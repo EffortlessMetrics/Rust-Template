@@ -4,7 +4,7 @@ jobs:
   atlas:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - run: curl -sSf https://atlasgo.sh | sh
       - run: atlas schema diff --to file://specs/db/atlas/schema.hcl
       - run: atlas migrate lint

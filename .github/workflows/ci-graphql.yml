@@ -6,7 +6,7 @@ jobs:
   rover-check:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: apollographql-gh-actions/install-rover@v1
       - run: rover graph check mygraph@current --schema specs/graphql/schema.graphql --background
         env:

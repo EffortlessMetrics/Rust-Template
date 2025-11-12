@@ -4,7 +4,7 @@ jobs:
   breaking:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: oasdiff/oasdiff-action@v1
         with:
           base: 'origin/main:specs/openapi/openapi.yaml'
@@ -13,5 +13,5 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - run: npx -y @redocly/cli@latest lint specs/openapi/openapi.yaml

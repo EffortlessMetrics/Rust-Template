@@ -6,7 +6,7 @@ jobs:
   release-security:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - run: cargo install cyclonedx-bom --locked || true
       - run: cyclonedx-bom -o sbom.json
       - run: echo "Skip cosign here; wire secrets and uncomment in real repo"
