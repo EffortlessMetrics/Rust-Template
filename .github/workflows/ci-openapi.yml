@@ -1,0 +1,17 @@
+name: OpenAPI
+on: [pull_request]
+jobs:
+  breaking:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oasdiff/oasdiff-action@v1
+        with:
+          base: 'origin/main:specs/openapi/openapi.yaml'
+          revision: 'specs/openapi/openapi.yaml'
+          check-breaking: true
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: npx -y @redocly/cli@latest lint specs/openapi/openapi.yaml

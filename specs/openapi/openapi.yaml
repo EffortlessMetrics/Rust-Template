@@ -1,0 +1,27 @@
+openapi: 3.1.0
+info:
+  title: Payments API
+  version: 0.1.0
+paths:
+  /refunds:
+    post:
+      operationId: createRefund
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [invoice_id]
+              properties:
+                invoice_id: { type: string }
+      responses:
+        "200":
+          description: ok
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [refund_id]
+                properties:
+                  refund_id: { type: string }

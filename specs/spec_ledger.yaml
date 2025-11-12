@@ -1,0 +1,11 @@
+stories:
+  - id: US-42
+    requirements:
+      - id: REQ-411
+        acceptance_criteria:
+          - id: AC-123
+            tests:
+              - { type: bdd, tag: "@AC-123" }
+          - id: AC-124
+            tests:
+              - { type: snapshot, path: "tests/snapshots/refund_error.snap" }

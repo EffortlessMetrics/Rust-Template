@@ -1,0 +1,13 @@
+name: GraphQL
+on:
+  pull_request:
+    paths: ["specs/graphql/**"]
+jobs:
+  rover-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: apollographql-gh-actions/install-rover@v1
+      - run: rover graph check mygraph@current --schema specs/graphql/schema.graphql --background
+        env:
+          APOLLO_KEY: ${{ secrets.APOLLO_KEY }}

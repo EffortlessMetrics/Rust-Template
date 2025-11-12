@@ -1,0 +1,4 @@
+site_name: Sample Service Docs
+nav:
+  - Home: ../docs/index.md
+  - Architecture: ../docs/architecture.md

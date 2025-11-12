@@ -1,0 +1,21 @@
+name: ACs
+on: [pull_request]
+jobs:
+  bdd:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - run: cargo test --test acceptance
+      - if: always()
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        with:
+          files: target/junit/**/*.xml
+  policy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: YubicoLabs/action-conftest@v3
+        with:
+          files: "specs/spec_ledger.yaml"
+          policy: "policy"

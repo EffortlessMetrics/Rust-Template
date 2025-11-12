@@ -1,0 +1,9 @@
+syntax = "proto3";
+package payments.v1;
+
+message CreateRefundRequest { string invoice_id = 1; }
+message CreateRefundResponse { string refund_id = 1; }
+
+service Payments {
+  rpc CreateRefund(CreateRefundRequest) returns (CreateRefundResponse);
+}

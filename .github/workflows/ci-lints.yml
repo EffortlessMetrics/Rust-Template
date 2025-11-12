@@ -1,0 +1,15 @@
+name: Lints
+on: [pull_request]
+jobs:
+  rust:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - run: cargo fmt --all -- --check
+      - run: cargo clippy --all-targets --all-features -D warnings
+      - run: cargo test --all
+      - run: cargo install cargo-deny --locked || true
+      - run: cargo deny check
+      - run: cargo install cargo-audit --locked || true
+      - run: cargo audit

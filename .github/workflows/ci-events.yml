@@ -1,0 +1,13 @@
+name: EventSchemas
+on:
+  pull_request:
+    paths: ["specs/events/**"]
+jobs:
+  sr-compat:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: ./scripts/check-schema-compat.sh orders-value specs/events/json-schema/orders.json
+        env:
+          SCHEMA_REGISTRY_URL: ${{ secrets.SR_URL }}
+          SCHEMA_REGISTRY_AUTH: ${{ secrets.SR_AUTH }}

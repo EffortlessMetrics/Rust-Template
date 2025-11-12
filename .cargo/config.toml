@@ -1,0 +1,6 @@
+[build]
+# Uncomment to fail on warnings in CI
+# rustflags = ["-Dwarnings"]
+
+[term]
+verbose = false

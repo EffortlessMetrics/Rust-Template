@@ -1,0 +1,13 @@
+name: Release SBOM & Sign
+on:
+  push:
+    tags: ["v*.*.*"]
+jobs:
+  release-security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: cargo install cyclonedx-bom --locked || true
+      - run: cyclonedx-bom -o sbom.json
+      - run: echo "Skip cosign here; wire secrets and uncomment in real repo"
+      # - run: cosign sign-blob --yes --output-signature sbom.sig sbom.json

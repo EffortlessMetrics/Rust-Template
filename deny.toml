@@ -1,0 +1,11 @@
+[advisories]
+vulnerability = "deny"
+yanked = "deny"
+
+[bans]
+multiple-versions = "warn"
+wildcards = "deny"
+
+[licenses]
+unlicensed = "deny"
+allow = ["Apache-2.0", "MIT", "BSD-3-Clause", "BSD-2-Clause", "Unicode-DFS-2016"]
