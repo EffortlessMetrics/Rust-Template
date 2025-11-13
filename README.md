@@ -67,11 +67,29 @@ crates/
 `app-http` → `core` ✓  (adapters call domain)
 `core` → `app-http` ✗  (domain never calls adapters)
 
-### Next Steps
+## Documentation
 
-- **Adopt the template**: `docs/how-to/new-service-from-template.md`
-- **API reference**: `TEMPLATE_API.md`
-- **AC-first development**: `docs/tutorials/first-ac-change.md`
+**📚 Complete documentation in `docs/`** - [Start Here](docs/README.md)
+
+### For New Users
+
+- 📘 **[Getting Started Tutorial](docs/tutorials/getting-started.md)** (30 min) - Clone, run, make first change
+- 📕 **[Architecture Explanation](docs/explanation/architecture.md)** (20 min read) - Design & philosophy
+- 📗 **[xtask Commands Reference](docs/reference/xtask-commands.md)** - All CLI commands
+
+### For Development
+
+- 🛠️ **[First AC Change](docs/tutorials/first-ac-change.md)** - Complete AC workflow
+- 🛠️ **[Add HTTP Endpoint](docs/how-to/add-http-endpoint.md)** - Add new routes
+- 🛠️ **[Use LLM Bundles](docs/how-to/use-llm-bundles.md)** - AI-assisted coding
+
+### For Adoption
+
+- 🚀 **[New Service from Template](docs/how-to/new-service-from-template.md)** - 10-minute setup
+- 🚀 **[Branch Protection Profiles](docs/reference/branch-protection-profiles.md)** - CI configuration
+- 🚀 **[Template API](TEMPLATE_API.md)** - Stable interfaces
+
+**→ [Browse all documentation](docs/README.md)**
 
 ---
 
