@@ -1,4 +1,22 @@
 stories:
+  # Template Core - Keep and extend these in your service
+  - id: US-TPL-001
+    title: "Service Core Capabilities"
+    requirements:
+      - id: REQ-TPL-HEALTH
+        title: "Health Check Endpoint"
+        acceptance_criteria:
+          - id: AC-TPL-001
+            text: "GET /health returns 200 with status 'ok' when service is healthy"
+            tests: [ { type: bdd, tag: "@AC-TPL-001" } ]
+      - id: REQ-TPL-VERSION
+        title: "Version Information Endpoint"
+        acceptance_criteria:
+          - id: AC-TPL-002
+            text: "GET /version returns build information including version and git SHA"
+            tests: [ { type: bdd, tag: "@AC-TPL-002" } ]
+
+  # Example Feature - Adapt or replace with your domain
   - id: US-42
     title: "Customer Refund Management"
     requirements:
