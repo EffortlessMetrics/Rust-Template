@@ -27,7 +27,8 @@ All development operations go through `xtask`:
 
 | Task                       | Command                             | What it does                            |
 |----------------------------|-------------------------------------|-----------------------------------------|
-| Validate template          | `xtask quickstart`                  | Run all checks + BDD + bundler          |
+| Full self-test suite       | `xtask selftest`                    | check + bdd + ac-status + bundler + policies |
+| Quick validation           | `xtask quickstart`                  | Lightweight validation for first use    |
 | Format + lint + tests      | `xtask check`                       | cargo fmt, clippy, test                 |
 | Acceptance tests           | `xtask bdd`                         | Run cucumber scenarios, emit JUnit XML  |
 | LLM context bundle         | `xtask bundle <task>`               | Generate focused context for AI coding  |
@@ -42,11 +43,29 @@ cargo run -p xtask -- bundle implement_ac      # Get context for AC work
 ### What's Working
 
 - ✅ **xtask** - Single Rust-native CLI for all operations
+- ✅ **Runtime architecture** - Axum HTTP service with hexagonal layering
+- ✅ **Observability** - tracing/logging from day 0 (RUST_LOG env support)
 - ✅ **BDD acceptance tests** - cucumber-rs with JUnit output
 - ✅ **AC status mapping** - tests → features → ledger traceability
 - ✅ **Policy-as-code** - OPA/Rego for ledger, features, flags, privacy
 - ✅ **LLM bundler** - Curated context for AI-assisted development
 - ✅ **CI workflows** - 22 GitHub Actions for comprehensive validation
+
+### Architecture
+
+```
+crates/
+├── app-http/       → HTTP adapter (Axum, routes, DTOs)
+├── core/           → Domain logic (business rules, no HTTP)
+├── model/          → Domain entities and value objects
+├── telemetry/      → Observability (tracing setup)
+├── acceptance/     → BDD tests (cucumber-rs)
+└── xtask/          → Dev/CI tooling
+```
+
+**Key pattern:** Dependencies point inward
+`app-http` → `core` ✓  (adapters call domain)
+`core` → `app-http` ✗  (domain never calls adapters)
 
 ### Next Steps
 
