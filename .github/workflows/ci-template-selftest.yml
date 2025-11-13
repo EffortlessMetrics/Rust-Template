@@ -28,23 +28,14 @@ jobs:
           echo "CARGO_INCREMENTAL=0" >> $GITHUB_ENV
           nix develop -c sccache --start-server || true
 
-      - name: Run xtask check
-        run: nix develop -c cargo run -p xtask -- check
+      - name: Run template self-test suite
+        run: nix develop -c cargo run -p xtask -- selftest
 
-      - name: Run xtask bdd
-        run: nix develop -c cargo run -p xtask -- bdd
-
-      - name: Generate AC status
-        run: nix develop -c python3 scripts/ac_status.py
-
-      - name: Generate LLM bundle
-        run: nix develop -c cargo run -p xtask -- bundle implement_ac
-
-      - name: Verify feature_status.md was generated
-        run: test -f docs/feature_status.md
-
-      - name: Verify bundle was generated
-        run: test -f .llm/bundle/implement_ac.md
+      - name: Verify artifacts were generated
+        run: |
+          test -f docs/feature_status.md
+          test -f .llm/bundle/implement_ac.md
+          test -f target/junit/acceptance.xml
 
       - name: Show sccache stats
         if: always()

@@ -84,6 +84,46 @@ cargo run -p xtask -- bundle debug_tests
 
 ---
 
+### `xtask selftest`
+
+Run the complete template self-test suite (used in CI).
+
+**Usage:**
+```bash
+cargo run -p xtask -- selftest
+# or in Nix shell:
+nix develop -c cargo run -p xtask -- selftest
+```
+
+**Behavior:**
+1. Runs `xtask check` (format, clippy, tests)
+2. Runs `xtask bdd` (acceptance tests + JUnit XML)
+3. Runs AC status mapping (`scripts/ac_status.py`)
+4. Runs `xtask bundle implement_ac` (LLM bundler)
+5. Runs policy tests (`scripts/test-policies.sh` if conftest available)
+6. Reports comprehensive validation results with colored output
+
+**Exit codes:**
+- `0`: All self-tests passed
+- Non-zero: One or more test suites failed
+
+**Output artifacts:**
+- `target/junit/acceptance.xml`: JUnit test results
+- `docs/feature_status.md`: AC status mapping
+- `.llm/bundle/implement_ac.md`: LLM context bundle
+
+**Use case:**
+- **CI/CD pipelines**: Single command for comprehensive validation
+- **Pre-release checks**: Verify template health before tagging
+- **Development**: Full validation after major changes
+
+**Notes:**
+- This is the canonical CI command (used in `ci-template-selftest.yml`)
+- AC status and policy checks are informational (don't fail suite if unavailable)
+- More comprehensive than `xtask quickstart` (which is for first-run validation)
+
+---
+
 ### `xtask quickstart`
 
 Quick validation of all template functionality.
