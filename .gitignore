@@ -10,3 +10,6 @@ sbom.json
 .tools/
 .llm/bundle/
 node_modules/
+
+# Ignore Windows zone identifier files
+*:Zone.Identifier
