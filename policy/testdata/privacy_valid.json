@@ -1,0 +1,25 @@
+{
+  "fields": [
+    {
+      "path": "user.email",
+      "classification": "PII",
+      "owner": "team-identity",
+      "retention": "365d",
+      "purpose": "User authentication and communication"
+    },
+    {
+      "path": "user.phone",
+      "classification": "PII",
+      "owner": "team-identity",
+      "retention": "730d",
+      "purpose": "Two-factor authentication"
+    },
+    {
+      "path": "user.name",
+      "classification": "PII",
+      "owner": "team-platform",
+      "retention": "5y",
+      "purpose": "User profile display"
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "fields": [
+    {
+      "path": "user.ssn",
+      "classification": "PII",
+      "retention": "10y",
+      "purpose": "Identity verification"
+    },
+    {
+      "path": "user.credit_card",
+      "classification": "PII",
+      "owner": "",
+      "retention": "invalid-format",
+      "purpose": "Payment processing"
+    },
+    {
+      "path": "user.address",
+      "pii": true,
+      "purpose": "Shipping"
+    }
+  ]
+}

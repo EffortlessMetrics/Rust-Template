@@ -1,0 +1,13 @@
+{
+  "features": [
+    {
+      "id": "FT-200",
+      "acceptance_criteria": ["AC-200", "AC-999"]
+    },
+    {
+      "id": "FT-201",
+      "acceptance_criteria": ["AC-888"]
+    }
+  ],
+  "ledger_ac_ids": ["AC-200", "AC-201"]
+}
