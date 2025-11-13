@@ -172,6 +172,12 @@ This documentation follows the [Diátaxis](https://diataxis.fr/) framework:
 - Observability strategy
 - Decision rationale
 
+📕 **[Template Foundation vs Examples](explanation/template-foundation-vs-examples.md)** (5 min read)
+- What to keep (template core)
+- What to adapt (example features)
+- Why the distinction matters
+- Quick reference for new services
+
 ---
 
 ## By Role
@@ -181,6 +187,7 @@ This documentation follows the [Diátaxis](https://diataxis.fr/) framework:
 **Must Read:**
 - [Getting Started](tutorials/getting-started.md)
 - [Architecture Overview](explanation/architecture.md)
+- [Template Foundation vs Examples](explanation/template-foundation-vs-examples.md)
 - [xtask Commands](reference/xtask-commands.md)
 
 **Frequently Used:**

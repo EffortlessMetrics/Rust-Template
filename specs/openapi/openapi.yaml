@@ -1,6 +1,50 @@
 openapi: 3.1.0
-info: { title: Payments API, version: 1.0.0 }
+info:
+  title: Service API
+  version: 1.0.0
+  description: |
+    Template-based service API.
+
+    Core endpoints (/health, /version) are part of the template foundation.
+    Domain endpoints (e.g., /refunds) are examples to adapt or replace.
+
 paths:
+  # Template Core - Keep these in your service
+  /health:
+    get:
+      summary: Health check
+      operationId: healthCheck
+      tags: [operations]
+      responses:
+        "200":
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status, service]
+                properties:
+                  status: { type: string, enum: [ok], description: "Health status" }
+                  service: { type: string, description: "Service name" }
+
+  /version:
+    get:
+      summary: Version information
+      operationId: getVersion
+      tags: [operations]
+      responses:
+        "200":
+          description: Current build information
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [version, gitSha]
+                properties:
+                  version: { type: string, description: "Service version from Cargo.toml" }
+                  gitSha: { type: string, description: "Git commit SHA" }
+
+  # Example Domain Endpoint - Adapt or replace
   /refunds:
     post:
       operationId: createRefund

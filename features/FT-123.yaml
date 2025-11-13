@@ -1,6 +1,7 @@
 id: FT-123
-name: "Refund Creation"
+name: "Refund Creation (Example)"
 description: "Allow customers to create refunds for existing orders through the payments API"
 acceptance_criteria: [AC-123]
 owner: team-payments
 status: active
+notes: "Example feature demonstrating domain implementation. Adapt or replace with your service's domain."
