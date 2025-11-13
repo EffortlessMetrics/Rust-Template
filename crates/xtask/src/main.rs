@@ -26,6 +26,8 @@ enum Commands {
     },
     /// Quick validation of template functionality
     Quickstart,
+    /// Run full template self-test suite (check + bdd + ac-status + bundler + policies)
+    Selftest,
 }
 
 fn main() -> Result<()> {
@@ -36,6 +38,7 @@ fn main() -> Result<()> {
         Commands::Bdd => commands::bdd::run(),
         Commands::Bundle { task } => commands::bundle::run(&task),
         Commands::Quickstart => commands::quickstart::run(),
+        Commands::Selftest => commands::selftest::run(),
     }
 }
 
