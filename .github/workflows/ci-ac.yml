@@ -27,53 +27,16 @@ jobs:
           echo "SCCACHE_GHA_ENABLED=1" >> $GITHUB_ENV
           echo "CARGO_INCREMENTAL=0" >> $GITHUB_ENV
           nix develop -c sccache --start-server || true
-      - run: nix develop -c cargo test -p acceptance --test acceptance
+      - name: Run BDD tests via xtask
+        run: nix develop -c cargo run -p xtask -- bdd
+
+      - name: Generate AC status
+        if: always()
+        run: nix develop -c python3 scripts/ac_status.py
+
       - if: always()
         uses: EnricoMi/publish-unit-test-result-action@v2
         with: { files: target/junit/**/*.xml }
-      - name: Generate feature status (per-AC)
-        if: always()
-        run: |
-          nix develop -c python3 - <<'PY'
-          import re, json, pathlib, xml.etree.ElementTree as ET, subprocess
-          ledger = subprocess.check_output(['bash','-lc','yq -o=json specs/spec_ledger.yaml'])
-          doc = json.loads(ledger)
-          ac_ids = []
-          for s in doc.get("stories", []):
-              for r in s.get("requirements", []):
-                  for ac in r.get("acceptance_criteria", []):
-                      ac_ids.append(ac["id"])
-          scenario2ac = {}
-          for feature in pathlib.Path("specs/features").rglob("*.feature"):
-              prev_tags=[]
-              for line in feature.read_text().splitlines():
-                  if line.strip().startswith("@"):
-                      prev_tags += re.findall(r'@([A-Za-z0-9_-]+)', line)
-                      continue
-                  m = re.match(r'^\s*Scenario(?: Outline)?:\s*(.+)$', line)
-                  if m:
-                      ac = next((t for t in prev_tags if t.startswith("AC-")), None)
-                      if ac: scenario2ac[m.group(1).strip()] = ac
-                      prev_tags=[]
-          status = {ac:"❓ unknown" for ac in ac_ids}
-          junit = pathlib.Path("target/junit/acceptance.xml")
-          if junit.exists():
-              root = ET.parse(junit).getroot()
-              for tc in root.findall(".//testcase"):
-                  name_raw = tc.get("name","")
-                  name = re.sub(r'\s*\(.*\)$', '', name_raw).strip()
-                  ac = scenario2ac.get(name)
-                  if not ac:
-                      ac = next((v for (k,v) in scenario2ac.items() if name.startswith(k)), None)
-                  if not ac:
-                      continue
-                  status[ac] = "❌ fail" if tc.find("failure") is not None else "✅ pass"
-          pathlib.Path("docs").mkdir(exist_ok=True)
-          with open("docs/feature_status.md","w") as out:
-              out.write("# Feature Status\n\n| AC | Result | Evidence |\n|---|---|---|\n")
-              for ac in ac_ids:
-                  out.write(f"| {ac} | {status.get(ac,'❓ unknown')} | acceptance.xml |\n")
-          PY
       - name: Show sccache stats
         if: always()
         run: nix develop -c sccache --show-stats || true
@@ -89,4 +52,4 @@ jobs:
       - uses: cachix/install-nix-action@v27
       - name: AC Coverage Policy
         run: |
-          nix develop -c bash -lc 'yq -o=json specs/spec_ledger.yaml | conftest test -p policy -'
+          nix develop -c bash -lc 'yq -o=json specs/spec_ledger.yaml | conftest test -p policy/ledger.rego -'
