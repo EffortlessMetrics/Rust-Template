@@ -84,6 +84,38 @@ cargo run -p xtask -- bundle debug_tests
 
 ---
 
+### `xtask quickstart`
+
+Quick validation of all template functionality.
+
+**Usage:**
+```bash
+cargo run -p xtask -- quickstart
+```
+
+**Behavior:**
+1. Checks environment (cargo, rustc versions)
+2. Runs `xtask check` (format, clippy, tests)
+3. Runs `xtask bdd` (acceptance tests + JUnit XML)
+4. Runs `xtask bundle implement_ac` (LLM bundler)
+5. Reports validation results with colored output
+
+**Exit codes:**
+- `0`: All validation steps passed
+- Non-zero: One or more validation steps failed
+
+**Use case:**
+- First-time template validation after cloning
+- Verifying template setup before starting work
+- CI self-test for template repository
+
+**Notes:**
+- This is the recommended first command to run after cloning
+- Provides clear visual feedback with ✓/✗/⚠ indicators
+- Fails fast if environment is not properly configured
+
+---
+
 ## Policy Input Schemas
 
 All policies are written in Rego and tested via `conftest`. Each policy expects JSON input in a specific schema.

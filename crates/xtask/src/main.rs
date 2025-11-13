@@ -24,6 +24,8 @@ enum Commands {
         /// Task name from .llm/contextpack.yaml
         task: String,
     },
+    /// Quick validation of template functionality
+    Quickstart,
 }
 
 fn main() -> Result<()> {
@@ -33,6 +35,7 @@ fn main() -> Result<()> {
         Commands::Check => commands::check::run(),
         Commands::Bdd => commands::bdd::run(),
         Commands::Bundle { task } => commands::bundle::run(&task),
+        Commands::Quickstart => commands::quickstart::run(),
     }
 }
 
