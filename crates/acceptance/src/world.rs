@@ -1,13 +1,29 @@
+use axum::Router;
 use cucumber::World as CucumberWorld;
 use std::collections::HashMap;
 
-/// Test world state
-#[derive(Debug, Default, CucumberWorld)]
+/// Test world state - includes real HTTP router for integration testing
+#[derive(Debug, CucumberWorld)]
 pub struct World {
-    /// Orders in the system
+    /// Real HTTP router (in-process, no network)
+    pub app: Router,
+    /// Orders in the system (test data)
     pub orders: HashMap<String, Order>,
     /// Last HTTP response
     pub last_response: Option<Response>,
+}
+
+impl Default for World {
+    fn default() -> Self {
+        // Initialize telemetry for tests (idempotent)
+        telemetry::init();
+
+        Self {
+            app: app_http::app(), // Real HTTP router from app-http crate
+            orders: HashMap::new(),
+            last_response: None,
+        }
+    }
 }
 
 #[derive(Debug, Clone)]
