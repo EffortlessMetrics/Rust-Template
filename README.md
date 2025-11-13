@@ -11,43 +11,48 @@
 
 ## Quick Start
 
-Clone and verify in 2 minutes:
+**Fastest path** - one command validates everything:
 
 ```bash
-# 1. Clone the template
-git clone <your-repo-url>
-cd Rust-Template
-
-# 2. Enter Nix development shell (installs all tools)
+git clone <your-repo-url> && cd Rust-Template
 nix develop
-
-# 3. Run all checks
-cargo run -p xtask -- check
-
-# 4. Run BDD acceptance tests
-cargo run -p xtask -- bdd
-
-# 5. Generate LLM context bundle
-cargo run -p xtask -- bundle implement_ac
+cargo run -p xtask -- quickstart
 ```
 
-**Expected results:**
-- ✓ All checks pass (format, clippy, tests)
-- ✓ BDD scenario passes, creates `target/junit/acceptance.xml`
-- ✓ Bundle created at `.llm/bundle/implement_ac.md`
+This runs all checks, tests, and bundler to prove the template works.
 
-**What's working:**
-- `xtask` CLI as single entrypoint for all operations
-- BDD acceptance tests with cucumber-rs
-- AC status mapping from tests → features → ledger
-- OPA/Rego policies for ledger, features, flags, privacy
-- LLM context bundler for targeted AI assistance
-- 22 GitHub Actions workflows for comprehensive CI
+### Command Reference
 
-**Next steps:**
-- See `docs/how-to/new-service-from-template.md` for adoption guide
-- See `TEMPLATE_API.md` for stable interface documentation
-- See `docs/tutorials/first-ac-change.md` for AC-first development
+All development operations go through `xtask`:
+
+| Task                       | Command                             | What it does                            |
+|----------------------------|-------------------------------------|-----------------------------------------|
+| Validate template          | `xtask quickstart`                  | Run all checks + BDD + bundler          |
+| Format + lint + tests      | `xtask check`                       | cargo fmt, clippy, test                 |
+| Acceptance tests           | `xtask bdd`                         | Run cucumber scenarios, emit JUnit XML  |
+| LLM context bundle         | `xtask bundle <task>`               | Generate focused context for AI coding  |
+
+**Examples:**
+```bash
+cargo run -p xtask -- check                    # Before every commit
+cargo run -p xtask -- bdd                      # Test acceptance criteria
+cargo run -p xtask -- bundle implement_ac      # Get context for AC work
+```
+
+### What's Working
+
+- ✅ **xtask** - Single Rust-native CLI for all operations
+- ✅ **BDD acceptance tests** - cucumber-rs with JUnit output
+- ✅ **AC status mapping** - tests → features → ledger traceability
+- ✅ **Policy-as-code** - OPA/Rego for ledger, features, flags, privacy
+- ✅ **LLM bundler** - Curated context for AI-assisted development
+- ✅ **CI workflows** - 22 GitHub Actions for comprehensive validation
+
+### Next Steps
+
+- **Adopt the template**: `docs/how-to/new-service-from-template.md`
+- **API reference**: `TEMPLATE_API.md`
+- **AC-first development**: `docs/tutorials/first-ac-change.md`
 
 ---
 
