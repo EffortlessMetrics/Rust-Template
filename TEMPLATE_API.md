@@ -20,8 +20,8 @@ nix develop -c cargo run -p xtask -- check
 
 **Behavior:**
 1. Runs `cargo fmt --all -- --check` (formatting verification)
-2. Runs `cargo clippy --all-targets --all-features -D warnings` (lint checks)
-3. Runs `cargo nextest run --workspace --exclude acceptance` (unit/integration tests)
+2. Runs `cargo clippy --all-targets --all-features -- -D warnings` (lint checks)
+3. Runs `cargo test --workspace --exclude acceptance` (unit/integration tests)
 
 **Exit codes:**
 - `0`: All checks passed

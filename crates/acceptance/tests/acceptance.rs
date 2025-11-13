@@ -23,15 +23,12 @@ async fn main() {
     std::fs::create_dir_all(&junit_dir).expect("Failed to create junit directory");
 
     // Create the JUnit output file
-    let junit_file = File::create(&junit_path)
-        .expect("Failed to create JUnit output file");
+    let junit_file = File::create(&junit_path).expect("Failed to create JUnit output file");
 
     // Combine basic console output with JUnit XML output
     World::cucumber()
         .with_writer(
-            writer::Basic::stdout()
-                .summarized()
-                .tee::<World, _>(writer::JUnit::new(junit_file, 0)),
+            writer::Basic::stdout().summarized().tee::<World, _>(writer::JUnit::new(junit_file, 0)),
         )
         .before(|_feature, _rule, _scenario, world| {
             Box::pin(async move {

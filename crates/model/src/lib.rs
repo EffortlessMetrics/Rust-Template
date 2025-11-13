@@ -1,1 +1,3 @@
-pub struct Refund { pub id: String }
+pub struct Refund {
+    pub id: String,
+}
