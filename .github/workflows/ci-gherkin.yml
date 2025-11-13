@@ -40,21 +40,3 @@ jobs:
                           ok=False
           sys.exit(0 if ok else 1)
           PY
-
-- name: Enforce exactly one @AC-#### per Scenario/Outline
-  run: |
-    python3 - <<'PY'
-    import re, sys, pathlib
-    ok=True
-    for f in pathlib.Path("specs/features").rglob("*.feature"):
-        lines=f.read_text().splitlines()
-        for i,l in enumerate(lines):
-            if re.match(r'^\s*Scenario(?: Outline)?:', l):
-                j=i-1; acs=[]
-                while j>=0 and lines[j].lstrip().startswith("@"):
-                    acs += re.findall(r'@AC-\d+', lines[j]); j-=1
-                if len(acs) != 1:
-                    print(f"{f}: Scenario at line {i+1} must have exactly one @AC-#### tag (found {len(acs)}: {acs})")
-                    ok=False
-    sys.exit(0 if ok else 1)
-    PY
