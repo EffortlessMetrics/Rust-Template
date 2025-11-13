@@ -1,12 +1,17 @@
-# Rust Spec-as-Code Template (v3.4.7)
+# Rust Spec-as-Code Template (v1.0.0)
+
+**AC-first, policy-first, LLM-native template for building Rust services**
 
 - See `TEMPLATE_OVERVIEW.md` for a high-level overview of this template.
 - See `IMPLEMENTATION_PLAN.md` and `ADOPTION.md` for rollout and implementation guidance.
 
-- Nix flake is the **canonical dev environment**; DevContainer wraps it.
-- Contracts & policies as code; interface locks as blocking gates.
-- Feature & flag manifests as code; OPA policy for governance.
-- LLM context bundles for targeted editing.
+**Key Features:**
+- 🦀 Rust-native development with xtask orchestration
+- 🎯 AC-first workflow: specs → tests → implementation
+- 🔒 Policy-as-code governance (OPA/Rego)
+- 🤖 LLM context bundles for AI-assisted development
+- 🏗️ Hexagonal architecture with Axum + tracing
+- 🧪 BDD acceptance tests with real HTTP integration
 
 
 ## Quick Start
@@ -93,8 +98,31 @@ crates/
 
 ---
 
-### v3.4.7 changes
-- Added `IMPLEMENTATION_PLAN.md` capturing phased work to instantiate or re-implement the template
-- Added `ADOPTION.md` with greenfield, brownfield, and strict adoption guidance
-- Seeded a Diátaxis-aligned docs tree under `docs/` (tutorials, how-tos, reference, explanations)
-- Kept existing AC mapping, contract gates, coverage, and checksum behavior from prior 3.4.x releases
+## Release Notes
+
+### v1.0.0 (2025-11-13)
+
+**First stable release** - Production-ready template for Rust services.
+
+**Core Infrastructure:**
+- ✅ Rust-native xtask tooling (check, bdd, bundle, selftest, quickstart)
+- ✅ Runtime architecture: Axum HTTP + hexagonal layering
+- ✅ Telemetry: tracing + RUST_LOG configuration
+- ✅ BDD vertical integration: tests hit real HTTP stack
+- ✅ CI: Template self-test workflow validates full stack
+
+**Governance & Traceability:**
+- ✅ AC status mapping: specs → features → tests → code
+- ✅ Policy-as-code: Rego policies for ledger, features, flags, privacy
+- ✅ LLM context bundler: Curated bundles for AI-assisted development
+- ✅ Branch protection profiles: Minimal/Standard/Strict
+
+**Documentation:**
+- ✅ Diátaxis framework: tutorials, how-tos, reference, explanations
+- ✅ Complete architecture documentation (4,400 words)
+- ✅ Adoption guides: greenfield, brownfield, strict
+- ✅ Stable API contract in `TEMPLATE_API.md`
+
+**Sample Implementation:**
+- ✅ Refund API sample: coherent across specs, OpenAPI, handlers, tests
+- ✅ Living enforcement: BDD validates production code paths

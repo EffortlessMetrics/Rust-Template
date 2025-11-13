@@ -1,8 +1,10 @@
 stories:
   - id: US-42
+    title: "Customer Refund Management"
     requirements:
       - id: REQ-411
+        title: "Refund Creation API"
         acceptance_criteria:
           - id: AC-123
-            text: "Customer can create a refund for an order"
+            text: "Customer can create a refund for an order and receive a refund ID with pending status"
             tests: [ { type: bdd, tag: "@AC-123" } ]
