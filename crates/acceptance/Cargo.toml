@@ -11,3 +11,11 @@ serde_json = "1"
 uuid = { version = "1", features = ["v4"] }
 cucumber = { version = "0.21", features=["output-junit"] }
 tokio = { version = "1", features=["rt-multi-thread","macros"] }
+axum = "0.7"
+tower = { version = "0.4", features = ["util"] }
+http = "1"
+http-body-util = "0.1"
+
+# Internal crates
+app-http = { path = "../app-http" }
+telemetry = { path = "../telemetry" }

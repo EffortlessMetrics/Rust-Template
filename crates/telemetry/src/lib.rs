@@ -15,8 +15,8 @@ pub fn init() {
     // Default to INFO if RUST_LOG not set
     let env_filter = EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("info"));
 
-    // Initialize tracing subscriber
-    tracing_subscriber::registry()
+    // Initialize tracing subscriber (idempotent - ignores error if already initialized)
+    let _ = tracing_subscriber::registry()
         .with(env_filter)
         .with(
             fmt::layer()
@@ -25,7 +25,7 @@ pub fn init() {
                 .with_file(false)
                 .with_line_number(false),
         )
-        .init();
+        .try_init();
 }
 
 /// Initialize tracing for tests
