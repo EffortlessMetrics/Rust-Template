@@ -1,1 +1,3 @@
-pub fn refund_ok() -> bool { true }
+pub fn refund_ok() -> bool {
+    true
+}

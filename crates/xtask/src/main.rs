@@ -38,9 +38,7 @@ fn main() -> Result<()> {
 
 /// Helper to run a command and propagate failures
 pub fn run_cmd(cmd: &mut Command) -> Result<()> {
-    let status = cmd
-        .status()
-        .with_context(|| format!("Failed to spawn command: {:?}", cmd))?;
+    let status = cmd.status().with_context(|| format!("Failed to spawn command: {:?}", cmd))?;
 
     if !status.success() {
         anyhow::bail!("Command {:?} failed with status {:?}", cmd, status);
