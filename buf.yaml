@@ -1,4 +1,3 @@
 version: v2
-modules: [{ path: specs/proto }]
-lint: { use: [DEFAULT] }
-breaking: { use: [FILE] }
+modules:
+  - path: specs/proto

@@ -1,17 +1,71 @@
 name: OpenAPI
-on: [pull_request]
+on:
+  pull_request:
+    paths:
+      - 'specs/openapi/**'
+      - '.github/workflows/ci-openapi.yml'
+      - 'redocly.yaml'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  breaking:
+  openapi:
     runs-on: ubuntu-latest
+    timeout-minutes: 25
+    permissions: { contents: read, pull-requests: write }
+    env:
+      ENFORCE_CHECKSUMS: "1"
     steps:
       - uses: actions/checkout@v4
-      - uses: oasdiff/oasdiff-action@v1
+        with: { fetch-depth: 0 }
+
+      - uses: actions/cache@v4
         with:
-          base: 'origin/main:specs/openapi/openapi.yaml'
-          revision: 'specs/openapi/openapi.yaml'
-          check-breaking: true
-  lint:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - run: npx -y @redocly/cli@latest lint specs/openapi/openapi.yaml
+          path: .tools/bin
+          key: tools-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('bootstrap-tools.sh') }}
+      - uses: cachix/install-nix-action@v27
+      - run: nix develop -c ./bootstrap-tools.sh
+
+      - name: Build baseline from origin/main
+        run: |
+          rm -rf /tmp/baseopenapi && mkdir -p /tmp/baseopenapi
+          git fetch --no-tags --prune origin +refs/heads/*:refs/remotes/origin/*
+          git archive --format=tar origin/main specs/openapi | tar -x -C /tmp/baseopenapi || true
+
+      - name: Breaking diff
+        id: oasdiff
+        continue-on-error: true
+        run: |
+          set -e
+          if [ ! -f /tmp/baseopenapi/specs/openapi/openapi.yaml ]; then
+            echo "No base OpenAPI dir on main; skipping breaking diff."
+            exit 0
+          fi
+          nix develop -c ./.tools/bin/oasdiff diff --format text --fail-on-breaking             /tmp/baseopenapi/specs/openapi/openapi.yaml             specs/openapi/openapi.yaml | tee oasdiff.txt
+
+      - name: Comment breaking changes
+        if: steps.oasdiff.outcome == 'failure'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const body = "### OpenAPI Breaking Changes\n\n```text\n"
+              + fs.readFileSync('oasdiff.txt', 'utf8').slice(0, 6000)
+              + "\n```";
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.pull_request.number,
+              body
+            });
+
+      - name: Fail on breaking changes
+        if: steps.oasdiff.outcome == 'failure'
+        run: |
+          echo "OpenAPI breaking changes detected"
+          exit 1
+
+      - name: Lint
+        run: nix develop -c npx -y @redocly/cli@1.21.0 lint -c redocly.yaml specs/openapi/openapi.yaml

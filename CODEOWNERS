@@ -1,7 +1,0 @@
-/specs/**            @platform-team @tech-leads
-/specs/openapi/**    @api-owners
-/specs/proto/**      @grpc-owners
-/specs/graphql/**    @graphql-owners
-/specs/events/**     @data-platform
-/specs/db/**         @db-owners
-/crates/**           @service-teams

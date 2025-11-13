@@ -1,12 +1,4 @@
-{
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "orders",
-  "type": "object",
-  "required": ["order_id", "user_id", "total_cents"],
-  "properties": {
-    "order_id": { "type": "string" },
-    "user_id": { "type": "string" },
-    "total_cents": { "type": "integer", "minimum": 0 }
-  },
-  "additionalProperties": false
-}
+{ "$schema": "https://json-schema.org/draft/2020-12/schema", "title": "orders-value",
+  "type": "object", "required": ["orderId","userId","totalCents"],
+  "properties": { "orderId": {"type":"string"}, "userId": {"type":"string"}, "totalCents": {"type":"integer","minimum":0} },
+  "additionalProperties": false }

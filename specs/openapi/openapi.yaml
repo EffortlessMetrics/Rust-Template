@@ -1,7 +1,5 @@
 openapi: 3.1.0
-info:
-  title: Payments API
-  version: 0.1.0
+info: { title: Payments API, version: 1.0.0 }
 paths:
   /refunds:
     post:
@@ -12,16 +10,16 @@ paths:
           application/json:
             schema:
               type: object
-              required: [invoice_id]
+              required: [orderId, amountCents]
               properties:
-                invoice_id: { type: string }
+                orderId: { type: string }
+                amountCents: { type: integer, minimum: 0 }
       responses:
-        "200":
-          description: ok
+        "201":
+          description: created
           content:
             application/json:
               schema:
                 type: object
-                required: [refund_id]
-                properties:
-                  refund_id: { type: string }
+                required: [refundId]
+                properties: { refundId: { type: string } }

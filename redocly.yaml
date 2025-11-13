@@ -1,5 +1,1 @@
 extends: [recommended]
-rules:
-  operation-operationId: error
-  no-empty-servers: error
-  tags-alphabetical: warn

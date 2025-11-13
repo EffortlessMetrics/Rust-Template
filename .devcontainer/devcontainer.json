@@ -1,6 +1,7 @@
 {
-  "name": "rust-spec-template",
-  "image": "mcr.microsoft.com/devcontainers/rust:1",
-  "postCreateCommand": "rustup component add clippy rustfmt && cargo --version",
+  "name": "rust-spec-template (nix)",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+  "features": { "ghcr.io/devcontainers/features/nix:1": {} },
+  "postCreateCommand": "nix --version && nix develop -c ./bootstrap-tools.sh",
   "customizations": { "vscode": { "extensions": ["rust-lang.rust-analyzer", "tamasfe.even-better-toml"] } }
 }

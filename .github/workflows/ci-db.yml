@@ -1,10 +1,28 @@
 name: DB
-on: [pull_request]
+on:
+  pull_request:
+    paths: ['specs/db/**', '.github/workflows/ci-db.yml']
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   atlas:
     runs-on: ubuntu-latest
+    timeout-minutes: 25
+    permissions: { contents: read }
+    env:
+      ENFORCE_CHECKSUMS: "1"
     steps:
       - uses: actions/checkout@v4
-      - run: curl -sSf https://atlasgo.sh | sh
-      - run: atlas schema diff --to file://specs/db/atlas/schema.hcl
-      - run: atlas migrate lint
+
+      - uses: actions/cache@v4
+        with:
+          path: .tools/bin
+          key: tools-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('bootstrap-tools.sh') }}
+      - uses: cachix/install-nix-action@v27
+      - run: nix develop -c ./bootstrap-tools.sh
+
+      - run: nix develop -c ./.tools/bin/atlas schema diff --to file://specs/db/atlas/schema.hcl
+      - run: nix develop -c ./.tools/bin/atlas migrate lint --dir file://specs/db/atlas/migrations --dev-url "sqlite://file?mode=memory&_fk=1"

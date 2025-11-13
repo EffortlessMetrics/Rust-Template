@@ -1,13 +1,19 @@
-name: Release SBOM & Sign
+name: Release
 on:
-  push:
-    tags: ["v*.*.*"]
+  push: { tags: ["v*"] }
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  release-security:
+  sbom-sign:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions: { contents: read }
     steps:
       - uses: actions/checkout@v4
       - run: cargo install cyclonedx-bom --locked || true
       - run: cyclonedx-bom -o sbom.json
-      - run: echo "Skip cosign here; wire secrets and uncomment in real repo"
-      # - run: cosign sign-blob --yes --output-signature sbom.sig sbom.json
+      - name: Generate release notes (features advanced)
+        run: bash scripts/gen-release-notes.sh

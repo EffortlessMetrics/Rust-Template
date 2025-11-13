@@ -1,0 +1,5 @@
+fields:
+  - path: user.email
+    pii: email
+    owner: team-privacy
+    retention: 365d

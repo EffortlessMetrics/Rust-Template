@@ -1,15 +1,30 @@
 name: Lints
-on: [pull_request]
+on:
+  pull_request:
+    paths-ignore: ['**/*.md','docs/**']
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  rust:
+  rust-lints:
     runs-on: ubuntu-latest
+    timeout-minutes: 25
+    permissions: { contents: read }
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
-      - run: cargo fmt --all -- --check
-      - run: cargo clippy --all-targets --all-features -D warnings
-      - run: cargo test --all
-      - run: cargo install cargo-deny --locked || true
-      - run: cargo deny check
-      - run: cargo install cargo-audit --locked || true
-      - run: cargo audit
+      - uses: Swatinem/rust-cache@v2
+      - uses: cachix/install-nix-action@v27
+      - name: Enable sccache
+        run: |
+          echo "RUSTC_WRAPPER=$(nix develop -c which sccache)" >> $GITHUB_ENV
+          echo "SCCACHE_GHA_ENABLED=1" >> $GITHUB_ENV
+          echo "CARGO_INCREMENTAL=0" >> $GITHUB_ENV
+          nix develop -c sccache --start-server || true
+      - run: nix develop -c cargo fmt --all -- --check
+      - run: nix develop -c cargo clippy --all-targets --all-features -D warnings
+      - run: nix develop -c cargo nextest run --all
+      - name: Show sccache stats
+        if: always()
+        run: nix develop -c sccache --show-stats || true

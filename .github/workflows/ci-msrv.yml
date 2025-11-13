@@ -1,0 +1,28 @@
+name: MSRV
+on:
+  pull_request:
+    paths: ['Cargo.toml','crates/**/Cargo.toml','.github/workflows/ci-msrv.yml']
+  workflow_dispatch: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  msrv:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions: { contents: read }
+    steps:
+      - uses: actions/checkout@v4
+      - name: Extract MSRV from workspace Cargo.toml
+        id: msrv
+        run: |
+          v=$(grep -E '^\s*rust-version\s*=\s*"[0-9.]+"' -m1 Cargo.toml | sed -E 's/.*"([0-9.]+)".*/\1/')
+          test -n "$v" || (echo "No rust-version found" && exit 1)
+          echo "msrv=$v" >> $GITHUB_OUTPUT
+
+      - name: Toolchain = ${{ steps.msrv.outputs.msrv }}
+        uses: dtolnay/rust-toolchain@master
+        with: { toolchain: ${{ steps.msrv.outputs.msrv }}, components: clippy,rustfmt }
+      - run: cargo +${{ steps.msrv.outputs.msrv }} build --workspace

@@ -1,13 +1,1 @@
-type Query {
-  health: String!
-}
-type Mutation {
-  createRefund(invoiceId: ID!): Refund!
-}
-type Refund {
-  refundId: ID!
-}
-schema {
-  query: Query
-  mutation: Mutation
-}
+type Refund { id: ID!, orderId: ID!, amountCents: Int! }

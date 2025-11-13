@@ -1,0 +1,29 @@
+name: Features
+on:
+  pull_request:
+    paths: ['features/**', 'specs/spec_ledger.yaml', '.github/workflows/ci-features.yml']
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  features-policy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions: { contents: read }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: cachix/install-nix-action@v27
+      - name: Check Feature ↔ AC linkage
+        run: |
+          nix develop -c bash -lc '
+            yq -o=json specs/spec_ledger.yaml               | jq "[.stories[].requirements[].acceptance_criteria[].id]" > /tmp/ledger_ac_ids.json
+            shopt -s nullglob
+            FEATS=(features/*.yaml)
+            if [ ${#FEATS[@]} -eq 0 ]; then echo "[]" > /tmp/features.json; else
+              yq -o=json -I=0 "." "${FEATS[@]}"                 | jq -s "[.[] | {id, acceptance_criteria: (.acceptance_criteria // [])}]" > /tmp/features.json
+            fi
+            jq -s "{{features:.[0], ledger_ac_ids:.[1]}}" /tmp/features.json /tmp/ledger_ac_ids.json > /tmp/input.json
+            conftest test -p policy/features.rego /tmp/input.json
+          '

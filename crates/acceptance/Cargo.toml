@@ -1,0 +1,11 @@
+[package]
+name = "acceptance"
+version = "0.1.0"
+edition = "2021"
+[[test]]
+name="acceptance"
+path="tests/acceptance.rs"
+harness=false
+[dev-dependencies]
+cucumber = { version = "0.21", features=["output-junit"] }
+tokio = { version = "1", features=["rt-multi-thread","macros"] }

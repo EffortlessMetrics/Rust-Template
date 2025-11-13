@@ -7,6 +7,6 @@ target/
 .env
 sbom.json
 *.sig
-
-# Ignore Windows zone identifier files
-*:Zone.Identifier
+.tools/
+.llm/bundle/
+node_modules/

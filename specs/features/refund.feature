@@ -1,6 +1,6 @@
-@AC-123
-Feature: Refund API
-  Scenario: Returns ID within 200ms
-    Given an unpaid invoice exists
-    When I request a refund
-    Then I get a 200 with a refund_id
+Feature: Refunds
+  @smoke @AC-123
+  Scenario: Create a refund
+    Given an order "ORD-1" totalling 5000 cents
+    When I POST /refunds with { "orderId": "ORD-1", "amountCents": 5000 }
+    Then I receive 201 with a "refundId"

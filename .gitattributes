@@ -1,0 +1,5 @@
+* text=auto eol=lf
+**/*.pb.rs linguist-generated
+docs/site/** linguist-vendored
+specs/** linguist-documentation
+docs/feature_status.md linguist-generated

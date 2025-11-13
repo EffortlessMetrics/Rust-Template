@@ -1,0 +1,41 @@
+name: Coverage
+on:
+  pull_request:
+    paths:
+      - 'crates/**'
+      - 'tests/**'
+      - 'specs/**'
+      - 'features/**'
+      - '.github/workflows/ci-coverage.yml'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  coverage:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    permissions: { contents: read }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: cachix/install-nix-action@v27
+      
+- name: Enable sccache
+  run: |
+    echo "RUSTC_WRAPPER=$(nix develop -c which sccache)" >> $GITHUB_ENV
+    echo "SCCACHE_GHA_ENABLED=1" >> $GITHUB_ENV
+    echo "CARGO_INCREMENTAL=0" >> $GITHUB_ENV
+    nix develop -c sccache --start-server || true
+- name: Run coverage (JSON)
+        env: { RUSTC_WRAPPER: "", CARGO_INCREMENTAL: "0" }
+        run: nix develop -c cargo llvm-cov --workspace --json --output-path cov.json
+      - name: Enforce floor (60%)
+        run: |
+          nix develop -c bash -lc '
+            PCT=$(jq ".totals.lines.percent|floor" cov.json)
+            echo "coverage=${PCT}%"
+            test "${PCT}" -ge 60
+          '
+      - uses: actions/upload-artifact@v4
+        with: { name: cov-json, path: cov.json }

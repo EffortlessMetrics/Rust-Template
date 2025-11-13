@@ -1,0 +1,17 @@
+name: ScopeGuard
+on: [pull_request]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  guard:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions: { contents: read }
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: cachix/install-nix-action@v27
+      - run: nix develop -c bash scripts/enforce-pr-scope.sh

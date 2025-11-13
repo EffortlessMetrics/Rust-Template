@@ -1,7 +1,0 @@
-[tools]
-buf = "1.45.0"
-oasdiff = "2.19.1"
-redocly = "1.21.0"
-rover = "0.22.0"
-atlas = "0.21.1"
-conftest = "0.54.0"
