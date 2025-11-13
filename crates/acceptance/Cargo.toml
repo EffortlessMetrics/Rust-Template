@@ -6,6 +6,8 @@ edition = "2021"
 name="acceptance"
 path="tests/acceptance.rs"
 harness=false
-[dev-dependencies]
+[dependencies]
+serde_json = "1"
+uuid = { version = "1", features = ["v4"] }
 cucumber = { version = "0.21", features=["output-junit"] }
 tokio = { version = "1", features=["rt-multi-thread","macros"] }
