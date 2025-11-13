@@ -1,0 +1,23 @@
+{
+  "stories": [
+    {
+      "id": "US-200",
+      "requirements": [
+        {
+          "id": "REQ-200",
+          "acceptance_criteria": [
+            {
+              "id": "AC-200",
+              "text": "User can create account",
+              "tests": []
+            },
+            {
+              "id": "AC-201",
+              "text": "User can login"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
