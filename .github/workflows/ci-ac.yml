@@ -30,9 +30,9 @@ jobs:
       - name: Run BDD tests via xtask
         run: nix develop -c cargo run -p xtask -- bdd
 
-      - name: Generate AC status
+      - name: Generate AC status (Rust)
         if: always()
-        run: nix develop -c python3 scripts/ac_status.py
+        run: nix develop -c cargo run -p xtask -- ac-status
 
       - if: always()
         uses: EnricoMi/publish-unit-test-result-action@v2

@@ -15,6 +15,8 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
+    /// Generate AC status report from acceptance tests
+    AcStatus,
     /// Run all checks: fmt, clippy, tests
     Check,
     /// Run BDD acceptance tests
@@ -34,6 +36,9 @@ fn main() -> Result<()> {
     let cli = Cli::parse();
 
     match cli.command {
+        Commands::AcStatus => {
+            commands::ac_status::run(commands::ac_status::AcStatusArgs::default())
+        }
         Commands::Check => commands::check::run(),
         Commands::Bdd => commands::bdd::run(),
         Commands::Bundle { task } => commands::bundle::run(&task),
