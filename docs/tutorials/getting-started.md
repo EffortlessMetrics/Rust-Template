@@ -290,7 +290,7 @@ Scenario: Create refund with reason
 **4. Validate:**
 ```bash
 cargo run -p xtask -- bdd
-python3 scripts/ac_status.py
+cargo run -p xtask -- ac-status
 cat docs/feature_status.md  # ← AC-124 should show as passing
 ```
 

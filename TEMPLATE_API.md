@@ -70,10 +70,11 @@ cargo run -p xtask -- bundle debug_tests
 - `<task>`: Task name as defined in `.llm/contextpack.yaml`
 
 **Behavior:**
-1. Invokes `scripts/make-context.sh <task>`
-2. Reads task configuration from `.llm/contextpack.yaml`
-3. Collects files matching `include` patterns
-4. Generates markdown bundle at `.llm/bundle/<task>.md`
+1. Loads task configuration from `.llm/contextpack.yaml`
+2. Uses `git ls-files` to find files matching `include` patterns
+3. Applies `.llm/.llmignore` exclusion patterns
+4. Enforces `max_bytes` size limit per task
+5. Generates markdown bundle at `.llm/bundle/<task>.md`
 
 **Exit codes:**
 - `0`: Bundle generated successfully
@@ -349,9 +350,11 @@ yq -o=json specs/privacy.yaml | conftest test -p policy/privacy.rego -
 
 ---
 
-## LLM Context Bundler (`scripts/make-context.sh`)
+## LLM Context Bundler (Rust-native)
 
 **Purpose:** Generate focused context bundles for LLM consumption.
+
+**Implementation:** `crates/xtask/src/commands/bundle.rs`
 
 **Configuration:** `.llm/contextpack.yaml`
 
@@ -367,33 +370,37 @@ tasks:
 ```
 
 **Behavior:**
-1. Reads task configuration from `.llm/contextpack.yaml`
-2. Resolves `include` globs via `git ls-files`
-3. Filters files via `.llm/.llmignore` (if present)
-4. Concatenates files with `# FILE: path` headers
-5. Enforces `max_bytes` limit
-6. Writes to `.llm/bundle/<task>.md`
+1. Parses task configuration from `.llm/contextpack.yaml` using `serde_yaml`
+2. Resolves `include` patterns via `git ls-files` for each pattern
+3. Applies `.llm/.llmignore` exclusion patterns
+4. Deduplicates files matched by multiple patterns
+5. Concatenates files with `# FILE: path` headers in markdown format
+6. Enforces `max_bytes` limit (stops adding files when limit reached)
+7. Writes to `.llm/bundle/<task>.md`
 
 **Output format:**
 ```markdown
-# Context Bundle: task_name
+# LLM Context Bundle
 
-Generated from commit: <sha>
+**Git SHA:** <commit-sha>
 
-## Purpose
-...
+**Description:** <task description>
+
+**Max bytes:** <limit>
 
 ---
 
 # FILE: path/to/file
 
+```
 <file contents>
-
----
+```
 
 # FILE: another/file
 
+```
 <file contents>
+```
 ```
 
 **Exit codes:**
@@ -402,7 +409,7 @@ Generated from commit: <sha>
 
 **Usage:**
 ```bash
-bash scripts/make-context.sh <task>
+cargo run -p xtask -- bundle <task>
 ```
 
 ---
@@ -421,36 +428,6 @@ bash scripts/test-policies.sh
 **Exit codes:**
 - `0`: All policy tests passed
 - Non-zero: One or more policy tests failed
-
----
-
-### `scripts/test-ac-status.sh`
-
-Tests the AC status script.
-
-**Usage:**
-```bash
-bash scripts/test-ac-status.sh
-```
-
-**Exit codes:**
-- `0`: All AC status tests passed
-- Non-zero: One or more tests failed
-
----
-
-### `scripts/test-bundler.sh`
-
-Tests the LLM context bundler.
-
-**Usage:**
-```bash
-bash scripts/test-bundler.sh
-```
-
-**Exit codes:**
-- `0`: All bundler tests passed
-- Non-zero: One or more tests failed
 
 ---
 
