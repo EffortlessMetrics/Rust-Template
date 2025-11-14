@@ -145,7 +145,7 @@ JUnit output: target/junit/acceptance.xml
 ### Generate AC Status
 
 ```bash
-python3 scripts/ac_status.py
+cargo run -p xtask -- ac-status
 ```
 
 **Expected output:**

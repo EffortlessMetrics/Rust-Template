@@ -144,7 +144,7 @@ cargo run -p xtask -- bundle implement_ac
 
 # 4. Apply changes, validate
 cargo run -p xtask -- bdd
-python3 scripts/ac_status.py  # Check AC-125 shows as passing
+cargo run -p xtask -- ac-status  # Check AC-125 shows as passing
 ```
 
 ### Workflow 2: Debug a failing scenario
