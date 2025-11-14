@@ -84,6 +84,44 @@ cargo run -p xtask -- bundle debug_tests
 
 ---
 
+### `xtask ac-status`
+
+Generate AC status report from acceptance test results.
+
+**Usage:**
+```bash
+cargo run -p xtask -- ac-status
+# or in Nix shell:
+nix develop -c cargo run -p xtask -- ac-status
+```
+
+**Behavior:**
+1. Reads `specs/spec_ledger.yaml` to extract all AC definitions
+2. Parses `specs/features/**/*.feature` files for `@AC-####` tagged scenarios
+3. Parses `target/junit/acceptance.xml` for test results
+4. Maps testcases → scenarios → ACs
+5. Computes status for each AC (pass/fail/unknown)
+6. Generates `docs/feature_status.md` with status table
+
+**Exit codes:**
+- `0`: All ACs passed or unknown
+- Non-zero: One or more ACs failed
+
+**Output artifacts:**
+- `docs/feature_status.md`: AC status table with pass/fail/unknown indicators
+
+**Status logic:**
+- **Pass (✅)**: All mapped testcases passed
+- **Fail (❌)**: Any mapped testcase failed
+- **Unknown (❓)**: AC has no mapped scenarios or testcases
+
+**Notes:**
+- Normalizes testcase names by removing ` (row N)` and ` (example N)` suffixes
+- Reports unmapped ACs (no scenarios) and unmapped scenarios (invalid AC refs)
+- Used by `xtask selftest` and `ci-ac.yml` workflow
+
+---
+
 ### `xtask selftest`
 
 Run the complete template self-test suite (used in CI).
@@ -98,7 +136,7 @@ nix develop -c cargo run -p xtask -- selftest
 **Behavior:**
 1. Runs `xtask check` (format, clippy, tests)
 2. Runs `xtask bdd` (acceptance tests + JUnit XML)
-3. Runs AC status mapping (`scripts/ac_status.py`)
+3. Runs `xtask ac-status` (AC status mapping)
 4. Runs `xtask bundle implement_ac` (LLM bundler)
 5. Runs policy tests (`scripts/test-policies.sh` if conftest available)
 6. Reports comprehensive validation results with colored output
@@ -307,39 +345,6 @@ jq -s '.[0] * .[1]' /tmp/flags.json /tmp/rollouts.json | \
 **Usage in CI:**
 ```bash
 yq -o=json specs/privacy.yaml | conftest test -p policy/privacy.rego -
-```
-
----
-
-## AC Status Script (`scripts/ac_status.py`)
-
-**Purpose:** Map test results to ACs and generate status report.
-
-**Inputs:**
-1. `specs/spec_ledger.yaml`: AC definitions
-2. `specs/features/*.feature`: Gherkin scenarios with `@AC-####` tags
-3. `target/junit/acceptance.xml`: JUnit test results
-
-**Output:**
-- `docs/feature_status.md`: Markdown table with AC statuses
-
-**Behavior:**
-1. Extracts all AC IDs from ledger
-2. Maps scenarios to ACs via `@AC-####` tags
-3. Maps testcases to scenarios (normalizing names)
-4. Determines AC status:
-   - `✅ pass`: All mapped tests passed
-   - `❌ fail`: Any mapped test failed
-   - `❓ unknown`: No mapped tests
-5. Reports unmapped ACs and scenarios
-
-**Exit codes:**
-- `0`: All mapped ACs passed
-- Non-zero: One or more ACs failed
-
-**Usage:**
-```bash
-python3 scripts/ac_status.py
 ```
 
 ---

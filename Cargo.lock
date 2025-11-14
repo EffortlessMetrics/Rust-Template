@@ -2100,7 +2100,9 @@ dependencies = [
  "colored",
  "glob",
  "quick-xml",
+ "regex",
  "serde",
  "serde_json",
  "serde_yaml",
+ "walkdir",
 ]

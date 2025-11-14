@@ -111,19 +111,8 @@ pub fn run() -> Result<()> {
 }
 
 fn run_ac_status() -> Result<()> {
-    use std::process::Command;
-
-    let output = Command::new("python3")
-        .arg("scripts/ac_status.py")
-        .output()
-        .context("Failed to run ac_status.py")?;
-
-    if !output.status.success() {
-        let stderr = String::from_utf8_lossy(&output.stderr);
-        anyhow::bail!("ac_status.py failed: {}", stderr);
-    }
-
-    Ok(())
+    // Use Rust-native AC status implementation
+    crate::commands::ac_status::run(crate::commands::ac_status::AcStatusArgs::default())
 }
 
 fn run_policy_tests() -> Result<()> {
