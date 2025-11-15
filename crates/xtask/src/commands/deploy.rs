@@ -67,31 +67,37 @@ fn validate_manifests(workspace_root: &Path, env: &Environment) -> Result<()> {
 
     println!("{} Found manifests directory: {}", "✓".green(), manifests_dir.display());
 
-    // Check for expected manifest files
-    let expected_files = ["deployment.yaml", "service.yaml"];
-    let mut found_files = Vec::new();
-    let mut missing_files = Vec::new();
+    // Check for kustomization.yaml (for staging/prod) or raw manifests (for dev)
+    let kustomization_file = manifests_dir.join("kustomization.yaml");
+    if kustomization_file.exists() {
+        println!("{} Found Kustomize overlay: kustomization.yaml", "✓".green());
+    } else {
+        // Check for expected base manifest files (dev environment)
+        let expected_files = ["deployment.yaml", "service.yaml"];
+        let mut found_files = Vec::new();
+        let mut missing_files = Vec::new();
 
-    for file in &expected_files {
-        let file_path = manifests_dir.join(file);
-        if file_path.exists() {
-            found_files.push(*file);
-        } else {
-            missing_files.push(*file);
+        for file in &expected_files {
+            let file_path = manifests_dir.join(file);
+            if file_path.exists() {
+                found_files.push(*file);
+            } else {
+                missing_files.push(*file);
+            }
         }
-    }
 
-    if !found_files.is_empty() {
-        println!("{} Found manifest files:", "✓".green());
-        for file in &found_files {
-            println!("  • {}", file);
+        if !found_files.is_empty() {
+            println!("{} Found base manifest files:", "✓".green());
+            for file in &found_files {
+                println!("  • {}", file);
+            }
         }
-    }
 
-    if !missing_files.is_empty() {
-        println!("{} Missing optional manifests:", "⚠".yellow());
-        for file in &missing_files {
-            println!("  • {}", file);
+        if !missing_files.is_empty() {
+            println!("{} Missing optional manifests:", "⚠".yellow());
+            for file in &missing_files {
+                println!("  • {}", file);
+            }
         }
     }
 
@@ -179,7 +185,7 @@ fn display_next_steps(env: &Environment) {
             println!();
 
             println!("3. Apply Kubernetes manifests:");
-            println!("   {}", format!("kubectl apply -f infra/k8s/{}/", env.as_str()).cyan());
+            println!("   {}", format!("kubectl apply -k infra/k8s/{}/", env.as_str()).cyan());
             println!();
 
             println!("4. Verify deployment:");
@@ -201,20 +207,25 @@ fn display_next_steps(env: &Environment) {
             println!("   {}", "docker push <registry>/app-http:<version>".cyan());
             println!();
 
-            println!("2. Update image tag in manifests:");
-            println!("   {}", format!("# Edit infra/k8s/{}/deployment.yaml", env.as_str()).cyan());
-            println!("   {}", "# Set image: <registry>/app-http:<version>".cyan());
+            println!("2. Update image tag in Kustomize overlay:");
+            println!("   {}", format!("# Edit infra/k8s/{}/kustomization.yaml", env.as_str()).cyan());
+            println!("   {}", "# Update images.newTag: <version>".cyan());
+            println!("   Or use: {}", format!("cd infra/k8s/{} && kustomize edit set image my-service=<registry>/app-http:<version>", env.as_str()).cyan());
             println!();
 
             println!("3. Verify you're connected to the correct cluster:");
             println!("   {}", "kubectl config current-context".cyan());
             println!();
 
-            println!("4. Apply Kubernetes manifests:");
-            println!("   {}", format!("kubectl apply -f infra/k8s/{}/", env.as_str()).cyan());
+            println!("4. Preview changes (optional):");
+            println!("   {}", format!("kubectl kustomize infra/k8s/{}/", env.as_str()).cyan());
             println!();
 
-            println!("5. Monitor rollout:");
+            println!("5. Apply Kubernetes manifests:");
+            println!("   {}", format!("kubectl apply -k infra/k8s/{}/", env.as_str()).cyan());
+            println!();
+
+            println!("6. Monitor rollout:");
             println!("   {}", "kubectl rollout status deployment/app-http".cyan());
             println!("   {}", "kubectl get pods -l app=app-http -w".cyan());
         }
