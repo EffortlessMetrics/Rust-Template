@@ -89,7 +89,7 @@ async fn version() -> impl IntoResponse {
 /// - Proper validation and error responses
 /// - Metrics integration points (stubbed)
 #[instrument(
-    skip(_request_id, payload),
+    skip(request_id, payload),
     fields(
         order_id = %payload.order_id,
         amount_cents = payload.amount_cents,
@@ -97,7 +97,7 @@ async fn version() -> impl IntoResponse {
     )
 )]
 async fn create_refund(
-    Extension(_request_id): Extension<RequestId>,
+    Extension(request_id): Extension<RequestId>,
     Json(payload): Json<CreateRefundRequest>,
 ) -> Result<(StatusCode, Json<CreateRefundResponse>), AppError> {
     info!("Processing refund creation request");
@@ -115,7 +115,8 @@ async fn create_refund(
                 .with_context("field", "amount_cents")
                 .with_context("value", payload.amount_cents)
                 .with_ac_id("AC-REFUND-001") // Links to acceptance criteria
-                .with_feature_id("FT-REFUND-CREATION"), // Links to feature
+                .with_feature_id("FT-REFUND-CREATION") // Links to feature
+                .with_request_id(request_id.as_str()), // AC-TPL-004: Propagate request ID
         );
     }
 
@@ -123,7 +124,8 @@ async fn create_refund(
     if payload.order_id.is_empty() {
         return Err(AppError::validation_error(ErrorCode::MissingField, "Order ID is required")
             .with_context("field", "order_id")
-            .with_ac_id("AC-REFUND-001"));
+            .with_ac_id("AC-REFUND-001")
+            .with_request_id(request_id.as_str())); // AC-TPL-004
     }
 
     // Call core domain logic
@@ -140,7 +142,8 @@ async fn create_refund(
 
         return Err(AppError::internal_error("Refund processing unavailable")
             .with_context("order_id", &payload.order_id)
-            .with_context("service", "core::refunds"));
+            .with_context("service", "core::refunds")
+            .with_request_id(request_id.as_str())); // AC-TPL-004
     }
 
     // In a real system, this would:
