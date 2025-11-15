@@ -178,6 +178,34 @@ This documentation follows the [Diátaxis](https://diataxis.fr/) framework:
 - Why the distinction matters
 - Quick reference for new services
 
+### Design Documents (Implementation Details)
+
+These documents capture implementation decisions, trade-offs, and rationale for internal systems. Useful for contributors and maintainers.
+
+📐 **[AC Structured Report Design](design/ac-structured-report.md)**
+- JSON schema for acceptance test results
+- Analysis of Cucumber integration approaches
+- Implementation plan and decisions
+- Cucumber JSON vs. JUnit XML trade-offs
+
+📐 **[.llmignore Semantics](design/llmignore-semantics.md)**
+- Analysis of ignore pattern implementations
+- Comparison of custom vs. gitignore-style semantics
+- Recommendation and justification
+- Migration strategy
+
+📊 **[Observability Patterns](../crates/app-http/OBSERVABILITY.md)** (in app-http crate)
+- Request ID correlation implementation
+- Structured error handling with AC tracking
+- Metrics integration guidance
+- Testing and debugging patterns
+
+📊 **[Implementation Summary 2025-11-15](implementation-summary-2025-11-15.md)**
+- Complete changelog of v1.0.0 improvements
+- Technical decisions and validation results
+- Code statistics and test coverage
+- Future roadmap
+
 ---
 
 ## By Role

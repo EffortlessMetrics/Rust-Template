@@ -157,11 +157,18 @@ nix develop -c cargo run -p xtask -- ac-status
 ### What It Does
 
 1. Reads `specs/spec_ledger.yaml` to extract all AC definitions
-2. Parses `specs/features/**/*.feature` files for `@AC-####` tagged scenarios
-3. Parses `target/junit/acceptance.xml` for test results
-4. Maps testcases → scenarios → ACs
+2. **Primary:** Parses structured JSON report (`target/ac_report.json`) from Cucumber with scenario metadata
+   - Includes scenario names, tags (AC IDs), status, and duration
+   - Single source of truth, no text parsing required
+3. **Fallback (legacy):** Falls back to JUnit XML + feature file parsing if JSON unavailable
+   - Parses `specs/features/**/*.feature` for `@AC-####` tags
+   - Parses `target/junit/acceptance.xml` for test results
+   - Requires fragile string matching
+4. Maps scenarios → ACs based on `@AC-####` tags
 5. Computes status for each AC (pass/fail/unknown)
 6. Generates `docs/feature_status.md` with status table
+
+**Note:** The JSON report path is the recommended approach. The JUnit+feature fallback is for backward compatibility and may be removed in a future major version.
 
 ### Exit Codes
 
@@ -182,20 +189,26 @@ nix develop -c cargo run -p xtask -- ac-status
 ### Example Output
 
 ```
-Parsing ledger from: specs/spec_ledger.yaml
-Found 1 AC(s) in ledger
+Parsing ledger: specs/spec_ledger.yaml
+  Found 3 ACs
+Parsing JSON report: target/ac_report.json
+  Found 3 scenarios
+  Found results for 3 ACs
+Generating status: docs/feature_status.md
+✓ Generated docs/feature_status.md
 
-Parsing feature files from: specs/features
-Found 1 scenario(s) with AC tags
-
-Parsing JUnit results from: target/junit/acceptance.xml
-Found 1 testcase(s) in JUnit output
-
-Mapping testcases → scenarios → ACs...
-  AC-123: 1 scenario(s), 1 testcase(s), status: pass
-
-✓ Generated /path/to/docs/feature_status.md
 ✓ All ACs passed
+```
+
+**Legacy fallback output** (if JSON not available):
+```
+Parsing ledger: specs/spec_ledger.yaml
+  Found 3 ACs
+JSON report not found: target/ac_report.json
+Falling back to JUnit + feature parsing (legacy)
+  Found 3 scenarios
+  Found results for 3 ACs
+...
 ```
 
 ### Status Logic

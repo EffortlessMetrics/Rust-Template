@@ -162,7 +162,13 @@ pub fn run(args: AcStatusArgs) -> Result<()> {
     let mut acs = parse_ledger(&args.ledger)?;
     println!("  Found {} ACs", acs.len());
 
-    // Try JSON report first, fall back to JUnit + feature parsing
+    // PRIMARY PATH: Structured JSON report from acceptance tests
+    // The Cucumber JSON format provides all necessary metadata (tags, status, etc.)
+    // in a single structured file, eliminating the need to parse Gherkin text.
+    //
+    // FALLBACK PATH: JUnit XML + feature file parsing
+    // This is a legacy path for backward compatibility and may be removed in a future major version.
+    // The JUnit path requires fragile text parsing and string matching.
     let (scenarios, ac_results) = if let Some(json_path) = &args.json_report {
         if json_path.exists() {
             println!("Parsing JSON report: {}", json_path.display());
@@ -172,11 +178,11 @@ pub fn run(args: AcStatusArgs) -> Result<()> {
             (scens, results)
         } else {
             println!("JSON report not found: {}", json_path.display());
-            println!("Falling back to JUnit + feature parsing");
+            println!("Falling back to JUnit + feature parsing (legacy)");
             fallback_to_junit(&args)?
         }
     } else {
-        println!("JSON report disabled, using JUnit + feature parsing");
+        println!("JSON report disabled, using JUnit + feature parsing (legacy)");
         fallback_to_junit(&args)?
     };
 
