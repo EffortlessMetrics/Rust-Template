@@ -176,14 +176,25 @@ fn load_ignore_patterns(workspace_root: &Path) -> Result<Vec<String>> {
 }
 
 fn should_ignore(path: &str, ignore_patterns: &[String]) -> bool {
+    use std::path::Path as StdPath;
+
     for pattern in ignore_patterns {
-        // Simple prefix matching for directory patterns ending with /
+        // Directory pattern: "foo/" should match "foo/bar.txt" but not "foobar.txt"
         if pattern.ends_with('/') {
-            if path.starts_with(pattern) || path.starts_with(pattern.trim_end_matches('/')) {
+            let dir_pattern = pattern.trim_end_matches('/');
+            // Match if path starts with "dir/" or is exactly "dir"
+            if path.starts_with(&format!("{}/", dir_pattern)) || path == dir_pattern {
                 return true;
             }
-        } else if path.contains(pattern) {
-            return true;
+        } else {
+            // Component match: "foo" matches "foo", "bar/foo", or "bar/foo.txt"
+            // but not "foobar" or "foobar.txt"
+            if StdPath::new(path)
+                .components()
+                .any(|c| c.as_os_str().to_string_lossy() == pattern.as_str())
+            {
+                return true;
+            }
         }
     }
     false

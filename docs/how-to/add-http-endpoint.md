@@ -285,7 +285,7 @@ use tower::ServiceExt; // for `oneshot`
 
 #[tokio::test]
 async fn test_get_refund_endpoint() {
-    let app = app_http::create_app(); // You'd need to expose this
+    let app = app_http::app();
 
     let response = app
         .oneshot(

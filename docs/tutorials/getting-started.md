@@ -379,7 +379,12 @@ See `docs/how-to/use-llm-bundles.md` for best practices.
 ## Troubleshooting
 
 **`nix develop` fails:**
-- Ensure Nix is installed: `curl -L https://nixos.org/nix/install | sh`
+- Ensure Nix is installed:
+  ```bash
+  curl -L https://nixos.org/nix/install -o nix_install.sh
+  sh nix_install.sh --daemon
+  rm nix_install.sh
+  ```
 - Check Nix flakes are enabled: `nix-env --version`
 
 **`xtask quickstart` fails on format check:**
@@ -388,7 +393,7 @@ See `docs/how-to/use-llm-bundles.md` for best practices.
 
 **HTTP service won't start:**
 - Check port 3000 isn't in use: `lsof -i :3000`
-- Try different port: Edit `app-http/src/main.rs`, change `3000` to `8080`
+- Try different port: Edit `crates/app-http/src/main.rs`, change `3000` to `8080`
 
 **BDD tests fail:**
 - Check `specs/features/*.feature` syntax
