@@ -18,4 +18,5 @@ http-body-util = "0.1.3"
 
 # Internal crates
 app-http = { path = "../app-http" }
+core = { path = "../core" }
 telemetry = { path = "../telemetry" }

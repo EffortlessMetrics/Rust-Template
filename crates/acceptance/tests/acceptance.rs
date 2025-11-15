@@ -47,6 +47,14 @@ async fn main() {
         .before(|_feature, _rule, _scenario, world| {
             Box::pin(async move {
                 *world = World::new();
+                // Reset service availability before each scenario
+                core::set_service_available(true);
+            })
+        })
+        .after(|_feature, _rule, _scenario, _event, _world| {
+            Box::pin(async move {
+                // Ensure service is available after each scenario (cleanup)
+                core::set_service_available(true);
             })
         })
         .run(features_path.to_str().unwrap())

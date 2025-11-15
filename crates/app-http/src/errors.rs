@@ -41,12 +41,14 @@
 use axum::{
     Json,
     extract::rejection::JsonRejection,
-    http::StatusCode,
+    http::{HeaderValue, StatusCode, header::HeaderName},
     response::{IntoResponse, Response},
 };
 use serde::Serialize;
 use std::collections::HashMap;
 use tracing::{error, warn};
+
+use crate::middleware::request_id::RequestId;
 
 /// Machine-readable error codes
 ///
@@ -105,7 +107,7 @@ impl std::fmt::Display for ErrorCode {
 /// - User message (safe to show to clients)
 /// - Internal context (for logging, not shown to clients)
 /// - AC ID and Feature ID (for product tracking)
-/// - Request ID (for correlation)
+/// - Request ID (for correlation - AC-TPL-004)
 #[derive(Debug)]
 pub struct AppError {
     /// HTTP status code to return
@@ -120,6 +122,9 @@ pub struct AppError {
     ac_id: Option<String>,
     /// Feature ID for tracking which feature this relates to
     feature_id: Option<String>,
+    /// Request ID for correlation (AC-TPL-004)
+    /// If None, a new UUID will be generated when converting to response
+    request_id: Option<String>,
 }
 
 impl AppError {
@@ -132,6 +137,7 @@ impl AppError {
             context: HashMap::new(),
             ac_id: None,
             feature_id: None,
+            request_id: None,
         }
     }
 
@@ -186,6 +192,15 @@ impl AppError {
         self
     }
 
+    /// Add Request ID (AC-TPL-004)
+    ///
+    /// Used for distributed tracing and correlation.
+    /// If not set, a UUID will be generated automatically.
+    pub fn with_request_id(mut self, request_id: impl Into<String>) -> Self {
+        self.request_id = Some(request_id.into());
+        self
+    }
+
     /// Log the error with structured fields
     fn log_error(&self) {
         // Determine if this is a client error (4xx) or server error (5xx)
@@ -220,20 +235,23 @@ impl AppError {
 
 /// JSON error response body
 ///
-/// This is what clients receive when an error occurs
+/// This is what clients receive when an error occurs.
+/// Matches the ErrorResponse schema in openapi.yaml (AC-TPL-003).
 #[derive(Debug, Serialize)]
 struct ErrorResponse {
-    /// Machine-readable error code
-    code: ErrorCode,
-    /// Human-readable error message
+    /// Machine-readable error code (required by AC-TPL-003)
+    error: String,
+    /// Human-readable error message (required by AC-TPL-003)
     message: String,
+    /// Request ID for correlation (required by AC-TPL-003, AC-TPL-004)
+    #[serde(rename = "requestId")]
+    request_id: String,
     /// Optional AC ID (for debugging/tracking)
     #[serde(skip_serializing_if = "Option::is_none")]
     ac_id: Option<String>,
     /// Optional Feature ID (for debugging/tracking)
     #[serde(skip_serializing_if = "Option::is_none")]
     feature_id: Option<String>,
-    // Note: request_id is added via response headers, not body
     // Note: context is NOT included (internal only)
 }
 
@@ -242,16 +260,31 @@ impl IntoResponse for AppError {
         // Log the error with full context
         self.log_error();
 
-        // Create client-safe response
+        // Get or generate request ID (AC-TPL-004)
+        let request_id = self.request_id.clone()
+            .unwrap_or_else(|| RequestId::generate().to_string());
+
+        // Create client-safe response matching ErrorResponse schema (AC-TPL-003)
         let body = Json(ErrorResponse {
-            code: self.code,
+            error: self.code.to_string(),
             message: self.message.clone(),
+            request_id: request_id.clone(),
             ac_id: self.ac_id.clone(),
             feature_id: self.feature_id.clone(),
         });
 
-        // Return response with appropriate status code
-        (self.status, body).into_response()
+        // Create response with status code
+        let mut response = (self.status, body).into_response();
+
+        // Add X-Request-ID header (AC-TPL-004)
+        if let Ok(header_value) = HeaderValue::from_str(&request_id) {
+            response.headers_mut().insert(
+                HeaderName::from_static("x-request-id"),
+                header_value,
+            );
+        }
+
+        response
     }
 }
 
@@ -359,11 +392,13 @@ mod tests {
     fn test_error_serialization() {
         let error = AppError::validation_error(ErrorCode::InvalidAmount, "Amount must be positive")
             .with_ac_id("AC-123")
-            .with_feature_id("FT-456");
+            .with_feature_id("FT-456")
+            .with_request_id("req-test-123");
 
         let response = ErrorResponse {
-            code: error.code,
+            error: error.code.to_string(),
             message: error.message.clone(),
+            request_id: error.request_id.clone().unwrap_or_default(),
             ac_id: error.ac_id.clone(),
             feature_id: error.feature_id.clone(),
         };
@@ -371,7 +406,12 @@ mod tests {
         let json = serde_json::to_string(&response).unwrap();
         assert!(json.contains("INVALID_AMOUNT"));
         assert!(json.contains("Amount must be positive"));
+        assert!(json.contains("req-test-123"));
         assert!(json.contains("AC-123"));
         assert!(json.contains("FT-456"));
+        // Verify it uses "error" not "code" (AC-TPL-003)
+        assert!(json.contains(r#""error":"INVALID_AMOUNT""#));
+        // Verify it uses "requestId" not "request_id" (AC-TPL-003)
+        assert!(json.contains(r#""requestId":"req-test-123""#));
     }
 }

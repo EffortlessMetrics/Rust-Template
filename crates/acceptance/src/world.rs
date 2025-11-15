@@ -1,5 +1,6 @@
 use axum::Router;
 use cucumber::World as CucumberWorld;
+use http::HeaderMap;
 use std::collections::HashMap;
 
 /// Test world state - includes real HTTP router for integration testing
@@ -11,6 +12,8 @@ pub struct World {
     pub orders: HashMap<String, Order>,
     /// Last HTTP response
     pub last_response: Option<Response>,
+    /// Request headers to be sent with next request
+    pub request_headers: HeaderMap,
 }
 
 impl Default for World {
@@ -22,6 +25,7 @@ impl Default for World {
             app: app_http::app(), // Real HTTP router from app-http crate
             orders: HashMap::new(),
             last_response: None,
+            request_headers: HeaderMap::new(),
         }
     }
 }
@@ -36,6 +40,7 @@ pub struct Order {
 pub struct Response {
     pub status: u16,
     pub body: serde_json::Value,
+    pub headers: HeaderMap,
 }
 
 impl World {
