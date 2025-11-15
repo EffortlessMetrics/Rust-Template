@@ -1,0 +1,43 @@
+# Machine-readable specification for xtask commands
+# This file defines the canonical list of xtask commands that must be implemented.
+# Validation ensures the Commands enum in crates/xtask/src/main.rs matches this spec.
+
+version: "1.0"
+description: "xtask command specification for Rust Template"
+
+commands:
+  - name: check
+    description: "Format, lint, and run tests"
+    required: true
+    usage: "cargo xtask check"
+
+  - name: bdd
+    description: "Run acceptance tests"
+    required: true
+    usage: "cargo xtask bdd"
+
+  - name: ac-status
+    description: "Generate AC status report"
+    required: true
+    usage: "cargo xtask ac-status"
+
+  - name: bundle
+    description: "Generate LLM context bundles"
+    required: true
+    usage: "cargo xtask bundle <task>"
+    has_args: true
+
+  - name: policy-test
+    description: "Run Rego policy tests"
+    required: true
+    usage: "cargo xtask policy-test"
+
+  - name: quickstart
+    description: "Quick validation workflow"
+    required: true
+    usage: "cargo xtask quickstart"
+
+  - name: selftest
+    description: "Full CI-equivalent validation"
+    required: true
+    usage: "cargo xtask selftest"

@@ -19,6 +19,22 @@
               ]
             }
           ]
+        },
+        {
+          "id": "REQ-TPL-VERSION",
+          "text": "Service exposes version information",
+          "acceptance_criteria": [
+            {
+              "id": "AC-TPL-002",
+              "text": "GET /version returns build information including version and git SHA",
+              "tests": [
+                {
+                  "type": "bdd",
+                  "tag": "@AC-TPL-002"
+                }
+              ]
+            }
+          ]
         }
       ]
     },
@@ -48,12 +64,12 @@
   "features": [
     {
       "id": "FT-TPL-CORE",
-      "acceptance_criteria": ["AC-TPL-001"]
+      "acceptance_criteria": ["AC-TPL-001", "AC-123"]
     },
     {
       "id": "FT-100",
       "acceptance_criteria": ["AC-123"]
     }
   ],
-  "ledger_ac_ids": ["AC-TPL-001", "AC-123"]
+  "ledger_ac_ids": ["AC-TPL-001", "AC-TPL-002", "AC-123"]
 }

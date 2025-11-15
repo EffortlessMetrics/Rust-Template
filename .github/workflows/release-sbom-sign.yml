@@ -15,5 +15,7 @@ jobs:
       - uses: actions/checkout@v4
       - run: cargo install cyclonedx-bom --locked || true
       - run: cyclonedx-bom -o sbom.json
-      - name: Generate release notes (features advanced)
-        run: bash scripts/gen-release-notes.sh
+      # TODO: Implement release notes generation from git tags/commits
+      # Consider using: git-cliff, conventional commits, or GitHub release notes API
+      - name: Generate release notes (placeholder)
+        run: echo "Release notes generation - implement based on your changelog workflow"

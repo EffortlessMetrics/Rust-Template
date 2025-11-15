@@ -1,5 +1,6 @@
 use anyhow::{Context, Result};
 use colored::Colorize;
+use once_cell::sync::Lazy;
 use quick_xml::Reader;
 use quick_xml::events::Event;
 use regex::Regex;
@@ -9,6 +10,17 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use walkdir::WalkDir;
 
+// Precompiled regex patterns for performance
+static AC_PATTERN: Lazy<Regex> = Lazy::new(|| Regex::new(r"^(AC-[A-Z0-9-]+)$").unwrap());
+static AC_PATTERN_WITH_AT: Lazy<Regex> = Lazy::new(|| Regex::new(r"@(AC-[A-Z0-9-]+)").unwrap());
+static SCENARIO_PATTERN: Lazy<Regex> =
+    Lazy::new(|| Regex::new(r"^\s*Scenario(?:\s+Outline)?:\s+(.+)").unwrap());
+static TAG_PATTERN: Lazy<Regex> = Lazy::new(|| Regex::new(r"@[\w-]+").unwrap());
+static TESTCASE_SCENARIO_PATTERN: Lazy<Regex> =
+    Lazy::new(|| Regex::new(r"Scenario:\s+(.+?):\s+").unwrap());
+static TESTCASE_SUFFIX_PATTERN: Lazy<Regex> =
+    Lazy::new(|| Regex::new(r"\s*\((?:row|example)\s+\d+\)\s*$").unwrap());
+
 #[derive(Debug, Clone)]
 pub struct AcStatusArgs {
     pub ledger: PathBuf,
@@ -16,6 +28,7 @@ pub struct AcStatusArgs {
     pub junit: PathBuf,
     pub json_report: Option<PathBuf>,
     pub output: PathBuf,
+    pub verbosity: crate::Verbosity,
 }
 
 impl Default for AcStatusArgs {
@@ -26,6 +39,7 @@ impl Default for AcStatusArgs {
             junit: PathBuf::from("target/junit/acceptance.xml"),
             json_report: Some(PathBuf::from("target/ac_report.json")),
             output: PathBuf::from("docs/feature_status.md"),
+            verbosity: crate::Verbosity::Normal,
         }
     }
 }
@@ -158,9 +172,13 @@ pub fn run(args: AcStatusArgs) -> Result<()> {
         anyhow::bail!("Features directory not found: {}", args.features_dir.display());
     }
 
-    println!("Parsing ledger: {}", args.ledger.display());
+    if !args.verbosity.is_quiet() {
+        println!("Parsing ledger: {}", args.ledger.display());
+    }
     let mut acs = parse_ledger(&args.ledger)?;
-    println!("  Found {} ACs", acs.len());
+    if !args.verbosity.is_quiet() {
+        println!("  Found {} ACs", acs.len());
+    }
 
     // PRIMARY PATH: Structured JSON report from acceptance tests
     // The Cucumber JSON format provides all necessary metadata (tags, status, etc.)
@@ -171,23 +189,33 @@ pub fn run(args: AcStatusArgs) -> Result<()> {
     // The JUnit path requires fragile text parsing and string matching.
     let (scenarios, ac_results) = if let Some(json_path) = &args.json_report {
         if json_path.exists() {
-            println!("Parsing JSON report: {}", json_path.display());
+            if !args.verbosity.is_quiet() {
+                println!("Parsing JSON report: {}", json_path.display());
+            }
             let (scens, results) = parse_cucumber_json(json_path)?;
-            println!("  Found {} scenarios", scens.len());
-            println!("  Found results for {} ACs", results.len());
+            if !args.verbosity.is_quiet() {
+                println!("  Found {} scenarios", scens.len());
+                println!("  Found results for {} ACs", results.len());
+            }
             (scens, results)
         } else {
-            println!("JSON report not found: {}", json_path.display());
-            println!("Falling back to JUnit + feature parsing (legacy)");
+            if !args.verbosity.is_quiet() {
+                println!("JSON report not found: {}", json_path.display());
+                println!("Falling back to JUnit + feature parsing (legacy)");
+            }
             fallback_to_junit(&args)?
         }
     } else {
-        println!("JSON report disabled, using JUnit + feature parsing (legacy)");
+        if !args.verbosity.is_quiet() {
+            println!("JSON report disabled, using JUnit + feature parsing (legacy)");
+        }
         fallback_to_junit(&args)?
     };
 
-    println!("Generating status: {}", args.output.display());
-    generate_status_md(&mut acs, &scenarios, &ac_results, &args.output)?;
+    if !args.verbosity.is_quiet() {
+        println!("Generating status: {}", args.output.display());
+    }
+    generate_status_md(&mut acs, &scenarios, &ac_results, &args.output, &args)?;
 
     // Check for failures
     let failed: Vec<_> =
@@ -212,13 +240,21 @@ fn fallback_to_junit(
         );
     }
 
-    println!("Parsing features: {}", args.features_dir.display());
+    if !args.verbosity.is_quiet() {
+        println!("Parsing features: {}", args.features_dir.display());
+    }
     let scenarios = parse_features(&args.features_dir)?;
-    println!("  Found {} scenarios", scenarios.len());
+    if !args.verbosity.is_quiet() {
+        println!("  Found {} scenarios", scenarios.len());
+    }
 
-    println!("Parsing JUnit results: {}", args.junit.display());
+    if !args.verbosity.is_quiet() {
+        println!("Parsing JUnit results: {}", args.junit.display());
+    }
     let ac_results = parse_junit(&args.junit, &scenarios)?;
-    println!("  Found results for {} ACs", ac_results.len());
+    if !args.verbosity.is_quiet() {
+        println!("  Found results for {} ACs", ac_results.len());
+    }
 
     Ok((scenarios, ac_results))
 }
@@ -235,7 +271,6 @@ fn parse_cucumber_json(
     let mut scenarios: HashMap<String, Scenario> = HashMap::new();
     let mut ac_results: HashMap<String, Vec<bool>> = HashMap::new();
     // Note: Cucumber JSON doesn't include @ in tag names
-    let ac_pattern = Regex::new(r"^(AC-[A-Z0-9-]+)$")?;
 
     for feature in report.0 {
         for element in feature.elements {
@@ -246,7 +281,7 @@ fn parse_cucumber_json(
                     .tags
                     .iter()
                     .filter_map(|tag| {
-                        ac_pattern.captures(&tag.name).map(|caps| caps[1].to_string())
+                        AC_PATTERN.captures(&tag.name).map(|caps| caps[1].to_string())
                     })
                     .collect();
 
@@ -315,10 +350,6 @@ fn parse_ledger(ledger_path: &Path) -> Result<HashMap<String, Ac>> {
 fn parse_features(features_dir: &Path) -> Result<HashMap<String, Scenario>> {
     let mut scenarios = HashMap::new();
 
-    let ac_pattern = Regex::new(r"@(AC-[A-Z0-9-]+)")?;
-    let scenario_pattern = Regex::new(r"^\s*Scenario(?:\s+Outline)?:\s+(.+)")?;
-    let tag_pattern = Regex::new(r"@[\w-]+")?;
-
     for entry in WalkDir::new(features_dir)
         .into_iter()
         .filter_map(|e| e.ok())
@@ -339,18 +370,18 @@ fn parse_features(features_dir: &Path) -> Result<HashMap<String, Scenario>> {
 
             // Collect tags from lines starting with @
             if trimmed.starts_with('@') {
-                for tag_match in tag_pattern.find_iter(trimmed) {
+                for tag_match in TAG_PATTERN.find_iter(trimmed) {
                     current_tags.push(tag_match.as_str().to_string());
                 }
             }
             // Match scenario and attach accumulated tags
-            else if let Some(caps) = scenario_pattern.captures(trimmed) {
+            else if let Some(caps) = SCENARIO_PATTERN.captures(trimmed) {
                 let scenario_name = caps[1].trim();
 
                 // Look for AC ID in collected tags
                 let ac_id = current_tags
                     .iter()
-                    .find_map(|tag| ac_pattern.captures(tag))
+                    .find_map(|tag| AC_PATTERN_WITH_AT.captures(tag))
                     .map(|caps| caps[1].to_string());
 
                 if let Some(ac_id) = ac_id {
@@ -392,14 +423,11 @@ fn parse_features(features_dir: &Path) -> Result<HashMap<String, Scenario>> {
 fn normalize_testcase_name(name: &str) -> String {
     // Extract scenario name from JUnit testcase name
     // Format: "Scenario: <name>: <file>:<line>:<col>"
-    let scenario_pattern = Regex::new(r"Scenario:\s+(.+?):\s+").unwrap();
-
-    if let Some(caps) = scenario_pattern.captures(name) {
-        let mut scenario_name = caps[1].trim().to_string();
+    if let Some(caps) = TESTCASE_SCENARIO_PATTERN.captures(name) {
+        let scenario_name = caps[1].trim();
         // Remove example/row suffixes
-        let suffix_pattern = Regex::new(r"\s*\((?:row|example)\s+\d+\)\s*$").unwrap();
-        scenario_name = suffix_pattern.replace(&scenario_name, "").to_string();
-        return scenario_name;
+        let normalized = TESTCASE_SUFFIX_PATTERN.replace(scenario_name, "");
+        return normalized.to_string();
     }
 
     name.to_string()
@@ -473,6 +501,7 @@ fn generate_status_md(
     scenarios: &HashMap<String, Scenario>,
     ac_results: &HashMap<String, AcStatus>,
     output_path: &Path,
+    args: &AcStatusArgs,
 ) -> Result<()> {
     // Map scenarios to ACs
     for scenario in scenarios.values() {
@@ -552,7 +581,9 @@ fn generate_status_md(
     }
 
     fs::write(output_path, output)?;
-    println!("{} Generated {}", "✓".green(), output_path.display());
+    if !args.verbosity.is_quiet() {
+        println!("{} Generated {}", "✓".green(), output_path.display());
+    }
 
     Ok(())
 }

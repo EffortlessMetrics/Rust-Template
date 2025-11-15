@@ -1,0 +1,22 @@
+{
+  "tasks": {
+    "implement_ac": {
+      "include": [
+        "specs/spec_ledger.yaml"
+      ],
+      "description": "Task without max_bytes - should fail"
+    },
+    "implement_feature": {
+      "max_bytes": 300000,
+      "include": [
+        "specs/spec_ledger.yaml"
+      ]
+    },
+    "debug_tests": {
+      "max_bytes": 200000,
+      "include": [
+        "specs/features/**/*.feature"
+      ]
+    }
+  }
+}

@@ -10,6 +10,8 @@ const POLICY_AREAS: &[(&str, &str)] = &[
     ("Flags", "flags"),
     ("Privacy", "privacy"),
     ("Template Core", "template_core"),
+    ("LLM", "llm"),
+    ("Kubernetes", "k8s"),
 ];
 
 /// Run conftest policy tests
@@ -147,28 +149,55 @@ fn get_workspace_root() -> Result<PathBuf> {
 fn find_test_fixtures(testdata_dir: &Path, area: &str) -> Result<Vec<(PathBuf, bool)>> {
     let mut fixtures = Vec::new();
 
-    // Look for valid and invalid fixtures
-    let valid_file = testdata_dir.join(format!("{}_valid.json", area));
-    let invalid_file = testdata_dir.join(format!("{}_invalid.json", area));
+    // Look for valid and invalid fixtures (both JSON and YAML)
+    let valid_json = testdata_dir.join(format!("{}_valid.json", area));
+    let valid_yaml = testdata_dir.join(format!("{}_valid.yaml", area));
+    let invalid_json = testdata_dir.join(format!("{}_invalid.json", area));
+    let invalid_yaml = testdata_dir.join(format!("{}_invalid.yaml", area));
 
-    // Also check for alternative naming patterns
-    let missing_tests_file = testdata_dir.join(format!("{}_missing_tests.json", area));
-    let unknown_ac_file = testdata_dir.join(format!("{}_unknown_ac.json", area));
+    // Also check for alternative naming patterns - these all should fail validation
+    let invalid_patterns = [
+        "missing_tests",
+        "no_tests",
+        "missing_ac",
+        "unknown_ac",
+        "wrong_feature",
+        "missing_include",
+        "zero_bytes",
+        "missing_required_task",
+        "unknown_field",
+        "missing_max_bytes",
+        "runs_as_root",
+        "no_labels",
+    ];
 
-    if valid_file.exists() {
-        fixtures.push((valid_file, true));
+    if valid_json.exists() {
+        fixtures.push((valid_json, true));
     }
 
-    if invalid_file.exists() {
-        fixtures.push((invalid_file, false));
+    if valid_yaml.exists() {
+        fixtures.push((valid_yaml, true));
     }
 
-    if missing_tests_file.exists() {
-        fixtures.push((missing_tests_file, false));
+    if invalid_json.exists() {
+        fixtures.push((invalid_json, false));
     }
 
-    if unknown_ac_file.exists() {
-        fixtures.push((unknown_ac_file, false));
+    if invalid_yaml.exists() {
+        fixtures.push((invalid_yaml, false));
+    }
+
+    // Check for all invalid patterns (both JSON and YAML)
+    for pattern in &invalid_patterns {
+        let json_file = testdata_dir.join(format!("{}_{}.json", area, pattern));
+        if json_file.exists() {
+            fixtures.push((json_file, false));
+        }
+
+        let yaml_file = testdata_dir.join(format!("{}_{}.yaml", area, pattern));
+        if yaml_file.exists() {
+            fixtures.push((yaml_file, false));
+        }
     }
 
     Ok(fixtures)

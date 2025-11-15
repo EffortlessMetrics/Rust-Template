@@ -76,14 +76,26 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  error: { type: string }
+                $ref: '#/components/schemas/ErrorResponse'
         "500":
           description: Internal error (e.g., refund processing unavailable)
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  error: { type: string }
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    ErrorResponse:
+      type: object
+      required: [error, message, requestId]
+      properties:
+        error:
+          type: string
+          description: "Machine-readable error code"
+        message:
+          type: string
+          description: "Human-readable message"
+        requestId:
+          type: string
+          description: "X-Request-ID for log correlation"
