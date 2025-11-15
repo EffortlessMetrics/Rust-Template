@@ -4,7 +4,7 @@ kind: Kustomization
 # Staging environment overlay
 # Inherits base dev configuration and applies staging-specific patches
 
-namespace: my-service-staging
+namespace: app-http-staging
 
 # Use dev as the base
 resources:
@@ -16,8 +16,11 @@ commonLabels:
   app.kubernetes.io/managed-by: kustomize
 
 # Patches for staging-specific configuration
-patchesStrategicMerge:
-  - deployment-patch.yaml
+patches:
+  - path: deployment-patch.yaml
+    target:
+      kind: Deployment
+      name: app-http
 
 # ConfigMap generator for environment-specific config
 configMapGenerator:
@@ -29,5 +32,5 @@ configMapGenerator:
 
 # Image tag override (typically set via CI/CD)
 images:
-  - name: my-service
+  - name: app-http
     newTag: staging-latest

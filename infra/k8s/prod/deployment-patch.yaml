@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: my-service
+  name: app-http
   annotations:
     # Production annotations for monitoring, alerting, etc.
     prometheus.io/scrape: "true"
@@ -29,13 +29,13 @@ spec:
               podAffinityTerm:
                 labelSelector:
                   matchExpressions:
-                    - key: app.kubernetes.io/name
+                    - key: app
                       operator: In
                       values:
-                        - my-service
+                        - app-http
                 topologyKey: kubernetes.io/hostname
       containers:
-        - name: app
+        - name: app-http
           resources:
             requests:
               cpu: "500m"
