@@ -261,13 +261,17 @@ The change you just made was *not* AC-first. Let's see the proper workflow.
 4. Validate: Run xtask bdd, check feature_status.md
 ```
 
-### Example: Adding "refund reason" field
+### Example: Adding "refund reason" field (New AC)
+
+> **Note**: We're creating a **new** AC (AC-124) as an example. It doesn't exist yet in the template's `spec_ledger.yaml`.
 
 **1. Update spec (`specs/spec_ledger.yaml`):**
 
+Add this new AC under the existing `AC-123`:
+
 ```yaml
 acceptance_criteria:
-  - id: AC-124
+  - id: AC-124  # ← NEW: Add this AC
     text: "Refund request includes optional reason"
     tests:
       - type: bdd
@@ -276,8 +280,10 @@ acceptance_criteria:
 
 **2. Write scenario (`specs/features/refunds.feature`):**
 
+Add this new scenario to the feature file:
+
 ```gherkin
-@AC-124
+@AC-124  # ← References the new AC you just added
 Scenario: Create refund with reason
   Given an order "ORD-789" totalling 10000 cents
   When I POST /refunds with { "orderId": "ORD-789", "amountCents": 10000, "reason": "damaged goods" }
