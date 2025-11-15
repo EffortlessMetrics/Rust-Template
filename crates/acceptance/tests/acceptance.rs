@@ -42,13 +42,13 @@ async fn main() {
 
     // Triple output: console + JUnit + JSON
     World::cucumber()
+        .filter_run("not @skip", |_, _, sc| !sc.tags.iter().any(|t| t == "skip"))
         .with_writer(
             writer::Basic::stdout().summarized().tee::<World, _>(
                 writer::JUnit::new(junit_file, 0)
                     .tee::<World, _>(writer::Json::for_tee(json_file).normalized()),
             ),
         )
-        .filter_run("not @skip", |_, _, sc| !sc.tags.iter().any(|t| t == "skip"))
         .before(|_feature, _rule, _scenario, world| {
             Box::pin(async move {
                 *world = World::new();
