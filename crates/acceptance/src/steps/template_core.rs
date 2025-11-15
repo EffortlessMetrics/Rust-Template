@@ -93,18 +93,15 @@ async fn then_receive_with_fields(
 // Error Envelope Step Definitions (AC-TPL-003, AC-TPL-004)
 // ============================================================================
 
-#[when(regex = r#"^I POST /refunds with invalid data \{ "orderId": "([^"]*)", "amountCents": (\d+) \}$"#)]
-async fn when_post_refunds_invalid(world: &mut World, order_id: String, amount_cents: String) {
-    let amount_cents = amount_cents.parse::<u64>().expect("valid number");
-
+#[when(regex = r#"^I POST /api/echo with invalid data \{ "message": "([^"]*)" \}$"#)]
+async fn when_post_echo_invalid(world: &mut World, message: String) {
     let request_body = serde_json::json!({
-        "orderId": order_id,
-        "amountCents": amount_cents
+        "message": message
     });
 
     let mut request_builder = Request::builder()
         .method("POST")
-        .uri("/refunds")
+        .uri("/api/echo")
         .header("content-type", "application/json");
 
     // Add any request headers from world
@@ -112,9 +109,8 @@ async fn when_post_refunds_invalid(world: &mut World, order_id: String, amount_c
         request_builder = request_builder.header(key, value);
     }
 
-    let request = request_builder
-        .body(Body::from(request_body.to_string()))
-        .expect("valid request");
+    let request =
+        request_builder.body(Body::from(request_body.to_string())).expect("valid request");
 
     let response = world.app.clone().oneshot(request).await.expect("request should succeed");
 
@@ -128,14 +124,6 @@ async fn when_post_refunds_invalid(world: &mut World, order_id: String, amount_c
 
     world.last_response = Some(Response { status, body, headers });
     world.request_headers.clear();
-}
-
-// Note: POST with valid data is handled in refunds.rs to avoid ambiguity
-
-#[given("the refund processing service is unavailable")]
-async fn given_service_unavailable(_world: &mut World) {
-    // Simulate service unavailability for testing error responses
-    core::set_service_available(false);
 }
 
 #[then(regex = r"^I receive a (\d+)xx response$")]
@@ -154,11 +142,7 @@ async fn then_receive_status_range(world: &mut World, status_range: String) {
 async fn then_receive_exact_status(world: &mut World, status_code: String) {
     let expected = status_code.parse::<u16>().expect("valid status code");
     let response = world.last_response.as_ref().expect("response should exist");
-    assert_eq!(
-        response.status, expected,
-        "Expected status {}, got {}",
-        expected, response.status
-    );
+    assert_eq!(response.status, expected, "Expected status {}, got {}", expected, response.status);
 }
 
 #[then(regex = r#"^the response body contains "([^"]+)" field$"#)]
@@ -200,7 +184,7 @@ async fn then_body_field_matches_header(
 
     let header_value = response
         .headers
-        .get(&header_name.to_lowercase())
+        .get(header_name.to_lowercase())
         .and_then(|v| v.to_str().ok())
         .expect("header should exist and be valid string");
 
@@ -213,8 +197,8 @@ async fn then_body_field_matches_header(
 
 #[given(regex = r#"^I set "([^"]+)" header to "([^"]+)"$"#)]
 async fn given_set_header(world: &mut World, header_name: String, header_value: String) {
-    use http::header::HeaderName;
     use http::HeaderValue;
+    use http::header::HeaderName;
 
     let name = HeaderName::from_bytes(header_name.as_bytes()).expect("valid header name");
     let value = HeaderValue::from_str(&header_value).expect("valid header value");
@@ -222,11 +206,15 @@ async fn given_set_header(world: &mut World, header_name: String, header_value: 
 }
 
 #[then(regex = r#"^the response includes "([^"]+)" header with value "([^"]+)"$"#)]
-async fn then_response_header_equals(world: &mut World, header_name: String, expected_value: String) {
+async fn then_response_header_equals(
+    world: &mut World,
+    header_name: String,
+    expected_value: String,
+) {
     let response = world.last_response.as_ref().expect("response should exist");
     let header_value = response
         .headers
-        .get(&header_name.to_lowercase())
+        .get(header_name.to_lowercase())
         .and_then(|v| v.to_str().ok())
         .expect("header should exist and be valid string");
 
@@ -258,7 +246,7 @@ async fn then_header_is_uuid(world: &mut World, header_name: String) {
     let response = world.last_response.as_ref().expect("response should exist");
     let header_value = response
         .headers
-        .get(&header_name.to_lowercase())
+        .get(header_name.to_lowercase())
         .and_then(|v| v.to_str().ok())
         .expect("header should exist and be valid string");
 

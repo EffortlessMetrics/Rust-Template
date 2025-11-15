@@ -37,39 +37,13 @@
           ]
         }
       ]
-    },
-    {
-      "id": "US-42",
-      "title": "Customer Refund Management",
-      "requirements": [
-        {
-          "id": "REQ-411",
-          "text": "Customer can request refund",
-          "acceptance_criteria": [
-            {
-              "id": "AC-123",
-              "text": "Customer can create a refund for an order",
-              "tests": [
-                {
-                  "type": "bdd",
-                  "tag": "@AC-123"
-                }
-              ]
-            }
-          ]
-        }
-      ]
     }
   ],
   "features": [
     {
       "id": "FT-TPL-CORE",
-      "acceptance_criteria": ["AC-TPL-001", "AC-123"]
-    },
-    {
-      "id": "FT-100",
-      "acceptance_criteria": ["AC-123"]
+      "acceptance_criteria": ["AC-TPL-001", "AC-TPL-003"]
     }
   ],
-  "ledger_ac_ids": ["AC-TPL-001", "AC-TPL-002", "AC-123"]
+  "ledger_ac_ids": ["AC-TPL-001", "AC-TPL-002", "AC-TPL-003"]
 }

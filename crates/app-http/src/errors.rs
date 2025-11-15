@@ -261,8 +261,8 @@ impl IntoResponse for AppError {
         self.log_error();
 
         // Get or generate request ID (AC-TPL-004)
-        let request_id = self.request_id.clone()
-            .unwrap_or_else(|| RequestId::generate().to_string());
+        let request_id =
+            self.request_id.clone().unwrap_or_else(|| RequestId::generate().to_string());
 
         // Create client-safe response matching ErrorResponse schema (AC-TPL-003)
         let body = Json(ErrorResponse {
@@ -278,10 +278,7 @@ impl IntoResponse for AppError {
 
         // Add X-Request-ID header (AC-TPL-004)
         if let Ok(header_value) = HeaderValue::from_str(&request_id) {
-            response.headers_mut().insert(
-                HeaderName::from_static("x-request-id"),
-                header_value,
-            );
+            response.headers_mut().insert(HeaderName::from_static("x-request-id"), header_value);
         }
 
         response

@@ -36,32 +36,19 @@ async fn main() {
     let junit_file = File::create(&junit_path).expect("Failed to create JUnit output file");
     let json_file = File::create(&json_path).expect("Failed to create JSON output file");
 
-    // Initialize service availability at test run start
-    // (guards against state bleeding from previous test runs)
-    core::set_service_available(true);
-
     // Triple output: console + JUnit + JSON
     World::cucumber()
-        .filter_run("not @skip", |_, _, sc| !sc.tags.iter().any(|t| t == "skip"))
+        .before(|_feature, _rule, _scenario, world| {
+            Box::pin(async move {
+                *world = World::new();
+            })
+        })
         .with_writer(
             writer::Basic::stdout().summarized().tee::<World, _>(
                 writer::JUnit::new(junit_file, 0)
                     .tee::<World, _>(writer::Json::for_tee(json_file).normalized()),
             ),
         )
-        .before(|_feature, _rule, _scenario, world| {
-            Box::pin(async move {
-                *world = World::new();
-                // Reset service availability before each scenario
-                core::set_service_available(true);
-            })
-        })
-        .after(|_feature, _rule, _scenario, _event, _world| {
-            Box::pin(async move {
-                // Ensure service is available after each scenario (cleanup)
-                core::set_service_available(true);
-            })
-        })
         .run(features_path.to_str().unwrap())
         .await;
 }

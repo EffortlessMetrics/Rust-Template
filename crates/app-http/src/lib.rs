@@ -1,7 +1,6 @@
 use axum::{
     Router,
     extract::{Extension, Json},
-    http::StatusCode,
     response::IntoResponse,
     routing::{get, post},
 };
@@ -23,8 +22,8 @@ pub fn app() -> Router {
         // Template core endpoints - keep these
         .route("/health", get(health))
         .route("/version", get(version))
-        // Example domain endpoints - adapt or replace
-        .route("/refunds", post(create_refund))
+        .route("/api/echo", post(echo)) // For demonstrating error handling in tests
+        // Add your domain endpoints here - see docs/tutorials/first-ac-change.md
         // Middleware layers (applied in reverse order - bottom to top)
         .layer(axum::middleware::from_fn(middleware::request_id_middleware))
         .layer(
@@ -74,109 +73,59 @@ async fn version() -> impl IntoResponse {
     })
 }
 
-// ============================================================================
-// Example Domain Handlers - Adapt or replace with your domain
-// ============================================================================
-
-/// Create refund endpoint - demonstrates edge → core path with full observability
+/// Echo endpoint - Used for testing error handling
 ///
-/// This handler demonstrates:
-/// - Request ID correlation via Extension
-/// - Structured logging with business context
-/// - Enhanced error handling with error codes and context
-/// - AC/Feature ID tracking for product correlation
-/// - Instrumentation with custom fields
-/// - Proper validation and error responses
-/// - Metrics integration points (stubbed)
-#[instrument(
-    skip(request_id, payload),
-    fields(
-        order_id = %payload.order_id,
-        amount_cents = payload.amount_cents,
-        // request_id is automatically included from the span
-    )
-)]
-async fn create_refund(
+/// Demonstrates:
+/// - Validation errors with error codes
+/// - Request ID propagation through error responses
+/// - ErrorResponse envelope structure
+#[instrument(skip(request_id, payload))]
+async fn echo(
     Extension(request_id): Extension<RequestId>,
-    Json(payload): Json<CreateRefundRequest>,
-) -> Result<(StatusCode, Json<CreateRefundResponse>), AppError> {
-    info!("Processing refund creation request");
+    Json(payload): Json<EchoRequest>,
+) -> Result<Json<EchoResponse>, AppError> {
+    info!("Echo request received");
 
-    // METRICS STUB: Start timer for refund creation latency
-    // let _timer = metrics::histogram!("refund_creation_duration_seconds").start_timer();
-
-    // Validation: Amount must be positive
-    if payload.amount_cents == 0 {
-        // METRICS STUB: Increment validation error counter
-        // metrics::counter!("refund_validation_errors_total", "field" => "amount").increment(1);
-
-        return Err(
-            AppError::validation_error(ErrorCode::InvalidAmount, "Amount must be greater than 0")
-                .with_context("field", "amount_cents")
-                .with_context("value", payload.amount_cents)
-                .with_ac_id("AC-REFUND-001") // Links to acceptance criteria
-                .with_feature_id("FT-REFUND-CREATION") // Links to feature
-                .with_request_id(request_id.as_str()), // AC-TPL-004: Propagate request ID
-        );
+    // Validation: message cannot be empty
+    if payload.message.is_empty() {
+        return Err(AppError::validation_error(ErrorCode::MissingField, "Message cannot be empty")
+            .with_context("field", "message")
+            .with_ac_id("AC-TPL-003") // Links to error envelope AC
+            .with_request_id(request_id.as_str())); // AC-TPL-004: Propagate request ID
     }
 
-    // Validation: Order ID format (simple example)
-    if payload.order_id.is_empty() {
-        return Err(AppError::validation_error(ErrorCode::MissingField, "Order ID is required")
-            .with_context("field", "order_id")
-            .with_ac_id("AC-REFUND-001")
-            .with_request_id(request_id.as_str())); // AC-TPL-004
-    }
-
-    // Call core domain logic
-    // This shows the separation: HTTP adapters call domain, not vice versa
-    if !core::refund_ok() {
-        // Log internal error with context
-        tracing::error!(
-            order_id = %payload.order_id,
-            "Refund service unavailable"
-        );
-
-        // METRICS STUB: Increment service unavailable counter
-        // metrics::counter!("refund_service_errors_total", "type" => "unavailable").increment(1);
-
-        return Err(AppError::internal_error("Refund processing unavailable")
-            .with_context("order_id", &payload.order_id)
-            .with_context("service", "core::refunds")
-            .with_request_id(request_id.as_str())); // AC-TPL-004
-    }
-
-    // In a real system, this would:
-    // 1. Validate order exists via core::orders::get(&payload.order_id)
-    // 2. Check refund eligibility via core::refunds::is_eligible()
-    // 3. Create refund entity via core::refunds::create()
-    // 4. Publish refund.created event via event bus
-    //
-    // For now, simulate success
-    let refund = model::Refund { id: format!("REF-{}", uuid::Uuid::new_v4()) };
-
-    // Log successful creation with structured data
-    info!(
-        refund_id = %refund.id,
-        order_id = %payload.order_id,
-        amount_cents = payload.amount_cents,
-        "Refund created successfully"
-    );
-
-    // METRICS STUB: Increment successful refund counter
-    // metrics::counter!("refunds_created_total", "status" => "success").increment(1);
-    // metrics::histogram!("refund_amount_cents").record(payload.amount_cents as f64);
-
-    Ok((
-        StatusCode::CREATED,
-        Json(CreateRefundResponse {
-            refund_id: refund.id,
-            order_id: payload.order_id,
-            amount_cents: payload.amount_cents,
-            status: "pending".to_string(),
-        }),
-    ))
+    Ok(Json(EchoResponse { message: payload.message }))
 }
+
+// ============================================================================
+// Your Domain Handlers Go Here
+// ============================================================================
+//
+// Example structure for adding a domain handler:
+//
+// #[instrument(skip(request_id, payload), fields(entity_id = %payload.id))]
+// async fn create_entity(
+//     Extension(request_id): Extension<RequestId>,
+//     Json(payload): Json<CreateEntityRequest>,
+// ) -> Result<(StatusCode, Json<EntityResponse>), AppError> {
+//     info!("Processing entity creation");
+//
+//     // Validation
+//     if payload.name.is_empty() {
+//         return Err(AppError::validation_error(ErrorCode::MissingField, "Name required")
+//             .with_context("field", "name")
+//             .with_ac_id("AC-XXX")
+//             .with_request_id(request_id.as_str()));
+//     }
+//
+//     // Call core domain logic
+//     let entity = core::entities::create(payload)?;
+//
+//     info!(entity_id = %entity.id, "Entity created");
+//     Ok((StatusCode::CREATED, Json(entity.into())))
+// }
+//
+// See docs/tutorials/first-ac-change.md for a complete walkthrough.
 
 // ============================================================================
 // DTOs - Request/Response types for HTTP boundary
@@ -196,25 +145,25 @@ struct VersionInfo {
     git_sha: String,
 }
 
-// Example Domain DTOs
+// Echo endpoint DTOs (used for testing error handling)
 #[derive(Debug, Deserialize)]
-pub struct CreateRefundRequest {
-    #[serde(rename = "orderId")]
-    pub order_id: String,
-    #[serde(rename = "amountCents")]
-    pub amount_cents: u64,
+struct EchoRequest {
+    pub message: String,
 }
 
 #[derive(Debug, Serialize)]
-pub struct CreateRefundResponse {
-    #[serde(rename = "refundId")]
-    pub refund_id: String,
-    #[serde(rename = "orderId")]
-    pub order_id: String,
-    #[serde(rename = "amountCents")]
-    pub amount_cents: u64,
-    pub status: String,
+struct EchoResponse {
+    pub message: String,
 }
+
+// Your Domain DTOs Go Here
+// Example:
+// #[derive(Debug, Deserialize)]
+// pub struct CreateEntityRequest {
+//     pub name: String,
+//     #[serde(rename = "someField")]
+//     pub some_field: String,
+// }
 
 // ============================================================================
 // Error handling - See errors.rs for comprehensive error handling
