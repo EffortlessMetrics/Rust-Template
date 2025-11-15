@@ -17,7 +17,7 @@ jobs:
       - uses: cachix/install-nix-action@v27
       - name: Check Feature ↔ AC linkage
         run: |
-          nix develop -c bash -lc '
+          nix develop -c bash -c '
             yq -o=json specs/spec_ledger.yaml               | jq "[.stories[].requirements[].acceptance_criteria[].id]" > /tmp/ledger_ac_ids.json
             shopt -s nullglob
             FEATS=(features/*.yaml)

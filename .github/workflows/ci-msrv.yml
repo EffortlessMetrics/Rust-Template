@@ -24,5 +24,7 @@ jobs:
 
       - name: Toolchain = ${{ steps.msrv.outputs.msrv }}
         uses: dtolnay/rust-toolchain@master
-        with: { toolchain: ${{ steps.msrv.outputs.msrv }}, components: clippy,rustfmt }
+        with:
+          toolchain: ${{ steps.msrv.outputs.msrv }}
+          components: clippy,rustfmt
       - run: cargo +${{ steps.msrv.outputs.msrv }} build --workspace

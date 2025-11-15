@@ -1,0 +1,241 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://rust-template.example.com/schemas/ac_report.schema.json",
+  "title": "Cucumber JSON Report Schema",
+  "description": "JSON Schema for Cucumber BDD acceptance test reports used in AC status generation",
+  "type": "array",
+  "items": {
+    "$ref": "#/definitions/feature"
+  },
+  "definitions": {
+    "feature": {
+      "type": "object",
+      "required": ["uri", "keyword", "name", "elements"],
+      "properties": {
+        "uri": {
+          "type": "string",
+          "description": "Relative path to the feature file"
+        },
+        "keyword": {
+          "type": "string",
+          "enum": ["Feature"],
+          "description": "Gherkin keyword for feature"
+        },
+        "name": {
+          "type": "string",
+          "description": "Feature name"
+        },
+        "description": {
+          "type": "string",
+          "description": "Optional feature description"
+        },
+        "line": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Line number where feature is defined"
+        },
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the feature"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/tag"
+          },
+          "description": "Tags applied to the feature"
+        },
+        "elements": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/element"
+          },
+          "description": "Scenarios, backgrounds, or other elements in the feature"
+        }
+      }
+    },
+    "element": {
+      "type": "object",
+      "required": ["keyword", "type", "name", "steps"],
+      "properties": {
+        "keyword": {
+          "type": "string",
+          "enum": ["Scenario", "Scenario Outline", "Background"],
+          "description": "Gherkin keyword for element type"
+        },
+        "type": {
+          "type": "string",
+          "enum": ["scenario", "background"],
+          "description": "Element type"
+        },
+        "name": {
+          "type": "string",
+          "description": "Element name"
+        },
+        "description": {
+          "type": "string",
+          "description": "Optional element description"
+        },
+        "line": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Line number where element is defined"
+        },
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the element"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/tag"
+          },
+          "description": "Tags applied to the element (includes AC IDs)"
+        },
+        "before": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/hook"
+          },
+          "description": "Before hooks executed for this element"
+        },
+        "after": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/hook"
+          },
+          "description": "After hooks executed for this element"
+        },
+        "steps": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/step"
+          },
+          "description": "Steps in the scenario"
+        }
+      }
+    },
+    "tag": {
+      "type": "object",
+      "required": ["name"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]+$",
+          "description": "Tag name (without @ prefix in Cucumber JSON format)"
+        },
+        "line": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Line number where tag appears"
+        }
+      }
+    },
+    "step": {
+      "type": "object",
+      "required": ["keyword", "name", "result"],
+      "properties": {
+        "keyword": {
+          "type": "string",
+          "enum": ["Given ", "When ", "Then ", "And ", "But ", "* "],
+          "description": "Gherkin keyword for step (includes trailing space)"
+        },
+        "name": {
+          "type": "string",
+          "description": "Step text"
+        },
+        "line": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Line number where step is defined"
+        },
+        "match": {
+          "type": "object",
+          "properties": {
+            "location": {
+              "type": "string",
+              "description": "File and line where step implementation is located"
+            }
+          },
+          "description": "Information about matched step definition"
+        },
+        "result": {
+          "$ref": "#/definitions/stepResult",
+          "description": "Step execution result"
+        },
+        "doc_string": {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "string",
+              "description": "Multi-line string content"
+            },
+            "content_type": {
+              "type": "string",
+              "description": "Content type hint"
+            },
+            "line": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          "description": "Doc string (triple-quoted text)"
+        },
+        "rows": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "cells": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "description": "Data table rows"
+        }
+      }
+    },
+    "stepResult": {
+      "type": "object",
+      "required": ["status"],
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": ["passed", "failed", "skipped", "pending", "undefined"],
+          "description": "Step execution status"
+        },
+        "duration": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Execution time in nanoseconds"
+        },
+        "error_message": {
+          "type": "string",
+          "description": "Error message if step failed"
+        }
+      }
+    },
+    "hook": {
+      "type": "object",
+      "required": ["result"],
+      "properties": {
+        "match": {
+          "type": "object",
+          "properties": {
+            "location": {
+              "type": "string",
+              "description": "File and line where hook is defined"
+            }
+          }
+        },
+        "result": {
+          "$ref": "#/definitions/stepResult",
+          "description": "Hook execution result"
+        }
+      }
+    }
+  }
+}

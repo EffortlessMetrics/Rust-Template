@@ -12,7 +12,7 @@ jobs:
       - uses: cachix/install-nix-action@v27
       - name: Warn on expiring flags
         run: |
-          nix develop -c bash -lc '
+          nix develop -c bash -c '
             yq -o=json flags/registry.yaml > /tmp/flags.json
             conftest test -p policy/flags_warn.rego /tmp/flags.json || true
           '

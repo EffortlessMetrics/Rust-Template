@@ -1,0 +1,29 @@
+{
+  "stories": [
+    {
+      "id": "US-100",
+      "requirements": [
+        {
+          "id": "REQ-100",
+          "acceptance_criteria": [
+            {
+              "id": "AC-100",
+              "text": "User can view dashboard",
+              "tests": [
+                { "type": "bdd", "tag": "@AC-100" }
+              ]
+            },
+            {
+              "id": "AC-101",
+              "text": "User can filter by date",
+              "tests": [
+                { "type": "bdd", "tag": "@AC-101" },
+                { "type": "unit", "path": "tests/dashboard_test.rs" }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

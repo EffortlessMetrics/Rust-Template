@@ -1,0 +1,31 @@
+[package]
+name = "app-http"
+version = "0.1.0"
+edition.workspace = true
+
+[dependencies]
+# Workspace dependencies
+anyhow.workspace = true
+serde.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+
+# Internal crates
+core = { path = "../core" }
+model = { path = "../model" }
+telemetry = { path = "../telemetry" }
+
+# Web framework
+axum = "0.8.7"
+tokio = { version = "1.48.0", features = ["full"] }
+tower = "0.5.2"
+tower-http = { version = "0.6.6", features = ["trace"] }
+
+# JSON, UUID, and time
+serde_json = "1.0.145"
+uuid = { version = "1.18.1", features = ["v4"] }
+chrono = { version = "0.4.42", features = ["serde"] }
+
+[dev-dependencies]
+tokio = { version = "1.48.0", features = ["macros", "rt-multi-thread"] }
+tower = { version = "0.5.2", features = ["util"] }

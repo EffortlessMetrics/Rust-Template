@@ -1,0 +1,29 @@
+{
+  "flags": [
+    {
+      "key": "feature_x",
+      "owner": "team-platform",
+      "default": false,
+      "expires_at": "2026-12-31"
+    },
+    {
+      "key": "feature_y",
+      "owner": "team-billing",
+      "default": true
+    }
+  ],
+  "rollouts": {
+    "dev": {
+      "feature_x": 100,
+      "feature_y": 100
+    },
+    "staging": {
+      "feature_x": 50,
+      "feature_y": 100
+    },
+    "prod": {
+      "feature_x": 0,
+      "feature_y": 100
+    }
+  }
+}

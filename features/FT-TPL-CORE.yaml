@@ -1,0 +1,7 @@
+id: FT-TPL-CORE
+name: "Template Core Operations"
+description: "Standard operational endpoints for service health monitoring and version information"
+acceptance_criteria: [AC-TPL-001, AC-TPL-002]
+owner: template
+status: active
+notes: "Keep and extend these capabilities in your service. Essential for production monitoring."

@@ -3,12 +3,12 @@
   inputs = { nixpkgs.url = "github:NixOS/nixpkgs/nixos-24.05"; fenix.url = "github:nix-community/fenix"; };
   outputs = { self, nixpkgs, fenix, ... }:
   let
-    systems = [ "x86_64-linux" "aarch64-darwin" ];
+    systems = [ "x86_64-linux" "aarch64-linux" "x86_64-darwin" "aarch64-darwin" ];
     forAllSystems = f: nixpkgs.lib.genAttrs(systems) (system:
       f rec {
         inherit system;
-        pkgs = import nixpkgs { inherit system; overlays = [ fenix.overlay ]; };
-        rust = pkgs.fenix.stable.withComponents [ "cargo" "clippy" "rustfmt" "rust-src" ];
+        pkgs = import nixpkgs { inherit system; overlays = [ fenix.overlays.default ]; };
+        rust = pkgs.fenix.stable.withComponents [ "cargo" "clippy" "rustfmt" "rust-src" "rust-analyzer" ];
       });
   in {
     devShells = forAllSystems ({ pkgs, rust, ... }: {
