@@ -9,7 +9,7 @@
 /// RUST_LOG=app_http=trace,core=debug cargo run
 /// ```
 pub fn init() {
-    use tracing_subscriber::{fmt, layer::SubscriberExt, util::SubscriberInitExt, EnvFilter};
+    use tracing_subscriber::{EnvFilter, fmt, layer::SubscriberExt, util::SubscriberInitExt};
 
     // Build the env filter
     // Default to INFO if RUST_LOG not set

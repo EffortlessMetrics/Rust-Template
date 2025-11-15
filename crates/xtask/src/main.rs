@@ -26,6 +26,8 @@ enum Commands {
         /// Task name from .llm/contextpack.yaml
         task: String,
     },
+    /// Test Rego policies with conftest
+    PolicyTest,
     /// Quick validation of template functionality
     Quickstart,
     /// Run full template self-test suite (check + bdd + ac-status + bundler + policies)
@@ -42,6 +44,7 @@ fn main() -> Result<()> {
         Commands::Check => commands::check::run(),
         Commands::Bdd => commands::bdd::run(),
         Commands::Bundle { task } => commands::bundle::run(&task),
+        Commands::PolicyTest => commands::policy_test::run(),
         Commands::Quickstart => commands::quickstart::run(),
         Commands::Selftest => commands::selftest::run(),
     }

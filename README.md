@@ -26,23 +26,43 @@ cargo run -p xtask -- quickstart
 
 This runs all checks, tests, and bundler to prove the template works.
 
+### Developer Workflow
+
+All development operations use `cargo run -p xtask --` as the primary interface:
+
+| Situation | Command | What it does |
+|-----------|---------|--------------|
+| **New dev/machine** | `nix develop` → `cargo run -p xtask -- check` | Enter environment, validate setup |
+| **Everyday dev** | `cargo run -p xtask -- check` | Format, lint, tests (before every commit) |
+| **Before push/in CI** | `cargo run -p xtask -- selftest` | Comprehensive validation suite |
+| **Check AC coverage** | `cargo run -p xtask -- ac-status` | Generate AC status report |
+| **Check policies** | `cargo run -p xtask -- policy-test` | Test Rego policies with conftest |
+| **Build LLM bundle** | `cargo run -p xtask -- bundle <task>` | Generate focused context for AI coding |
+| **First-time validation** | `cargo run -p xtask -- quickstart` | Quick health check |
+| **Run acceptance tests** | `cargo run -p xtask -- bdd` | Execute BDD scenarios |
+
 ### Command Reference
 
-All development operations go through `xtask`:
+Core `xtask` commands (see [full reference](docs/reference/xtask-commands.md)):
 
-| Task                       | Command                             | What it does                            |
-|----------------------------|-------------------------------------|-----------------------------------------|
-| Full self-test suite       | `xtask selftest`                    | check + bdd + ac-status + bundler + policies |
-| Quick validation           | `xtask quickstart`                  | Lightweight validation for first use    |
-| Format + lint + tests      | `xtask check`                       | cargo fmt, clippy, test                 |
-| Acceptance tests           | `xtask bdd`                         | Run cucumber scenarios, emit JUnit XML  |
-| LLM context bundle         | `xtask bundle <task>`               | Generate focused context for AI coding  |
+| Command | Purpose | When to use |
+|---------|---------|-------------|
+| `check` | Format, lint, tests | Every commit |
+| `bdd` | BDD acceptance tests | After AC work |
+| `ac-status` | AC coverage report | Check test coverage |
+| `policy-test` | Rego policy tests | Validate governance |
+| `bundle <task>` | LLM context bundle | Before AI coding |
+| `quickstart` | Quick validation | First run |
+| `selftest` | Full validation suite | CI, releases |
 
 **Examples:**
 ```bash
 cargo run -p xtask -- check                    # Before every commit
 cargo run -p xtask -- bdd                      # Test acceptance criteria
+cargo run -p xtask -- ac-status                # Check AC coverage
+cargo run -p xtask -- policy-test              # Validate policies
 cargo run -p xtask -- bundle implement_ac      # Get context for AC work
+cargo run -p xtask -- selftest                 # Full validation (CI)
 ```
 
 ### What's Working

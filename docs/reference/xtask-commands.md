@@ -5,6 +5,8 @@ Complete reference for all `xtask` CLI commands.
 **Quick Index:**
 - [check](#xtask-check) - Format, lint, test
 - [bdd](#xtask-bdd) - Run BDD acceptance tests
+- [ac-status](#xtask-ac-status) - Generate AC status report
+- [policy-test](#xtask-policy-test) - Test Rego policies
 - [bundle](#xtask-bundle) - Generate LLM context
 - [quickstart](#xtask-quickstart) - First-run validation
 - [selftest](#xtask-selftest) - Comprehensive validation suite
@@ -139,6 +141,190 @@ JUnit output: target/junit/acceptance.xml
 
 ---
 
+## xtask ac-status
+
+Generate AC status report from acceptance test results.
+
+### Usage
+
+```bash
+cargo run -p xtask -- ac-status
+
+# Or in Nix shell
+nix develop -c cargo run -p xtask -- ac-status
+```
+
+### What It Does
+
+1. Reads `specs/spec_ledger.yaml` to extract all AC definitions
+2. Parses `specs/features/**/*.feature` files for `@AC-####` tagged scenarios
+3. Parses `target/junit/acceptance.xml` for test results
+4. Maps testcases → scenarios → ACs
+5. Computes status for each AC (pass/fail/unknown)
+6. Generates `docs/feature_status.md` with status table
+
+### Exit Codes
+
+- `0`: All ACs passed or unknown
+- Non-zero: One or more ACs failed
+
+### Output Artifacts
+
+- `docs/feature_status.md` - AC status table with pass/fail/unknown indicators
+
+### When to Use
+
+- **After running BDD tests** - Check which ACs are covered
+- **In CI** - Verify AC coverage
+- **During development** - Understand test-to-AC mapping
+- **Before releases** - Ensure all ACs have passing tests
+
+### Example Output
+
+```
+Parsing ledger from: specs/spec_ledger.yaml
+Found 1 AC(s) in ledger
+
+Parsing feature files from: specs/features
+Found 1 scenario(s) with AC tags
+
+Parsing JUnit results from: target/junit/acceptance.xml
+Found 1 testcase(s) in JUnit output
+
+Mapping testcases → scenarios → ACs...
+  AC-123: 1 scenario(s), 1 testcase(s), status: pass
+
+✓ Generated /path/to/docs/feature_status.md
+✓ All ACs passed
+```
+
+### Status Logic
+
+- **Pass (✅)**: All mapped testcases passed
+- **Fail (❌)**: Any mapped testcase failed
+- **Unknown (❓)**: AC has no mapped scenarios or testcases
+
+### Common Issues
+
+**No JUnit XML found:**
+- Run `cargo run -p xtask -- bdd` first to generate test results
+- Check that `target/junit/acceptance.xml` exists
+
+**ACs show as unknown:**
+- Verify feature files have `@AC-####` tags
+- Check that tag IDs match ledger AC IDs
+- Ensure scenarios are actually running in BDD tests
+
+**Unmapped scenarios:**
+- Scenario has `@AC-####` tag that doesn't exist in ledger
+- Check ledger for typos in AC IDs
+- Add missing ACs to `specs/spec_ledger.yaml`
+
+### Notes
+
+- Normalizes testcase names by removing ` (row N)` and ` (example N)` suffixes
+- Reports unmapped ACs (no scenarios) and unmapped scenarios (invalid AC refs)
+- Used by `xtask selftest` and CI workflows
+
+---
+
+## xtask policy-test
+
+Test Rego policies with conftest.
+
+### Usage
+
+```bash
+cargo run -p xtask -- policy-test
+
+# Or in Nix shell
+nix develop -c cargo run -p xtask -- policy-test
+```
+
+### What It Does
+
+Runs conftest policy tests for all policy areas:
+
+1. **Ledger Policy** (`policy/ledger.rego`) - Ensures every AC has tests
+2. **Features Policy** (`policy/features.rego`) - Validates feature-AC references
+3. **Flags Policy** (`policy/flags.rego`) - Validates flag ownership and rollouts
+4. **Privacy Policy** (`policy/privacy.rego`) - Ensures PII fields have owners and retention
+
+Each policy is tested against fixtures in `policy/testdata/`:
+- `{area}_valid.json` - Should pass
+- `{area}_invalid.json` - Should fail
+- `{area}_missing_tests.json` - Should fail (for ledger)
+- `{area}_unknown_ac.json` - Should fail (for features)
+
+### Exit Codes
+
+- `0`: All policy tests passed
+- Non-zero: One or more policy tests failed or conftest not available
+
+### When to Use
+
+- **During development** - Validate policy changes
+- **Before commits** - Ensure policies still pass
+- **In CI** - Governance validation
+- **After adding ACs/flags/PII** - Verify metadata is complete
+
+### Example Output
+
+```
+Testing Rego policies...
+
+Ledger Policy (policy/ledger.rego):
+  ✓ ledger_valid.json (correctly passed)
+  ✓ ledger_missing_tests.json (correctly failed)
+
+Features Policy (policy/features.rego):
+  ✓ features_valid.json (correctly passed)
+  ✓ features_unknown_ac.json (correctly failed)
+
+Flags Policy (policy/flags.rego):
+  ✓ flags_valid.json (correctly passed)
+  ✓ flags_invalid.json (correctly failed)
+
+Privacy Policy (policy/privacy.rego):
+  ✓ privacy_valid.json (correctly passed)
+  ✓ privacy_invalid.json (correctly failed)
+
+✓ All 8 policy tests passed!
+```
+
+### Prerequisites
+
+Requires `conftest` to be available on PATH:
+
+**Install options:**
+- **Nix:** `nix develop` (recommended - automatically available)
+- **macOS:** `brew install conftest`
+- **Linux:** See https://www.conftest.dev/install/
+- **Container:** `docker run --rm openpolicyagent/conftest`
+
+### Common Issues
+
+**"conftest not found on PATH":**
+- Enter Nix shell: `nix develop`
+- Or install conftest manually for your platform
+
+**Policy test fails unexpectedly:**
+- Check fixture files in `policy/testdata/`
+- Verify policy file syntax in `policy/*.rego`
+- Run manually: `conftest test -p policy/ledger.rego policy/testdata/ledger_valid.json`
+
+**No test fixtures found:**
+- Check that `policy/testdata/{area}_valid.json` exists
+- Policy will skip if no fixtures found
+
+### Notes
+
+- Part of `xtask selftest` but gracefully degrades if conftest unavailable
+- Each policy area is tested independently
+- Fixtures use realistic data structures from actual specs
+
+---
+
 ## xtask bundle
 
 Generate LLM context bundle for a specific task.
@@ -158,7 +344,7 @@ cargo run -p xtask -- bundle debug_tests
 
 1. Reads `.llm/contextpack.yaml` for task configuration
 2. Resolves `include` glob patterns via `git ls-files`
-3. Respects `.llm/.llmignore` exclusions
+3. Respects `.llm/.llmignore` exclusions (using gitignore syntax)
 4. Enforces `max_bytes` limit
 5. Generates markdown bundle at `.llm/bundle/<task>.md`
 
@@ -207,7 +393,7 @@ Bundle written to: /path/to/.llm/bundle/implement_ac.md
 
 **Missing files:**
 - Files must be tracked by git (`git ls-files`)
-- Check `.llm/.llmignore` isn't excluding needed files
+- Check `.llm/.llmignore` isn't excluding needed files (uses gitignore syntax)
 
 ### Configuration
 
@@ -408,6 +594,8 @@ Used in `.github/workflows/ci-template-selftest.yml`:
 |---------|-------|----------|----------|
 | `check` | Fast | Code quality | Every commit |
 | `bdd` | Medium | Acceptance | After AC work |
+| `ac-status` | Fast | AC coverage | After BDD tests |
+| `policy-test` | Fast | Governance | Validate policies |
 | `bundle` | Fast | Context gen | Before LLM use |
 | `quickstart` | Medium | Basic validation | First run |
 | `selftest` | Slow | Comprehensive | CI, releases |

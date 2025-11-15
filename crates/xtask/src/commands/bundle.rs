@@ -112,7 +112,7 @@ fn get_git_sha(workspace_root: &Path) -> Result<String> {
 }
 
 fn resolve_files(workspace_root: &Path, patterns: &[String]) -> Result<Vec<PathBuf>> {
-    let ignore_patterns = load_ignore_patterns(workspace_root)?;
+    let llmignore = load_llmignore(workspace_root)?;
     let mut seen = HashSet::new();
     let mut files = Vec::new();
 
@@ -139,8 +139,9 @@ fn resolve_files(workspace_root: &Path, patterns: &[String]) -> Result<Vec<PathB
                 continue;
             }
 
-            // Skip if matches ignore patterns
-            if should_ignore(path_str, &ignore_patterns) {
+            // Skip if matches .llmignore patterns (using gitignore semantics)
+            let path = Path::new(path_str);
+            if llmignore.matched(path, false).is_ignore() {
                 continue;
             }
 
@@ -155,49 +156,17 @@ fn resolve_files(workspace_root: &Path, patterns: &[String]) -> Result<Vec<PathB
     Ok(files)
 }
 
-fn load_ignore_patterns(workspace_root: &Path) -> Result<Vec<String>> {
+/// Load .llmignore file and build gitignore matcher
+fn load_llmignore(workspace_root: &Path) -> Result<ignore::gitignore::Gitignore> {
     let ignore_path = workspace_root.join(".llm/.llmignore");
 
-    if !ignore_path.exists() {
-        return Ok(Vec::new());
+    let mut builder = ignore::gitignore::GitignoreBuilder::new(workspace_root);
+
+    if ignore_path.exists() {
+        builder.add(&ignore_path);
     }
 
-    let content = fs::read_to_string(&ignore_path)
-        .with_context(|| format!("Failed to read .llmignore: {}", ignore_path.display()))?;
-
-    let patterns: Vec<String> = content
-        .lines()
-        .map(|line| line.trim())
-        .filter(|line| !line.is_empty() && !line.starts_with('#'))
-        .map(|line| line.to_string())
-        .collect();
-
-    Ok(patterns)
-}
-
-fn should_ignore(path: &str, ignore_patterns: &[String]) -> bool {
-    use std::path::Path as StdPath;
-
-    for pattern in ignore_patterns {
-        // Directory pattern: "foo/" should match "foo/bar.txt" but not "foobar.txt"
-        if pattern.ends_with('/') {
-            let dir_pattern = pattern.trim_end_matches('/');
-            // Match if path starts with "dir/" or is exactly "dir"
-            if path.starts_with(&format!("{}/", dir_pattern)) || path == dir_pattern {
-                return true;
-            }
-        } else {
-            // Component match: "foo" matches "foo", "bar/foo", or "bar/foo.txt"
-            // but not "foobar" or "foobar.txt"
-            if StdPath::new(path)
-                .components()
-                .any(|c| c.as_os_str().to_string_lossy() == pattern.as_str())
-            {
-                return true;
-            }
-        }
-    }
-    false
+    builder.build().context("Failed to build .llmignore matcher")
 }
 
 fn build_bundle(

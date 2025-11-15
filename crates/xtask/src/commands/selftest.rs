@@ -1,4 +1,4 @@
-use anyhow::{Context, Result};
+use anyhow::Result;
 use colored::Colorize;
 use std::path::Path;
 
@@ -77,7 +77,7 @@ pub fn run() -> Result<()> {
 
     // Step 5: Policy tests (if conftest available)
     println!("{}", "[5/5] Running policy tests...".blue());
-    match run_policy_tests() {
+    match crate::commands::policy_test::run() {
         Ok(_) => println!("  {} Policy tests passed", "✓".green()),
         Err(e) => {
             eprintln!("  {} Policy tests: {}", "⚠".yellow(), e);
@@ -113,29 +113,4 @@ pub fn run() -> Result<()> {
 fn run_ac_status() -> Result<()> {
     // Use Rust-native AC status implementation
     crate::commands::ac_status::run(crate::commands::ac_status::AcStatusArgs::default())
-}
-
-fn run_policy_tests() -> Result<()> {
-    use std::process::Command;
-
-    // Check if conftest is available
-    let conftest_check = Command::new("conftest").arg("--version").output();
-
-    match conftest_check {
-        Ok(output) if output.status.success() => {
-            // conftest available, run tests
-            let status = Command::new("bash")
-                .arg("scripts/test-policies.sh")
-                .status()
-                .context("Failed to run policy tests")?;
-
-            if !status.success() {
-                anyhow::bail!("Policy tests failed");
-            }
-            Ok(())
-        }
-        _ => {
-            anyhow::bail!("conftest not available (install via: brew install conftest)")
-        }
-    }
 }
