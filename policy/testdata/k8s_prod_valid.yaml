@@ -1,0 +1,68 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-service
+  labels:
+    app: my-service
+    version: v1.0.0
+    component: api
+    app.kubernetes.io/environment: production
+    app.kubernetes.io/managed-by: kustomize
+    team: platform
+    cost-center: engineering
+spec:
+  replicas: 3  # Production requires >= 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0  # Zero-downtime required in prod
+  selector:
+    matchLabels:
+      app: my-service
+  template:
+    metadata:
+      labels:
+        app: my-service
+        version: v1.0.0
+        app.kubernetes.io/environment: production
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+      # Pod anti-affinity required in production
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                    - key: app
+                      operator: In
+                      values:
+                        - my-service
+                topologyKey: kubernetes.io/hostname
+      containers:
+        - name: app
+          image: my-service:latest
+          resources:
+            requests:
+              cpu: "500m"
+              memory: "512Mi"
+            limits:
+              cpu: "2000m"
+              memory: "2Gi"
+          # Probes required in production
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 5

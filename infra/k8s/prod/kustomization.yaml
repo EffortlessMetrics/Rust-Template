@@ -1,0 +1,36 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# Production environment overlay
+# Inherits base dev configuration and applies production-hardened patches
+
+namespace: my-service-prod
+
+# Use dev as the base
+resources:
+  - ../dev
+
+# Common labels applied to all resources
+commonLabels:
+  app.kubernetes.io/environment: production
+  app.kubernetes.io/managed-by: kustomize
+  # Production-specific labels for cost tracking, ownership, etc.
+  team: platform
+  cost-center: engineering
+
+# Patches for production-specific configuration
+patchesStrategicMerge:
+  - deployment-patch.yaml
+
+# ConfigMap generator for environment-specific config
+configMapGenerator:
+  - name: app-config
+    literals:
+      - ENVIRONMENT=production
+      - LOG_LEVEL=warn
+      - RUST_LOG=warn,my_service=info
+
+# Image tag override (typically set via CI/CD)
+images:
+  - name: my-service
+    newTag: prod-latest  # Or specific version like v1.2.3
