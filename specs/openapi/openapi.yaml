@@ -1,6 +1,50 @@
 openapi: 3.1.0
-info: { title: Payments API, version: 1.0.0 }
+info:
+  title: Service API
+  version: 1.0.0
+  description: |
+    Template-based service API.
+
+    Core endpoints (/health, /version) are part of the template foundation.
+    Domain endpoints (e.g., /refunds) are examples to adapt or replace.
+
 paths:
+  # Template Core - Keep these in your service
+  /health:
+    get:
+      summary: Health check
+      operationId: healthCheck
+      tags: [operations]
+      responses:
+        "200":
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status, service]
+                properties:
+                  status: { type: string, enum: [ok], description: "Health status" }
+                  service: { type: string, description: "Service name" }
+
+  /version:
+    get:
+      summary: Version information
+      operationId: getVersion
+      tags: [operations]
+      responses:
+        "200":
+          description: Current build information
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [version, gitSha]
+                properties:
+                  version: { type: string, description: "Service version from Cargo.toml" }
+                  gitSha: { type: string, description: "Git commit SHA" }
+
+  # Example Domain Endpoint - Adapt or replace
   /refunds:
     post:
       operationId: createRefund
@@ -16,10 +60,42 @@ paths:
                 amountCents: { type: integer, minimum: 0 }
       responses:
         "201":
-          description: created
+          description: Refund created successfully
           content:
             application/json:
               schema:
                 type: object
-                required: [refundId]
-                properties: { refundId: { type: string } }
+                required: [refundId, orderId, amountCents, status]
+                properties:
+                  refundId: { type: string, description: "Unique refund identifier" }
+                  orderId: { type: string, description: "Original order identifier" }
+                  amountCents: { type: integer, minimum: 0, description: "Refund amount in cents" }
+                  status: { type: string, enum: [pending, approved, rejected], description: "Refund status" }
+        "400":
+          description: Bad request (e.g., amount is zero)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        "500":
+          description: Internal error (e.g., refund processing unavailable)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    ErrorResponse:
+      type: object
+      required: [error, message, requestId]
+      properties:
+        error:
+          type: string
+          description: "Machine-readable error code"
+        message:
+          type: string
+          description: "Human-readable message"
+        requestId:
+          type: string
+          description: "X-Request-ID for log correlation"

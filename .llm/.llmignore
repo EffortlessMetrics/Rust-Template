@@ -1,1 +1,28 @@
+# .llmignore - Gitignore-style pattern matching
+# This file uses standard gitignore syntax
+
+# Build artifacts
 target/
+*.lock
+*.tmp
+
+# IDE and OS files
+.idea/
+.vscode/
+.DS_Store
+*.swp
+
+# Test and development files
+*_test.go
+test_*.rs
+
+# Logs and databases
+*.log
+*.db
+
+# Environment files
+.env*
+
+# Documentation drafts
+docs/**/*.draft
+*.bak

@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: test-app-root
+  labels:
+    app: test-app
+    version: v1
+    component: api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: test-app
+  template:
+    metadata:
+      labels:
+        app: test-app
+        version: v1
+        component: api
+    spec:
+      # Missing runAsNonRoot - this should fail policy
+      containers:
+      - name: test-app
+        image: test-app:latest
+        resources:
+          limits:
+            cpu: "500m"
+            memory: "256Mi"
+          requests:
+            cpu: "100m"
+            memory: "128Mi"

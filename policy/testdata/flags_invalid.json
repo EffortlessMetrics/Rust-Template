@@ -1,0 +1,25 @@
+{
+  "flags": [
+    {
+      "key": "bad_flag_1",
+      "default": false
+    },
+    {
+      "key": "bad_flag_2",
+      "owner": "",
+      "default": true
+    }
+  ],
+  "rollouts": {
+    "dev": {
+      "bad_flag_1": 100,
+      "unknown_flag": 50
+    },
+    "staging": {
+      "bad_flag_2": 150
+    },
+    "prod": {
+      "bad_flag_1": -10
+    }
+  }
+}

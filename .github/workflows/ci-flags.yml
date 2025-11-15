@@ -17,7 +17,7 @@ jobs:
       - uses: cachix/install-nix-action@v27
       - name: Flags & rollouts Policy
         run: |
-          nix develop -c bash -lc '
+          nix develop -c bash -c '
             yq -o=json flags/registry.yaml > /tmp/flags.json
             yq -o=json flags/rollouts.yaml | jq "{rollouts: .environments}" > /tmp/rollouts.json
             jq -s ".[0] * .[1]" /tmp/flags.json /tmp/rollouts.json               | conftest test -p policy/flags.rego -

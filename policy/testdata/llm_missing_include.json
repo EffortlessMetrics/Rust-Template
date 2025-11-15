@@ -1,0 +1,21 @@
+{
+  "tasks": {
+    "implement_ac": {
+      "max_bytes": 250000,
+      "include": [],
+      "description": "Task with empty include list - should fail"
+    },
+    "implement_feature": {
+      "max_bytes": 300000,
+      "include": [
+        "specs/spec_ledger.yaml"
+      ]
+    },
+    "debug_tests": {
+      "max_bytes": 200000,
+      "include": [
+        "specs/features/**/*.feature"
+      ]
+    }
+  }
+}

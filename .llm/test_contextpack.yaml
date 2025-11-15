@@ -1,0 +1,7 @@
+tasks:
+  test_ignore:
+    max_bytes: 100000
+    include:
+      - "*.lock"
+      - "crates/core/src/lib.rs"
+    description: "Test to verify .llmignore filtering"

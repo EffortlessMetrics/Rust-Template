@@ -1,7 +1,32 @@
 stories:
-  - id: US-42
+  # Template Core - Keep and extend these in your service
+  - id: US-TPL-001
+    title: "Service Core Capabilities"
     requirements:
-      - id: REQ-411
+      - id: REQ-TPL-HEALTH
+        title: "Health Check Endpoint"
         acceptance_criteria:
-          - id: AC-123
-            tests: [ { type: bdd, tag: "@AC-123" } ]
+          - id: AC-TPL-001
+            text: "GET /health returns 200 with status 'ok' when service is healthy"
+            tests: [ { type: bdd, tag: "@AC-TPL-001" } ]
+      - id: REQ-TPL-VERSION
+        title: "Version Information Endpoint"
+        acceptance_criteria:
+          - id: AC-TPL-002
+            text: "GET /version returns build information including version and git SHA"
+            tests: [ { type: bdd, tag: "@AC-TPL-002" } ]
+      - id: REQ-TPL-ERROR-HANDLING
+        title: "Error Response Envelope"
+        acceptance_criteria:
+          - id: AC-TPL-003
+            text: "All 4xx/5xx responses include an error code, message, and request ID"
+            tests: [ { type: bdd, tag: "@AC-TPL-003" } ]
+          - id: AC-TPL-004
+            text: "Handlers propagate or generate X-Request-ID and expose it in responses"
+            tests: [ { type: bdd, tag: "@AC-TPL-004" } ]
+
+  # When adding your domain features:
+  # - Copy the structure above (story → requirement → AC → tests)
+  # - Use @AC-XXX tags in feature files
+  # - Run: cargo run -p xtask -- ac-status
+  # See docs/tutorials/first-ac-change.md for a walkthrough
