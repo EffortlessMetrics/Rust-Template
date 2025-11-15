@@ -1,13 +1,13 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: my-service
+  name: app-http
 spec:
   replicas: 2  # Staging runs with 2 replicas for light load testing
   template:
     spec:
       containers:
-        - name: app
+        - name: app-http
           resources:
             requests:
               cpu: "100m"
