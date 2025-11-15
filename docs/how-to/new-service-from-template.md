@@ -96,11 +96,15 @@ nix develop
 
 If Nix isn't available:
 ```bash
-# macOS
-sh <(curl -L https://nixos.org/nix/install)
+# Download installer
+curl -L https://nixos.org/nix/install -o nix_install.sh
 
-# Linux
-sh <(curl -L https://nixos.org/nix/install) --daemon
+# Install (use --daemon on Linux)
+sh nix_install.sh           # macOS
+sh nix_install.sh --daemon  # Linux
+
+# Cleanup
+rm nix_install.sh
 ```
 
 ### Run All Checks
@@ -304,11 +308,10 @@ See: [Branch Protection Profiles](../reference/branch-protection-profiles.md)
 
 **Fix:** Install Nix:
 ```bash
-# macOS
-sh <(curl -L https://nixos.org/nix/install)
-
-# Linux
-sh <(curl -L https://nixos.org/nix/install) --daemon
+curl -L https://nixos.org/nix/install -o nix_install.sh
+sh nix_install.sh           # macOS
+sh nix_install.sh --daemon  # Linux
+rm nix_install.sh
 ```
 
 ### "xtask not found"

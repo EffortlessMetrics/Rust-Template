@@ -16,12 +16,12 @@ model = { path = "../model" }
 telemetry = { path = "../telemetry" }
 
 # Web framework
-axum = "0.7"
-tokio = { version = "1", features = ["full"] }
-tower = "0.4"
-tower-http = { version = "0.5", features = ["trace"] }
+axum = "0.8.7"
+tokio = { version = "1.48.0", features = ["full"] }
+tower = "0.5.2"
+tower-http = { version = "0.6.6", features = ["trace"] }
 
 # JSON, UUID, and time
-serde_json = "1"
-uuid = { version = "1", features = ["v4"] }
-chrono = { version = "0.4", features = ["serde"] }
+serde_json = "1.0.145"
+uuid = { version = "1.18.1", features = ["v4"] }
+chrono = { version = "0.4.42", features = ["serde"] }

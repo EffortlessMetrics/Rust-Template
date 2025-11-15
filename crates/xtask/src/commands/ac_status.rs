@@ -170,9 +170,9 @@ fn parse_ledger(ledger_path: &Path) -> Result<HashMap<String, Ac>> {
 fn parse_features(features_dir: &Path) -> Result<HashMap<String, Scenario>> {
     let mut scenarios = HashMap::new();
 
-    // Regex to match tags followed by Scenario/Scenario Outline
-    let pattern = Regex::new(r"(@[\w-]+(?:\s+@[\w-]+)*)\s+Scenario(?:\s+Outline)?:\s+(.+)")?;
     let ac_pattern = Regex::new(r"@(AC-[A-Z0-9-]+)")?;
+    let scenario_pattern = Regex::new(r"^\s*Scenario(?:\s+Outline)?:\s+(.+)")?;
+    let tag_pattern = Regex::new(r"@[\w-]+")?;
 
     for entry in WalkDir::new(features_dir)
         .into_iter()
@@ -187,21 +187,56 @@ fn parse_features(features_dir: &Path) -> Result<HashMap<String, Scenario>> {
             .to_string_lossy()
             .to_string();
 
-        for caps in pattern.captures_iter(&content) {
-            let tags_str = &caps[1];
-            let scenario_name = caps[2].trim();
+        let mut current_tags: Vec<String> = Vec::new();
 
-            // Extract AC ID from tags
-            if let Some(ac_match) = ac_pattern.captures(tags_str) {
-                let ac_id = ac_match[1].to_string();
-                scenarios.insert(
-                    scenario_name.to_string(),
-                    Scenario {
-                        name: scenario_name.to_string(),
-                        ac_id,
-                        file: relative_path.clone(),
-                    },
-                );
+        for line in content.lines() {
+            let trimmed = line.trim_start();
+
+            // Collect tags from lines starting with @
+            if trimmed.starts_with('@') {
+                for tag_match in tag_pattern.find_iter(trimmed) {
+                    current_tags.push(tag_match.as_str().to_string());
+                }
+            }
+            // Match scenario and attach accumulated tags
+            else if let Some(caps) = scenario_pattern.captures(trimmed) {
+                let scenario_name = caps[1].trim();
+
+                // Look for AC ID in collected tags
+                let ac_id = current_tags
+                    .iter()
+                    .find_map(|tag| ac_pattern.captures(tag))
+                    .map(|caps| caps[1].to_string());
+
+                if let Some(ac_id) = ac_id {
+                    scenarios.insert(
+                        scenario_name.to_string(),
+                        Scenario {
+                            name: scenario_name.to_string(),
+                            ac_id,
+                            file: relative_path.clone(),
+                        },
+                    );
+                }
+
+                // Reset tags after processing scenario
+                current_tags.clear();
+            }
+            // Reset tags on other Gherkin keywords (but not on blank lines or comments)
+            else if !trimmed.is_empty()
+                && !trimmed.starts_with('#')
+                && (trimmed.starts_with("Feature:")
+                    || trimmed.starts_with("Background:")
+                    || trimmed.starts_with("Rule:")
+                    || trimmed.starts_with("Examples:")
+                    || trimmed.starts_with("Given ")
+                    || trimmed.starts_with("When ")
+                    || trimmed.starts_with("Then ")
+                    || trimmed.starts_with("And ")
+                    || trimmed.starts_with("But ")
+                    || trimmed.starts_with("|"))
+            {
+                current_tags.clear();
             }
         }
     }
@@ -347,7 +382,12 @@ fn generate_status_md(
         output.push_str("ACs with no mapped scenarios:\n\n");
         for ac in unmapped {
             let text_preview = if ac.text.len() > 100 {
-                format!("{}...", &ac.text[..100])
+                // Safe truncation at character boundary
+                let mut end = 100.min(ac.text.len());
+                while end > 0 && !ac.text.is_char_boundary(end) {
+                    end -= 1;
+                }
+                format!("{}...", &ac.text[..end])
             } else {
                 ac.text.clone()
             };
@@ -373,4 +413,129 @@ fn generate_status_md(
     println!("{} Generated {}", "✓".green(), output_path.display());
 
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::fs;
+    use tempfile::TempDir;
+
+    #[test]
+    fn test_parse_features_with_tags_on_previous_line() {
+        let temp_dir = TempDir::new().unwrap();
+        let features_dir = temp_dir.path().join("features");
+        fs::create_dir_all(&features_dir).unwrap();
+
+        let feature_content = r#"Feature: Test Feature
+  As a user
+  I want to test tag parsing
+  So that ACs are correctly mapped
+
+  @AC-TEST-001 @smoke
+  Scenario: First scenario
+    When I do something
+    Then it works
+
+  @AC-TEST-002
+  Scenario: Second scenario
+    When I do something else
+    Then it also works
+"#;
+
+        fs::write(features_dir.join("test.feature"), feature_content).unwrap();
+
+        let scenarios = parse_features(&features_dir).unwrap();
+
+        assert_eq!(scenarios.len(), 2);
+        assert!(scenarios.contains_key("First scenario"));
+        assert!(scenarios.contains_key("Second scenario"));
+
+        let scenario1 = &scenarios["First scenario"];
+        assert_eq!(scenario1.ac_id, "AC-TEST-001");
+
+        let scenario2 = &scenarios["Second scenario"];
+        assert_eq!(scenario2.ac_id, "AC-TEST-002");
+    }
+
+    #[test]
+    fn test_parse_features_with_multiple_tags_on_same_line() {
+        let temp_dir = TempDir::new().unwrap();
+        let features_dir = temp_dir.path().join("features");
+        fs::create_dir_all(&features_dir).unwrap();
+
+        let feature_content = r#"Feature: Multi-tag Test
+
+  @AC-TEST-003 @wip @integration
+  Scenario: Scenario with multiple tags
+    Given something
+    When action
+    Then result
+"#;
+
+        fs::write(features_dir.join("test.feature"), feature_content).unwrap();
+
+        let scenarios = parse_features(&features_dir).unwrap();
+
+        assert_eq!(scenarios.len(), 1);
+        let scenario = &scenarios["Scenario with multiple tags"];
+        assert_eq!(scenario.ac_id, "AC-TEST-003");
+    }
+
+    #[test]
+    fn test_parse_features_ignores_scenarios_without_ac_tags() {
+        let temp_dir = TempDir::new().unwrap();
+        let features_dir = temp_dir.path().join("features");
+        fs::create_dir_all(&features_dir).unwrap();
+
+        let feature_content = r#"Feature: Mixed scenarios
+
+  @smoke
+  Scenario: No AC tag
+    When something happens
+    Then no mapping
+
+  @AC-TEST-004
+  Scenario: Has AC tag
+    When something else happens
+    Then mapped correctly
+"#;
+
+        fs::write(features_dir.join("test.feature"), feature_content).unwrap();
+
+        let scenarios = parse_features(&features_dir).unwrap();
+
+        // Only the scenario with AC tag should be included
+        assert_eq!(scenarios.len(), 1);
+        assert!(scenarios.contains_key("Has AC tag"));
+        assert!(!scenarios.contains_key("No AC tag"));
+    }
+
+    #[test]
+    fn test_parse_features_scenario_outline() {
+        let temp_dir = TempDir::new().unwrap();
+        let features_dir = temp_dir.path().join("features");
+        fs::create_dir_all(&features_dir).unwrap();
+
+        let feature_content = r#"Feature: Outline test
+
+  @AC-TEST-005
+  Scenario Outline: Parameterized scenario
+    When I use <value>
+    Then I get <result>
+
+    Examples:
+      | value | result |
+      | 1     | one    |
+      | 2     | two    |
+"#;
+
+        fs::write(features_dir.join("test.feature"), feature_content).unwrap();
+
+        let scenarios = parse_features(&features_dir).unwrap();
+
+        assert_eq!(scenarios.len(), 1);
+        let scenario = &scenarios["Parameterized scenario"];
+        assert_eq!(scenario.ac_id, "AC-TEST-005");
+    }
 }
