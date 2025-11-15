@@ -13,11 +13,13 @@ The technical freeze phase is complete. All implementation work is done and vali
 ### 1. ✅ Stale Reference Sweep
 
 **Searched for:**
+
 - Old script references (`ac_status.py`, `make-context.sh`, etc.) - ✅ None found
 - Python script calls - ✅ None found
 - Unnecessary `bash -lc` in workflows - ⚠️ Found 6 instances (minor cleanup opportunity, not critical)
 
 **Results:**
+
 - No references to deleted scripts
 - All core workflows use xtask commands
 - Clean migration to Rust-native tooling
@@ -25,12 +27,14 @@ The technical freeze phase is complete. All implementation work is done and vali
 ### 2. ✅ Clarified JSON as First-Class AC Report
 
 **Code Changes:**
+
 - Added comprehensive comments in `crates/xtask/src/commands/ac_status.rs`
 - Clearly marked JSON path as PRIMARY
 - Clearly marked JUnit path as FALLBACK (legacy)
 - Noted that JUnit fallback may be removed in future major version
 
 **Documentation Changes:**
+
 - Updated `docs/reference/xtask-commands.md` with:
   - Primary vs. fallback explanation
   - JSON format benefits
@@ -39,6 +43,7 @@ The technical freeze phase is complete. All implementation work is done and vali
 - Added note about backward compatibility
 
 **Benefits:**
+
 - Future contributors know the right path to improve
 - Clear deprecation path for JUnit fallback
 - No confusion about which approach is preferred
@@ -50,12 +55,14 @@ The technical freeze phase is complete. All implementation work is done and vali
 **Added Section:** "Design Note: Custom vs. Library Implementation"
 
 **Content:**
+
 - Explains why we use custom middleware (educational)
 - Provides complete tower-http alternative code example
 - Compares both approaches (pros/cons)
 - Empowers teams to choose based on preference
 
 **Result:**
+
 - Template remains educational
 - Teams have clear migration path if desired
 - No hidden "better way" that people discover later
@@ -67,12 +74,14 @@ The technical freeze phase is complete. All implementation work is done and vali
 **Added Section:** "Design Documents (Implementation Details)"
 
 **Links Added:**
+
 - `docs/design/ac-structured-report.md` - AC JSON design
 - `docs/design/llmignore-semantics.md` - Ignore pattern design
 - `crates/app-http/OBSERVABILITY.md` - Runtime patterns
 - `docs/implementation-summary-2025-11-15.md` - Complete v1.0.0 summary
 
 **Benefits:**
+
 - Design decisions are discoverable
 - Implementation rationale is preserved
 - Contributors can understand "why" not just "what"
@@ -84,6 +93,7 @@ The technical freeze phase is complete. All implementation work is done and vali
 **Format:** Keep a Changelog standard
 
 **v1.0.0 Entry Includes:**
+
 - Complete feature list (xtask commands, policies, observability, etc.)
 - Code statistics (1,500 LOC, 14 tests, 26 files, etc.)
 - Validation results (all selftests passing)
@@ -95,6 +105,7 @@ The technical freeze phase is complete. All implementation work is done and vali
 - Contributor guidance
 
 **Unreleased Section:**
+
 - Planned features for v1.1.0
 - Clear roadmap
 
@@ -103,7 +114,8 @@ The technical freeze phase is complete. All implementation work is done and vali
 **Command:** `cargo run -p xtask -- selftest`
 
 **Results:**
-```
+
+```text
 ✅ [1/5] Core checks (fmt, clippy, tests) - PASS
    - 14 unit tests passed
    - Zero clippy warnings
@@ -137,7 +149,7 @@ The technical freeze phase is complete. All implementation work is done and vali
 
 ## Files Modified in Technical Freeze
 
-```
+```text
 .
 ├── CHANGELOG.md                                    (created, 270 lines)
 ├── crates/app-http/OBSERVABILITY.md                (+25 lines)
@@ -148,6 +160,7 @@ The technical freeze phase is complete. All implementation work is done and vali
 ```
 
 **Total Changes:**
+
 - 6 files modified
 - ~350 lines added
 - 0 breaking changes
@@ -218,18 +231,21 @@ The codebase is now ready for the operationalization phase:
 ## Quality Metrics
 
 **Test Coverage:**
+
 - Unit tests: 14/14 passing (100% of new code)
 - Integration tests: 3/3 scenarios passing
 - AC coverage: 3/3 ACs mapped and passing
 - Policy tests: Ready (requires conftest)
 
 **Code Quality:**
+
 - Clippy warnings: 0
 - Formatting: 100% compliant
 - Documentation: Comprehensive (1,200+ lines)
 - Design docs: 3 complete documents
 
 **Operational Readiness:**
+
 - Selftest: ✅ Passing
 - CI workflows: ✅ Configured
 - Branch protection: 📋 Profiles documented
@@ -244,7 +260,7 @@ This technical freeze represents the completion of all implementation work for v
 - **Validated**: All tests passing, comprehensive validation suite
 - **Documented**: Complete Diátaxis docs, design docs, CHANGELOG
 
-**The template is ready to ship. 🚀**
+### The template is ready to ship 🚀
 
 ---
 
