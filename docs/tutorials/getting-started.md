@@ -4,6 +4,8 @@
 **Goal:** Get the template running, understand core concepts, make your first change
 **Prerequisites:** Git, Nix installed
 
+> **⚠️ Note:** This tutorial references a "refunds" feature as a teaching example. The template itself only ships with template-core endpoints (`/health`, `/version`, `/api/echo`). References to refunds are fictional examples you would implement following the patterns shown. See `docs/PILOT-PROJECT-PLAN.md` for a complete real-world example using a Task Management API.
+
 ---
 
 ## What You'll Learn

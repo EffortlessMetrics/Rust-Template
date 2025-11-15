@@ -5,6 +5,8 @@ This tutorial walks you through the complete AC-first development loop: from spe
 **Time:** 15 minutes
 **Prerequisites:** Template cloned, Nix devShell working
 
+> **⚠️ Note:** This tutorial uses a "refunds" feature as a teaching example. The template ships with only template-core endpoints. You'll be adding the refund feature from scratch following AC-first development. See `docs/PILOT-PROJECT-PLAN.md` for a complete real-world example.
+
 ---
 
 ## The AC-First Loop
