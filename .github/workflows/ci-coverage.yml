@@ -33,7 +33,7 @@ jobs:
         run: nix develop -c cargo llvm-cov --workspace --json --output-path cov.json
       - name: Enforce floor (60%)
         run: |
-          nix develop -c bash -lc '
+          nix develop -c bash -c '
             PCT=$(jq ".totals.lines.percent|floor" cov.json)
             echo "coverage=${PCT}%"
             test "${PCT}" -ge 60

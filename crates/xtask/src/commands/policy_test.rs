@@ -4,8 +4,13 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 
 /// Policy areas to test
-const POLICY_AREAS: &[(&str, &str)] =
-    &[("Ledger", "ledger"), ("Features", "features"), ("Flags", "flags"), ("Privacy", "privacy")];
+const POLICY_AREAS: &[(&str, &str)] = &[
+    ("Ledger", "ledger"),
+    ("Features", "features"),
+    ("Flags", "flags"),
+    ("Privacy", "privacy"),
+    ("Template Core", "template_core"),
+];
 
 /// Run conftest policy tests
 pub fn run() -> Result<()> {

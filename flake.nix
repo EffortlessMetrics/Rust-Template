@@ -7,7 +7,7 @@
     forAllSystems = f: nixpkgs.lib.genAttrs(systems) (system:
       f rec {
         inherit system;
-        pkgs = import nixpkgs { inherit system; overlays = [ fenix.overlay ]; };
+        pkgs = import nixpkgs { inherit system; overlays = [ fenix.overlays.default ]; };
         rust = pkgs.fenix.stable.withComponents [ "cargo" "clippy" "rustfmt" "rust-src" ];
       });
   in {

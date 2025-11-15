@@ -1,5 +1,6 @@
 use anyhow::{Context, Result};
 use clap::{Parser, Subcommand};
+use colored::Colorize;
 use std::process::Command;
 
 mod commands;
@@ -51,12 +52,58 @@ fn main() -> Result<()> {
 }
 
 /// Helper to run a command and propagate failures
+///
+/// Captures stdout/stderr and displays them on failure for better debugging.
 pub fn run_cmd(cmd: &mut Command) -> Result<()> {
-    let status = cmd.status().with_context(|| format!("Failed to spawn command: {:?}", cmd))?;
+    let cmd_repr = format_command(cmd);
 
-    if !status.success() {
-        anyhow::bail!("Command {:?} failed with status {:?}", cmd, status);
+    let output = cmd
+        .output()
+        .with_context(|| format!("Failed to execute: {}", cmd_repr))?;
+
+    if !output.status.success() {
+        eprintln!("\n{} Command failed: {}", "✗".bright_red(), cmd_repr);
+
+        let stdout = String::from_utf8_lossy(&output.stdout);
+        let stderr = String::from_utf8_lossy(&output.stderr);
+
+        if !stdout.trim().is_empty() {
+            eprintln!("\n--- stdout ---");
+            eprintln!("{}", stdout);
+        }
+
+        if !stderr.trim().is_empty() {
+            eprintln!("\n--- stderr ---");
+            eprintln!("{}", stderr);
+        }
+
+        anyhow::bail!("Command failed with exit code: {:?}", output.status.code());
     }
 
     Ok(())
+}
+
+/// Format a Command for display
+fn format_command(cmd: &Command) -> String {
+    use std::ffi::OsStr;
+
+    let program = cmd.get_program().to_string_lossy();
+    let args: Vec<String> = cmd
+        .get_args()
+        .map(OsStr::to_string_lossy)
+        .map(|s| {
+            // Quote arguments with spaces
+            if s.contains(' ') {
+                format!("\"{}\"", s)
+            } else {
+                s.to_string()
+            }
+        })
+        .collect();
+
+    if args.is_empty() {
+        program.to_string()
+    } else {
+        format!("{} {}", program, args.join(" "))
+    }
 }

@@ -1,0 +1,64 @@
+{
+  "stories": [
+    {
+      "id": "US-TPL-001",
+      "title": "Service Observability",
+      "requirements": [
+        {
+          "id": "REQ-TPL-HEALTH",
+          "text": "Service exposes health check endpoint",
+          "acceptance_criteria": [
+            {
+              "id": "AC-TPL-001",
+              "text": "GET /health returns 200 with status 'ok' when service is healthy",
+              "tests": [
+                {
+                  "type": "bdd",
+                  "tag": "@AC-TPL-001"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "REQ-TPL-VERSION",
+          "text": "Service exposes version information",
+          "acceptance_criteria": [
+            {
+              "id": "AC-TPL-002",
+              "text": "GET /version returns build information including version and git SHA",
+              "tests": [
+                {
+                  "type": "bdd",
+                  "tag": "@AC-TPL-002"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "US-42",
+      "title": "Customer Refund Management",
+      "requirements": [
+        {
+          "id": "REQ-411",
+          "text": "Customer can request refund",
+          "acceptance_criteria": [
+            {
+              "id": "AC-123",
+              "text": "Customer can create a refund for an order",
+              "tests": [
+                {
+                  "type": "bdd",
+                  "tag": "@AC-123"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

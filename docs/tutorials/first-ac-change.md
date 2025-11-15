@@ -23,7 +23,9 @@ Let's walk through each step.
 
 ## Step 1: Add AC to the Ledger
 
-Open `specs/spec_ledger.yaml` and add a new AC:
+Open `specs/spec_ledger.yaml` and add a new AC.
+
+> **Note**: The template currently has `AC-123` for refund creation and `AC-TPL-001/002` for core endpoints. We're adding `AC-124` as a new example.
 
 ```yaml
 stories:
@@ -35,14 +37,14 @@ stories:
             text: "Customer can create a refund for an order"
             tests: [{ type: bdd, tag: "@AC-123" }]
 
-          # Add new AC:
-          - id: AC-124
+          # Add new AC (you're creating this):
+          - id: AC-124  # ← NEW AC to add
             text: "Customer can view refund status"
             tests: [{ type: bdd, tag: "@AC-124" }]
 ```
 
 **Key points:**
-- Use next sequential AC number
+- Use next sequential AC number (AC-124 in this example)
 - Write clear, testable behavior statement
 - Reference the BDD tag you'll use in the scenario
 

@@ -52,4 +52,4 @@ jobs:
       - uses: cachix/install-nix-action@v27
       - name: AC Coverage Policy
         run: |
-          nix develop -c bash -lc 'yq -o=json specs/spec_ledger.yaml | conftest test -p policy/ledger.rego -'
+          nix develop -c bash -c 'yq -o=json specs/spec_ledger.yaml | conftest test -p policy/ledger.rego -'
