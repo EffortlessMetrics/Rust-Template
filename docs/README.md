@@ -145,6 +145,12 @@ This documentation follows the [Diátaxis](https://diataxis.fr/) framework:
 - Error handling patterns
 - Testing
 
+📗 **[Deploy to Development](how-to/deploy-dev.md)** (20 minutes)
+- Deploy to local Kubernetes cluster
+- Environment configuration
+- Prerequisite checking
+- Troubleshooting deployment issues
+
 ### Reference (Information-Oriented)
 
 📚 **[xtask Commands](reference/xtask-commands.md)**
@@ -194,6 +200,12 @@ These documents capture implementation decisions, trade-offs, and rationale for 
 - Recommendation and justification
 - Migration strategy
 
+📐 **[Meta-Contract Phase 1.3](meta_contract_phase1.3.md)**
+- Machine-readable specifications for xtask and AC reports
+- Control plane contract enforcement
+- Template-core protection policies
+- Implementation details and validation
+
 📊 **[Observability Patterns](../crates/app-http/OBSERVABILITY.md)** (in app-http crate)
 - Request ID correlation implementation
 - Structured error handling with AC tracking
@@ -205,6 +217,12 @@ These documents capture implementation decisions, trade-offs, and rationale for 
 - Technical decisions and validation results
 - Code statistics and test coverage
 - Future roadmap
+
+📋 **[Policy Organization](../policy/README.md)** (in policy/ directory)
+- Policy structure and testing guide
+- Template-core, LLM, and Kubernetes policies
+- Test fixture organization
+- Integration with xtask policy-test
 
 ---
 
@@ -357,16 +375,23 @@ ls docs/                             # Browse docs locally
 
 ## Version
 
-This documentation is for **Rust Template v1.0.0**.
+This documentation is for **Rust Template v1.1.0**.
 
 **Changelog:**
-- v1.0.0 (2025-11-13): Initial stable release
+- v1.1.0 (2025-11-15): Contract layer, infrastructure foundation, and DevEx improvements
+  - Template contract layer: Error envelope spec, template-core protection, meta-contracts
+  - Infrastructure foundation: K8s manifests, policies, and deploy command
+  - DevEx improvements: Multi-platform Nix, verbosity controls, performance optimizations
+  - See [CHANGELOG.md](../CHANGELOG.md) for full details
+
+- v1.0.0 (2025-11-15): Initial stable release
   - Complete Diátaxis documentation
   - Runtime architecture (app-http)
   - Rust-native tooling (xtask)
   - AC-first + Policy-as-code + LLM-native
 
-**Next version (v1.1.0) planned:**
-- Rust-native AC status (xtask ac-status)
-- Database adapter example
-- More how-to guides
+**Next version (v1.2.0) planned:**
+- Implement ErrorResponse fields in AppError (AC-TPL-003, AC-TPL-004)
+- Task Management API pilot project
+- Docker build automation
+- Staging and production K8s manifests
