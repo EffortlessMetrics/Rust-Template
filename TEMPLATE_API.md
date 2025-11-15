@@ -123,6 +123,52 @@ nix develop -c cargo run -p xtask -- ac-status
 
 ---
 
+### `xtask policy-test`
+
+Test Rego policies with conftest.
+
+**Usage:**
+```bash
+cargo run -p xtask -- policy-test
+```
+
+**Behavior:**
+1. Checks if conftest is available on PATH
+2. Runs policy tests for each policy area (ledger, features, flags, privacy)
+3. Tests against fixtures in `policy/testdata/`
+4. Validates that valid fixtures pass and invalid fixtures fail
+5. Reports comprehensive test results
+
+**Exit codes:**
+- `0`: All policy tests passed
+- Non-zero: One or more policy tests failed or conftest not available
+
+**Policy areas tested:**
+- **Ledger** (`policy/ledger.rego`) - Ensures every AC has tests
+- **Features** (`policy/features.rego`) - Validates feature-AC references
+- **Flags** (`policy/flags.rego`) - Validates flag ownership and rollouts
+- **Privacy** (`policy/privacy.rego`) - Ensures PII fields have owners and retention
+
+**Fixtures:**
+Each policy area has test fixtures in `policy/testdata/`:
+- `{area}_valid.json` - Should pass policy checks
+- `{area}_invalid.json` - Should fail policy checks
+- `{area}_missing_tests.json` - Should fail (for ledger)
+- `{area}_unknown_ac.json` - Should fail (for features)
+
+**Prerequisites:**
+Requires `conftest` on PATH. Available in Nix shell or install separately:
+- macOS: `brew install conftest`
+- Linux: See https://www.conftest.dev/install/
+- Nix: `nix develop` (automatically available)
+
+**Notes:**
+- Used by `xtask selftest` but gracefully degrades if conftest unavailable
+- Each policy area is tested independently
+- Provides clear pass/fail output for each fixture
+
+---
+
 ### `xtask selftest`
 
 Run the complete template self-test suite (used in CI).
@@ -139,7 +185,7 @@ nix develop -c cargo run -p xtask -- selftest
 2. Runs `xtask bdd` (acceptance tests + JUnit XML)
 3. Runs `xtask ac-status` (AC status mapping)
 4. Runs `xtask bundle implement_ac` (LLM bundler)
-5. Runs policy tests (`scripts/test-policies.sh` if conftest available)
+5. Runs `xtask policy-test` (Rego policy tests if conftest available)
 6. Reports comprehensive validation results with colored output
 
 **Exit codes:**
@@ -414,11 +460,72 @@ cargo run -p xtask -- bundle <task>
 
 ---
 
-## Test Scripts
+### `.llmignore` File Semantics
+
+**Location:** `.llm/.llmignore`
+
+**Purpose:** Exclude files from LLM context bundles using pattern matching.
+
+**Current Implementation:** Minimal pattern matching (see design doc for planned gitignore semantics adoption)
+
+**Supported Patterns:**
+
+1. **Exact component match:** `foo` matches any path component named exactly "foo"
+   - Matches: `foo`, `bar/foo`, `bar/foo/baz.txt`
+   - Does NOT match: `foobar`, `foo.txt`
+
+2. **Directory pattern:** `foo/` matches directory and its contents
+   - Matches: `foo/bar.txt`, `foo/baz/qux.rs`
+   - Does NOT match: `bar/foo/baz.txt` (only at root currently)
+
+3. **Comments:** Lines starting with `#` are ignored
+
+4. **Whitespace:** Leading/trailing whitespace is trimmed
+
+**Example `.llm/.llmignore`:**
+```
+# Ignore build artifacts
+target/
+dist/
+
+# Ignore specific files
+Cargo.lock
+.DS_Store
+
+# Ignore test directories
+tests/
+```
+
+**Limitations (Current Implementation):**
+- No glob patterns (`*.log`, `test_*.rs`)
+- No wildcards (`?`, `*`, `**`)
+- No path anchoring (`/foo` vs `foo`)
+- No negation patterns (`!important.log`)
+- No character classes (`[0-9]`)
+
+**Planned Enhancement:**
+Full gitignore semantics via the `ignore` crate. See `docs/design/llmignore-semantics.md` for analysis and implementation plan.
+
+**Processing Order:**
+1. Load patterns from `.llm/.llmignore`
+2. Filter comments and empty lines
+3. Apply patterns to files matched by `include` globs
+4. Excluded files are not added to bundle
+
+**Notes:**
+- Patterns are applied after `git ls-files` resolves include globs
+- Files must be git-tracked to be considered for bundling
+- Exclusion happens before size limit enforcement
+
+---
+
+## Test Scripts (Legacy)
 
 ### `scripts/test-policies.sh`
 
-Tests all Rego policies against fixtures in `policy/testdata/`.
+**DEPRECATED:** Use `cargo run -p xtask -- policy-test` instead.
+
+Legacy bash wrapper for testing Rego policies. Kept for backward compatibility.
 
 **Usage:**
 ```bash

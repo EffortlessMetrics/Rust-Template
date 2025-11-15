@@ -205,6 +205,137 @@ cargo run -p xtask -- bundle my_custom_task
 
 ---
 
+## Excluding Files with .llmignore
+
+The `.llm/.llmignore` file lets you exclude files from bundles using **standard gitignore syntax**.
+
+### Location
+
+Create or edit: `.llm/.llmignore`
+
+### Syntax
+
+`.llmignore` uses **full gitignore semantics** - the same patterns you use in `.gitignore` work here.
+
+For complete syntax reference, see [gitignore documentation](https://git-scm.com/docs/gitignore).
+
+### Common Patterns
+
+**1. Wildcard patterns:**
+```
+# Ignore all log files
+*.log
+
+# Ignore test files
+test_*.rs
+*_test.go
+```
+
+**2. Directory patterns:**
+```
+# Ignore build directories
+target/
+dist/
+node_modules/
+```
+
+**3. Path anchoring:**
+```
+# Only at root
+/ROOT_FILE.txt
+
+# Anywhere in tree
+Cargo.lock
+```
+
+**4. Recursive wildcards:**
+```
+# All .draft files in docs subdirectories
+docs/**/*.draft
+
+# All temporary files anywhere
+**/*.tmp
+```
+
+**5. Negation (whitelist):**
+```
+# Ignore all logs except error.log
+*.log
+!error.log
+```
+
+**6. Character classes:**
+```
+# Ignore test0.rs through test9.rs
+test[0-9].rs
+
+# Files starting with a, b, or c
+[abc]*.txt
+```
+
+### Example .llmignore
+
+```
+# Build artifacts
+target/
+*.lock
+*.tmp
+
+# IDE and OS files
+.idea/
+.vscode/
+.DS_Store
+*.swp
+
+# Test and development files
+*_test.go
+test_*.rs
+
+# Logs and databases
+*.log
+*.db
+
+# Environment files
+.env*
+
+# Documentation drafts
+docs/**/*.draft
+*.bak
+```
+
+### How It Works
+
+1. Files matched by `include` patterns in contextpack.yaml
+2. `.llmignore` patterns are applied to exclude files (using gitignore semantics)
+3. Remaining files are added to bundle (up to `max_bytes`)
+
+### Tips
+
+**Balance include patterns with .llmignore:**
+
+```yaml
+# Good: Use include for broad categories, .llmignore for exclusions
+include:
+  - crates/**/*.rs
+
+# .llmignore:
+# test_*.rs
+# *_test.rs
+# target/
+```
+
+**Be specific when possible:**
+
+```yaml
+# Even better: Be specific in contextpack.yaml
+include:
+  - crates/core/src/**/*.rs
+  - crates/app-http/src/**/*.rs
+  # More specific = less filtering needed
+```
+
+---
+
 ## Troubleshooting
 
 **Bundle is empty or missing files:**

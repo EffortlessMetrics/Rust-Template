@@ -1,5 +1,5 @@
 use acceptance::World;
-use cucumber::{writer, World as _, WriterExt};
+use cucumber::{World as _, WriterExt, writer};
 use std::fs::File;
 
 // Import steps module to ensure step definitions are registered
@@ -19,16 +19,30 @@ async fn main() {
     let junit_dir = workspace_root.join("target/junit");
     let junit_path = junit_dir.join("acceptance.xml");
 
+    // Support environment variable for JSON output path (default: target/ac_report.json)
+    let json_path = std::env::var("AC_REPORT_JSON")
+        .map(std::path::PathBuf::from)
+        .unwrap_or_else(|_| workspace_root.join("target/ac_report.json"));
+
     // Ensure target/junit directory exists
     std::fs::create_dir_all(&junit_dir).expect("Failed to create junit directory");
 
-    // Create the JUnit output file
-    let junit_file = File::create(&junit_path).expect("Failed to create JUnit output file");
+    // Ensure JSON parent directory exists
+    if let Some(parent) = json_path.parent() {
+        std::fs::create_dir_all(parent).expect("Failed to create JSON output directory");
+    }
 
-    // Combine basic console output with JUnit XML output
+    // Create output files
+    let junit_file = File::create(&junit_path).expect("Failed to create JUnit output file");
+    let json_file = File::create(&json_path).expect("Failed to create JSON output file");
+
+    // Triple output: console + JUnit + JSON
     World::cucumber()
         .with_writer(
-            writer::Basic::stdout().summarized().tee::<World, _>(writer::JUnit::new(junit_file, 0)),
+            writer::Basic::stdout().summarized().tee::<World, _>(
+                writer::JUnit::new(junit_file, 0)
+                    .tee::<World, _>(writer::Json::for_tee(json_file).normalized()),
+            ),
         )
         .before(|_feature, _rule, _scenario, world| {
             Box::pin(async move {
