@@ -35,6 +35,31 @@ async fn handler(Extension(request_id): Extension<RequestId>) {
 - **Adds to tracing span** automatically for log correlation
 - **Returns in response header** for client tracking
 
+### Design Note: Custom vs. Library Implementation
+
+This template implements request ID middleware manually for **educational purposes** - it shows the complete pattern and is easy to understand and customize.
+
+**Alternative:** If you prefer a batteries-included approach, `tower-http` provides equivalent functionality:
+
+```rust
+use tower_http::request_id::{MakeRequestUuid, PropagateRequestIdLayer, SetRequestIdLayer};
+use http::HeaderName;
+
+let header = HeaderName::from_static("x-request-id");
+let make_request_id = MakeRequestUuid::default();
+
+Router::new()
+    .route("/health", get(health))
+    .layer(PropagateRequestIdLayer::new(header.clone()))
+    .layer(SetRequestIdLayer::new(header, make_request_id))
+```
+
+Both approaches are valid:
+- **Custom middleware** (current): Full control, clear pattern, easier to extend with custom logic
+- **tower-http**: Less code, well-tested library, standard ecosystem tool
+
+Choose based on your team's preference for explicitness vs. convenience.
+
 ### Example Flow
 
 ```
