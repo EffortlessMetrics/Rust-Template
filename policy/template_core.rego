@@ -34,8 +34,50 @@ deny[msg] {
     is_core_ac(ac.id)
     not ac_has_tests(ac)
     msg := sprintf(
-        "Template core AC %s must have mapped tests. Core ACs enforce template foundation behavior.",
+        "Template core AC %s must have at least one BDD test. The 'tests' field is either missing or empty. Core ACs enforce template foundation behavior and require test coverage. See docs/explanation/template-foundation-vs-examples.md for details.",
         [ac.id]
+    )
+}
+
+# Deny if core ACs have empty tests array
+deny[msg] {
+    some i, j, k
+    story := input.stories[i]
+    req := story.requirements[j]
+    ac := req.acceptance_criteria[k]
+    is_core_ac(ac.id)
+    ac.tests
+    count(ac.tests) == 0
+    msg := sprintf(
+        "Template core AC %s has an empty 'tests' array. Core ACs must have at least one BDD test to verify template foundation behavior. Add a test entry with 'type: bdd' and appropriate '@%s' tag.",
+        [ac.id, ac.id]
+    )
+}
+
+# Deny if FT-TPL-CORE feature exists but doesn't reference all required core ACs
+deny[msg] {
+    some i
+    feature := input.features[i]
+    feature.id == "FT-TPL-CORE"
+    some required_ac
+    required_core_acs[required_ac]
+    not ac_in_feature(required_ac, feature.acceptance_criteria)
+    msg := sprintf(
+        "FT-TPL-CORE must reference template core AC %s. This feature defines the template foundation and must include all core ACs: [%s]. Update features/FT-TPL-CORE.yaml to include this AC.",
+        [required_ac, concat(", ", required_core_acs)]
+    )
+}
+
+# Deny if FT-TPL-CORE feature exists but references non-core ACs
+deny[msg] {
+    some i, j
+    feature := input.features[i]
+    feature.id == "FT-TPL-CORE"
+    ac := feature.acceptance_criteria[j]
+    not is_core_ac(ac)
+    msg := sprintf(
+        "FT-TPL-CORE references non-core AC %s. This feature should only reference template core ACs: [%s]. Remove '%s' from features/FT-TPL-CORE.yaml or verify it's a core AC.",
+        [ac, concat(", ", required_core_acs), ac]
     )
 }
 
@@ -54,4 +96,9 @@ is_core_ac(ac_id) {
 ac_has_tests(ac) {
     ac.tests
     count(ac.tests) > 0
+}
+
+# Helper: Check if AC is in feature's acceptance_criteria list
+ac_in_feature(ac_id, feature_acs) {
+    ac_id == feature_acs[_]
 }

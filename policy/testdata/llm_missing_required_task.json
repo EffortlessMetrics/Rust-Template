@@ -1,0 +1,19 @@
+{
+  "tasks": {
+    "implement_feature": {
+      "max_bytes": 300000,
+      "include": [
+        "specs/spec_ledger.yaml",
+        "specs/userstories/**/*.md"
+      ],
+      "description": "Only has implement_feature - missing implement_ac and debug_tests"
+    },
+    "debug_tests": {
+      "max_bytes": 200000,
+      "include": [
+        "specs/features/**/*.feature"
+      ],
+      "description": "Has debug_tests - but missing implement_ac"
+    }
+  }
+}

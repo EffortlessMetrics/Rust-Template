@@ -4,12 +4,43 @@ use colored::Colorize;
 use std::process::Command;
 
 mod commands;
+mod validation;
+
+/// Verbosity level for command output
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+pub enum Verbosity {
+    Quiet,
+    Normal,
+    Verbose,
+}
+
+impl Verbosity {
+    pub fn is_verbose(&self) -> bool {
+        *self >= Verbosity::Verbose
+    }
+
+    pub fn is_quiet(&self) -> bool {
+        *self == Verbosity::Quiet
+    }
+
+    pub fn is_normal(&self) -> bool {
+        *self == Verbosity::Normal
+    }
+}
 
 /// xtask: Single entrypoint for all dev and CI operations
 #[derive(Parser)]
 #[command(name = "xtask")]
 #[command(about = "Development and CI orchestration tool", long_about = None)]
 struct Cli {
+    /// Increase verbosity (show detailed output)
+    #[arg(short, long, global = true)]
+    verbose: bool,
+
+    /// Decrease verbosity (suppress non-error output)
+    #[arg(short, long, global = true)]
+    quiet: bool,
+
     #[command(subcommand)]
     command: Commands,
 }
@@ -27,6 +58,12 @@ enum Commands {
         /// Task name from .llm/contextpack.yaml
         task: String,
     },
+    /// Deploy application to specified environment (dev, staging, prod)
+    Deploy {
+        /// Target environment: dev, staging, or prod
+        #[arg(short, long, default_value = "dev")]
+        env: String,
+    },
     /// Test Rego policies with conftest
     PolicyTest,
     /// Quick validation of template functionality
@@ -38,16 +75,27 @@ enum Commands {
 fn main() -> Result<()> {
     let cli = Cli::parse();
 
+    // Determine verbosity level
+    let verbosity = if cli.quiet {
+        Verbosity::Quiet
+    } else if cli.verbose {
+        Verbosity::Verbose
+    } else {
+        Verbosity::Normal
+    };
+
     match cli.command {
-        Commands::AcStatus => {
-            commands::ac_status::run(commands::ac_status::AcStatusArgs::default())
-        }
+        Commands::AcStatus => commands::ac_status::run(commands::ac_status::AcStatusArgs {
+            verbosity,
+            ..Default::default()
+        }),
         Commands::Check => commands::check::run(),
         Commands::Bdd => commands::bdd::run(),
         Commands::Bundle { task } => commands::bundle::run(&task),
+        Commands::Deploy { env } => commands::deploy::run(&env),
         Commands::PolicyTest => commands::policy_test::run(),
         Commands::Quickstart => commands::quickstart::run(),
-        Commands::Selftest => commands::selftest::run(),
+        Commands::Selftest => commands::selftest::run_with_verbosity(verbosity),
     }
 }
 
@@ -57,9 +105,7 @@ fn main() -> Result<()> {
 pub fn run_cmd(cmd: &mut Command) -> Result<()> {
     let cmd_repr = format_command(cmd);
 
-    let output = cmd
-        .output()
-        .with_context(|| format!("Failed to execute: {}", cmd_repr))?;
+    let output = cmd.output().with_context(|| format!("Failed to execute: {}", cmd_repr))?;
 
     if !output.status.success() {
         eprintln!("\n{} Command failed: {}", "✗".bright_red(), cmd_repr);
@@ -93,17 +139,9 @@ fn format_command(cmd: &Command) -> String {
         .map(OsStr::to_string_lossy)
         .map(|s| {
             // Quote arguments with spaces
-            if s.contains(' ') {
-                format!("\"{}\"", s)
-            } else {
-                s.to_string()
-            }
+            if s.contains(' ') { format!("\"{}\"", s) } else { s.to_string() }
         })
         .collect();
 
-    if args.is_empty() {
-        program.to_string()
-    } else {
-        format!("{} {}", program, args.join(" "))
-    }
+    if args.is_empty() { program.to_string() } else { format!("{} {}", program, args.join(" ")) }
 }
