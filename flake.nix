@@ -13,7 +13,24 @@
   in {
     devShells = forAllSystems ({ pkgs, rust, ... }: {
       default = pkgs.mkShell {
-        packages = [ rust pkgs.just pkgs.git pkgs.curl pkgs.jq pkgs.yq-go pkgs.nodejs_20 pkgs.python3 pkgs.gitleaks pkgs.conftest pkgs.cargo-audit pkgs.cargo-deny pkgs.sccache pkgs.cargo-nextest ];
+        packages = [
+          rust
+          pkgs.just
+          pkgs.git
+          pkgs.curl
+          pkgs.jq
+          pkgs.yq-go
+          pkgs.nodejs_20
+          pkgs.python3
+          pkgs.gitleaks
+          pkgs.conftest
+          pkgs.kubectl
+          pkgs.kustomize
+          pkgs.cargo-audit
+          pkgs.cargo-deny
+          pkgs.sccache
+          pkgs.cargo-nextest
+        ];
         shellHook = ''
           export PATH="$PWD/.tools/bin:$PATH"
           echo "DevShell ready — try: just checks"
