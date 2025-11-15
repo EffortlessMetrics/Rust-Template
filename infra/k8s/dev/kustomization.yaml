@@ -10,10 +10,12 @@ namespace: app-http-dev
 
 # Base resources
 resources:
-  - deployment.yaml
-  - service.yaml
+- deployment.yaml
+- service.yaml
 
 # Common labels applied to all resources
-commonLabels:
-  app.kubernetes.io/environment: dev
-  app.kubernetes.io/managed-by: kustomize
+labels:
+- includeSelectors: true
+  pairs:
+    app.kubernetes.io/environment: dev
+    app.kubernetes.io/managed-by: kustomize

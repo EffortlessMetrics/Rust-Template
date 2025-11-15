@@ -8,32 +8,34 @@ namespace: app-http-prod
 
 # Use dev as the base
 resources:
-  - ../dev
+- ../dev
 
 # Common labels applied to all resources
-commonLabels:
-  app.kubernetes.io/environment: production
-  app.kubernetes.io/managed-by: kustomize
   # Production-specific labels for cost tracking, ownership, etc.
-  team: platform
-  cost-center: engineering
 
 # Patches for production-specific configuration
 patches:
-  - path: deployment-patch.yaml
-    target:
-      kind: Deployment
-      name: app-http
+- path: deployment-patch.yaml
+  target:
+    kind: Deployment
+    name: app-http
 
 # ConfigMap generator for environment-specific config
 configMapGenerator:
-  - name: app-config
-    literals:
-      - ENVIRONMENT=production
-      - LOG_LEVEL=warn
-      - RUST_LOG=warn,my_service=info
+- literals:
+  - ENVIRONMENT=production
+  - LOG_LEVEL=warn
+  - RUST_LOG=warn,my_service=info
+  name: app-config
 
 # Image tag override (typically set via CI/CD)
 images:
-  - name: app-http
-    newTag: prod-latest  # Or specific version like v1.2.3
+- name: app-http
+  newTag: prod-latest
+labels:
+- includeSelectors: true
+  pairs:
+    app.kubernetes.io/environment: production
+    app.kubernetes.io/managed-by: kustomize
+    cost-center: engineering
+    team: platform

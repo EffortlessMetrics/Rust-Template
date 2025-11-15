@@ -8,29 +8,31 @@ namespace: app-http-staging
 
 # Use dev as the base
 resources:
-  - ../dev
+- ../dev
 
 # Common labels applied to all resources
-commonLabels:
-  app.kubernetes.io/environment: staging
-  app.kubernetes.io/managed-by: kustomize
 
 # Patches for staging-specific configuration
 patches:
-  - path: deployment-patch.yaml
-    target:
-      kind: Deployment
-      name: app-http
+- path: deployment-patch.yaml
+  target:
+    kind: Deployment
+    name: app-http
 
 # ConfigMap generator for environment-specific config
 configMapGenerator:
-  - name: app-config
-    literals:
-      - ENVIRONMENT=staging
-      - LOG_LEVEL=info
-      - RUST_LOG=info
+- literals:
+  - ENVIRONMENT=staging
+  - LOG_LEVEL=info
+  - RUST_LOG=info
+  name: app-config
 
 # Image tag override (typically set via CI/CD)
 images:
-  - name: app-http
-    newTag: staging-latest
+- name: app-http
+  newTag: staging-latest
+labels:
+- includeSelectors: true
+  pairs:
+    app.kubernetes.io/environment: staging
+    app.kubernetes.io/managed-by: kustomize

@@ -210,7 +210,7 @@ fn display_next_steps(env: &Environment) {
             println!("2. Update image tag in Kustomize overlay:");
             println!("   {}", format!("# Edit infra/k8s/{}/kustomization.yaml", env.as_str()).cyan());
             println!("   {}", "# Update images.newTag: <version>".cyan());
-            println!("   Or use: {}", format!("cd infra/k8s/{} && kustomize edit set image my-service=<registry>/app-http:<version>", env.as_str()).cyan());
+            println!("   Or use: {}", format!("cd infra/k8s/{} && kustomize edit set image app-http=<registry>/app-http:<version>", env.as_str()).cyan());
             println!();
 
             println!("3. Verify you're connected to the correct cluster:");
