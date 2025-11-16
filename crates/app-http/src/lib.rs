@@ -5,7 +5,11 @@ use axum::{
     routing::{get, post},
 };
 use serde::{Deserialize, Serialize};
-use tower_http::trace::TraceLayer;
+use prometheus::handle;
+use tower_http::{
+    metrics::MetricsLayer,
+    trace::TraceLayer,
+};
 use tracing::{info, instrument};
 
 // Public modules
@@ -23,8 +27,10 @@ pub fn app() -> Router {
         .route("/health", get(health))
         .route("/version", get(version))
         .route("/api/echo", post(echo)) // For demonstrating error handling in tests
+        .route("/metrics", get(|| async { handle().render() })) // Prometheus metrics endpoint
         // Add your domain endpoints here - see docs/tutorials/first-ac-change.md
         // Middleware layers (applied in reverse order - bottom to top)
+        .layer(MetricsLayer::new())
         .layer(axum::middleware::from_fn(middleware::request_id_middleware))
         .layer(
             // Configure TraceLayer to include request_id field

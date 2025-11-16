@@ -6,6 +6,12 @@ This document explains the observability patterns implemented in the `app-http` 
 
 The app-http implementation provides a comprehensive observability story through:
 
+1. **OTLP Tracing** - Distributed tracing via OTLP exporter (configurable)
+2. **Prometheus Metrics** - Full HTTP metrics + `/metrics` endpoint
+3. **Request ID Correlation** - Track requests across services and log aggregations
+4. **Structured Logging** - Consistent, queryable log data with rich context
+5. **Error Tracking** - Machine-readable error codes with AC/Feature correlation
+
 1. **Request ID Correlation** - Track requests across services and log aggregations
 2. **Structured Logging** - Consistent, queryable log data with rich context
 3. **Error Tracking** - Machine-readable error codes with AC/Feature correlation
@@ -309,6 +315,36 @@ refund_creation_duration_seconds > 1.0
 ```
 
 ## Adding Metrics
+
+## Production Observability Configuration
+
+### OTLP Tracing
+```bash
+# Enable OTLP export (default: console fallback)
+export OTLP_ENDPOINT=http://otel-collector:4317
+
+# Log level filtering
+export RUST_LOG=info,app_http=debug
+```
+
+### Prometheus Metrics
+- **Endpoint**: `GET /metrics`
+- **Metrics**: `http_requests_total`, `http_requests_duration_seconds`, `http_errors_total`
+- **Dimensions**: `method`, `status`, `uri`
+
+### Example Metrics Output
+```bash
+curl http://localhost:3000/metrics | grep http_requests
+# http_requests_total{method="GET",outcome="success",status="200",uri="/health"} 5 1734251234567
+# http_requests_duration_seconds_bucket{...le="0.005"} 2
+```
+
+### Complete Stack
+```
+Client → app-http:3000 → OTLP(gRPC):4317 → Collector → Backend
+                           ↓
+                       Prometheus:9090 ← /metrics
+```
 
 To add actual metrics (currently stubbed):
 
