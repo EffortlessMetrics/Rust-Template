@@ -208,7 +208,10 @@ fn display_next_steps(env: &Environment) {
             println!();
 
             println!("2. Update image tag in Kustomize overlay:");
-            println!("   {}", format!("# Edit infra/k8s/{}/kustomization.yaml", env.as_str()).cyan());
+            println!(
+                "   {}",
+                format!("# Edit infra/k8s/{}/kustomization.yaml", env.as_str()).cyan()
+            );
             println!("   {}", "# Update images.newTag: <version>".cyan());
             println!("   Or use: {}", format!("cd infra/k8s/{} && kustomize edit set image app-http=<registry>/app-http:<version>", env.as_str()).cyan());
             println!();

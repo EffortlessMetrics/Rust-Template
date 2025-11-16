@@ -1,4 +1,4 @@
-package k8s
+package main
 
 # Kubernetes Security and Best Practices Policy
 # Enforces security best practices for Kubernetes deployments

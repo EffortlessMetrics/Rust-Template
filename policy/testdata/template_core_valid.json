@@ -42,7 +42,10 @@
   "features": [
     {
       "id": "FT-TPL-CORE",
-      "acceptance_criteria": ["AC-TPL-001", "AC-TPL-002", "AC-TPL-003", "AC-TPL-004"]
+      "acceptance_criteria": [
+      "AC-TPL-CORE-001",
+      "AC-TPL-CORE-002"
+    ]
     }
   ],
   "ledger_ac_ids": ["AC-TPL-001", "AC-TPL-002", "AC-TPL-003", "AC-TPL-004"]

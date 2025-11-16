@@ -1,4 +1,4 @@
-package features
+package main
 
 # Feature-AC Linkage Policy
 # Ensures features only reference ACs that exist in the ledger
