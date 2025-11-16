@@ -9,12 +9,12 @@
           "text": "Service exposes health check endpoint",
           "acceptance_criteria": [
             {
-              "id": "AC-TPL-001",
+              "id": "AC-TPL-CORE-001",
               "text": "GET /health returns 200 with status 'ok' when service is healthy",
               "tests": [
                 {
                   "type": "bdd",
-                  "tag": "@AC-TPL-001"
+                  "tag": "@AC-TPL-CORE-001"
                 }
               ]
             }
@@ -26,8 +26,8 @@
   "features": [
     {
       "id": "FT-TPL-CORE",
-      "acceptance_criteria": ["AC-TPL-001"]
+      "acceptance_criteria": ["AC-TPL-CORE-001"]
     }
   ],
-  "ledger_ac_ids": ["AC-TPL-001"]
+  "ledger_ac_ids": ["AC-TPL-CORE-001"]
 }
