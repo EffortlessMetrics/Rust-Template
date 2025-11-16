@@ -1,4 +1,4 @@
-package flags
+package main
 
 # Feature Flags Policy
 # Ensures flags have owners and rollouts reference valid flags

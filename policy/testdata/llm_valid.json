@@ -43,6 +43,13 @@
         "docs/**/*.md"
       ],
       "description": "Optional custom task for documentation"
+    },
+    "selftest": {
+      "max_bytes": 100000,
+      "description": "Context for debugging the template self-test suite",
+      "include": [
+        "crates/xtask/**"
+      ]
     }
   }
 }

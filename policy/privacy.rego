@@ -1,4 +1,4 @@
-package privacy
+package main
 
 # Privacy Policy
 # Ensures PII fields have owners and valid retention periods

@@ -126,9 +126,8 @@ pub fn run_with_verbosity(verbosity: crate::Verbosity) -> Result<()> {
             }
         }
         Err(e) => {
-            eprintln!("  {} Policy tests: {}", "⚠".yellow(), e);
-            println!("  {} (Run 'nix develop' for full policy validation)", "ℹ".blue());
-            // Don't fail suite if conftest unavailable
+            eprintln!("  {} Policy tests: {}", "✗".red(), e);
+            failed += 1;
         }
     }
     println!();
