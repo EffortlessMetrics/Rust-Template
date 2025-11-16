@@ -297,54 +297,6 @@ impl From<JsonRejection> for AppError {
     }
 }
 
-// ============================================================================
-// Metrics Integration Points
-// ============================================================================
-//
-// To add metrics, you would:
-//
-// 1. Add a metrics crate dependency (e.g., `metrics` or `prometheus`)
-// 2. Define error counter in a metrics module:
-//    ```rust
-//    use metrics::{counter, describe_counter};
-//
-//    pub fn init_error_metrics() {
-//        describe_counter!(
-//            "http_errors_total",
-//            "Total number of HTTP errors by status code and error code"
-//        );
-//    }
-//    ```
-//
-// 3. Increment counter in AppError::log_error():
-//    ```rust
-//    counter!(
-//        "http_errors_total",
-//        "status" => self.status.as_str(),
-//        "code" => self.code.to_string(),
-//        "ac_id" => self.ac_id.as_deref().unwrap_or("none"),
-//    ).increment(1);
-//    ```
-//
-// 4. Add latency tracking in request_id middleware:
-//    ```rust
-//    let start = std::time::Instant::now();
-//    let response = next.run(request).await;
-//    let duration = start.elapsed();
-//
-//    histogram!(
-//        "http_request_duration_seconds",
-//        "path" => path,
-//        "method" => method,
-//        "status" => response.status().as_str(),
-//    ).record(duration.as_secs_f64());
-//    ```
-//
-// This provides rich observability:
-// - Error rates by code and status
-// - Error distribution by AC/Feature
-// - Request latency by endpoint
-// ============================================================================
 
 #[cfg(test)]
 mod tests {

@@ -9,16 +9,17 @@
 // Keep this crate lightweight - only pure data structures and value objects.
 // Business logic belongs in crates/core, not here.
 //
-// Example:
-//
-// pub struct Task {
-//     pub id: String,
-//     pub title: String,
-//     pub status: TaskStatus,
-// }
-//
-// pub enum TaskStatus {
-//     Pending,
-//     InProgress,
-//     Completed,
-// }
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Task {
+    pub id: String,
+    pub title: String,
+    pub status: TaskStatus,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum TaskStatus {
+    Pending,
+    InProgress,
+    Completed,
+}

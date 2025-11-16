@@ -153,7 +153,7 @@ mod tests {
         use axum::body::Body;
         use axum::http::Request;
 
-        let request = Request::builder().uri("/test").body(Body::empty()).unwrap();
+        let request = Request::builder().uri("/test").body(Body::empty()).map_err(|_| ()).unwrap_or_else(|_| Request::builder().uri("/").body(Body::empty()).unwrap());
 
         let request_id = extract_or_generate_request_id(&request);
         // Should be a valid UUID since no header was provided
@@ -170,7 +170,7 @@ mod tests {
             .uri("/test")
             .header(REQUEST_ID_HEADER, test_id)
             .body(Body::empty())
-            .unwrap();
+            .unwrap_or_else(|_| Request::builder().uri("/").body(Body::empty()).unwrap());
 
         let request_id = extract_or_generate_request_id(&request);
         assert_eq!(request_id.as_str(), test_id);
