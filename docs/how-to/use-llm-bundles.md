@@ -128,58 +128,366 @@ If the LLM's first attempt isn't quite right:
 
 ### Workflow 1: Add a new AC
 
+**Scenario:** You need to add email notification when a refund is approved.
+
 ```bash
-# 1. Human adds AC to ledger
+# 1. Human adds AC to ledger FIRST (governance requirement)
 vim specs/spec_ledger.yaml
-# Add: AC-125: "Customer receives email when refund is approved"
-
-# 2. Generate bundle
-cargo run -p xtask -- bundle implement_ac
-
-# 3. Prompt LLM
-"Implement AC-125. Show me:
-1. New Gherkin scenario with @AC-125 tag
-2. Step definitions in crates/acceptance/src/steps/refunds.rs
-3. Core logic in crates/core/src/refunds.rs"
-
-# 4. Apply changes, validate
-cargo run -p xtask -- bdd
-cargo run -p xtask -- ac-status  # Check AC-125 shows as passing
 ```
+
+Add to ledger:
+```yaml
+- id: AC-125
+  text: "Customer receives email when refund is approved"
+  tests: [{ type: bdd, tag: "@AC-125" }]
+```
+
+```bash
+# 2. Validate AC exists in ledger
+cargo run -p xtask -- policy-test
+
+# 3. Generate bundle with ledger context
+cargo run -p xtask -- bundle implement_ac
+```
+
+**Prompt to LLM:**
+```
+I've added AC-125 to the ledger: "Customer receives email when refund is approved"
+
+Using the provided bundle context, implement this AC. Show me:
+
+1. New Gherkin scenario in specs/features/refunds.feature with @AC-125 tag
+2. Step definitions in crates/acceptance/src/steps/refunds.rs
+3. Core email notification logic in crates/core/src/notifications.rs
+4. Handler updates in crates/app-http/src/lib.rs to trigger notification
+
+Requirements:
+- Use existing error handling patterns
+- Add tracing spans for observability
+- Include AC-125 in error messages for traceability
+- Do NOT invent new AC IDs or feature flags
+```
+
+**Apply and validate:**
+```bash
+# 4. Review LLM output carefully
+# 5. Apply changes to files
+# 6. Run tests
+cargo run -p xtask -- bdd
+
+# 7. Verify AC shows up in status
+cargo run -p xtask -- ac-status
+
+# 8. Check AC-125 is passing
+grep "AC-125" docs/feature_status.md
+# Should show: | AC-125 | ... | ✅ pass | 1 |
+```
+
+---
 
 ### Workflow 2: Debug a failing scenario
 
+**Scenario:** BDD test is failing with unexpected status code.
+
 ```bash
-# 1. Scenario fails
-cargo run -p xtask -- bdd
-# Error: Expected 201, got 400
+# 1. Run tests, capture failure
+cargo run -p xtask -- bdd 2>&1 | tee test-output.txt
 
-# 2. Generate debug bundle
-cargo run -p xtask -- bundle debug_tests
-
-# 3. Prompt LLM
-"Scenario 'Create a refund' (@AC-123) fails with:
-Expected 201, got 400 with body: {\"error\":\"Invalid amount\"}
-
-Looking at the step definition and core logic, what's wrong?"
-
-# 4. Apply fix, re-test
-cargo run -p xtask -- bdd
+# Example failure:
+# Scenario: Create a refund
+#   ✗ Expected 201, got 400
+#   Body: {"error":"INVALID_INPUT","message":"Amount must be positive"}
 ```
 
+```bash
+# 2. Generate debug bundle
+cargo run -p xtask -- bundle debug_tests
+```
+
+**Prompt to LLM:**
+```
+The BDD scenario for AC-123 "Create a refund" is failing.
+
+Expected: 201 Created
+Actual: 400 Bad Request
+Body: {"error":"INVALID_INPUT","message":"Amount must be positive"}
+
+Looking at the bundle:
+1. What validation is failing in the core layer?
+2. Is the step definition passing the correct data?
+3. What's the expected validation rule for amount?
+4. Show me the exact fix needed
+
+Context: The scenario is:
+```gherkin
+Given an order "ORD-123" totalling 5000 cents
+When I POST /refunds with { "orderId": "ORD-123", "amountCents": 5000 }
+Then I receive 201 with a "refundId"
+```
+```
+
+**LLM might respond:**
+
+> Looking at `crates/core/src/refunds.rs:42`, the validation requires:
+> ```rust
+> if amount_cents <= 0 {
+>     return Err(CoreError::ValidationError { ... });
+> }
+> ```
+>
+> But the step definition in `crates/acceptance/src/steps/refunds.rs:15` is passing:
+> ```rust
+> amount_cents: -5000  // ← Bug: negative!
+> ```
+>
+> **Fix:** Change step definition to:
+> ```rust
+> amount_cents: 5000  // Positive value
+> ```
+
+```bash
+# 3. Apply fix
+vim crates/acceptance/src/steps/refunds.rs
+
+# 4. Re-run tests
+cargo run -p xtask -- bdd
+# ✓ All scenarios pass
+```
+
+---
+
 ### Workflow 3: Understand what an AC actually does
+
+**Scenario:** New team member needs to understand existing ACs.
 
 ```bash
 # Generate context
 cargo run -p xtask -- bundle implement_ac
-
-# Ask LLM:
-"What does AC-123 actually require?
-Show me:
-1. The AC text from the ledger
-2. The Gherkin scenario
-3. The core code that implements it"
 ```
+
+**Prompt to LLM:**
+```
+Explain what AC-TPL-001 actually requires and how it's implemented.
+
+Show me:
+1. The exact AC text from the ledger
+2. The Gherkin scenario that tests it
+3. The handler code that implements it
+4. What would break if I removed this AC?
+```
+
+**LLM response:**
+
+> **AC-TPL-001:** "GET /health returns 200 with status 'ok' when service is healthy"
+>
+> **Ledger entry:**
+> ```yaml
+> - id: AC-TPL-001
+>   text: "GET /health returns 200 with status 'ok' when service is healthy"
+>   tests: [{ type: bdd, tag: "@AC-TPL-001" }]
+> ```
+>
+> **Gherkin scenario:** (specs/features/template_core.feature:7)
+> ```gherkin
+> @AC-TPL-001 @smoke
+> Scenario: Health endpoint reports service is healthy
+>   When I GET /health
+>   Then I receive 200 with status "ok"
+> ```
+>
+> **Implementation:** (crates/app-http/src/lib.rs:56)
+> ```rust
+> async fn health(Extension(_request_id): Extension<RequestId>) -> impl IntoResponse {
+>     info!("Health check requested");
+>     Json(HealthResponse {
+>         status: "ok".to_string(),
+>         service: "service-api".to_string()
+>     })
+> }
+> ```
+>
+> **What would break:**
+> - Kubernetes liveness/readiness probes would fail
+> - Load balancers couldn't determine service health
+> - Monitoring would have no heartbeat signal
+
+---
+
+### Workflow 4: Implement a new feature end-to-end
+
+**Scenario:** Add task completion feature (builds on Day 7 tutorial).
+
+```bash
+# 1. Plan ACs (human decision)
+vim specs/spec_ledger.yaml
+```
+
+Add:
+```yaml
+- id: AC-TASK-006
+  text: "User can mark a task as completed"
+  tests: [{ type: bdd, tag: "@AC-TASK-006" }]
+- id: AC-TASK-007
+  text: "Completed tasks have status 'completed' and timestamp"
+  tests: [{ type: bdd, tag: "@AC-TASK-007" }]
+```
+
+```bash
+# 2. Generate bundle
+cargo run -p xtask -- bundle implement_feature
+```
+
+**Prompt to LLM:**
+```
+Implement task completion feature with ACs:
+- AC-TASK-006: "User can mark a task as completed"
+- AC-TASK-007: "Completed tasks have status 'completed' and timestamp"
+
+Show me complete implementation:
+
+1. **Model changes** (crates/model/src/lib.rs):
+   - Add `completed_at: Option<DateTime>` to Task
+   - Method: `task.complete() -> Result<Task, CoreError>`
+
+2. **Core logic** (crates/core/src/lib.rs):
+   - Function: `complete_task(store, task_id) -> Result<Task, CoreError>`
+   - Validation: Task exists, not already completed
+
+3. **HTTP handler** (crates/app-http/src/lib.rs):
+   - Route: PUT /tasks/:id/complete
+   - Handler: `complete_task_handler`
+   - Response DTO: TaskResponse (updated)
+
+4. **BDD scenarios** (specs/features/tasks.feature):
+   - Two scenarios tagged @AC-TASK-006 and @AC-TASK-007
+
+5. **Step definitions** (crates/acceptance/src/steps/tasks.rs):
+   - New steps for PUT requests and timestamp validation
+
+Use existing patterns from the bundle. Do not invent new error codes.
+```
+
+```bash
+# 3. Apply LLM suggestions
+# (Review each file carefully)
+
+# 4. Validate
+cargo run -p xtask -- selftest
+
+# If errors, iterate:
+cargo run -p xtask -- bundle debug_tests
+# Paste error, ask LLM for fix
+```
+
+---
+
+### Workflow 5: Refactor with LLM assistance
+
+**Scenario:** Extract repeated validation logic into reusable function.
+
+```bash
+cargo run -p xtask -- bundle implement_feature
+```
+
+**Prompt to LLM:**
+```
+I see repeated validation pattern in crates/core/src/lib.rs:
+
+```rust
+// In create_task:
+if title.trim().is_empty() {
+    return Err(CoreError::ValidationError { ... });
+}
+
+// In update_task:
+if title.trim().is_empty() {
+    return Err(CoreError::ValidationError { ... });
+}
+```
+
+Refactor to a shared validation function:
+
+1. Create `validate_task_title(title: &str) -> Result<(), CoreError>`
+2. Use it in both `create_task` and `update_task`
+3. Ensure error messages stay the same (for AC traceability)
+4. Update any affected tests
+
+Show me the diffs.
+```
+
+---
+
+### Workflow 6: Policy-protected LLM workflow
+
+**Scenario:** LLM tries to invent a new AC ID.
+
+```bash
+cargo run -p xtask -- bundle implement_ac
+```
+
+**Prompt to LLM:**
+```
+Add a feature that deletes tasks.
+```
+
+**LLM might respond:**
+
+> I'll add AC-TASK-999 for task deletion:
+>
+> ```yaml
+> - id: AC-TASK-999
+>   text: "User can delete a task by ID"
+> ```
+
+**DON'T apply this!** The LLM invented an AC ID.
+
+**Correct workflow:**
+
+```bash
+# 1. Human adds AC to ledger FIRST
+vim specs/spec_ledger.yaml
+```
+
+Add:
+```yaml
+- id: AC-TASK-008  # ← Sequential ID, not LLM's AC-999
+  text: "User can delete a task by ID"
+  tests: [{ type: bdd, tag: "@AC-TASK-008" }]
+```
+
+```bash
+# 2. Validate policy
+cargo run -p xtask -- policy-test
+# ✓ AC-TASK-008 has tests
+
+# 3. NOW ask LLM to implement
+cargo run -p xtask -- bundle implement_ac
+```
+
+**Corrected prompt:**
+```
+I've added AC-TASK-008 to the ledger: "User can delete a task by ID"
+
+Implement this AC using the existing patterns in the bundle.
+Use AC-TASK-008 (not AC-TASK-999) in all references.
+```
+
+**Policy enforcement protects you:**
+
+```bash
+# If you accidentally committed AC-TASK-999 without tests:
+git add specs/spec_ledger.yaml
+git commit -m "Add task deletion"
+
+# CI would fail:
+cargo run -p xtask -- policy-test
+# ✗ AC-TASK-999 not found in ledger
+# ✗ AC without tests array
+
+# You're forced to fix it before merge
+```
+
+**This is the power of policy-as-code:** LLMs can assist, but policies enforce governance.
 
 ---
 

@@ -25,17 +25,36 @@ This documentation follows the [Diátaxis](https://diataxis.fr/) framework:
 
 ## Getting Started
 
-**Brand new?** Start here:
+**Brand new?** Follow this path:
 
-1. 📘 **[Getting Started Tutorial](tutorials/getting-started.md)** (30 min)
+### Path 1: Quick Start (Recommended)
+
+1. 📘 **[Day 1: First Change](tutorials/day-1-first-change.md)** (30 min) **← START HERE**
    - Clone, validate, run the service
-   - Make your first change
-   - Understand core concepts
+   - Add trivial AC and see it go green
+   - Understand AC-first development loop
 
-2. 📗 **[Architecture Overview](explanation/architecture.md)** (20 min read)
-   - Design philosophy
-   - Hexagonal architecture
-   - Why these choices
+2. 📘 **[Day 7: First Real Feature](tutorials/day-7-first-real-feature.md)** (90 min)
+   - Build a complete task management feature
+   - Learn multi-layer architecture
+   - Master validation, errors, and testing
+
+3. 📕 **[Adoption Patterns](explanation/adoption-patterns.md)** (15 min)
+   - Choose Pattern A, B, or C for your organization
+   - Plan template update strategy
+   - Understand trade-offs
+
+### Path 2: Deep Dive (Alternative)
+
+1. 📗 **[Architecture Overview](explanation/architecture.md)** (20 min read)
+   - Design philosophy and rationale
+   - Hexagonal architecture explained
+   - Governance and policy model
+
+2. 📘 **[Getting Started Tutorial](tutorials/getting-started.md)** (30 min)
+   - Comprehensive environment setup
+   - Detailed command explanations
+   - All subsystems overview
 
 3. 📕 **[First AC Change Tutorial](tutorials/first-ac-change.md)** (15 min)
    - Complete AC-first workflow
@@ -47,25 +66,26 @@ This documentation follows the [Diátaxis](https://diataxis.fr/) framework:
 
 ### Week 1: Foundations
 
-**Day 1-2: Environment & Basics**
-- [ ] Complete [Getting Started Tutorial](tutorials/getting-started.md)
-- [ ] Read [Architecture Overview](explanation/architecture.md)
+**Day 1: Environment & First Change**
+- [ ] Complete [Day 1: First Change Tutorial](tutorials/day-1-first-change.md) (30 min)
 - [ ] Run `xtask quickstart` successfully
+- [ ] Make one trivial AC change end-to-end
 
-**Day 3-4: AC-First Development**
-- [ ] Complete [First AC Change Tutorial](tutorials/first-ac-change.md)
+**Day 2-4: AC-First Development**
+- [ ] Read [Architecture Overview](explanation/architecture.md) (20 min)
+- [ ] Complete [Getting Started Tutorial](tutorials/getting-started.md) (optional deep dive)
 - [ ] Read [How to Add HTTP Endpoint](how-to/add-http-endpoint.md)
-- [ ] Make one small change end-to-end
 
-**Day 5: Tooling & Workflow**
-- [ ] Read [xtask Commands Reference](reference/xtask-commands.md)
+**Day 5-7: Real Feature Implementation**
+- [ ] Complete [Day 7: First Real Feature Tutorial](tutorials/day-7-first-real-feature.md) (90 min)
 - [ ] Read [LLM Bundles Guide](how-to/use-llm-bundles.md)
-- [ ] Generate and use one LLM bundle
+- [ ] Generate and use one LLM bundle for your feature
 
 ### Week 2: Production Readiness
 
 **Day 1-2: Service Adaptation**
 - [ ] Follow [New Service from Template](how-to/new-service-from-template.md)
+- [ ] Read [Adoption Patterns](explanation/adoption-patterns.md) (choose your pattern)
 - [ ] Update ownership in specs/
 - [ ] Configure branch protection
 
@@ -78,6 +98,7 @@ This documentation follows the [Diátaxis](https://diataxis.fr/) framework:
 - [ ] Explore policy/*.rego files
 - [ ] Review TEMPLATE_API.md
 - [ ] Set up pre-commit hooks
+- [ ] Plan template upgrade strategy (if using Pattern B or C)
 
 ---
 
@@ -115,13 +136,29 @@ This documentation follows the [Diátaxis](https://diataxis.fr/) framework:
 
 ### Tutorials (Learning-Oriented)
 
-📘 **[Getting Started](tutorials/getting-started.md)** (30 minutes)
+📘 **[Day 1: First Change](tutorials/day-1-first-change.md)** (30 minutes) **← START HERE**
+- Clone and validate template
+- Add a trivial AC to the ledger
+- Write Gherkin scenario
+- Implement simple endpoint
+- See AC go from red → green
+- Complete AC-first development loop
+
+📘 **[Day 7: First Real Feature](tutorials/day-7-first-real-feature.md)** (90 minutes)
+- Implement substantial task management feature
+- Multi-layer architecture (model → core → app-http)
+- Proper validation and error handling
+- Multiple ACs working together
+- Generate LLM bundle for feature
+- Production-ready patterns
+
+📘 **[Getting Started](tutorials/getting-started.md)** (30 minutes) *[Alternative intro]*
 - Clone and validate template
 - Run HTTP service
 - Make first change
 - Understand AC-first workflow
 
-📘 **[First AC Change](tutorials/first-ac-change.md)** (15 minutes)
+📘 **[First AC Change](tutorials/first-ac-change.md)** (15 minutes) *[Legacy - see Day 1 instead]*
 - Complete AC implementation cycle
 - Spec → Test → Code → Validate
 - Update AC status
@@ -178,6 +215,14 @@ This documentation follows the [Diátaxis](https://diataxis.fr/) framework:
 - Observability strategy
 - Decision rationale
 
+📕 **[Adoption Patterns](explanation/adoption-patterns.md)** (15 min read) **← IMPORTANT**
+- Pattern A: Clone and Detach (single service)
+- Pattern B: Template as Upstream (multiple services, get updates)
+- Pattern C: Generator-Based (platform team, many services)
+- Pros/cons, when to use each
+- Upgrade strategies and migration paths
+- Decision tree and hybrid approaches
+
 📕 **[Template Foundation vs Examples](explanation/template-foundation-vs-examples.md)** (5 min read)
 - What to keep (template core)
 - What to adapt (example features)
@@ -231,19 +276,20 @@ These documents capture implementation decisions, trade-offs, and rationale for 
 ### For Developers
 
 **Must Read:**
-- [Getting Started](tutorials/getting-started.md)
+- [Day 1: First Change](tutorials/day-1-first-change.md) **← Start here**
+- [Day 7: First Real Feature](tutorials/day-7-first-real-feature.md)
 - [Architecture Overview](explanation/architecture.md)
-- [Template Foundation vs Examples](explanation/template-foundation-vs-examples.md)
 - [xtask Commands](reference/xtask-commands.md)
 
 **Frequently Used:**
+- [LLM Bundles](how-to/use-llm-bundles.md) - Daily workflow with AI
 - [Add HTTP Endpoint](how-to/add-http-endpoint.md)
-- [First AC Change](tutorials/first-ac-change.md)
-- [LLM Bundles](how-to/use-llm-bundles.md)
+- [Template Foundation vs Examples](explanation/template-foundation-vs-examples.md)
 
 ### For Tech Leads
 
 **Must Read:**
+- [Adoption Patterns](explanation/adoption-patterns.md) **← Critical decision**
 - [Architecture Overview](explanation/architecture.md)
 - [Branch Protection Profiles](reference/branch-protection-profiles.md)
 - [New Service from Template](how-to/new-service-from-template.md)
@@ -251,18 +297,23 @@ These documents capture implementation decisions, trade-offs, and rationale for 
 **Reference:**
 - [Template API](../TEMPLATE_API.md)
 - All policy/*.rego files
+- [Day 7: First Real Feature](tutorials/day-7-first-real-feature.md) - Share with team
 
 ### For New Hires
 
+**Day 1:**
+- [Day 1: First Change](tutorials/day-1-first-change.md) - Hands-on intro
+- [xtask Commands](reference/xtask-commands.md) - Skim for reference
+
 **Week 1:**
-- [Getting Started](tutorials/getting-started.md)
-- [Architecture Overview](explanation/architecture.md) (skim)
-- [xtask Commands](reference/xtask-commands.md) (skim)
+- [Day 7: First Real Feature](tutorials/day-7-first-real-feature.md) - Build complete feature
+- [Architecture Overview](explanation/architecture.md) - Read as you build
+- [LLM Bundles](how-to/use-llm-bundles.md) - Use for questions
 
 **Week 2:**
-- [First AC Change](tutorials/first-ac-change.md)
-- [Add HTTP Endpoint](how-to/add-http-endpoint.md)
-- Start making real changes
+- Start making real changes on team backlog
+- [Add HTTP Endpoint](how-to/add-http-endpoint.md) - Reference as needed
+- [Adoption Patterns](explanation/adoption-patterns.md) - Understand team's choice
 
 ---
 

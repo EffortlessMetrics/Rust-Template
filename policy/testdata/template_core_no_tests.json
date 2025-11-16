@@ -9,7 +9,7 @@
           "text": "Service exposes health check endpoint",
           "acceptance_criteria": [
             {
-              "id": "AC-TPL-001",
+              "id": "AC-TPL-CORE-001",
               "text": "GET /health returns 200 with status 'ok' when service is healthy",
               "tests": []
             }
@@ -20,12 +20,12 @@
           "text": "Service exposes version information",
           "acceptance_criteria": [
             {
-              "id": "AC-TPL-002",
+              "id": "AC-TPL-CORE-002",
               "text": "GET /version returns build information including version and git SHA",
               "tests": [
                 {
                   "type": "bdd",
-                  "tag": "@AC-TPL-002"
+                  "tag": "@AC-TPL-CORE-002"
                 }
               ]
             }
