@@ -22,6 +22,9 @@ uuid = "1.18.1"
 tonic-build = "0.14.2"
 tonic-prost-build = "0.14.2"
 
+[dev-dependencies]
+async-trait = "0.1.89"
+
 [features]
 default = []
 integration-grpc = []
