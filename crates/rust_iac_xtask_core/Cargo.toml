@@ -1,18 +1,19 @@
 [package]
 name = "rust_iac_xtask_core"
 version = "0.1.0"
-edition.workspace = true
-license.workspace = true
-rust-version.workspace = true
-description = "Configuration-driven IaC orchestration library for Rust projects"
-repository = "https://github.com/your-org/rust-template"
-keywords = ["iac", "infrastructure", "orchestration", "devops", "governance"]
-categories = ["development-tools", "config"]
+edition = "2021"
+license = "Apache-2.0 OR MIT"
+description = "Core library for Rust IaC xtask automation"
+repository = "https://github.com/EffortlessMetrics/Rust-Template"
 
 [dependencies]
-serde = { workspace = true }
-serde_yaml = { workspace = true }
-thiserror = { workspace = true }
+anyhow = "1.0.100"
+clap = { version = "4.5.51", features = ["derive"] }
+colored = "3.0.0"
+serde = { version = "1.0.228", features = ["derive"] }
+serde_yaml = { package = "serde_yaml_ng", version = "0.10.0" }
+toml = "0.8.19"
+walkdir = "2.5.0"
 
 [dev-dependencies]
 tempfile = "3.23.0"

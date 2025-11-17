@@ -1,294 +1,284 @@
 # rust_iac_xtask_core
 
-Production-ready Infrastructure as Code (IaC) orchestration library for Rust projects.
+Core library for Rust Infrastructure-as-Code xtask automation tooling.
 
 ## Overview
 
-`rust_iac_xtask_core` provides a configuration-driven framework for orchestrating development and deployment workflows in Rust-based IaC templates. It is designed to be reusable across different projects and makes no assumptions about specific acceptance criteria IDs, environment names, or project structure beyond what is explicitly configured.
+`rust_iac_xtask_core` provides reusable commands and utilities for managing Rust IaC projects. It implements the core functionality for:
+
+- **Initialization**: Scaffolding project structure for brownfield and greenfield projects
+- **Validation**: Self-testing to verify project setup
+- **Configuration**: TOML-based project configuration
+- **Governance**: Specs, policies, and LLM context management
+
+This library is designed to be used by xtask binaries in individual projects, providing a consistent experience across all Rust IaC projects.
 
 ## Features
 
-- **Configuration-driven**: Define environments, validation rules, and project structure in YAML
-- **Strong validation**: Comprehensive validation with clear, actionable error messages
-- **No panics**: All error conditions return `Result` types with structured errors
-- **Production-ready**: Designed for external users with a clean, minimal API
-- **Zero hardcoded assumptions**: Works with any project structure defined in config
+- **Brownfield Support**: Add governance to existing projects non-invasively
+- **Greenfield Support**: Full scaffolding for new projects
+- **Configuration Management**: Type-safe TOML configuration
+- **Self-Validation**: Built-in self-test to verify project structure
+- **Idempotent Operations**: Safe to run init multiple times
 
 ## Installation
 
-Add this to your `Cargo.toml`:
+Add to your xtask's `Cargo.toml`:
 
 ```toml
 [dependencies]
-rust_iac_xtask_core = "0.1.0"
+rust_iac_xtask_core = { path = "../path/to/rust_iac_xtask_core" }
+# or from git:
+# rust_iac_xtask_core = { git = "https://github.com/yourorg/rust-template" }
+# or from crates.io (when published):
+# rust_iac_xtask_core = "0.1.0"
 ```
 
-## Quick Start
+## Usage
 
-### 1. Create a configuration file
+### Basic Xtask Integration
 
-Create `iac-config.yaml` in your project root:
-
-```yaml
-project:
-  name: my-rust-project
-  workspace_root: .
-  description: My awesome Rust IaC project
-
-environments:
-  - name: dev
-    manifests_path: infra/k8s/dev
-    requires_kustomize: false
-    description: Local development environment
-
-  - name: staging
-    manifests_path: infra/k8s/staging
-    requires_kustomize: true
-    description: Staging environment with Kustomize
-
-  - name: prod
-    manifests_path: infra/k8s/prod
-    requires_kustomize: true
-    description: Production environment
-
-validation:
-  check_git_repo: true
-  required_directories:
-    - specs
-    - infra
-  required_files:
-    - README.md
-```
-
-### 2. Load and use the configuration
+Create a minimal `xtask/src/main.rs` that delegates to the core library:
 
 ```rust
-use rust_iac_xtask_core::{IaCConfig, ConfigError};
-use std::path::Path;
+use anyhow::Result;
+use clap::{Parser, Subcommand};
+use rust_iac_xtask_core::{commands, InitMode};
 
-fn main() -> Result<(), ConfigError> {
-    // Load configuration
-    let config = IaCConfig::from_file(Path::new("iac-config.yaml"))?;
+#[derive(Parser)]
+#[command(name = "xtask")]
+struct Cli {
+    #[command(subcommand)]
+    command: Commands,
+}
 
-    println!("Project: {}", config.project.name);
-    println!("Available environments: {}", config.environment_names().join(", "));
+#[derive(Subcommand)]
+enum Commands {
+    Init {
+        #[arg(long, default_value = "brownfield")]
+        mode: String,
+    },
+    Selftest,
+}
 
-    // Find a specific environment
-    if let Some(env) = config.find_environment("dev") {
-        println!("Dev manifests: {}", env.manifests_path.display());
+fn main() -> Result<()> {
+    let cli = Cli::parse();
+
+    match cli.command {
+        Commands::Init { mode } => {
+            let init_mode: InitMode = mode.parse()?;
+            commands::init::init(init_mode, None)?;
+        }
+        Commands::Selftest => {
+            commands::selftest::selftest(None)?;
+        }
     }
 
     Ok(())
 }
 ```
 
-## Configuration Reference
+### Initialize a Brownfield Project
 
-### Project Section
-
-The `project` section defines project-level metadata:
-
-```yaml
-project:
-  name: my-project              # Required: Project name
-  workspace_root: .              # Optional: Path to workspace root (default: ".")
-  description: My project        # Optional: Project description
+```bash
+cargo run -p xtask -- init --mode=brownfield
 ```
 
-### Environments Section
+Creates:
+- `RUST_IAC.toml` - Project configuration
+- `specs/spec_ledger.yaml` - Requirements tracking
+- `specs/features/` - BDD feature files directory
+- `policy/` - Rego policy directory
+- `policy/tests/` - Policy tests directory
+- `.llm/contextpack.yaml` - LLM context definitions
 
-The `environments` section defines deployment targets:
+### Run Self-Test
 
-```yaml
-environments:
-  - name: dev                    # Required: Environment name
-    manifests_path: infra/k8s/dev  # Required: Path to K8s manifests
-    requires_kustomize: false    # Optional: Whether kustomization.yaml is required
-    description: Dev env         # Optional: Environment description
-    required_files:              # Optional: Files that must exist
-      - deployment.yaml
-      - service.yaml
+```bash
+cargo run -p xtask -- selftest
 ```
 
-### Validation Section
+Validates:
+- ✓ Configuration file exists and is valid TOML
+- ✓ Specifications directory exists
+- ✓ Policy directory exists
+- ✓ LLM context directory exists
+- ✓ Specification ledger exists
 
-The `validation` section defines validation rules:
+## API
 
-```yaml
-validation:
-  check_git_repo: true          # Optional: Verify project is in git repo
-  required_directories:         # Optional: Directories that must exist
-    - specs
-    - infra
-  required_files:               # Optional: Files that must exist
-    - README.md
-  validate_manifests_paths: true  # Optional: Validate manifests paths exist
-```
+### Commands
 
-## Error Handling
+#### `init(mode: InitMode, project_root: Option<PathBuf>) -> Result<()>`
 
-All errors are represented by the `ConfigError` type:
+Initialize a Rust IaC project structure.
+
+**Parameters:**
+- `mode`: Either `InitMode::Brownfield` or `InitMode::Greenfield`
+- `project_root`: Optional project root path (defaults to current directory)
+
+**Returns:** `Result<()>` - Success or error
+
+**Example:**
 
 ```rust
-use rust_iac_xtask_core::{IaCConfig, ConfigError};
-use std::path::Path;
+use rust_iac_xtask_core::{init, InitMode};
 
-match IaCConfig::from_file(Path::new("config.yaml")) {
-    Ok(config) => {
-        println!("Config loaded successfully");
-    }
-    Err(ConfigError::FileNotFound(path)) => {
-        eprintln!("Config file not found: {}", path.display());
-    }
-    Err(ConfigError::InvalidYaml(msg)) => {
-        eprintln!("Invalid YAML: {}", msg);
-    }
-    Err(ConfigError::DirectoryNotFound { path, hint }) => {
-        eprintln!("Directory not found: {}", path.display());
-        eprintln!("Hint: {}", hint);
-    }
-    Err(ConfigError::ValidationFailed(msg)) => {
-        eprintln!("Validation failed: {}", msg);
-    }
-    Err(e) => {
-        eprintln!("Error: {}", e);
-    }
+// Initialize brownfield project in current directory
+init(InitMode::Brownfield, None)?;
+
+// Initialize greenfield project in specific directory
+init(InitMode::Greenfield, Some("/path/to/project".into()))?;
+```
+
+#### `selftest(project_root: Option<PathBuf>) -> Result<()>`
+
+Run self-test to verify project structure.
+
+**Parameters:**
+- `project_root`: Optional project root path (defaults to current directory)
+
+**Returns:** `Result<()>` - Success or error
+
+**Example:**
+
+```rust
+use rust_iac_xtask_core::selftest;
+
+// Run self-test in current directory
+selftest(None)?;
+
+// Run self-test in specific directory
+selftest(Some("/path/to/project".into()))?;
+```
+
+### Configuration
+
+#### `RustIacConfig`
+
+Main configuration structure loaded from `RUST_IAC.toml`:
+
+```rust
+pub struct RustIacConfig {
+    pub project: ProjectConfig,
+    pub specs: SpecsConfig,
+    pub policy: PolicyConfig,
+    pub llm: LlmConfig,
 }
 ```
 
-### Error Types
+**Default Configuration:**
 
-- `FileNotFound`: Configuration file doesn't exist
-- `FileReadError`: Failed to read configuration file
-- `InvalidYaml`: Malformed YAML syntax
-- `MissingField`: Required configuration field is missing
-- `InvalidValue`: Invalid value for a configuration field
-- `DirectoryNotFound`: Required directory doesn't exist
-- `EnvironmentNotFound`: Specified environment not in configuration
-- `DuplicateEnvironment`: Duplicate environment names
-- `NotGitRepository`: Not in a git repository (when check enabled)
-- `ValidationFailed`: Generic validation failure
+```toml
+[project]
+name = "rust-iac-project"
+version = "0.1.0"
+mode = "brownfield"
 
-## API Reference
+[specs]
+ledger = "specs/spec_ledger.yaml"
+features_dir = "specs/features"
 
-### `IaCConfig`
+[policy]
+dir = "policy"
+tests_dir = "policy/tests"
 
-The main configuration structure.
-
-#### Methods
-
-- `from_file(path: &Path) -> Result<Self, ConfigError>`: Load and validate configuration from a YAML file
-- `find_environment(name: &str) -> Option<&Environment>`: Find an environment by name (case-insensitive)
-- `environment_names() -> Vec<String>`: Get list of all environment names
-
-#### Fields
-
-- `project: ProjectInfo`: Project metadata
-- `environments: Vec<Environment>`: List of deployment environments
-- `validation: ValidationRules`: Validation rules
-
-### `ProjectInfo`
-
-Project-level metadata.
-
-- `name: String`: Project name
-- `workspace_root: PathBuf`: Workspace root directory
-- `description: Option<String>`: Optional description
-
-### `Environment`
-
-Deployment environment configuration.
-
-- `name: String`: Environment name
-- `manifests_path: PathBuf`: Path to Kubernetes manifests
-- `requires_kustomize: bool`: Whether Kustomize is required
-- `description: Option<String>`: Optional description
-- `required_files: Vec<String>`: Files that must exist in manifests directory
-
-### `ValidationRules`
-
-Validation rules for the configuration.
-
-- `check_git_repo: bool`: Verify project is in a git repository
-- `required_directories: Vec<PathBuf>`: Directories that must exist
-- `required_files: Vec<PathBuf>`: Files that must exist
-- `validate_manifests_paths: bool`: Validate manifests paths exist
-
-## Design Principles
-
-This library follows these principles:
-
-1. **No panics**: All error conditions return `Result` types
-2. **Validation first**: Configuration is validated on load, not at use time
-3. **Clear errors**: Error messages explain what's wrong and suggest fixes
-4. **Minimal API**: Small public surface area that's easy to understand
-5. **No assumptions**: Works with any project structure defined in config
-6. **Production-ready**: Designed for external users with comprehensive documentation
-
-## Example: Building an xtask
-
-Here's how you might use this library in an `xtask` deployment command:
-
-```rust
-use rust_iac_xtask_core::{IaCConfig, ConfigError};
-use std::path::Path;
-
-fn deploy_command(env_name: &str) -> Result<(), ConfigError> {
-    // Load configuration
-    let config = IaCConfig::from_file(Path::new("iac-config.yaml"))?;
-
-    // Find the environment
-    let env = config.find_environment(env_name).ok_or_else(|| {
-        ConfigError::EnvironmentNotFound(
-            env_name.to_string(),
-            config.environment_names().join(", "),
-        )
-    })?;
-
-    println!("Deploying to {} environment", env.name);
-    println!("Manifests path: {}", env.manifests_path.display());
-
-    if env.requires_kustomize {
-        println!("Using Kustomize for deployment");
-        // Run: kubectl apply -k {}
-    } else {
-        println!("Using kubectl apply");
-        // Run: kubectl apply -f {}
-    }
-
-    Ok(())
-}
+[llm]
+contextpack = ".llm/contextpack.yaml"
 ```
 
-## Testing
+## Project Structure
 
-Run the test suite:
+After initialization, your project will have:
+
+```
+your-project/
+├── RUST_IAC.toml          # Configuration
+├── specs/
+│   ├── spec_ledger.yaml   # Requirements ledger
+│   └── features/          # BDD scenarios
+├── policy/
+│   ├── example.rego       # Sample policy
+│   └── tests/             # Policy tests
+└── .llm/
+    └── contextpack.yaml   # LLM context packs
+```
+
+## Development
+
+### Building
+
+```bash
+cargo build
+```
+
+### Running Tests
 
 ```bash
 cargo test
 ```
 
-Run with verbose output:
+The test suite includes:
+- Unit tests for init and selftest
+- Integration tests with temporary directories
+- Configuration parsing tests
+
+### Adding New Commands
+
+To add a new command to the core library:
+
+1. Add the implementation to `src/lib.rs`:
+
+```rust
+pub fn my_new_command(project_root: Option<PathBuf>) -> Result<()> {
+    // Implementation
+    Ok(())
+}
+```
+
+2. Export from `src/commands.rs`:
+
+```rust
+pub mod my_command {
+    pub use crate::my_new_command;
+}
+```
+
+3. Projects can then use it in their xtask:
+
+```rust
+Commands::MyCommand => {
+    commands::my_command::my_new_command(None)?;
+}
+```
+
+## Examples
+
+See the [brownfield-demo](../examples/brownfield-demo/) for a complete working example.
+
+## Brownfield vs Greenfield
+
+| Feature | Brownfield | Greenfield |
+|---------|------------|------------|
+| **Use Case** | Existing projects | New projects |
+| **Generated Files** | Minimal governance structure | Full scaffold |
+| **Invasiveness** | Non-invasive | Full structure |
+| **Migration** | Incremental adoption | Clean slate |
+| **Risk** | Low | Low |
+
+## Testing
 
 ```bash
+# Run all tests
+cargo test
+
+# Run specific test
+cargo test test_init_brownfield_creates_structure
+
+# Run with output
 cargo test -- --nocapture
 ```
 
 ## License
 
-Licensed under either of:
-
-- Apache License, Version 2.0 ([LICENSE-APACHE](../../LICENSE-APACHE) or http://www.apache.org/licenses/LICENSE-2.0)
-- MIT license ([LICENSE-MIT](../../LICENSE-MIT) or http://opensource.org/licenses/MIT)
-
-at your option.
-
-## Contributing
-
-Contributions are welcome! This library is designed to be reusable across projects, so please ensure:
-
-1. No hardcoded assumptions about specific projects
-2. Clear, actionable error messages
-3. Comprehensive documentation
-4. Tests for new functionality
-5. No panics in library code
+Dual-licensed under Apache-2.0 OR MIT.

@@ -1,4 +1,5 @@
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    tonic_build::compile_protos("../../../specs/proto/task.proto")?;
+    let proto_file = std::path::Path::new("../../specs/proto/task.proto");
+    tonic_prost_build::compile_protos(proto_file)?;
     Ok(())
 }

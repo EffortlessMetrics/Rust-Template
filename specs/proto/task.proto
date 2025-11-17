@@ -3,10 +3,9 @@ syntax = "proto3";
 package task;
 
 import "google/protobuf/timestamp.proto";
-import "google/protobuf/uuid.proto";
 
 message Task {
-  google.protobuf.UUID id = 1;
+  string id = 1;  // UUID as string
   string title = 2;
   string status = 3;
   google.protobuf.Timestamp created_at = 4;
@@ -21,7 +20,7 @@ message CreateTaskResponse {
 }
 
 message GetTaskRequest {
-  google.protobuf.UUID id = 1;
+  string id = 1;  // UUID as string
 }
 
 message ListTasksRequest {}
@@ -31,7 +30,7 @@ message ListTasksResponse {
 }
 
 message UpdateTaskStatusRequest {
-  google.protobuf.UUID id = 1;
+  string id = 1;  // UUID as string
   string status = 2;
 }
 
