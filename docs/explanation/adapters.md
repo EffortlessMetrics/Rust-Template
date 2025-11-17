@@ -807,6 +807,42 @@ cargo test --workspace -- --ignored
 - Listing all tasks
 - Proper UUID and timestamp handling
 
+**gRPC Adapter Smoke Test:**
+
+Location: `crates/adapters-grpc/tests/smoke.rs`
+
+The gRPC adapter smoke test verifies the service works end-to-end:
+1. Creates an in-memory TaskRepository (no DB dependency)
+2. Starts a gRPC server on a test port
+3. Creates a tonic client
+4. Tests CreateTask, GetTask, and ListTasks RPCs
+5. Automatically cleans up server after test completes
+
+**Running gRPC Smoke Test:**
+
+The smoke test is marked with `#[ignore]` by default.
+
+To run the gRPC adapter smoke test:
+
+```bash
+# Run smoke test
+cargo test -p adapters-grpc --test smoke -- --ignored
+
+# Or run all ignored tests in the workspace
+cargo test --workspace -- --ignored
+```
+
+**Requirements:**
+- No external dependencies (uses in-memory repository)
+- Tests full gRPC request/response cycle
+
+**What the test validates:**
+- Task creation via gRPC CreateTask RPC
+- Task retrieval via gRPC GetTask RPC
+- Task listing via gRPC ListTasks RPC
+- Protobuf serialization/deserialization
+- Service implementation correctness
+
 ### In-Memory Stubs for Events
 
 For event publishers, use in-memory implementations in tests:
