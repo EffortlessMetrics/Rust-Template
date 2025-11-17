@@ -15,11 +15,12 @@ pub mod ports {
     use model::Task;
 
     /// Port for task persistence
-    pub trait TaskRepository {
-        fn save(&self, task: &Task) -> Result<(), String>;
-        fn find_by_id(&self, id: &str) -> Result<Option<Task>, String>;
-        fn find_all(&self) -> Result<Vec<Task>, String>;
-        fn update_status(
+    #[async_trait::async_trait]
+    pub trait TaskRepository: Send + Sync {
+        async fn save(&self, task: &Task) -> Result<(), String>;
+        async fn find_by_id(&self, id: &str) -> Result<Option<Task>, String>;
+        async fn find_all(&self) -> Result<Vec<Task>, String>;
+        async fn update_status(
             &self,
             id: &str,
             status: model::TaskStatus,
@@ -32,30 +33,30 @@ pub mod use_cases {
     use model::{Task, TaskStatus};
 
     /// Create a new task
-    pub fn create_task(repo: &impl TaskRepository, title: String) -> Result<Task, String> {
+    pub async fn create_task(repo: &dyn TaskRepository, title: String) -> Result<Task, String> {
         let task = Task {
             id: uuid::Uuid::new_v4().to_string(),
             title,
             status: TaskStatus::Pending,
             created_at: chrono::Utc::now(),
         };
-        repo.save(&task)?;
+        repo.save(&task).await?;
         Ok(task)
     }
 
-    pub fn get_task(repo: &impl TaskRepository, id: String) -> Result<Option<Task>, String> {
-        repo.find_by_id(&id)
+    pub async fn get_task(repo: &dyn TaskRepository, id: String) -> Result<Option<Task>, String> {
+        repo.find_by_id(&id).await
     }
 
-    pub fn list_tasks(repo: &impl TaskRepository) -> Result<Vec<Task>, String> {
-        repo.find_all()
+    pub async fn list_tasks(repo: &dyn TaskRepository) -> Result<Vec<Task>, String> {
+        repo.find_all().await
     }
 
-    pub fn update_task_status(
-        repo: &impl TaskRepository,
+    pub async fn update_task_status(
+        repo: &dyn TaskRepository,
         id: String,
         status: TaskStatus,
     ) -> Result<Option<Task>, String> {
-        repo.update_status(&id, status)
+        repo.update_status(&id, status).await
     }
 }
