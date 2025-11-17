@@ -1,34 +1,193 @@
+# LLM Context Pack Configuration
+#
+# This file defines context bundles for LLM-assisted development.
+# Each bundle packages relevant files into markdown for AI code generation.
+#
+# See: docs/how-to/use-llm-bundles.md for usage guide
+# See: .llm/example-prompts.md for prompt templates
+#
+# Validation: `cargo run -p xtask -- policy-test`
+# Policy: policy/llm.rego enforces structure
+
+# Bundle Sizing Guidance:
+#
+# - Small (100-150KB): Focused tasks, single module
+# - Medium (200-250KB): AC implementation, debugging
+# - Large (300KB+): Feature development, refactoring
+#
+# Limits prevent LLM context overflow. If bundle is too small,
+# add more include patterns. If too large, split into subtasks.
+
 tasks:
+  # Bundle: implement_ac
+  # Use for: Implementing a single acceptance criterion
+  # Size: 250KB - Fits ledger, BDD features, core logic
+  #
+  # Example usage:
+  #   cargo run -p xtask -- bundle implement_ac > /tmp/context.md
+  #
+  # Contains:
+  #   - Acceptance criteria from ledger (source of truth)
+  #   - Gherkin scenarios (test examples to pattern-match)
+  #   - Core business logic (implementation patterns)
+  #   - Acceptance test steps (test patterns)
+  #
+  # Typical prompts:
+  #   "Implement AC-TPL-005 using patterns from this bundle..."
+  #   "Add BDD scenario for AC-XYZ following existing style..."
   implement_ac:
     max_bytes: 250000
     include:
-      - specs/spec_ledger.yaml
-      - specs/userstories/**/*.md
-      - specs/features/**/*.feature
-      - features/*.yaml
-      - flags/*.yaml
-      - crates/core/src/**/*.rs
-      - crates/acceptance/src/**/*.rs
+      - specs/spec_ledger.yaml       # Source of truth for ACs
+      - specs/userstories/**/*.md    # User story context
+      - specs/features/**/*.feature  # BDD scenarios (examples)
+      - features/*.yaml              # Feature toggle config
+      - flags/*.yaml                 # Feature flag definitions
+      - crates/core/src/**/*.rs      # Core business logic patterns
+      - crates/acceptance/src/**/*.rs # Step definition patterns
       - crates/acceptance/tests/**/*.rs
     description: "Context for implementing an AC: ledger, specs, features, and core code"
 
+  # Bundle: implement_feature
+  # Use for: Multi-AC feature development, endpoint additions
+  # Size: 300KB - Broader scope than implement_ac
+  #
+  # Example usage:
+  #   cargo run -p xtask -- bundle implement_feature > /tmp/context.md
+  #
+  # Contains:
+  #   - All specs (OpenAPI, protobuf, ledger)
+  #   - All application code (handlers, models, core)
+  #   - Feature flags and toggles
+  #
+  # Typical prompts:
+  #   "Add GET /api/metrics endpoint with AC-TPL-006..."
+  #   "Implement notification feature with ACs XYZ-001 through XYZ-003..."
   implement_feature:
     max_bytes: 300000
     include:
-      - specs/spec_ledger.yaml
-      - specs/userstories/**/*.md
-      - specs/openapi/**/*.yaml
-      - specs/proto/**/*.proto
-      - features/*.yaml
-      - flags/*.yaml
-      - crates/**/src/**/*.rs
+      - specs/spec_ledger.yaml       # ACs and requirements
+      - specs/userstories/**/*.md    # User stories
+      - specs/openapi/**/*.yaml      # API contracts
+      - specs/proto/**/*.proto       # gRPC contracts
+      - features/*.yaml              # Feature definitions
+      - flags/*.yaml                 # Flag registry
+      - crates/**/src/**/*.rs        # All application code
     description: "Broader context for feature development: all specs and application code"
 
+  # Bundle: debug_tests
+  # Use for: Debugging failing BDD scenarios or tests
+  # Size: 200KB - Focused on test code and implementations
+  #
+  # Example usage:
+  #   cargo run -p xtask -- bundle debug_tests > /tmp/context.md
+  #
+  # Contains:
+  #   - Gherkin scenarios (what's being tested)
+  #   - Step definitions (test implementation)
+  #   - Application code (actual behavior)
+  #
+  # Typical prompts:
+  #   "Scenario @AC-TPL-002 fails with error: [paste error]..."
+  #   "Why is this BDD test expecting X but getting Y?"
   debug_tests:
     max_bytes: 200000
     include:
-      - specs/features/**/*.feature
-      - crates/acceptance/**/*.rs
-      - crates/*/tests/**/*.rs
-      - crates/*/src/**/*.rs
+      - specs/features/**/*.feature  # Gherkin scenarios
+      - crates/acceptance/**/*.rs    # Cucumber step definitions
+      - crates/*/tests/**/*.rs       # Unit/integration tests
+      - crates/*/src/**/*.rs         # Application code
     description: "Context for debugging tests: test code, step definitions, and application code"
+
+  # Bundle: selftest (Required by policy/llm.rego)
+  # Use for: Understanding overall project health
+  # Size: 250KB - All governance and test artifacts
+  #
+  # This bundle is REQUIRED by policy/llm.rego.
+  # It provides context for understanding project compliance.
+  selftest:
+    max_bytes: 250000
+    include:
+      - specs/spec_ledger.yaml       # All ACs
+      - specs/features/**/*.feature  # All BDD scenarios
+      - policy/**/*.rego             # Policy rules
+      - .llm/contextpack.yaml        # This file
+    description: "Project health and governance context"
+
+# Example: Custom bundle for specific use cases
+#
+# Uncomment and customize for your needs:
+#
+# tasks:
+#   debug_http:
+#     max_bytes: 150000
+#     include:
+#       - crates/app-http/src/**/*.rs
+#       - crates/model/src/**/*.rs
+#       - specs/openapi/**/*.yaml
+#     description: "Debug HTTP layer issues"
+#
+#   refactor_core:
+#     max_bytes: 200000
+#     include:
+#       - crates/core/src/**/*.rs
+#       - crates/core/tests/**/*.rs
+#       - specs/spec_ledger.yaml
+#     description: "Refactor core business logic"
+#
+#   add_grpc_endpoint:
+#     max_bytes: 250000
+#     include:
+#       - specs/proto/**/*.proto
+#       - crates/adapters-grpc/src/**/*.rs
+#       - crates/core/src/**/*.rs
+#     description: "Add gRPC endpoint implementation"
+
+# Advanced: Bundle with optional prompt guidance (for future use)
+#
+# You can add a 'prompt' field to provide LLM context automatically:
+#
+# tasks:
+#   implement_ac:
+#     max_bytes: 250000
+#     include: [...]
+#     description: "..."
+#     # Optional: Prepend this to every bundle generation
+#     # prompt: |
+#     #   You are implementing acceptance criteria in a governed codebase.
+#     #   - All AC IDs must exist in specs/spec_ledger.yaml
+#     #   - Follow existing patterns from the bundle
+#     #   - Do NOT invent new AC IDs
+#     #   - Add @AC-XXX tags to Gherkin scenarios
+#
+# Note: 'prompt' field is not currently used by xtask but could be
+# integrated in future tooling for automatic prompt generation.
+
+# Tips for Creating Custom Bundles:
+#
+# 1. Start specific, expand if needed
+#    Bad:  crates/**/*.rs (too broad, hits max_bytes)
+#    Good: crates/core/src/**/*.rs (focused)
+#
+# 2. Include examples for pattern-matching
+#    Always include existing code that shows "how we do things"
+#
+# 3. Use .llm/.llmignore to exclude files
+#    See docs/how-to/use-llm-bundles.md#excluding-files
+#
+# 4. Test your bundle size
+#    cargo run -p xtask -- bundle your_task | wc -c
+#
+# 5. Verify required tasks exist
+#    cargo run -p xtask -- policy-test
+#    (Checks for 'implement_ac' and 'selftest')
+
+# Governance Note:
+#
+# This file is validated by policy/llm.rego which enforces:
+# - Required tasks exist (implement_ac, selftest)
+# - Tasks have required fields (max_bytes, include, description)
+# - Field types are correct (max_bytes > 0, include is array of strings)
+# - No unknown fields
+#
+# Run `cargo run -p xtask -- policy-test` to validate changes.

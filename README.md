@@ -2,10 +2,12 @@
 
 **Heavy governance so LLMs can move fast**
 
-AC-first, policy-first template for building Rust services with AI-assisted development.
+This project serves **two purposes**:
 
-- See `TEMPLATE_OVERVIEW.md` for a high-level overview of this template.
-- See `IMPLEMENTATION_PLAN.md` and `ADOPTION.md` for rollout and implementation guidance.
+1. **Full-Featured Template**: Clone it to start a new Rust service with governance, observability, and AI-assisted development built-in
+2. **Governance Library**: Add the `rust_iac_xtask_core` library to your existing Rust project to gain AC tracking, policy enforcement, and LLM bundling
+
+Whether you're starting fresh or adding governance to an existing codebase, this project provides the infrastructure for safe, fast AI-assisted development.
 
 **Key Features:**
 - 🦀 Rust-native development with xtask orchestration
@@ -15,18 +17,43 @@ AC-first, policy-first template for building Rust services with AI-assisted deve
 - 🏗️ Hexagonal architecture with Axum + tracing
 - 🧪 BDD acceptance tests with real HTTP integration
 
+---
+
+## How to Use This Project
+
+| Your Situation | Recommended Path | Documentation |
+|---------------|------------------|---------------|
+| **Starting a new service** | Clone this template | [Quick Start (Template)](#quick-start-template) |
+| **Adding governance to existing repo** | Use the library | [Quick Start (Library)](#quick-start-library) / [Brownfield Guide](docs/how-to/add-governance-to-existing-repo.md) |
+| **Multiple services, want updates** | Template as upstream | [Adoption Patterns](docs/explanation/adoption-patterns.md#pattern-b-template-as-upstream) |
+| **Platform team (10+ services)** | Generator-based | [Adoption Patterns](docs/explanation/adoption-patterns.md#pattern-c-generator-based-platform-team) |
+
 
 ### Who This Is For
 
-This template is opinionated and governance-heavy **on purpose**:
+This project is opinionated and governance-heavy **on purpose**. It serves two primary audiences:
 
-- Built for teams using LLMs/agents as real contributors to their codebase
-- Provides ACs, policies, and bundles so you can **trust but verify** AI work
-- Assumes you care about invariants, privacy, and production safety
+**Teams Starting New Services:**
+- Want governance, observability, and AI-safety built-in from day 0
+- Need AC-first development workflow with traceability
+- Value hexagonal architecture and clean separation of concerns
+- Using LLMs/agents as real contributors, need trust-but-verify guardrails
 
-If you're hand-writing everything and want a light Axum starter, this is overkill.
+**Teams Retrofitting Governance:**
+- Have existing Rust projects that need AC tracking and policy enforcement
+- Want to add LLM-safe development workflows without rewriting everything
+- Need incremental adoption: start with xtask commands, add policies over time
+- Care about invariants, privacy, and production safety
 
-If you want to let an LLM move fast inside a Rust service **without** guessing what it broke, this is the right weight.
+**Not for:**
+- Hand-writing everything without AI assistance → Use a lighter Axum starter
+- Prototyping without governance → This is overkill
+- Teams that don't need traceability between specs, ACs, and code
+
+**Perfect for:**
+- Letting LLMs move fast inside a Rust service without guessing what broke
+- Maintaining audit trails from user stories to implementation
+- Enforcing policies without manual reviews
 
 
 ### Current Status
@@ -41,7 +68,11 @@ This template is at v1.1.0 and pilot-ready.
 
 ## Quick Start
 
-**Fastest path** - one command validates everything:
+Choose your path based on your situation:
+
+### Quick Start (Template)
+
+**For new services** - Clone and validate everything:
 
 ```bash
 git clone <your-repo-url> && cd Rust-Template
@@ -49,7 +80,28 @@ nix develop
 cargo run -p xtask -- quickstart
 ```
 
-This runs all checks, tests, and bundler to prove the template works.
+This runs all checks, tests, and bundler to prove the template works. Continue to [New Service from Template](docs/how-to/new-service-from-template.md).
+
+### Quick Start (Library)
+
+**For existing Rust projects** - Add governance incrementally:
+
+```bash
+# Add xtask tooling to your Cargo workspace
+cargo add --path /path/to/rust-template/crates/xtask -p xtask
+
+# Or use from crates.io (when published)
+# cargo install rust_iac_xtask_core
+
+# Create minimal specs/ directory structure
+mkdir -p specs/{features,userstories}
+touch specs/spec_ledger.yaml
+
+# Run your first governance check
+cargo run -p xtask -- ac-status
+```
+
+Continue to [Brownfield Guide](docs/how-to/add-governance-to-existing-repo.md) for incremental adoption.
 
 ### Developer Workflow
 
@@ -116,6 +168,84 @@ crates/
 **Key pattern:** Dependencies point inward
 `app-http` → `core` ✓  (adapters call domain)
 `core` → `app-http` ✗  (domain never calls adapters)
+
+---
+
+## As a Library
+
+**Don't need the full template?** Use `rust_iac_xtask_core` to add governance to your existing Rust project.
+
+### What You Get
+
+The library provides the **governance spine** without requiring the full template structure:
+
+| Component | What It Does | When to Use |
+|-----------|--------------|-------------|
+| **xtask Commands** | AC status, policy tests, LLM bundling | Add to any Cargo workspace |
+| **Policy Suite** | OPA/Rego policies for AC/feature/privacy | Adopt incrementally as YAML |
+| **LLM Bundler** | Curated context generation | Use with your existing code |
+| **AC Tracking** | Specs → tests → code traceability | Works with minimal `spec_ledger.yaml` |
+
+### When to Use Library vs Template
+
+| Use Case | Recommendation |
+|----------|----------------|
+| **New service, greenfield** | Clone the template |
+| **Existing service, add governance** | Use the library |
+| **Need hexagonal architecture** | Clone the template |
+| **Just want xtask + policies** | Use the library |
+| **Full observability stack** | Clone the template |
+| **Incremental adoption** | Use the library |
+
+### Getting Started as a Library
+
+1. **Add xtask to your workspace:**
+   ```bash
+   # Add as workspace member in Cargo.toml
+   [workspace]
+   members = ["crates/*", "path/to/rust-template/crates/xtask"]
+   ```
+
+2. **Create minimal governance structure:**
+   ```bash
+   mkdir -p specs/{features,userstories}
+   mkdir -p policy/
+   touch specs/spec_ledger.yaml
+   ```
+
+3. **Run governance checks:**
+   ```bash
+   cargo run -p xtask -- ac-status    # Check AC coverage
+   cargo run -p xtask -- bundle <task> # Generate LLM context
+   ```
+
+4. **Adopt incrementally:**
+   - Start with AC tracking only
+   - Add policies when you need enforcement
+   - Integrate LLM bundling when ready
+   - Adopt BDD testing at your own pace
+
+### CI Integration Examples
+
+Use xtask commands in your existing CI:
+
+```yaml
+# .github/workflows/governance.yml
+- name: Check AC Coverage
+  run: cargo run -p xtask -- ac-status
+
+- name: Test Policies
+  run: cargo run -p xtask -- policy-test
+
+- name: Validate Spec Ledger
+  run: cargo run -p xtask -- check
+```
+
+See [CI Examples](.github/workflows/) for 20+ workflow templates you can adapt.
+
+**Learn more:** [Brownfield Guide](docs/how-to/add-governance-to-existing-repo.md)
+
+---
 
 ## Documentation
 

@@ -1,0 +1,15 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: app-http-pdb
+  labels:
+    app: app-http
+    app.kubernetes.io/environment: production
+    app.kubernetes.io/managed-by: kustomize
+    team: platform
+    cost-center: engineering
+spec:
+  minAvailable: 2  # Valid: ensures 2 pods always available
+  selector:
+    matchLabels:
+      app: app-http

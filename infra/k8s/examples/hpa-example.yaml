@@ -1,0 +1,371 @@
+# HorizontalPodAutoscaler Example
+#
+# PURPOSE:
+# Automatically scale your Deployment based on CPU/memory utilization or custom metrics.
+# HPA adjusts the number of pod replicas to maintain target resource utilization.
+#
+# WHEN TO USE:
+# - Your service has variable load patterns (not constant traffic)
+# - You want to optimize costs by scaling down during low traffic
+# - You have metrics-server or custom metrics infrastructure
+# - You've profiled your service and know good scaling thresholds
+#
+# WHEN NOT TO USE:
+# - Your service has constant load (just set replicas directly)
+# - You're in dev/local environments (use fixed replicas for predictability)
+# - You haven't load-tested your service yet (you'll set bad targets)
+# - Your cluster doesn't have metrics-server installed
+# - You need very fast scale-up (HPA checks metrics every 15s by default)
+#
+# TRADE-OFFS:
+# ✅ Pros:
+#   - Automatically handles traffic spikes
+#   - Reduces costs during low traffic
+#   - Improves resource utilization across cluster
+#
+# ❌ Cons:
+#   - Adds complexity (monitoring HPA behavior, debugging scaling issues)
+#   - Can cause "flapping" if targets are set wrong (constant scale up/down)
+#   - Metrics lag (15s default) means slow response to sudden spikes
+#   - Requires metrics infrastructure (metrics-server, Prometheus, etc.)
+#
+# PREREQUISITES:
+# 1. metrics-server must be installed:
+#    kubectl get deployment metrics-server -n kube-system
+#
+# 2. Your Deployment should NOT have replicas set (HPA manages it):
+#    # Wrong:
+#    spec:
+#      replicas: 3  # Remove this line
+#
+# 3. Your pods must have resource requests defined (HPA uses this as baseline):
+#    resources:
+#      requests:
+#        cpu: "100m"
+#        memory: "128Mi"
+
+---
+# Basic HPA: Scale based on CPU utilization
+# This is the most common HPA configuration
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: app-http-basic
+  namespace: default
+  labels:
+    app: app-http
+    environment: production
+spec:
+  # Target the Deployment to scale
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: app-http
+
+  # Scaling bounds
+  minReplicas: 3
+    # IMPORTANT: Set minReplicas to your HA requirement
+    # Production: >= 3 (tolerates 1 node failure)
+    # Staging: 2 (tests load balancing)
+    # Dev: 1 (cost optimization)
+
+  maxReplicas: 10
+    # Set based on:
+    # - Budget (max cost you'll accept)
+    # - Cluster capacity (don't exceed node resources)
+    # - Load testing (max replicas needed for peak traffic)
+    # - Database connection limits (if your DB has max_connections=100, don't scale to 50 pods)
+
+  # Metrics to scale on
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        # Scale when average CPU across all pods exceeds this percentage
+        averageUtilization: 70
+          # Recommended values:
+          # - 70% for CPU (allows headroom for spikes)
+          # - 80% for memory (memory scales linearly with requests)
+          # Too low (< 50%): Wastes money, over-provisions
+          # Too high (> 90%): Risk of saturation during scale-up lag
+
+  # Optional: Advanced scaling behavior (v2 API)
+  behavior:
+    scaleDown:
+      # Wait 5 minutes before scaling down (prevents flapping)
+      stabilizationWindowSeconds: 300
+        # Trade-off: Slower cost reduction vs. stability
+        # Short window (60s): Fast cost reduction, but risk of flapping
+        # Long window (600s): Very stable, but slower to reduce costs
+        # Recommended: 300s (5 min) for most workloads
+
+      # Scale down policy: Max 1 pod per 60s
+      policies:
+      - type: Pods
+        value: 1
+        periodSeconds: 60
+          # Prevents mass scale-down that could cause service degradation
+
+    scaleUp:
+      # Scale up immediately (no stabilization window)
+      stabilizationWindowSeconds: 0
+        # You want to respond to load FAST
+
+      # Scale up policy: Max 2 pods per 60s OR 50% of current size
+      policies:
+      - type: Pods
+        value: 2
+        periodSeconds: 60
+      - type: Percent
+        value: 50
+        periodSeconds: 60
+      selectPolicy: Max  # Use the policy that scales fastest
+        # Example: If you have 2 pods and load spikes:
+        # - Pods policy: Add 2 pods (total: 4)
+        # - Percent policy: Add 50% = 1 pod (total: 3)
+        # Max policy chooses Pods: 4 pods
+
+---
+# Advanced HPA: Multiple metrics (CPU + Memory)
+# Use this if your service is constrained by both CPU and memory
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: app-http-multi-metric
+  namespace: default
+  labels:
+    app: app-http
+    environment: production
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: app-http
+
+  minReplicas: 3
+  maxReplicas: 20
+
+  # Multiple metrics: HPA scales based on whichever metric is highest
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+          # Memory target is usually higher than CPU because:
+          # - Memory usage is more predictable (scales with request count)
+          # - CPU spikes can be bursty (one expensive request)
+
+  # Example: If CPU is at 60% and memory is at 85%:
+  # HPA scales based on memory (higher utilization)
+
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+      - type: Pods
+        value: 1
+        periodSeconds: 60
+    scaleUp:
+      stabilizationWindowSeconds: 0
+      policies:
+      - type: Percent
+        value: 50
+        periodSeconds: 30
+
+---
+# Custom Metrics HPA: Scale based on application metrics
+# Requires Prometheus Adapter or similar metrics provider
+# USE CASE: Scale based on HTTP request rate, queue depth, etc.
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: app-http-custom-metrics
+  namespace: default
+  labels:
+    app: app-http
+    environment: production
+  annotations:
+    # Document what custom metrics you're using
+    prometheus.io/custom-metric: "http_requests_per_second"
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: app-http
+
+  minReplicas: 3
+  maxReplicas: 30
+
+  metrics:
+  # CPU as a baseline
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+
+  # Custom metric: HTTP requests per second per pod
+  - type: Pods
+    pods:
+      metric:
+        name: http_requests_per_second
+          # This metric must be exposed via Prometheus and made available to K8s
+          # via Prometheus Adapter or custom metrics API
+      target:
+        type: AverageValue
+        averageValue: "1000"
+          # Scale when average pod handles > 1000 req/s
+          # Set this based on load testing:
+          # 1. Find max throughput per pod (load test)
+          # 2. Set target to 70% of max (e.g., max=1500, target=1000)
+
+  # Custom metric: Queue depth (for async processing)
+  # - type: External
+  #   external:
+  #     metric:
+  #       name: sqs_queue_depth
+  #       selector:
+  #         matchLabels:
+  #           queue: "work-queue"
+  #     target:
+  #       type: AverageValue
+  #       averageValue: "30"
+  #         # Scale when queue depth per pod > 30 messages
+
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 600  # 10 min for custom metrics (more stable)
+      policies:
+      - type: Pods
+        value: 2
+        periodSeconds: 120
+    scaleUp:
+      stabilizationWindowSeconds: 0
+      policies:
+      - type: Percent
+        value: 100  # Can double pod count quickly for traffic spikes
+        periodSeconds: 30
+
+---
+# HOW TO INTEGRATE THIS INTO YOUR DEPLOYMENT:
+#
+# 1. Choose the appropriate HPA example above (basic, multi-metric, or custom)
+#
+# 2. Copy to your environment overlay:
+#    cp infra/k8s/examples/hpa-example.yaml infra/k8s/prod/hpa.yaml
+#
+# 3. Customize:
+#    - Update metadata.name and spec.scaleTargetRef.name to match your Deployment
+#    - Adjust minReplicas/maxReplicas based on your capacity planning
+#    - Tune averageUtilization based on load testing
+#    - Configure behavior policies for your traffic pattern
+#
+# 4. Remove replicas from Deployment:
+#    # In infra/k8s/prod/deployment-patch.yaml
+#    # Comment out or remove:
+#    # spec:
+#    #   replicas: 3
+#    # HPA will manage replicas; Deployment should not have it set
+#
+# 5. Add to Kustomization:
+#    # In infra/k8s/prod/kustomization.yaml
+#    resources:
+#      - ../dev
+#      - hpa.yaml
+#
+# 6. Verify metrics-server is working:
+#    kubectl top pods -n my-service-prod
+#    # Should show CPU/memory usage, not "error: metrics not available"
+#
+# 7. Deploy:
+#    kubectl apply -k infra/k8s/prod
+#
+# 8. Monitor HPA:
+#    kubectl get hpa -n my-service-prod -w
+#    # Watch current/target metrics and replica count
+#
+#    kubectl describe hpa app-http -n my-service-prod
+#    # Shows scaling events and reasons
+#
+# 9. Test scaling behavior:
+#    # Generate load (adjust for your service)
+#    kubectl run load-test --image=busybox --rm -it -- \
+#      /bin/sh -c "while true; do wget -q -O- http://app-http/health; done"
+#
+#    # Watch pods scale up
+#    kubectl get pods -n my-service-prod -w
+#
+#    # Stop load test and watch scale down (takes 5+ min due to stabilization)
+#
+# 10. Tune based on observations:
+#     - If HPA is flapping (constantly scaling up/down):
+#       → Increase scaleDown.stabilizationWindowSeconds
+#       → Lower averageUtilization target (more headroom)
+#     - If HPA is too slow to respond:
+#       → Decrease scaleUp.stabilizationWindowSeconds (default: 0)
+#       → Increase scaleUp.policies.value (scale more pods at once)
+#     - If you're hitting maxReplicas often:
+#       → Increase maxReplicas OR optimize your service
+#     - If you're always at minReplicas:
+#       → Decrease minReplicas OR lower averageUtilization target
+
+---
+# COMMON MISTAKES:
+#
+# ❌ Setting averageUtilization too low (< 50%):
+#    → Wastes money, over-provisions resources
+#    → Example: 30% CPU target means you're paying for 70% idle capacity
+#
+# ❌ Setting maxReplicas too low:
+#    → Service saturates during peak traffic
+#    → Users see timeouts/errors
+#    → Example: maxReplicas: 5 but need 20 to handle Black Friday traffic
+#
+# ❌ Not configuring scaleDown.stabilizationWindowSeconds:
+#    → HPA flaps (scale up, scale down, repeat)
+#    → Disrupts service, wastes resources on pod churn
+#
+# ❌ Having replicas set in Deployment:
+#    → HPA and Deployment fight over replica count
+#    → Deployment always resets to hardcoded value
+#
+# ❌ No resource requests defined:
+#    → HPA can't calculate utilization (divides by zero)
+#    → HPA shows "unknown" for current metrics
+#
+# ❌ Scaling based on memory without considering leaks:
+#    → If your app has memory leaks, HPA will keep scaling up forever
+#    → Fix the leak; don't scale around it
+#
+# ❌ Using HPA in dev environment:
+#    → Adds complexity for no benefit (dev traffic is unpredictable)
+#    → Use fixed replicas: 1 in dev
+#
+# ❌ Not monitoring HPA events:
+#    → You won't notice when HPA is failing to scale
+#    → Set up alerts: kubectl get events | grep HPA | grep Warning
+
+---
+# POLICY RECOMMENDATIONS:
+#
+# Create policy/k8s_hpa.rego to enforce safe HPA configurations:
+#
+# - Require minReplicas >= 3 in production
+# - Prevent CPU targets < 50% (too aggressive)
+# - Require scaleDown.stabilizationWindowSeconds >= 300 in production
+# - Warn if maxReplicas is very high (cost risk)
+# - Deny HPA targeting a Deployment that has replicas set
+#
+# See docs/explanation/infra-modules.md for example Rego policies

@@ -297,7 +297,6 @@ impl From<JsonRejection> for AppError {
     }
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::*;

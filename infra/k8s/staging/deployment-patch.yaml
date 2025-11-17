@@ -15,19 +15,28 @@ spec:
             limits:
               cpu: "500m"
               memory: "512Mi"
-          env:
-            - name: ENVIRONMENT
-              valueFrom:
-                configMapKeyRef:
-                  name: app-config
-                  key: ENVIRONMENT
-            - name: LOG_LEVEL
-              valueFrom:
-                configMapKeyRef:
-                  name: app-config
-                  key: LOG_LEVEL
-            - name: RUST_LOG
-              valueFrom:
-                configMapKeyRef:
-                  name: app-config
-                  key: RUST_LOG
+          # Staging probes match production for realistic testing
+          # This ensures staging can catch probe-related issues before prod
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 2
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 2
+            failureThreshold: 2
+          # Load non-sensitive configuration from ConfigMap
+          envFrom:
+            - configMapRef:
+                name: app-config
+            # Load sensitive configuration from Secret
+            - secretRef:
+                name: app-secrets

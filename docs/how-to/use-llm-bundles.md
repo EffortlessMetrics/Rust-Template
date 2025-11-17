@@ -126,368 +126,911 @@ If the LLM's first attempt isn't quite right:
 
 ## Common Workflows
 
-### Workflow 1: Add a new AC
+The following workflows show concrete examples of using LLM bundles with policies that keep AI assistance safe and governed.
 
-**Scenario:** You need to add email notification when a refund is approved.
+### Workflow 1: Implement a New AC
+
+**Scenario:** Product owner added AC-TPL-005 to spec_ledger.yaml: "GET /api/echo returns the input message"
+
+**Goal:** Implement from AC to working code using LLM assistance, verified by selftest.
+
+**Step 1: Verify AC is in ledger (human governance)**
 
 ```bash
-# 1. Human adds AC to ledger FIRST (governance requirement)
-vim specs/spec_ledger.yaml
+# Check that AC exists
+grep "AC-TPL-005" specs/spec_ledger.yaml
 ```
 
-Add to ledger:
+Output:
 ```yaml
-- id: AC-125
-  text: "Customer receives email when refund is approved"
-  tests: [{ type: bdd, tag: "@AC-125" }]
+- id: AC-TPL-005
+  text: "GET /api/echo returns the input message"
+  tests: [{ type: bdd, tag: "@AC-TPL-005" }]
 ```
+
+**Step 2: Generate context bundle**
 
 ```bash
-# 2. Validate AC exists in ledger
-cargo run -p xtask -- policy-test
-
-# 3. Generate bundle with ledger context
-cargo run -p xtask -- bundle implement_ac
+cargo run -p xtask -- bundle implement_ac > /tmp/ac-context.md
 ```
+
+This bundles:
+- `specs/spec_ledger.yaml` - All ACs (including AC-TPL-005)
+- `specs/features/**/*.feature` - Existing scenarios as examples
+- `crates/core/src/**/*.rs` - Core business logic patterns
+- `crates/acceptance/src/**/*.rs` - Step definition patterns
+
+**Step 3: Craft precise prompt with bundle**
 
 **Prompt to LLM:**
+```markdown
+I've added AC-TPL-005 to the ledger: "GET /api/echo returns the input message"
+
+Here's the complete context bundle showing our project structure:
+
+[PASTE CONTENTS OF /tmp/ac-context.md]
+
+Using the patterns in this bundle, implement AC-TPL-005. Provide:
+
+1. **Gherkin scenario** in specs/features/template_core.feature:
+   - Tag with @AC-TPL-005
+   - Follow existing scenario style (see @AC-TPL-001 example)
+   - Test: GET /api/echo?message=hello returns {"echo": "hello"}
+
+2. **Step definitions** in crates/acceptance/src/steps/template_core.rs:
+   - Reuse existing step patterns from bundle
+   - Handle query parameters
+   - Validate JSON response structure
+
+3. **Core logic** (if needed) in crates/core/src/lib.rs:
+   - Simple echo function
+   - No external dependencies
+
+4. **HTTP handler** in crates/app-http/src/lib.rs:
+   - Route: GET /api/echo
+   - Use existing error handling pattern (see health endpoint)
+   - Add tracing span with AC reference
+
+**Constraints:**
+- Do NOT invent new AC IDs (only use AC-TPL-005)
+- Use existing error types (CoreError, AppError)
+- Follow tracing pattern from health handler
+- Match coding style in bundle
+
+Show me the exact diffs for each file.
 ```
-I've added AC-125 to the ledger: "Customer receives email when refund is approved"
 
-Using the provided bundle context, implement this AC. Show me:
+**Step 4: Review LLM output**
 
-1. New Gherkin scenario in specs/features/refunds.feature with @AC-125 tag
-2. Step definitions in crates/acceptance/src/steps/refunds.rs
-3. Core email notification logic in crates/core/src/notifications.rs
-4. Handler updates in crates/app-http/src/lib.rs to trigger notification
+**Expected LLM response structure:**
+```rust
+// File: specs/features/template_core.feature
+// Add after existing scenarios:
 
-Requirements:
-- Use existing error handling patterns
-- Add tracing spans for observability
-- Include AC-125 in error messages for traceability
-- Do NOT invent new AC IDs or feature flags
+@AC-TPL-005
+Scenario: Echo endpoint returns input message
+  When I GET /api/echo?message=hello
+  Then I receive 200 with JSON containing field "echo" with value "hello"
+
+// File: crates/acceptance/src/steps/template_core.rs
+// Add step definition:
+
+#[when(expr = "I GET /api/echo?message={word}")]
+async fn get_echo(world: &mut TemplateWorld, message: String) {
+    let response = world.client
+        .get(&format!("{}/api/echo?message={}", world.base_url, message))
+        .send()
+        .await
+        .expect("Failed to send request");
+    world.last_response = Some(response);
+}
+
+// File: crates/app-http/src/lib.rs
+// Add handler:
+
+#[tracing::instrument(name = "echo_handler", skip(request_id))]
+async fn echo_handler(
+    Extension(request_id): Extension<RequestId>,
+    Query(params): Query<EchoQuery>
+) -> Result<Json<EchoResponse>, AppError> {
+    info!(ac = "AC-TPL-005", "Echo request received");
+    Ok(Json(EchoResponse {
+        echo: params.message
+    }))
+}
+
+#[derive(Deserialize)]
+struct EchoQuery {
+    message: String,
+}
+
+#[derive(Serialize)]
+struct EchoResponse {
+    echo: String,
+}
 ```
 
-**Apply and validate:**
+**What policies protect you:**
+- ✅ `policy/ledger.rego` ensures AC-TPL-005 has tests array
+- ✅ `policy/features.rego` ensures @AC-TPL-005 tag references real AC
+- ✅ LLM can't invent AC-TPL-999 - it will fail policy check
+
+**Step 5: Apply changes and verify**
+
 ```bash
-# 4. Review LLM output carefully
-# 5. Apply changes to files
-# 6. Run tests
-cargo run -p xtask -- bdd
+# Apply the diffs manually (review each change!)
+vim specs/features/template_core.feature
+vim crates/acceptance/src/steps/template_core.rs
+vim crates/app-http/src/lib.rs
 
-# 7. Verify AC shows up in status
+# Run policy checks
+cargo run -p xtask -- policy-test
+# ✅ AC-TPL-005 has tests
+# ✅ @AC-TPL-005 references existing AC
+
+# Run BDD tests
+cargo run -p xtask -- bdd
+# ✅ Scenario: Echo endpoint returns input message ... passed
+
+# Full selftest
+cargo run -p xtask -- selftest
+# ✅ All checks pass
+# ✅ AC-TPL-005 implementation verified
+```
+
+**Step 6: Verify traceability**
+
+```bash
+# Check AC status report
 cargo run -p xtask -- ac-status
 
-# 8. Check AC-125 is passing
-grep "AC-125" docs/feature_status.md
-# Should show: | AC-125 | ... | ✅ pass | 1 |
+# Should show:
+# | AC-TPL-005 | GET /api/echo returns the input message | ✅ pass | 1 |
 ```
+
+**Key learnings:**
+- **Human adds AC first** → LLM implements → Policies verify
+- Bundle provides **concrete examples** LLM can pattern-match
+- Policies **prevent invented IDs** before code review
+- Selftest **validates entire chain** (AC → test → code)
 
 ---
 
-### Workflow 2: Debug a failing scenario
+### Workflow 2: Fix a Failing Policy
 
-**Scenario:** BDD test is failing with unexpected status code.
+**Scenario:** You committed a feature but `cargo run -p xtask -- policy-test` fails in CI.
 
-```bash
-# 1. Run tests, capture failure
-cargo run -p xtask -- bdd 2>&1 | tee test-output.txt
-
-# Example failure:
-# Scenario: Create a refund
-#   ✗ Expected 201, got 400
-#   Body: {"error":"INVALID_INPUT","message":"Amount must be positive"}
+**Error:**
+```
+Policy violation in policy/ledger.rego:
+AC 'AC-NOTIF-001' must have a non-empty 'tests' array.
 ```
 
+**Goal:** Use LLM to understand Rego error, identify root cause, fix without breaking other rules.
+
+**Step 1: Understand the policy failure**
+
 ```bash
-# 2. Generate debug bundle
-cargo run -p xtask -- bundle debug_tests
+# See which policy failed
+cargo run -p xtask -- policy-test
 ```
+
+Output:
+```
+❌ FAIL: policy/ledger.rego
+  AC 'AC-NOTIF-001' must have a non-empty 'tests' array.
+
+Tested: specs/spec_ledger.yaml
+```
+
+**Step 2: Read the policy to understand the rule**
+
+```bash
+cat policy/ledger.rego
+```
+
+```rego
+package main
+
+deny[msg] {
+    ac := input.stories[_].requirements[_].acceptance_criteria[_]
+    not has_tests(ac)
+    msg := sprintf("AC '%s' must have a non-empty 'tests' array.", [ac.id])
+}
+
+has_tests(ac) {
+    is_array(ac.tests)
+    count(ac.tests) > 0
+}
+```
+
+**Translation:** Every AC must have a `tests` array with at least one test entry.
+
+**Step 3: Generate bundle with policy context**
+
+```bash
+# Create custom bundle for policy debugging
+cargo run -p xtask -- bundle implement_ac > /tmp/policy-context.md
+```
+
+**Step 4: Ask LLM to explain Rego error**
 
 **Prompt to LLM:**
+```markdown
+I'm getting this policy error:
+
 ```
-The BDD scenario for AC-123 "Create a refund" is failing.
-
-Expected: 201 Created
-Actual: 400 Bad Request
-Body: {"error":"INVALID_INPUT","message":"Amount must be positive"}
-
-Looking at the bundle:
-1. What validation is failing in the core layer?
-2. Is the step definition passing the correct data?
-3. What's the expected validation rule for amount?
-4. Show me the exact fix needed
-
-Context: The scenario is:
-```gherkin
-Given an order "ORD-123" totalling 5000 cents
-When I POST /refunds with { "orderId": "ORD-123", "amountCents": 5000 }
-Then I receive 201 with a "refundId"
-```
+AC 'AC-NOTIF-001' must have a non-empty 'tests' array.
 ```
 
-**LLM might respond:**
+Here's the Rego policy:
 
-> Looking at `crates/core/src/refunds.rs:42`, the validation requires:
-> ```rust
-> if amount_cents <= 0 {
->     return Err(CoreError::ValidationError { ... });
-> }
+[PASTE policy/ledger.rego contents]
+
+And here's my spec_ledger.yaml entry:
+
+```yaml
+- id: AC-NOTIF-001
+  text: "Customer receives email when refund is approved"
+  # Missing tests array!
+```
+
+Questions:
+1. What does this Rego rule enforce and why?
+2. What's wrong with my AC-NOTIF-001 entry?
+3. Show me the correct YAML structure to satisfy this policy
+4. What would be the proper test entry for a BDD scenario?
+
+Context from bundle:
+[PASTE /tmp/policy-context.md showing examples of correct AC entries]
+```
+
+**Expected LLM response:**
+
+> **Policy Purpose:**
+> The `ledger.rego` policy enforces that every acceptance criterion has associated tests.
+> This ensures traceability: ACs without tests can't be verified.
+>
+> **What's Wrong:**
+> Your AC-NOTIF-001 is missing the required `tests` array field.
+>
+> **Correct Structure:**
+> ```yaml
+> - id: AC-NOTIF-001
+>   text: "Customer receives email when refund is approved"
+>   tests:
+>     - type: bdd
+>       tag: "@AC-NOTIF-001"
 > ```
 >
-> But the step definition in `crates/acceptance/src/steps/refunds.rs:15` is passing:
-> ```rust
-> amount_cents: -5000  // ← Bug: negative!
-> ```
+> **Explanation:**
+> - `tests` must be an array (even for single test)
+> - Each test needs `type` (e.g., "bdd", "unit")
+> - The `tag` field references the Gherkin tag (@AC-NOTIF-001)
 >
-> **Fix:** Change step definition to:
-> ```rust
-> amount_cents: 5000  // Positive value
-> ```
-
-```bash
-# 3. Apply fix
-vim crates/acceptance/src/steps/refunds.rs
-
-# 4. Re-run tests
-cargo run -p xtask -- bdd
-# ✓ All scenarios pass
-```
-
----
-
-### Workflow 3: Understand what an AC actually does
-
-**Scenario:** New team member needs to understand existing ACs.
-
-```bash
-# Generate context
-cargo run -p xtask -- bundle implement_ac
-```
-
-**Prompt to LLM:**
-```
-Explain what AC-TPL-001 actually requires and how it's implemented.
-
-Show me:
-1. The exact AC text from the ledger
-2. The Gherkin scenario that tests it
-3. The handler code that implements it
-4. What would break if I removed this AC?
-```
-
-**LLM response:**
-
-> **AC-TPL-001:** "GET /health returns 200 with status 'ok' when service is healthy"
->
-> **Ledger entry:**
+> **Example from bundle (AC-TPL-001):**
 > ```yaml
 > - id: AC-TPL-001
 >   text: "GET /health returns 200 with status 'ok' when service is healthy"
->   tests: [{ type: bdd, tag: "@AC-TPL-001" }]
+>   tests: [ { type: bdd, tag: "@AC-TPL-001" } ]
 > ```
->
-> **Gherkin scenario:** (specs/features/template_core.feature:7)
-> ```gherkin
-> @AC-TPL-001 @smoke
-> Scenario: Health endpoint reports service is healthy
->   When I GET /health
->   Then I receive 200 with status "ok"
-> ```
->
-> **Implementation:** (crates/app-http/src/lib.rs:56)
-> ```rust
-> async fn health(Extension(_request_id): Extension<RequestId>) -> impl IntoResponse {
->     info!("Health check requested");
->     Json(HealthResponse {
->         status: "ok".to_string(),
->         service: "service-api".to_string()
->     })
-> }
-> ```
->
-> **What would break:**
-> - Kubernetes liveness/readiness probes would fail
-> - Load balancers couldn't determine service health
-> - Monitoring would have no heartbeat signal
 
----
-
-### Workflow 4: Implement a new feature end-to-end
-
-**Scenario:** Add task completion feature (builds on Day 7 tutorial).
+**Step 5: Apply fix**
 
 ```bash
-# 1. Plan ACs (human decision)
 vim specs/spec_ledger.yaml
 ```
 
-Add:
+Update to:
 ```yaml
-- id: AC-TASK-006
-  text: "User can mark a task as completed"
-  tests: [{ type: bdd, tag: "@AC-TASK-006" }]
-- id: AC-TASK-007
-  text: "Completed tasks have status 'completed' and timestamp"
-  tests: [{ type: bdd, tag: "@AC-TASK-007" }]
+- id: AC-NOTIF-001
+  text: "Customer receives email when refund is approved"
+  tests:
+    - type: bdd
+      tag: "@AC-NOTIF-001"
 ```
 
+**Step 6: Verify policy now passes**
+
 ```bash
-# 2. Generate bundle
-cargo run -p xtask -- bundle implement_feature
+cargo run -p xtask -- policy-test
+# ✅ All policies pass
+# ✅ AC-NOTIF-001 has required tests array
 ```
+
+**What policies protect you:**
+- ✅ `policy/ledger.rego` - Prevents ACs without test coverage
+- ✅ `policy/features.rego` - Ensures @AC-NOTIF-001 tag references real AC
+- ✅ Policies run in CI - Can't merge without compliance
+
+**Key learnings:**
+- Rego errors are **governance violations**, not code bugs
+- LLM can **translate Rego to human intent**
+- Bundle shows **correct examples** from existing codebase
+- Fix policy violations **before implementing code**
+
+---
+
+### Workflow 3: Add a New Endpoint Using Bundles
+
+**Scenario:** Add GET /api/metrics endpoint for basic service metrics (request count, uptime).
+
+**Goal:** Use `implement_feature` bundle with precise prompt template to generate full implementation.
+
+**Step 1: Add AC to ledger (human governance)**
+
+```bash
+vim specs/spec_ledger.yaml
+```
+
+Add new requirement:
+```yaml
+- id: REQ-TPL-METRICS
+  title: "Basic Service Metrics"
+  acceptance_criteria:
+    - id: AC-TPL-006
+      text: "GET /api/metrics returns JSON with requestCount and uptimeSeconds"
+      tests: [{ type: bdd, tag: "@AC-TPL-006" }]
+```
+
+**Step 2: Generate feature development bundle**
+
+```bash
+cargo run -p xtask -- bundle implement_feature > /tmp/feature-context.md
+```
+
+Includes:
+- All crates source code (patterns for handlers, models, errors)
+- OpenAPI specs (API design patterns)
+- Feature files (scenario examples)
+
+**Step 3: Use prompt template**
 
 **Prompt to LLM:**
+```markdown
+Implement AC-TPL-006: "GET /api/metrics returns JSON with requestCount and uptimeSeconds"
+
+Bundle context:
+[PASTE /tmp/feature-context.md]
+
+**Implementation Requirements:**
+
+Route: GET /api/metrics
+Response:
+```json
+{
+  "requestCount": 42,
+  "uptimeSeconds": 3600
+}
 ```
-Implement task completion feature with ACs:
-- AC-TASK-006: "User can mark a task as completed"
-- AC-TASK-007: "Completed tasks have status 'completed' and timestamp"
 
-Show me complete implementation:
+**Tasks:**
 
-1. **Model changes** (crates/model/src/lib.rs):
-   - Add `completed_at: Option<DateTime>` to Task
-   - Method: `task.complete() -> Result<Task, CoreError>`
+1. **Model** (crates/model/src/lib.rs or new metrics.rs):
+   ```rust
+   #[derive(Serialize)]
+   pub struct MetricsResponse {
+       pub request_count: u64,
+       pub uptime_seconds: u64,
+   }
+   ```
 
-2. **Core logic** (crates/core/src/lib.rs):
-   - Function: `complete_task(store, task_id) -> Result<Task, CoreError>`
-   - Validation: Task exists, not already completed
+2. **Core logic** (crates/core/src/metrics.rs - create if needed):
+   ```rust
+   pub fn get_metrics() -> MetricsResponse {
+       // Use lazy_static for counters or read from state
+   }
+   ```
 
-3. **HTTP handler** (crates/app-http/src/lib.rs):
-   - Route: PUT /tasks/:id/complete
-   - Handler: `complete_task_handler`
-   - Response DTO: TaskResponse (updated)
+3. **HTTP Handler** (crates/app-http/src/lib.rs):
+   ```rust
+   #[tracing::instrument(name = "metrics", skip(request_id))]
+   async fn metrics_handler(
+       Extension(request_id): Extension<RequestId>
+   ) -> Result<Json<MetricsResponse>, AppError> {
+       info!(ac = "AC-TPL-006", "Metrics requested");
+       let metrics = core::get_metrics();
+       Ok(Json(metrics))
+   }
+   ```
+   Add route: `.route("/api/metrics", get(metrics_handler))`
 
-4. **BDD scenarios** (specs/features/tasks.feature):
-   - Two scenarios tagged @AC-TASK-006 and @AC-TASK-007
+4. **BDD Scenario** (specs/features/template_core.feature):
+   ```gherkin
+   @AC-TPL-006
+   Scenario: Metrics endpoint returns service statistics
+     When I GET /api/metrics
+     Then I receive 200 with JSON containing "requestCount" and "uptimeSeconds"
+   ```
 
-5. **Step definitions** (crates/acceptance/src/steps/tasks.rs):
-   - New steps for PUT requests and timestamp validation
+5. **Step Definition** (crates/acceptance/src/steps/template_core.rs):
+   Use existing step patterns for GET requests and JSON validation.
 
-Use existing patterns from the bundle. Do not invent new error codes.
+**Constraints:**
+- Follow existing code style from bundle
+- Use RequestId middleware pattern
+- Add tracing span with AC reference
+- Use existing error handling (AppError)
+- Do NOT invent new AC IDs
+
+Show exact file paths and diffs.
 ```
+
+**Expected LLM Output:**
+
+LLM provides complete implementation with:
+- Exact file locations
+- Import statements needed
+- Where to add route in router
+- Step definitions reusing existing patterns
+
+**Step 4: Validate with selftest**
 
 ```bash
-# 3. Apply LLM suggestions
-# (Review each file carefully)
+# Apply changes
+# (Review each diff carefully!)
 
-# 4. Validate
+# Run full validation
 cargo run -p xtask -- selftest
 
-# If errors, iterate:
-cargo run -p xtask -- bundle debug_tests
-# Paste error, ask LLM for fix
+# Expected output:
+# ✅ Policy tests pass
+# ✅ BDD scenarios pass (@AC-TPL-006)
+# ✅ AC-TPL-006 traceable in status report
 ```
+
+**What the prompt template provides:**
+- ✅ **Exact structure** - LLM knows what files to modify
+- ✅ **Code snippets** - Shows expected implementation shape
+- ✅ **Constraints** - Prevents common mistakes
+- ✅ **Verification** - Clear success criteria
+
+**Key learnings:**
+- **Structured prompts** → more precise LLM output
+- Bundle provides **working examples** to pattern-match
+- Template forces **explicit file paths** (no guessing)
+- Verification step **catches LLM hallucinations**
 
 ---
 
-### Workflow 5: Refactor with LLM assistance
+### Workflow 4: Refactor Under Policy Protection
 
-**Scenario:** Extract repeated validation logic into reusable function.
+**Scenario:** Refactor error handling code while keeping all ACs passing (trust-but-verify).
+
+**Goal:** Use LLM to refactor, rely on policies and tests to catch regressions.
+
+**Step 1: Identify refactoring opportunity**
 
 ```bash
-cargo run -p xtask -- bundle implement_feature
+# Found repeated error pattern in crates/app-http/src/lib.rs:
 ```
-
-**Prompt to LLM:**
-```
-I see repeated validation pattern in crates/core/src/lib.rs:
 
 ```rust
-// In create_task:
-if title.trim().is_empty() {
-    return Err(CoreError::ValidationError { ... });
-}
+// Handler 1:
+let result = validate_input(&request).map_err(|e| {
+    error!(ac = "AC-TPL-003", error = ?e, "Validation failed");
+    AppError::ValidationError(e.to_string())
+})?;
 
-// In update_task:
-if title.trim().is_empty() {
-    return Err(CoreError::ValidationError { ... });
-}
+// Handler 2:
+let result = validate_email(&email).map_err(|e| {
+    error!(ac = "AC-TPL-003", error = ?e, "Validation failed");
+    AppError::ValidationError(e.to_string())
+})?;
+
+// Handler 3: (same pattern repeated 5+ times!)
 ```
 
-Refactor to a shared validation function:
+**Step 2: Generate refactoring bundle**
 
-1. Create `validate_task_title(title: &str) -> Result<(), CoreError>`
-2. Use it in both `create_task` and `update_task`
-3. Ensure error messages stay the same (for AC traceability)
-4. Update any affected tests
-
-Show me the diffs.
+```bash
+cargo run -p xtask -- bundle implement_feature > /tmp/refactor-context.md
 ```
+
+**Step 3: Ask LLM for refactoring**
+
+**Prompt to LLM:**
+```markdown
+I see repeated validation error handling in crates/app-http/src/lib.rs.
+
+Here's the pattern (repeated 5+ times):
+
+```rust
+let result = some_validation().map_err(|e| {
+    error!(ac = "AC-TPL-003", error = ?e, "Validation failed");
+    AppError::ValidationError(e.to_string())
+})?;
+```
+
+**Refactoring Goal:**
+Extract this into a reusable helper function that:
+1. Logs the error with AC reference
+2. Converts to AppError::ValidationError
+3. Preserves existing error messages (for AC traceability)
+
+**Requirements:**
+- Create helper in crates/app-http/src/errors.rs (or new helpers.rs)
+- Replace all 5 occurrences with the helper
+- Do NOT change error messages (tests depend on exact text)
+- Do NOT change AC references
+- Keep existing type signatures
+
+Bundle context:
+[PASTE /tmp/refactor-context.md]
+
+Show me:
+1. The new helper function
+2. Before/after for each call site
+3. Any import changes needed
+```
+
+**Expected LLM Response:**
+
+> **New Helper Function** (crates/app-http/src/helpers.rs):
+> ```rust
+> use tracing::error;
+> use crate::AppError;
+>
+> pub fn validation_error<E: std::fmt::Display>(
+>     ac: &str,
+>     error: E
+> ) -> AppError {
+>     error!(ac = ac, error = %error, "Validation failed");
+>     AppError::ValidationError(error.to_string())
+> }
+> ```
+>
+> **Before:**
+> ```rust
+> let result = validate_input(&request).map_err(|e| {
+>     error!(ac = "AC-TPL-003", error = ?e, "Validation failed");
+>     AppError::ValidationError(e.to_string())
+> })?;
+> ```
+>
+> **After:**
+> ```rust
+> let result = validate_input(&request)
+>     .map_err(|e| validation_error("AC-TPL-003", e))?;
+> ```
+
+**Step 4: Apply refactoring**
+
+```bash
+# Create new file
+vim crates/app-http/src/helpers.rs
+
+# Update each handler
+vim crates/app-http/src/lib.rs
+
+# Add mod declaration
+# mod helpers;
+# use helpers::validation_error;
+```
+
+**Step 5: Verify no regressions (policies protect you!)**
+
+```bash
+# Run tests - error messages must be identical
+cargo run -p xtask -- bdd
+# ✅ All scenarios pass
+# ✅ Error messages unchanged
+# ✅ AC-TPL-003 still passing
+
+# Run policy tests
+cargo run -p xtask -- policy-test
+# ✅ All policies pass
+# ✅ AC references still valid
+
+# Full selftest
+cargo run -p xtask -- selftest
+# ✅ No regressions detected
+```
+
+**What protected you during refactoring:**
+- ✅ **BDD tests** - Validated error messages didn't change
+- ✅ **Policy tests** - Ensured AC references still valid
+- ✅ **Selftest** - Caught any broken imports or type errors
+- ✅ **AC traceability** - Error logs still reference correct ACs
+
+**If tests HAD failed:**
+
+```bash
+# Scenario: AC-TPL-003 error format changed
+# ❌ Expected: "Validation failed: email invalid"
+# ❌ Got: "ValidationError: email invalid"
+
+# LLM changed the error format!
+# Policies caught it before merge.
+```
+
+**Key learnings:**
+- **Refactor freely** when you have comprehensive tests
+- Policies provide **safety net** for governance compliance
+- LLM does the tedious work, **tests verify correctness**
+- "Trust but verify" - let automation catch mistakes
 
 ---
 
-### Workflow 6: Policy-protected LLM workflow
+### Workflow 5: Debug a Failing BDD Scenario
 
-**Scenario:** LLM tries to invent a new AC ID.
+**Scenario:** BDD test failing after refactoring - use LLM to understand feature context and fix.
+
+**Goal:** Use `debug_tests` bundle to diagnose and fix without introducing regressions.
+
+**Step 1: Run BDD and capture failure**
 
 ```bash
-cargo run -p xtask -- bundle implement_ac
+cargo run -p xtask -- bdd 2>&1 | tee /tmp/bdd-failure.txt
 ```
 
+**Output:**
+```
+Feature: Template Core Endpoints
+
+  @AC-TPL-001 @smoke
+  Scenario: Health endpoint reports service is healthy
+    When I GET /health
+    Then I receive 200 with status "ok"
+    ✅ PASSED
+
+  @AC-TPL-002
+  Scenario: Version endpoint reports build information
+    When I GET /version
+    Then I receive 200 with JSON containing "version" and "gitSha"
+    ❌ FAILED
+
+    Error: Expected field "gitSha" in response
+    Got: {"version": "0.1.0", "git_sha": "abc123"}
+                                 ^^^^^^^^ snake_case instead of camelCase!
+```
+
+**Step 2: Generate debug bundle**
+
+```bash
+cargo run -p xtask -- bundle debug_tests > /tmp/debug-context.md
+```
+
+Includes:
+- Feature files (expected behavior)
+- Step definitions (what the test checks)
+- Application code (actual implementation)
+
+**Step 3: Ask LLM with specific error context**
+
 **Prompt to LLM:**
+```markdown
+BDD scenario @AC-TPL-002 is failing with this error:
+
+```
+Expected field "gitSha" in response
+Got: {"version": "0.1.0", "git_sha": "abc123"}
+```
+
+Here's the debug bundle with all relevant code:
+
+[PASTE /tmp/debug-context.md]
+
+**Questions:**
+1. What does the Gherkin scenario expect (field name)?
+2. What is the handler currently returning?
+3. Why is there a mismatch (snake_case vs camelCase)?
+4. Show me the exact fix needed
+
+**Error output:**
+[PASTE relevant lines from /tmp/bdd-failure.txt]
+```
+
+**Expected LLM Response:**
+
+> **Root Cause Analysis:**
+>
+> **1. Gherkin Expectation** (specs/features/template_core.feature:14):
+> ```gherkin
+> Then I receive 200 with JSON containing "version" and "gitSha"
+> ```
+> Expects: `gitSha` (camelCase)
+>
+> **2. Current Handler** (crates/app-http/src/lib.rs:78):
+> ```rust
+> #[derive(Serialize)]
+> struct VersionResponse {
+>     version: String,
+>     git_sha: String,  // ← Serializes as "git_sha" (snake_case)
+> }
+> ```
+> Returns: `git_sha` (snake_case)
+>
+> **3. Why Mismatch:**
+> Serde defaults to snake_case for struct field names unless told otherwise.
+> The test expects camelCase per API convention.
+>
+> **4. Fix:**
+>
+> **Option A: Rename field to match Rust conventions (use serde rename)**
+> ```rust
+> #[derive(Serialize)]
+> struct VersionResponse {
+>     version: String,
+>     #[serde(rename = "gitSha")]
+>     git_sha: String,
+> }
+> ```
+>
+> **Option B: Change Gherkin to match snake_case**
+> ```gherkin
+> Then I receive 200 with JSON containing "version" and "git_sha"
+> ```
+>
+> **Recommendation:** Use Option A to maintain camelCase API convention.
+
+**Step 4: Apply the fix**
+
+```bash
+vim crates/app-http/src/lib.rs
+```
+
+Update:
+```rust
+#[derive(Serialize)]
+struct VersionResponse {
+    version: String,
+    #[serde(rename = "gitSha")]
+    git_sha: String,
+}
+```
+
+**Step 5: Re-run BDD tests**
+
+```bash
+cargo run -p xtask -- bdd
+
+# Output:
+# @AC-TPL-002
+# Scenario: Version endpoint reports build information
+#   ✅ PASSED
+```
+
+**Step 6: Verify no other regressions**
+
+```bash
+cargo run -p xtask -- selftest
+# ✅ All tests pass
+# ✅ AC-TPL-002 now passing
+```
+
+**What the debug bundle provided:**
+- ✅ **Feature file** - Showed expected API contract
+- ✅ **Step definitions** - Revealed exact assertion
+- ✅ **Handler code** - Showed actual implementation
+- ✅ **Full context** - LLM connected the dots
+
+**Key learnings:**
+- Debug bundles provide **all layers** (test → code → contract)
+- LLM can **trace through** feature → step → handler
+- Specific error output helps LLM **pinpoint exact mismatch**
+- Fix verified by **re-running same test** that failed
+
+---
+
+## Policy-Protected LLM Workflow Summary
+
+**The Safety Model:**
+
+```
+Human Governance → LLM Assistance → Policy Enforcement → Test Verification
+       ↓                  ↓                  ↓                    ↓
+   Add AC to ledger   Generate code    Verify compliance    Run selftest
+   (spec_ledger.yaml)  (using bundles)  (policy/**.rego)    (BDD + checks)
+```
+
+**Example: LLM Tries to Invent an AC ID**
+
+**Bad Prompt (no governance):**
 ```
 Add a feature that deletes tasks.
 ```
 
-**LLM might respond:**
-
+**LLM Might Respond:**
 > I'll add AC-TASK-999 for task deletion:
->
 > ```yaml
 > - id: AC-TASK-999
 >   text: "User can delete a task by ID"
 > ```
 
-**DON'T apply this!** The LLM invented an AC ID.
+**DON'T APPLY THIS!** The LLM invented an AC ID outside governance.
 
-**Correct workflow:**
+**Correct Workflow (governance first):**
 
 ```bash
-# 1. Human adds AC to ledger FIRST
+# 1. Human adds AC to ledger FIRST (governance decision)
 vim specs/spec_ledger.yaml
 ```
 
 Add:
 ```yaml
-- id: AC-TASK-008  # ← Sequential ID, not LLM's AC-999
+- id: AC-TASK-008  # ← Sequential ID following convention
   text: "User can delete a task by ID"
   tests: [{ type: bdd, tag: "@AC-TASK-008" }]
 ```
 
 ```bash
-# 2. Validate policy
+# 2. Validate policy compliance
 cargo run -p xtask -- policy-test
-# ✓ AC-TASK-008 has tests
-
-# 3. NOW ask LLM to implement
-cargo run -p xtask -- bundle implement_ac
+# ✅ AC-TASK-008 has required tests array
 ```
-
-**Corrected prompt:**
-```
-I've added AC-TASK-008 to the ledger: "User can delete a task by ID"
-
-Implement this AC using the existing patterns in the bundle.
-Use AC-TASK-008 (not AC-TASK-999) in all references.
-```
-
-**Policy enforcement protects you:**
 
 ```bash
-# If you accidentally committed AC-TASK-999 without tests:
-git add specs/spec_ledger.yaml
-git commit -m "Add task deletion"
-
-# CI would fail:
-cargo run -p xtask -- policy-test
-# ✗ AC-TASK-999 not found in ledger
-# ✗ AC without tests array
-
-# You're forced to fix it before merge
+# 3. NOW generate bundle and ask LLM to implement
+cargo run -p xtask -- bundle implement_ac > /tmp/context.md
 ```
 
-**This is the power of policy-as-code:** LLMs can assist, but policies enforce governance.
+**Corrected Prompt:**
+```markdown
+I've added AC-TASK-008 to the ledger: "User can delete a task by ID"
+
+Here's the context bundle:
+[PASTE /tmp/context.md]
+
+Implement AC-TASK-008 using existing patterns.
+
+**Constraints:**
+- Use AC-TASK-008 (it's already in the ledger)
+- Do NOT invent new AC IDs
+- Follow existing delete patterns from bundle
+- Add @AC-TASK-008 tag to Gherkin scenario
+```
+
+**What Policies Protect You:**
+
+| Policy | Protection | Example |
+|--------|-----------|---------|
+| `policy/ledger.rego` | Every AC must have tests | ❌ Rejects: AC without `tests` array |
+| `policy/features.rego` | Tags must reference real ACs | ❌ Rejects: `@AC-FAKE-999` in Gherkin |
+| `policy/llm.rego` | Contextpack must be valid | ❌ Rejects: Invalid bundle configuration |
+
+**If You Bypass Governance:**
+
+```bash
+# Scenario: You accidentally apply LLM's invented AC-TASK-999
+vim specs/spec_ledger.yaml  # Add AC-TASK-999
+git add .
+git commit -m "Add task deletion"
+
+# Policy test runs (in pre-commit hook or CI):
+cargo run -p xtask -- policy-test
+
+# ❌ FAIL: Features reference AC-TASK-999 but it's non-sequential
+# ❌ FAIL: AC-TASK-999 doesn't follow naming convention
+# (Policies would need to be extended for these specific checks)
+
+# Current policies catch:
+# ✅ AC without tests array
+# ✅ Feature tag referencing non-existent AC
+# ✅ Invalid contextpack configuration
+```
+
+**Key Principle: Policies Enforce Governance at Commit Time**
+
+```
+                    Governance Layer
+                          │
+        ┌─────────────────┼─────────────────┐
+        │                 │                 │
+   spec_ledger.yaml   policy/*.rego    xtask policy-test
+   (source of truth)  (rules)          (enforcement)
+        │                 │                 │
+        └─────────────────┼─────────────────┘
+                          │
+                    Blocks bad commits
+                    (pre-commit hook)
+```
+
+**This is the power of policy-as-code:**
+- ✅ LLMs can **assist implementation**
+- ✅ Policies **enforce governance rules**
+- ✅ Humans make **strategic decisions** (AC IDs, architecture)
+- ✅ Automation **catches compliance violations** before merge
 
 ---
 

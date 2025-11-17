@@ -1,0 +1,23 @@
+# Specification Ledger
+# This file tracks the relationship between user stories, requirements, and acceptance criteria
+
+user_stories: []
+  # - id: US-001
+  #   title: Example User Story
+  #   description: As a user, I want to...
+  #   acceptance_criteria:
+  #     - AC-001
+
+requirements: []
+  # - id: REQ-001
+  #   title: Example Requirement
+  #   description: System shall...
+  #   user_story: US-001
+  #   priority: high
+
+acceptance_criteria: []
+  # - id: AC-001
+  #   title: Example Acceptance Criterion
+  #   description: When... Then...
+  #   requirement: REQ-001
+  #   priority: must-have

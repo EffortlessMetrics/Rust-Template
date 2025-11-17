@@ -18,7 +18,10 @@ async fn when_get_endpoint(world: &mut World, path: String) {
         request_builder = request_builder.header(key, value);
     }
 
-    let request = request_builder.body(Body::empty()).map_err(|e| tracing::warn!("Invalid request: {}", e)).unwrap_or_else(|_| Request::builder().uri("/").body(Body::empty()).unwrap());
+    let request = request_builder
+        .body(Body::empty())
+        .map_err(|e| tracing::warn!("Invalid request: {}", e))
+        .unwrap_or_else(|_| Request::builder().uri("/").body(Body::empty()).unwrap());
 
     // Call the router - this is the REAL HTTP stack!
     let response = world.app.clone().oneshot(request).await.unwrap_or_else(|e| {
@@ -50,8 +53,7 @@ async fn then_receive_with_status(world: &mut World, status_code: String, status
         status_code, response.status
     );
 
-    let actual_status =
-        response.body.get("status").and_then(|v| v.as_str()).unwrap_or("");
+    let actual_status = response.body.get("status").and_then(|v| v.as_str()).unwrap_or("");
 
     assert_eq!(
         actual_status, status_value,
@@ -111,7 +113,10 @@ async fn when_post_echo_invalid(world: &mut World, message: String) {
         request_builder = request_builder.header(key, value);
     }
 
-    let request = request_builder.body(Body::from(request_body.to_string())).map_err(|e| tracing::warn!("Invalid request: {}", e)).unwrap_or_else(|_| Request::builder().uri("/").body(Body::empty()).unwrap());
+    let request = request_builder
+        .body(Body::from(request_body.to_string()))
+        .map_err(|e| tracing::warn!("Invalid request: {}", e))
+        .unwrap_or_else(|_| Request::builder().uri("/").body(Body::empty()).unwrap());
 
     let response = world.app.clone().oneshot(request).await.expect("request should succeed");
 
@@ -175,11 +180,7 @@ async fn then_body_field_matches_header(
 ) {
     let response = world.last_response.as_ref().expect("response should exist");
 
-    let body_value = response
-        .body
-        .get(&body_field)
-        .and_then(|v| v.as_str())
-        .unwrap_or("");
+    let body_value = response.body.get(&body_field).and_then(|v| v.as_str()).unwrap_or("");
 
     let header_value = response
         .headers
@@ -210,7 +211,11 @@ async fn then_response_header_equals(
     header_name: String,
     expected_value: String,
 ) {
-    let response = world.last_response.as_ref().unwrap_or(&Response { status: 0, body: serde_json::json!({}), headers: http::HeaderMap::new() });
+    let response = world.last_response.as_ref().unwrap_or(&Response {
+        status: 0,
+        body: serde_json::json!({}),
+        headers: http::HeaderMap::new(),
+    });
     let header_value = response
         .headers
         .get(header_name.to_lowercase())
@@ -226,12 +231,12 @@ async fn then_response_header_equals(
 
 #[then(regex = r#"^the "([^"]+)" field in response body equals "([^"]+)"$"#)]
 async fn then_body_field_equals(world: &mut World, field_name: String, expected_value: String) {
-    let response = world.last_response.as_ref().unwrap_or(&Response { status: 0, body: serde_json::json!({}), headers: http::HeaderMap::new() });
-    let actual_value = response
-        .body
-        .get(&field_name)
-        .and_then(|v| v.as_str())
-        .unwrap_or("");
+    let response = world.last_response.as_ref().unwrap_or(&Response {
+        status: 0,
+        body: serde_json::json!({}),
+        headers: http::HeaderMap::new(),
+    });
+    let actual_value = response.body.get(&field_name).and_then(|v| v.as_str()).unwrap_or("");
 
     assert_eq!(
         actual_value, expected_value,
@@ -242,7 +247,11 @@ async fn then_body_field_equals(world: &mut World, field_name: String, expected_
 
 #[then(regex = r#"^the "([^"]+)" header is a valid UUID or request identifier$"#)]
 async fn then_header_is_uuid(world: &mut World, header_name: String) {
-    let response = world.last_response.as_ref().unwrap_or(&Response { status: 0, body: serde_json::json!({}), headers: http::HeaderMap::new() });
+    let response = world.last_response.as_ref().unwrap_or(&Response {
+        status: 0,
+        body: serde_json::json!({}),
+        headers: http::HeaderMap::new(),
+    });
     let header_value = response
         .headers
         .get(header_name.to_lowercase())

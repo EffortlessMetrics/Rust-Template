@@ -1,0 +1,11 @@
+# LLM Context Packs
+# Define task-specific context bundles for LLM assistance
+
+tasks:
+  - name: selftest
+    description: "Context for running self-tests"
+    includes:
+      - "specs/**/*.yaml"
+      - "specs/**/*.feature"
+      - "policy/**/*.rego"
+      - "RUST_IAC.toml"

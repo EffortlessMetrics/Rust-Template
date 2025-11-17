@@ -1,0 +1,32 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: app-http-pdb
+  labels:
+    app: app-http
+    app.kubernetes.io/environment: production
+    app.kubernetes.io/managed-by: kustomize
+    team: platform
+    cost-center: engineering
+spec:
+  minAvailable: 2  # Ensure at least 2 pods are always available (out of 3 replicas)
+  selector:
+    matchLabels:
+      app: app-http
+---
+# PodDisruptionBudget ensures high availability during voluntary disruptions
+# such as node drains, cluster upgrades, or pod evictions.
+#
+# Configuration:
+# - minAvailable: 2 (with 3 replicas, allows 1 pod to be disrupted at a time)
+# - This ensures that during rolling updates or node maintenance,
+#   the service maintains at least 2 healthy pods for handling traffic
+#
+# Alternative approach (not used here):
+# - maxUnavailable: 1 would achieve the same goal
+# - We use minAvailable for clarity: "always keep 2 pods running"
+#
+# HA Guarantees:
+# - Prevents cluster operations from disrupting more than 1 pod simultaneously
+# - Works in conjunction with maxUnavailable: 0 in deployment strategy
+# - Ensures service availability during planned maintenance

@@ -10,10 +10,10 @@ use acceptance::steps;
 async fn main() {
     // Find the workspace root by going up from CARGO_MANIFEST_DIR
     let manifest_dir = env!("CARGO_MANIFEST_DIR");
-    let workspace_root = std::path::Path::new(manifest_dir)
-        .parent()
-        .and_then(|p| p.parent())
-        .unwrap_or_else(|| std::path::Path::new(env!("CARGO_MANIFEST_DIR")).ancestors().nth(2).unwrap());
+    let workspace_root =
+        std::path::Path::new(manifest_dir).parent().and_then(|p| p.parent()).unwrap_or_else(|| {
+            std::path::Path::new(env!("CARGO_MANIFEST_DIR")).ancestors().nth(2).unwrap()
+        });
 
     let features_path = workspace_root.join("specs/features");
     let junit_dir = workspace_root.join("target/junit");
@@ -33,8 +33,10 @@ async fn main() {
     }
 
     // Create output files
-    let junit_file = File::create(&junit_path).unwrap_or_else(|_| std::fs::File::create("/dev/null").unwrap());
-    let json_file = File::create(&json_path).unwrap_or_else(|_| std::fs::File::create("/dev/null").unwrap());
+    let junit_file =
+        File::create(&junit_path).unwrap_or_else(|_| std::fs::File::create("/dev/null").unwrap());
+    let json_file =
+        File::create(&json_path).unwrap_or_else(|_| std::fs::File::create("/dev/null").unwrap());
 
     // Triple output: console + JUnit + JSON
     World::cucumber()

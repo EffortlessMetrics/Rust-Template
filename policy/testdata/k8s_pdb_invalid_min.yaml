@@ -1,0 +1,11 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: app-http-pdb
+  labels:
+    app: app-http
+spec:
+  minAvailable: 0  # INVALID: minAvailable must be at least 1
+  selector:
+    matchLabels:
+      app: app-http

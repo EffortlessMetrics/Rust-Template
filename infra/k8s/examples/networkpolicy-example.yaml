@@ -1,0 +1,605 @@
+# NetworkPolicy Examples
+#
+# PURPOSE:
+# NetworkPolicies act as firewall rules for pods, controlling ingress/egress traffic.
+# They enforce zero-trust networking: deny by default, allow explicitly.
+#
+# WHEN TO USE:
+# - Multi-tenant clusters (need isolation between teams/services)
+# - Compliance requirements (PCI-DSS, HIPAA, SOC2)
+# - Defense in depth (limit blast radius if a pod is compromised)
+# - Production environments with sensitive data
+#
+# WHEN NOT TO USE:
+# - Your CNI doesn't support NetworkPolicy (kubenet, basic Flannel)
+# - Local dev environment (adds friction, no security benefit)
+# - You haven't mapped service dependencies yet (you'll break things)
+# - Single-tenant cluster with trusted workloads only
+#
+# TRADE-OFFS:
+# ✅ Pros:
+#   - Strong network isolation (reduces lateral movement in breaches)
+#   - Compliance-friendly (auditable network controls)
+#   - No performance overhead (enforced by CNI, not app layer)
+#
+# ❌ Cons:
+#   - CNI dependency (not all clusters support it)
+#   - Complex debugging (connection failures are silent)
+#   - Requires complete dependency map (missing one rule = broken service)
+#   - Operational overhead (every new dependency needs policy update)
+#
+# PREREQUISITES:
+# 1. Your cluster's CNI must support NetworkPolicy:
+#    - Calico ✅
+#    - Cilium ✅
+#    - Weave Net ✅
+#    - Canal (Flannel + Calico) ✅
+#    - Flannel alone ❌
+#    - kubenet ❌
+#
+#    Check: kubectl get pods -n kube-system | grep -E 'calico|cilium|weave'
+#
+# 2. Test that NetworkPolicy is enforced (not just accepted):
+#    kubectl apply -f infra/k8s/examples/networkpolicy-example.yaml
+#    kubectl exec -it <pod> -- curl http://google.com
+#    # Should fail if deny-all egress policy is working
+#
+# 3. Map your service dependencies (example):
+#    app-http needs:
+#      Ingress from: ingress-nginx namespace (port 8080)
+#      Ingress from: Kubernetes API server (health probes, port 8080)
+#      Ingress from: Prometheus (metrics scraping, port 8080)
+#      Egress to: PostgreSQL (port 5432)
+#      Egress to: kube-dns (port 53 UDP)
+#      Egress to: External API (port 443)
+
+---
+# STEP 1: Deny-all baseline
+# Start with a clean slate: block all traffic, then explicitly allow what's needed
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-all
+  namespace: default
+  annotations:
+    description: "Baseline: deny all ingress and egress traffic"
+spec:
+  # Apply to all pods in this namespace
+  podSelector: {}
+
+  # Deny both ingress (incoming) and egress (outgoing) traffic
+  policyTypes:
+  - Ingress
+  - Egress
+
+  # No ingress/egress rules = deny all
+  # (This is different from omitting policyTypes, which would be "no policy")
+
+# IMPORTANT: This will break everything until you add allow rules below
+# Deploy deny-all + allow rules together in the same kubectl apply
+
+---
+# STEP 2: Allow ingress from Ingress controller
+# Allows external traffic to reach your service via Ingress
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: app-http-allow-ingress
+  namespace: default
+  annotations:
+    description: "Allow ingress from nginx Ingress controller to app-http"
+spec:
+  # Apply only to app-http pods
+  podSelector:
+    matchLabels:
+      app: app-http
+
+  policyTypes:
+  - Ingress
+
+  ingress:
+  # Allow from ingress-nginx namespace
+  - from:
+    # Match by namespace label
+    - namespaceSelector:
+        matchLabels:
+          name: ingress-nginx
+            # IMPORTANT: Your ingress namespace must have this label
+            # kubectl label namespace ingress-nginx name=ingress-nginx
+
+    # To port 8080 (your app's HTTP port)
+    ports:
+    - protocol: TCP
+      port: 8080
+
+  # Alternative: Match by pod labels instead of namespace
+  # - from:
+  #   - namespaceSelector:
+  #       matchLabels:
+  #         name: ingress-nginx
+  #     podSelector:
+  #       matchLabels:
+  #         app.kubernetes.io/name: ingress-nginx
+
+---
+# STEP 3: Allow ingress for health probes
+# Kubernetes kubelet (runs on every node) needs to reach your health endpoints
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: app-http-allow-health-probes
+  namespace: default
+  annotations:
+    description: "Allow kubelet to reach health check endpoints"
+spec:
+  podSelector:
+    matchLabels:
+      app: app-http
+
+  policyTypes:
+  - Ingress
+
+  ingress:
+  # Allow from any namespace (kubelet runs in kube-system, but uses node IPs)
+  - from:
+    - namespaceSelector: {}
+      # Empty selector = all namespaces
+      # This is safe because kubelet uses node IPs, not pod IPs
+
+    ports:
+    - protocol: TCP
+      port: 8080  # Your liveness/readiness probe port
+
+  # Alternative: Allow from specific CIDR (if you know your node IPs)
+  # - from:
+  #   - ipBlock:
+  #       cidr: 10.0.0.0/16  # Your node CIDR range
+
+---
+# STEP 4: Allow ingress from Prometheus
+# If you're scraping metrics, Prometheus needs access to /metrics endpoint
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: app-http-allow-prometheus
+  namespace: default
+  annotations:
+    description: "Allow Prometheus to scrape /metrics endpoint"
+spec:
+  podSelector:
+    matchLabels:
+      app: app-http
+
+  policyTypes:
+  - Ingress
+
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: monitoring
+      podSelector:
+        matchLabels:
+          app: prometheus
+
+    ports:
+    - protocol: TCP
+      port: 8080  # Metrics port (same as HTTP in this example)
+
+---
+# STEP 5: Allow egress to DNS
+# CRITICAL: Pods need to resolve domain names (kube-dns or CoreDNS)
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: app-http-allow-dns
+  namespace: default
+  annotations:
+    description: "Allow DNS queries to kube-dns/CoreDNS"
+spec:
+  podSelector:
+    matchLabels:
+      app: app-http
+
+  policyTypes:
+  - Egress
+
+  egress:
+  # Allow UDP/TCP to kube-dns on port 53
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          name: kube-system
+      podSelector:
+        matchLabels:
+          k8s-app: kube-dns  # Or coredns
+
+    ports:
+    - protocol: UDP
+      port: 53
+    - protocol: TCP
+      port: 53
+
+  # Alternative: Allow to kube-dns ClusterIP
+  # - to:
+  #   - namespaceSelector:
+  #       matchLabels:
+  #         name: kube-system
+  #   ports:
+  #   - protocol: UDP
+  #     port: 53
+
+---
+# STEP 6: Allow egress to PostgreSQL
+# If your app connects to a database
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: app-http-allow-postgres
+  namespace: default
+  annotations:
+    description: "Allow connections to PostgreSQL database"
+spec:
+  podSelector:
+    matchLabels:
+      app: app-http
+
+  policyTypes:
+  - Egress
+
+  egress:
+  # Option A: Database in same namespace
+  - to:
+    - podSelector:
+        matchLabels:
+          app: postgres
+
+    ports:
+    - protocol: TCP
+      port: 5432
+
+  # Option B: Database in different namespace
+  # - to:
+  #   - namespaceSelector:
+  #       matchLabels:
+  #         name: database
+  #     podSelector:
+  #       matchLabels:
+  #         app: postgres
+  #   ports:
+  #   - protocol: TCP
+  #     port: 5432
+
+  # Option C: External database (managed service like RDS, CloudSQL)
+  # - to:
+  #   - ipBlock:
+  #       cidr: 10.20.30.40/32  # Database IP
+  #   ports:
+  #   - protocol: TCP
+  #     port: 5432
+
+---
+# STEP 7: Allow egress to external HTTPS APIs
+# If your app calls external services (payment gateways, etc.)
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: app-http-allow-external-https
+  namespace: default
+  annotations:
+    description: "Allow HTTPS to external APIs"
+spec:
+  podSelector:
+    matchLabels:
+      app: app-http
+
+  policyTypes:
+  - Egress
+
+  egress:
+  # Allow HTTPS to any destination
+  - to:
+    - ipBlock:
+        cidr: 0.0.0.0/0
+        except:
+        # Block private IP ranges (if you don't need to reach private IPs)
+        - 10.0.0.0/8
+        - 172.16.0.0/12
+        - 192.168.0.0/16
+
+    ports:
+    - protocol: TCP
+      port: 443
+
+  # Alternative: Allow only to specific external IPs
+  # - to:
+  #   - ipBlock:
+  #       cidr: 54.32.10.5/32  # stripe.com API IP
+  #   ports:
+  #   - protocol: TCP
+  #     port: 443
+
+---
+# COMBINED POLICY: All-in-one for app-http
+# This is a more maintainable approach: one NetworkPolicy with all rules
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: app-http-complete
+  namespace: default
+  labels:
+    app: app-http
+  annotations:
+    description: "Complete NetworkPolicy for app-http: ingress from Ingress/Prometheus, egress to DNS/Postgres/HTTPS"
+spec:
+  podSelector:
+    matchLabels:
+      app: app-http
+
+  policyTypes:
+  - Ingress
+  - Egress
+
+  # INGRESS RULES
+  ingress:
+  # Rule 1: Allow from Ingress controller
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: ingress-nginx
+    ports:
+    - protocol: TCP
+      port: 8080
+
+  # Rule 2: Allow health probes from any namespace (kubelet)
+  - from:
+    - namespaceSelector: {}
+    ports:
+    - protocol: TCP
+      port: 8080
+
+  # Rule 3: Allow Prometheus metrics scraping
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: monitoring
+      podSelector:
+        matchLabels:
+          app: prometheus
+    ports:
+    - protocol: TCP
+      port: 8080
+
+  # EGRESS RULES
+  egress:
+  # Rule 1: Allow DNS
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          name: kube-system
+      podSelector:
+        matchLabels:
+          k8s-app: kube-dns
+    ports:
+    - protocol: UDP
+      port: 53
+    - protocol: TCP
+      port: 53
+
+  # Rule 2: Allow PostgreSQL
+  - to:
+    - podSelector:
+        matchLabels:
+          app: postgres
+    ports:
+    - protocol: TCP
+      port: 5432
+
+  # Rule 3: Allow external HTTPS
+  - to:
+    - ipBlock:
+        cidr: 0.0.0.0/0
+        except:
+        - 10.0.0.0/8
+        - 172.16.0.0/12
+        - 192.168.0.0/16
+    ports:
+    - protocol: TCP
+      port: 443
+
+---
+# NAMESPACE-LEVEL POLICY: Apply to all pods in production namespace
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-all-production
+  namespace: my-service-prod
+  annotations:
+    description: "Production baseline: deny all traffic by default"
+    networkpolicies.configured: "true"  # Satisfies policy check
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  - Egress
+
+---
+# HOW TO INTEGRATE THIS INTO YOUR DEPLOYMENT:
+#
+# 1. Verify your CNI supports NetworkPolicy:
+#    kubectl get pods -n kube-system | grep -E 'calico|cilium|weave'
+#    # If none found, your cluster may not support NetworkPolicy
+#
+# 2. Test enforcement (before deploying to production):
+#    # Create a test namespace
+#    kubectl create namespace netpol-test
+#
+#    # Deploy deny-all policy
+#    kubectl apply -f - <<EOF
+#    apiVersion: networking.k8s.io/v1
+#    kind: NetworkPolicy
+#    metadata:
+#      name: test-deny-all
+#      namespace: netpol-test
+#    spec:
+#      podSelector: {}
+#      policyTypes:
+#      - Egress
+#    EOF
+#
+#    # Create a test pod
+#    kubectl run test-pod --image=curlimages/curl -n netpol-test --rm -it -- sh
+#
+#    # Try to access internet (should FAIL if NetworkPolicy is enforced)
+#    curl -m 5 https://google.com
+#    # If this succeeds, your CNI doesn't enforce NetworkPolicy
+#
+#    # Clean up
+#    kubectl delete namespace netpol-test
+#
+# 3. Map your service's dependencies:
+#    - What services does it call? (databases, APIs, other microservices)
+#    - What calls it? (Ingress, Prometheus, other services)
+#    - What infrastructure does it need? (DNS, kube-apiserver)
+#
+# 4. Copy the combined policy example:
+#    cp infra/k8s/examples/networkpolicy-example.yaml infra/k8s/prod/networkpolicy.yaml
+#
+# 5. Customize for your service:
+#    - Update podSelector to match your labels
+#    - Add/remove ingress rules based on your ingress sources
+#    - Add/remove egress rules based on your dependencies
+#    - Adjust ports to match your service
+#
+# 6. Add namespace labels (required for namespace selectors):
+#    kubectl label namespace ingress-nginx name=ingress-nginx
+#    kubectl label namespace monitoring name=monitoring
+#    kubectl label namespace kube-system name=kube-system
+#
+# 7. Add to Kustomization:
+#    # In infra/k8s/prod/kustomization.yaml
+#    resources:
+#      - ../dev
+#      - networkpolicy.yaml
+#
+# 8. Deploy to STAGING first:
+#    kubectl apply -k infra/k8s/staging
+#
+#    # Test all functionality:
+#    # - External traffic via Ingress
+#    # - Database connections
+#    # - External API calls
+#    # - Health checks
+#    # - Metrics scraping
+#
+# 9. Monitor for blocked connections:
+#    # Cilium
+#    kubectl -n kube-system exec -it cilium-xxxxx -- cilium monitor --type drop
+#
+#    # Calico
+#    kubectl logs -n kube-system -l k8s-app=calico-node | grep -i drop
+#
+# 10. Fix any issues found in staging, then deploy to production:
+#     kubectl apply -k infra/k8s/prod
+#
+# 11. Add monitoring/alerting for NetworkPolicy failures:
+#     # Example Prometheus alert
+#     - alert: NetworkPolicyDrops
+#       expr: rate(cilium_drop_count_total[5m]) > 10
+#       annotations:
+#         summary: "NetworkPolicy is dropping packets"
+
+---
+# COMMON MISTAKES:
+#
+# ❌ Forgetting to allow DNS:
+#    → Pods can't resolve domain names
+#    → Error: "dial tcp: lookup postgres.database.svc.cluster.local: no such host"
+#    → Fix: Add egress rule for kube-dns on port 53 UDP/TCP
+#
+# ❌ Blocking kubelet health probes:
+#    → Pods show as "Not Ready"
+#    → Deployment rollout gets stuck
+#    → Fix: Allow ingress from all namespaces on health check port
+#
+# ❌ Using ipBlock with service DNS names:
+#    → NetworkPolicy only works with IPs, not DNS names
+#    → Error: Can't use "cidr: postgres.database.svc.cluster.local/32"
+#    → Fix: Use podSelector/namespaceSelector, or resolve IP manually
+#
+# ❌ Empty podSelector {} without rules:
+#    → Applies deny-all to entire namespace
+#    → Breaks everything if deployed accidentally
+#    → Fix: Always include at least one ingress/egress rule
+#
+# ❌ Mixing "from" and "to" in same rule:
+#    → Invalid syntax
+#    → Error: "spec.ingress.to: Forbidden"
+#    → Fix: Use "from" for ingress, "to" for egress
+#
+# ❌ Not labeling namespaces:
+#    → namespaceSelector can't match
+#    → Connections fail silently
+#    → Fix: kubectl label namespace <name> name=<name>
+#
+# ❌ Deploying to production without testing in staging:
+#    → Production outage from misconfigured policy
+#    → Fix: ALWAYS test in staging first
+#
+# ❌ Forgetting to allow Prometheus:
+#    → Metrics scraping fails
+#    → Monitoring/alerting goes dark
+#    → Fix: Add ingress rule for Prometheus namespace/pods
+#
+# ❌ Using "ipBlock: 0.0.0.0/0" for egress without except:
+#    → Allows access to private IPs (internal services)
+#    → Security risk if pod is compromised
+#    → Fix: Add "except" for private IP ranges
+
+---
+# DEBUGGING TIPS:
+#
+# 1. Check if NetworkPolicy exists and is correct:
+#    kubectl get networkpolicy -n default
+#    kubectl describe networkpolicy app-http-complete -n default
+#
+# 2. Test connectivity from a pod:
+#    kubectl exec -it <pod-name> -- sh
+#    # Try DNS
+#    nslookup google.com
+#    # Try external HTTPS
+#    curl -m 5 https://google.com
+#    # Try internal service
+#    curl -m 5 http://postgres.database.svc.cluster.local:5432
+#
+# 3. Check NetworkPolicy enforcement (CNI-specific):
+#    # Cilium
+#    kubectl -n kube-system exec -it cilium-xxxxx -- cilium endpoint list
+#    kubectl -n kube-system exec -it cilium-xxxxx -- cilium policy get
+#
+#    # Calico
+#    kubectl get felixconfiguration default -o yaml
+#    calicoctl get networkpolicy --all-namespaces
+#
+# 4. Temporarily disable NetworkPolicy for testing:
+#    kubectl delete networkpolicy <name> -n <namespace>
+#    # Test if connectivity works
+#    # If yes, the NetworkPolicy was blocking it
+#    # Re-apply and adjust the policy
+#
+# 5. Use network policy editor/visualizer:
+#    # https://editor.cilium.io/
+#    # https://orca.tufin.io/netpol/
+#    # Paste your YAML, visualize allowed/denied traffic flows
+
+---
+# POLICY RECOMMENDATIONS:
+#
+# Create policy/k8s_networkpolicy.rego to enforce best practices:
+#
+# - Require NetworkPolicies in production namespaces
+# - Prevent overly broad policies (allow-all)
+# - Ensure DNS is allowed in egress policies
+# - Warn about NetworkPolicies with no effect (no matching pods)
+#
+# See docs/explanation/infra-modules.md for example Rego policies

@@ -169,6 +169,9 @@ fn find_test_fixtures(testdata_dir: &Path, area: &str) -> Result<Vec<(PathBuf, b
         "missing_max_bytes",
         "runs_as_root",
         "no_labels",
+        "literal_database_url",
+        "literal_api_key",
+        "configmap_for_secret",
     ];
 
     if valid_json.exists() {

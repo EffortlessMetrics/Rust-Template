@@ -1,0 +1,14 @@
+[workspace]
+members = [
+    "server",
+    "xtask",
+]
+resolver = "2"
+
+[workspace.package]
+edition = "2021"
+version = "0.1.0"
+
+[workspace.dependencies]
+anyhow = "1.0.100"
+tokio = { version = "1.42.0", features = ["full"] }

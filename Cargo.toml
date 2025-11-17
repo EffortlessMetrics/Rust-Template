@@ -4,6 +4,9 @@ members = [
   "crates/adapters-db-sqlx",
   "crates/adapters-grpc",
 ]
+exclude = [
+  "examples/brownfield-demo",
+]
 resolver = "2"
 
 [workspace.package]
