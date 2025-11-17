@@ -153,6 +153,39 @@ deny[msg] {
     msg := sprintf("Service %s is missing required label: %s", [input.metadata.name, missing_label])
 }
 
+# Observability: Require Prometheus scrape annotations for prod/staging Services
+deny[msg] {
+    input.kind == "Service"
+    service_environment := service_env
+    service_environment == "production"
+    not has_prometheus_annotations
+    msg := sprintf("Production Service %s must have Prometheus scrape annotations (prometheus.io/scrape, prometheus.io/port, prometheus.io/path)", [input.metadata.name])
+}
+
+deny[msg] {
+    input.kind == "Service"
+    service_environment := service_env
+    service_environment == "staging"
+    not has_prometheus_annotations
+    msg := sprintf("Staging Service %s must have Prometheus scrape annotations (prometheus.io/scrape, prometheus.io/port, prometheus.io/path)", [input.metadata.name])
+}
+
+has_prometheus_annotations {
+    input.metadata.annotations["prometheus.io/scrape"] == "true"
+    input.metadata.annotations["prometheus.io/port"]
+    input.metadata.annotations["prometheus.io/path"]
+}
+
+service_env := env {
+    # Detect from app.kubernetes.io/environment label on service
+    env := input.metadata.labels["app.kubernetes.io/environment"]
+}
+
+service_env := "dev" {
+    # Default to dev if no environment label
+    not input.metadata.labels["app.kubernetes.io/environment"]
+}
+
 # Environment detection
 environment := env {
     # Detect from app.kubernetes.io/environment label

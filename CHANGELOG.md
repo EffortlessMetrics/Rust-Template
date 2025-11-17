@@ -326,6 +326,58 @@ No migration required. All new features are opt-in:
 
 ---
 
+## [2.1.0] - 2025-11-17
+
+### Added
+
+**Observability: Prometheus Metrics**
+- **`/metrics` endpoint** in `app-http` exposing Prometheus-formatted metrics
+  - Global `http_requests_total` counter with labels: `method`, `path`, `status`
+  - Middleware automatically tracks all HTTP requests
+  - Tests validate metrics collection and endpoint response format
+- **K8s manifests** updated for prod and staging environments:
+  - Added `service-patch.yaml` with Prometheus scrape annotations:
+    - `prometheus.io/scrape: "true"`
+    - `prometheus.io/port: "8080"`
+    - `prometheus.io/path: "/metrics"`
+- **Rego policy enforcement** for metrics observability:
+  - Production and staging Services **must** have Prometheus annotations
+  - Policy test fixtures added: `k8s_service_metrics_valid.yaml`, `k8s_service_metrics_missing.yaml`
+  - Dev environment exempt (policy only enforces in staging/prod)
+
+**Telemetry: OTLP Feature Flag Preparation**
+- Added `otlp` feature flag to `crates/telemetry/Cargo.toml`
+- Dependencies configured: `opentelemetry`, `opentelemetry_sdk`, `opentelemetry-otlp`, `tracing-opentelemetry`
+- Implementation deferred to v2.2.0 (OpenTelemetry 0.31 API research needed)
+- TODO comment in `init_tracing` documents next steps
+
+### Changed
+
+**Dependencies**
+- Updated workspace dependencies with OTLP feature flags:
+  - `opentelemetry_sdk = { version = "0.31.0", features = ["rt-tokio"] }`
+  - `opentelemetry-otlp = { version = "0.31.0", features = ["tonic", "trace"] }`
+- Added `once_cell = "1.20.2"` to `app-http` for metrics registry initialization
+
+### Infrastructure
+
+**Kustomize**
+- `infra/k8s/prod/service-patch.yaml` - Prometheus annotations for production
+- `infra/k8s/staging/service-patch.yaml` - Prometheus annotations for staging
+- Updated `kustomization.yaml` in both environments to apply service patches
+
+**Policy-as-Code**
+- `policy/k8s.rego` - New rules for Prometheus scrape configuration enforcement
+- `policy/testdata/` - Test fixtures validating metrics policy compliance
+
+### Notes
+
+- `/metrics` endpoint is **immediately usable** with any Prometheus-compatible scraper
+- OTLP tracing deferred to v2.2.0 to allow proper research of OpenTelemetry 0.31.x API changes
+- This release completes the observability foundation for production monitoring
+
+---
+
 ## [2.0.1] - 2025-11-17
 
 ### Fixed
