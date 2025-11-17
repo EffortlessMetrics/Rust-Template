@@ -4,7 +4,7 @@ use tracing::info;
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     // Initialize telemetry (tracing)
-    telemetry::init();
+    telemetry::init_tracing("app-http");
 
     info!("Starting HTTP service");
 
