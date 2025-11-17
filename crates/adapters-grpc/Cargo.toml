@@ -9,12 +9,14 @@ path = "src/lib.rs"
 
 [dependencies]
 tonic = { version = "0.14.2", features = ["transport"] }
+tonic-prost = "0.14.2"
 prost = "0.14.1"
 prost-types = "0.14.1"
 tokio = { version = "1.48.0", features = ["macros", "rt-multi-thread", "sync"] }
 model = { path = "../model" }
 business-core = { path = "../business-core" }
 tracing = "0.1.41"
+uuid = "1.18.1"
 
 [build-dependencies]
 tonic-build = "0.14.2"
