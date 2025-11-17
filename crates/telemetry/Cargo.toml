@@ -3,6 +3,16 @@ name = "telemetry"
 version = "0.1.0"
 edition.workspace = true
 
+[features]
+default = []
+otlp = ["opentelemetry", "opentelemetry_sdk", "opentelemetry-otlp", "tracing-opentelemetry"]
+
 [dependencies]
 tracing.workspace = true
 tracing-subscriber.workspace = true
+
+# Optional OTLP dependencies (enabled via 'otlp' feature)
+opentelemetry = { workspace = true, optional = true }
+opentelemetry_sdk = { workspace = true, optional = true }
+opentelemetry-otlp = { workspace = true, optional = true }
+tracing-opentelemetry = { workspace = true, optional = true }

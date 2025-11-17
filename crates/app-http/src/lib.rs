@@ -10,6 +10,7 @@ use tracing::{info, instrument};
 
 // Public modules
 pub mod errors;
+pub mod metrics;
 pub mod middleware;
 
 // Re-export commonly used types
@@ -22,9 +23,11 @@ pub fn app() -> Router {
         // Template core endpoints - keep these
         .route("/health", get(health))
         .route("/version", get(version))
+        .route("/metrics", get(metrics::metrics_handler))
         .route("/api/echo", post(echo)) // For demonstrating error handling in tests
         // Add your domain endpoints here - see docs/tutorials/first-ac-change.md
         // Middleware layers (applied in reverse order - bottom to top)
+        .layer(axum::middleware::from_fn(metrics::metrics_middleware))
         .layer(axum::middleware::from_fn(middleware::request_id_middleware))
         .layer(
             // Configure TraceLayer to include request_id field

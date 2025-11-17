@@ -18,6 +18,10 @@ patches:
   target:
     kind: Deployment
     name: app-http
+- path: service-patch.yaml
+  target:
+    kind: Service
+    name: app-http
 
 # ConfigMap generator for environment-specific config
 configMapGenerator:
