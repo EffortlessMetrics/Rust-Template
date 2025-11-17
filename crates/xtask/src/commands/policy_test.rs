@@ -3,6 +3,30 @@ use colored::Colorize;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
+/// Custom error type for policy tests
+#[derive(Debug)]
+pub enum PolicyTestError {
+    ConftestNotFound(String),
+    Other(anyhow::Error),
+}
+
+impl std::fmt::Display for PolicyTestError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            PolicyTestError::ConftestNotFound(msg) => write!(f, "{}", msg),
+            PolicyTestError::Other(e) => write!(f, "{}", e),
+        }
+    }
+}
+
+impl std::error::Error for PolicyTestError {}
+
+impl From<anyhow::Error> for PolicyTestError {
+    fn from(e: anyhow::Error) -> Self {
+        PolicyTestError::Other(e)
+    }
+}
+
 /// Policy areas to test
 const POLICY_AREAS: &[(&str, &str)] = &[
     ("Ledger", "ledger"),
@@ -15,7 +39,7 @@ const POLICY_AREAS: &[(&str, &str)] = &[
 ];
 
 /// Run conftest policy tests
-pub fn run() -> Result<()> {
+pub fn run() -> Result<(), PolicyTestError> {
     // Check if conftest is available
     check_conftest_available()?;
 
@@ -24,11 +48,17 @@ pub fn run() -> Result<()> {
     let testdata_dir = policy_dir.join("testdata");
 
     if !policy_dir.exists() {
-        anyhow::bail!("Policy directory not found: {}", policy_dir.display());
+        return Err(PolicyTestError::Other(anyhow::anyhow!(
+            "Policy directory not found: {}",
+            policy_dir.display()
+        )));
     }
 
     if !testdata_dir.exists() {
-        anyhow::bail!("Policy testdata directory not found: {}", testdata_dir.display());
+        return Err(PolicyTestError::Other(anyhow::anyhow!(
+            "Policy testdata directory not found: {}",
+            testdata_dir.display()
+        )));
     }
 
     println!("Testing Rego policies...\n");
@@ -95,27 +125,26 @@ pub fn run() -> Result<()> {
         Ok(())
     } else {
         println!("{} {} of {} policy test(s) failed", "✗".red(), failed_tests, total_tests);
-        anyhow::bail!("{} policy test(s) failed", failed_tests)
+        Err(PolicyTestError::Other(anyhow::anyhow!("{} policy test(s) failed", failed_tests)))
     }
 }
 
 /// Check if conftest is available on PATH
-fn check_conftest_available() -> Result<()> {
+fn check_conftest_available() -> Result<(), PolicyTestError> {
     let output = Command::new("conftest").arg("--version").output();
 
     match output {
         Ok(output) if output.status.success() => Ok(()),
-        _ => {
-            anyhow::bail!(
-                "conftest not found on PATH\n\
-                \n\
-                Install conftest:\n\
-                  • macOS:     brew install conftest\n\
-                  • Linux:     See https://www.conftest.dev/install/\n\
-                  • Nix:       nix develop\n\
-                  • Container: docker run --rm openpolicyagent/conftest"
-            )
-        }
+        _ => Err(PolicyTestError::ConftestNotFound(
+            "conftest not found on PATH\n\
+            \n\
+            Install conftest:\n\
+              • macOS:     brew install conftest\n\
+              • Linux:     See https://www.conftest.dev/install/\n\
+              • Nix:       nix develop\n\
+              • Container: docker run --rm openpolicyagent/conftest"
+                .to_string(),
+        )),
     }
 }
 

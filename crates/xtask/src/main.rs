@@ -93,7 +93,7 @@ fn main() -> Result<()> {
         Commands::Bdd => commands::bdd::run(),
         Commands::Bundle { task } => commands::bundle::run(&task),
         Commands::Deploy { env } => commands::deploy::run(&env),
-        Commands::PolicyTest => commands::policy_test::run(),
+        Commands::PolicyTest => commands::policy_test::run().map_err(|e| anyhow::anyhow!("{}", e)),
         Commands::Quickstart => commands::quickstart::run(),
         Commands::Selftest => commands::selftest::run_with_verbosity(verbosity),
     }

@@ -126,8 +126,28 @@ pub fn run_with_verbosity(verbosity: crate::Verbosity) -> Result<()> {
             }
         }
         Err(e) => {
-            eprintln!("  {} Policy tests: {}", "✗".red(), e);
-            failed += 1;
+            // Check if this is a "conftest not found" error
+            if let crate::commands::policy_test::PolicyTestError::ConftestNotFound(_) = e {
+                // In CI, treat this as a failure; locally, just warn
+                let is_ci = std::env::var("CI").is_ok() || std::env::var("GITHUB_ACTIONS").is_ok();
+
+                if is_ci {
+                    eprintln!(
+                        "  {} Policy tests: conftest not found (CI requires conftest)",
+                        "✗".red()
+                    );
+                    eprintln!("\n{}", e);
+                    failed += 1;
+                } else {
+                    println!("  {} Policy tests skipped: conftest not found", "⚠".yellow());
+                    if verbosity.is_verbose() {
+                        println!("\n{}", e);
+                    }
+                }
+            } else {
+                eprintln!("  {} Policy tests: {}", "✗".red(), e);
+                failed += 1;
+            }
         }
     }
     println!();
