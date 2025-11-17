@@ -1,0 +1,43 @@
+syntax = "proto3";
+
+package task;
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/uuid.proto";
+
+message Task {
+  google.protobuf.UUID id = 1;
+  string title = 2;
+  string status = 3;
+  google.protobuf.Timestamp created_at = 4;
+}
+
+message CreateTaskRequest {
+  string title = 1;
+}
+
+message CreateTaskResponse {
+  Task task = 1;
+}
+
+message GetTaskRequest {
+  google.protobuf.UUID id = 1;
+}
+
+message ListTasksRequest {}
+
+message ListTasksResponse {
+  repeated Task tasks = 1;
+}
+
+message UpdateTaskStatusRequest {
+  google.protobuf.UUID id = 1;
+  string status = 2;
+}
+
+service TaskService {
+  rpc CreateTask(CreateTaskRequest) returns (CreateTaskResponse);
+  rpc GetTask(GetTaskRequest) returns (Task);
+  rpc ListTasks(ListTasksRequest) returns (ListTasksResponse);
+  rpc UpdateStatus(UpdateTaskStatusRequest) returns (Task);
+}

@@ -1,5 +1,9 @@
 [workspace]
-members = ["crates/*"]
+members = [
+  "crates/*",
+  "crates/adapters-db-sqlx",
+  "crates/adapters-grpc",
+]
 resolver = "2"
 
 [workspace.package]
