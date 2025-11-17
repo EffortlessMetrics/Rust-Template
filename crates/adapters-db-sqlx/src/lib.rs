@@ -20,6 +20,11 @@ impl PostgresTaskRepository {
         let pool = PgPool::connect(&database_url).await?;
         Ok(Self { pool })
     }
+
+    /// Create a new repository with an existing pool (useful for testing)
+    pub fn new_with_pool(pool: PgPool) -> Self {
+        Self { pool }
+    }
 }
 
 #[async_trait::async_trait]
