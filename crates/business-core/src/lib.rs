@@ -12,7 +12,7 @@
 //
 
 pub mod ports {
-    use crate::model::Task;
+    use model::Task;
 
     /// Port for task persistence
     pub trait TaskRepository {
@@ -29,7 +29,7 @@ pub mod ports {
 
 pub mod use_cases {
     use super::ports::TaskRepository;
-    use crate::model::{Task, TaskStatus};
+    use model::{Task, TaskStatus};
 
     /// Create a new task
     pub fn create_task(repo: &impl TaskRepository, title: String) -> Result<Task, String> {

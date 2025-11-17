@@ -10,7 +10,9 @@ sqlx = { version = "0.8.6", features = ["runtime-tokio-rustls", "postgres", "mig
 tracing = { workspace = true }
 uuid = { version = "1.18.1", features = ["v4", "serde"] }
 chrono = { version = "0.4.42", features = ["serde"] }
-core = { path = "../core" }
+async-trait = "0.1.89"
+model = { path = "../model" }
+business-core = { path = "../business-core" }
 
 [dev-dependencies]
 testcontainers = "0.25.2"

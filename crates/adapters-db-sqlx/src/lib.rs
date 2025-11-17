@@ -5,8 +5,8 @@ use std::env;
 use tracing::{error, info};
 use uuid::Uuid;
 
-use crate::core::model::{Task, TaskStatus};
-use crate::core::ports::TaskRepository;
+use model::{Task, TaskStatus};
+use business_core::ports::TaskRepository;
 
 pub struct PostgresTaskRepository {
     pool: PgPool,

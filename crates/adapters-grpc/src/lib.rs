@@ -6,10 +6,10 @@ pub mod task {
     tonic::include_proto!("task");
 }
 
-use core::ports::TaskRepository;
-use core::use_cases;
+use business_core::ports::TaskRepository;
+use business_core::use_cases;
 use model::{Task as ModelTask, TaskStatus};
-use prost_types::{Timestamp, Uuid};
+use prost_types::Timestamp;
 use task::{
     CreateTaskRequest, CreateTaskResponse, GetTaskRequest, ListTasksRequest, ListTasksResponse,
     Task as ProtoTask, UpdateTaskStatusRequest,

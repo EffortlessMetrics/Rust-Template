@@ -173,18 +173,37 @@ crates/
 
 ## As a Library
 
-**Don't need the full template?** Use `rust_iac_xtask_core` to add governance to your existing Rust project.
+**Don't need the full template?** Reuse parts of this template in your existing Rust projects.
 
-### What You Get
+### Available Crates
 
-The library provides the **governance spine** without requiring the full template structure:
+| Crate | Purpose | When to Use |
+|-------|---------|-------------|
+| **`rust_iac_xtask_core`** | Governance & xtask orchestration | Add specs/policy/LLM governance to any project |
+| **`rust_iac_config`** | Generic infra config validation | Validate K8s manifests, environments, resource constraints |
 
-| Component | What It Does | When to Use |
-|-----------|--------------|-------------|
-| **xtask Commands** | AC status, policy tests, LLM bundling | Add to any Cargo workspace |
-| **Policy Suite** | OPA/Rego policies for AC/feature/privacy | Adopt incrementally as YAML |
-| **LLM Bundler** | Curated context generation | Use with your existing code |
-| **AC Tracking** | Specs → tests → code traceability | Works with minimal `spec_ledger.yaml` |
+### rust_iac_xtask_core (Governance & Xtask Core)
+
+The **governance spine** for Rust IaC projects:
+
+| Component | What It Provides |
+|-----------|-----------------|
+| **xtask Commands** | `init`, `selftest`, `ac-status`, `policy-test`, `bundle` |
+| **Spec Framework** | `specs/spec_ledger.yaml` + `specs/features/` directory |
+| **Policy Layer** | `policy/` directory scaffolding for OPA/Rego |
+| **LLM Context** | `.llm/contextpack.yaml` for task-scoped AI assistance |
+| **Config** | `RUST_IAC.toml` for project metadata |
+
+### rust_iac_config (Infrastructure Config)
+
+Lightweight YAML-based config library for infra validation:
+
+| Feature | What It Does |
+|---------|-------------|
+| **Environment Management** | Define dev/staging/prod with manifest paths |
+| **Validation Rules** | Enforce required dirs, files, git repo presence |
+| **Resource Constraints** | Check K8s resources, probes, labels |
+| **Zero Assumptions** | No hardcoded AC IDs or template-specific logic |
 
 ### When to Use Library vs Template
 
@@ -334,5 +353,5 @@ This release clarifies the template's purpose: it's governance-heavy **on purpos
 
 **Sample Implementation:**
 
-- ✅ Refund API sample: coherent across specs, OpenAPI, handlers, tests
+- ✅ ?????? API sample: coherent across specs, OpenAPI, handlers, tests
 - ✅ Living enforcement: BDD validates production code paths

@@ -1,7 +1,7 @@
 #[cfg(feature = "integration-db")]
 mod integration_tests {
     use adapters_db_sqlx::PostgresTaskRepository;
-    use core::model::{Task, TaskStatus};
+    use model::{Task, TaskStatus};
     use testcontainers::{clients::Cli, images::postgres::Postgres};
 
     #[tokio::test]
