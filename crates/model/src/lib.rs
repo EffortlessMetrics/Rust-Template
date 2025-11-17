@@ -15,6 +15,7 @@ pub struct Task {
     pub id: String,
     pub title: String,
     pub status: TaskStatus,
+    pub created_at: chrono::DateTime<chrono::Utc>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
