@@ -768,46 +768,13 @@ Each adapter has its own integration tests that verify it correctly implements t
 
 **Database Adapter Tests (using Testcontainers):**
 
-```rust
-// crates/adapters-db-sqlx/tests/integration.rs
-#[cfg(feature = "integration-db")]
-mod integration_tests {
-    use adapters_db_sqlx::PostgresTaskRepository;
-    use core::ports::TaskRepository;
-    use core::model::TaskStatus;
-    use testcontainers::{clients::Cli, images::postgres::Postgres};
+Location: `crates/adapters-db-sqlx/tests/integration.rs`
 
-    #[tokio::test]
-    async fn test_task_repository_crud() -> anyhow::Result<()> {
-        // Spin up real Postgres in Docker
-        let docker = Cli::default();
-        let postgres = docker.run(Postgres::default());
-        let port = postgres.get_host_port_ipv4(5432);
-
-        let database_url = format!(
-            "postgres://postgres:postgres@localhost:{}/postgres",
-            port
-        );
-
-        let repo = PostgresTaskRepository::new_with_url(&database_url).await?;
-
-        // Test create
-        let task = repo.create_task("Integration test task".to_string()).await?;
-        assert_eq!(task.title, "Integration test task");
-
-        // Test get
-        let fetched = repo.get_task(&task.id).await?;
-        assert!(fetched.is_some());
-
-        // Test update
-        repo.update_status(&task.id, TaskStatus::Completed).await?;
-        let updated = repo.get_task(&task.id).await?.unwrap();
-        assert_eq!(updated.status, TaskStatus::Completed);
-
-        Ok(())
-    }
-}
-```
+The DB adapter integration test verifies the full repository CRUD cycle:
+1. Spins up a PostgreSQL container via testcontainers
+2. Creates test database and tables
+3. Tests save, find_by_id, update_status, and find_all operations
+4. Automatically cleans up containers after test completes
 
 **Why Testcontainers?**
 - Spins up real Postgres in Docker
@@ -817,13 +784,28 @@ mod integration_tests {
 
 **Running Integration Tests:**
 
-```bash
-# Run with feature flag
-cargo test -p adapters-db-sqlx --features integration-db
+The integration tests are marked with `#[ignore]` by default to keep CI fast and avoid requiring Docker in all environments.
 
-# Or run all integration tests
-cargo test --all-features
+To run the DB adapter integration test:
+
+```bash
+# Requires Docker running
+cargo test -p adapters-db-sqlx -- --ignored
+
+# Or run all ignored tests in the workspace
+cargo test --workspace -- --ignored
 ```
+
+**Requirements:**
+- Docker must be running
+- Testcontainers will automatically pull `postgres:16-alpine` image
+
+**What the test validates:**
+- Task creation and persistence
+- Finding task by ID
+- Status updates (Pending → InProgress → Completed)
+- Listing all tasks
+- Proper UUID and timestamp handling
 
 ### In-Memory Stubs for Events
 
