@@ -1,0 +1,687 @@
+# Ingress Examples
+#
+# PURPOSE:
+# Ingress exposes HTTP/HTTPS routes from outside the cluster to services within the cluster.
+# It provides load balancing, SSL termination, and name-based virtual hosting.
+#
+# WHEN TO USE:
+# - You need external access to your service (from internet or corporate network)
+# - You want to consolidate multiple services under one domain/IP
+# - You need SSL/TLS termination at the edge
+# - You want to use a load balancer provided by your cloud or on-prem infrastructure
+#
+# WHEN NOT TO USE:
+# - Your service is internal-only (use Service type: ClusterIP)
+# - You need TCP/UDP protocols (Ingress is HTTP/HTTPS only; use Gateway API or Service type: LoadBalancer)
+# - You're in local dev (use port-forward or Service type: NodePort)
+# - Your cluster doesn't have an Ingress controller installed
+#
+# TRADE-OFFS:
+# ✅ Pros:
+#   - Single entry point for multiple services (cost-effective)
+#   - Automatic SSL/TLS with cert-manager
+#   - Path-based and host-based routing
+#   - Offloads SSL termination from your app
+#
+# ❌ Cons:
+#   - Ingress controller dependency (nginx, Traefik, ALB, etc.)
+#   - Provider-specific annotations (not portable)
+#   - Limited to HTTP/HTTPS (no TCP/UDP)
+#   - DNS and TLS certificate management required
+#
+# PREREQUISITES:
+# 1. Ingress controller must be installed:
+#    kubectl get ingressclass
+#    kubectl get pods -n ingress-nginx  # Or your controller's namespace
+#
+#    If not installed, install one:
+#    # nginx Ingress Controller
+#    kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.9.4/deploy/static/provider/cloud/deploy.yaml
+#
+#    # Or use Helm
+#    helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+#    helm install ingress-nginx ingress-nginx/ingress-nginx
+#
+# 2. DNS must point to Ingress controller's external IP:
+#    kubectl get svc -n ingress-nginx ingress-nginx-controller
+#    # Create DNS A record: myapp.example.com -> <EXTERNAL-IP>
+#
+# 3. TLS certificate (optional but recommended for production):
+#    - Option A: Bring your own certificate (kubectl create secret tls ...)
+#    - Option B: Use cert-manager for automatic Let's Encrypt certificates
+
+---
+# BASIC HTTP INGRESS
+# Simplest configuration: HTTP traffic to a single service
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: app-http-basic
+  namespace: default
+  annotations:
+    # Specify Ingress controller (if you have multiple)
+    kubernetes.io/ingress.class: nginx
+      # Alternatives: "traefik", "alb", "gce", etc.
+      # Or use spec.ingressClassName instead (v1 API)
+
+    # nginx-specific: rewrite paths
+    nginx.ingress.kubernetes.io/rewrite-target: /
+      # Example: /api/foo -> /foo
+      # Useful if your app doesn't expect /api prefix
+
+spec:
+  # Alternative to annotation (v1 API, recommended)
+  ingressClassName: nginx
+
+  rules:
+  - host: myapp.example.com
+      # IMPORTANT: Replace with your actual domain
+      # DNS must point to Ingress controller's external IP
+
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+          # Prefix: Matches /foo, /foo/bar, /foobar
+          # Exact: Matches only exact path
+          # ImplementationSpecific: Depends on Ingress controller
+
+        backend:
+          service:
+            name: app-http
+              # Must match your Service name
+            port:
+              number: 80
+                # Service port (not container port)
+
+  # If host is omitted, matches all hosts (not recommended for production)
+  # - http:
+  #     paths:
+  #     - path: /
+  #       pathType: Prefix
+  #       backend:
+  #         service:
+  #           name: app-http
+  #           port:
+  #             number: 80
+
+---
+# HTTPS INGRESS WITH TLS
+# Production-ready: HTTPS with TLS certificate
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: app-http-tls
+  namespace: default
+  annotations:
+    # Force HTTPS redirect
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+      # HTTP requests get 308 redirect to HTTPS
+
+    # cert-manager: automatic certificate provisioning
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+      # Requires cert-manager installed (see below)
+      # cert-manager will create TLS secret automatically
+
+spec:
+  ingressClassName: nginx
+
+  # TLS configuration
+  tls:
+  - hosts:
+    - myapp.example.com
+      # Must match the host in rules below
+
+    secretName: app-http-tls
+      # TLS certificate stored in this Secret
+      # cert-manager creates this automatically if annotation is present
+      # Or create manually: kubectl create secret tls app-http-tls --cert=tls.crt --key=tls.key
+
+  rules:
+  - host: myapp.example.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: app-http
+            port:
+              number: 80
+                # Ingress talks to Service on HTTP (port 80)
+                # SSL termination happens at Ingress controller
+
+---
+# MULTI-SERVICE INGRESS
+# Route different paths to different services
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: app-multi-service
+  namespace: default
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+      # Strips /api and /web prefixes before forwarding
+      # Uses capture group from path regex
+
+spec:
+  ingressClassName: nginx
+
+  tls:
+  - hosts:
+    - myapp.example.com
+    secretName: app-http-tls
+
+  rules:
+  - host: myapp.example.com
+    http:
+      paths:
+      # API backend
+      - path: /api(/|$)(.*)
+        pathType: ImplementationSpecific
+          # Uses regex for nginx (not portable)
+        backend:
+          service:
+            name: app-http
+            port:
+              number: 80
+
+      # Web frontend
+      - path: /web(/|$)(.*)
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: app-web
+            port:
+              number: 80
+
+      # Admin dashboard
+      - path: /admin
+        pathType: Prefix
+        backend:
+          service:
+            name: app-admin
+            port:
+              number: 80
+
+---
+# MULTI-DOMAIN INGRESS
+# Route different domains to different services
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: app-multi-domain
+  namespace: default
+
+spec:
+  ingressClassName: nginx
+
+  tls:
+  - hosts:
+    - api.example.com
+    secretName: api-tls
+  - hosts:
+    - web.example.com
+    secretName: web-tls
+
+  rules:
+  # API domain
+  - host: api.example.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: app-http
+            port:
+              number: 80
+
+  # Web domain
+  - host: web.example.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: app-web
+            port:
+              number: 80
+
+---
+# NGINX INGRESS WITH COMMON ANNOTATIONS
+# Production-ready configuration with rate limiting, CORS, etc.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: app-http-production
+  namespace: default
+  annotations:
+    # Ingress class
+    kubernetes.io/ingress.class: nginx
+
+    # TLS settings
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/ssl-protocols: "TLSv1.2 TLSv1.3"
+      # Disable older TLS versions for security
+
+    # cert-manager
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+
+    # Rate limiting
+    nginx.ingress.kubernetes.io/limit-rps: "100"
+      # Max 100 requests per second per IP
+    nginx.ingress.kubernetes.io/limit-burst-multiplier: "5"
+      # Allow bursts up to 500 req/s briefly
+
+    # CORS (Cross-Origin Resource Sharing)
+    nginx.ingress.kubernetes.io/enable-cors: "true"
+    nginx.ingress.kubernetes.io/cors-allow-origin: "https://app.example.com"
+      # Or "*" for allow-all (not recommended for production)
+    nginx.ingress.kubernetes.io/cors-allow-methods: "GET, POST, PUT, DELETE, OPTIONS"
+    nginx.ingress.kubernetes.io/cors-allow-credentials: "true"
+
+    # Backend protocol (if your service uses HTTPS)
+    # nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
+
+    # Client body size (for file uploads)
+    nginx.ingress.kubernetes.io/proxy-body-size: "10m"
+      # Default: 1m; increase for larger uploads
+
+    # Timeouts
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: "60"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "60"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "60"
+
+    # Custom headers
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      more_set_headers "X-Frame-Options: DENY";
+      more_set_headers "X-Content-Type-Options: nosniff";
+      more_set_headers "X-XSS-Protection: 1; mode=block";
+
+spec:
+  ingressClassName: nginx
+
+  tls:
+  - hosts:
+    - myapp.example.com
+    secretName: app-http-tls
+
+  rules:
+  - host: myapp.example.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: app-http
+            port:
+              number: 80
+
+---
+# TRAEFIK INGRESS EXAMPLE
+# Alternative Ingress controller with different annotations
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: app-http-traefik
+  namespace: default
+  annotations:
+    # Traefik-specific annotations
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+      # Use HTTPS entrypoint
+    traefik.ingress.kubernetes.io/router.tls: "true"
+    traefik.ingress.kubernetes.io/router.middlewares: default-ratelimit@kubernetescrd
+      # Reference a Traefik Middleware resource for rate limiting
+
+spec:
+  ingressClassName: traefik
+
+  tls:
+  - hosts:
+    - myapp.example.com
+    secretName: app-http-tls
+
+  rules:
+  - host: myapp.example.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: app-http
+            port:
+              number: 80
+
+---
+# AWS ALB INGRESS EXAMPLE
+# For AWS EKS clusters using AWS Load Balancer Controller
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: app-http-alb
+  namespace: default
+  annotations:
+    # AWS Load Balancer Controller annotations
+    kubernetes.io/ingress.class: alb
+
+    # ALB scheme
+    alb.ingress.kubernetes.io/scheme: internet-facing
+      # Or "internal" for VPC-only access
+
+    # Target type
+    alb.ingress.kubernetes.io/target-type: ip
+      # "ip" for pod IPs (recommended for Fargate)
+      # "instance" for node IPs
+
+    # TLS certificate from ACM
+    alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:us-east-1:123456789012:certificate/12345678-1234-1234-1234-123456789012
+      # Use AWS Certificate Manager certificate
+
+    # Redirect HTTP to HTTPS
+    alb.ingress.kubernetes.io/ssl-redirect: "443"
+
+    # Health check
+    alb.ingress.kubernetes.io/healthcheck-path: /health
+    alb.ingress.kubernetes.io/healthcheck-interval-seconds: "15"
+    alb.ingress.kubernetes.io/healthcheck-timeout-seconds: "5"
+    alb.ingress.kubernetes.io/healthy-threshold-count: "2"
+    alb.ingress.kubernetes.io/unhealthy-threshold-count: "2"
+
+    # Tags for cost allocation
+    alb.ingress.kubernetes.io/tags: Environment=production,Team=platform
+
+spec:
+  ingressClassName: alb
+
+  rules:
+  - host: myapp.example.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: app-http
+            port:
+              number: 80
+
+---
+# GCP GCE INGRESS EXAMPLE
+# For GKE clusters using Google Cloud Load Balancer
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: app-http-gce
+  namespace: default
+  annotations:
+    # GCE-specific annotations
+    kubernetes.io/ingress.class: gce
+
+    # Static IP (pre-allocated in GCP)
+    kubernetes.io/ingress.global-static-ip-name: my-static-ip
+      # Create IP: gcloud compute addresses create my-static-ip --global
+
+    # Managed certificate (automatic from Google)
+    networking.gke.io/managed-certificates: my-cert
+      # Requires ManagedCertificate resource (see below)
+
+    # Backend config (health checks, timeouts, etc.)
+    cloud.google.com/backend-config: '{"default": "my-backend-config"}'
+      # Requires BackendConfig resource
+
+spec:
+  rules:
+  - host: myapp.example.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: app-http
+            port:
+              number: 80
+
+---
+# GKE MANAGED CERTIFICATE
+# Automatic SSL certificate from Google (Let's Encrypt-like)
+apiVersion: networking.gke.io/v1
+kind: ManagedCertificate
+metadata:
+  name: my-cert
+  namespace: default
+spec:
+  domains:
+  - myapp.example.com
+    # Google will provision certificate for this domain
+    # DNS must point to GCE Ingress IP
+
+---
+# CERT-MANAGER SETUP (for automatic Let's Encrypt certificates)
+# Install cert-manager first:
+# kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.13.0/cert-manager.yaml
+
+# Create ClusterIssuer for Let's Encrypt production
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-prod
+spec:
+  acme:
+    # Let's Encrypt production server
+    server: https://acme-v02.api.letsencrypt.org/directory
+
+    # Email for certificate expiry notifications
+    email: ops@example.com
+      # IMPORTANT: Replace with your actual email
+
+    # Secret to store ACME account private key
+    privateKeySecretRef:
+      name: letsencrypt-prod
+
+    # HTTP-01 challenge (proves domain ownership via HTTP)
+    solvers:
+    - http01:
+        ingress:
+          class: nginx
+            # Or "traefik", "alb", etc.
+
+---
+# CERT-MANAGER STAGING ISSUER (for testing)
+# Use this for testing to avoid hitting Let's Encrypt rate limits
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-staging
+spec:
+  acme:
+    server: https://acme-staging-v02.api.letsencrypt.org/directory
+      # Staging server (higher rate limits, but cert not trusted)
+    email: ops@example.com
+    privateKeySecretRef:
+      name: letsencrypt-staging
+    solvers:
+    - http01:
+        ingress:
+          class: nginx
+
+---
+# HOW TO INTEGRATE THIS INTO YOUR DEPLOYMENT:
+#
+# 1. Verify Ingress controller is installed:
+#    kubectl get ingressclass
+#    # Should show: nginx, traefik, alb, gce, etc.
+#
+#    kubectl get pods -n ingress-nginx  # For nginx
+#    # Should show running ingress-nginx-controller pods
+#
+#    # If not installed, install nginx Ingress:
+#    kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.9.4/deploy/static/provider/cloud/deploy.yaml
+#
+# 2. Get Ingress controller's external IP:
+#    kubectl get svc -n ingress-nginx ingress-nginx-controller
+#    # Note the EXTERNAL-IP (may take a few minutes to provision)
+#
+# 3. Configure DNS:
+#    # Create A record in your DNS provider:
+#    # myapp.example.com -> <EXTERNAL-IP from step 2>
+#
+#    # Verify DNS:
+#    nslookup myapp.example.com
+#    # Should return the Ingress external IP
+#
+# 4. (Optional) Install cert-manager for automatic TLS:
+#    kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.13.0/cert-manager.yaml
+#
+#    # Wait for cert-manager to be ready
+#    kubectl get pods -n cert-manager
+#
+#    # Create ClusterIssuer (see CERT-MANAGER SETUP above)
+#    kubectl apply -f infra/k8s/examples/ingress-example.yaml
+#    # (Apply the ClusterIssuer sections)
+#
+# 5. Copy appropriate Ingress example:
+#    # For nginx with cert-manager:
+#    cp infra/k8s/examples/ingress-example.yaml infra/k8s/prod/ingress.yaml
+#
+#    # Edit to use only the sections you need (e.g., HTTPS INGRESS WITH TLS)
+#
+# 6. Customize for your service:
+#    # Update host
+#    spec:
+#      rules:
+#      - host: myapp.example.com  # Your actual domain
+#
+#    # Update service name
+#    backend:
+#      service:
+#        name: app-http  # Your Service name
+#
+#    # Update annotations for your Ingress controller
+#    metadata:
+#      annotations:
+#        # nginx, Traefik, ALB, GCE, etc.
+#
+# 7. Add to Kustomization:
+#    # In infra/k8s/prod/kustomization.yaml
+#    resources:
+#      - ../dev
+#      - ingress.yaml
+#
+# 8. Deploy:
+#    kubectl apply -k infra/k8s/prod
+#
+#    # Watch Ingress creation
+#    kubectl get ingress -n my-service-prod -w
+#    # Wait for ADDRESS to be populated
+#
+# 9. If using cert-manager, wait for certificate:
+#    kubectl get certificate -n my-service-prod
+#    # Should show READY=True after a few minutes
+#
+#    kubectl describe certificate app-http-tls -n my-service-prod
+#    # Check for any errors
+#
+# 10. Test:
+#     # HTTP (should redirect to HTTPS if force-ssl-redirect is set)
+#     curl -v http://myapp.example.com/health
+#
+#     # HTTPS
+#     curl -v https://myapp.example.com/health
+#     # Should return 200 OK with valid certificate
+
+---
+# COMMON MISTAKES:
+#
+# ❌ DNS not configured:
+#    → Ingress has ADDRESS but can't access via domain
+#    → Error: "curl: (6) Could not resolve host: myapp.example.com"
+#    → Fix: Create DNS A record pointing to Ingress external IP
+#
+# ❌ Using wrong Ingress controller annotation:
+#    → Ingress is created but not handled by any controller
+#    → Ingress shows no ADDRESS
+#    → Fix: Check kubectl get ingressclass and use matching annotation
+#
+# ❌ Service port mismatch:
+#    → Ingress routes to wrong port
+#    → Error: "503 Service Unavailable"
+#    → Fix: Use Service port (80), not container port (8080)
+#
+# ❌ TLS secret doesn't exist:
+#    → Ingress can't enable TLS
+#    → Error: "secret 'app-http-tls' not found"
+#    → Fix: Create secret or use cert-manager annotation
+#
+# ❌ cert-manager annotation but ClusterIssuer doesn't exist:
+#    → Certificate is never created
+#    → kubectl get certificate shows no resources
+#    → Fix: Create ClusterIssuer first (see CERT-MANAGER SETUP)
+#
+# ❌ HTTP-01 challenge can't reach Ingress:
+#    → cert-manager can't validate domain ownership
+#    → Certificate stuck in "Pending"
+#    → Fix: Ensure DNS points to Ingress and port 80 is accessible
+#
+# ❌ Using default backend without matching host:
+#    → Ingress catches all traffic (including other services)
+#    → Other Ingresses stop working
+#    → Fix: Always specify host in rules
+#
+# ❌ Path regex wrong for rewrite-target:
+#    → Paths not rewritten correctly
+#    → App receives /api/foo instead of /foo
+#    → Fix: Use /$2 with path: /api(/|$)(.*)
+#
+# ❌ Not setting proxy-body-size for file uploads:
+#    → Large uploads fail with 413 Request Entity Too Large
+#    → Fix: Set nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+
+---
+# DEBUGGING TIPS:
+#
+# 1. Check Ingress status:
+#    kubectl get ingress -n default
+#    kubectl describe ingress app-http -n default
+#    # Look for ADDRESS and any error events
+#
+# 2. Check Ingress controller logs:
+#    kubectl logs -n ingress-nginx -l app.kubernetes.io/name=ingress-nginx
+#    # Look for backend configuration errors
+#
+# 3. Test from within cluster:
+#    kubectl run test-pod --image=curlimages/curl --rm -it -- sh
+#    curl http://app-http.default.svc.cluster.local/health
+#    # If this works, Ingress is the issue; if not, Service is the issue
+#
+# 4. Check certificate status (if using cert-manager):
+#    kubectl get certificate -n default
+#    kubectl describe certificate app-http-tls -n default
+#    kubectl get certificaterequest -n default
+#    kubectl describe certificaterequest <name> -n default
+#    # Look for ACME challenge failures
+#
+# 5. Test TLS certificate:
+#    openssl s_client -connect myapp.example.com:443 -servername myapp.example.com
+#    # Check certificate issuer and validity
+#
+# 6. Check backend service:
+#    kubectl get endpoints app-http -n default
+#    # Should show pod IPs; if empty, Service selector doesn't match pods
+
+---
+# POLICY RECOMMENDATIONS:
+#
+# Create policy/k8s_ingress.rego to enforce best practices:
+#
+# - Require TLS in production Ingresses
+# - Require force-ssl-redirect annotation
+# - Prevent wildcard hosts in production
+# - Require rate limiting annotations
+# - Warn about missing cert-manager annotations
+#
+# See docs/explanation/infra-modules.md for example Rego policies

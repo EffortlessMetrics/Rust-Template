@@ -4,12 +4,9 @@ use axum::{
     response::IntoResponse,
     routing::{get, post},
 };
-use serde::{Deserialize, Serialize};
 use prometheus::handle;
-use tower_http::{
-    metrics::MetricsLayer,
-    trace::TraceLayer,
-};
+use serde::{Deserialize, Serialize};
+use tower_http::{metrics::MetricsLayer, trace::TraceLayer};
 use tracing::{info, instrument};
 
 // Public modules

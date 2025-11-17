@@ -10,17 +10,17 @@
 /// ```
 pub fn init() {
     use opentelemetry::global;
-    use opentelemetry::sdk::trace::config;
     use opentelemetry::sdk::Resource;
+    use opentelemetry::sdk::trace::config;
     use opentelemetry_otlp::{SpanExporter, TonicExporter};
     use opentelemetry_semantic_conventions::resource::SEMCONV_RESOURCE_ATTRIBUTES;
     use tracing_opentelemetry::layer;
-    use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt, EnvFilter, fmt, Registry};
+    use tracing_subscriber::{
+        EnvFilter, Registry, fmt, layer::SubscriberExt, util::SubscriberInitExt,
+    };
 
-    let otlp_endpoint = std::env::var("OTLP_ENDPOINT")
-        .ok()
-        .filter(|s| !s.is_empty())
-        .unwrap_or_else(|| {
+    let otlp_endpoint =
+        std::env::var("OTLP_ENDPOINT").ok().filter(|s| !s.is_empty()).unwrap_or_else(|| {
             tracing::info!("OTLP_ENDPOINT not set, falling back to console tracing");
             return String::new();
         });
@@ -33,7 +33,8 @@ pub fn init() {
             .with_exporter(
                 TonicExporter::builder()
                     .tonic_builder(tonic::transport::Channel::from_shared(otlp_endpoint).unwrap())
-                    .build_span_exporter().expect("Failed to create OTLP exporter"),
+                    .build_span_exporter()
+                    .expect("Failed to create OTLP exporter"),
             )
             .with_batch_config(
                 config::BatchConfigBuilder::default()
@@ -45,7 +46,8 @@ pub fn init() {
                 SEMCONV_RESOURCE_ATTRIBUTES.service_name,
                 "app-http".into(),
             )]))
-            .install_batch(opentelemetry::runtime::Tokio).expect("Failed to install OTLP tracer provider");
+            .install_batch(opentelemetry::runtime::Tokio)
+            .expect("Failed to install OTLP tracer provider");
 
         let otel_layer = layer().with_tracer_provider(tracer_provider);
 

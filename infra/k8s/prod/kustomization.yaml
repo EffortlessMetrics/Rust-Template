@@ -9,6 +9,7 @@ namespace: app-http-prod
 # Use dev as the base
 resources:
 - ../dev
+- poddisruptionbudget.yaml
 
 # Common labels applied to all resources
   # Production-specific labels for cost tracking, ownership, etc.

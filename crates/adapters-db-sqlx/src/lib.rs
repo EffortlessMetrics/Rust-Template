@@ -1,12 +1,12 @@
 use anyhow::Result;
+use chrono::{DateTime, Utc};
 use sqlx::{PgPool, Row};
 use std::env;
-use tracing::{info, error};
+use tracing::{error, info};
 use uuid::Uuid;
-use chrono::{DateTime, Utc};
 
-use crate::core::ports::TaskRepository;
 use crate::core::model::{Task, TaskStatus};
+use crate::core::ports::TaskRepository;
 
 pub struct PostgresTaskRepository {
     pool: PgPool,
@@ -14,9 +14,9 @@ pub struct PostgresTaskRepository {
 
 impl PostgresTaskRepository {
     pub async fn new() -> Result<Self> {
-        let database_url = env::var("DATABASE_URL")
-            .map_err(|_| anyhow::anyhow!("DATABASE_URL must be set"))?;
-        
+        let database_url =
+            env::var("DATABASE_URL").map_err(|_| anyhow::anyhow!("DATABASE_URL must be set"))?;
+
         let pool = PgPool::connect(&database_url).await?;
         Ok(Self { pool })
     }
@@ -27,7 +27,7 @@ impl TaskRepository for PostgresTaskRepository {
     async fn create_task(&self, title: String) -> Result<Task> {
         let id = Uuid::new_v4();
         let created_at = Utc::now();
-        
+
         sqlx::query(
             r#"
             INSERT INTO tasks (id, title, status, created_at) 
@@ -41,11 +41,7 @@ impl TaskRepository for PostgresTaskRepository {
         .execute(&self.pool)
         .await?;
 
-        let task = Task {
-            id: id.to_string(),
-            title,
-            status: TaskStatus::Pending,
-        };
+        let task = Task { id: id.to_string(), title, status: TaskStatus::Pending };
 
         info!(task_id = %task.id, "Created task");
         Ok(task)
@@ -72,7 +68,7 @@ impl TaskRepository for PostgresTaskRepository {
                 "COMPLETED" => TaskStatus::Completed,
                 _ => TaskStatus::Pending,
             };
-            
+
             Some(Task { id, title, status })
         } else {
             None
@@ -90,12 +86,9 @@ impl TaskRepository for PostgresTaskRepository {
         .fetch_all(&self.pool)
         .await?;
 
-        let tasks = rows.into_iter()
-            .map(|row| Task {
-                id: row.id,
-                title: row.title,
-                status: row.status,
-            })
+        let tasks = rows
+            .into_iter()
+            .map(|row| Task { id: row.id, title: row.title, status: row.status })
             .collect();
 
         Ok(tasks)

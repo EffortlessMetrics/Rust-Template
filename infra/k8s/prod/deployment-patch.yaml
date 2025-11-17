@@ -60,19 +60,10 @@ spec:
             periodSeconds: 5
             timeoutSeconds: 2
             failureThreshold: 2
-          env:
-            - name: ENVIRONMENT
-              valueFrom:
-                configMapKeyRef:
-                  name: app-config
-                  key: ENVIRONMENT
-            - name: LOG_LEVEL
-              valueFrom:
-                configMapKeyRef:
-                  name: app-config
-                  key: LOG_LEVEL
-            - name: RUST_LOG
-              valueFrom:
-                configMapKeyRef:
-                  name: app-config
-                  key: RUST_LOG
+          # Load non-sensitive configuration from ConfigMap
+          envFrom:
+            - configMapRef:
+                name: app-config
+            # Load sensitive configuration from Secret
+            - secretRef:
+                name: app-secrets

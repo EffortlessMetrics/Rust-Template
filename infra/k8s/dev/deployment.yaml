@@ -34,11 +34,13 @@ spec:
         - name: http
           containerPort: 8080
           protocol: TCP
-        env:
-        - name: RUST_LOG
-          value: "info,app_http=debug"
-        - name: PORT
-          value: "8080"
+        # Load non-sensitive configuration from ConfigMap
+        envFrom:
+        - configMapRef:
+            name: app-config
+        # Load sensitive configuration from Secret
+        - secretRef:
+            name: app-secrets
         resources:
           limits:
             cpu: "500m"

@@ -1,0 +1,56 @@
+# Sample IaC Configuration File
+# This file demonstrates all available configuration options
+
+project:
+  # Required: Name of your project
+  name: my-rust-project
+
+  # Optional: Path to workspace root (default: ".")
+  workspace_root: .
+
+  # Optional: Description of the project
+  description: A sample Rust Infrastructure as Code project
+
+# List of deployment environments
+environments:
+  # Development environment - typically for local testing
+  - name: dev
+    manifests_path: infra/k8s/dev
+    requires_kustomize: false
+    description: Local development environment using minikube or kind
+    required_files:
+      - deployment.yaml
+      - service.yaml
+
+  # Staging environment - pre-production testing
+  - name: staging
+    manifests_path: infra/k8s/staging
+    requires_kustomize: true
+    description: Staging environment with Kustomize overlays
+
+  # Production environment
+  - name: prod
+    manifests_path: infra/k8s/prod
+    requires_kustomize: true
+    description: Production environment with full Kustomize configuration
+    required_files:
+      - kustomization.yaml
+
+# Validation rules to enforce
+validation:
+  # Verify the project is in a git repository
+  check_git_repo: true
+
+  # Directories that must exist in the workspace
+  required_directories:
+    - specs
+    - infra
+    - docs
+
+  # Files that must exist in the workspace
+  required_files:
+    - README.md
+    - Cargo.toml
+
+  # Whether to validate that manifests paths are accessible (default: true)
+  validate_manifests_paths: true

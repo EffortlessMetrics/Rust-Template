@@ -4,7 +4,7 @@
 // - Domain entities and business rules
 // - Use case / application service logic
 // - Port definitions (traits for adapters to implement)
-// 
+//
 // Architecture principles:
 // - No dependencies on HTTP, database, or other adapters
 // - Adapters (app-http, app-db, etc.) call core, never the reverse
@@ -19,7 +19,11 @@ pub mod ports {
         fn save(&self, task: &Task) -> Result<(), String>;
         fn find_by_id(&self, id: &str) -> Result<Option<Task>, String>;
         fn find_all(&self) -> Result<Vec<Task>, String>;
-        fn update_status(&self, id: &str, status: model::TaskStatus) -> Result<Option<Task>, String>;
+        fn update_status(
+            &self,
+            id: &str,
+            status: model::TaskStatus,
+        ) -> Result<Option<Task>, String>;
     }
 }
 
@@ -47,7 +51,11 @@ pub mod use_cases {
         repo.find_all()
     }
 
-    pub fn update_task_status(repo: &impl TaskRepository, id: String, status: TaskStatus) -> Result<Option<Task>, String> {
+    pub fn update_task_status(
+        repo: &impl TaskRepository,
+        id: String,
+        status: TaskStatus,
+    ) -> Result<Option<Task>, String> {
         repo.update_status(&id, status)
     }
 }

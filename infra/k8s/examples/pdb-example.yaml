@@ -1,0 +1,452 @@
+# PodDisruptionBudget (PDB) Examples
+#
+# PURPOSE:
+# PodDisruptionBudget ensures minimum availability during voluntary disruptions:
+# - Node drains (maintenance, upgrades)
+# - Cluster autoscaling (node removal)
+# - Manual pod evictions
+#
+# WHEN TO USE:
+# - Production with multiple replicas (>= 2)
+# - Strict availability requirements (SLA-driven)
+# - Clusters with frequent node maintenance
+# - Critical services that can't tolerate downtime
+#
+# WHEN NOT TO USE:
+# - Single replica deployments (PDB has no effect)
+# - Dev/staging environments (no availability requirements)
+# - Deployments with HPA minReplicas: 1 (PDB blocks scale-down)
+# - Stateless services with very fast startup (< 10s)
+#
+# TRADE-OFFS:
+# ✅ Pros:
+#   - Prevents accidental downtime during maintenance
+#   - Enforces availability guarantees programmatically
+#   - Works with cluster autoscaler and draining
+#   - No performance overhead
+#
+# ❌ Cons:
+#   - Can block node drains (delays maintenance)
+#   - Can prevent cluster autoscaling (blocks node removal)
+#   - Only protects against voluntary disruptions (not crashes, OOMKills)
+#   - Requires careful configuration with HPA
+#
+# IMPORTANT: PDB only affects VOLUNTARY disruptions:
+# ✅ Protects against:
+#   - kubectl drain (node maintenance)
+#   - Cluster autoscaler removing nodes
+#   - Manual eviction: kubectl delete pod
+#
+# ❌ Does NOT protect against:
+#   - Node crashes/power loss
+#   - OOMKilled pods
+#   - Liveness probe failures
+#   - kubectl delete deployment (deletes PDB too)
+
+---
+# BASIC PDB: Minimum available replicas
+# Most common configuration: keep at least N pods running
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: app-http-basic
+  namespace: default
+  labels:
+    app: app-http
+spec:
+  # Keep at least 2 pods running during disruptions
+  minAvailable: 2
+    # Recommended for production: (total replicas - 1)
+    # Example: 3 replicas -> minAvailable: 2
+    # Allows draining 1 node at a time while maintaining 2 pods
+
+  # Select pods this PDB applies to
+  selector:
+    matchLabels:
+      app: app-http
+      version: v1
+        # Should match your Deployment's pod labels
+
+---
+# PDB: Maximum unavailable
+# Alternative: specify how many pods can be down
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: app-http-maxunavailable
+  namespace: default
+  labels:
+    app: app-http
+spec:
+  # Allow at most 1 pod to be unavailable
+  maxUnavailable: 1
+    # Equivalent to minAvailable: (total replicas - 1)
+    # Prefer maxUnavailable for rolling updates
+    # Prefer minAvailable for absolute guarantees
+
+  selector:
+    matchLabels:
+      app: app-http
+
+# WHEN TO USE EACH:
+# - minAvailable: When you need absolute pod count (e.g., min 2 for quorum)
+# - maxUnavailable: When you think in terms of "how many can go down"
+
+---
+# PDB WITH PERCENTAGE
+# Use percentages for dynamic scaling (works with HPA)
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: app-http-percentage
+  namespace: default
+  labels:
+    app: app-http
+spec:
+  # Keep at least 75% of pods running
+  minAvailable: 75%
+    # Example: 4 replicas -> minAvailable: 3
+    # Example: 8 replicas -> minAvailable: 6
+    # Good for HPA: scales with replica count
+
+  selector:
+    matchLabels:
+      app: app-http
+
+# PERCENTAGE CONSIDERATIONS:
+# - Rounds down: 75% of 3 replicas = 2.25 -> 2 pods
+# - Better for HPA: works at any scale
+# - Avoid low percentages (< 50%) in production
+
+---
+# PDB FOR HIGH AVAILABILITY (3+ REPLICAS)
+# Production configuration with strict availability
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: app-http-ha
+  namespace: default
+  labels:
+    app: app-http
+    environment: production
+  annotations:
+    description: "HA configuration: requires 2+ pods during disruptions"
+spec:
+  # For 3-replica deployment, keep at least 2 running
+  minAvailable: 2
+    # Tolerates 1 pod disruption
+    # Maintains majority (2/3) for leader election, quorum, etc.
+
+  selector:
+    matchLabels:
+      app: app-http
+      environment: production
+
+# PRODUCTION BEST PRACTICE:
+# - Deployment: 3+ replicas
+# - PDB: minAvailable: (replicas - 1)
+# - Anti-affinity: spread across nodes/zones
+# - Result: Can drain any single node without downtime
+
+---
+# PDB WITH UNHEALTHY POD EVICTION POLICY
+# Kubernetes 1.26+: control eviction of unhealthy pods
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: app-http-unhealthy-policy
+  namespace: default
+  labels:
+    app: app-http
+spec:
+  minAvailable: 2
+
+  selector:
+    matchLabels:
+      app: app-http
+
+  # How to count unhealthy pods (Kubernetes 1.26+)
+  unhealthyPodEvictionPolicy: IfHealthyBudget
+    # Options:
+    # - IfHealthyBudget (default): Allow evicting unhealthy pods if healthy budget is met
+    # - AlwaysAllow: Always allow evicting unhealthy pods (ignores PDB for unhealthy)
+    #
+    # Example: 3 replicas, minAvailable: 2, 1 pod is unhealthy
+    # - IfHealthyBudget: Can evict unhealthy pod only if 2 healthy pods exist
+    # - AlwaysAllow: Can evict unhealthy pod immediately
+
+  # Use AlwaysAllow if:
+  # - You want to evict crashlooping pods during drains
+  # - Your service can tolerate brief under-capacity
+  #
+  # Use IfHealthyBudget (default) if:
+  # - You need strict availability guarantees
+  # - Unhealthy pods might become healthy soon
+
+---
+# ANTI-PATTERN: PDB for single replica (DOESN'T WORK)
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: app-http-single-replica-BROKEN
+  namespace: default
+  labels:
+    app: app-http
+spec:
+  minAvailable: 1
+    # ❌ PROBLEM: If you have 1 replica and minAvailable: 1,
+    # the pod can NEVER be evicted (blocks drains forever)
+    # Node drains will hang waiting for PDB to allow eviction
+
+  selector:
+    matchLabels:
+      app: app-http
+
+# FIX: Don't use PDB with single replica deployments
+# If you must (for some reason):
+# - Use maxUnavailable: 1 instead (allows eviction)
+# - Or set minAvailable: 0 (defeats the purpose of PDB)
+# - Or increase replicas to 2+
+
+---
+# PDB WITH HPA: CAREFUL CONFIGURATION
+# When using HPA, PDB needs to work at all replica counts
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: app-http-with-hpa
+  namespace: default
+  labels:
+    app: app-http
+spec:
+  # Use percentage or maxUnavailable (not fixed minAvailable)
+  maxUnavailable: 1
+    # Works at any scale:
+    # - HPA scales to 3: can evict 1, keeps 2
+    # - HPA scales to 10: can evict 1, keeps 9
+    # - HPA scales to 2: can evict 1, keeps 1
+
+  # ❌ AVOID: minAvailable: 3 with HPA
+  # Problem: If HPA scales down to 2, PDB blocks scale-down (needs 3)
+
+  selector:
+    matchLabels:
+      app: app-http
+
+# HPA + PDB BEST PRACTICES:
+# - Use maxUnavailable: 1 or minAvailable: 50%
+# - Ensure PDB works at HPA minReplicas
+# - Test: scale to minReplicas and try draining a node
+
+---
+# PDB FOR STATEFULSET
+# Different considerations for stateful workloads
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: postgres-pdb
+  namespace: database
+  labels:
+    app: postgres
+spec:
+  # For 3-node PostgreSQL cluster (1 leader + 2 followers)
+  minAvailable: 2
+    # Keeps quorum (2/3) during disruptions
+    # Leader election can proceed
+
+  selector:
+    matchLabels:
+      app: postgres
+
+# STATEFULSET CONSIDERATIONS:
+# - Account for leader election (need majority)
+# - Consider replication lag (follower might be behind)
+# - Drain slowly (one node at a time)
+
+---
+# HOW TO INTEGRATE THIS INTO YOUR DEPLOYMENT:
+#
+# 1. Check your Deployment's replica count:
+#    kubectl get deployment app-http -n default
+#    # Note the READY count (e.g., 3/3)
+#
+# 2. Choose appropriate PDB configuration:
+#    # For fixed replicas (no HPA):
+#    - Use minAvailable: (replicas - 1)
+#    - Example: 3 replicas -> minAvailable: 2
+#
+#    # For HPA:
+#    - Use maxUnavailable: 1 or minAvailable: 50%
+#
+#    # For single replica:
+#    - Don't use PDB (has no effect or blocks drains)
+#
+# 3. Copy appropriate example:
+#    cp infra/k8s/examples/pdb-example.yaml infra/k8s/prod/pdb.yaml
+#
+# 4. Customize:
+#    # Update selector to match your pod labels
+#    spec:
+#      selector:
+#        matchLabels:
+#          app: app-http  # Match your Deployment labels
+#
+#    # Set minAvailable or maxUnavailable
+#    spec:
+#      minAvailable: 2  # Or maxUnavailable: 1
+#
+# 5. Add to Kustomization:
+#    # In infra/k8s/prod/kustomization.yaml
+#    resources:
+#      - ../dev
+#      - pdb.yaml
+#
+# 6. Deploy:
+#    kubectl apply -k infra/k8s/prod
+#
+# 7. Verify PDB:
+#    kubectl get pdb -n my-service-prod
+#    # Shows: ALLOWED DISRUPTIONS
+#    # Example: minAvailable: 2, 3 pods running -> ALLOWED DISRUPTIONS: 1
+#
+#    kubectl describe pdb app-http -n my-service-prod
+#    # Shows current status and disruptions allowed
+#
+# 8. Test PDB behavior:
+#    # Cordon a node (prevents new pods from scheduling)
+#    kubectl cordon <node-name>
+#
+#    # Drain node (evicts pods respecting PDB)
+#    kubectl drain <node-name> --ignore-daemonsets --delete-emptydir-data
+#    # Should drain slowly, respecting minAvailable
+#
+#    # Watch pods reschedule
+#    kubectl get pods -n my-service-prod -w
+#
+#    # Uncordon node when done
+#    kubectl uncordon <node-name>
+#
+# 9. Monitor PDB events:
+#    kubectl get events -n my-service-prod | grep PDB
+#    # Look for "DisruptionAllowed" or "DisruptionBlocked" events
+
+---
+# COMMON MISTAKES:
+#
+# ❌ minAvailable > total replicas:
+#    → PDB always blocks evictions (drains hang forever)
+#    → Example: 3 replicas, minAvailable: 4
+#    → Fix: Set minAvailable <= replicas
+#
+# ❌ Using PDB with 1 replica:
+#    → Either blocks drains (minAvailable: 1) or has no effect (maxUnavailable: 1)
+#    → Fix: Increase replicas to 2+ or don't use PDB
+#
+# ❌ PDB selector doesn't match any pods:
+#    → PDB has no effect
+#    → kubectl get pdb shows "ALLOWED DISRUPTIONS: 0" even with no pods
+#    → Fix: Check selector matches Deployment pod labels
+#
+# ❌ Using minAvailable with HPA:
+#    → HPA can't scale below minAvailable
+#    → Example: minAvailable: 3, HPA minReplicas: 2 -> stuck at 3
+#    → Fix: Use maxUnavailable or percentage instead
+#
+# ❌ Setting minAvailable: 100%:
+#    → No disruptions allowed (blocks all drains)
+#    → Fix: Use minAvailable: (replicas - 1) or 75%
+#
+# ❌ Not accounting for pod startup time:
+#    → Drain evicts pod, new pod starts slowly, disrupts availability
+#    → Fix: Ensure maxUnavailable allows enough running pods during startup
+#
+# ❌ Using both minAvailable and maxUnavailable:
+#    → Invalid configuration (choose one)
+#    → Error: "may not be set when minAvailable is set"
+#    → Fix: Use only minAvailable OR maxUnavailable, not both
+
+---
+# DEBUGGING TIPS:
+#
+# 1. Check PDB status:
+#    kubectl get pdb -n default
+#    # ALLOWED DISRUPTIONS shows how many pods can be evicted now
+#    # 0 = no disruptions allowed (might block drains)
+#
+# 2. Describe PDB for details:
+#    kubectl describe pdb app-http -n default
+#    # Shows:
+#    # - Current/Desired/Expected pods
+#    # - DisruptionsAllowed
+#    # - Events (disruption allowed/blocked)
+#
+# 3. Check why drain is stuck:
+#    kubectl drain <node> --dry-run=client
+#    # Shows which pods would be evicted
+#
+#    kubectl get pdb --all-namespaces
+#    # Find PDBs with 0 allowed disruptions
+#
+# 4. Force drain (DANGEROUS - breaks PDB guarantees):
+#    kubectl drain <node> --disable-eviction --force
+#    # Skips PDB checks, deletes pods directly
+#    # Use only in emergencies (node hardware failure, etc.)
+#
+# 5. Check pod distribution across nodes:
+#    kubectl get pods -n default -o wide
+#    # Ensure pods are spread across nodes (anti-affinity)
+#    # If all pods on one node, PDB can't help
+
+---
+# PRODUCTION CHECKLIST:
+#
+# ✅ Multi-replica deployment (3+ for HA)
+# ✅ PDB with minAvailable: (replicas - 1) or maxUnavailable: 1
+# ✅ Pod anti-affinity (spread pods across nodes/zones)
+# ✅ Appropriate resource requests (for reliable scheduling)
+# ✅ Health checks (liveness/readiness probes)
+# ✅ Fast startup time (< 30s ideal)
+# ✅ Graceful shutdown (handle SIGTERM)
+#
+# With all of the above:
+# - Can drain any single node without downtime
+# - Cluster autoscaler can remove nodes safely
+# - Node upgrades proceed smoothly
+# - Service maintains availability during maintenance
+
+---
+# POLICY RECOMMENDATIONS:
+#
+# Create policy to enforce PDB in production:
+#
+# # In policy/k8s_pdb.rego
+# package main
+#
+# # Require PDB for production Deployments with 2+ replicas
+# deny[msg] {
+#     input.kind == "Deployment"
+#     environment == "production"
+#     replicas := to_number(input.spec.replicas)
+#     replicas >= 2
+#     not has_pdb
+#     msg := sprintf("Production Deployment %s with %d replicas should have a PodDisruptionBudget",
+#                    [input.metadata.name, replicas])
+# }
+#
+# # Prevent PDB that always blocks disruptions
+# deny[msg] {
+#     input.kind == "PodDisruptionBudget"
+#     input.spec.minAvailable == "100%"
+#     msg := sprintf("PDB %s has minAvailable: 100%% which blocks all disruptions",
+#                    [input.metadata.name])
+# }
+#
+# # Warn about PDB with single replica
+# warn[msg] {
+#     input.kind == "PodDisruptionBudget"
+#     # This would require multi-document validation to check Deployment replicas
+#     # For now, just warn if minAvailable: 1 (might be single replica)
+#     input.spec.minAvailable == 1
+#     msg := sprintf("PDB %s has minAvailable: 1 - ensure target has 2+ replicas",
+#                    [input.metadata.name])
+# }
