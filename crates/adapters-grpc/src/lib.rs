@@ -19,6 +19,13 @@ pub struct TaskServiceImpl {
     repo: Arc<dyn TaskRepository>,
 }
 
+impl TaskServiceImpl {
+    /// Create a new TaskServiceImpl with the given repository (useful for testing)
+    pub fn new(repo: Arc<dyn TaskRepository>) -> Self {
+        Self { repo }
+    }
+}
+
 #[tonic::async_trait]
 impl TaskService for TaskServiceImpl {
     async fn create_task(
@@ -99,7 +106,3 @@ pub async fn spawn(
 
     Ok(())
 }
-
-// TODO: Add integration tests
-// Integration tests are intentionally omitted for now to keep the crate building.
-// Future work: implement proper integration tests with a mock TaskRepository.
