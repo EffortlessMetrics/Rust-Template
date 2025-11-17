@@ -16,7 +16,7 @@ pub struct World {
 impl Default for World {
     fn default() -> Self {
         // Initialize telemetry for tests (idempotent)
-        telemetry::init();
+        telemetry::init_tracing("acceptance-tests");
 
         Self {
             app: app_http::app(), // Real HTTP router from app-http crate

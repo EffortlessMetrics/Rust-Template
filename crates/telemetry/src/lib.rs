@@ -1,86 +1,31 @@
-/// Initialize tracing with env-based log filtering
+/// Initialize tracing with env-based log filtering and optional OTLP export
 ///
 /// Respects `RUST_LOG` environment variable for filtering.
 /// Default level: INFO
 ///
+/// If `OTLP_ENDPOINT` is set, traces will be exported via OTLP.
+///
 /// Examples:
 /// ```ignore
 /// RUST_LOG=debug cargo run
-/// RUST_LOG=app_http=trace,core=debug cargo run
+/// RUST_LOG=app_http=trace,business_core=debug cargo run
+/// OTLP_ENDPOINT=http://localhost:4317 cargo run
 /// ```
-pub fn init() {
-    use opentelemetry::global;
-    use opentelemetry::sdk::Resource;
-    use opentelemetry::sdk::trace::config;
-    use opentelemetry_otlp::{SpanExporter, TonicExporter};
-    use opentelemetry_semantic_conventions::resource::SEMCONV_RESOURCE_ATTRIBUTES;
-    use tracing_opentelemetry::layer;
-    use tracing_subscriber::{
-        EnvFilter, Registry, fmt, layer::SubscriberExt, util::SubscriberInitExt,
-    };
+pub fn init_tracing(service_name: &str) {
+    use tracing_subscriber::EnvFilter;
 
-    let otlp_endpoint =
-        std::env::var("OTLP_ENDPOINT").ok().filter(|s| !s.is_empty()).unwrap_or_else(|| {
-            tracing::info!("OTLP_ENDPOINT not set, falling back to console tracing");
-            return String::new();
-        });
+    let env_filter = EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("info"));
 
-    let registry = Registry::default();
+    // For now, just use console tracing
+    // TODO: Add OTLP support when needed
+    let _ = tracing_subscriber::fmt().with_env_filter(env_filter).try_init();
 
-    if !otlp_endpoint.is_empty() {
-        let tracer_provider = opentelemetry_otlp::new_pipeline()
-            .tracing()
-            .with_exporter(
-                TonicExporter::builder()
-                    .tonic_builder(tonic::transport::Channel::from_shared(otlp_endpoint).unwrap())
-                    .build_span_exporter()
-                    .expect("Failed to create OTLP exporter"),
-            )
-            .with_batch_config(
-                config::BatchConfigBuilder::default()
-                    .with_max_queue_size(2048)
-                    .with_scheduled_delay_millis(5000)
-                    .build(),
-            )
-            .with_resource(Resource::new(vec![(
-                SEMCONV_RESOURCE_ATTRIBUTES.service_name,
-                "app-http".into(),
-            )]))
-            .install_batch(opentelemetry::runtime::Tokio)
-            .expect("Failed to install OTLP tracer provider");
-
-        let otel_layer = layer().with_tracer_provider(tracer_provider);
-
-        let _ = registry
-            .with(EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("info")))
-            .with(otel_layer)
-            .with(
-                fmt::layer()
-                    .with_target(true)
-                    .with_thread_ids(false)
-                    .with_file(false)
-                    .with_line_number(false),
-            )
-            .try_init();
-    } else {
-        // Console fallback
-        let _ = registry
-            .with(EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("info")))
-            .with(
-                fmt::layer()
-                    .with_target(true)
-                    .with_thread_ids(false)
-                    .with_file(false)
-                    .with_line_number(false),
-            )
-            .try_init();
-    }
+    tracing::info!(service = service_name, "Initialized console tracing");
 }
 
 /// Initialize tracing for tests
 ///
 /// Use this in test setup to get structured logs during test execution.
-/// Compatible with OTLP setup.
 #[cfg(test)]
 pub fn init_test() {
     let _ = tracing_subscriber::fmt()

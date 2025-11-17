@@ -211,11 +211,9 @@ async fn then_response_header_equals(
     header_name: String,
     expected_value: String,
 ) {
-    let response = world.last_response.as_ref().unwrap_or(&Response {
-        status: 0,
-        body: serde_json::json!({}),
-        headers: http::HeaderMap::new(),
-    });
+    let default_response =
+        Response { status: 0, body: serde_json::json!({}), headers: http::HeaderMap::new() };
+    let response = world.last_response.as_ref().unwrap_or(&default_response);
     let header_value = response
         .headers
         .get(header_name.to_lowercase())
@@ -231,11 +229,9 @@ async fn then_response_header_equals(
 
 #[then(regex = r#"^the "([^"]+)" field in response body equals "([^"]+)"$"#)]
 async fn then_body_field_equals(world: &mut World, field_name: String, expected_value: String) {
-    let response = world.last_response.as_ref().unwrap_or(&Response {
-        status: 0,
-        body: serde_json::json!({}),
-        headers: http::HeaderMap::new(),
-    });
+    let default_response =
+        Response { status: 0, body: serde_json::json!({}), headers: http::HeaderMap::new() };
+    let response = world.last_response.as_ref().unwrap_or(&default_response);
     let actual_value = response.body.get(&field_name).and_then(|v| v.as_str()).unwrap_or("");
 
     assert_eq!(
@@ -247,11 +243,9 @@ async fn then_body_field_equals(world: &mut World, field_name: String, expected_
 
 #[then(regex = r#"^the "([^"]+)" header is a valid UUID or request identifier$"#)]
 async fn then_header_is_uuid(world: &mut World, header_name: String) {
-    let response = world.last_response.as_ref().unwrap_or(&Response {
-        status: 0,
-        body: serde_json::json!({}),
-        headers: http::HeaderMap::new(),
-    });
+    let default_response =
+        Response { status: 0, body: serde_json::json!({}), headers: http::HeaderMap::new() };
+    let response = world.last_response.as_ref().unwrap_or(&default_response);
     let header_value = response
         .headers
         .get(header_name.to_lowercase())
