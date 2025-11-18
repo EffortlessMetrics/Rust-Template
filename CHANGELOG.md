@@ -522,20 +522,100 @@ For users upgrading from v1.x:
 
 ---
 
+## [2.2.0] - 2025-11-17
+
+### Added
+
+**Adapter Integration Testing**
+- **DB adapter integration test** with testcontainers + Postgres
+  - End-to-end CRUD test for `TaskRepository` using real Postgres instance
+  - Validates `create_task`, `get_task`, and `list_tasks` operations
+  - Located in `crates/adapters-db-sqlx/tests/integration_test.rs`
+  - Proves database adapter contract compliance without mocks
+- **gRPC adapter smoke test** with in-memory repository
+  - Tests gRPC service layer (`CreateTask`, `GetTask`, `ListTasks`) against in-memory implementation
+  - No Docker dependency, fast feedback loop
+  - Located in `crates/adapters-grpc/tests/smoke_test.rs`
+  - Validates protobuf serialization and gRPC server behavior
+
+**BDD Scenario for Metrics**
+- New `specs/features/metrics.feature` with scenario `@AC-TPL-007`
+  - Tests `/metrics` endpoint availability
+  - Validates `http_requests_total` metric is present in Prometheus output
+  - Uses existing step definitions with new raw body support
+- Enhanced acceptance test infrastructure:
+  - `Response` struct now includes `raw_body: String` field for non-JSON responses
+  - New step definition: `the response body contains "{string}"`
+  - Extended GET step to support `/metrics` endpoint
+
+**LLM Ergonomics Improvements**
+- Enhanced `.llm/contextpack.yaml` with richer metadata for `implement_ac` task:
+  - `description` field: "Context for implementing a single acceptance criterion end-to-end."
+  - `prompt` field: Embedded workflow guidance for LLMs (understand AC → find BDD → edit core → run selftest)
+  - Updated include paths to reference `business-core` and `app-http` (not legacy `core`)
+  - Added tutorial reference (`docs/tutorials/day-7-first-real-feature.md`)
+- Documentation update in `docs/how-to/use-llm-bundles.md`:
+  - New "Quick Reference" section with 5-step workflow
+  - Clear path from bundle generation → LLM prompt → verification
+
+**VSCode Integration (optional, local-only)**
+- `.vscode/tasks.json` with shortcuts for xtask commands:
+  - `xtask: check`, `xtask: selftest`, `xtask: bdd`, `xtask: bundle implement_ac`, `xtask: policy-test`, `xtask: ac-status`
+  - Accessible via VSCode "Tasks → Run Task" menu
+  - Note: `.vscode/` is in `.gitignore`, so this is not committed to the repository
+
+### Changed
+
+- Acceptance test `World` struct now tracks both JSON body and raw text responses
+- All step definitions updated to populate `raw_body` field
+- GET step (`when_get_endpoint`) regex extended to include `/metrics`
+
+### Fixed
+
+- Acceptance tests now properly handle non-JSON responses (e.g., Prometheus plain text format)
+- LLM contextpack paths corrected to reference current workspace structure
+
+### Technical Details
+
+**Files Modified:**
+- `.llm/contextpack.yaml` - Enhanced with description and prompt metadata
+- `crates/acceptance/src/world.rs` - Added `raw_body` field to `Response` struct
+- `crates/acceptance/src/steps/template_core.rs` - Updated all step definitions, added raw body assertion step
+- `specs/features/metrics.feature` - New BDD scenario for metrics endpoint
+- `docs/how-to/use-llm-bundles.md` - Added quick-reference workflow section
+
+**New Files:**
+- `crates/adapters-db-sqlx/tests/integration_test.rs` - DB adapter integration test
+- `crates/adapters-grpc/tests/smoke_test.rs` - gRPC adapter smoke test
+- `specs/features/metrics.feature` - Metrics endpoint BDD scenario
+
+**Validation:**
+- ✅ `cargo test --workspace` - All tests pass (including new integration tests)
+- ✅ `cargo xtask selftest` - All 5 checks passing
+- ✅ `cargo clippy --workspace --all-targets -- -D warnings` - Clean
+- ✅ `cargo fmt --all -- --check` - Clean
+
+**Dependencies Added:**
+- `testcontainers = "0.23"` (dev dependency in adapters-db-sqlx) - For Postgres integration tests
+
+### Notes
+
+- OTLP tracing implementation **deferred to v2.3.0** to allow proper research of OpenTelemetry 0.31.x API changes
+- This release completes the minimum viable v2.2.0 scope with solid adapter testing and improved LLM workflow
+
+---
+
 ## [Unreleased]
 
-### Planned for v2.1.0
+### Planned for v2.3.0
 
-- OTLP telemetry feature flag for optional observability
-- `/metrics` endpoint via Prometheus middleware
-- Integration test improvements for adapters
+- OTLP telemetry implementation (OpenTelemetry 0.31.x integration)
+- Telemetry hardening and trace export configuration
 
 ### Planned for Later
 
 - Task Management API pilot project
 - Docker build automation in deploy command
-- Staging and production K8s manifests
-- Database adapter examples
 - More how-to guides
 
 ---
