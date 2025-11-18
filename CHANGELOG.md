@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- **xtask selftest**: Policy tests now properly skip when conftest is not available in local development without failing selftest. CI environments (detected via `CI` or `GITHUB_ACTIONS` env vars) still correctly treat missing conftest as a failure. This aligns with the design where policy tests run in CI via Nix (which provides conftest), while local developers can validate the template without needing conftest installed. (Commit: `bc97ef6`)
+
 ## [1.0.0] - 2025-11-15
 
 ### Added

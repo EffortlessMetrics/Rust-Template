@@ -61,10 +61,11 @@ This project is opinionated and governance-heavy **on purpose**. It serves two p
 - Runtime & AC workflow: ✅ Fully working
 - LLM bundler: ✅ Producing bounded, governed context
 - Policy suite: ✅ Enforcing ledger, features, K8s, privacy rules
-- Selftest harness: ✅ Honest failure reporting
+- Selftest harness: ✅ Complete validation suite (local/CI properly differentiated)
 
 This template is at v2.3.0 and production-ready. Currently in **Pilot Phase** for validation.
 
+**Latest update (2025-11-18)**: Fixed selftest to gracefully skip policy tests when conftest is unavailable locally while still enforcing them in CI.
 
 ## Quick Start
 

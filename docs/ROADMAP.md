@@ -1,8 +1,8 @@
 # Rust Template Roadmap
 
-**Last Updated**: 2025-11-17
+**Last Updated**: 2025-11-18
 **Current Version**: v2.3.0
-**Status**: Pilot Phase
+**Status**: Pilot Phase (Ready for validation)
 
 ---
 
@@ -24,6 +24,7 @@ The Rust IaC Template has reached a natural completion point after three focused
 - ✅ LLM-assisted workflow (contextpack, bundles, AC mapping)
 - ✅ Release playbook and pilot evaluation tooling
 - ✅ Comprehensive documentation (Diátaxis framework)
+- ✅ Selftest validation suite (local/CI behavior correctly differentiated)
 
 **Strategic Position:**
 The template is "production-ready" as a starting point. Further evolution should be **demand-driven**, informed by real-world pilot projects rather than speculative features.
@@ -341,5 +342,13 @@ These are not planned features—they're examples of what *might* happen if pilo
 
 ---
 
-**Last reviewed**: 2025-11-17
+**Last reviewed**: 2025-11-18
 **Next review**: After pilot project completes (estimated 1-2 weeks)
+
+## Recent Updates
+
+### 2025-11-18: Selftest Fix
+
+- Fixed selftest to properly skip policy tests when conftest is not available locally (no longer treats missing conftest as failure in local development)
+- CI environments still enforce policy tests via Nix-provided conftest
+- Commit: `bc97ef6` - "fix(xtask): policy test skip shouldn't fail selftest in local development"
