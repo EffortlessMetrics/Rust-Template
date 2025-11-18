@@ -4,8 +4,10 @@ Welcome to the Rust Template documentation. This template provides spec-as-code,
 
 **Quick Links:**
 - 🚀 [Getting Started](#getting-started)
+- 🧪 [Pilot Projects](#pilot-projects) ← Validate the template
 - 📖 [Learning Path](#learning-path-new-to-template)
 - 🎯 [Common Tasks](#common-tasks)
+- 🗺️ [Roadmap](#roadmap)
 - 📚 [Complete Reference](#complete-reference)
 
 ---
@@ -20,6 +22,35 @@ This documentation follows the [Diátaxis](https://diataxis.fr/) framework:
 | **How-to Guides** | Task-oriented, solve specific problems | Know what you want to do |
 | **Reference** | Information-oriented, technical specs | Need specific details |
 | **Explanation** | Understanding-oriented, concepts | Want to understand why |
+
+---
+
+## Pilot Projects
+
+**Want to validate the template before committing?** Create a greenfield pilot project to test real-world usage.
+
+### Quick Start
+```bash
+# From the template repository
+./scripts/create-pilot.sh my-pilot-service ~/projects/
+
+# Then follow Day 1 workflow
+cd ~/projects/my-pilot-service
+cargo run -p xtask -- selftest           # Verify setup
+# Implement features, track friction in FRICTION_LOG.md
+```
+
+### Resources
+- 📘 **[Pilot Feature Ideas](templates/PILOT_FEATURE_IDEAS.md)** - Curated features to test the template
+  - Task Management API (starter)
+  - E-commerce Order API (intermediate)
+  - User Authentication API (advanced)
+- 📋 **[Friction Log Template](templates/FRICTION_LOG.md)** - Track pain points during pilot
+- 📖 **[Release Playbook](RELEASE_PLAYBOOK.md)** - Understand how friction informs template evolution
+
+**Goal**: Understand template usability through real development, not speculation.
+
+See [Roadmap](#roadmap) for how pilot results inform future releases.
 
 ---
 
@@ -271,6 +302,34 @@ These documents capture implementation decisions, trade-offs, and rationale for 
 
 ---
 
+## Roadmap
+
+**Current Status**: v2.3.0 (Production-Ready Template)
+
+The template has completed a three-release observability arc and is now in **pilot validation phase**. Further development will be **demand-driven** based on real-world usage feedback.
+
+### What's Complete
+- ✅ Complete observability stack (logs, metrics, OTLP traces)
+- ✅ Hexagonal architecture with production adapters
+- ✅ Governance infrastructure (policy-as-code, specs, BDD)
+- ✅ LLM-assisted workflow with context bundling
+- ✅ Release playbook and pilot evaluation tooling
+
+### Next Phase: Pilot Validation (1-2 weeks)
+1. Create pilot project with `./scripts/create-pilot.sh`
+2. Implement 3-5 real features
+3. Track friction in FRICTION_LOG.md
+4. Analyze friction to determine next steps
+
+### Possible Outcomes
+- **v2.3.1 patch** - If blockers found (missing docs, broken workflows)
+- **v2.4.0 features** - If quality-of-life improvements needed
+- **Template "good enough"** - Continue as-is, address issues reactively
+
+**Full roadmap**: [ROADMAP.md](ROADMAP.md)
+
+---
+
 ## By Role
 
 ### For Developers
@@ -426,23 +485,30 @@ ls docs/                             # Browse docs locally
 
 ## Version
 
-This documentation is for **Rust Template v1.1.0**.
+This documentation is for **Rust Template v2.3.0**.
 
-**Changelog:**
-- v1.1.0 (2025-11-15): Contract layer, infrastructure foundation, and DevEx improvements
-  - Template contract layer: Error envelope spec, template-core protection, meta-contracts
-  - Infrastructure foundation: K8s manifests, policies, and deploy command
-  - DevEx improvements: Multi-platform Nix, verbosity controls, performance optimizations
+**Recent Releases:**
+- **v2.3.0 (2025-11-17)**: OTLP tracing + pilot infrastructure
+  - OTLP export via `telemetry/otlp` feature flag
+  - Graceful fallback on telemetry failures
+  - Pilot project creation script and templates
+  - Release playbook and friction log templates
   - See [CHANGELOG.md](../CHANGELOG.md) for full details
 
-- v1.0.0 (2025-11-15): Initial stable release
-  - Complete Diátaxis documentation
-  - Runtime architecture (app-http)
-  - Rust-native tooling (xtask)
-  - AC-first + Policy-as-code + LLM-native
+- **v2.2.0 (2025-11-17)**: Adapter integration + LLM ergonomics
+  - DB adapter integration test (testcontainers + Postgres)
+  - gRPC adapter smoke test
+  - Enhanced LLM contextpack with workflow guidance
+  - Metrics BDD scenario
 
-**Next version (v1.2.0) planned:**
-- Implement ErrorResponse fields in AppError (AC-TPL-003, AC-TPL-004)
-- Task Management API pilot project
-- Docker build automation
-- Staging and production K8s manifests
+- **v2.1.0 (2025-11-17)**: Prometheus metrics
+  - `/metrics` endpoint with Prometheus scraping
+  - K8s service annotations for observability
+  - Policy enforcement for metrics in prod/staging
+
+**Next Steps:**
+- 🔄 Run greenfield pilot project (1-2 weeks)
+- 🔄 Analyze friction logs
+- 🔄 Determine: v2.3.1 patch, v2.4.0 features, or status quo
+
+See [ROADMAP.md](ROADMAP.md) for strategic direction.

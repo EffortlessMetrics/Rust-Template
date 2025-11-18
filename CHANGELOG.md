@@ -677,11 +677,62 @@ For users upgrading from v1.x:
 
 ## [Unreleased]
 
+### Post-v2.3.0: Pilot Infrastructure
+
+**Added** (2025-11-17, commits fe0a00e, 2615dbc):
+
+**Pilot Project Tooling:**
+- `scripts/create-pilot.sh` - Automated pilot project creation from v2.3.0 template
+  - Copies template to new directory with fresh git history
+  - Pre-configures `FRICTION_LOG.md` with metadata (project name, date, developer)
+  - Runs initial selftest to verify setup
+  - Provides comprehensive next-step guidance
+- `docs/templates/PILOT_FEATURE_IDEAS.md` - Curated pilot feature catalog
+  - 3 pilot archetypes: Task Management (starter), E-commerce (intermediate), User Auth (advanced)
+  - 18 feature examples across simple/medium/complex tiers
+  - Expected friction points per feature
+  - Half-day and week-long pilot paths
+  - Anti-patterns and recommendations
+- `docs/templates/FRICTION_LOG.md` - Structured friction capture template
+  - Pre-formatted sections for pain points, feature tracking, observability/governance assessment
+  - Guides pilot evaluation and template evolution decisions
+- `docs/RELEASE_PLAYBOOK.md` - Reusable 7-phase release process
+  - Planning → Roadmap → Code → Validation → Documentation → Tagging → Post-Release
+  - Adaptable to non-Rust projects
+  - Multiple validation gates and checklists
+- `docs/templates/RELEASE_PLAN.md` - Template for future release planning
+  - Scope definition, implementation roadmap, exit criteria, decision log structure
+
+**Documentation:**
+- `README.md` - Added "Quick Start (Pilot Project)" and "Pilot Workflow" sections
+  - Day 0 → Day 1+ workflow guide
+  - Friction log → template evolution feedback loop
+  - References to Release Playbook
+
+**Strategic Shift:**
+- v2.3.0 closes the three-release observability arc (v2.1.0 → v2.2.0 → v2.3.0)
+- Template now has complete observability stack (logs, metrics, traces) + governance infrastructure
+- Pilot infrastructure enables validation through real usage before planning v2.4.0
+- Template evolution should be informed by pilot friction logs, not feature speculation
+
+**Usage:**
+```bash
+# Create pilot project
+./scripts/create-pilot.sh my-pilot-service ~/projects/
+
+# Follow Day 1 workflow
+cd ~/projects/my-pilot-service
+cargo run -p xtask -- selftest
+# Implement features, track friction in FRICTION_LOG.md
+# After 1-2 weeks: review friction, decide on v2.3.1/v2.4.0
+```
+
 ### Planned for Later
 
-- Task Management API pilot project
+- Run greenfield pilot project (1-2 weeks)
+- Analyze friction logs to inform v2.3.1 or v2.4.0 planning
 - Docker build automation in deploy command
-- More how-to guides
+- Additional how-to guides based on pilot learnings
 
 ---
 
