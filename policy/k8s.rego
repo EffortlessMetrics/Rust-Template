@@ -422,27 +422,28 @@ warn[msg] {
     )
 }
 
-# Require that deployments with envFrom use both ConfigMap and Secret
-# This encourages proper separation of sensitive and non-sensitive config
-warn[msg] {
-    input.kind == "Deployment"
-    container := input.spec.template.spec.containers[_]
-    container.envFrom
-    has_config_map_ref := has_configmap_ref(container)
-    has_secret_ref := has_secret_ref(container)
-    # Warn if only one type is used (should use both for complete config)
-    has_config_map_ref
-    not has_secret_ref
-    msg := sprintf(
-        "BEST PRACTICE: Deployment %s container %s uses ConfigMap but no Secret. Consider using Secret for sensitive values.",
-        [input.metadata.name, container.name]
-    )
-}
-
+# Helper functions for envFrom validation
 has_configmap_ref(container) {
     container.envFrom[_].configMapRef
 }
 
 has_secret_ref(container) {
     container.envFrom[_].secretRef
+}
+
+# Require that deployments with envFrom use both ConfigMap and Secret
+# This encourages proper separation of sensitive and non-sensitive config
+warn[msg] {
+    input.kind == "Deployment"
+    container := input.spec.template.spec.containers[_]
+    container.envFrom
+    configmap_used := has_configmap_ref(container)
+    secret_used := has_secret_ref(container)
+    # Warn if only one type is used (should use both for complete config)
+    configmap_used
+    not secret_used
+    msg := sprintf(
+        "BEST PRACTICE: Deployment %s container %s uses ConfigMap but no Secret. Consider using Secret for sensitive values.",
+        [input.metadata.name, container.name]
+    )
 }

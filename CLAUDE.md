@@ -314,15 +314,48 @@ The template includes **Open Policy Agent (OPA)** policies in `policies/`:
 - **Locally**: If `conftest` is not installed, selftest shows `⚠ Policy tests skipped` but still passes
 - **CI**: Policy tests enforced via Nix environment (which provides `conftest`), failures block merge
 
-To run policy tests locally:
-```bash
-# Install conftest (optional)
-# See: https://www.conftest.dev/install/
+### Running Policy Tests Locally (Optional)
 
-# Run policies
-conftest test -p policies/ledger_governance.rego specs/spec_ledger.yaml
-conftest test -p policies/k8s_standards.rego k8s/*.yaml
+You have two options to enable policy tests in `xtask selftest`:
+
+#### Option 1: Use the Nix devshell (Recommended)
+
+The flake already includes `conftest 0.52.0`, so just run selftest inside the devshell:
+
+```bash
+nix develop
+cargo run -p xtask -- selftest
+# Policy tests will now run in step 5 ✓
 ```
+
+This gives you the same toolchain as CI with zero extra installs.
+
+#### Option 2: Install conftest globally on WSL/Ubuntu
+
+If you prefer to run `cargo xtask selftest` without `nix develop`:
+
+```bash
+# 1. Check what version CI uses
+nix develop -c conftest --version
+# Output: Conftest: 0.52.0
+
+# 2. Install that version
+CONFTEST_VERSION="0.52.0"
+ARCH="$(uname -m)"
+SYSTEM="$(uname -s)"
+wget "https://github.com/open-policy-agent/conftest/releases/download/v${CONFTEST_VERSION}/conftest_${CONFTEST_VERSION}_${SYSTEM}_${ARCH}.tar.gz"
+tar xzf "conftest_${CONFTEST_VERSION}_${SYSTEM}_${ARCH}.tar.gz"
+chmod +x conftest
+sudo mv conftest /usr/local/bin/conftest
+
+# 3. Verify
+conftest --version
+# Should show: Conftest: 0.52.0
+```
+
+After installation, `cargo run -p xtask -- selftest` will run policy tests automatically.
+
+**Note**: Without `conftest`, selftest still passes locally (with ⚠️ warning). CI always enforces policies.
 
 ---
 
