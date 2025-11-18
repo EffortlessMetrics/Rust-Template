@@ -605,12 +605,77 @@ For users upgrading from v1.x:
 
 ---
 
+## [2.3.0] - 2025-11-17
+
+### Added
+
+**OTLP Tracing (Feature-Gated)**
+- `telemetry` crate now supports OTLP (OpenTelemetry Protocol) export via the `otlp` feature flag
+- When `otlp` feature is enabled and `OTLP_ENDPOINT` environment variable is set:
+  - Traces are exported to OTLP collectors via gRPC (tonic)
+  - Uses OpenTelemetry 0.31.x API with `SpanExporter::builder()` pattern
+  - Combines OTLP export with console tracing for local development
+- Graceful fallback behavior:
+  - If OTLP initialization fails (e.g., collector unreachable), logs warning and falls back to console-only tracing
+  - Application never crashes due to telemetry issues
+- Feature flag: `telemetry/otlp` (disabled by default)
+- No changes to existing `telemetry::init_tracing()` call sites
+
+**Documentation**
+- `docs/how-to/test-otlp-tracing.md` - Complete guide for testing OTLP locally with Jaeger
+  - Quick start with Jaeger all-in-one container
+  - Alternative setup with OpenTelemetry Collector
+  - Fallback behavior verification
+  - Troubleshooting guide
+- `crates/telemetry/README.md` - API documentation and usage examples
+  - Console tracing vs. OTLP tracing
+  - Environment variable reference
+  - Design principles and implementation details
+
+### Technical Details
+
+**Files Modified:**
+- `crates/telemetry/src/lib.rs` - Implemented `try_init_otlp()` function under `#[cfg(feature = "otlp")]`
+- `crates/telemetry/Cargo.toml` - Added `otlp` feature with dependencies: `opentelemetry`, `opentelemetry_sdk`, `opentelemetry-otlp` (with `grpc-tonic`), `tracing-opentelemetry`
+
+**New Files:**
+- `docs/how-to/test-otlp-tracing.md` - OTLP testing guide
+- `crates/telemetry/README.md` - Telemetry crate documentation
+- `docs/v2.3.0-plan.md` - Release plan with OTLP version decision
+
+**Validation:**
+- ✅ `cargo build -p telemetry` - Builds without OTLP feature (default)
+- ✅ `cargo build -p telemetry --features otlp` - Builds with OTLP feature
+- ✅ `cargo clippy --all-targets --all-features -- -D warnings` - Clean
+- ✅ `cargo fmt --all -- --check` - Clean
+- ✅ `cargo run -p xtask -- selftest` - Core checks passing
+
+**Dependencies:**
+- OpenTelemetry 0.31.0 (already in workspace)
+- Using official OTLP patterns from opentelemetry-rust examples
+
+### Design Decisions
+
+**OTLP Version Strategy:**
+- Chose OpenTelemetry 0.31.0 (current workspace version)
+- Rationale: No dependency churn, aligns with current ecosystem, better long-term maintenance
+- Rejected: Pinning to older 0.24.x (would create technical debt)
+
+**Implementation Approach:**
+- Feature-gated to keep default builds lightweight
+- Graceful degradation ensures production reliability
+- No breaking changes to existing telemetry API
+
+### Notes
+
+- OTLP remains **optional** - default builds use console-only tracing
+- No changes required to existing applications
+- To enable OTLP: `cargo build --features telemetry/otlp` and set `OTLP_ENDPOINT`
+- Telemetry failures never crash the application
+
+---
+
 ## [Unreleased]
-
-### Planned for v2.3.0
-
-- OTLP telemetry implementation (OpenTelemetry 0.31.x integration)
-- Telemetry hardening and trace export configuration
 
 ### Planned for Later
 

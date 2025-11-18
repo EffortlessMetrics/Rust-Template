@@ -5,7 +5,13 @@ edition.workspace = true
 
 [features]
 default = []
-otlp = ["opentelemetry", "opentelemetry_sdk", "opentelemetry-otlp", "tracing-opentelemetry"]
+otlp = [
+    "opentelemetry",
+    "opentelemetry_sdk",
+    "opentelemetry-otlp",
+    "opentelemetry-otlp/grpc-tonic",
+    "tracing-opentelemetry",
+]
 
 [dependencies]
 tracing.workspace = true
