@@ -2,6 +2,24 @@
 
 **Heavy governance so LLMs can move fast**
 
+> **What this is:**
+> An opinionated Rust service template + library that bakes in
+> spec-as-code, policy-as-code, LLM-assisted workflows, and a Nix dev environment,
+> so dev, CI, and governance line up by default.
+
+Use it when you want:
+
+- A **governed starting point** for new Rust services (health/version/metrics, policies, selftest).
+- A **library** (`rust_iac_xtask_core`, `rust_iac_config`) to add AC tracking and policy enforcement to existing repos.
+- A **repeatable pattern** for AI-assisted development that doesn't devolve into "the model randomly changed prod code".
+
+If you just want "hello world in Axum", this is too much.
+If you want a **serious baseline for multi-service Rust in an LLM era**, this is what it's for.
+
+**Read more:** [Why This Template Exists](docs/why-this-exists.md)
+
+---
+
 This project serves **two purposes**:
 
 1. **Full-Featured Template**: Clone it to start a new Rust service with governance, observability, and AI-assisted development built-in
