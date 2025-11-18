@@ -67,6 +67,8 @@ This template is at v2.3.0 and production-ready. Currently in **Pilot Phase** fo
 
 **Latest update (2025-11-18)**: Fixed selftest to gracefully skip policy tests when conftest is unavailable locally while still enforcing them in CI.
 
+**For LLM-assisted development**: See [CLAUDE.md](CLAUDE.md) for standard prompts, workflows, and best practices.
+
 ## Quick Start
 
 Choose your path based on your situation:
