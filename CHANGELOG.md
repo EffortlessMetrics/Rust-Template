@@ -7,9 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Development Environment Guide** (`docs/dev-environment.md`): Comprehensive guide establishing Nix as the primary development path (Tier 1) with fallback native toolchain support (Tier 2). Includes installation instructions, tool versions, and clear philosophy.
+- **Selftest UX Enhancement**: When `conftest` is missing locally, selftest now provides helpful hints based on environment:
+  - If Nix is available: `💡 Hint: Run nix develop -c cargo run -p xtask -- selftest`
+  - Otherwise: Points to `docs/dev-environment.md`
+
+### Changed
+
+- **README.md**: Repositioned as Nix-first with clear opinionated messaging. Nix installation shown in Quick Start, with fallback docs linked.
+- **CLAUDE.md**: Updated all workflow examples to assume `nix develop` for CI-equivalent validation. Added explicit environment assumptions section.
+- **Pilot workflow**: Updated Quick Start (Pilot Project) to use `nix develop` before selftest.
+
+### Removed
+
+- **docs/ROADMAP.md**: Removed outdated roadmap file. Per-version release planning now lives in `docs/v2.*.md` files (e.g., `v2.3.0-plan.md`).
+- **Dev cruft cleanup**: Removed obsolete development files (`.llm/example-prompts.md`, `.llm/test_contextpack.yaml`)
+
 ### Fixed
 
-- **xtask selftest**: Policy tests now properly skip when conftest is not available in local development without failing selftest. CI environments (detected via `CI` or `GITHUB_ACTIONS` env vars) still correctly treat missing conftest as a failure. This aligns with the design where policy tests run in CI via Nix (which provides conftest), while local developers can validate the template without needing conftest installed. (Commit: `bc97ef6`)
+- **xtask selftest**: Policy tests now properly skip when conftest is not available in local development without failing selftest. CI environments (detected via `CI` or `GITHUB_ACTIONS` env vars) still correctly treat missing conftest as a failure. This aligns with the design where policy tests run in CI via Nix (which provides conftest), while local developers can validate the template without needing conftest installed.
 
 ## [1.0.0] - 2025-11-15
 

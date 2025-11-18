@@ -8,7 +8,7 @@
 # Each bundle packages relevant files into markdown for AI code generation.
 #
 # See: docs/how-to/use-llm-bundles.md for usage guide
-# See: .llm/example-prompts.md for prompt templates
+# See: CLAUDE.md for standard prompts and workflow
 #
 # Validation: `cargo run -p xtask -- policy-test`
 # Policy: policy/llm.rego enforces structure
