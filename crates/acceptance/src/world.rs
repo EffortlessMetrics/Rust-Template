@@ -31,6 +31,8 @@ pub struct Response {
     pub status: u16,
     pub body: serde_json::Value,
     pub headers: HeaderMap,
+    /// Raw body text (for non-JSON responses like /metrics)
+    pub raw_body: String,
 }
 
 impl World {

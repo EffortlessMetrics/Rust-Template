@@ -9,7 +9,7 @@ use tower::util::ServiceExt;
 // Template Core Step Definitions - Keep these in your service
 // ============================================================================
 
-#[when(regex = r"^I GET (/health|/version)$")]
+#[when(regex = r"^I GET (/health|/version|/metrics)$")]
 async fn when_get_endpoint(world: &mut World, path: String) {
     let mut request_builder = Request::builder().method("GET").uri(&path);
 
@@ -35,9 +35,10 @@ async fn when_get_endpoint(world: &mut World, path: String) {
     let headers = response.headers().clone();
     let body_bytes = response.into_body().collect().await.map(|c| c.to_bytes()).unwrap_or_default();
 
+    let raw_body = String::from_utf8_lossy(&body_bytes).to_string();
     let body: serde_json::Value = serde_json::from_slice(&body_bytes).unwrap_or_default();
 
-    world.last_response = Some(Response { status, body, headers });
+    world.last_response = Some(Response { status, body, headers, raw_body });
     // Clear request headers after use
     world.request_headers.clear();
 }
@@ -124,9 +125,10 @@ async fn when_post_echo_invalid(world: &mut World, message: String) {
     let headers = response.headers().clone();
     let body_bytes = response.into_body().collect().await.map(|c| c.to_bytes()).unwrap_or_default();
 
+    let raw_body = String::from_utf8_lossy(&body_bytes).to_string();
     let body: serde_json::Value = serde_json::from_slice(&body_bytes).unwrap_or_default();
 
-    world.last_response = Some(Response { status, body, headers });
+    world.last_response = Some(Response { status, body, headers, raw_body });
     world.request_headers.clear();
 }
 
@@ -211,8 +213,12 @@ async fn then_response_header_equals(
     header_name: String,
     expected_value: String,
 ) {
-    let default_response =
-        Response { status: 0, body: serde_json::json!({}), headers: http::HeaderMap::new() };
+    let default_response = Response {
+        status: 0,
+        body: serde_json::json!({}),
+        headers: http::HeaderMap::new(),
+        raw_body: String::new(),
+    };
     let response = world.last_response.as_ref().unwrap_or(&default_response);
     let header_value = response
         .headers
@@ -229,8 +235,12 @@ async fn then_response_header_equals(
 
 #[then(regex = r#"^the "([^"]+)" field in response body equals "([^"]+)"$"#)]
 async fn then_body_field_equals(world: &mut World, field_name: String, expected_value: String) {
-    let default_response =
-        Response { status: 0, body: serde_json::json!({}), headers: http::HeaderMap::new() };
+    let default_response = Response {
+        status: 0,
+        body: serde_json::json!({}),
+        headers: http::HeaderMap::new(),
+        raw_body: String::new(),
+    };
     let response = world.last_response.as_ref().unwrap_or(&default_response);
     let actual_value = response.body.get(&field_name).and_then(|v| v.as_str()).unwrap_or("");
 
@@ -243,8 +253,12 @@ async fn then_body_field_equals(world: &mut World, field_name: String, expected_
 
 #[then(regex = r#"^the "([^"]+)" header is a valid UUID or request identifier$"#)]
 async fn then_header_is_uuid(world: &mut World, header_name: String) {
-    let default_response =
-        Response { status: 0, body: serde_json::json!({}), headers: http::HeaderMap::new() };
+    let default_response = Response {
+        status: 0,
+        body: serde_json::json!({}),
+        headers: http::HeaderMap::new(),
+        raw_body: String::new(),
+    };
     let response = world.last_response.as_ref().unwrap_or(&default_response);
     let header_value = response
         .headers
@@ -270,4 +284,20 @@ async fn then_header_is_uuid(world: &mut World, header_name: String) {
             header_value
         );
     }
+}
+
+// ============================================================================
+// Metrics and Raw Body Step Definitions
+// ============================================================================
+
+#[then(regex = r#"^the response body contains "([^"]+)"$"#)]
+async fn then_response_body_contains(world: &mut World, needle: String) {
+    let response = world.last_response.as_ref().expect("no last response");
+
+    assert!(
+        response.raw_body.contains(&needle),
+        "Expected response body to contain {:?}, but it did not. Body: {}",
+        needle,
+        response.raw_body
+    );
 }

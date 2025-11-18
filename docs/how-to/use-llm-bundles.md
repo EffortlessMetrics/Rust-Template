@@ -7,6 +7,38 @@ This guide shows you how to use the template's LLM context bundler to get AI ass
 
 ---
 
+## Quick Reference: Implementing an AC with LLM + Bundles
+
+**1. Generate the bundle:**
+
+```bash
+cargo run -p xtask -- bundle implement_ac
+```
+
+**2. Open `.llm/bundle/implement_ac.md` in your LLM tool** (Claude, ChatGPT, etc.)
+
+**3. Use the suggested prompt from `.llm/contextpack.yaml`:**
+
+- Understand the AC in `specs/spec_ledger.yaml`
+- Inspect the BDD scenario in `specs/features/...`
+- Identify the core and app-http changes needed
+- Propose minimal code changes and tests
+
+**4. Apply changes locally and verify:**
+
+```bash
+cargo run -p xtask -- selftest
+```
+
+**5. If everything passes:**
+
+- Commit your changes
+- Update AC status if needed
+
+See the detailed workflows below for examples of each step.
+
+---
+
 ## What Are Context Bundles?
 
 Context bundles are curated collections of files packaged as markdown, designed to give LLMs exactly the context they need for specific tasks without overwhelming them with irrelevant code.

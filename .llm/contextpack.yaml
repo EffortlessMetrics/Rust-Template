@@ -36,6 +36,19 @@ tasks:
   #   "Implement AC-TPL-005 using patterns from this bundle..."
   #   "Add BDD scenario for AC-XYZ following existing style..."
   implement_ac:
+    description: "Context for implementing a single acceptance criterion end-to-end."
+    prompt: |
+      You are working on a governed Rust service template. Use this bundle to:
+      - Understand the relevant AC in specs/spec_ledger.yaml
+      - Find the corresponding BDD scenario in specs/features
+      - Locate the core and app-http code that needs to change
+      - Make minimal, safe edits that keep selftest passing
+
+      Guidelines:
+      - DO NOT invent new AC IDs; they must exist in spec_ledger.yaml
+      - Follow existing patterns from the bundled code
+      - Tag BDD scenarios with @AC-XXX-YYY
+      - Run `cargo run -p xtask -- selftest` after changes
     max_bytes: 250000
     include:
       - specs/spec_ledger.yaml       # Source of truth for ACs
@@ -43,10 +56,11 @@ tasks:
       - specs/features/**/*.feature  # BDD scenarios (examples)
       - features/*.yaml              # Feature toggle config
       - flags/*.yaml                 # Feature flag definitions
-      - crates/core/src/**/*.rs      # Core business logic patterns
+      - crates/business-core/**/*.rs # Core business logic patterns
+      - crates/app-http/**/*.rs      # HTTP adapter patterns
       - crates/acceptance/src/**/*.rs # Step definition patterns
       - crates/acceptance/tests/**/*.rs
-    description: "Context for implementing an AC: ledger, specs, features, and core code"
+      - docs/tutorials/day-7-first-real-feature.md # Tutorial for reference
 
   # Bundle: implement_feature
   # Use for: Multi-AC feature development, endpoint additions
