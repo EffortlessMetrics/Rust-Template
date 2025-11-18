@@ -1,4 +1,4 @@
-# Rust Spec-as-Code Template (v1.1.0)
+# Rust Spec-as-Code Template (v2.3.0)
 
 **Heavy governance so LLMs can move fast**
 
@@ -63,7 +63,7 @@ This project is opinionated and governance-heavy **on purpose**. It serves two p
 - Policy suite: ✅ Enforcing ledger, features, K8s, privacy rules
 - Selftest harness: ✅ Honest failure reporting
 
-This template is at v1.1.0 and pilot-ready.
+This template is at v2.3.0 and production-ready. Currently in **Pilot Phase** for validation.
 
 
 ## Quick Start
@@ -209,7 +209,7 @@ cargo run -p xtask -- selftest                 # Full validation (CI)
 
 ### Architecture
 
-```
+```text
 crates/
 ├── app-http/       → HTTP adapter (Axum, routes, DTOs)
 ├── core/           → Domain logic (business rules, no HTTP)
@@ -361,6 +361,79 @@ See [CI Examples](.github/workflows/) for 20+ workflow templates you can adapt.
 ---
 
 ## Release Notes
+
+### v2.3.0 (2025-11-17)
+
+**OTLP Tracing + Pilot Infrastructure**
+
+This release completes the three-release observability arc (v2.1.0 → v2.2.0 → v2.3.0) and adds pilot validation infrastructure.
+
+**Added:**
+
+- ✅ OTLP tracing via `telemetry/otlp` feature flag
+- ✅ Pilot project tooling (`scripts/create-pilot.sh`)
+- ✅ Friction log templates and pilot feature catalog
+- ✅ Release Playbook for governed releases
+- ✅ Complete observability stack (logs, metrics, traces)
+
+**Strategic Position:**
+
+- Template is **production-ready** for starting new services
+- Now in **Pilot Phase** for validation through real usage
+- Future evolution will be **demand-driven** based on pilot friction logs
+
+See [CHANGELOG.md](CHANGELOG.md#230---2025-11-17) for full details.
+
+---
+
+### v2.2.0 (2025-11-17)
+
+**Adapter Integration + LLM Ergonomics**
+
+**Added:**
+
+- ✅ DB adapter integration tests (testcontainers + Postgres)
+- ✅ gRPC adapter smoke tests
+- ✅ BDD scenario for `/metrics` endpoint
+- ✅ Enhanced LLM contextpack with richer metadata
+- ✅ VSCode task integration (optional)
+
+See [CHANGELOG.md](CHANGELOG.md#220---2025-11-17) for details.
+
+---
+
+### v2.1.0 (2025-11-17)
+
+**Prometheus Metrics Foundation**
+
+**Added:**
+
+- ✅ `/metrics` endpoint with Prometheus format
+- ✅ HTTP request tracking with labels (method, path, status)
+- ✅ K8s manifests with Prometheus scrape annotations
+- ✅ Rego policies enforcing metrics in staging/prod
+
+See [CHANGELOG.md](CHANGELOG.md#210---2025-11-17) for details.
+
+---
+
+### v2.0.0 (2025-11-17)
+
+**Complete Workspace Stabilization**
+
+Major reorganization into production-grade multi-crate workspace with stabilized APIs.
+
+**Added:**
+
+- ✅ 9 production crates with clear boundaries
+- ✅ Hexagonal architecture fully realized
+- ✅ Async traits for clean adapter interfaces
+- ✅ OTLP telemetry support
+- ✅ Rust-native IaC libraries
+
+See [CHANGELOG.md](CHANGELOG.md#200---2025-11-17) for details.
+
+---
 
 ### v1.1.0 (2025-11-16)
 
