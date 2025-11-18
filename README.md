@@ -71,7 +71,36 @@ This template is at v2.3.0 and production-ready. Currently in **Pilot Phase** fo
 
 ## Quick Start
 
-Choose your path based on your situation:
+**This template is Nix-first.** We believe development environments should be declarative, reproducible, and match CI exactly. If you don't have Nix installed:
+
+```bash
+# Install Nix (one-time setup)
+curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | sh -s -- install
+```
+
+**Can't use Nix?** See [Development Environment](docs/dev-environment.md) for the fallback path.
+
+---
+
+### Quick Start (Template)
+
+**For new services** - Clone and validate everything works:
+
+```bash
+git clone <your-repo-url> && cd Rust-Template
+nix develop                              # Enter reproducible dev environment
+cargo run -p xtask -- selftest           # Validate all 5 governance steps
+```
+
+**What you just got:**
+- ✅ Exact Rust toolchain from `rust-toolchain.toml`
+- ✅ conftest 0.52.0 (policy testing)
+- ✅ All tools pinned to match CI
+- ✅ Full selftest: fmt, clippy, tests, BDD, AC mapping, policies
+
+Continue to [New Service from Template](docs/how-to/new-service-from-template.md) or see [Development Environment](docs/dev-environment.md) for details.
+
+---
 
 ### Quick Start (Pilot Project)
 
@@ -81,8 +110,9 @@ Choose your path based on your situation:
 # From the template repository
 ./scripts/create-pilot.sh my-pilot-service ~/projects/
 
-# Then follow Day 1 workflow
+# Day 1 workflow in the new project
 cd ~/projects/my-pilot-service
+nix develop                              # Enter dev environment
 cargo run -p xtask -- selftest           # Verify setup
 # Add your first AC to specs/spec_ledger.yaml
 cargo run -p xtask -- bundle implement_ac # Get LLM context
@@ -91,17 +121,7 @@ cargo run -p xtask -- bundle implement_ac # Get LLM context
 
 This creates a fresh project from v2.3.0, sets up friction logging, and guides you through real feature development. Continue to [Pilot Workflow](#pilot-workflow).
 
-### Quick Start (Template)
-
-**For new services** - Clone and validate everything:
-
-```bash
-git clone <your-repo-url> && cd Rust-Template
-nix develop
-cargo run -p xtask -- quickstart
-```
-
-This runs all checks, tests, and bundler to prove the template works. Continue to [New Service from Template](docs/how-to/new-service-from-template.md).
+---
 
 ### Quick Start (Library)
 

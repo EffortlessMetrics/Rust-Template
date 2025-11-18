@@ -14,6 +14,19 @@ This repository is designed for **LLM-assisted development** with built-in gover
 - 🤖 **Bounded Context**: LLM bundles generated via `xtask bundle` with automatic size limits
 - ✅ **Safety Rails**: Selftest validates fmt, clippy, tests, BDD scenarios, and policy compliance
 - 🎯 **AC-First Flow**: Always work from existing ACs, never invent new IDs
+- 🔧 **Nix-First**: Declarative dev environment matching CI exactly
+
+**Development Environment**: This template uses Nix for reproducible development. Always run commands inside `nix develop`:
+
+```bash
+# Enter the development shell (first time or new session)
+nix develop
+
+# Now all tools are pinned: Rust, conftest, yq, etc.
+cargo run -p xtask -- selftest  # Full validation including policies
+```
+
+If you can't use Nix, see [docs/dev-environment.md](docs/dev-environment.md) for the fallback path. Policy tests will be skipped locally but still enforced in CI.
 
 ---
 
@@ -264,7 +277,12 @@ tasks:
 
 ### Using Claude Code CLI
 
+**Always work inside the Nix devshell for full validation:**
+
 ```bash
+# Enter development environment
+nix develop
+
 # Generate bundle
 cargo run -p xtask -- bundle implement_ac
 
@@ -273,7 +291,7 @@ code .llm/bundle/implement_ac.md
 
 # Paste standard prompt, let LLM propose changes
 
-# Validate
+# Validate (includes policy tests)
 cargo run -p xtask -- selftest
 
 # Commit when green
@@ -283,12 +301,15 @@ git commit -m "feat(core): implement AC-XXX-YYY - [description]"
 
 ### Using Cursor or Similar
 
-1. Generate bundle: `cargo run -p xtask -- bundle implement_ac`
-2. Open `.llm/bundle/implement_ac.md` in Cursor
-3. Use Cursor's chat with the standard prompt
-4. Apply suggested changes
-5. Run `cargo run -p xtask -- selftest` in terminal
-6. Commit when passing
+**Run inside `nix develop` for CI-equivalent validation:**
+
+1. Enter devshell: `nix develop`
+2. Generate bundle: `cargo run -p xtask -- bundle implement_ac`
+3. Open `.llm/bundle/implement_ac.md` in Cursor
+4. Use Cursor's chat with the standard prompt
+5. Apply suggested changes
+6. Run `cargo run -p xtask -- selftest` in terminal (all 5 steps pass)
+7. Commit when passing
 
 ### CI Integration
 

@@ -145,6 +145,14 @@ pub fn run_with_verbosity(verbosity: crate::Verbosity) -> Result<()> {
                     failed += 1;
                 } else {
                     println!("  {} Policy tests skipped: conftest not found", "⚠".yellow());
+
+                    // Check if nix is available and provide helpful hint
+                    if which::which("nix").is_ok() {
+                        println!("  💡 Hint: Run {} for full validation", "nix develop -c cargo run -p xtask -- selftest".cyan());
+                    } else {
+                        println!("  💡 For full policy testing, see: {}", "docs/dev-environment.md".cyan());
+                    }
+
                     if verbosity.is_verbose() {
                         println!("\n{}", e);
                     }
