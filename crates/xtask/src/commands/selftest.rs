@@ -148,9 +148,15 @@ pub fn run_with_verbosity(verbosity: crate::Verbosity) -> Result<()> {
 
                     // Check if nix is available and provide helpful hint
                     if which::which("nix").is_ok() {
-                        println!("  💡 Hint: Run {} for full validation", "nix develop -c cargo run -p xtask -- selftest".cyan());
+                        println!(
+                            "  💡 Hint: Run {} for full validation",
+                            "nix develop -c cargo run -p xtask -- selftest".cyan()
+                        );
                     } else {
-                        println!("  💡 For full policy testing, see: {}", "docs/dev-environment.md".cyan());
+                        println!(
+                            "  💡 For full policy testing, see: {}",
+                            "docs/dev-environment.md".cyan()
+                        );
                     }
 
                     if verbosity.is_verbose() {
