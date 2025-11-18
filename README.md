@@ -70,6 +70,24 @@ This template is at v1.1.0 and pilot-ready.
 
 Choose your path based on your situation:
 
+### Quick Start (Pilot Project)
+
+**Want to validate the template?** - Create a greenfield pilot to test real usage:
+
+```bash
+# From the template repository
+./scripts/create-pilot.sh my-pilot-service ~/projects/
+
+# Then follow Day 1 workflow
+cd ~/projects/my-pilot-service
+cargo run -p xtask -- selftest           # Verify setup
+# Add your first AC to specs/spec_ledger.yaml
+cargo run -p xtask -- bundle implement_ac # Get LLM context
+# Track friction in FRICTION_LOG.md
+```
+
+This creates a fresh project from v2.3.0, sets up friction logging, and guides you through real feature development. Continue to [Pilot Workflow](#pilot-workflow).
+
 ### Quick Start (Template)
 
 **For new services** - Clone and validate everything:
@@ -102,6 +120,42 @@ cargo run -p xtask -- ac-status
 ```
 
 Continue to [Brownfield Guide](docs/how-to/add-governance-to-existing-repo.md) for incremental adoption.
+
+### Pilot Workflow
+
+**For validating the template in real usage** - The pilot workflow helps you identify template friction:
+
+```bash
+# 1. Create pilot project
+./scripts/create-pilot.sh task-api ~/projects/
+
+# 2. Day 0 - Verify setup
+cd ~/projects/task-api
+cargo run -p xtask -- selftest
+
+# 3. Day 1+ - Implement features
+# a. Add AC to specs/spec_ledger.yaml
+# b. Add BDD scenario to specs/features/
+# c. Generate context
+cargo run -p xtask -- bundle implement_ac
+# d. Feed .llm/bundle/implement_ac.md to your LLM
+# e. Apply changes
+# f. Validate
+cargo run -p xtask -- selftest
+
+# 4. Record friction
+# Every rough edge → FRICTION_LOG.md
+# Missing docs, confusing behavior, unclear errors
+
+# 5. After 1-2 weeks
+# Review FRICTION_LOG.md
+# Classify: 🔴 Blockers / 🟡 Annoyances / 🟢 Nice-to-have
+# Decide: Does template need patches or is it "good enough"?
+```
+
+**Goal:** Understand template usability through real development, not speculation.
+
+See [Release Playbook](docs/RELEASE_PLAYBOOK.md) for how friction logs inform template evolution.
 
 ### Developer Workflow
 
