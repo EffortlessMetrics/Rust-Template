@@ -1,3 +1,7 @@
+# Template Version: v2.3.0
+# Schema: spec_ledger.yaml v1.0
+# Last Updated: 2025-11-17
+
 Feature: Template Core Endpoints
   As a service operator
   I want standard operational endpoints

@@ -1,3 +1,7 @@
+# Template Version: v2.3.0 (added in v2.1.0)
+# Schema: spec_ledger.yaml v1.0
+# Last Updated: 2025-11-17
+
 Feature: Metrics endpoint
   As an operator
   I want the service to expose HTTP metrics

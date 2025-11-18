@@ -1,3 +1,12 @@
+# Spec Ledger: Story → Requirement → Acceptance Criteria → Tests mapping
+# This file defines the canonical traceability from user stories to test coverage
+
+metadata:
+  schema_version: "1.0"
+  template_version: "2.3.0"
+  last_updated: "2025-11-17"
+  description: "Template core capabilities - v2.3.0 includes health, version, errors, and metrics"
+
 stories:
   # Template Core - Keep and extend these in your service
   - id: US-TPL-001

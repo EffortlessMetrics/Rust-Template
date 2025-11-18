@@ -211,12 +211,14 @@ cargo run -p xtask -- selftest                 # Full validation (CI)
 
 ```text
 crates/
-├── app-http/       → HTTP adapter (Axum, routes, DTOs)
-├── core/           → Domain logic (business rules, no HTTP)
-├── model/          → Domain entities and value objects
-├── telemetry/      → Observability (tracing setup)
-├── acceptance/     → BDD tests (cucumber-rs)
-└── xtask/          → Dev/CI tooling
+├── app-http/         → HTTP adapter (Axum, routes, DTOs)
+├── business-core/    → Domain logic (business rules, no HTTP)
+├── model/            → Domain entities and value objects
+├── adapters-db-sqlx/ → Postgres adapter (sqlx)
+├── adapters-grpc/    → gRPC adapter (tonic)
+├── telemetry/        → Observability (tracing & OTLP export)
+├── acceptance/       → BDD tests (cucumber-rs)
+└── xtask/            → Dev/CI tooling
 ```
 
 **Key pattern:** Dependencies point inward
@@ -428,7 +430,7 @@ Major reorganization into production-grade multi-crate workspace with stabilized
 - ✅ 9 production crates with clear boundaries
 - ✅ Hexagonal architecture fully realized
 - ✅ Async traits for clean adapter interfaces
-- ✅ OTLP telemetry support
+- ✅ Telemetry scaffolding (tracing, metrics stubs)
 - ✅ Rust-native IaC libraries
 
 See [CHANGELOG.md](CHANGELOG.md#200---2025-11-17) for details.
@@ -480,5 +482,5 @@ This release clarifies the template's purpose: it's governance-heavy **on purpos
 
 **Sample Implementation:**
 
-- ✅ ?????? API sample: coherent across specs, OpenAPI, handlers, tests
+- ✅ Refund API sample: coherent across specs, OpenAPI, handlers, tests
 - ✅ Living enforcement: BDD validates production code paths

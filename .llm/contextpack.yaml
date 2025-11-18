@@ -1,5 +1,9 @@
 # LLM Context Pack Configuration
 #
+# Template Version: v2.3.0
+# Schema Version: 1.0
+# Last Updated: 2025-11-17
+#
 # This file defines context bundles for LLM-assisted development.
 # Each bundle packages relevant files into markdown for AI code generation.
 #
