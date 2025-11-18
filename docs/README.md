@@ -326,7 +326,7 @@ The template has completed a three-release observability arc and is now in **pil
 - **v2.4.0 features** - If quality-of-life improvements needed
 - **Template "good enough"** - Continue as-is, address issues reactively
 
-**Full roadmap**: [ROADMAP.md](ROADMAP.md)
+Development is now driven by pilot feedback rather than speculative features. See version-specific plans in `docs/v2.*.md`.
 
 ---
 
@@ -511,4 +511,4 @@ This documentation is for **Rust Template v2.3.0**.
 - 🔄 Analyze friction logs
 - 🔄 Determine: v2.3.1 patch, v2.4.0 features, or status quo
 
-See [ROADMAP.md](ROADMAP.md) for strategic direction.
+Further development driven by real pilot feedback. See `docs/v2.3.0-plan.md` for current strategic context.

@@ -553,8 +553,8 @@ cargo run -p xtask -- bundle implement_ac
 - **How-to**: `docs/how-to/new-service-from-template.md` - creating a new service
 - **Explanation**: `docs/explanation/hexagonal-architecture.md` - architecture principles
 - **Reference**: `docs/reference/xtask-commands.md` - all xtask commands
-- **Roadmap**: `docs/ROADMAP.md` - template evolution and pilot process
 - **Changelog**: `CHANGELOG.md` - version history
+- **Release Plans**: `docs/v2.*.md` - per-version release planning and retrospectives
 
 ---
 
