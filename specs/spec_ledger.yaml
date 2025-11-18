@@ -24,6 +24,12 @@ stories:
           - id: AC-TPL-004
             text: "Handlers propagate or generate X-Request-ID and expose it in responses"
             tests: [ { type: bdd, tag: "@AC-TPL-004" } ]
+      - id: REQ-TPL-METRICS
+        title: "Prometheus Metrics Endpoint"
+        acceptance_criteria:
+          - id: AC-TPL-007
+            text: "GET /metrics returns Prometheus-formatted metrics including http_requests_total"
+            tests: [ { type: bdd, tag: "@AC-TPL-007" } ]
 
   # When adding your domain features:
   # - Copy the structure above (story → requirement → AC → tests)
