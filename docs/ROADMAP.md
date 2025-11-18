@@ -169,9 +169,9 @@ After the pilot phase and any immediate follow-up (v2.3.1 or v2.4.0), the templa
 
 These are not planned features—they're examples of what *might* happen if pilot projects demand them.
 
-**Observability:**
+**Observability (examples):**
 
-- Logs export via OTLP (currently console-only)
+- OTLP log export (today: traces via OTLP, logs to console)
 - Custom trace attributes (user_id, tenant_id)
 - Distributed tracing examples across adapters
 - Structured logging improvements

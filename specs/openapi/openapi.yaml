@@ -3,10 +3,20 @@ info:
   title: Service API
   version: 1.0.0
   description: |
-    Template-based service API.
+    Template-based service API (Template v2.3.0).
 
-    Core endpoints (/health, /version) are part of the template foundation.
-    Domain endpoints (e.g., /refunds) are examples to adapt or replace.
+    **Template Core Endpoints** (Keep these):
+    - /health - Health check (AC-TPL-001)
+    - /version - Build information (AC-TPL-002)
+    - /metrics - Prometheus metrics (AC-TPL-007)
+    - Error envelope - Standardized errors (AC-TPL-003, AC-TPL-004)
+
+    **Domain Endpoints** (Replace with your service):
+    - /refunds - Example domain endpoint to adapt or remove
+
+  x-template-version: "2.3.0"
+  x-schema-version: "1.0"
+  x-last-updated: "2025-11-17"
 
 paths:
   # Template Core - Keep these in your service
