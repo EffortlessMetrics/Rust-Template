@@ -729,6 +729,20 @@ For users upgrading from v1.x:
 
 ## [Unreleased]
 
+### Changed
+
+**Documentation Cleanup (2025-11-19):**
+
+- **Removed** `scripts/create-pilot.sh` - Replaced with explicit GitHub template + git instructions
+  - Shell scaffolding didn't align with Rust-native, xtask-driven philosophy
+  - GitHub "Use this template" provides better first-class experience
+  - Manual git clone path is now fully documented as fallback
+- **Updated** documentation with clear bootstrap instructions:
+  - `README.md` - Pilot Workflow section now shows both GitHub template and manual clone paths
+  - `CLAUDE.md` - Updated "Pilot Workflow" and "Create a Pilot Project" prompts
+  - `docs/README.md` - Updated Pilot Projects section with explicit git commands
+- **Rationale**: Template instantiation is better served by GitHub's built-in features and documented git steps than by an opaque shell script. All "real" automation lives in Rust (xtask), Rego, or Nix.
+
 ### Post-v2.3.0: Pilot Infrastructure
 
 **Added** (2025-11-17, commits fe0a00e, 2615dbc):
@@ -767,9 +781,9 @@ For users upgrading from v1.x:
 - Pilot infrastructure enables validation through real usage before planning v2.4.0
 - Template evolution should be informed by pilot friction logs, not feature speculation
 
-**Usage:**
+**Usage (Historical - script removed 2025-11-19, see "Changed" section above):**
 ```bash
-# Create pilot project
+# Original workflow (now replaced with GitHub template + git instructions)
 ./scripts/create-pilot.sh my-pilot-service ~/projects/
 
 # Follow Day 1 workflow
@@ -778,6 +792,8 @@ cargo run -p xtask -- selftest
 # Implement features, track friction in FRICTION_LOG.md
 # After 1-2 weeks: review friction, decide on v2.3.1/v2.4.0
 ```
+
+**Current workflow:** See README.md "Pilot Workflow" section for GitHub template + manual git clone instructions.
 
 ### Planned for Later
 

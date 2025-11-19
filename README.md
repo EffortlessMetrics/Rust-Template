@@ -124,25 +124,6 @@ Continue to [New Service from Template](docs/how-to/new-service-from-template.md
 
 ---
 
-### Quick Start (Pilot Project)
-
-**Want to validate the template?** - Create a greenfield pilot to test real usage:
-
-```bash
-# From the template repository
-./scripts/create-pilot.sh my-pilot-service ~/projects/
-
-# Day 1 workflow in the new project
-cd ~/projects/my-pilot-service
-nix develop                              # Enter dev environment
-cargo run -p xtask -- selftest           # Verify setup
-# Add your first AC to specs/spec_ledger.yaml
-cargo run -p xtask -- bundle implement_ac # Get LLM context
-# Track friction in FRICTION_LOG.md
-```
-
-This creates a fresh project from v2.3.0, sets up friction logging, and guides you through real feature development. Continue to [Pilot Workflow](#pilot-workflow).
-
 ---
 
 ### Quick Start (Library)
@@ -166,36 +147,59 @@ cargo run -p xtask -- ac-status
 
 Continue to [Brownfield Guide](docs/how-to/add-governance-to-existing-repo.md) for incremental adoption.
 
-### Pilot Workflow
+---
 
-**For validating the template in real usage** - The pilot workflow helps you identify template friction:
+### Pilot Workflow (Validating the Template)
+
+**Want to validate the template in real usage?** Create a greenfield pilot project:
+
+**Option 1: GitHub "Use this template" (Recommended)**
 
 ```bash
-# 1. Create pilot project
-./scripts/create-pilot.sh task-api ~/projects/
+# 1. In GitHub UI:
+#    - Click "Use this template"
+#    - Name: task-api-pilot
+#    - Create repository
 
-# 2. Day 0 - Verify setup
-cd ~/projects/task-api
+# 2. Clone and validate
+git clone git@github.com:your-org/task-api-pilot.git
+cd task-api-pilot
+nix develop
 cargo run -p xtask -- selftest
+```
 
-# 3. Day 1+ - Implement features
-# a. Add AC to specs/spec_ledger.yaml
-# b. Add BDD scenario to specs/features/
-# c. Generate context
+**Option 2: Manual git clone**
+
+```bash
+# 1. Clone and reset git
+git clone git@github.com:EffortlessMetrics/Rust-Template.git task-api-pilot
+cd task-api-pilot
+rm -rf .git
+git init
+git remote add origin git@github.com:your-org/task-api-pilot.git
+
+# 2. Validate
+nix develop
+cargo run -p xtask -- selftest
+```
+
+**Day 1+ Development Loop:**
+
+```bash
+# 1. Add AC to specs/spec_ledger.yaml
+# 2. Add BDD scenario to specs/features/
+# 3. Generate context
 cargo run -p xtask -- bundle implement_ac
-# d. Feed .llm/bundle/implement_ac.md to your LLM
-# e. Apply changes
-# f. Validate
+# 4. Feed .llm/bundle/implement_ac.md to your LLM
+# 5. Apply changes
+# 6. Validate
 cargo run -p xtask -- selftest
+# 7. Record friction in FRICTION_LOG.md
 
-# 4. Record friction
-# Every rough edge → FRICTION_LOG.md
-# Missing docs, confusing behavior, unclear errors
-
-# 5. After 1-2 weeks
-# Review FRICTION_LOG.md
-# Classify: 🔴 Blockers / 🟡 Annoyances / 🟢 Nice-to-have
-# Decide: Does template need patches or is it "good enough"?
+# After 1-2 weeks:
+# - Review FRICTION_LOG.md
+# - Classify: 🔴 Blockers / 🟡 Annoyances / 🟢 Nice-to-have
+# - Decide: template patches needed or "good enough"?
 ```
 
 **Goal:** Understand template usability through real development, not speculation.

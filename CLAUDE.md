@@ -184,7 +184,7 @@ After implementation, I will run: cargo run -p xtask -- selftest
 ```text
 You are helping create a new service from the Rust Template (v2.3.0).
 
-Context: I've run ./scripts/create-pilot.sh and have a fresh copy.
+Context: I've created a new project using GitHub's "Use this template" or manual git clone.
 
 Task: Help implement the first feature for a new domain.
 
@@ -519,18 +519,42 @@ See `docs/explanation/template-versioning.md` for the versioning scheme.
 
 When creating a new service from the template:
 
-```bash
-# 1. Create pilot project
-./scripts/create-pilot.sh my-service ~/projects/
+**Option 1: GitHub "Use this template"**
 
-# 2. Enter pilot directory
-cd ~/projects/my-service
+```bash
+# 1. In GitHub UI, click "Use this template" → create repo → clone locally
+git clone git@github.com:your-org/my-service.git
+cd my-service
+
+# 2. Enter dev environment
+nix develop
 
 # 3. Verify template works
 cargo run -p xtask -- selftest
+```
 
+**Option 2: Manual git clone**
+
+```bash
+# 1. Clone and reset git
+git clone git@github.com:EffortlessMetrics/Rust-Template.git my-service
+cd my-service
+rm -rf .git
+git init
+git remote add origin git@github.com:your-org/my-service.git
+
+# 2. Enter dev environment
+nix develop
+
+# 3. Verify template works
+cargo run -p xtask -- selftest
+```
+
+**Development Loop (both options):**
+
+```bash
 # 4. Plan features
-# - Review PILOT_FEATURE_IDEAS.md
+# - Review PILOT_FEATURE_IDEAS.md (if exists)
 # - Choose 3-5 features
 # - Add ACs to specs/spec_ledger.yaml
 
@@ -625,7 +649,7 @@ cargo run -p xtask -- selftest              # Validate
 git commit                                  # Commit when green
 ```
 
-**Next step**: Run a pilot project with `./scripts/create-pilot.sh` and track real-world friction in `FRICTION_LOG.md`.
+**Next step**: Run a pilot project (use GitHub "Use this template" or manual git clone as shown in [Pilot Workflow](#pilot-workflow)) and track real-world friction in `FRICTION_LOG.md`.
 
 ---
 

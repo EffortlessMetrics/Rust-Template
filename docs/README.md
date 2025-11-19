@@ -30,14 +30,33 @@ This documentation follows the [Diátaxis](https://diataxis.fr/) framework:
 **Want to validate the template before committing?** Create a greenfield pilot project to test real-world usage.
 
 ### Quick Start
-```bash
-# From the template repository
-./scripts/create-pilot.sh my-pilot-service ~/projects/
 
-# Then follow Day 1 workflow
-cd ~/projects/my-pilot-service
-cargo run -p xtask -- selftest           # Verify setup
-# Implement features, track friction in FRICTION_LOG.md
+**Option 1: GitHub "Use this template"**
+
+```bash
+# 1. In GitHub UI: click "Use this template" → create repo
+# 2. Clone locally
+git clone git@github.com:your-org/my-pilot-service.git
+cd my-pilot-service
+
+# 3. Enter dev environment and validate
+nix develop
+cargo run -p xtask -- selftest
+```
+
+**Option 2: Manual git clone**
+
+```bash
+# 1. Clone and reset git
+git clone git@github.com:EffortlessMetrics/Rust-Template.git my-pilot-service
+cd my-pilot-service
+rm -rf .git
+git init
+git remote add origin git@github.com:your-org/my-pilot-service.git
+
+# 2. Enter dev environment and validate
+nix develop
+cargo run -p xtask -- selftest
 ```
 
 ### Resources
@@ -316,7 +335,7 @@ The template has completed a three-release observability arc and is now in **pil
 - ✅ Release playbook and pilot evaluation tooling
 
 ### Next Phase: Pilot Validation (1-2 weeks)
-1. Create pilot project with `./scripts/create-pilot.sh`
+1. Create pilot project (GitHub "Use this template" or manual clone)
 2. Implement 3-5 real features
 3. Track friction in FRICTION_LOG.md
 4. Analyze friction to determine next steps
