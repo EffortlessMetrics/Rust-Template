@@ -1,12 +1,15 @@
 [package]
 name = "rust_iac_config"
 version = "0.1.0"
+authors = ["Steven Zimmerman <git@effortlesssteven.com>"]
 edition.workspace = true
 license.workspace = true
 rust-version.workspace = true
-description = "Generic YAML-based infrastructure configuration library for Rust IaC projects"
+description = "YAML-based infrastructure configuration library for Rust IaC projects with validation rules"
 repository = "https://github.com/EffortlessMetrics/Rust-Template"
-keywords = ["iac", "infrastructure", "config", "yaml", "validation"]
+homepage = "https://github.com/EffortlessMetrics/Rust-Template"
+readme = "README.md"
+keywords = ["iac", "config", "yaml", "validation", "infrastructure"]
 categories = ["config", "development-tools"]
 
 [lib]
