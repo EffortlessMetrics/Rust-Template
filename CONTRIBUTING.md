@@ -1,0 +1,206 @@
+# Contributing to Rust Spec-as-Code Template
+
+Thanks for taking the time to contribute.
+
+This repo is a **governed Rust service template + library**. It bakes in:
+
+- spec-as-code (ledger → features → tests → code),
+- policy-as-code (Rego),
+- LLM-assisted workflows (bundles, CLAUDE.md),
+- Nix-pinned dev environment.
+
+That means contributions should preserve (or improve) those properties, not bypass them.
+
+---
+
+## 1. Before you start
+
+### 1.1 Prerequisites
+
+- Rust (managed via `rustup`, but we use `rust-toolchain.toml` in Nix)
+- Nix (recommended) or a native toolchain
+- Git, GitHub account
+
+Recommended:
+
+- `just`
+- `direnv` (optional, if you want auto devshell activation)
+
+### 1.2 Dev environment
+
+**Golden path (Nix):**
+
+```bash
+git clone https://github.com/EffortlessMetrics/Rust-Template.git
+cd Rust-Template
+
+# Enter devshell (Rust, conftest, yq, etc. pinned to match CI)
+nix develop
+
+# Sanity check
+cargo run -p xtask -- selftest
+```
+
+**Fallback (no Nix):**
+
+See [`docs/dev-environment.md`](docs/dev-environment.md). In this mode:
+
+* Core checks and BDD work as usual.
+* Policy tests are *skipped* locally unless you install `conftest` yourself.
+* CI always enforces policies.
+
+---
+
+## 2. How to work on changes
+
+### 2.1 Branching
+
+Use topic branches:
+
+* `feat/<area>-<short-description>`
+* `fix/<area>-<short-description>`
+* `docs/<area>-<short-description>`
+
+Example:
+
+* `feat/app-http-refund-api`
+* `fix/policy-k8s-envfrom`
+* `docs/llm-workflow-clarifications`
+
+### 2.2 Commit messages
+
+Short, imperative subject:
+
+* `feat(app-http): add refund endpoint`
+* `fix(policy): avoid var shadowing in envFrom rule`
+* `docs: clarify Nix-first dev workflow`
+
+If a commit addresses a specific AC or issue, reference it in the body:
+
+```text
+Implements AC-TPL-007 for metrics endpoint
+Fixes #123
+```
+
+---
+
+## 3. What "done" means here
+
+### 3.1 Always run `selftest`
+
+Before opening a PR:
+
+```bash
+# Inside nix develop (preferred)
+cargo run -p xtask -- selftest
+```
+
+That runs:
+
+1. `fmt` + `clippy` + tests
+2. BDD (Cucumber)
+3. AC status mapping
+4. LLM bundler checks
+5. Policy tests (if `conftest` available, always in CI)
+
+If you *must* skip some work locally (e.g., no Nix), make sure CI is green.
+
+### 3.2 Keep the hexagonal architecture intact
+
+* Domain logic stays in `business-core` and `model`.
+* Adapters (HTTP, gRPC, DB) live in their crates and depend inward.
+* Don't pull adapters into `business-core`.
+
+If you're unsure: check `docs/explanation/hexagonal-architecture.md`.
+
+### 3.3 Respect the governance model
+
+When you add or change behavior:
+
+1. **Spec** – update `specs/spec_ledger.yaml` with ACs and stories if needed.
+2. **BDD** – add/update `.feature` scenarios in `specs/features/`.
+3. **Code** – implement in the right crate (model/core/app-http/etc.).
+4. **Tests** – add unit/integration tests as needed.
+5. **Policies** – if infra/LLM behavior changes, update Rego + testdata.
+
+---
+
+## 4. Making changes: step-by-step
+
+A typical feature flow:
+
+1. Pick an AC (or add one) in `specs/spec_ledger.yaml`.
+
+2. Add/update the matching scenario in `specs/features/*.feature`.
+
+3. Generate an LLM bundle:
+
+   ```bash
+   cargo run -p xtask -- bundle implement_ac
+   ```
+
+4. Use the instructions and prompts in `CLAUDE.md` to drive LLM-assisted changes.
+
+5. Apply/curate the changes locally.
+
+6. Run:
+
+   ```bash
+   cargo run -p xtask -- selftest
+   ```
+
+7. Commit and open a PR.
+
+---
+
+## 5. Tests
+
+Useful commands:
+
+```bash
+# Fast path
+cargo run -p xtask -- check
+
+# Full template validation
+cargo run -p xtask -- selftest
+
+# Unit tests
+cargo test --workspace
+
+# BDD only
+cargo run -p xtask -- bdd
+
+# Policy tests only (if conftest installed)
+cargo run -p xtask -- policy-test
+```
+
+Some tests are marked `#[ignore]` when they:
+
+* manipulate global state (e.g., `set_current_dir`),
+* or require external dependencies (e.g., Docker).
+
+Those tests include comments explaining how to run them explicitly.
+
+---
+
+## 6. Style and tooling
+
+* Rust code: `rustfmt` + `clippy -D warnings`
+* Rego: keep rules small and name things for intent, not implementation.
+* YAML: prefer explicit structure over "clever" anchors for template users.
+* Docs: short sections, headings, and examples. Avoid walls of text where possible.
+
+---
+
+## 7. Questions / Discussions
+
+If you're unsure whether a change fits:
+
+* Open a draft PR and describe:
+
+  * the problem,
+  * the AC or use case,
+  * your proposed approach.
+* Or open an issue referencing relevant ACs / features / policies.
+
+Thanks again for contributing. This template is expressly meant to be **used** and **evolved** by people who care about governed, AI-assisted Rust services.

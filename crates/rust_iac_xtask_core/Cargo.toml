@@ -1,10 +1,15 @@
 [package]
 name = "rust_iac_xtask_core"
 version = "0.1.0"
+authors = ["Steven Zimmerman <git@effortlesssteven.com>"]
 edition = "2021"
 license = "Apache-2.0 OR MIT"
-description = "Core library for Rust IaC xtask automation"
+description = "Governance & xtask orchestration core for Rust IaC projects with spec-as-code and policy validation"
 repository = "https://github.com/EffortlessMetrics/Rust-Template"
+homepage = "https://github.com/EffortlessMetrics/Rust-Template"
+readme = "README.md"
+keywords = ["xtask", "governance", "devops", "policy", "spec-as-code"]
+categories = ["development-tools", "development-tools::build-utils"]
 
 [dependencies]
 anyhow = "1.0.100"

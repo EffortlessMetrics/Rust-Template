@@ -61,10 +61,42 @@ nix develop
 # Every subsequent session
 nix develop
 
-# Or make it automatic with direnv
+# Optional: Use just for common commands
+just dev       # Enter devshell
+just selftest  # Run full validation
+just check     # Fast checks (fmt, clippy, tests)
+just bdd       # BDD scenarios only
+```
+
+**Optional: Automatic Devshell with Direnv**
+
+If you use `direnv`, you can make the Nix devshell activate automatically when you `cd` into the repo:
+
+```bash
+# Create .envrc (not committed by default)
 echo "use flake" > .envrc
+
+# Allow direnv to load it
 direnv allow
-# Now the devshell activates when you cd into the repo
+
+# From now on, your shell drops into the Nix devshell automatically
+cd /path/to/Rust-Template  # → devshell activates
+cd ~                        # → devshell deactivates
+```
+
+This pattern is supported but not required. We don't commit `.envrc` to avoid surprising environments for users who don't use direnv.
+
+If you want this pattern, install direnv first:
+
+```bash
+# On macOS
+brew install direnv
+
+# On Linux/WSL
+sudo apt install direnv  # or equivalent for your distro
+
+# Then add to your shell profile (~/.bashrc, ~/.zshrc, etc.):
+eval "$(direnv hook bash)"  # or zsh, fish, etc.
 ```
 
 **Validation:**
