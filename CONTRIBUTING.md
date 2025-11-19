@@ -122,6 +122,11 @@ When you add or change behavior:
 3. **Code** – implement in the right crate (model/core/app-http/etc.).
 4. **Tests** – add unit/integration tests as needed.
 5. **Policies** – if infra/LLM behavior changes, update Rego + testdata.
+6. **ADRs** – for significant architectural changes:
+   - Copy `docs/templates/ADR-TEMPLATE.md` to `docs/adr/00XX-your-decision.md`
+   - Fill in context, decision, and consequences
+   - Reference it in `specs/spec_ledger.yaml` (at story/requirement/AC level as appropriate)
+   - Run `cargo run -p xtask -- adr-check` to validate references
 
 ---
 
