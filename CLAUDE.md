@@ -10,11 +10,12 @@
 
 This repository is designed for **LLM-assisted development** with built-in governance rails. The template provides:
 
-- 📋 **Spec-as-Code**: All features tracked as acceptance criteria (ACs) in `specs/spec_ledger.yaml`
-- 🤖 **Bounded Context**: LLM bundles generated via `xtask bundle` with automatic size limits
-- ✅ **Safety Rails**: Selftest validates fmt, clippy, tests, BDD scenarios, and policy compliance
+- 📋 **Spec-as-Code**: All features tracked as acceptance criteria (ACs) in `specs/spec_ledger.yaml` ([ADR-0003](docs/adr/0003-spec-and-bdd-as-source-of-truth.md))
+- 🤖 **Bounded Context**: LLM bundles generated via `xtask bundle` with automatic size limits ([ADR-0004](docs/adr/0004-policy-and-llm-governance.md))
+- ✅ **Safety Rails**: Selftest validates fmt, clippy, tests, BDD scenarios, and policy compliance ([ADR-0005](docs/adr/0005-xtask-selftest-single-gate.md))
 - 🎯 **AC-First Flow**: Always work from existing ACs, never invent new IDs
-- 🔧 **Nix-First**: Declarative dev environment matching CI exactly
+- 🔧 **Nix-First**: Declarative dev environment matching CI exactly ([ADR-0002](docs/adr/0002-nix-first-dev-env.md))
+- 🏛️ **Hexagonal Architecture**: Business logic in core, adapters for HTTP/gRPC/DB ([ADR-0001](docs/adr/0001-hexagonal-architecture.md))
 
 **Development Environment**: This template uses Nix for reproducible development. Always run commands inside `nix develop`:
 
@@ -222,7 +223,8 @@ I will validate with: cargo run -p xtask -- selftest
 ### 🛡️ Human-Owned (LLM Should Ask First)
 
 - **New AC IDs**: Must follow project convention and be added deliberately
-- **Policy files** (`policies/*.rego`): Security/governance rules
+- **ADRs** (`docs/adr/*.md`): Architectural decisions (see [ADR template](docs/templates/ADR-TEMPLATE.md))
+- **Policy files** (`policies/*.rego`): Security/governance rules (see [controls-as-code](docs/explanation/controls-as-code.md))
 - **Infrastructure** (`k8s/*.yaml`, Nix configs): Deployment concerns
 - **Schema version changes**: Breaking changes to spec_ledger schema
 - **CI workflows** (`.github/workflows/`): Build/deploy automation
@@ -570,10 +572,36 @@ cargo run -p xtask -- bundle implement_ac
 
 ## Resources
 
+### Tutorials and How-Tos
+
 - **Tutorial**: `docs/tutorials/first-ac-change.md` - walkthrough of implementing your first AC
 - **How-to**: `docs/how-to/new-service-from-template.md` - creating a new service
+
+### Architectural Decisions (ADRs)
+
+- **ADR Index**: `docs/adr/` - all architectural decision records
+- **ADR Template**: `docs/templates/ADR-TEMPLATE.md` - template for new ADRs
+- **Key ADRs**:
+  - [ADR-0001: Hexagonal Architecture](docs/adr/0001-hexagonal-architecture.md)
+  - [ADR-0002: Nix-First Dev Environment](docs/adr/0002-nix-first-dev-env.md)
+  - [ADR-0003: Spec and BDD as Source of Truth](docs/adr/0003-spec-and-bdd-as-source-of-truth.md)
+  - [ADR-0004: Policy and LLM Governance](docs/adr/0004-policy-and-llm-governance.md)
+  - [ADR-0005: Selftest as Single Gate](docs/adr/0005-xtask-selftest-single-gate.md)
+
+### Explanations and Reference
+
 - **Explanation**: `docs/explanation/hexagonal-architecture.md` - architecture principles
+- **Explanation**: `docs/explanation/controls-as-code.md` - policy governance
 - **Reference**: `docs/reference/xtask-commands.md` - all xtask commands
+- **Testing**: `docs/testing-strategy.md` - complete test layer documentation
+
+### Templates for Services
+
+- **Service Metadata**: `docs/templates/SERVICE_METADATA.example.yaml` - service self-description
+- **Runbook**: `docs/templates/RUNBOOK.example.md` - operations guide template
+
+### Changelog and Plans
+
 - **Changelog**: `CHANGELOG.md` - version history
 - **Release Plans**: `docs/v2.*.md` - per-version release planning and retrospectives
 

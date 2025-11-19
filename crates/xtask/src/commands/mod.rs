@@ -1,4 +1,5 @@
 pub mod ac_status;
+pub mod adr_check;
 pub mod bdd;
 pub mod bundle;
 pub mod check;

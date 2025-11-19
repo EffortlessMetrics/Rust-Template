@@ -4,41 +4,55 @@
 metadata:
   schema_version: "1.0"
   template_version: "2.3.0"
-  last_updated: "2025-11-17"
+  last_updated: "2025-11-18"
   description: "Template core capabilities - v2.3.0 includes health, version, errors, and metrics"
+  # Template-wide ADRs (not tied to specific stories/requirements)
+  adrs:
+    - ADR-0002  # Nix-first dev environment (applies to entire template)
+    - ADR-0004  # Policy and LLM governance (applies to entire template)
 
 stories:
   # Template Core - Keep and extend these in your service
   - id: US-TPL-001
     title: "Service Core Capabilities"
+    adr: ADR-0001  # Hexagonal architecture
     requirements:
       - id: REQ-TPL-HEALTH
         title: "Health Check Endpoint"
+        adr: ADR-0003  # Spec and BDD as source of truth
         acceptance_criteria:
           - id: AC-TPL-001
             text: "GET /health returns 200 with status 'ok' when service is healthy"
             tests: [ { type: bdd, tag: "@AC-TPL-001" } ]
+            adr: ADR-0005  # Selftest as single gate
       - id: REQ-TPL-VERSION
         title: "Version Information Endpoint"
+        adr: ADR-0003  # Spec and BDD as source of truth
         acceptance_criteria:
           - id: AC-TPL-002
             text: "GET /version returns build information including version and git SHA"
             tests: [ { type: bdd, tag: "@AC-TPL-002" } ]
+            adr: ADR-0005  # Selftest as single gate
       - id: REQ-TPL-ERROR-HANDLING
         title: "Error Response Envelope"
+        adr: ADR-0003  # Spec and BDD as source of truth
         acceptance_criteria:
           - id: AC-TPL-003
             text: "All 4xx/5xx responses include an error code, message, and request ID"
             tests: [ { type: bdd, tag: "@AC-TPL-003" } ]
+            adr: ADR-0005  # Selftest as single gate
           - id: AC-TPL-004
             text: "Handlers propagate or generate X-Request-ID and expose it in responses"
             tests: [ { type: bdd, tag: "@AC-TPL-004" } ]
+            adr: ADR-0005  # Selftest as single gate
       - id: REQ-TPL-METRICS
         title: "Prometheus Metrics Endpoint"
+        adr: ADR-0003  # Spec and BDD as source of truth
         acceptance_criteria:
           - id: AC-TPL-007
             text: "GET /metrics returns Prometheus-formatted metrics including http_requests_total"
             tests: [ { type: bdd, tag: "@AC-TPL-007" } ]
+            adr: ADR-0005  # Selftest as single gate
 
   # When adding your domain features:
   # - Copy the structure above (story → requirement → AC → tests)

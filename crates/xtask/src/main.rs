@@ -49,6 +49,8 @@ struct Cli {
 enum Commands {
     /// Generate AC status report from acceptance tests
     AcStatus,
+    /// Validate ADR references in spec ledger
+    AdrCheck,
     /// Run all checks: fmt, clippy, tests
     Check,
     /// Run BDD acceptance tests
@@ -86,6 +88,10 @@ fn main() -> Result<()> {
 
     match cli.command {
         Commands::AcStatus => commands::ac_status::run(commands::ac_status::AcStatusArgs {
+            verbosity,
+            ..Default::default()
+        }),
+        Commands::AdrCheck => commands::adr_check::run(commands::adr_check::AdrCheckArgs {
             verbosity,
             ..Default::default()
         }),
