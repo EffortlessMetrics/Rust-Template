@@ -1,0 +1,153 @@
+# Service Metadata
+# This file provides a self-description of the service for tooling and orchestration.
+# Copy this template to your service root as SERVICE_METADATA.yaml and fill in the values.
+
+service:
+  # Unique identifier for this service
+  id: "example-api"
+
+  # Human-readable name
+  name: "Example API Service"
+
+  # Team or individual who owns this service
+  owner: "team-platform"  # or "john.doe@example.com"
+
+  # Business domain this service operates in
+  domain: "user-management"  # or "billing", "inventory", etc.
+
+  # Template version this service was created from
+  template_version: "2.3.0"
+
+  # Service version (SemVer recommended)
+  version: "0.1.0"
+
+  # Brief description of what this service does
+  description: |
+    Manages user accounts, authentication, and authorization.
+    Provides REST API for user CRUD operations and session management.
+
+# Architecture patterns adopted from the template
+architecture:
+  # Using hexagonal/ports-and-adapters architecture (ADR-0001)
+  hexagonal: true
+
+  # Nix-first development environment (ADR-0002)
+  nix_first: true
+
+  # LLM-assisted development workflow enabled (CLAUDE.md + bundles)
+  llm_bundles: true
+
+  # Policy-as-code enforcement (Rego + conftest)
+  rego_policies: true
+
+  # Spec-as-code / BDD workflow (spec_ledger.yaml + features)
+  spec_as_code: true
+
+# Runtime dependencies (databases, message queues, external services)
+dependencies:
+  databases:
+    - name: "postgres"
+      type: "PostgreSQL"
+      version: "15"
+      purpose: "User account storage"
+
+  # message_queues:
+  #   - name: "rabbitmq"
+  #     type: "RabbitMQ"
+  #     version: "3.11"
+  #     purpose: "Event publishing"
+
+  # external_services:
+  #   - name: "auth0"
+  #     type: "External API"
+  #     purpose: "OAuth provider"
+  #     docs: "https://auth0.com/docs"
+
+# Observability configuration
+observability:
+  # Metrics endpoint
+  metrics:
+    enabled: true
+    format: "prometheus"
+    endpoint: "/metrics"
+
+  # Tracing configuration
+  tracing:
+    enabled: true
+    provider: "opentelemetry"  # or "jaeger", "zipkin"
+    # exporter: "otlp-grpc"
+
+  # Logging configuration
+  logging:
+    level: "info"  # debug, info, warn, error
+    format: "json"  # or "pretty"
+
+# Deployment configuration
+deployment:
+  # Kubernetes deployment
+  kubernetes:
+    enabled: true
+    namespace: "default"
+    replicas: 2
+
+  # Health check endpoints
+  health:
+    liveness: "/health"
+    readiness: "/ready"
+
+  # Resource requirements (for k8s)
+  resources:
+    requests:
+      cpu: "100m"
+      memory: "128Mi"
+    limits:
+      cpu: "500m"
+      memory: "512Mi"
+
+# Compliance and governance
+governance:
+  # Policy enforcement (via Rego)
+  policies:
+    enabled: true
+    directories:
+      - "policy/"
+
+  # Acceptance criteria tracking
+  ac_tracking:
+    enabled: true
+    ledger: "specs/spec_ledger.yaml"
+
+  # Automated testing requirements
+  testing:
+    unit_tests: true
+    bdd_scenarios: true
+    policy_tests: true
+
+# Contact and documentation
+contact:
+  # Primary contact for this service
+  email: "team-platform@example.com"
+
+  # Slack channel or communication channel
+  # slack: "#team-platform"
+
+  # Documentation links
+  documentation:
+    - type: "README"
+      url: "README.md"
+    - type: "OpenAPI"
+      url: "specs/openapi/openapi.yaml"
+    # - type: "Runbook"
+    #   url: "docs/RUNBOOK.md"
+
+# Additional metadata (optional)
+# tags:
+#   - "user-management"
+#   - "authentication"
+#   - "rest-api"
+
+# Change history (optional, can also use git log)
+# changelog:
+#   - version: "0.1.0"
+#     date: "2025-01-18"
+#     changes: "Initial service scaffolded from template v2.3.0"

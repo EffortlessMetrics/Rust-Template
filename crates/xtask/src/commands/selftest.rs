@@ -62,19 +62,14 @@ pub fn run_with_verbosity(verbosity: crate::Verbosity) -> Result<()> {
     }
     println!();
 
-    // Step 3: AC status mapping
-    println!("{}", "[3/5] Running AC status mapping...".blue());
+    // Step 3: AC status mapping & ADR references
+    println!("{}", "[3/5] Running AC status mapping & ADR references...".blue());
     let step_start = Instant::now();
+
+    // 3a: AC status
     match run_ac_status(verbosity) {
         Ok(_) => {
-            let elapsed = step_start.elapsed();
             if verbosity.is_verbose() {
-                println!(
-                    "  {} AC status script executed ({:.2}s)",
-                    "✓".green(),
-                    elapsed.as_secs_f64()
-                );
-            } else {
                 println!("  {} AC status script executed", "✓".green());
             }
             if Path::new("docs/feature_status.md").exists() {
@@ -88,6 +83,22 @@ pub fn run_with_verbosity(verbosity: crate::Verbosity) -> Result<()> {
             // Don't fail the suite if AC status has issues - it's informational
             println!("  {} Continuing (AC status is informational)", "⚠".yellow());
         }
+    }
+
+    // 3b: ADR references
+    match run_adr_check(verbosity) {
+        Ok(_) => {
+            println!("  {} ADR references validated", "✓".green());
+        }
+        Err(e) => {
+            eprintln!("  {} ADR check failed: {}", "✗".red(), e);
+            failed += 1;
+        }
+    }
+
+    let elapsed = step_start.elapsed();
+    if verbosity.is_verbose() {
+        println!("  {} Step 3 completed ({:.2}s)", "✓".green(), elapsed.as_secs_f64());
     }
     println!();
 
@@ -205,6 +216,13 @@ pub fn run_with_verbosity(verbosity: crate::Verbosity) -> Result<()> {
 fn run_ac_status(verbosity: crate::Verbosity) -> Result<()> {
     // Use Rust-native AC status implementation
     crate::commands::ac_status::run(crate::commands::ac_status::AcStatusArgs {
+        verbosity,
+        ..Default::default()
+    })
+}
+
+fn run_adr_check(verbosity: crate::Verbosity) -> Result<()> {
+    crate::commands::adr_check::run(crate::commands::adr_check::AdrCheckArgs {
         verbosity,
         ..Default::default()
     })
