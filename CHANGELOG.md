@@ -7,27 +7,55 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Added
+(empty)
 
-- **Development Environment Guide** (`docs/dev-environment.md`): Comprehensive guide establishing Nix as the primary development path (Tier 1) with fallback native toolchain support (Tier 2). Includes installation instructions, tool versions, and clear philosophy.
-- **Selftest UX Enhancement**: When `conftest` is missing locally, selftest now provides helpful hints based on environment:
-  - If Nix is available: `💡 Hint: Run nix develop -c cargo run -p xtask -- selftest`
-  - Otherwise: Points to `docs/dev-environment.md`
-
-### Changed
-
-- **README.md**: Repositioned as Nix-first with clear opinionated messaging. Nix installation shown in Quick Start, with fallback docs linked.
-- **CLAUDE.md**: Updated all workflow examples to assume `nix develop` for CI-equivalent validation. Added explicit environment assumptions section.
-- **Pilot workflow**: Updated Quick Start (Pilot Project) to use `nix develop` before selftest.
-
-### Removed
-
-- **docs/ROADMAP.md**: Removed outdated roadmap file. Per-version release planning now lives in `docs/v2.*.md` files (e.g., `v2.3.0-plan.md`).
-- **Dev cruft cleanup**: Removed obsolete development files (`.llm/example-prompts.md`, `.llm/test_contextpack.yaml`)
+## [2.3.1] - 2025-01-18
 
 ### Fixed
 
-- **xtask selftest**: Policy tests now properly skip when conftest is not available in local development without failing selftest. CI environments (detected via `CI` or `GITHUB_ACTIONS` env vars) still correctly treat missing conftest as a failure. This aligns with the design where policy tests run in CI via Nix (which provides conftest), while local developers can validate the template without needing conftest installed.
+- **k8s.rego policy**: Fixed variable shadowing and undefined reference in `has_secret_ref` function. All 22 policy tests now pass cleanly in Nix devshell.
+- **xtask selftest**: Policy tests now properly skip when conftest is not available in local development without failing selftest. CI environments (detected via `CI` or `GITHUB_ACTIONS` env vars) still correctly treat missing conftest as a failure.
+- **rust_iac_config**: Marked flaky tests that mutate `set_current_dir` as `#[ignore]` to avoid non-deterministic failures in workspace test runs.
+
+### Added
+
+- **ADR System** (Design-as-Code):
+  - `docs/templates/ADR-TEMPLATE.md` - Template for architecture decision records
+  - `docs/adr/0001-hexagonal-architecture.md` - Hexagonal architecture via workspace crates
+  - `docs/adr/0002-nix-first-dev-env.md` - Nix-first development environment
+  - `docs/adr/0003-spec-and-bdd-as-source-of-truth.md` - Spec ledger and BDD as canonical behavior contracts
+  - `docs/adr/0004-policy-and-llm-governance.md` - Policy-as-code and LLM governance
+  - `docs/adr/0005-xtask-selftest-single-gate.md` - Selftest as the single quality gate
+  - ADR references wired into `specs/spec_ledger.yaml` at metadata, story, requirement, and AC levels
+  - `cargo run -p xtask -- adr-check` command to validate ADR references
+  - ADR check integrated into selftest step 3
+
+- **Nix-First Development Environment**:
+  - `docs/dev-environment.md` - Comprehensive guide with Tier 1 (Nix) and Tier 2 (native) paths
+  - README.md now Nix-first with clear quick start
+  - Selftest provides helpful hints when conftest is missing locally
+
+- **LLM & Governance Documentation**:
+  - `CLAUDE.md` - Formalized LLM workflow guide with standard prompts and golden path
+  - `docs/explanation/controls-as-code.md` - Comprehensive explanation of policy governance (447 lines)
+  - `docs/templates/SERVICE_METADATA.example.yaml` - Service self-description template
+  - `docs/templates/RUNBOOK.example.md` - Operations guide template (400 lines)
+
+- **OSS Hygiene**:
+  - CI status and license badges in README.md
+  - ADR workflow documented in CONTRIBUTING.md
+  - SECURITY.md with vulnerability reporting and scope
+
+### Changed
+
+- **README.md**: Repositioned as Nix-first with clear opinionated messaging
+- **CLAUDE.md**: Updated all workflow examples to assume `nix develop` for CI-equivalent validation
+- **CONTRIBUTING.md**: Added ADR workflow to governance model section
+
+### Removed
+
+- **docs/ROADMAP.md**: Removed in favor of per-version release planning in `docs/v2.*.md` files
+- **Dev cruft**: Removed obsolete `.llm/example-prompts.md` and `.llm/test_contextpack.yaml`
 
 ## [1.0.0] - 2025-11-15
 

@@ -1,4 +1,4 @@
-# Rust Spec-as-Code Template (v2.3.0)
+# Rust Spec-as-Code Template (v2.3.1)
 
 [![CI](https://github.com/EffortlessMetrics/Rust-Template/actions/workflows/ci-template-selftest.yml/badge.svg)](https://github.com/EffortlessMetrics/Rust-Template/actions/workflows/ci-template-selftest.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE-MIT)
