@@ -158,6 +158,9 @@ enum Commands {
     /// Show flow-based command map
     #[command(next_help_heading = "Meta")]
     HelpFlows,
+    /// Install git hooks for pre-commit governance
+    #[command(next_help_heading = "Onboarding")]
+    InstallHooks,
 }
 
 fn main() -> Result<()> {
@@ -237,6 +240,7 @@ fn main() -> Result<()> {
         Commands::SuggestNext(args) => commands::suggest_next::run(args),
         Commands::Selftest => commands::selftest::run_with_verbosity(verbosity),
         Commands::HelpFlows => commands::help_flows::run(),
+        Commands::InstallHooks => commands::install_hooks::run(),
     }
 }
 
@@ -332,6 +336,7 @@ pub fn all_command_names() -> Vec<&'static str> {
         "docs-check",
         "fmt-all",
         "hakari",
+        "install-hooks",
         "migrate",
         "pin-actions",
         "policy-test",

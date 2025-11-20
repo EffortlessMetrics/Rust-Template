@@ -8,8 +8,14 @@ async fn main() -> anyhow::Result<()> {
 
     info!("Starting HTTP service");
 
+    // Initialize governance repository
+    let repo_root = std::env::current_dir()?;
+    let specs_dir = repo_root.join("specs");
+    let governance_repo =
+        std::sync::Arc::new(adapters_spec_fs::FsGovernanceRepository::new(specs_dir));
+
     // Build our application router from lib
-    let app = app_http::app();
+    let app = app_http::app(governance_repo);
 
     // Start server
     let addr = SocketAddr::from(([0, 0, 0, 0], 3000));

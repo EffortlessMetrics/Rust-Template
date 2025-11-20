@@ -16,6 +16,7 @@ pub mod fmt_all;
 pub mod graph_export;
 pub mod hakari;
 pub mod help_flows;
+pub mod install_hooks;
 pub mod migrate;
 pub mod pin_actions;
 pub mod policy_test;

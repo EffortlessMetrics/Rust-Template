@@ -406,6 +406,78 @@ stories:
             tests:
               - { type: bdd, tag: "@AC-TPL-GRAPH-MERMAID", file: "specs/features/graph_visualization.feature" }
 
+      - id: REQ-TPL-LOCAL-RUNTIME
+        title: "Local Runtime Sovereignty"
+        tags: [platform, devex]
+        must_have_ac: true
+        description: >
+          The template MUST provide a reproducible local runtime environment
+          (Database, Observability) that works out-of-the-box with sensible defaults.
+        adr: [ADR-0002]
+        acceptance_criteria:
+          - id: AC-TPL-LOCAL-DOCKER
+            text: >
+              A docker-compose.yaml file exists providing Postgres and Jaeger,
+              configured to match the application's default config for local development.
+            tests:
+              - { type: manual, tag: "docker_compose_up" }
+
+      - id: REQ-TPL-GOV-HOOKS
+        title: "Governance Hooks"
+        tags: [platform, devex, structural]
+        must_have_ac: true
+        description: >
+          The template MUST provide a mechanism to install Git hooks that
+          enforce governance checks (fmt, clippy, tests) before commit.
+        adr: [ADR-0005]
+        acceptance_criteria:
+          - id: AC-TPL-HOOKS-INSTALL
+            text: >
+              The 'cargo xtask install-hooks' command creates a pre-commit hook
+              that runs 'cargo xtask check' within the Nix environment when available.
+            tests:
+              - { type: manual, tag: "git_commit_verify" }
+
+      - id: REQ-TPL-AGENT-INTERFACE
+        title: "Agent-Native Interface"
+        tags: [platform, ai, structural]
+        must_have_ac: true
+        description: >
+          The template MUST provide structured Skills for AI agents
+          to execute governance workflows autonomously without guessing.
+        adr: [ADR-0004]
+        acceptance_criteria:
+          - id: AC-TPL-AGENT-SKILLS
+            text: >
+              The .claude/skills directory contains executable skill definitions
+              for feature development, release, and maintenance workflows,
+              each referencing the appropriate xtask commands and platform APIs.
+            tests:
+              - { type: manual, tag: "agent_skill_discovery" }
+
+  - id: US-TPL-PLATFORM-V3
+    title: "The Recursive Platform"
+    description: >
+      The platform MUST be able to govern its own evolution by reading and
+      writing its own specifications and task state, enabling autonomous
+      loops where agents drive the development process.
+    adr: [ADR-0001, ADR-0004]
+    requirements:
+      - id: REQ-TPL-GOV-WRITE-001
+        title: "The system can persist task status changes to machine-managed state"
+        tags: [platform, governance, write-layer]
+        must_have_ac: true
+        description: >
+          The platform MUST provide a mechanism to update task status in a
+          durable way that is reflected in the governance graph, without
+          destroying human comments in the source YAML.
+        adr: [ADR-0001]
+        acceptance_criteria:
+          - id: AC-TPL-GOV-WRITE-TASK-STATUS-200
+            text: "set_task_status writes durable state reflected in the governance graph."
+            tests:
+              - { type: integration, tag: "@AC-TPL-GOV-WRITE-TASK-STATUS-200" }
+
   # When adding your domain features:
   # - Copy the structure above (story → requirement → AC → tests)
   # - Use @AC-XXX tags in feature files

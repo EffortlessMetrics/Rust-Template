@@ -11,6 +11,8 @@ pub struct World {
     pub last_response: Option<Response>,
     /// Request headers to be sent with next request
     pub request_headers: HeaderMap,
+    /// Keep temp dir alive
+    pub _temp_dir: std::sync::Arc<tempfile::TempDir>,
 }
 
 impl Default for World {
@@ -18,10 +20,16 @@ impl Default for World {
         // Initialize telemetry for tests (idempotent)
         telemetry::init_tracing("acceptance-tests");
 
+        let temp_dir = std::sync::Arc::new(tempfile::tempdir().expect("Failed to create temp dir"));
+        let specs_dir = temp_dir.path().to_path_buf();
+        let governance_repo =
+            std::sync::Arc::new(adapters_spec_fs::FsGovernanceRepository::new(specs_dir));
+
         Self {
-            app: app_http::app(), // Real HTTP router from app-http crate
+            app: app_http::app(governance_repo), // Real HTTP router from app-http crate
             last_response: None,
             request_headers: HeaderMap::new(),
+            _temp_dir: temp_dir,
         }
     }
 }

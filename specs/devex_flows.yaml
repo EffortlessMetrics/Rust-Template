@@ -44,6 +44,15 @@ commands:
       contributing_flow: false
       claude_golden_path: true
 
+  install-hooks:
+    category: onboarding
+    summary: "Install git hooks for pre-commit governance"
+    required: true
+    docs:
+      readme_table: true
+      contributing_flow: true
+      claude_golden_path: true
+
   # Design & AC
   adr-new:
     category: design_ac
@@ -236,7 +245,7 @@ flows:
     description: "Validate environment, discover workflows, reach first green check"
     required: true
     documented_in: ["CONTRIBUTING.md", "CLAUDE.md", "README.md"]
-    steps: ["doctor", "check", "selftest"]
+    steps: ["doctor", "install-hooks", "check", "selftest"]
 
   ac_first:
     name: "Feature addition (AC-first)"

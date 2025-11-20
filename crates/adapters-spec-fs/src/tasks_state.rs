@@ -1,0 +1,57 @@
+use business_core::governance::{TaskId, TaskStatus};
+use fs2::FileExt;
+use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
+use std::fs::{self, OpenOptions};
+use std::io::{Read, Seek, SeekFrom, Write};
+use std::path::Path;
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct TasksState {
+    pub tasks: HashMap<TaskId, TaskStatus>,
+}
+
+#[allow(clippy::suspicious_open_options)]
+pub fn update_task_status(
+    path: &Path,
+    task_id: TaskId,
+    status: TaskStatus,
+) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    // Ensure directory exists
+    if let Some(parent) = path.parent() {
+        fs::create_dir_all(parent)?;
+    }
+
+    // Open file with read/write access, create if not exists
+    let mut file = OpenOptions::new().read(true).write(true).create(true).open(path)?;
+
+    // Lock the file for exclusive access
+    file.lock_exclusive()?;
+
+    // Read content
+    let mut content = String::new();
+    file.read_to_string(&mut content)?;
+
+    // Parse or default
+    let mut state: TasksState = if content.trim().is_empty() {
+        TasksState::default()
+    } else {
+        serde_yaml::from_str(&content).unwrap_or_default()
+    };
+
+    // Update state
+    state.tasks.insert(task_id, status);
+
+    // Serialize
+    let new_content = serde_yaml::to_string(&state)?;
+
+    // Write back
+    file.set_len(0)?;
+    file.seek(SeekFrom::Start(0))?;
+    file.write_all(new_content.as_bytes())?;
+
+    // Unlock (optional as closing the file unlocks it, but explicit is fine)
+    file.unlock()?;
+
+    Ok(())
+}

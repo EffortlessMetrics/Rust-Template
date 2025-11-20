@@ -15,6 +15,7 @@ business-core = { path = "../business-core" }
 model = { path = "../model" }
 telemetry = { path = "../telemetry" }
 spec-runtime = { path = "../spec-runtime" }
+adapters-spec-fs = { path = "../adapters-spec-fs" }
 
 # Web framework
 axum = "0.8.7"

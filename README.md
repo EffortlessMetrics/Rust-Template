@@ -1,4 +1,4 @@
-# Rust-as-Spec Platform Cell (v2.4.0)
+# Rust-as-Spec Platform Cell (v2.5.0) 🎉
 
 [![CI](https://github.com/EffortlessMetrics/Rust-Template/actions/workflows/ci-template-selftest.yml/badge.svg)](https://github.com/EffortlessMetrics/Rust-Template/actions/workflows/ci-template-selftest.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE-MIT)
@@ -9,6 +9,10 @@
 > **What is this?**
 >
 > A **governed Rust service** that maintains a living contract between specs, code, docs, and policies—enforced automatically by CI and introspectable via HTTP APIs and a web UI.
+
+> **Status: Kernel Frozen** (v2.5.0)
+>
+> The platform successfully used its own governance contracts to build itself. All 7 selftest steps pass. Next phase: real-world service pilot.
 
 Unlike conventional templates that drift over time, this repository:
 - **Self-heals**: Specs, docs, and policies are validated as rigorously as code
@@ -24,7 +28,9 @@ Unlike conventional templates that drift over time, this repository:
 **Don't use this if:**
 - ❌ You just want "hello world in Axum" (too heavy)
 - ❌ You're prototyping without governance requirements (overkill)
-- ❌ You don't need Ac traceability between specs, ACs, and code (simpler templates exist)
+- ❌ You don't need AC traceability between specs, ACs, and code (simpler templates exist)
+
+**Read more:** [Why This Template Exists](docs/why-this-exists.md) | [ROADMAP.md](docs/ROADMAP.md) | [Technical Overview](docs/explanation/rust-as-spec-overview.md)
 
 ---
 
@@ -363,18 +369,28 @@ Spec (YAML) → Loader (Rust) → Enforce (CI) → Introspect (API/UI)
 
 ---
 
-## Current Status: v2.4.0 – "The Governing Kernel"
+## Current Status: v2.5.0 – "The Governing Kernel" (Frozen) 🎉
 
-**Phase 4 Complete** (All 4 Ep ics):
+**Phase 4 Complete** (All 4 Epics):
 - ✅ **Epic 1**: Graph invariants as mandatory CI gate
 - ✅ **Epic 2**: Context-aware `suggest-next` (tracks satisfied vs pending steps)
 - ✅ **Epic 3**: Real-time policy status via `/platform/status`
 - ✅ **Epic 4**: Rust-native Web UI (maud + htmx, zero build step)
 
-**Now in Pilot Phase** (2025-Q1 to Q2):
-- 2-3 pilot services implementing 3-5 features using AC-first workflow
-- Friction log maintained to surface blockers
-- Weekly syncs to refine governance model based on real usage
+**Pilot Complete** (Agent-Ready):
+- ✅ Local runtime (`docker-compose.yaml` with Postgres + Jaeger)
+- ✅ Governance hooks (`cargo xtask install-hooks`)
+- ✅ Agent skills (`.claude/skills/*`)
+
+**Validated:**
+- All 7 selftest steps pass
+- 22/22 policy tests pass
+- Platform used itself to build final features
+
+**Status: Kernel Frozen**  
+No new platform features until validated by real-world service pilot.
+
+**Next:** Real-world service pilot → friction log → v2.5.x hardening
 
 **See:** [ROADMAP.md](docs/ROADMAP.md) for full details on current state, pilot plan, and future direction.
 

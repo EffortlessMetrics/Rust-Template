@@ -1,0 +1,21 @@
+[package]
+name = "adapters-spec-fs"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+business-core = { path = "../business-core" }
+spec-runtime = { path = "../spec-runtime" }
+serde = { workspace = true }
+serde_yaml = { workspace = true }
+thiserror = { workspace = true }
+fs2 = "0.4.3"
+tracing = { workspace = true }
+
+[dev-dependencies]
+tempfile = "3.10.1"
+
+[lints]
+workspace = true
