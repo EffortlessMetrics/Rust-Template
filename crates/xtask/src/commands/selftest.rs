@@ -1,6 +1,7 @@
 use anyhow::Result;
 use colored::Colorize;
-use std::path::Path;
+use std::env;
+use std::path::{Path, PathBuf};
 use std::time::Instant;
 
 /// Run full template self-test suite
@@ -103,7 +104,7 @@ pub fn run_with_verbosity(verbosity: crate::Verbosity) -> Result<()> {
     println!();
 
     // Step 4: LLM context bundler
-    println!("{}", "[4/5] Testing LLM context bundler...".blue());
+    println!("{}", "[4/6] Testing LLM context bundler...".blue());
     let step_start = Instant::now();
     match crate::commands::bundle::run("implement_ac") {
         Ok(_) => {
@@ -226,4 +227,41 @@ fn run_adr_check(verbosity: crate::Verbosity) -> Result<()> {
         verbosity,
         ..Default::default()
     })
+}
+
+fn run_devex_contract(_verbosity: crate::Verbosity) -> Result<()> {
+    let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    let root = manifest_dir
+        .parent()
+        .unwrap()
+        .parent()
+        .unwrap();
+
+    let spec_path = root.join("specs/devex_flows.yaml");
+    let spec = crate::devex::load_spec(&spec_path)?;
+
+    // Get list of available commands
+    let available_commands = crate::all_command_names();
+
+    let mut missing = Vec::new();
+    for (cmd_name, cmd_spec) in &spec.commands {
+        if cmd_spec.required && !available_commands.contains(&cmd_name.as_str()) {
+            missing.push(cmd_name.clone());
+        }
+    }
+
+    if !missing.is_empty() {
+        eprintln!();
+        eprintln!("✗ Required commands missing from xtask:");
+        for name in &missing {
+            eprintln!("  • {}", name);
+        }
+        eprintln!();
+        eprintln!("{}", "To fix:".bold());
+        eprintln!("  • Implement missing command(s) in crates/xtask");
+        eprintln!("  • Or update specs/devex_flows.yaml if spec is outdated");
+        anyhow::bail!("DevEx contract: {} required command(s) missing", missing.len());
+    }
+
+    Ok(())
 }

@@ -4,6 +4,7 @@ use colored::Colorize;
 use std::process::Command;
 
 mod commands;
+mod devex;
 mod validation;
 
 /// Verbosity level for command output
@@ -258,4 +259,16 @@ fn format_command(cmd: &Command) -> String {
         .collect();
 
     if args.is_empty() { program.to_string() } else { format!("{} {}", program, args.join(" ")) }
+}
+
+/// Returns list of all available xtask command names
+/// Used by devex contract check to validate required commands exist
+pub fn all_command_names() -> Vec<&'static str> {
+    vec![
+        "ac-status", "ac-new", "adr-check", "adr-new", "check", "bdd",
+        "bundle", "clean", "ci-local", "deploy", "audit", "doctor",
+        "docs-check", "fmt-all", "hakari", "migrate", "pin-actions",
+        "policy-test", "release-prepare", "release-verify", "sbom-local",
+        "quickstart", "selftest", "help-flows",
+    ]
 }
