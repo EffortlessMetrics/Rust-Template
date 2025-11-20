@@ -60,3 +60,38 @@ pub mod use_cases {
         repo.update_status(&id, status).await
     }
 }
+
+pub mod governance {
+    use serde::{Deserialize, Serialize};
+
+    #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+    pub enum TaskStatus {
+        Todo,
+        InProgress,
+        Review,
+        Done,
+    }
+
+    #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+    pub struct TaskId(pub String);
+
+    #[derive(Debug, thiserror::Error)]
+    pub enum GovernanceError {
+        #[error("IO error: {0}")]
+        Io(#[from] std::io::Error),
+        #[error("Serialization error: {0}")]
+        Serialization(String),
+        #[error("Task not found: {0:?}")]
+        TaskNotFound(TaskId),
+        #[error("Lock error: {0}")]
+        Lock(String),
+    }
+
+    pub trait GovernanceRepository: Send + Sync {
+        fn set_task_status(
+            &self,
+            task_id: &TaskId,
+            status: TaskStatus,
+        ) -> Result<(), GovernanceError>;
+    }
+}

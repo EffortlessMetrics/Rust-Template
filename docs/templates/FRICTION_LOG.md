@@ -1,236 +1,150 @@
-# Friction Log – [Project Name]
+# Friction Log Template
 
-**Template Version**: v2.4.0
-**Started**: YYYY-MM-DD
-**Team**: [Team/Developer Name]
-**Project Type**: [Greenfield / Brownfield]
+**Purpose:** Track pain points encountered during development to refine the governance model
 
----
-
-## Purpose
-
-This log captures pain points, surprises, and improvements discovered while using the Rust IaC Template in a real project. Use this to inform future template evolution.
+**Instructions:**
+1. Create a copy of this file as `FRICTION_LOG.md` in the repo root
+2. Add entries whenever something slows you down or feels awkward
+3. Use this during weekly pilot syncs to prioritize fixes
 
 ---
 
-## Setup Phase
+## Entry Template
 
-### Initial Clone & Selftest
+```markdown
+### [YYYY-MM-DD] {Short Title}
 
-- [ ] Clone template (or `cargo generate`)
-- [ ] Run `cargo run -p xtask -- selftest`
-- [ ] Review generated structure
+**Context:** What were you trying to do?
 
-**Issues Encountered:**
-- [ ] None / Describe below
+**Friction:** What got in your way?
 
-**Observations:**
-```
-[Describe what worked well, what was confusing, what was missing]
-```
+**Impact:** How much did this slow you down?
+- [ ] Blocker (couldn't proceed)
+- [ ] Major (lost > 30 min)
+- [ ] Minor (lost < 30 min)
+- [ ] Papercut (annoying but quick)
 
----
+**Proposed Fix:** What would have made this smoother?
 
-## Feature Implementation
-
-### Feature 1: [Feature Name] (AC-XXX-YYY)
-
-**Context:**
-- **Acceptance Criteria**: [Link or brief description]
-- **Complexity**: [Trivial / Simple / Moderate / Complex]
-- **Tools Used**: [xtask bundle, LLM, manual coding, etc.]
-
-**Timeline:**
-- Planning: [Duration]
-- Implementation: [Duration]
-- Testing: [Duration]
-- Total: [Duration]
-
-**Friction Points:**
-
-1. **[Category: Setup / Coding / Testing / Docs / Other]**
-   - **What happened**: [Describe the friction]
-   - **Expected**: [What you expected to happen]
-   - **Actual**: [What actually happened]
-   - **Workaround**: [How you solved it, if applicable]
-   - **Severity**: [Low / Medium / High / Blocker]
-
-2. **[Next friction point]**
-   - ...
-
-**What Worked Well:**
-- [List positive experiences, e.g., "BDD scenario generation was instant"]
-
----
-
-### Feature 2: [Next Feature]
-
-[Repeat structure above]
-
----
-
-## Observability Integration
-
-### Logs
-- [ ] Added structured logging with `tracing`
-- [ ] Configured `RUST_LOG` filtering
-- **Issues**: [Describe any friction]
-
-### Metrics
-- [ ] Added custom metrics to `/metrics` endpoint
-- [ ] Verified Prometheus scraping
-- **Issues**: [Describe any friction]
-
-### Traces
-- [ ] Enabled `telemetry/otlp` feature
-- [ ] Connected to OTLP collector (Jaeger/other)
-- [ ] Verified distributed traces
-- **Issues**: [Describe any friction]
-
-**Observations:**
-```
-[Was the observability setup smooth? Missing docs? Unclear patterns?]
+**Related:**
+- Task: {task_id}
+- Flow: {flow_name}
+- Command: `cargo xtask {command}`
+- Spec: {file and line}
 ```
 
 ---
 
-## Policy & Governance
+## Example Entries
 
-### OPA/Rego Policies
-- [ ] Ran `cargo run -p xtask -- policy-test`
-- [ ] Added custom policies for project domain
-- **Issues**: [Describe any friction]
+### [2025-01-15] Creating AC with Long Description
 
-### Spec Ledger
-- [ ] Updated `specs/spec_ledger.yaml` with new ACs
-- [ ] Ran `cargo run -p xtask -- ac-status`
-- **Issues**: [Describe any friction]
+**Context:** I wanted to add an AC for "Users can upload profile pictures" with a detailed description including size limits, formats, and validation rules.
 
-### BDD Scenarios
-- [ ] Created Gherkin scenarios for new features
-- [ ] Ran `cargo run -p xtask -- bdd`
-- **Issues**: [Describe any friction]
+**Friction:** `cargo xtask ac-new` only accepts a single quoted string. My description had quotes in it, and escaping them in the shell was painful.
 
-**Observations:**
-```
-[Was the governance flow helpful? Bureaucratic? Missing tooling?]
-```
+**Impact:**
+- [x] Minor (lost < 30 min)
 
----
+**Proposed Fix:**
+- Option A: `ac-new --interactive` that opens $EDITOR
+- Option B: `ac-new --from-file=ac-draft.yaml`
+- Option C: Better help text showing how to use heredocs
 
-## LLM-Assisted Development
-
-### Contextpack Usage
-- [ ] Generated contextpack with `cargo run -p xtask -- bundle --ac AC-XXX-YYY`
-- [ ] Used contextpack with LLM (Claude / other)
-- [ ] LLM output quality: [Poor / Fair / Good / Excellent]
-
-**Friction Points:**
-- [e.g., "Contextpack was too large for LLM context window"]
-- [e.g., "Missing domain context in bundle"]
-- [e.g., "LLM hallucinated API that doesn't exist in template"]
-
-**What Worked:**
-- [e.g., "LLM correctly inferred test structure from BDD scenarios"]
+**Related:**
+- Task: `implement_ac`
+- Command: `cargo xtask ac-new`
+- Spec: `specs/spec_ledger.yaml`
 
 ---
 
-## Adapter Integration
+### [2025-01-16] Selftest Failure Message Unclear
 
-### Database (sqlx)
-- [ ] Used `adapters-db-sqlx` as reference
-- [ ] Created custom adapter for [database/service]
-- **Issues**: [Describe any friction]
+**Context:** Running `cargo xtask selftest` after adding a new command to `devex_flows.yaml`.
 
-### gRPC (tonic)
-- [ ] Used `adapters-grpc` as reference
-- [ ] Created custom gRPC client/server
-- **Issues**: [Describe any friction]
+**Friction:** Got an error "[7/7] Graph invariants failed" but had to dig through output to find "Command 'my-new-cmd' not found in devex.commands". The error didn't tell me which YAML section to fix.
 
-### Other Adapters
-- [ ] [Describe custom adapter, e.g., Redis, Kafka, S3]
-- **Issues**: [Describe any friction]
+**Impact:**
+- [x] Major (lost > 30 min)
 
-**Observations:**
-```
-[Were adapter patterns clear? Missing examples? Over-engineered?]
-```
+**Proposed Fix:**
+- Make graph invariant errors include actionable hints:
+  ```
+  [COMMAND_UNREACHABLE] Command 'my-new-cmd' used in flow 'my-flow' but not defined
+  → Fix: Add to devex_flows.yaml under 'commands:' section
+  → See: docs/how-to/adding-commands.md
+  ```
 
----
-
-## Documentation Gaps
-
-**Missing Docs:**
-1. [e.g., "How to add custom xtask commands"]
-2. [e.g., "Patterns for domain events"]
-3. [e.g., "Kubernetes deployment in production"]
-
-**Confusing Docs:**
-1. [e.g., "docs/day-1.md assumes familiarity with X"]
-2. [e.g., "OTLP guide unclear about TLS setup"]
-
-**Excellent Docs:**
-- [e.g., "docs/how-to/test-otlp-tracing.md was perfect"]
+**Related:**
+- Flow: `ci_parity`
+- Command: `cargo xtask selftest`
+- Code: `crates/spec-runtime/src/graph.rs:L165`
 
 ---
 
-## Overall Assessment
+### [2025-01-18] Bundle Takes Too Long
 
-### Template Strengths
-1. [e.g., "Observability wired out of the box"]
-2. [e.g., "Policy enforcement caught real issues early"]
-3. [e.g., "Clean separation of business-core from adapters"]
+**Context:** Running `cargo xtask bundle implement_ac` before asking LLM to implement.
 
-### Template Weaknesses
-1. [e.g., "Too much boilerplate for simple CRUD services"]
-2. [e.g., "Missing guidance on database migrations"]
-3. [e.g., "Unclear how to extend xtask for project-specific tasks"]
+**Friction:** Bundle generation took 8 seconds. When iterating quickly (implement → test → ask LLM → repeat), this adds up.
 
-### Would You Use This Template Again?
-- [ ] Yes, immediately
-- [ ] Yes, with modifications
-- [ ] Maybe, for specific use cases
-- [ ] No
+**Impact:**
+- [ ] Blocker
+- [ ] Major
+- [x] Papercut (annoying but quick)
 
-**Reasoning:**
-```
-[Explain your assessment]
-```
+**Proposed Fix:**
+- Cache: Only regenerate bundle if specs/tasks/docs changed
+- Async: Show "Generating bundle..." progress indicator
+- Parallel: Bundle could be generated in background when `ac-new` runs
+
+**Related:**
+- Task: `implement_ac`
+- Command: `cargo xtask bundle`
+- Code: `crates/xtask/src/commands/bundle.rs`
 
 ---
 
-## Recommendations for Template Evolution
+## Guidelines for Good Entries
 
-### High Priority (Next Release)
-1. [e.g., "Add migration tooling guide (Diesel/sqlx)"]
-2. [e.g., "Simplify xtask extension API"]
+**Do:**
+- ✅ Be specific (include exact commands, error messages)
+- ✅ Note what you expected vs what happened
+- ✅ Suggest fixes (even if you're not sure they're right)
+- ✅ Include timestamps and impact level
+- ✅ Link to related files/commands/docs
 
-### Medium Priority
-1. [e.g., "Add S3 adapter example"]
-2. [e.g., "Improve LLM contextpack chunking for large projects"]
-
-### Low Priority / Nice-to-Have
-1. [e.g., "Add example CI/CD pipeline for GitHub Actions"]
-2. [e.g., "Create video walkthrough of Day 1 setup"]
-
----
-
-## Appendix: Raw Notes
-
-```
-[Paste any raw notes, chat logs, or observations that don't fit above categories]
-```
+**Don't:**
+- ❌ Say "X is broken" without context
+- ❌ Complain without proposing solutions
+- ❌ Leave impact unchecked (helps prioritization)
+- ❌ Dupe entries (search log first)
 
 ---
 
-## Change Log
+## During Pilot Syncs
 
-| Date       | Phase               | Notes                          |
-|------------|---------------------|--------------------------------|
-| YYYY-MM-DD | Setup               | Initial clone, selftest passed |
-| YYYY-MM-DD | Feature 1 (AC-XXX)  | [Brief note]                   |
-| YYYY-MM-DD | Feature 2 (AC-YYY)  | [Brief note]                   |
+Review friction log weekly:
+
+1. **Blockers:** Must fix immediately (patch release)
+2. **Major:** Prioritize for next sprint
+3. **Minor:** Batch into "DX improvements" epic
+4. **Papercuts:** Accumulate; fix when quick wins are needed
+
+**Decision Framework:**
+- Does it affect governance integrity? → Fix ASAP
+- Does it make AC-first workflow painful? → High priority
+- Does it slow every developer? → Medium priority
+- Does it affect edge cases? → Low priority unless trivial fix
 
 ---
 
-**End of Friction Log**
+## After Pilot
+
+Friction log becomes the input for:
+- v2.5.0 improvements
+- Documentation gaps
+- UX refinements
+- Policy/invariant tuning
+
+Keep it updated throughout pilot. This is how we learn what "complete" actually means.

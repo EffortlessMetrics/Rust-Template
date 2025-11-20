@@ -8,30 +8,6 @@ Unlike conventional templates that drift from their documented behavior over tim
 
 ---
 
-## Current State: v2.4.0 – "The Governing Kernel"
-
-**Release Date:** 2025-Q1
-
-### What We Built
-
-Phase 1-4 established the **governance foundation**:
-
-1. **Specs as Code** ([`specs/spec_ledger.yaml`](file:///home/steven/code/Rust/Rust-Template/specs/spec_ledger.yaml))
-   - Stories → Requirements → Acceptance Criteria as structured YAML
-   - Linked to ADRs, BDD scenarios, design docs
-   - 17 requirements with mandatory AC coverage (`must_have_ac: true`)
-
-2. **DevEx as Spec** ([`specs/devex_flows.yaml`](file:///home/steven/code/Rust/Rust-Template/specs/devex_flows.yaml))
-   - Developer workflows (onboarding, AC-first, release) as executable flows
-   - All `xtask` commands mapped to flows and use cases
-   - DevEx contract enforced by selftest
-
-3. **Docs as Spec** ([`specs/doc_index.yaml`](file:///home/steven/code/Rust/Rust-Template/specs/doc_index.yaml))
-   - Documentation inventory with front-matter validation
-   - Requirement ↔ design doc linkage tracked
-   - Policy enforcement via OPA/Rego
-
-4. **Tasks as Spec** ([`specs/tasks.yaml`](file:///home/steven/code/Rust/Rust-Template/specs/tasks.yaml))
    - Concrete work items with recommended flows
    - Context-aware `suggest-next` showing satisfied vs pending steps
    - Agent-friendly guidance for LLM-driven workflows
@@ -93,11 +69,6 @@ Phase 1-4 established the **governance foundation**:
 **Timeline:** 2025-Q1 to Q2  
 **Goal:** Validate that the governance kernel reduces friction in real service development
 
-### Pilot Workflow
-
-We're intentionally **limiting the scope** to a small, controlled pilot:
-
-1. **Select 2-3 pilot services** (internal teams only)
 2. **Clone this template** and implement 3-5 features using the AC-first workflow
 3. **Maintain a friction log** ([`FRICTION_LOG.md`](file:///home/steven/code/Rust/Rust-Template/docs/templates/FRICTION_LOG.md))
 4. **Weekly sync** to surface blockers
@@ -131,6 +102,30 @@ We're intentionally **limiting the scope** to a small, controlled pilot:
 **Risk 3: False Positives**
 - **Symptom**: Selftest fails on valid changes (e.g., graph invariants too strict)
 - **Mitigation**: Refine invariant rules based on real usage
+
+---
+
+---
+
+## v3.0.0: The Living Platform (Active)
+
+**Goal:** Transition from "Code that Agents help write" to "An Environment where Agents live."
+
+### Sprint 1: The Write Layer (Completed ✅)
+- [x] **Governance Repository**: Abstract trait for state persistence
+- [x] **FS Adapter**: `adapters-spec-fs` with file locking and `tasks_state.yaml`
+- [x] **Wiring**: `app-http` and acceptance tests wired to use the repository
+- [x] **Verification**: BDD scenario for task persistence
+
+### Sprint 2: Domain Rules (Next)
+- [ ] **Task Status Machine**: Enforce valid transitions (Todo -> InProgress -> Done)
+- [ ] **Task <-> Requirement Linking**: Domain model for traceability
+- [ ] **Update Use Case**: Pure business logic for status updates
+
+### Sprint 3: API & UI
+- [ ] **Write API**: `POST /platform/tasks/{id}/status`
+- [ ] **Kanban Board**: Interactive UI for task management
+- [ ] **Agent Hints**: `GET /platform/agent/hints`
 
 ---
 

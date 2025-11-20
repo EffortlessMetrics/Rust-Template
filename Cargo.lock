@@ -12,6 +12,7 @@ checksum = "fe438c63458706e03479442743baae6c88256498e6431708f6dfc520a26515d3"
 name = "acceptance"
 version = "0.1.0"
 dependencies = [
+ "adapters-spec-fs",
  "app-http",
  "axum",
  "business-core",
@@ -20,6 +21,7 @@ dependencies = [
  "http-body-util",
  "serde_json",
  "telemetry",
+ "tempfile",
  "tokio",
  "tower",
  "tracing",
@@ -58,6 +60,20 @@ dependencies = [
  "tonic-prost-build",
  "tracing",
  "uuid",
+]
+
+[[package]]
+name = "adapters-spec-fs"
+version = "0.1.0"
+dependencies = [
+ "business-core",
+ "fs2",
+ "serde",
+ "serde_yaml_ng",
+ "spec-runtime",
+ "tempfile",
+ "thiserror 2.0.17",
+ "tracing",
 ]
 
 [[package]]
@@ -158,6 +174,7 @@ checksum = "a23eb6b1614318a8071c9b2521f36b424b2c83db5eb3a0fead4a6c0809af6e61"
 name = "app-http"
 version = "0.1.0"
 dependencies = [
+ "adapters-spec-fs",
  "anyhow",
  "axum",
  "business-core",
@@ -457,6 +474,8 @@ dependencies = [
  "async-trait",
  "chrono",
  "model",
+ "serde",
+ "thiserror 2.0.17",
  "uuid",
 ]
 
@@ -1048,6 +1067,16 @@ checksum = "0f158e3ff0a1b334408dc9fb811cd99b446986f4d8b741bb08f9df1604085ae7"
 dependencies = [
  "lazy_static",
  "num",
+]
+
+[[package]]
+name = "fs2"
+version = "0.4.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9564fc758e15025b46aa6643b1b77d047d1a56a1aea6e01002ac0c7026876213"
+dependencies = [
+ "libc",
+ "winapi",
 ]
 
 [[package]]

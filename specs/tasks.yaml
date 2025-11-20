@@ -46,3 +46,17 @@ tasks:
     docs:
       design: []
       plan: []
+
+  - id: TASK-TPL-GOV-WRITE-001
+    title: "Implement FsGovernanceRepository and Task Status Persistence"
+    requirement: REQ-TPL-GOV-WRITE-001
+    acs:
+      - AC-TPL-GOV-WRITE-TASK-STATUS-200
+    status: open
+    owner: team-platform
+    labels: [platform, governance, v3]
+    summary: "Implement the write-side governance repository to persist task status changes."
+    recommended_flows: ["ac_first"]
+    docs:
+      design: []
+      plan: []

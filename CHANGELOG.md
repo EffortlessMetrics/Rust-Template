@@ -47,6 +47,61 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Deprecated shell scripts: `test-all.sh`, `test-policies.sh`, `hakari-check.sh`, `migrate-dev.sh`, `pin-actions.sh`
 - Redundant `Justfile` (capitalized) - `justfile` (lowercase) is canonical
 
+## [2.5.0] - 2025-11-20 🎉 **Agent-Ready Platform Cell**
+
+### Summary
+**Kernel freeze.** This release completes the self-governing platform cell architecture. The platform successfully used its own governance contracts to build its final features (pilot validation). No new kernel features planned - next phase is real-world service pilot.
+
+### Added - Phase 4: Deep Governance & Polish
+
+**Epic 1: Graph Invariants as Mandatory Gate**
+- Structural validation catches drift: `REQ_HAS_NO_AC`, `COMMAND_UNREACHABLE`
+- Integrated as selftest step [7/7]
+- Violations block merge with actionable errors
+
+**Epic 2: Context-Aware Suggest-Next**
+- Tracks `Pending` vs `Satisfied` steps (✓ indicators)
+- Prevents redundant work for humans and agents
+
+**Epic 3: Real-Time Policy Status**
+- `policy-test` emits `target/policy_status.json`
+- `/platform/status` exposes policy health
+
+**Epic 4: Platform Introspection Web UI**
+- `/ui` - Dashboard (metrics, status, policy health)
+- `/ui/graph` - Mermaid visualization
+- `/ui/flows` - DevEx explorer
+- Zero build steps, maud + htmx + Mermaid.js
+
+### Added - Pilot: Agent Interface (Kernel Bootstrapped Itself)
+
+**Local Runtime** (`docker-compose.yaml`)
+- Postgres 16 + Jaeger, zero-config
+
+**Governance Hooks** (`cargo xtask install-hooks`)
+- Pre-commit hook runs `cargo xtask check`
+
+**Agent Skills** (`.claude/skills/*`)
+- `governed-feature-dev`, `governed-release`, `governed-maintenance`
+- Updated `CLAUDE.md`
+
+### Documentation
+- `docs/ROADMAP.md` - Strategic vision
+- `docs/explanation/rust-as-spec-overview.md` - Technical deep-dive
+- `docs/AGENT_GUIDE.md` - LLM operational guide
+- `docs/INDEX.md`, `docs/MISSING_MANUAL.md`
+
+### Validated
+✅ All 7 selftest steps pass  
+✅ 22/22 policy tests pass  
+✅ Graph invariants enforced  
+✅ **Platform used itself to build final features**
+
+### What's Next
+**Real-world pilot** using this kernel → friction log → v2.5.x hardening (no new features)
+
+---
+
 ## [2.4.0] - 2025-11-19
 
 ### Added

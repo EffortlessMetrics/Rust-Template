@@ -18,8 +18,11 @@ pub mod platform;
 pub use errors::{AppError, ErrorCode};
 pub use middleware::{REQUEST_ID_HEADER, RequestId};
 
+use business_core::governance::GovernanceRepository;
+use std::sync::Arc;
+
 /// Create the application router (reusable for both main and tests)
-pub fn app() -> Router {
+pub fn app(governance_repo: Arc<dyn GovernanceRepository>) -> Router {
     Router::new()
         // Template core endpoints - keep these
         .route("/health", get(health))
@@ -32,6 +35,7 @@ pub fn app() -> Router {
         // Middleware layers (applied in reverse order - bottom to top)
         .layer(axum::middleware::from_fn(metrics::metrics_middleware))
         .layer(axum::middleware::from_fn(middleware::request_id_middleware))
+        .layer(Extension(governance_repo))
         .layer(
             // Configure TraceLayer to include request_id field
             TraceLayer::new_for_http().make_span_with(|request: &axum::extract::Request| {
