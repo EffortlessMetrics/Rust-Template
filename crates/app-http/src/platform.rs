@@ -4,12 +4,19 @@ use spec_runtime::load_all_specs;
 use std::fs;
 use std::path::PathBuf;
 
+mod ui;
+
 pub fn router() -> Router {
     Router::new()
+        // UI routes
+        .route("/", get(ui::dashboard))
+        .route("/ui", get(ui::dashboard))
+        .route("/ui/graph", get(ui::graph_view))
+        .route("/ui/flows", get(ui::flows_view))
+        // API routes
         .route("/graph", get(get_graph))
         .route("/devex/flows", get(get_devex_flows))
         .route("/docs/index", get(get_docs_index))
-        .route("/status", get(get_status))
         .route("/status", get(get_status))
         .route("/tasks", get(get_tasks))
         .route("/tasks/suggest-next", get(get_suggest_next))
