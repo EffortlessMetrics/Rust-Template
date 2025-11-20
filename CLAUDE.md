@@ -100,6 +100,52 @@ Only commit when selftest passes. The template enforces:
 
 ---
 
+## Golden Path Workflows
+
+You have access to a comprehensive `xtask` command suite. **Prefer these flows over ad-hoc commands.**
+
+**Onboarding (new dev / new machine)**
+
+1. `nix develop`
+2. `cargo xtask doctor`
+3. `cargo xtask check`
+
+**AC-first development (add behavior)**
+
+1. `cargo xtask ac-new AC-ID "description" --story US-ID --requirement REQ-ID`
+2. Add the AC snippet to `specs/spec_ledger.yaml`
+3. Add a `@AC-ID` scenario to the appropriate file in `specs/features/`
+4. `cargo xtask bundle implement_ac` (generates LLM context)
+5. Implement code + tests with LLM assistance
+6. `cargo xtask bdd` → `cargo xtask selftest`
+
+**Architecture decisions**
+
+1. `cargo xtask adr-new "Decision Title"`
+2. Edit `docs/adr/NNNN-*.md`
+3. Link the ADR from `specs/spec_ledger.yaml`
+4. `cargo xtask adr-check`
+
+**Dependencies & security**
+
+- When dependencies change: `cargo xtask audit`
+- For local SBOM inspection: `cargo xtask sbom-local`
+
+**Release**
+
+1. `cargo xtask release-prepare X.Y.Z`
+2. Edit `CHANGELOG.md` entry
+3. `cargo xtask release-verify`
+4. Tag + push
+
+**Discoverability**
+
+- `cargo xtask help-flows` shows flow-based command groups
+- `cargo xtask --help` shows grouped commands by category
+
+
+---
+
 ## Standard Prompts
 
 ### Implement an Existing AC

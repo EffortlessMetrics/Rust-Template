@@ -79,6 +79,12 @@ pub fn run() -> Result<()> {
     } else {
         if issues > 0 {
             println!("{} {} issue(s) found", "✗".red().bold(), issues);
+            println!();
+            println!("{}", "Recovery options:".bold());
+            println!("  • Update dependency: {}", "cargo update <crate>".cyan());
+            println!("  • Pin safe version in Cargo.toml");
+            println!("  • Document mitigation: {}", "see ADR-0007".dimmed());
+            println!("  • Review: {}", "deny.toml policy configuration".dimmed());
         }
         if warnings > 0 {
             println!("{} {} warning(s)", "⚠".yellow(), warnings);

@@ -79,7 +79,11 @@ enum Commands {
         task: String,
     },
     /// Clean workspace (remove target/, generated docs, etc.)
+    #[command(next_help_heading = "Infrastructure")]
     Clean,
+    /// Run CI checks locally (doctor + selftest + audit + docs-check)
+    #[command(next_help_heading = "Onboarding")]
+    CiLocal,
     /// Deploy application to specified environment (dev, staging, prod)
     Deploy {
         /// Target environment: dev, staging, or prod
@@ -115,6 +119,9 @@ enum Commands {
     Quickstart,
     /// Run full template self-test suite (check + bdd + ac-status + bundler + policies)
     Selftest,
+    /// Show flow-based command map
+    #[command(next_help_heading = "Meta")]
+    HelpFlows,
 }
 
 fn main() -> Result<()> {
@@ -162,6 +169,7 @@ fn main() -> Result<()> {
         Commands::Bundle { task } => commands::bundle::run(&task),
         Commands::Audit => commands::audit::run(),
         Commands::Clean => commands::clean::run(),
+        Commands::CiLocal => commands::ci_local::run(),
         Commands::Deploy { env } => commands::deploy::run(&env),
         Commands::Doctor => commands::doctor::run(),
         Commands::DocsCheck => commands::docs_check::run(),
@@ -175,6 +183,7 @@ fn main() -> Result<()> {
         Commands::ReleaseVerify => commands::release_verify::run(),
         Commands::SbomLocal => commands::sbom_local::run(),
         Commands::Selftest => commands::selftest::run_with_verbosity(verbosity),
+        Commands::HelpFlows => commands::help_flows::run(),
     }
 }
 
