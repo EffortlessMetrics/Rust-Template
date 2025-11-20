@@ -232,11 +232,11 @@ stories:
             text: "GET /platform/docs/index returns the documentation index."
             tests:
               - { type: bdd, tag: "@AC-TPL-PLATFORM-DOCS" }
-          - id: AC-TPL-PLATFORM-STATUS
+          - id: AC-TPL-POLICY-STATUS-OVERVIEW
             text: >
-              GET /platform/status returns a JSON summary including template
-              version, ledger counts, DevEx counts, doc counts, task counts,
-              and policy status flags.
+              GET /platform/status includes governance.policies.status field
+              derived from the last policy-test run (pass/fail/unknown),
+              read from target/policy_status.json.
             tests:
               - { type: bdd, tag: "@AC-TPL-PLATFORM-STATUS" }
 
@@ -302,9 +302,41 @@ stories:
           - id: AC-TPL-GRAPH-SELFTEST
             text: >
               cargo xtask selftest fails when governance graph invariants fail,
-              and passes when invariants are satisfied.
+              Mermaid syntax, and is suitable for documentation or debugging.
             tests:
-              - { type: unit, tag: "graph_invariants_selftest" }
+              - { type: unit, tag: "graph_export_mermaid" }
+
+      - id: REQ-TPL-PLATFORM-UI
+        title: "Platform Web UI"
+        tags: [platform, devex, ui]
+        must_have_ac: true
+        description: >
+          The template MUST provide a web-based UI for visualizing and
+          interacting with the governance platform, served by the same
+          binary that provides the API endpoints.
+        adr: [ADR-0004]
+        acceptance_criteria:
+          - id: AC-TPL-PLATFORM-UI-DASHBOARD
+            text: >
+              GET / or /ui serves an HTML dashboard showing platform status,
+              including governance health metrics from /platform/status.
+            tests:
+              - { type: bdd, tag: "@AC-TPL-PLATFORM-UI-DASHBOARD" }
+
+          - id: AC-TPL-PLATFORM-UI-GRAPH
+            text: >
+              The UI provides a graph visualization rendering the governance
+              graph (stories, requirements, ACs, docs, commands) using Mermaid.js.
+            tests:
+              - { type: bdd, tag: "@AC-TPL-PLATFORM-UI-GRAPH" }
+
+          - id: AC-TPL-PLATFORM-UI-FLOWS
+            text: >
+              The UI provides a flows and tasks view displaying DevEx flows
+              and available tasks from the platform APIs.
+            tests:
+              - { type: bdd, tag: "@AC-TPL-PLATFORM-UI-FLOWS" }
+
       - id: REQ-TPL-PLATFORM-INTROSPECTION
         title: "Platform Introspection API"
         tags: [platform, structural]
