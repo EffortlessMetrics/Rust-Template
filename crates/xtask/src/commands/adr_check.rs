@@ -48,8 +48,8 @@ struct Metadata {
 #[derive(Debug, Deserialize)]
 struct Story {
     id: String,
-    #[serde(default)]
-    adr: Option<String>,
+    #[serde(default, deserialize_with = "deserialize_string_or_vec")]
+    adr: Option<Vec<String>>,
     requirements: Vec<Requirement>,
 }
 
@@ -57,15 +57,36 @@ struct Story {
 struct Requirement {
     id: String,
     #[serde(default)]
-    adr: Option<String>,
+    #[allow(dead_code)]
+    tags: Vec<String>,
+    #[serde(default, deserialize_with = "deserialize_string_or_vec")]
+    adr: Option<Vec<String>>,
     acceptance_criteria: Vec<AcceptanceCriterion>,
 }
 
 #[derive(Debug, Deserialize)]
 struct AcceptanceCriterion {
     id: String,
-    #[serde(default)]
-    adr: Option<String>,
+    #[serde(default, deserialize_with = "deserialize_string_or_vec")]
+    adr: Option<Vec<String>>,
+}
+
+fn deserialize_string_or_vec<'de, D>(deserializer: D) -> Result<Option<Vec<String>>, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    #[derive(Deserialize)]
+    #[serde(untagged)]
+    enum StringOrVec {
+        String(String),
+        Vec(Vec<String>),
+    }
+
+    Option::<StringOrVec>::deserialize(deserializer).map(|opt| match opt {
+        Some(StringOrVec::String(s)) => Some(vec![s]),
+        Some(StringOrVec::Vec(v)) => Some(v),
+        None => None,
+    })
 }
 
 /// Main ADR check entry point
@@ -170,25 +191,33 @@ fn collect_adr_references(ledger_path: &Path, _verbose: bool) -> Result<Vec<AdrR
     }
 
     for story in &ledger.stories {
-        if let Some(adr) = &story.adr {
-            references
-                .push(AdrReference { adr_id: adr.clone(), context: format!("Story {}", story.id) });
+        if let Some(adrs) = &story.adr {
+            for adr in adrs {
+                references.push(AdrReference {
+                    adr_id: adr.clone(),
+                    context: format!("Story {}", story.id),
+                });
+            }
         }
 
         for req in &story.requirements {
-            if let Some(adr) = &req.adr {
-                references.push(AdrReference {
-                    adr_id: adr.clone(),
-                    context: format!("Requirement {} (Story {})", req.id, story.id),
-                });
+            if let Some(adrs) = &req.adr {
+                for adr in adrs {
+                    references.push(AdrReference {
+                        adr_id: adr.clone(),
+                        context: format!("Requirement {} (Story {})", req.id, story.id),
+                    });
+                }
             }
 
             for ac in &req.acceptance_criteria {
-                if let Some(adr) = &ac.adr {
-                    references.push(AdrReference {
-                        adr_id: adr.clone(),
-                        context: format!("AC {} (Requirement {})", ac.id, req.id),
-                    });
+                if let Some(adrs) = &ac.adr {
+                    for adr in adrs {
+                        references.push(AdrReference {
+                            adr_id: adr.clone(),
+                            context: format!("AC {} (Requirement {})", ac.id, req.id),
+                        });
+                    }
                 }
             }
         }

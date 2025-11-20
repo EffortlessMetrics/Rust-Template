@@ -4,7 +4,7 @@
 metadata:
   schema_version: "1.0"
   template_version: "2.4.0"
-  last_updated: "2025-11-19"
+  last_updated: "2025-11-20"
   description: "Template core capabilities - v2.4.0 includes health, version, errors, metrics, and supply chain hardening"
   # Template-wide ADRs (not tied to specific stories/requirements)
   adrs:
@@ -20,6 +20,7 @@ stories:
     requirements:
       - id: REQ-TPL-HEALTH
         title: "Health Check Endpoint"
+        tags: [platform, structural]
         adr: ADR-0003  # Spec and BDD as source of truth
         acceptance_criteria:
           - id: AC-TPL-001
@@ -28,6 +29,7 @@ stories:
             adr: ADR-0005  # Selftest as single gate
       - id: REQ-TPL-VERSION
         title: "Version Information Endpoint"
+        tags: [platform]
         adr: ADR-0003  # Spec and BDD as source of truth
         acceptance_criteria:
           - id: AC-TPL-002
@@ -36,6 +38,7 @@ stories:
             adr: ADR-0005  # Selftest as single gate
       - id: REQ-TPL-ERROR-HANDLING
         title: "Error Response Envelope"
+        tags: [platform, structural]
         adr: ADR-0003  # Spec and BDD as source of truth
         acceptance_criteria:
           - id: AC-TPL-003
@@ -48,12 +51,305 @@ stories:
             adr: ADR-0005  # Selftest as single gate
       - id: REQ-TPL-METRICS
         title: "Prometheus Metrics Endpoint"
+        tags: [platform]
         adr: ADR-0003  # Spec and BDD as source of truth
         acceptance_criteria:
           - id: AC-TPL-007
             text: "GET /metrics returns Prometheus-formatted metrics including http_requests_total"
             tests: [ { type: bdd, tag: "@AC-TPL-007" } ]
             adr: ADR-0005  # Selftest as single gate
+
+  - id: US-TPL-PLT-001
+    title: "Platform: Developer Experience & Governance"
+    description: >
+      The template MUST provide discoverable, documented, and tested developer
+      workflows (onboarding, AC-first development, security auditing, releases)
+      as first-class platform features, with flows defined as spec and enforced by CI.
+    adr: 
+      - ADR-0002  # Nix-first
+      - ADR-0005  # Single selftest gate
+      - ADR-0006  # Supply chain
+      - ADR-0007  # Dependency health
+    requirements:
+
+      - id: REQ-PLT-ONBOARDING
+        title: "New developer onboarding is guided and validated"
+        tags: [platform, devex]
+        description: >
+          New developers on any machine can validate their environment,
+          discover workflows, and reach first green check within 15 minutes.
+        adr: ADR-0002
+        acceptance_criteria:
+          - id: AC-PLT-001
+            text: "`cargo xtask doctor` validates Rust, Nix, conftest, git and provides next-steps guidance"
+            tests:
+              - { type: integration, tag: "@AC-PLT-001", file: "specs/features/xtask_devex.feature" }
+          
+          - id: AC-PLT-002
+            text: "`cargo xtask help-flows` renders categorized command map from specs/devex_flows.yaml"
+            tests:
+              - { type: integration, tag: "@AC-PLT-002", file: "specs/features/xtask_devex.feature" }
+          
+          - id: AC-PLT-003
+            text: "`cargo xtask check` runs fmt + clippy + tests as fast dev loop"
+            tests:
+              - { type: integration, tag: "@AC-PLT-003", file: "specs/features/xtask_devex.feature" }
+
+      - id: REQ-PLT-DESIGN-SCAFFOLDING
+        title: "Design decisions and ACs are easy to create correctly"
+        tags: [platform, devex]
+        description: >
+          Scaffolding commands make the right path (ADR-first, AC-first) the easy path,
+          reducing error rates and cognitive load.
+        adr: ADR-0001  # Design history
+        acceptance_criteria:
+          - id: AC-PLT-004
+            text: "`cargo xtask adr-new <title>` creates numbered ADR from template with metadata"
+            tests:
+              - { type: integration, tag: "@AC-PLT-004", file: "specs/features/xtask_devex.feature" }
+          
+          - id: AC-PLT-005
+            text: "`cargo xtask ac-new <ID> <desc>` rejects duplicate IDs and generates YAML snippet"
+            tests:
+              - { type: integration, tag: "@AC-PLT-005", file: "specs/features/xtask_devex.feature" }
+
+      - id: REQ-PLT-SECURITY-GOVERNANCE
+        title: "Security and dependency health are first-class gates"
+        tags: [platform, security]
+        description: >
+          Security auditing is not an afterthought but a required step in
+          dependency changes and releases, with clear recovery guidance.
+        adr: ADR-0007
+        acceptance_criteria:
+          - id: AC-PLT-006
+            text: "`cargo xtask audit` runs cargo-audit + cargo-deny with repo policy (deny.toml)"
+            tests:
+              - { type: integration, tag: "@AC-PLT-006", file: "specs/features/xtask_devex.feature" }
+          
+          - id: AC-PLT-007
+            text: "`cargo xtask audit` provides 4-step recovery guidance on failure"
+            tests:
+              - { type: integration, tag: "@AC-PLT-007", file: "specs/features/xtask_devex.feature" }
+          
+          - id: AC-PLT-008
+            text: "`cargo xtask sbom-local` generates SPDX JSON to target/sbom.spdx.json"
+            tests:
+              - { type: integration, tag: "@AC-PLT-008", file: "specs/features/xtask_devex.feature" }
+
+      - id: REQ-PLT-DOCS-CONSISTENCY
+        title: "Documentation alignment is automatically validated"
+        tags: [platform, docs]
+        description: >
+          Version drift between spec_ledger, README, CLAUDE is caught by CI,
+          not discovered months later.
+        adr: ADR-0005
+        acceptance_criteria:
+          - id: AC-PLT-009
+            text: "`cargo xtask docs-check` validates version alignment across spec_ledger, README, CLAUDE"
+            tests:
+              - { type: integration, tag: "@AC-PLT-009", file: "specs/features/xtask_devex.feature" }
+          
+          - id: AC-PLT-010
+            text: "`cargo xtask docs-check` regenerates feature_status and fails on dirty git tree"
+            tests:
+              - { type: integration, tag: "@AC-PLT-010", file: "specs/features/xtask_devex.feature" }
+
+      - id: REQ-PLT-RELEASE-SAFETY
+        title: "Releases are guided, validated, and never skip steps"
+        tags: [platform, release]
+        description: >
+          Release process is a single command sequence with automated validation,
+          making "forgot to run audit" or "dirty tree" impossible.
+        adr: ADR-0005
+        acceptance_criteria:
+          - id: AC-PLT-011
+            text: "`cargo xtask release-prepare X.Y.Z` updates spec_ledger, README, CLAUDE, CHANGELOG"
+            tests:
+              - { type: integration, tag: "@AC-PLT-011", file: "specs/features/xtask_devex.feature" }
+          
+          - id: AC-PLT-012
+            text: "`cargo xtask release-verify` runs selftest + audit + docs-check + clean tree"
+            tests:
+              - { type: integration, tag: "@AC-PLT-012", file: "specs/features/xtask_devex.feature" }
+          
+          - id: AC-PLT-013
+            text: "`cargo xtask release-verify` provides git command sequence on success"
+            tests:
+              - { type: integration, tag: "@AC-PLT-013", file: "specs/features/xtask_devex.feature" }
+
+      - id: REQ-PLT-DEVEX-CONTRACT
+        title: "DevEx flows and commands are spec-backed and CI-enforced"
+        tags: [platform, devex]
+        description: >
+          The template defines its own workflows in machine-readable spec,
+          tests that required commands exist, and fails CI if docs/code drift from spec.
+        adr: ADR-0005
+        acceptance_criteria:
+          - id: AC-PLT-014
+            text: "Canonical flows and commands are defined in specs/devex_flows.yaml"
+            tests:
+              - { type: unit, tag: "devex_flows_schema_valid" }
+          
+          - id: AC-PLT-015
+            text: "`cargo xtask selftest` enforces devex contract (required commands exist)"
+            tests:
+              - { type: integration, tag: "@AC-PLT-015", file: "specs/features/xtask_devex.feature" }
+          
+          - id: AC-PLT-016
+            text: "`cargo xtask ci-local` orchestrates doctor + selftest + audit + docs-check"
+            tests:
+              - { type: integration, tag: "@AC-PLT-016", file: "specs/features/xtask_devex.feature" }
+
+      - id: REQ-TPL-PLATFORM-INTROSPECTION
+        title: "Platform Introspection API"
+        tags: [platform, devex, api]
+        description: >
+          The template MUST provide HTTP endpoints to introspect its own
+          governance state (graph, tasks, flows, docs), enabling agents
+          and dashboards to understand the platform without parsing files.
+        adr: [ADR-0001]
+        acceptance_criteria:
+          - id: AC-TPL-PLATFORM-GRAPH
+            text: "GET /platform/graph returns the full governance graph in JSON format."
+            tests:
+              - { type: bdd, tag: "@AC-TPL-PLATFORM-GRAPH" }
+          - id: AC-TPL-PLATFORM-DEVEX
+            text: "GET /platform/devex/flows returns the canonical flows definition."
+            tests:
+              - { type: bdd, tag: "@AC-TPL-PLATFORM-DEVEX" }
+          - id: AC-TPL-PLATFORM-DOCS
+            text: "GET /platform/docs/index returns the documentation index."
+            tests:
+              - { type: bdd, tag: "@AC-TPL-PLATFORM-DOCS" }
+          - id: AC-TPL-PLATFORM-STATUS
+            text: >
+              GET /platform/status returns a JSON summary including template
+              version, ledger counts, DevEx counts, doc counts, task counts,
+              and policy status flags.
+            tests:
+              - { type: bdd, tag: "@AC-TPL-PLATFORM-STATUS" }
+
+      - id: REQ-TPL-SUGGEST-NEXT
+        title: "Task-Aware Next-Step Suggestions"
+        tags: [platform, devex, structural]
+        description: >
+          The template MUST provide a canonical way for humans and agents
+          to get a suggested next-step sequence for a given task, derived
+          from specs/tasks.yaml and specs/devex_flows.yaml.
+        adr: [ADR-0001]
+        acceptance_criteria:
+          - id: AC-TPL-SUGGEST-NEXT-CLI
+            text: >
+              cargo xtask suggest-next --task <ID> prints a structured
+              sequence of recommended commands and edits for the given
+              task, based on its recommended_flows.
+            tests:
+              - { type: bdd, tag: "@AC-TPL-SUGGEST-NEXT-CLI" }
+
+          - id: AC-TPL-SUGGEST-NEXT-HTTP
+            text: >
+              GET /platform/tasks/suggest-next?task=<ID> returns a JSON
+              payload with task metadata and a recommended_sequence of
+              steps (commands/edits) for that task.
+            tests:
+              - { type: bdd, tag: "@AC-TPL-SUGGEST-NEXT-HTTP" }
+
+      - id: REQ-TPL-GRAPH-INVARIANTS
+        title: "Governance Graph Invariants"
+        tags: [platform, structural]
+        description: >
+          The governance graph MUST satisfy baseline structural invariants,
+          so that missing coverage and dead configuration are detected
+          automatically.
+        adr: [ADR-0001]
+        acceptance_criteria:
+          - id: AC-TPL-GRAPH-REQ-HAS-AC
+            text: >
+              Every requirement with tags including platform, structural,
+              security, devex, docs, or release has at least one AC node
+              in the graph.
+            tests:
+              - { type: unit, tag: "graph_invariants_req_has_ac" }
+
+          - id: AC-TPL-GRAPH-AC-HAS-TEST
+            text: >
+              Every AC with a tests mapping in spec_ledger.yaml has at
+              least one test node linked in the graph.
+            tests:
+              - { type: unit, tag: "graph_invariants_ac_has_test" }
+
+          - id: AC-TPL-GRAPH-COMMAND-REACHABLE
+            text: >
+              Every command declared in specs/devex_flows.yaml is either
+              referenced by a flow or explicitly marked internal; no
+              orphan commands exist.
+            tests:
+              - { type: unit, tag: "graph_invariants_command_reachable" }
+      - id: REQ-TPL-PLATFORM-INTROSPECTION
+        title: "Platform Introspection API"
+        tags: [platform, structural]
+        description: >
+          The service MUST expose introspection endpoints for specs,
+          DevEx flows, and docs index, so humans and agents can query
+          governance state at runtime.
+        adr: ADR-0001  # Hexagonal architecture
+        acceptance_criteria:
+          - id: AC-TPL-PLATFORM-GRAPH
+            text: "GET /platform/graph returns the governance graph (stories, requirements, ACs, docs, commands, flows) as JSON with nodes[] and edges[]."
+            tests:
+              - { type: bdd, tag: "@AC-TPL-PLATFORM-GRAPH", file: "specs/features/platform_introspection.feature" }
+
+          - id: AC-TPL-PLATFORM-DEVEX
+            text: "GET /platform/devex/flows returns devex_flows.yaml as JSON, including commands and flows sections."
+            tests:
+              - { type: bdd, tag: "@AC-TPL-PLATFORM-DEVEX", file: "specs/features/platform_introspection.feature" }
+
+          - id: AC-TPL-PLATFORM-DOCS
+            text: "GET /platform/docs/index returns doc_index.yaml as JSON, including docs[] entries mapped to stories/requirements/ACs/ADRs."
+            tests:
+              - { type: bdd, tag: "@AC-TPL-PLATFORM-DOCS", file: "specs/features/platform_introspection.feature" }
+
+      - id: REQ-TPL-PLATFORM-TASKS
+        title: "Platform Tasks Surfacing"
+        tags: [platform, devex, structural]
+        description: >
+          The template MUST surface tasks defined in specs/tasks.yaml via both
+          CLI and HTTP so humans and agents can discover and track work items
+          without reading raw YAML.
+        adr: [ADR-0001]
+        acceptance_criteria:
+          - id: AC-TPL-TASKS-CLI
+            text: >
+              cargo xtask tasks-list prints tasks grouped by status, with
+              requirement IDs and ACs visible, and supports status/requirement
+              filters.
+            tests:
+              - { type: bdd, tag: "@AC-TPL-TASKS-CLI", file: "specs/features/platform_tasks.feature" }
+
+          - id: AC-TPL-TASKS-HTTP
+            text: >
+              GET /platform/tasks returns a JSON representation of tasks.yaml,
+              including id, title, requirement, acs, status, owner, labels,
+              and docs fields, and supports status/requirement filters.
+            tests:
+              - { type: bdd, tag: "@AC-TPL-TASKS-HTTP", file: "specs/features/platform_tasks.feature" }
+
+      - id: REQ-TPL-GRAPH-VISUALIZATION
+        title: "Governance Graph Visualization"
+        tags: [platform, structural, docs]
+        description: >
+          The template MUST provide a human-friendly visualization of the
+          governance graph, so engineers can understand relationships
+          between stories, requirements, ACs, and docs at a glance.
+        adr: [ADR-0001]
+        acceptance_criteria:
+          - id: AC-TPL-GRAPH-MERMAID
+            text: >
+              cargo xtask graph-export --format mermaid emits a valid Mermaid
+              graph (graph TD) that includes nodes for stories, requirements,
+              and ACs, and edges showing their relationships.
+            tests:
+              - { type: bdd, tag: "@AC-TPL-GRAPH-MERMAID", file: "specs/features/graph_visualization.feature" }
 
   # When adding your domain features:
   # - Copy the structure above (story → requirement → AC → tests)

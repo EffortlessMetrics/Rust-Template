@@ -1,0 +1,22 @@
+service:
+  id: "rust-as-spec-kernel"
+  name: "Rust-as-Spec Platform Kernel"
+  owner: "team-platform"
+  description: "Self-healing spec-governed service template for Rust"
+  tags: ["platform", "template", "governance"]
+
+runtime:
+  language: "rust"
+  framework: "axum"
+  deployment: "kubernetes"
+
+governance:
+  runbook_required: true
+  slo_required: true
+  spec_governed: true
+  devex_spec: "specs/devex_flows.yaml"
+  docs_spec: "specs/doc_index.yaml"
+
+slo:
+  availability: "99.5"
+  latency_p95_ms: 250

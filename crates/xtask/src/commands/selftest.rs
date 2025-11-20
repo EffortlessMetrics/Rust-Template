@@ -126,7 +126,7 @@ pub fn run_with_verbosity(verbosity: crate::Verbosity) -> Result<()> {
     println!();
 
     // Step 5: Policy tests (if conftest available)
-    println!("{}", "[5/5] Running policy tests...".blue());
+    println!("{}", "[5/6] Running policy tests...".blue());
     let step_start = Instant::now();
     match crate::commands::policy_test::run() {
         Ok(_) => {
@@ -182,6 +182,27 @@ pub fn run_with_verbosity(verbosity: crate::Verbosity) -> Result<()> {
             }
         }
     }
+    // Step 6: DevEx contract
+    println!("{}", "[6/6] Checking DevEx contract...".blue());
+    let step_start = Instant::now();
+    match run_devex_contract(verbosity) {
+        Ok(_) => {
+            let elapsed = step_start.elapsed();
+            if verbosity.is_verbose() {
+                println!(
+                    "  {} DevEx contract satisfied ({:.2}s)",
+                    "✓".green(),
+                    elapsed.as_secs_f64()
+                );
+            } else {
+                println!("  {} DevEx contract satisfied", "✓".green());
+            }
+        }
+        Err(e) => {
+            eprintln!("  {} DevEx contract failed: {}", "✗".red(), e);
+            failed += 1;
+        }
+    }
     println!();
 
     // Summary
@@ -231,11 +252,7 @@ fn run_adr_check(verbosity: crate::Verbosity) -> Result<()> {
 
 fn run_devex_contract(_verbosity: crate::Verbosity) -> Result<()> {
     let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-    let root = manifest_dir
-        .parent()
-        .unwrap()
-        .parent()
-        .unwrap();
+    let root = manifest_dir.parent().unwrap().parent().unwrap();
 
     let spec_path = root.join("specs/devex_flows.yaml");
     let spec = crate::devex::load_spec(&spec_path)?;

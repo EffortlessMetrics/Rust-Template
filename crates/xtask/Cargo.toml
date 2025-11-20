@@ -8,6 +8,7 @@ anyhow.workspace = true
 colored="3.0.0"
 serde.workspace = true
 serde_yaml = { workspace = true }
+spec-runtime = { path = "../spec-runtime" }
 serde_json="1.0.145"
 quick-xml="0.38.4"
 glob="0.3.3"

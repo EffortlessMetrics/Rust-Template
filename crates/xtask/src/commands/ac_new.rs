@@ -1,9 +1,9 @@
-use anyhow::{Context, Result};
+use anyhow::Result;
 use colored::Colorize;
 use std::fs;
 use std::path::Path;
 
-pub fn run(ac_id: &str, description: &str, story: &str, requirement: &str) -> Result<()> {
+pub fn run(ac_id: &str, description: &str, _story: &str, requirement: &str) -> Result<()> {
     println!("{}", "✨ Creating new acceptance criterion...".blue().bold());
     println!();
 
@@ -21,7 +21,7 @@ pub fn run(ac_id: &str, description: &str, story: &str, requirement: &str) -> Re
         anyhow::bail!("spec_ledger.yaml not found at {}", ledger_path.display());
     }
 
-    let ledger_content = fs::read_to_string(ledger_path)?;
+    let _ledger_content = fs::read_to_string(ledger_path)?;
 
     // Simple insertion: find the requirement and add AC
     // This is a basic implementation - more sophisticated YAML parsing could be added

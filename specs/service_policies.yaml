@@ -1,0 +1,21 @@
+# Service Policy Specification
+# Version: 1.0.0
+# Purpose: Define operational policies for services (runbooks, SLOs)
+
+schema_version: "1.0"
+template_version: "v2.4.0"
+
+policies:
+  runbook_required:
+    description: "Every service must have a runbook in docs/runbooks/"
+    required_sections:
+      - "Overview"
+      - "Alerts"
+      - "Troubleshooting"
+      - "Dependencies"
+
+  slo_defined:
+    description: "Every service must define SLOs in service_metadata.yaml"
+    required_slos:
+      - "availability"
+      - "latency"

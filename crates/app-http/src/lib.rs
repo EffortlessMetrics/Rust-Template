@@ -12,6 +12,7 @@ use tracing::{info, instrument};
 pub mod errors;
 pub mod metrics;
 pub mod middleware;
+pub mod platform;
 
 // Re-export commonly used types
 pub use errors::{AppError, ErrorCode};
@@ -25,6 +26,8 @@ pub fn app() -> Router {
         .route("/version", get(version))
         .route("/metrics", get(metrics::metrics_handler))
         .route("/api/echo", post(echo)) // For demonstrating error handling in tests
+        // Platform introspection endpoints
+        .nest("/platform", platform::router())
         // Add your domain endpoints here - see docs/tutorials/first-ac-change.md
         // Middleware layers (applied in reverse order - bottom to top)
         .layer(axum::middleware::from_fn(metrics::metrics_middleware))

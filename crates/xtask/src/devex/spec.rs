@@ -60,11 +60,7 @@ mod tests {
     #[test]
     fn devex_spec_parses() {
         let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-        let root = manifest_dir
-            .parent()
-            .unwrap()
-            .parent()
-            .unwrap();
+        let root = manifest_dir.parent().unwrap().parent().unwrap();
         let spec_path = root.join("specs/devex_flows.yaml");
 
         let spec = load_spec(&spec_path).expect("devex_flows.yaml should parse");

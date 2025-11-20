@@ -18,22 +18,22 @@ pub fn run(version: &str) -> Result<()> {
     let mut updated = Vec::new();
 
     // Update spec_ledger.yaml
-    if update_file_version("specs/spec_ledger.yaml", "template_version:", &version)? {
+    if update_file_version("specs/spec_ledger.yaml", "template_version:", version)? {
         updated.push("specs/spec_ledger.yaml");
     }
 
     // Update README.md
-    if update_readme_version(&version)? {
+    if update_readme_version(version)? {
         updated.push("README.md");
     }
 
     // Update CLAUDE.md
-    if update_claude_version(&version, &today)? {
+    if update_claude_version(version, &today)? {
         updated.push("CLAUDE.md");
     }
 
     // Insert CHANGELOG skeleton
-    if insert_changelog_skeleton(&version, &today)? {
+    if insert_changelog_skeleton(version, &today)? {
         updated.push("CHANGELOG.md");
     }
 

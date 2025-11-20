@@ -5,11 +5,7 @@ use std::path::PathBuf;
 /// Print a flow-based map of xtask commands loaded from specs/devex_flows.yaml
 pub fn run() -> Result<()> {
     let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-    let root = manifest_dir
-        .parent()
-        .unwrap()
-        .parent()
-        .unwrap();
+    let root = manifest_dir.parent().unwrap().parent().unwrap();
 
     let spec_path = root.join("specs/devex_flows.yaml");
     let spec = crate::devex::load_spec(&spec_path)?;
@@ -24,10 +20,7 @@ pub fn run() -> Result<()> {
     > = std::collections::HashMap::new();
 
     for (cmd_name, cmd_spec) in &spec.commands {
-        by_category
-            .entry(cmd_spec.category.clone())
-            .or_default()
-            .push((cmd_name, cmd_spec));
+        by_category.entry(cmd_spec.category.clone()).or_default().push((cmd_name, cmd_spec));
     }
 
     // Render each category in canonical order

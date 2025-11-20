@@ -113,8 +113,15 @@ enum Commands {
     Audit,
     /// Diagnose development environment setup
     Doctor,
-    /// Check documentation consistency
+    /// Verify documentation consistency
     DocsCheck,
+    /// Export dependency graph
+    GraphExport {
+        #[arg(long, value_enum, default_value = "json")]
+        format: commands::graph_export::OutputFormat,
+    },
+    /// List tasks from specs/tasks.yaml
+    TasksList,
     /// Format all code (Rust, YAML validation, etc.)
     FmtAll,
     /// Manage workspace dependencies with hakari
@@ -134,6 +141,8 @@ enum Commands {
     ReleaseVerify,
     /// Generate local SBOM
     SbomLocal,
+    /// Suggest next steps for a task
+    SuggestNext(commands::suggest_next::SuggestNextArgs),
     /// Quick validation of template functionality
     Quickstart,
     /// Run full template self-test suite (check + bdd + ac-status + bundler + policies)
@@ -201,6 +210,13 @@ fn main() -> Result<()> {
         }
         Commands::Doctor => commands::doctor::run(),
         Commands::DocsCheck => commands::docs_check::run(),
+        Commands::GraphExport { format } => {
+            commands::graph_export::run(commands::graph_export::GraphExportArgs {
+                format,
+                check: false,
+            })
+        }
+        Commands::TasksList => commands::tasks_list::run(),
         Commands::FmtAll => commands::fmt_all::run(),
         Commands::Hakari => commands::hakari::run(),
         Commands::Migrate => commands::migrate::run(),
@@ -210,6 +226,7 @@ fn main() -> Result<()> {
         Commands::ReleasePrepare { version } => commands::release_prepare::run(&version),
         Commands::ReleaseVerify => commands::release_verify::run(),
         Commands::SbomLocal => commands::sbom_local::run(),
+        Commands::SuggestNext(args) => commands::suggest_next::run(args),
         Commands::Selftest => commands::selftest::run_with_verbosity(verbosity),
         Commands::HelpFlows => commands::help_flows::run(),
     }
@@ -292,10 +309,29 @@ fn format_command(cmd: &Command) -> String {
 /// Used by devex contract check to validate required commands exist
 pub fn all_command_names() -> Vec<&'static str> {
     vec![
-        "ac-status", "ac-new", "adr-check", "adr-new", "check", "bdd",
-        "bundle", "clean", "ci-local", "deploy", "audit", "doctor",
-        "docs-check", "fmt-all", "hakari", "migrate", "pin-actions",
-        "policy-test", "release-prepare", "release-verify", "sbom-local",
-        "quickstart", "selftest", "help-flows",
+        "ac-status",
+        "ac-new",
+        "adr-check",
+        "adr-new",
+        "check",
+        "bdd",
+        "bundle",
+        "clean",
+        "ci-local",
+        "deploy",
+        "audit",
+        "doctor",
+        "docs-check",
+        "fmt-all",
+        "hakari",
+        "migrate",
+        "pin-actions",
+        "policy-test",
+        "release-prepare",
+        "release-verify",
+        "sbom-local",
+        "quickstart",
+        "selftest",
+        "help-flows",
     ]
 }

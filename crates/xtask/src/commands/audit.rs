@@ -8,7 +8,7 @@ pub fn run() -> Result<()> {
     println!();
 
     let mut issues = 0;
-    let mut warnings = 0;
+    let warnings = 0;
 
     // Check if tools are available
     let has_cargo_audit = which::which("cargo-audit").is_ok();
