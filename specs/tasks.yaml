@@ -1,0 +1,33 @@
+schema_version: "1.0"
+template_version: "v2.4.0"
+
+tasks:
+  - id: TASK-TPL-IMPLEMENT-AC-001
+    title: "Implement ACs for Platform Introspection API"
+    requirement: REQ-TPL-PLATFORM-INTROSPECTION
+    acs:
+      - AC-TPL-PLATFORM-GRAPH
+      - AC-TPL-PLATFORM-DEVEX
+      - AC-TPL-PLATFORM-DOCS
+    status: open
+    owner: team-platform
+    labels: [platform, devex, ac_first]
+    recommended_flows: ["ac_first"]
+    docs:
+      design:
+        - DESIGN-TPL-PLATFORM-INTROSPECTION-001
+      plan: []
+
+  - id: TASK-TPL-FIX-AUDIT-001
+    title: "Fix cargo-audit / cargo-deny findings and keep audit clean"
+    requirement: REQ-PLT-SECURITY-GOVERNANCE
+    acs:
+      - AC-PLT-006
+      - AC-PLT-007
+    status: open
+    owner: team-platform
+    labels: [security, dependencies, audit]
+    recommended_flows: ["dependency_change"]
+    docs:
+      design: []
+      plan: []

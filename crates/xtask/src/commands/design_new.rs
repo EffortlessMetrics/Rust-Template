@@ -14,11 +14,7 @@ pub struct DesignNewArgs {
 
 pub fn run(args: DesignNewArgs) -> Result<()> {
     let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-    let root = manifest_dir
-        .parent()
-        .expect("workspace root")
-        .parent()
-        .expect("repo root");
+    let root = manifest_dir.parent().expect("workspace root").parent().expect("repo root");
 
     let design_dir = root.join("docs/design");
     fs::create_dir_all(&design_dir)
@@ -36,12 +32,18 @@ pub fn run(args: DesignNewArgs) -> Result<()> {
     let reqs_str = if args.requirements.is_empty() {
         "[]".to_string()
     } else {
-        format!("[{}]", args.requirements.iter().map(|r| format!("\"{}\"", r)).collect::<Vec<_>>().join(", "))
+        format!(
+            "[{}]",
+            args.requirements.iter().map(|r| format!("\"{}\"", r)).collect::<Vec<_>>().join(", ")
+        )
     };
     let adrs_str = if args.adrs.is_empty() {
         "[]".to_string()
     } else {
-        format!("[{}]", args.adrs.iter().map(|a| format!("\"{}\"", a)).collect::<Vec<_>>().join(", "))
+        format!(
+            "[{}]",
+            args.adrs.iter().map(|a| format!("\"{}\"", a)).collect::<Vec<_>>().join(", ")
+        )
     };
     let owner = args.owner.as_deref().unwrap_or("platform");
 
@@ -101,14 +103,14 @@ owner: "{owner}"
 
     fs::write(&path, content).with_context(|| format!("Writing {}", path.display()))?;
 
-    let rel_path = path.strip_prefix(&root).unwrap_or(&path);
+    let rel_path = path.strip_prefix(root).unwrap_or(&path);
     println!("{} Created design doc at {}", "✓".green(), rel_path.display());
     println!();
     println!("{}", "Next steps:".bold());
     println!("  • Add this entry to specs/doc_index.yaml:");
     println!("    - id: {}", args.id);
     println!("      file: {}", rel_path.display());
-println!("      doc_type: design_doc");
+    println!("      doc_type: design_doc");
     println!("      stories: []");
     println!("      requirements: {}", reqs_str);
     println!("      acs: []");
@@ -123,15 +125,7 @@ fn slugify(title: &str) -> String {
     title
         .to_lowercase()
         .chars()
-        .map(|c| {
-            if c.is_ascii_alphanumeric() {
-                c
-            } else if c.is_whitespace() || c == '-' {
-                '-'
-            } else {
-                '-'
-            }
-        })
+        .map(|c| if c.is_ascii_alphanumeric() { c } else { '-' })
         .collect::<String>()
         .split('-')
         .filter(|s| !s.is_empty())

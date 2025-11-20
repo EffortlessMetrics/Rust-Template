@@ -1,3 +1,7 @@
+pub mod ledger;
+pub mod policy;
 pub mod spec;
 
-pub use spec::{load_doc_index, DocEntry, DocIndex};
+pub use ledger::load_ledger;
+pub use policy::load_policies;
+pub use spec::{DocEntry, DocIndex, load_doc_index};

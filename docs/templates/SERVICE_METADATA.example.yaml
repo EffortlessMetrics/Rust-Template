@@ -10,7 +10,14 @@ service:
   name: "Example API Service"
 
   # Team or individual who owns this service
-  owner: "team-platform"  # or "john.doe@example.com"
+  owner: "team-platform"
+  tier: "1"
+  team: "platform"
+  runbook_required: true
+  slos:
+    availability: 99.9%
+    latency: 100ms
+  # or "john.doe@example.com"
 
   # Business domain this service operates in
   domain: "user-management"  # or "billing", "inventory", etc.

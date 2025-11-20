@@ -53,9 +53,7 @@ pub fn run() -> Result<()> {
 
     // Final: Check working tree
     println!("{}", "Checking working tree...".bold());
-    let output = std::process::Command::new("git")
-        .args(["status", "--porcelain"])
-        .output()?;
+    let output = std::process::Command::new("git").args(["status", "--porcelain"]).output()?;
 
     let status = String::from_utf8_lossy(&output.stdout);
     if !status.trim().is_empty() {

@@ -27,6 +27,18 @@ Auto-generated AC status from acceptance tests.
 | AC-TPL-003 | US-TPL-001 | REQ-TPL-ERROR-HANDLING | ✅ pass | 1 |
 | AC-TPL-004 | US-TPL-001 | REQ-TPL-ERROR-HANDLING | ✅ pass | 3 |
 | AC-TPL-007 | US-TPL-001 | REQ-TPL-METRICS | ✅ pass | 1 |
+| AC-TPL-GRAPH-AC-HAS-TEST | US-TPL-PLT-001 | REQ-TPL-GRAPH-INVARIANTS | ❓ unknown | 0 |
+| AC-TPL-GRAPH-COMMAND-REACHABLE | US-TPL-PLT-001 | REQ-TPL-GRAPH-INVARIANTS | ❓ unknown | 0 |
+| AC-TPL-GRAPH-MERMAID | US-TPL-PLT-001 | REQ-TPL-GRAPH-VISUALIZATION | ✅ pass | 1 |
+| AC-TPL-GRAPH-REQ-HAS-AC | US-TPL-PLT-001 | REQ-TPL-GRAPH-INVARIANTS | ❓ unknown | 0 |
+| AC-TPL-PLATFORM-DEVEX | US-TPL-PLT-001 | REQ-TPL-PLATFORM-INTROSPECTION | ✅ pass | 1 |
+| AC-TPL-PLATFORM-DOCS | US-TPL-PLT-001 | REQ-TPL-PLATFORM-INTROSPECTION | ✅ pass | 1 |
+| AC-TPL-PLATFORM-GRAPH | US-TPL-PLT-001 | REQ-TPL-PLATFORM-INTROSPECTION | ✅ pass | 1 |
+| AC-TPL-PLATFORM-STATUS | US-TPL-PLT-001 | REQ-TPL-PLATFORM-INTROSPECTION | ✅ pass | 1 |
+| AC-TPL-SUGGEST-NEXT-CLI | US-TPL-PLT-001 | REQ-TPL-SUGGEST-NEXT | ✅ pass | 1 |
+| AC-TPL-SUGGEST-NEXT-HTTP | US-TPL-PLT-001 | REQ-TPL-SUGGEST-NEXT | ✅ pass | 1 |
+| AC-TPL-TASKS-CLI | US-TPL-PLT-001 | REQ-TPL-PLATFORM-TASKS | ✅ pass | 1 |
+| AC-TPL-TASKS-HTTP | US-TPL-PLT-001 | REQ-TPL-PLATFORM-TASKS | ✅ pass | 1 |
 
 ## Unmapped ACs
 
@@ -48,3 +60,9 @@ ACs with no mapped scenarios:
 - AC-PLT-014: Canonical flows and commands are defined in specs/devex_flows.yaml
 - AC-PLT-015: `cargo xtask selftest` enforces devex contract (required commands exist)
 - AC-PLT-016: `cargo xtask ci-local` orchestrates doctor + selftest + audit + docs-check
+- AC-TPL-GRAPH-AC-HAS-TEST: Every AC with a tests mapping in spec_ledger.yaml has at least one test node linked in the graph.
+
+- AC-TPL-GRAPH-COMMAND-REACHABLE: Every command declared in specs/devex_flows.yaml is either referenced by a flow or explicitly marked internal; no orphan commands exist.
+
+- AC-TPL-GRAPH-REQ-HAS-AC: Every requirement with tags including platform, structural, security, devex, docs, or release has at least one AC node in the graph.
+

@@ -1,3 +1,3 @@
 pub mod spec;
 
-pub use spec::{load_spec, DevExSpec};
+pub use spec::load_spec;

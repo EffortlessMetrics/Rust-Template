@@ -101,6 +101,9 @@ struct Story {
 #[derive(Debug, Deserialize)]
 struct Requirement {
     id: String,
+    #[serde(default)]
+    #[allow(dead_code)]
+    tags: Vec<String>,
     acceptance_criteria: Vec<AcceptanceCriteria>,
 }
 
@@ -530,11 +533,11 @@ fn generate_status_md(
     output.push_str("| AC ID | Story | Requirement | Status | Scenarios |\n");
     output.push_str("|-------|-------|-------------|--------|----------|\n");
 
-    let mut ac_ids: Vec<_> = acs.keys().cloned().collect();
-    ac_ids.sort();
+    // Sort ACs for deterministic output
+    let mut sorted_acs: Vec<_> = acs.values().collect();
+    sorted_acs.sort_by_key(|ac| &ac.id);
 
-    for ac_id in &ac_ids {
-        let ac = &acs[ac_id];
+    for ac in sorted_acs {
         output.push_str(&format!(
             "| {} | {} | {} | {} {} | {} |\n",
             ac.id,
@@ -547,28 +550,21 @@ fn generate_status_md(
     }
 
     // Unmapped ACs
-    let unmapped: Vec<_> = acs.values().filter(|ac| ac.scenarios.is_empty()).collect();
-    if !unmapped.is_empty() {
+    let mut unmapped_acs: Vec<_> = acs.values().filter(|ac| ac.scenarios.is_empty()).collect();
+    unmapped_acs.sort_by_key(|ac| &ac.id);
+
+    if !unmapped_acs.is_empty() {
         output.push_str("\n## Unmapped ACs\n\n");
         output.push_str("ACs with no mapped scenarios:\n\n");
-        for ac in unmapped {
-            let text_preview = if ac.text.len() > 100 {
-                // Safe truncation at character boundary
-                let mut end = 100.min(ac.text.len());
-                while end > 0 && !ac.text.is_char_boundary(end) {
-                    end -= 1;
-                }
-                format!("{}...", &ac.text[..end])
-            } else {
-                ac.text.clone()
-            };
-            output.push_str(&format!("- {}: {}\n", ac.id, text_preview));
+        for ac in unmapped_acs {
+            output.push_str(&format!("- {}: {}\n", ac.id, ac.text));
         }
     }
 
-    // Unmapped scenarios
-    let unmapped_scenarios: Vec<_> =
+    let mut unmapped_scenarios: Vec<_> =
         scenarios.values().filter(|s| !acs.contains_key(&s.ac_id)).collect();
+    unmapped_scenarios.sort_by_key(|s| &s.name);
+
     if !unmapped_scenarios.is_empty() {
         output.push_str("\n## Unmapped Scenarios\n\n");
         output.push_str("Scenarios referencing non-existent ACs:\n\n");

@@ -43,11 +43,7 @@ mod tests {
     #[test]
     fn doc_index_parses() {
         let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-        let root = manifest_dir
-            .parent()
-            .unwrap()
-            .parent()
-            .unwrap();
+        let root = manifest_dir.parent().unwrap().parent().unwrap();
         let index_path = root.join("specs/doc_index.yaml");
 
         let index = load_doc_index(&index_path).expect("doc_index.yaml should parse");

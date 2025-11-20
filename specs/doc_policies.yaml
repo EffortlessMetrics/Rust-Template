@@ -1,0 +1,21 @@
+# Documentation Policies
+# Version: 1.0.0
+# Purpose: Define when specific documentation types are mandatory based on requirement tags.
+
+schema_version: "1.0"
+template_version: "v2.4.0"
+
+rules:
+  - id: DOC-REQ-STRUCTURAL
+    description: "Structural and platform-level requirements must have at least one design or implementation plan."
+    applies_to:
+      requirement_tags: ["platform", "structural"]
+    require_doc_types: ["design_doc", "impl_plan"]
+    min_docs: 1
+
+  - id: DOC-REQ-SECURITY
+    description: "Security requirements must have a design doc explaining the mitigation."
+    applies_to:
+      requirement_tags: ["security"]
+    require_doc_types: ["design_doc"]
+    min_docs: 1

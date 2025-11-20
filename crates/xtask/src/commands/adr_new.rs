@@ -1,7 +1,7 @@
 use anyhow::{Context, Result};
 use colored::Colorize;
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::process::Command;
 
 pub fn run(title: &str) -> Result<()> {
@@ -76,10 +76,10 @@ fn find_next_adr_number(adr_dir: &Path) -> Result<u32> {
         let filename_str = filename.to_string_lossy();
 
         // Parse "0001-title.md" -> 1
-        if let Some(num_str) = filename_str.split('-').next() {
-            if let Ok(num) = num_str.parse::<u32>() {
-                max_num = max_num.max(num);
-            }
+        if let Some(num_str) = filename_str.split('-').next()
+            && let Ok(num) = num_str.parse::<u32>()
+        {
+            max_num = max_num.max(num);
         }
     }
 

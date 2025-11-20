@@ -37,7 +37,7 @@ pub fn run() -> Result<()> {
         },
         "packages": tree_output.lines()
             .filter_map(|line| {
-                let parts: Vec<&str> = line.trim().split_whitespace().collect();
+                let parts: Vec<&str> = line.split_whitespace().collect();
                 if parts.len() >= 2 {
                     Some(serde_json::json!({
                         "name": parts[0],

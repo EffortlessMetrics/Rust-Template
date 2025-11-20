@@ -1,0 +1,391 @@
+warning: fields `id` and `title` are never read
+  --> crates/xtask/src/docs_index/ledger.rs:13:9
+   |
+12 | pub struct Story {
+   |            ----- fields in this struct
+13 |     pub id: String,
+   |         ^^
+14 |     pub title: String,
+   |         ^^^^^
+   |
+   = note: `Story` has a derived impl for the trait `Debug`, but this is intentionally ignored during dead code analysis
+   = note: `#[warn(dead_code)]` on by default
+
+warning: fields `title` and `acceptance_criteria` are never read
+  --> crates/xtask/src/docs_index/ledger.rs:21:9
+   |
+19 | pub struct Requirement {
+   |            ----------- fields in this struct
+20 |     pub id: String,
+21 |     pub title: String,
+   |         ^^^^^
+...
+24 |     pub acceptance_criteria: Vec<AcceptanceCriterion>,
+   |         ^^^^^^^^^^^^^^^^^^^
+   |
+   = note: `Requirement` has a derived impl for the trait `Debug`, but this is intentionally ignored during dead code analysis
+
+warning: fields `id` and `text` are never read
+  --> crates/xtask/src/docs_index/ledger.rs:29:9
+   |
+28 | pub struct AcceptanceCriterion {
+   |            ------------------- fields in this struct
+29 |     pub id: String,
+   |         ^^
+30 |     pub text: String,
+   |         ^^^^
+   |
+   = note: `AcceptanceCriterion` has a derived impl for the trait `Debug`, but this is intentionally ignored during dead code analysis
+
+warning: `xtask` (bin "xtask") generated 3 warnings
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.07s
+     Running `target/debug/xtask selftest`
+warning: unknown setting 'lazy-trees'
+warning: Git tree '/home/steven/code/Rust/Rust-Template' is dirty
+DevShell ready — try: just checks
+warning: fields `id` and `title` are never read
+  --> crates/xtask/src/docs_index/ledger.rs:13:9
+   |
+12 | pub struct Story {
+   |            ----- fields in this struct
+13 |     pub id: String,
+   |         ^^
+14 |     pub title: String,
+   |         ^^^^^
+   |
+   = note: `Story` has a derived impl for the trait `Debug`, but this is intentionally ignored during dead code analysis
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: fields `title` and `acceptance_criteria` are never read
+  --> crates/xtask/src/docs_index/ledger.rs:21:9
+   |
+19 | pub struct Requirement {
+   |            ----------- fields in this struct
+20 |     pub id: String,
+21 |     pub title: String,
+   |         ^^^^^
+...
+24 |     pub acceptance_criteria: Vec<AcceptanceCriterion>,
+   |         ^^^^^^^^^^^^^^^^^^^
+   |
+   = note: `Requirement` has a derived impl for the trait `Debug`, but this is intentionally ignored during dead code analysis
+
+warning: fields `id` and `text` are never read
+  --> crates/xtask/src/docs_index/ledger.rs:29:9
+   |
+28 | pub struct AcceptanceCriterion {
+   |            ------------------- fields in this struct
+29 |     pub id: String,
+   |         ^^
+30 |     pub text: String,
+   |         ^^^^
+   |
+   = note: `AcceptanceCriterion` has a derived impl for the trait `Debug`, but this is intentionally ignored during dead code analysis
+
+warning: `xtask` (bin "xtask") generated 3 warnings
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.13s
+     Running `target/debug/xtask selftest`
+======================================
+  Template Self-Test Suite
+======================================
+
+[1/5] Running core checks (fmt, clippy, tests)...
+Running format check...
+
+✗ Command failed: cargo fmt --all -- --check
+
+--- stdout ---
+Diff in /home/steven/code/Rust/Rust-Template/crates/spec-runtime/src/graph.rs:1:
+ use anyhow::Result;
+ use serde::Serialize;
+ 
+[31m-use crate::{SpecLedger, DevExFlows, DocIndex};
+(B[m[32m+use crate::{DevExFlows, DocIndex, SpecLedger};
+(B[m 
+ #[derive(Debug, Serialize, Clone)]
+ pub struct Graph {
+Diff in /home/steven/code/Rust/Rust-Template/crates/spec-runtime/src/graph.rs:27:
+     pub edge_type: String,
+ }
+ 
+[31m-pub fn build_graph(
+(B[m[31m-    ledger: &SpecLedger,
+(B[m[31m-    devex: &DevExFlows,
+(B[m[31m-    docs: &DocIndex,
+(B[m[31m-) -> Result<Graph> {
+(B[m[31m-    let mut graph = Graph {
+(B[m[31m-        nodes: Vec::new(),
+(B[m[31m-        edges: Vec::new(),
+(B[m[31m-    };
+(B[m[32m+pub fn build_graph(ledger: &SpecLedger, devex: &DevExFlows, docs: &DocIndex) -> Result<Graph> {
+(B[m[32m+    let mut graph = Graph { nodes: Vec::new(), edges: Vec::new() };
+(B[m 
+     // Add stories, requirements, and ACs
+     for story in &ledger.stories {
+Diff in /home/steven/code/Rust/Rust-Template/crates/spec-runtime/src/graph.rs:53:
+                 node_type: "requirement".to_string(),
+                 url: None,
+             });
+[31m-            
+(B[m[32m+
+(B[m             graph.edges.push(Edge {
+                 source: story.id.clone(),
+                 target: req.id.clone(),
+Diff in /home/steven/code/Rust/Rust-Template/crates/spec-runtime/src/graph.rs:67:
+                     node_type: "ac".to_string(),
+                     url: None,
+                 });
+[31m-                
+(B[m[32m+
+(B[m                 graph.edges.push(Edge {
+                     source: req.id.clone(),
+                     target: ac.id.clone(),
+Diff in /home/steven/code/Rust/Rust-Template/crates/spec-runtime/src/graph.rs:155:
+ 
+ fn mermaid_id(id: &str) -> String {
+     // Mermaid node IDs must be simple identifiers: replace non-alnum with '_'
+[31m-    id.chars()
+(B[m[31m-        .map(|c| {
+(B[m[31m-            if c.is_ascii_alphanumeric() {
+(B[m[31m-                c
+(B[m[31m-            } else {
+(B[m[31m-                '_'
+(B[m[31m-            }
+(B[m[31m-        })
+(B[m[31m-        .collect()
+(B[m[32m+    id.chars().map(|c| if c.is_ascii_alphanumeric() { c } else { '_' }).collect()
+(B[m }
+ 
+ fn mermaid_label(id: &str, label: &str) -> String {
+Diff in /home/steven/code/Rust/Rust-Template/crates/spec-runtime/src/lib.rs:1:
+ use anyhow::Result;
+ use std::path::Path;
+ 
+[31m-pub mod graph;
+(B[m[31m-pub mod ledger;
+(B[m pub mod devex;
+ pub mod docs;
+[32m+pub mod graph;
+(B[m[32m+pub mod ledger;
+(B[m pub mod tasks;
+ 
+[31m-pub use graph::{Graph, Node, Edge, build_graph};
+(B[m[31m-pub use ledger::{SpecLedger, Story, Requirement, AcceptanceCriterion, load_spec_ledger};
+(B[m[31m-pub use devex::{DevExFlows, load_devex_flows};
+(B[m[31m-pub use docs::{DocIndex, DocEntry, load_doc_index};
+(B[m[32m+pub use devex::{load_devex_flows, DevExFlows};
+(B[m[32m+pub use docs::{load_doc_index, DocEntry, DocIndex};
+(B[m[32m+pub use graph::{build_graph, Edge, Graph, Node};
+(B[m[32m+pub use ledger::{load_spec_ledger, AcceptanceCriterion, Requirement, SpecLedger, Story};
+(B[m pub use tasks::*;
+ 
+ /// Load all specs from the workspace root
+Diff in /home/steven/code/Rust/Rust-Template/crates/spec-runtime/src/tasks.rs:1:
+[32m+use anyhow::{Context, Result};
+(B[m use serde::{Deserialize, Serialize};
+ use std::path::Path;
+[31m-use anyhow::{Context, Result};
+(B[m 
+ #[derive(Debug, Deserialize, Serialize)]
+ pub struct TasksSpec {
+Diff in /home/steven/code/Rust/Rust-Template/crates/app-http/src/platform.rs:1:
+[31m-use axum::{Json, Router, routing::get, extract::Query};
+(B[m[31m-use serde::{Serialize, Deserialize};
+(B[m[32m+use axum::{Json, Router, extract::Query, routing::get};
+(B[m[32m+use serde::{Deserialize, Serialize};
+(B[m use spec_runtime::load_all_specs;
+[31m-use std::path::PathBuf;
+(B[m use std::collections::HashMap;
+[32m+use std::path::PathBuf;
+(B[m 
+ pub fn router() -> Router {
+     Router::new()
+Diff in /home/steven/code/Rust/Rust-Template/crates/app-http/src/platform.rs:124:
+             status: t.status,
+             owner: t.owner,
+             labels: t.labels,
+[31m-            docs: t.docs.map(|d| TaskDocsOut {
+(B[m[31m-                design: d.design,
+(B[m[31m-                plan: d.plan,
+(B[m[31m-            }),
+(B[m[32m+            docs: t.docs.map(|d| TaskDocsOut { design: d.design, plan: d.plan }),
+(B[m         }
+     }
+ }
+Diff in /home/steven/code/Rust/Rust-Template/crates/app-http/src/platform.rs:134:
+ 
+ fn workspace_root() -> PathBuf {
+[31m-    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+(B[m[31m-        .parent()
+(B[m[31m-        .unwrap()
+(B[m[31m-        .parent()
+(B[m[31m-        .unwrap()
+(B[m[31m-        .to_path_buf()
+(B[m[32m+    PathBuf::from(env!("CARGO_MANIFEST_DIR")).parent().unwrap().parent().unwrap().to_path_buf()
+(B[m }
+ 
+Diff in /home/steven/code/Rust/Rust-Template/crates/xtask/src/commands/docs_check.rs:359:
+ 
+ fn validate_service_policies() -> Result<()> {
+     let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+[31m-    let root = manifest_dir
+(B[m[31m-        .parent()
+(B[m[31m-        .expect("workspace root")
+(B[m[31m-        .parent()
+(B[m[31m-        .expect("repo root");
+(B[m[32m+    let root = manifest_dir.parent().expect("workspace root").parent().expect("repo root");
+(B[m 
+     let policies_path = root.join("specs/service_policies.yaml");
+     if !policies_path.exists() {
+Diff in /home/steven/code/Rust/Rust-Template/crates/xtask/src/commands/docs_check.rs:391:
+             // Let's just warn for now if it's missing in the template.
+             // actually, let's create a dummy runbook if missing to satisfy the check for the demo.
+             if !runbooks_dir.exists() {
+[31m-                 std::fs::create_dir_all(&runbooks_dir)?;
+(B[m[32m+                std::fs::create_dir_all(&runbooks_dir)?;
+(B[m             }
+             if runbooks_dir.read_dir()?.next().is_none() {
+[31m-                 std::fs::write(runbooks_dir.join("placeholder.md"), "# Placeholder Runbook\n\nRequired by service policy.")?;
+(B[m[32m+                std::fs::write(
+(B[m[32m+                    runbooks_dir.join("placeholder.md"),
+(B[m[32m+                    "# Placeholder Runbook\n\nRequired by service policy.",
+(B[m[32m+                )?;
+(B[m             }
+         }
+     }
+Diff in /home/steven/code/Rust/Rust-Template/crates/xtask/src/commands/graph_export.rs:1:
+ use anyhow::Result;
+ use clap::ValueEnum;
+[31m-use std::path::PathBuf;
+(B[m use spec_runtime::Graph;
+[32m+use std::path::PathBuf;
+(B[m 
+ #[derive(Debug, Clone, ValueEnum)]
+ pub enum OutputFormat {
+Diff in /home/steven/code/Rust/Rust-Template/crates/xtask/src/commands/graph_export.rs:28:
+ 
+ fn build_graph_internal() -> Result<Graph> {
+     let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+[31m-    let root = manifest_dir
+(B[m[31m-        .parent()
+(B[m[31m-        .unwrap()
+(B[m[31m-        .parent()
+(B[m[31m-        .unwrap();
+(B[m[32m+    let root = manifest_dir.parent().unwrap().parent().unwrap();
+(B[m 
+     let specs = spec_runtime::load_all_specs(&root)?;
+     spec_runtime::build_graph(&specs.ledger, &specs.devex, &specs.docs)
+Diff in /home/steven/code/Rust/Rust-Template/crates/xtask/src/commands/mod.rs:11:
+ pub mod deploy;
+ pub mod design_new;
+ pub mod docs_check;
+[31m-pub mod graph_export;
+(B[m pub mod doctor;
+ pub mod fmt_all;
+[32m+pub mod graph_export;
+(B[m pub mod hakari;
+ pub mod help_flows;
+ pub mod migrate;
+Diff in /home/steven/code/Rust/Rust-Template/crates/xtask/src/commands/tasks_list.rs:4:
+ 
+ pub fn run() -> Result<()> {
+     let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+[31m-    let root = manifest_dir
+(B[m[31m-        .parent()
+(B[m[31m-        .unwrap()
+(B[m[31m-        .parent()
+(B[m[31m-        .unwrap();
+(B[m[32m+    let root = manifest_dir.parent().unwrap().parent().unwrap();
+(B[m 
+     let tasks_spec = spec_runtime::load_tasks(&root.join("specs/tasks.yaml"))?;
+ 
+
+  ✗ Core checks failed: Command failed with exit code: Some(1)
+
+[2/5] Running BDD acceptance tests...
+Running acceptance tests...
+✓ Acceptance tests passed
+JUnit output: target/junit/acceptance.xml
+  ✓ BDD scenarios passed
+  ✓ JUnit XML generated
+
+[3/5] Running AC status mapping & ADR references...
+Parsing ledger: specs/spec_ledger.yaml
+  Found 27 ACs
+Parsing JSON report: target/ac_report.json
+  Found 13 scenarios
+  Found results for 11 ACs
+Generating status: docs/feature_status.md
+✓ Generated docs/feature_status.md
+
+✓ All ACs passed
+  ✓ Feature status generated
+Checking ADR references...
+
+✓ All ADR references are valid
+  ✓ ADR references validated
+
+[4/6] Testing LLM context bundler...
+Loading contextpack: /home/steven/code/Rust/Rust-Template/.llm/contextpack.yaml
+Task: implement_ac
+  Context for implementing a single acceptance criterion end-to-end.
+  Max bytes: 250000
+  Include patterns: 10
+Git SHA: 06e4aac46250b6521b5d48c46023f6aea65f6e13
+Resolving files...
+  Found 14 matching files
+Building bundle: /home/steven/code/Rust/Rust-Template/.llm/bundle/implement_ac.md
+✓ Generated /home/steven/code/Rust/Rust-Template/.llm/bundle/implement_ac.md
+  Files: 14
+  Size: 88876 bytes
+  ✓ Bundle generated
+  ✓ Bundle size: 88876 bytes
+
+[5/6] Running policy tests...
+Testing Rego policies...
+
+Ledger Policy (/home/steven/code/Rust/Rust-Template/policy/ledger.rego):
+  ✓ ledger_valid.json (correctly passed)
+  ✓ ledger_missing_tests.json (correctly failed)
+
+Features Policy (/home/steven/code/Rust/Rust-Template/policy/features.rego):
+  ✓ features_valid.json (correctly passed)
+  ✓ features_unknown_ac.json (correctly failed)
+
+Flags Policy (/home/steven/code/Rust/Rust-Template/policy/flags.rego):
+  ✓ flags_valid.json (correctly passed)
+  ✓ flags_invalid.json (correctly failed)
+
+Privacy Policy (/home/steven/code/Rust/Rust-Template/policy/privacy.rego):
+  ✓ privacy_valid.json (correctly passed)
+  ✓ privacy_invalid.json (correctly failed)
+
+Template Core Policy (/home/steven/code/Rust/Rust-Template/policy/template_core.rego):
+  ✓ template_core_valid.json (correctly passed)
+  ✓ template_core_missing_tests.json (correctly failed)
+  ✓ template_core_no_tests.json (correctly failed)
+  ✓ template_core_missing_ac.json (correctly failed)
+  ✓ template_core_wrong_feature.json (correctly failed)
+
+LLM Policy (/home/steven/code/Rust/Rust-Template/policy/llm.rego):
+  ✓ llm_valid.json (correctly passed)
+  ✓ llm_missing_include.json (correctly failed)
+  ✓ llm_zero_bytes.json (correctly failed)
+  ✓ llm_missing_required_task.json (correctly failed)
+  ✓ llm_unknown_field.json (correctly failed)
+  ✓ llm_missing_max_bytes.json (correctly failed)
+
+Kubernetes Policy (/home/steven/code/Rust/Rust-Template/policy/k8s.rego):
+  ✓ k8s_valid.yaml (correctly passed)
+  ✓ k8s_runs_as_root.yaml (correctly failed)
+  ✓ k8s_no_labels.yaml (correctly failed)
+
+✓ All 22 policy tests passed!
+  ✓ Policy tests passed
+[6/6] Checking DevEx contract...
+  ✓ DevEx contract satisfied
+
+======================================
+✗ 1 test suite(s) failed
+======================================
+Error: 1 test suites failed
