@@ -7,45 +7,95 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.0.0-sprint1] - 2025-11-20 🚀 **v3.0.0 Sprint 1: The Write Layer**
+
+### Summary
+First iteration of v3.0.0 "The Living Platform" - transitioning from "Code that Agents help write" to "An Environment where Agents live." This sprint implements the foundational governance write layer with file system persistence and BDD verification.
+
 ### Added
 
-- **xtask Commands**: Migrated shell scripts to Rust for cross-platform support
-  - `cargo xtask hakari` - Manage workspace dependencies with hakari (replaces `hakari-check.sh`)
-  - `cargo xtask migrate` - Run database migrations (replaces `migrate-dev.sh`)
-  - `cargo xtask pin-actions` - Pin GitHub Actions to SHAs (replaces `pin-actions.sh`)
-- **Modern Developer Tools**: Standard commands expected in modern repositories
-  - `cargo xtask doctor` - Comprehensive environment diagnostics and validation
-  - `cargo xtask clean` - Workspace cleanup (target/, generated files, etc.)
-  - `cargo xtask fmt-all` - Format all code (Rust + YAML/JSON validation)
-- **Development Scaffolding**: Make the right path the easy path
-  - `cargo xtask adr-new <title>` - Create ADR from template with auto-numbering
-  - `cargo xtask ac-new <AC-ID> <desc>` - Add AC to spec ledger with validation
-- **Security & Governance**: First-class dependency and security health
-  - `cargo xtask audit` - Security audit via cargo-audit + cargo-deny (ADR-0007)
-  - `cargo xtask docs-check` - Documentation consistency validation
-  - `cargo xtask sbom-local` - Local SBOM generation
-- **Release Automation**: Streamline version management
-  - `cargo xtask release-prepare X.Y.Z` - Bump versions + update changelog
-  - `cargo xtask release-verify` - Comprehensive pre-release gate (selftest + audit + docs-check)
-- **Universal Nix Wrapper**: ALL `cargo xtask` commands now auto-wrap with `nix develop` when available (ADR-0002)
-  - Ensures hermetic environment for all development tooling
-  - Guarantees perfect CI/local parity for every command
-  - Gracefully falls back to native execution when Nix unavailable
-  - Single implementation (DRY) in `main.rs` for all commands
-- **ADR-0007**: Dependency & Security Health governance framework
-- **Nix Dependencies**: Added cargo-audit and cargo-deny to devshell
+**Governance Repository & File System Adapter**
+- **Governance Repository Trait** (`business-core`): Abstract interface for task state persistence
+- **File System Adapter** (`adapters-spec-fs`): Production implementation with:
+  - `tasks_state.yaml` for task status tracking
+  - File locking for concurrent access safety
+  - Integration with existing spec ledger
+- **Integration Tests**: End-to-end validation of repository contract
+- **ADR-0007**: [Governance Repository and FS Adapter](docs/adr/0007-governance-repository-and-fs-adapter.md)
+
+**BDD Scenarios for Platform Governance**
+- **New Feature File**: `platform_governance_write.feature` with scenarios:
+  - `@AC-GOV-WRITE-001`: Task status changes are persisted
+  - `@AC-GOV-WRITE-002`: Task status changes are visible through introspection
+- **Step Definitions**: `governance_write.rs` implementing governance write operations
+- **Wiring**: `app-http` and acceptance tests integrated with `FsGovernanceRepository`
+
+**Agent Skills & Documentation**
+- **Claude Skills** (`.claude/skills/`):
+  - `governed-feature-dev` - AC → BDD → code → selftest workflow
+  - `governed-release` - changelog → tag → deploy workflow
+  - `governed-maintenance` - audit → upgrade → verify workflow
+- **Documentation**:
+  - `docs/AGENT_GUIDE.md` - LLM operational directive
+  - `docs/INDEX.md` - Documentation inventory
+  - `docs/MISSING_MANUAL.md` - Implicit knowledge capture
+  - `docs/RELEASE_v2.5.0.md` - v2.5.0 release documentation
+
+**Developer Experience**
+- **Governance Hooks**: `cargo xtask install-hooks` command
+  - Installs pre-commit hook that runs `cargo xtask check`
+  - Ensures governance checks run before commit
+- **Local Runtime**: `docker-compose.yaml` with Postgres 16 + Jaeger for local development
 
 ### Changed
 
-- **CI**: Added dirty tree check to `ci-template-selftest.yml` to enforce docs-as-code consistency
-- **Workflows**: Updated `maintenance-pin-actions.yml` to use `cargo xtask pin-actions`
-- **rustfmt.toml**: Updated `edition` from `2021` to `2024` to match workspace configuration
-- **Nix Wrapper UX**: Silent when Nix present (expected default), gentle warning when missing
+- **Acceptance Tests**: Updated `World` struct and step definitions to support governance write scenarios
+- **ROADMAP.md**: Updated to show Sprint 1 as completed ✅
+- **Feature Status**: Marked Sprint 1 tasks as complete in `docs/feature_status.md`
+- **Spec Ledger**: Updated with governance write requirements and acceptance criteria
+- **CLAUDE.md**: Enhanced with agent skills references and governance workflow guidance
 
-### Removed
+### Technical Details
 
-- Deprecated shell scripts: `test-all.sh`, `test-policies.sh`, `hakari-check.sh`, `migrate-dev.sh`, `pin-actions.sh`
-- Redundant `Justfile` (capitalized) - `justfile` (lowercase) is canonical
+**New Crates:**
+- `crates/adapters-spec-fs/` - File system governance repository adapter (295 lines)
+
+**Files Created (17):**
+- `.claude/skills/governed-feature-dev/SKILL.md`
+- `.claude/skills/governed-maintenance/SKILL.md`
+- `.claude/skills/governed-release/SKILL.md`
+- `crates/acceptance/src/steps/governance_write.rs`
+- `crates/adapters-spec-fs/Cargo.toml`
+- `crates/adapters-spec-fs/src/lib.rs`
+- `crates/adapters-spec-fs/src/tasks_state.rs`
+- `crates/adapters-spec-fs/tests/integration_test.rs`
+- `crates/xtask/src/commands/install_hooks.rs`
+- `docker-compose.yaml`
+- `docs/AGENT_GUIDE.md`
+- `docs/INDEX.md`
+- `docs/MISSING_MANUAL.md`
+- `docs/RELEASE_v2.5.0.md`
+- `docs/adr/0007-governance-repository-and-fs-adapter.md`
+- `specs/features/platform_governance_write.feature`
+
+**Files Modified (20+):**
+- Multiple crate `Cargo.toml` files for dependency updates
+- Acceptance test infrastructure (`world.rs`, `mod.rs`)
+- ROADMAP, CHANGELOG, CLAUDE.md, README.md
+- Feature status and spec ledger files
+
+**Validation:**
+- ✅ All pre-commit checks passed (fmt, clippy, tests)
+- ✅ Governance repository integration tests passing
+- ✅ BDD scenarios for governance write operations passing
+- ✅ Selftest validation complete
+
+### Next: Sprint 2 - Domain Rules
+- Task Status Machine: Enforce valid transitions (Todo → InProgress → Done)
+- Task ↔ Requirement Linking: Domain model for traceability
+- Update Use Case: Pure business logic for status updates
+
+---
 
 ## [2.5.0] - 2025-11-20 🎉 **Agent-Ready Platform Cell**
 
