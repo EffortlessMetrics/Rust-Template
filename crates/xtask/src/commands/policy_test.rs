@@ -1,13 +1,30 @@
 use anyhow::{Context, Result};
+use chrono::{DateTime, Utc};
 use colored::Colorize;
+use serde::Serialize;
+use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
+use std::time::SystemTime;
 
 /// Custom error type for policy tests
 #[derive(Debug)]
 pub enum PolicyTestError {
     ConftestNotFound(String),
     Other(anyhow::Error),
+}
+
+#[derive(Serialize)]
+struct PolicyStatusReport {
+    timestamp: String,
+    summary: String,
+    details: Vec<PolicyResult>,
+}
+
+#[derive(Serialize)]
+struct PolicyResult {
+    name: String,
+    status: String,
 }
 
 impl std::fmt::Display for PolicyTestError {
@@ -65,6 +82,7 @@ pub fn run() -> Result<(), PolicyTestError> {
 
     let mut total_tests = 0;
     let mut failed_tests = 0;
+    let mut policy_results = Vec::new();
 
     // Run tests for each policy area
     for (name, area) in POLICY_AREAS {
@@ -86,6 +104,8 @@ pub fn run() -> Result<(), PolicyTestError> {
             continue;
         }
 
+        let mut area_failed = 0;
+
         // Run tests for each fixture
         for (fixture_path, should_pass) in fixtures {
             let fixture_name =
@@ -105,16 +125,38 @@ pub fn run() -> Result<(), PolicyTestError> {
                 (true, false) => {
                     println!("  {} {} (expected fail, got pass)", "✗".red(), fixture_name);
                     failed_tests += 1;
+                    area_failed += 1;
                 }
                 (false, true) => {
                     println!("  {} {} (expected pass, got fail)", "✗".red(), fixture_name);
                     failed_tests += 1;
+                    area_failed += 1;
                 }
             };
         }
 
+        policy_results.push(PolicyResult {
+            name: name.to_string(),
+            status: if area_failed == 0 { "pass".to_string() } else { "fail".to_string() },
+        });
+
         println!();
     }
+
+    // Write policy status JSON
+    let report = PolicyStatusReport {
+        timestamp: DateTime::<Utc>::from(SystemTime::now()).to_rfc3339(),
+        summary: if failed_tests == 0 { "pass".to_string() } else { "fail".to_string() },
+        details: policy_results,
+    };
+
+    let target_dir = workspace_root.join("target");
+    fs::create_dir_all(&target_dir).map_err(|e| PolicyTestError::Other(e.into()))?;
+
+    let json =
+        serde_json::to_string_pretty(&report).map_err(|e| PolicyTestError::Other(e.into()))?;
+    fs::write(target_dir.join("policy_status.json"), json)
+        .map_err(|e| PolicyTestError::Other(e.into()))?;
 
     // Summary
     if failed_tests == 0 && total_tests > 0 {
