@@ -1,7 +1,8 @@
 use anyhow::Result;
 use colored::Colorize;
+use serde::Deserialize;
 use std::fs;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 pub fn run() -> Result<()> {
     println!("{}", "📚 Checking documentation consistency...".blue().bold());
@@ -40,6 +41,17 @@ pub fn run() -> Result<()> {
         Ok(_) => println!("{}", "✓ Up to date".green()),
         Err(e) => {
             println!("{}", "✗ Out of sync".red());
+            eprintln!("  {}", e);
+            issues += 1;
+        }
+    }
+
+    // Check Docs-as-Spec validation
+    print!("Doc index & front-matter... ");
+    match validate_doc_index() {
+        Ok(_) => println!("{}", "✓ Consistent".green()),
+        Err(e) => {
+            println!("{}", "✗ Issues found".red());
             eprintln!("  {}", e);
             issues += 1;
         }
@@ -141,4 +153,111 @@ fn check_ac_status_clean() -> Result<()> {
     }
 
     Ok(())
+}
+
+#[derive(Debug, Deserialize)]
+struct DocFrontMatter {
+    doc_type: String,
+    id: String,
+    #[serde(default)]
+    requirements: Vec<String>,
+    #[serde(default)]
+    adrs: Vec<String>,
+}
+
+fn validate_doc_index() -> Result<()> {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .expect("workspace root")
+        .parent()
+        .expect("repo root");
+    let index_path = root.join("specs/doc_index.yaml");
+
+    if !index_path.exists() {
+        // Not fatal if doc_index doesn't exist yet (MVP phase)
+        return Ok(());
+    }
+
+    let index = crate::docs_index::load_doc_index(&index_path)?;
+    let mut errors = Vec::new();
+
+    for entry in &index.docs {
+        let doc_path = root.join(&entry.file);
+        if !doc_path.exists() {
+            errors.push(format!(
+                "Doc '{}' listed in index but file missing: {}",
+                entry.id,
+                entry.file
+            ));
+            continue;
+        }
+
+        let content = fs::read_to_string(&doc_path)?;
+        match parse_front_matter(&content) {
+            Ok(fm) => {
+                if fm.id != entry.id {
+                    errors.push(format!(
+                        "ID mismatch in {}: front-matter='{}', index='{}'",
+                        entry.file, fm.id, entry.id
+                    ));
+                }
+                if fm.doc_type != entry.doc_type {
+                    errors.push(format!(
+                        "doc_type mismatch in {}: front-matter='{}', index='{}'",
+                        entry.file, fm.doc_type, entry.doc_type
+                    ));
+                }
+                // Check requirements and ADRs are consistent
+                for req in &entry.requirements {
+                    if !fm.requirements.contains(req) {
+                        errors.push(format!(
+                            "Requirement '{}' in index but not front-matter: {}",
+                            req, entry.file
+                        ));
+                    }
+                }
+                for adr in &entry.adrs {
+                    if !fm.adrs.contains(adr) {
+                        errors.push(format!(
+                            "ADR '{}' in index but not front-matter: {}",
+                            adr, entry.file
+                        ));
+                    }
+                }
+            }
+            Err(e) => {
+                errors.push(format!("Failed to parse front-matter in {}: {}", entry.file, e));
+            }
+        }
+    }
+
+    if !errors.is_empty() {
+        eprintln!();
+        for err in &errors {
+            eprintln!("  ✗ {}", err);
+        }
+        eprintln!();
+        eprintln!("To fix:");
+        eprintln!("  • Align front-matter and specs/doc_index.yaml");
+        eprintln!("  • Or update doc_index if the mapping changed intentionally");
+        anyhow::bail!("Docs-as-Spec: {} issue(s)", errors.len());
+    }
+
+    Ok(())
+}
+
+fn parse_front_matter(content: &str) -> Result<DocFrontMatter> {
+    let trimmed = content.trim_start();
+    if !trimmed.starts_with("---") {
+        anyhow::bail!("Missing YAML front-matter");
+    }
+
+    let rest = &trimmed[3..]; // Skip first "---"
+    if let Some(end_pos) = rest.find("\n---") {
+        let yaml_str = &rest[..end_pos];
+        let fm: DocFrontMatter = serde_yaml::from_str(yaml_str)?;
+        Ok(fm)
+    } else {
+        anyhow::bail!("Malformed front-matter: missing closing ---");
+    }
 }

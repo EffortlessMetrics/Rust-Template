@@ -5,6 +5,7 @@ use std::process::Command;
 
 mod commands;
 mod devex;
+mod docs_index;
 mod validation;
 
 /// Verbosity level for command output
@@ -91,6 +92,23 @@ enum Commands {
         #[arg(short, long, default_value = "dev")]
         env: String,
     },
+    /// Create new design document with front-matter
+    #[command(next_help_heading = "Design & Acceptance Criteria")]
+    DesignNew {
+        /// Document ID (e.g., DESIGN-TPL-HEALTH-001)
+        id: String,
+        /// Title for the design doc
+        title: String,
+        /// Linked requirements (repeatable)
+        #[arg(long = "req")]
+        requirements: Vec<String>,
+        /// Linked ADRs (repeatable)
+        #[arg(long = "adr")]
+        adrs: Vec<String>,
+        /// Optional owner label
+        #[arg(long)]
+        owner: Option<String>,
+    },
     /// Run security and dependency audit
     Audit,
     /// Diagnose development environment setup
@@ -172,6 +190,15 @@ fn main() -> Result<()> {
         Commands::Clean => commands::clean::run(),
         Commands::CiLocal => commands::ci_local::run(),
         Commands::Deploy { env } => commands::deploy::run(&env),
+        Commands::DesignNew { id, title, requirements, adrs, owner } => {
+            commands::design_new::run(commands::design_new::DesignNewArgs {
+                id,
+                title,
+                requirements,
+                adrs,
+                owner,
+            })
+        }
         Commands::Doctor => commands::doctor::run(),
         Commands::DocsCheck => commands::docs_check::run(),
         Commands::FmtAll => commands::fmt_all::run(),
