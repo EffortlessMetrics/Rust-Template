@@ -1,6 +1,7 @@
 use axum::{Json, Router, extract::Query, routing::get};
 use serde::{Deserialize, Serialize};
 use spec_runtime::load_all_specs;
+use std::fs;
 use std::path::PathBuf;
 
 pub fn router() -> Router {
@@ -79,8 +80,12 @@ struct TaskCounts {
 
 #[derive(Serialize)]
 struct PolicyStatus {
-    doc_policies: String,
-    service_policies: String,
+    status: String,
+}
+
+#[derive(Deserialize)]
+struct PolicyStatusReport {
+    summary: String,
 }
 
 async fn get_graph() -> Json<spec_runtime::Graph> {
@@ -133,6 +138,16 @@ async fn get_status() -> Json<PlatformStatus> {
 
     let task_counts = TaskCounts { total: tasks_spec.tasks.len() };
 
+    // Read policy status from last policy-test run
+    let policy_path = root.join("target/policy_status.json");
+    let policy_status = if let Ok(content) = fs::read_to_string(policy_path) {
+        serde_json::from_str::<PolicyStatusReport>(&content)
+            .map(|r| r.summary)
+            .unwrap_or_else(|_| "unknown".to_string())
+    } else {
+        "unknown".to_string()
+    };
+
     Json(PlatformStatus {
         service_id: "rust-as-spec-kernel".to_string(),
         template_version: env!("CARGO_PKG_VERSION").to_string(),
@@ -141,10 +156,7 @@ async fn get_status() -> Json<PlatformStatus> {
             devex: devex_counts,
             docs: doc_counts,
             tasks: task_counts,
-            policies: PolicyStatus {
-                doc_policies: "enforced".to_string(),
-                service_policies: "enforced".to_string(),
-            },
+            policies: PolicyStatus { status: policy_status },
         },
     })
 }

@@ -63,3 +63,9 @@ ACs with no mapped scenarios:
 - AC-PLT-016: `cargo xtask ci-local` orchestrates doctor + selftest + audit + docs-check
 - AC-TPL-GRAPH-AC-HAS-TEST: Every AC with a tests mapping in spec_ledger.yaml has at least one test node linked in the graph.
 
+
+## Unmapped Scenarios
+
+Scenarios referencing non-existent ACs:
+
+- Scenario 'Platform status exposes policy health' references AC-TPL-POLICY-STATUS-OVERVIEW (in home/steven/code/Rust/Rust-Template/specs/features/platform_rounding.feature)

@@ -30,3 +30,9 @@ Feature: Platform Rounding Features
     And the JSON response should have field "service_id"
     And the JSON response should have field "governance"
     And the JSON response should have field "governance.ledger.requirements"
+
+  @AC-TPL-POLICY-STATUS-OVERVIEW
+  Scenario: Platform status exposes policy health
+    When I GET "http://localhost:8080/platform/status"
+    Then the response status should be 200
+    And the JSON response should have field "governance.policies.status"
