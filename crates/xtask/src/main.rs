@@ -49,8 +49,26 @@ struct Cli {
 enum Commands {
     /// Generate AC status report from acceptance tests
     AcStatus,
+    /// Create new acceptance criterion
+    AcNew {
+        /// AC ID (e.g., AC-TPL-001)
+        ac_id: String,
+        /// AC description
+        description: String,
+        /// Story ID (e.g., US-TPL-001)
+        #[arg(long)]
+        story: String,
+        /// Requirement ID (e.g., REQ-TPL-HEALTH)
+        #[arg(long)]
+        requirement: String,
+    },
     /// Validate ADR references in spec ledger
     AdrCheck,
+    /// Create new architecture decision record
+    AdrNew {
+        /// ADR title
+        title: String,
+    },
     /// Run all checks: fmt, clippy, tests
     Check,
     /// Run BDD acceptance tests
@@ -60,14 +78,39 @@ enum Commands {
         /// Task name from .llm/contextpack.yaml
         task: String,
     },
+    /// Clean workspace (remove target/, generated docs, etc.)
+    Clean,
     /// Deploy application to specified environment (dev, staging, prod)
     Deploy {
         /// Target environment: dev, staging, or prod
         #[arg(short, long, default_value = "dev")]
         env: String,
     },
+    /// Run security and dependency audit
+    Audit,
+    /// Diagnose development environment setup
+    Doctor,
+    /// Check documentation consistency
+    DocsCheck,
+    /// Format all code (Rust, YAML validation, etc.)
+    FmtAll,
+    /// Manage workspace dependencies with hakari
+    Hakari,
+    /// Run database migrations
+    Migrate,
+    /// Pin GitHub Actions to commit SHAs
+    PinActions,
     /// Test Rego policies with conftest
     PolicyTest,
+    /// Prepare release (bump versions, update changelog)
+    ReleasePrepare {
+        /// Version to release (e.g., 2.5.0)
+        version: String,
+    },
+    /// Verify release readiness (selftest + audit + docs-check)
+    ReleaseVerify,
+    /// Generate local SBOM
+    SbomLocal,
     /// Quick validation of template functionality
     Quickstart,
     /// Run full template self-test suite (check + bdd + ac-status + bundler + policies)
@@ -76,6 +119,21 @@ enum Commands {
 
 fn main() -> Result<()> {
     let cli = Cli::parse();
+
+    // Universal Nix wrapper - ALL commands run in hermetic environment when available
+    // This aligns with ADR-0002 (Nix-first development) and ensures perfect CI/local parity
+    if should_wrap_with_nix() {
+        // Silent when Nix is present - it's the expected default
+        exec_via_nix()?;
+        unreachable!(); // Process will be replaced by nix develop
+    }
+
+    // Warn when Nix is missing (gentle reminder, not an error)
+    if !cli.quiet && std::env::var("IN_NIX_SHELL").is_err() {
+        eprintln!("{}", "⚠️  Running without Nix (hermetic environment unavailable)".yellow());
+        eprintln!("{}", "   Install Nix for full CI parity: https://nixos.org/download".dimmed());
+        eprintln!();
+    }
 
     // Determine verbosity level
     let verbosity = if cli.quiet {
@@ -91,18 +149,59 @@ fn main() -> Result<()> {
             verbosity,
             ..Default::default()
         }),
+        Commands::AcNew { ac_id, description, story, requirement } => {
+            commands::ac_new::run(&ac_id, &description, &story, &requirement)
+        }
         Commands::AdrCheck => commands::adr_check::run(commands::adr_check::AdrCheckArgs {
             verbosity,
             ..Default::default()
         }),
+        Commands::AdrNew { title } => commands::adr_new::run(&title),
         Commands::Check => commands::check::run(),
         Commands::Bdd => commands::bdd::run(),
         Commands::Bundle { task } => commands::bundle::run(&task),
+        Commands::Audit => commands::audit::run(),
+        Commands::Clean => commands::clean::run(),
         Commands::Deploy { env } => commands::deploy::run(&env),
+        Commands::Doctor => commands::doctor::run(),
+        Commands::DocsCheck => commands::docs_check::run(),
+        Commands::FmtAll => commands::fmt_all::run(),
+        Commands::Hakari => commands::hakari::run(),
+        Commands::Migrate => commands::migrate::run(),
+        Commands::PinActions => commands::pin_actions::run(),
         Commands::PolicyTest => commands::policy_test::run().map_err(|e| anyhow::anyhow!("{}", e)),
         Commands::Quickstart => commands::quickstart::run(),
+        Commands::ReleasePrepare { version } => commands::release_prepare::run(&version),
+        Commands::ReleaseVerify => commands::release_verify::run(),
+        Commands::SbomLocal => commands::sbom_local::run(),
         Commands::Selftest => commands::selftest::run_with_verbosity(verbosity),
     }
+}
+
+/// Check if we should wrap execution with Nix
+fn should_wrap_with_nix() -> bool {
+    // Don't re-wrap if already inside Nix shell
+    if std::env::var("IN_NIX_SHELL").is_ok() {
+        return false;
+    }
+
+    // Check if nix command is available
+    which::which("nix").is_ok()
+}
+
+/// Execute xtask via Nix wrapper, forwarding all arguments
+fn exec_via_nix() -> Result<()> {
+    let mut cmd = Command::new("nix");
+    cmd.args(["develop", "-c", "cargo", "run", "-p", "xtask", "--"]);
+
+    // Forward ALL arguments after the program name
+    cmd.args(std::env::args().skip(1));
+
+    // Execute and replace current process
+    let status =
+        cmd.status().map_err(|e| anyhow::anyhow!("Failed to execute nix develop: {}", e))?;
+
+    std::process::exit(status.code().unwrap_or(1));
 }
 
 /// Helper to run a command and propagate failures

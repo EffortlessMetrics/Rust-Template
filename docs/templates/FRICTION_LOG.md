@@ -1,6 +1,6 @@
 # Friction Log – [Project Name]
 
-**Template Version**: v2.3.0
+**Template Version**: v2.4.0
 **Started**: YYYY-MM-DD
 **Team**: [Team/Developer Name]
 **Project Type**: [Greenfield / Brownfield]

@@ -323,29 +323,23 @@ These documents capture implementation decisions, trade-offs, and rationale for 
 
 ## Roadmap
 
-**Current Status**: v2.3.0 (Production-Ready Template)
+**Current Status**: v2.4.0 (Pilot-Ready)
 
-The template has completed a three-release observability arc and is now in **pilot validation phase**. Further development will be **demand-driven** based on real-world usage feedback.
+The template is now in the **Pilot Validation Phase**. We have completed the observability arc and release polish.
 
 ### What's Complete
 - ✅ Complete observability stack (logs, metrics, OTLP traces)
 - ✅ Hexagonal architecture with production adapters
 - ✅ Governance infrastructure (policy-as-code, specs, BDD)
 - ✅ LLM-assisted workflow with context bundling
-- ✅ Release playbook and pilot evaluation tooling
+- ✅ Release polish (docs, friction logs, reliability fixes)
 
-### Next Phase: Pilot Validation (1-2 weeks)
-1. Create pilot project (GitHub "Use this template" or manual clone)
-2. Implement 3-5 real features
-3. Track friction in FRICTION_LOG.md
-4. Analyze friction to determine next steps
+### Current Phase: Pilot Validation
+1. **Execute Pilots**: Teams create services using v2.4.0.
+2. **Collect Friction**: Use `FRICTION_LOG.md` to track real-world issues.
+3. **Iterate**: Release patches (v2.4.x) for blockers, or v2.5.0 for new features.
 
-### Possible Outcomes
-- **v2.3.1 patch** - If blockers found (missing docs, broken workflows)
-- **v2.4.0 features** - If quality-of-life improvements needed
-- **Template "good enough"** - Continue as-is, address issues reactively
-
-Development is now driven by pilot feedback rather than speculative features. See version-specific plans in `docs/v2.*.md`.
+Development is now driven by pilot feedback.
 
 ---
 
@@ -504,30 +498,27 @@ ls docs/                             # Browse docs locally
 
 ## Version
 
-This documentation is for **Rust Template v2.3.0**.
+This documentation is for **Rust Template v2.4.0**.
 
 **Recent Releases:**
+- **v2.4.0 (2025-11-19)**: Release Prep & Polish
+  - Added `FRICTION_LOG.md` for pilot feedback
+  - Fixed gRPC smoke test reliability
+  - Full documentation consistency check
+
 - **v2.3.0 (2025-11-17)**: OTLP tracing + pilot infrastructure
   - OTLP export via `telemetry/otlp` feature flag
-  - Graceful fallback on telemetry failures
   - Pilot project creation script and templates
-  - Release playbook and friction log templates
-  - See [CHANGELOG.md](../CHANGELOG.md) for full details
+  - Release playbook
 
 - **v2.2.0 (2025-11-17)**: Adapter integration + LLM ergonomics
-  - DB adapter integration test (testcontainers + Postgres)
+  - DB adapter integration test
   - gRPC adapter smoke test
-  - Enhanced LLM contextpack with workflow guidance
-  - Metrics BDD scenario
-
-- **v2.1.0 (2025-11-17)**: Prometheus metrics
-  - `/metrics` endpoint with Prometheus scraping
-  - K8s service annotations for observability
-  - Policy enforcement for metrics in prod/staging
+  - Enhanced LLM contextpack
 
 **Next Steps:**
-- 🔄 Run greenfield pilot project (1-2 weeks)
+- 🔄 Run greenfield pilot project
 - 🔄 Analyze friction logs
-- 🔄 Determine: v2.3.1 patch, v2.4.0 features, or status quo
+- 🔄 Determine v2.5.0 roadmap based on feedback
 
-Further development driven by real pilot feedback. See `docs/v2.3.0-plan.md` for current strategic context.
+Further development driven by real pilot feedback.

@@ -28,7 +28,6 @@
           pkgs.kustomize
           pkgs.cargo-audit
           pkgs.cargo-deny
-          pkgs.sccache
           pkgs.cargo-nextest
         ];
         shellHook = ''

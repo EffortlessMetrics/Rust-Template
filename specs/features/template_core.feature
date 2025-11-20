@@ -1,6 +1,6 @@
-# Template Version: v2.3.0
+# Template Version: v2.4.0
 # Schema: spec_ledger.yaml v1.0
-# Last Updated: 2025-11-17
+# Last Updated: 2025-11-19
 
 Feature: Template Core Endpoints
   As a service operator
