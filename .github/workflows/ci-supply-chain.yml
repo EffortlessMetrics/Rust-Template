@@ -1,0 +1,63 @@
+name: Supply Chain
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  sbom-provenance:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read          # Read source code
+      id-token: write         # OIDC token for Sigstore
+      attestations: write     # Write to GitHub Attestations API
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Nix
+        uses: DeterminateSystems/nix-installer-action@v9
+
+      - name: Configure Nix cache
+        uses: DeterminateSystems/magic-nix-cache-action@v2
+
+      - name: Build release artifacts
+        run: nix develop -c cargo build --workspace --release
+
+      - name: Create source tarball
+        id: tarball
+        run: |
+          TAG=${GITHUB_REF#refs/tags/}
+          TARBALL="rust-template-${TAG}.tar.gz"
+          git archive --format=tar.gz --prefix=rust-template-${TAG}/ -o ${TARBALL} ${TAG}
+          echo "tarball=${TARBALL}" >> $GITHUB_OUTPUT
+          echo "tag=${TAG}" >> $GITHUB_OUTPUT
+
+      - name: Generate SBOM
+        uses: anchore/sbom-action@v0
+        with:
+          format: spdx-json
+          output-file: rust-template-${{ steps.tarball.outputs.tag }}-sbom.spdx.json
+          artifact-name: rust-template-${{ steps.tarball.outputs.tag }}-sbom.spdx.json
+
+      - name: Attest build provenance
+        uses: actions/attest-build-provenance@v1
+        with:
+          subject-path: |
+            ${{ steps.tarball.outputs.tarball }}
+            rust-template-${{ steps.tarball.outputs.tag }}-sbom.spdx.json
+
+      - name: Upload artifacts to release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            ${{ steps.tarball.outputs.tarball }}
+            rust-template-${{ steps.tarball.outputs.tag }}-sbom.spdx.json
+          fail_on_unmatched_files: true

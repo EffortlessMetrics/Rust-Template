@@ -1,4 +1,4 @@
-# Rust Spec-as-Code Template (v2.3.1)
+# Rust Spec-as-Code Template (v2.4.0)
 
 [![CI](https://github.com/EffortlessMetrics/Rust-Template/actions/workflows/ci-template-selftest.yml/badge.svg)](https://github.com/EffortlessMetrics/Rust-Template/actions/workflows/ci-template-selftest.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE-MIT)
@@ -38,6 +38,7 @@ Whether you're starting fresh or adding governance to an existing codebase, this
 - 🤖 LLM context bundles for AI-assisted development
 - 🏗️ Hexagonal architecture with Axum + tracing
 - 🧪 BDD acceptance tests with real HTTP integration
+- 🧾 Supply chain basics: Per-tag SBOM (SPDX JSON) and build provenance attestations for release tarballs (SLSA-lite via GitHub Artifact Attestations)
 
 ---
 
@@ -406,6 +407,10 @@ See [CI Examples](.github/workflows/) for 20+ workflow templates you can adapt.
 - 🚀 **[Adoption Patterns](docs/explanation/adoption-patterns.md)** - Clone vs Upstream vs Generator
 - 🚀 **[Branch Protection Profiles](docs/reference/branch-protection-profiles.md)** - CI configuration
 - 🚀 **[Template API](TEMPLATE_API.md)** - Stable interfaces
+
+### Explanations
+
+- 📖 **[Supply Chain Hardening](docs/explanation/supply-chain-hardening.md)** - SBOM and provenance
 
 **→ [Browse all documentation](docs/README.md)**
 
