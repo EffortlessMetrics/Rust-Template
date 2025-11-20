@@ -37,6 +37,17 @@ jobs:
           test -f .llm/bundle/implement_ac.md
           test -f target/junit/acceptance.xml
 
+      - name: Ensure clean git state (docs-as-code enforcement)
+        run: |
+          if [[ -n $(git status --porcelain) ]]; then
+            echo "❌ Git tree is dirty after running selftest. The following files were modified:"
+            git status --porcelain
+            echo ""
+            echo "💡 Please run 'cargo xtask selftest' locally and commit the changes."
+            exit 1
+          fi
+          echo "✅ Git tree is clean. Docs and artifacts are up-to-date."
+
       - name: Show sccache stats
         if: always()
         run: nix develop -c sccache --show-stats || true

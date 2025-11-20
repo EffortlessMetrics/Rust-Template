@@ -7,7 +7,45 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-(empty)
+### Added
+
+- **xtask Commands**: Migrated shell scripts to Rust for cross-platform support
+  - `cargo xtask hakari` - Manage workspace dependencies with hakari (replaces `hakari-check.sh`)
+  - `cargo xtask migrate` - Run database migrations (replaces `migrate-dev.sh`)
+  - `cargo xtask pin-actions` - Pin GitHub Actions to SHAs (replaces `pin-actions.sh`)
+- **Modern Developer Tools**: Standard commands expected in modern repositories
+  - `cargo xtask doctor` - Comprehensive environment diagnostics and validation
+  - `cargo xtask clean` - Workspace cleanup (target/, generated files, etc.)
+  - `cargo xtask fmt-all` - Format all code (Rust + YAML/JSON validation)
+- **Development Scaffolding**: Make the right path the easy path
+  - `cargo xtask adr-new <title>` - Create ADR from template with auto-numbering
+  - `cargo xtask ac-new <AC-ID> <desc>` - Add AC to spec ledger with validation
+- **Security & Governance**: First-class dependency and security health
+  - `cargo xtask audit` - Security audit via cargo-audit + cargo-deny (ADR-0007)
+  - `cargo xtask docs-check` - Documentation consistency validation
+  - `cargo xtask sbom-local` - Local SBOM generation
+- **Release Automation**: Streamline version management
+  - `cargo xtask release-prepare X.Y.Z` - Bump versions + update changelog
+  - `cargo xtask release-verify` - Comprehensive pre-release gate (selftest + audit + docs-check)
+- **Universal Nix Wrapper**: ALL `cargo xtask` commands now auto-wrap with `nix develop` when available (ADR-0002)
+  - Ensures hermetic environment for all development tooling
+  - Guarantees perfect CI/local parity for every command
+  - Gracefully falls back to native execution when Nix unavailable
+  - Single implementation (DRY) in `main.rs` for all commands
+- **ADR-0007**: Dependency & Security Health governance framework
+- **Nix Dependencies**: Added cargo-audit and cargo-deny to devshell
+
+### Changed
+
+- **CI**: Added dirty tree check to `ci-template-selftest.yml` to enforce docs-as-code consistency
+- **Workflows**: Updated `maintenance-pin-actions.yml` to use `cargo xtask pin-actions`
+- **rustfmt.toml**: Updated `edition` from `2021` to `2024` to match workspace configuration
+- **Nix Wrapper UX**: Silent when Nix present (expected default), gentle warning when missing
+
+### Removed
+
+- Deprecated shell scripts: `test-all.sh`, `test-policies.sh`, `hakari-check.sh`, `migrate-dev.sh`, `pin-actions.sh`
+- Redundant `Justfile` (capitalized) - `justfile` (lowercase) is canonical
 
 ## [2.4.0] - 2025-11-19
 
@@ -22,6 +60,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Build provenance attestation via actions/attest-build-provenance (Sigstore-backed)
   - Nix-based hermetic builds for release artifacts
   - Verification guides for GitHub CLI, SLSA verifier, and policy enforcement
+  - **Release Polish**:
+    - `FRICTION_LOG.md` in root for immediate pilot feedback
+    - Dynamic port selection for gRPC smoke tests (reliability)
+    - Full documentation consistency check
 
 ### Changed
 

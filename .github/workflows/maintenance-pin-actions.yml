@@ -9,9 +9,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: sudo apt-get update && sudo apt-get install -y jq
-      - uses: cli/cli@v2
+      - uses: cli/gh-cli@v2
       - name: Pin actions and open PR
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: bash scripts/pin-actions.sh
+        run: cargo run -p xtask -- pin-actions

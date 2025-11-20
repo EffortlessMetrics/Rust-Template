@@ -60,7 +60,10 @@ async fn test_grpc_service_create_task() {
     let repo: Arc<dyn TaskRepository> = Arc::new(InMemoryTaskRepository::new());
 
     // Start gRPC server on random port
-    let port = 50051; // TODO: Use random port if this conflicts
+    // Start gRPC server on random port
+    let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+    let port = listener.local_addr().unwrap().port();
+    drop(listener); // Release port so server can bind to it
     let server_repo = repo.clone();
 
     // Spawn server in background task

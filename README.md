@@ -88,7 +88,7 @@ This project is opinionated and governance-heavy **on purpose**. It serves two p
 
 This template is at v2.3.0 and production-ready. Currently in **Pilot Phase** for validation.
 
-**Latest update (2025-11-18)**: Fixed selftest to gracefully skip policy tests when conftest is unavailable locally while still enforcing them in CI.
+**Latest update (2025-11-19)**: Validated release v2.4.0 with full selftest suite and documentation polish.
 
 **For LLM-assisted development**: See [CLAUDE.md](CLAUDE.md) for standard prompts, workflows, and best practices.
 
@@ -417,6 +417,26 @@ See [CI Examples](.github/workflows/) for 20+ workflow templates you can adapt.
 ---
 
 ## Release Notes
+
+### v2.4.0 (2025-11-19)
+
+**Release Prep & Polish**
+
+**Added:**
+
+- ✅ **Supply Chain Hardening**: SBOMs, build provenance, and SLSA Level 2 compliance (ADR-0006)
+- ✅ `FRICTION_LOG.md` in root for immediate pilot feedback
+- ✅ Dynamic port selection for gRPC smoke tests (reliability)
+- ✅ Full documentation polish and version consistency check
+
+**Strategic Position:**
+
+- Template is **fully polished** and ready for immediate pilot usage.
+- All governance workflows (ACs, policies, LLM bundles) are validated.
+
+See [CHANGELOG.md](CHANGELOG.md#240---2025-11-19) for full details.
+
+---
 
 ### v2.3.0 (2025-11-17)
 

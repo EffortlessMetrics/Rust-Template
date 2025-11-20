@@ -1,7 +1,7 @@
 # Why This Template Exists
 
-**Version**: v2.3.0
-**Last Updated**: 2025-11-18
+**Version**: v2.4.0
+**Last Updated**: 2025-11-19
 
 ---
 

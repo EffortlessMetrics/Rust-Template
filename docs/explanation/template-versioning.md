@@ -13,9 +13,9 @@ The template includes explicit version metadata across all specification files t
 ```yaml
 metadata:
   schema_version: "1.0"
-  template_version: "2.3.0"
-  last_updated: "2025-11-17"
-  description: "Template core capabilities - v2.3.0 includes health, version, errors, and metrics"
+  template_version: "2.4.0"
+  last_updated: "2025-11-18"
+  description: "Template core capabilities - v2.4.0 includes health, version, errors, and metrics"
 ```
 
 **Purpose:**
@@ -25,9 +25,9 @@ metadata:
 
 ### 2. Feature Files (.feature)
 ```gherkin
-# Template Version: v2.3.0
+# Template Version: v2.4.0
 # Schema: spec_ledger.yaml v1.0
-# Last Updated: 2025-11-17
+# Last Updated: 2025-11-18
 
 Feature: Template Core Endpoints
 ```
