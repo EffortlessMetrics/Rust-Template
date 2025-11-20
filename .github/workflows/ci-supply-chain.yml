@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     permissions:
-      contents: read          # Read source code
+      contents: write         # Write to releases
       id-token: write         # OIDC token for Sigstore
       attestations: write     # Write to GitHub Attestations API
     steps:
