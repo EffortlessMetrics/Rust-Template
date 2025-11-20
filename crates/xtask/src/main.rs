@@ -28,6 +28,14 @@ impl Verbosity {
     pub fn is_normal(&self) -> bool {
         *self == Verbosity::Normal
     }
+
+    pub fn as_u8(&self) -> u8 {
+        match self {
+            Verbosity::Quiet => 0,
+            Verbosity::Normal => 1,
+            Verbosity::Verbose => 2,
+        }
+    }
 }
 
 /// xtask: Single entrypoint for all dev and CI operations

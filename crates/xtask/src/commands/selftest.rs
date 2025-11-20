@@ -205,6 +205,32 @@ pub fn run_with_verbosity(verbosity: crate::Verbosity) -> Result<()> {
     }
     println!();
 
+    // Step 7: Graph invariants
+    println!("{}", "[7/7] Checking governance graph invariants...".blue());
+    let step_start = Instant::now();
+    match crate::commands::graph_export::run_graph_invariants(verbosity.as_u8()) {
+        Ok(_) => {
+            let elapsed = step_start.elapsed();
+            if verbosity.is_verbose() {
+                println!(
+                    "  {} Graph invariants satisfied ({:.2}s)",
+                    "✓".green(),
+                    elapsed.as_secs_f64()
+                );
+            } else {
+                println!("  {} Graph invariants satisfied", "✓".green());
+            }
+        }
+        Err(e) => {
+            // The error message from run_graph_invariants already includes the violations list
+            // but we want to format the header nicely
+            eprintln!("  {} Graph invariants failed:", "✗".red());
+            eprintln!("{}", e);
+            failed += 1;
+        }
+    }
+    println!();
+
     // Summary
     let total_elapsed = start_time.elapsed();
     println!("{}", "======================================".blue());

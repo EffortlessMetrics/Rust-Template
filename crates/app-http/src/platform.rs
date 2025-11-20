@@ -27,9 +27,12 @@ async fn get_suggest_next(
         .expect("Failed to load tasks.yaml");
     let devex_spec = spec_runtime::load_devex_flows(&root.join("specs/devex_flows.yaml"))
         .expect("Failed to load devex_flows.yaml");
+    let ledger = spec_runtime::load_spec_ledger(&root.join("specs/spec_ledger.yaml"))
+        .expect("Failed to load spec_ledger.yaml");
 
-    let suggestion = spec_runtime::tasks::suggest_next(&q.task, &tasks_spec, &devex_spec)
-        .expect("Failed to generate suggestion");
+    let suggestion =
+        spec_runtime::tasks::suggest_next(&root, &q.task, &tasks_spec, &devex_spec, &ledger)
+            .expect("Failed to generate suggestion");
 
     Json(suggestion)
 }

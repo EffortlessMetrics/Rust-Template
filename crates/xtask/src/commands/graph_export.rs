@@ -27,7 +27,12 @@ pub fn run(args: GraphExportArgs) -> Result<()> {
     let graph = spec_runtime::build_graph(&specs.ledger, &specs.devex, &specs.docs)?;
 
     if args.check {
-        spec_runtime::graph::check_invariants(&graph, &specs.devex)?;
+        if let Err(violations) = spec_runtime::graph::check_invariants(&graph, &specs.devex) {
+            for v in violations {
+                eprintln!("  - {}", v);
+            }
+            anyhow::bail!("Graph invariants failed");
+        }
         eprintln!("✓ Graph invariants satisfied");
     }
 
@@ -41,4 +46,22 @@ pub fn run(args: GraphExportArgs) -> Result<()> {
     }
 
     Ok(())
+}
+
+pub fn run_graph_invariants(_verbosity: u8) -> Result<()> {
+    let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    let root = manifest_dir.parent().unwrap().parent().unwrap();
+
+    let specs = spec_runtime::load_all_specs(root)?;
+    let graph = spec_runtime::build_graph(&specs.ledger, &specs.devex, &specs.docs)?;
+
+    match spec_runtime::graph::check_invariants(&graph, &specs.devex) {
+        Ok(_) => Ok(()),
+        Err(violations) => {
+            for v in violations {
+                eprintln!("  - {}", v);
+            }
+            anyhow::bail!("Graph invariants failed");
+        }
+    }
 }
