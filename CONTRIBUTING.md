@@ -105,7 +105,16 @@ That runs:
 
 If you *must* skip some work locally (e.g., no Nix), make sure CI is green.
 
-### 3.2 Keep the hexagonal architecture intact
+### 3.2 Supply chain workflows
+
+CI includes supply-chain hardening workflows (SBOM and provenance generation):
+
+- **Supply chain workflows**:
+  - `.github/workflows/ci-supply-chain.yml` runs on `v*.*.*` tags
+  - Generates an SBOM (`sbom.spdx.json`) and build provenance for a source tarball
+  - If this workflow fails on a release tag, fix it before publishing the GitHub Release
+
+### 3.3 Keep the hexagonal architecture intact
 
 * Domain logic stays in `business-core` and `model`.
 * Adapters (HTTP, gRPC, DB) live in their crates and depend inward.
@@ -113,7 +122,7 @@ If you *must* skip some work locally (e.g., no Nix), make sure CI is green.
 
 If you're unsure: check `docs/explanation/hexagonal-architecture.md`.
 
-### 3.3 Respect the governance model
+### 3.4 Respect the governance model
 
 When you add or change behavior:
 

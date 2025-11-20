@@ -1,7 +1,7 @@
 # Claude Code Usage Guide
 
-**Version**: v2.3.0
-**Last Updated**: 2025-11-18
+**Version**: v2.4.0
+**Last Updated**: 2025-11-19
 **Purpose**: Define the LLM-assisted workflow for this governed Rust template
 
 ---
@@ -105,7 +105,7 @@ Only commit when selftest passes. The template enforces:
 ### Implement an Existing AC
 
 ```text
-You are working in a governed Rust service template (v2.3.0).
+You are working in a governed Rust service template (v2.4.0).
 
 Task: Implement ONE existing acceptance criterion from specs/spec_ledger.yaml.
 
@@ -131,7 +131,7 @@ After implementation, I will run: cargo run -p xtask -- selftest
 ### Fix a Failing BDD Scenario
 
 ```text
-You are working in a governed Rust service template (v2.3.0).
+You are working in a governed Rust service template (v2.4.0).
 
 Task: Fix a failing BDD scenario while maintaining governance.
 
@@ -155,7 +155,7 @@ After fix, I will run: cargo run -p xtask -- selftest
 ### Add a New Endpoint (Following Existing Patterns)
 
 ```text
-You are working in a governed Rust service template (v2.3.0).
+You are working in a governed Rust service template (v2.4.0).
 
 Task: Add a new HTTP endpoint following existing patterns.
 
@@ -182,7 +182,7 @@ After implementation, I will run: cargo run -p xtask -- selftest
 ### Create a Pilot Project (New Service)
 
 ```text
-You are helping create a new service from the Rust Template (v2.3.0).
+You are helping create a new service from the Rust Template (v2.4.0).
 
 Context: I've created a new project using GitHub's "Use this template" or manual git clone.
 
@@ -237,7 +237,7 @@ I will validate with: cargo run -p xtask -- selftest
 The template uses **contextpack** (`.llm/contextpack.yaml`) to generate governed bundles:
 
 ```yaml
-# Template Version: v2.3.0
+# Template Version: v2.4.0
 # Schema Version: 1.0
 
 tasks:
@@ -501,9 +501,9 @@ All bundles include version headers:
 
 ```markdown
 <!-- LLM Context Bundle -->
-<!-- Template Version: v2.3.0 -->
+<!-- Template Version: v2.4.0 -->
 <!-- Schema Version: 1.0 -->
-<!-- Generated: 2025-11-18T... -->
+<!-- Generated: 2025-11-19T... -->
 ```
 
 This ensures the LLM knows:
@@ -611,11 +611,13 @@ cargo run -p xtask -- bundle implement_ac
   - [ADR-0003: Spec and BDD as Source of Truth](docs/adr/0003-spec-and-bdd-as-source-of-truth.md)
   - [ADR-0004: Policy and LLM Governance](docs/adr/0004-policy-and-llm-governance.md)
   - [ADR-0005: Selftest as Single Gate](docs/adr/0005-xtask-selftest-single-gate.md)
+  - [ADR-0006: Supply Chain Hardening](docs/adr/0006-supply-chain-hardening.md)
 
 ### Explanations and Reference
 
 - **Explanation**: `docs/explanation/hexagonal-architecture.md` - architecture principles
 - **Explanation**: `docs/explanation/controls-as-code.md` - policy governance
+- **Explanation**: `docs/explanation/supply-chain-hardening.md` - SBOM and provenance
 - **Reference**: `docs/reference/xtask-commands.md` - all xtask commands
 - **Testing**: `docs/testing-strategy.md` - complete test layer documentation
 
@@ -653,5 +655,5 @@ git commit                                  # Commit when green
 
 ---
 
-**Last updated**: 2025-11-18
-**Template version**: v2.3.0
+**Last updated**: 2025-11-19
+**Template version**: v2.4.0

@@ -3,13 +3,14 @@
 
 metadata:
   schema_version: "1.0"
-  template_version: "2.3.1"
-  last_updated: "2025-11-18"
-  description: "Template core capabilities - v2.3.0 includes health, version, errors, and metrics"
+  template_version: "2.4.0"
+  last_updated: "2025-11-19"
+  description: "Template core capabilities - v2.4.0 includes health, version, errors, metrics, and supply chain hardening"
   # Template-wide ADRs (not tied to specific stories/requirements)
   adrs:
     - ADR-0002  # Nix-first dev environment (applies to entire template)
     - ADR-0004  # Policy and LLM governance (applies to entire template)
+    - ADR-0006  # Supply chain hardening (applies to entire template)
 
 stories:
   # Template Core - Keep and extend these in your service

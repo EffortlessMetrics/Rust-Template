@@ -9,6 +9,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 (empty)
 
+## [2.4.0] - 2025-11-19
+
+### Added
+
+- **Supply Chain Hardening** (ADR-0006):
+  - `docs/adr/0006-supply-chain-hardening.md` - Supply chain hardening and build provenance decision record
+  - `docs/explanation/supply-chain-hardening.md` - Comprehensive guide to SBOM and provenance (25KB, 834 lines)
+  - `.github/workflows/ci-supply-chain.yml` - Automated SBOM generation and provenance attestation for tagged releases
+  - SLSA v1.0 Level 2 compliance via GitHub Artifact Attestations
+  - SBOM generation in SPDX JSON format via anchore/sbom-action
+  - Build provenance attestation via actions/attest-build-provenance (Sigstore-backed)
+  - Nix-based hermetic builds for release artifacts
+  - Verification guides for GitHub CLI, SLSA verifier, and policy enforcement
+
+### Changed
+
+- **README.md**: Added supply chain basics to "What this template provides" section
+- **CONTRIBUTING.md**: Added supply chain workflow expectations to release process
+- **CLAUDE.md**: Added ADR-0006 to key ADRs list and supply chain hardening to explanations
+- **spec_ledger.yaml**: Added ADR-0006 to template-wide ADRs, bumped version to v2.4.0
+- **Version strings**: Updated all version references from v2.3.x to v2.4.0 across documentation
+
 ## [2.3.1] - 2025-01-18
 
 ### Fixed
