@@ -24,7 +24,7 @@ stories:
         acceptance_criteria:
           - id: AC-TPL-001
             text: "GET /health returns 200 with status 'ok' when service is healthy"
-            tests: [ { type: bdd, tag: "@AC-TPL-001" } ]
+            tests: [ { type: bdd, tag: "@AC-TPL-005" } ]
             adr: ADR-0005  # Selftest as single gate
       - id: REQ-TPL-VERSION
         title: "Version Information Endpoint"

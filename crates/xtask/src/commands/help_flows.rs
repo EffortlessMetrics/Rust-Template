@@ -1,54 +1,54 @@
 use anyhow::Result;
 use colored::Colorize;
+use std::path::PathBuf;
 
-/// Print a flow-based map of xtask commands
+/// Print a flow-based map of xtask commands loaded from specs/devex_flows.yaml
 pub fn run() -> Result<()> {
+    let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    let root = manifest_dir
+        .parent()
+        .unwrap()
+        .parent()
+        .unwrap();
+
+    let spec_path = root.join("specs/devex_flows.yaml");
+    let spec = crate::devex::load_spec(&spec_path)?;
+
     println!("{}", "FLOWS & COMMAND GROUPS".bold());
     println!();
 
-    println!("{}", "🚀 Onboarding (New Developer / Machine)".cyan().bold());
-    println!("  {}  Validate environment (Rust, Nix, tools)", "doctor         ".bold());
-    println!("  {}  Fast dev loop (fmt + clippy + tests)", "check          ".bold());
-    println!("  {}  Full gate (BDD + AC + policies)", "selftest       ".bold());
-    println!();
+    // Group commands by category
+    let mut by_category: std::collections::HashMap<
+        String,
+        Vec<(&String, &crate::devex::spec::CommandSpec)>,
+    > = std::collections::HashMap::new();
 
-    println!("{}", "✨ Design & Acceptance Criteria".cyan().bold());
-    println!("  {}  Create architecture decision record", "adr-new        ".bold());
-    println!("  {}  Validate ADR references and linkage", "adr-check      ".bold());
-    println!("  {}  Scaffold new acceptance criterion", "ac-new         ".bold());
-    println!("  {}  Generate AC coverage/status report", "ac-status      ".bold());
-    println!("  {}  Generate LLM context bundle (e.g., implement_ac)", "bundle         ".bold());
-    println!("  {}  Run BDD acceptance tests", "bdd            ".bold());
-    println!();
+    for (cmd_name, cmd_spec) in &spec.commands {
+        by_category
+            .entry(cmd_spec.category.clone())
+            .or_default()
+            .push((cmd_name, cmd_spec));
+    }
 
-    println!("{}", "🔒 Security & Dependencies".cyan().bold());
-    println!("  {}  Security & license audit (cargo-audit + cargo-deny)", "audit          ".bold());
-    println!("  {}  Generate local SPDX SBOM for the workspace", "sbom-local     ".bold());
-    println!();
-
-    println!("{}", "📦 Release Management".cyan().bold());
-    println!("  {}  Bump versions & seed changelog entry", "release-prepare".bold());
-    println!("  {}  Pre-release gate (selftest + audit + docs)", "release-verify ".bold());
-    println!();
-
-    println!("{}", "📚 Documentation & Consistency".cyan().bold());
-    println!("  {}  Verify version alignment & generated docs", "docs-check     ".bold());
-    println!();
-
-    println!("{}", "🛠️  Infrastructure & Maintenance".cyan().bold());
-    println!("  {}  Deploy to environment", "deploy         ".bold());
-    println!("  {}  Run database migrations", "migrate        ".bold());
-    println!("  {}  Manage workspace dependency unification", "hakari         ".bold());
-    println!("  {}  Pin GitHub Actions to SHAs", "pin-actions    ".bold());
-    println!("  {}  Clean workspace artifacts (target/, etc.)", "clean          ".bold());
-    println!("  {}  Format Rust and related artifacts", "fmt-all        ".bold());
-    println!("  {}  Run Rego/OPA policy tests", "policy-test    ".bold());
-    println!("  {}  Minimal smoke-check of the template", "quickstart     ".bold());
-    println!();
-
-    println!("{}", "🔍 Meta".cyan().bold());
-    println!("  {}  Show this flow-based command map", "help-flows     ".bold());
-    println!();
+    // Render each category in canonical order
+    for (category_id, heading) in [
+        ("onboarding", "🚀 Onboarding (New Developer / Machine)"),
+        ("design_ac", "✨ Design & Acceptance Criteria"),
+        ("security", "🔒 Security & Dependencies"),
+        ("release", "📦 Release Management"),
+        ("docs", "📚 Documentation & Consistency"),
+        ("infrastructure", "🛠️  Infrastructure & Maintenance"),
+        ("meta", "🔍 Meta"),
+    ] {
+        if let Some(mut cmds) = by_category.get(category_id).cloned() {
+            println!("{}", heading.cyan().bold());
+            cmds.sort_by_key(|(name, _)| *name);
+            for (name, spec) in cmds {
+                println!("  {:<15} {}", name.bold(), spec.summary);
+            }
+            println!();
+        }
+    }
 
     println!("{}", "For full details:".dimmed());
     println!("  • {}", "README.md → Developer Workflows".dimmed());

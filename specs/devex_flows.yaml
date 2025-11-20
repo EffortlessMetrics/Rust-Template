@@ -1,0 +1,274 @@
+# DevEx Flows Specification
+# Version: 1.0.0
+# Purpose: Canonical definition of xtask commands, categories, and workflows
+# This file is the authoritative source for developer experience flows
+
+schema_version: "1.0"
+template_version: "v2.4.0"
+
+commands:
+  # Onboarding
+  doctor:
+    category: onboarding
+    summary: "Validate environment (Rust, Nix, tools)"
+    required: true
+    docs:
+      readme_table: true
+      contributing_flow: true
+      claude_golden_path: true
+
+  check:
+    category: onboarding
+    summary: "Fast dev loop (fmt + clippy + tests)"
+    required: true
+    docs:
+      readme_table: true
+      contributing_flow: true
+      claude_golden_path: true
+
+  selftest:
+    category: onboarding
+    summary: "Full gate (BDD + AC + policies)"
+    required: true
+    docs:
+      readme_table: true
+      contributing_flow: true
+      claude_golden_path: true
+
+  ci-local:
+    category: onboarding
+    summary: "Run CI checks locally (doctor + selftest + audit + docs)"
+    required: false
+    docs:
+      readme_table: true
+      contributing_flow: false
+      claude_golden_path: true
+
+  # Design & AC
+  adr-new:
+    category: design_ac
+    summary: "Create architecture decision record"
+    required: true
+    docs:
+      readme_table: true
+      contributing_flow: true
+      claude_golden_path: true
+
+  adr-check:
+    category: design_ac
+    summary: "Validate ADR references and linkage"
+    required: true
+    docs:
+      readme_table: false
+      contributing_flow: false
+      claude_golden_path: false
+
+  ac-new:
+    category: design_ac
+    summary: "Scaffold new acceptance criterion"
+    required: true
+    docs:
+      readme_table: true
+      contributing_flow: true
+      claude_golden_path: true
+
+  ac-status:
+    category: design_ac
+    summary: "Generate AC coverage/status report"
+    required: true
+    docs:
+      readme_table: false
+      contributing_flow: false
+      claude_golden_path: false
+
+  bundle:
+    category: design_ac
+    summary: "Generate LLM context bundle"
+    required: true
+    docs:
+      readme_table: true
+      contributing_flow: true
+      claude_golden_path: true
+
+  bdd:
+    category: design_ac
+    summary: "Run BDD acceptance tests"
+    required: true
+    docs:
+      readme_table: true
+      contributing_flow: true
+      claude_golden_path: true
+
+  # Security
+  audit:
+    category: security
+    summary: "Security & license audit (cargo-audit + cargo-deny)"
+    required: true
+    docs:
+      readme_table: true
+      contributing_flow: true
+      claude_golden_path: true
+
+  sbom-local:
+    category: security
+    summary: "Generate local SPDX SBOM"
+    required: false
+    docs:
+      readme_table: false
+      contributing_flow: false
+      claude_golden_path: true
+
+  # Release
+  release-prepare:
+    category: release
+    summary: "Bump versions & seed changelog"
+    required: true
+    docs:
+      readme_table: true
+      contributing_flow: true
+      claude_golden_path: true
+
+  release-verify:
+    category: release
+    summary: "Pre-release gate (selftest + audit + docs)"
+    required: true
+    docs:
+      readme_table: true
+      contributing_flow: true
+      claude_golden_path: true
+
+  # Docs
+  docs-check:
+    category: docs
+    summary: "Verify version alignment & generated docs"
+    required: true
+    docs:
+      readme_table: false
+      contributing_flow: false
+      claude_golden_path: false
+
+  # Infrastructure
+  deploy:
+    category: infrastructure
+    summary: "Deploy to environment"
+    required: true
+    docs:
+      readme_table: false
+      contributing_flow: false
+      claude_golden_path: false
+
+  migrate:
+    category: infrastructure
+    summary: "Run database migrations"
+    required: true
+    docs:
+      readme_table: false
+      contributing_flow: false
+      claude_golden_path: false
+
+  hakari:
+    category: infrastructure
+    summary: "Manage workspace dependencies"
+    required: false
+    docs:
+      readme_table: false
+      contributing_flow: false
+      claude_golden_path: false
+
+  pin-actions:
+    category: infrastructure
+    summary: "Pin GitHub Actions to SHAs"
+    required: false
+    docs:
+      readme_table: false
+      contributing_flow: false
+      claude_golden_path: false
+
+  clean:
+    category: infrastructure
+    summary: "Clean workspace artifacts"
+    required: true
+    docs:
+      readme_table: false
+      contributing_flow: false
+      claude_golden_path: false
+
+  fmt-all:
+    category: infrastructure
+    summary: "Format Rust and related artifacts"
+    required: true
+    docs:
+      readme_table: false
+      contributing_flow: false
+      claude_golden_path: false
+
+  policy-test:
+    category: infrastructure
+    summary: "Run Rego/OPA policy tests"
+    required: true
+    docs:
+      readme_table: false
+      contributing_flow: false
+      claude_golden_path: false
+
+  quickstart:
+    category: infrastructure
+    summary: "Minimal smoke-check"
+    required: false
+    docs:
+      readme_table: false
+      contributing_flow: false
+      claude_golden_path: false
+
+  # Meta
+  help-flows:
+    category: meta
+    summary: "Show flow-based command map"
+    required: true
+    docs:
+      readme_table: true
+      contributing_flow: false
+      claude_golden_path: true
+
+flows:
+  onboarding:
+    name: "Onboarding (new developer / machine)"
+    description: "Validate environment, discover workflows, reach first green check"
+    required: true
+    documented_in: ["CONTRIBUTING.md", "CLAUDE.md", "README.md"]
+    steps: ["doctor", "check", "selftest"]
+
+  ac_first:
+    name: "Feature addition (AC-first)"
+    description: "Add behavior via acceptance criterion, implement, validate"
+    required: true
+    documented_in: ["CONTRIBUTING.md", "CLAUDE.md"]
+    steps: ["ac-new", "bundle", "bdd", "selftest"]
+
+  design_decision:
+    name: "Architecture decision (ADR-first)"
+    description: "Record structural decisions in ADR, link to spec"
+    required: true
+    documented_in: ["CONTRIBUTING.md", "CLAUDE.md"]
+    steps: ["adr-new", "adr-check"]
+
+  dependency_change:
+    name: "Dependency change (audit ritual)"
+    description: "Update dependencies, validate security/license"
+    required: true
+    documented_in: ["CONTRIBUTING.md", "CLAUDE.md"]
+    steps: ["audit"]
+
+  release:
+    name: "Release"
+    description: "Bump version, validate, tag, push"
+    required: true
+    documented_in: ["CONTRIBUTING.md", "CLAUDE.md", "README.md"]
+    steps: ["release-prepare", "release-verify"]
+
+  ci_parity:
+    name: "CI parity (run what CI runs)"
+    description: "Local validation matching CI checks"
+    required: false
+    documented_in: ["README.md", "CLAUDE.md"]
+    steps: ["ci-local"]
