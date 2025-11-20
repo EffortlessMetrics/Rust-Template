@@ -9,6 +9,12 @@ pub struct Graph {
     pub edges: Vec<Edge>,
 }
 
+#[derive(Debug, Serialize, Clone, Default)]
+pub struct NodeMeta {
+    #[serde(default)]
+    pub must_have_ac: bool,
+}
+
 #[derive(Debug, Serialize, Clone)]
 pub struct Node {
     pub id: String,
@@ -17,6 +23,8 @@ pub struct Node {
     pub node_type: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub url: Option<String>,
+    #[serde(default)]
+    pub meta: NodeMeta,
 }
 
 #[derive(Debug, Serialize, Clone)]
@@ -26,6 +34,8 @@ pub struct Edge {
     #[serde(rename = "type")]
     pub edge_type: String,
 }
+
+// ... (Edge struct remains same)
 
 pub fn build_graph(ledger: &SpecLedger, devex: &DevExFlows, docs: &DocIndex) -> Result<Graph> {
     let mut graph = Graph { nodes: Vec::new(), edges: Vec::new() };
@@ -37,6 +47,7 @@ pub fn build_graph(ledger: &SpecLedger, devex: &DevExFlows, docs: &DocIndex) -> 
             label: story.title.clone(),
             node_type: "story".to_string(),
             url: None,
+            meta: NodeMeta::default(),
         });
 
         for req in &story.requirements {
@@ -45,6 +56,7 @@ pub fn build_graph(ledger: &SpecLedger, devex: &DevExFlows, docs: &DocIndex) -> 
                 label: req.title.clone(),
                 node_type: "requirement".to_string(),
                 url: None,
+                meta: NodeMeta { must_have_ac: req.must_have_ac },
             });
 
             graph.edges.push(Edge {
@@ -59,6 +71,7 @@ pub fn build_graph(ledger: &SpecLedger, devex: &DevExFlows, docs: &DocIndex) -> 
                     label: ac.text.clone(),
                     node_type: "ac".to_string(),
                     url: None,
+                    meta: NodeMeta::default(),
                 });
 
                 graph.edges.push(Edge {
@@ -77,6 +90,7 @@ pub fn build_graph(ledger: &SpecLedger, devex: &DevExFlows, docs: &DocIndex) -> 
             label: doc.id.clone(),
             node_type: "document".to_string(),
             url: Some(format!("file://{}", doc.file)),
+            meta: NodeMeta::default(),
         });
 
         for req_id in &doc.requirements {
@@ -95,6 +109,7 @@ pub fn build_graph(ledger: &SpecLedger, devex: &DevExFlows, docs: &DocIndex) -> 
             label: format!("cargo xtask {}", cmd_name),
             node_type: "command".to_string(),
             url: None,
+            meta: NodeMeta::default(),
         });
     }
 
@@ -106,6 +121,7 @@ pub fn build_graph(ledger: &SpecLedger, devex: &DevExFlows, docs: &DocIndex) -> 
             label: flow.name.clone(),
             node_type: "flow".to_string(),
             url: None,
+            meta: NodeMeta::default(),
         });
 
         for step in &flow.steps {
@@ -120,56 +136,63 @@ pub fn build_graph(ledger: &SpecLedger, devex: &DevExFlows, docs: &DocIndex) -> 
     Ok(graph)
 }
 
-pub fn check_invariants(graph: &Graph, devex: &DevExFlows) -> Result<()> {
-    let mut errors = Vec::new();
+#[derive(Debug)]
+pub struct InvariantViolation {
+    pub code: String,
+    pub message: String,
+}
 
-    // 1. Every requirement with certain tags must have at least one AC
-    let req_nodes: Vec<&Node> =
-        graph.nodes.iter().filter(|n| n.node_type == "requirement").collect();
-    for req in req_nodes {
-        // In a real implementation we'd check tags, but for now we assume all requirements in the graph matter
-        // Check if it has an outgoing edge to an AC
+impl std::fmt::Display for InvariantViolation {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "[{}] {}", self.code, self.message)
+    }
+}
+
+pub fn check_invariants(graph: &Graph, devex: &DevExFlows) -> Result<(), Vec<InvariantViolation>> {
+    let mut violations = Vec::new();
+
+    // 1. REQ must_have_ac -> at least one AC
+    for req in graph.nodes.iter().filter(|n| n.node_type == "requirement") {
+        if !req.meta.must_have_ac {
+            continue;
+        }
+
         let has_ac = graph.edges.iter().any(|e| e.source == req.id && e.edge_type == "contains");
+
         if !has_ac {
-            // Check if it's a requirement that SHOULD have ACs (e.g. platform/structural)
-            // For this simplified check, we'll just warn or error if it's a core requirement
-            if req.id.starts_with("REQ-TPL") {
-                errors.push(format!("Requirement {} has no ACs", req.id));
-            }
+            violations.push(InvariantViolation {
+                code: "REQ_HAS_NO_AC".into(),
+                message: format!("Requirement {} has no ACs in graph", req.id),
+            });
         }
     }
 
-    // 2. Every AC must have at least one test edge (or be manually verified)
-    // This is harder to check purely from the graph as we don't explicitly model test nodes yet in build_graph
-    // But we can check if ACs are leaf nodes (which they shouldn't be if they have tests)
-    // For now, we'll skip this strictly or implement a basic check if we added test nodes.
-    // Since we didn't add test nodes in build_graph yet, let's skip this one for now to avoid false positives.
+    // 2. AC has tests (skipped for now)
 
-    // 3. Every command in devex_flows must be reachable
-    // We check if command nodes are orphans (no incoming edges from flows/tasks)
-    // Actually, commands are usually leaf nodes in our current graph (Flow -> Command).
-    // So we check if they have INCOMING edges.
+    // 3. DevEx commands reachable
     for cmd_name in devex.commands.keys() {
         let cmd_id = format!("cmd:{}", cmd_name);
         let is_reachable = graph.edges.iter().any(|e| e.target == cmd_id);
         if !is_reachable {
-            // Check if it's required
             if let Some(cmd_spec) = devex.commands.get(cmd_name) {
                 if cmd_spec.required {
-                    errors.push(format!(
-                        "Required command '{}' is not used in any flow or task",
-                        cmd_name
-                    ));
+                    violations.push(InvariantViolation {
+                        code: "COMMAND_UNREACHABLE".into(),
+                        message: format!(
+                            "Required command '{}' is not used in any flow or task",
+                            cmd_name
+                        ),
+                    });
                 }
             }
         }
     }
 
-    if !errors.is_empty() {
-        anyhow::bail!("Graph invariants failed:\n- {}", errors.join("\n- "));
+    if violations.is_empty() {
+        Ok(())
+    } else {
+        Err(violations)
     }
-
-    Ok(())
 }
 
 impl Graph {

@@ -12,11 +12,25 @@ tasks:
     status: open
     owner: team-platform
     labels: [platform, devex, ac_first]
+    summary: "Implement platform introspection APIs"
     recommended_flows: ["ac_first"]
     docs:
       design:
         - DESIGN-TPL-PLATFORM-INTROSPECTION-001
       plan: []
+
+  - id: implement_ac
+    title: "Implement Acceptance Criterion"
+    requirement: REQ-TPL-SUGGEST-NEXT
+    acs: [AC-TPL-SUGGEST-NEXT-CLI]
+    status: "in_progress"
+    owner: "steven"
+    labels: ["feature", "devex"]
+    summary: "Implement a new feature starting from an AC"
+    recommended_flows: ["ac_first"]
+    docs:
+      design: ["docs/design/platform-devex.md"]
+      plan: ["docs/plans/phase-3.md"]
 
   - id: TASK-TPL-FIX-AUDIT-001
     title: "Fix cargo-audit / cargo-deny findings and keep audit clean"
@@ -27,6 +41,7 @@ tasks:
     status: open
     owner: team-platform
     labels: [security, dependencies, audit]
+    summary: "Resolve security vulnerabilities and policy violations"
     recommended_flows: ["dependency_change"]
     docs:
       design: []

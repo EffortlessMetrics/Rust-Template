@@ -271,4 +271,25 @@ flows:
     description: "Local validation matching CI checks"
     required: false
     documented_in: ["README.md", "CLAUDE.md"]
-    steps: ["ci-local"]
+    steps: ["ci-local", "fmt-all", "policy-test", "docs-check"]
+
+  deployment:
+    name: "Deployment"
+    description: "Deploy services and run migrations"
+    required: true
+    documented_in: ["README.md"]
+    steps: ["deploy", "migrate"]
+
+  maintenance:
+    name: "Maintenance"
+    description: "Clean and maintain workspace"
+    required: false
+    documented_in: ["README.md"]
+    steps: ["clean"]
+
+  discovery:
+    name: "Discovery"
+    description: "Explore available commands and flows"
+    required: true
+    documented_in: ["README.md"]
+    steps: ["help-flows", "ac-status"]

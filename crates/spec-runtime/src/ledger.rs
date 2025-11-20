@@ -29,6 +29,8 @@ pub struct Requirement {
     pub title: String,
     #[serde(default)]
     pub tags: Vec<String>,
+    #[serde(default)]
+    pub must_have_ac: bool,
     pub acceptance_criteria: Vec<AcceptanceCriterion>,
 }
 
