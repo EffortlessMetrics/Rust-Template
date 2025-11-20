@@ -50,6 +50,12 @@ pub fn run() -> Result<()> {
         println!("{} Documentation is consistent", "✓".green().bold());
     } else {
         println!("{} {} issue(s) found", "✗".red().bold(), issues);
+        println!();
+        println!("{}", "To fix:".bold());
+        println!("  • Align versions: {}", "cargo xtask release-prepare X.Y.Z".cyan());
+        println!("  • Or manually sync: {}", "README.md, CLAUDE.md, spec_ledger.yaml".dimmed());
+        println!("  • Commit generated docs if out of sync");
+        println!("  • See: {}", "docs/RELEASE_PLAYBOOK.md".dimmed());
     }
 
     if issues > 0 {

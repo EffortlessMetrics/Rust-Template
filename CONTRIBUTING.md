@@ -51,6 +51,93 @@ See [`docs/dev-environment.md`](docs/dev-environment.md). In this mode:
 
 ---
 
+## 2. Common Workflows
+
+The `xtask` command provides a complete developer experience for this template.
+**Use flows, not individual commands, wherever possible.**
+
+### New developer / new machine
+
+1. `nix develop`
+2. `cargo xtask doctor`
+3. `cargo xtask check`
+
+* `doctor` validates Rust, Cargo, Nix, and supporting tools
+* `check` is the fast dev loop (fmt + clippy + tests)
+
+### Adding new behavior (AC-first)
+
+1. Scaffold the AC:
+   ```bash
+   cargo xtask ac-new AC-TPL-010 "User can cancel account" \
+     --story US-TPL-002 --requirement REQ-TPL-CANCEL
+   ```
+
+2. Paste the AC snippet into `specs/spec_ledger.yaml` under the requirement
+
+3. Add a `@AC-TPL-010` scenario to the appropriate file in `specs/features/`
+
+4. Regenerate the LLM bundle:
+   ```bash
+   cargo xtask bundle implement_ac
+   ```
+
+5. Implement code + tests with LLM assistance
+
+6. Run BDD and full gate:
+   ```bash
+   cargo xtask bdd
+   cargo xtask selftest
+   ```
+
+### Making an architecture decision
+
+```bash
+cargo xtask adr-new "Introduce order cancellation"
+# edit docs/adr/NNNN-introduce-order-cancellation.md
+cargo xtask adr-check
+```
+
+* Record the decision in the ADR
+* Link it from `specs/spec_ledger.yaml` where appropriate
+
+### Changing dependencies
+
+Whenever you touch `Cargo.toml` or `Cargo.lock`:
+
+```bash
+cargo xtask audit
+```
+
+* Fix any vulnerabilities or license violations
+* If you must accept a risk, document it in ADR-0007 before merging
+
+### Preparing a release
+
+```bash
+cargo xtask release-prepare X.Y.Z    # bump versions & seed changelog
+# edit CHANGELOG.md entry as needed
+cargo xtask release-verify           # selftest + audit + docs-check
+
+git commit -am "Release vX.Y.Z"
+git tag -a vX.Y.Z -m "Release vX.Y.Z"
+git push origin main --follow-tags
+```
+
+### All flows
+
+```bash
+cargo xtask help-flows
+```
+
+Shows a categorized map of all available commands organized by workflow.
+
+---
+
+## 3. Making Changes
+
+---
+
 ## 2. How to work on changes
 
 ### 2.1 Branching

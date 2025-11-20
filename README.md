@@ -150,6 +150,25 @@ Continue to [Brownfield Guide](docs/how-to/add-governance-to-existing-repo.md) f
 
 ---
 
+## Developer Workflows
+
+Common workflows using the `xtask` command suite:
+
+| Situation | Commands | Documentation |
+|-----------|----------|---------------|
+| **New dev/machine** | `nix develop` → `xtask doctor` | [Dev Environment](docs/dev-environment.md) |
+| **Everyday dev** | `xtask check` | Fast loop: fmt + clippy + tests |
+| **Before push** | `xtask selftest` | Full gate: BDD + AC + policies |
+| **Add feature (AC)** | `ac-new` → update spec/feature → `bundle` → `bdd` | [AC-First Tutorial](docs/tutorials/first-ac-change.md) |
+| **Architecture** | `adr-new` → edit ADR → `adr-check` | [ADR Guide](docs/explanation/controls-as-code.md) |
+| **Dependencies** | `xtask audit` | [Security](docs/adr/0007-dependency-security-health.md) |
+| **Release** | `release-prepare` → `release-verify` → tag | [Release Playbook](docs/RELEASE_PLAYBOOK.md) |
+| **CI locally** | `xtask ci-local` | Runs doctor + selftest + audit + docs |
+| **All flows** | `xtask help-flows` | Categorized command map |
+
+
+---
+
 ### Pilot Workflow (Validating the Template)
 
 **Want to validate the template in real usage?** Create a greenfield pilot project:

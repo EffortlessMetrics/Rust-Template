@@ -63,12 +63,12 @@ pub fn run() -> Result<()> {
 
     // Check cargo-hakari
     print!("cargo-hakari... ");
-    match which::which("cargo-hakari") {
-        Ok(_) => println!("{} Installed", "✓".green()),
-        Err(_) => {
-            println!("{} Not found (optional, install: cargo install cargo-hakari)", "⚠".yellow());
-            warnings += 1;
-        }
+    let has_cargo_hakari = which::which("cargo-hakari").is_ok();
+    if has_cargo_hakari {
+        println!("{} Installed", "✓".green());
+    } else {
+        println!("{} Not found (optional, install: cargo install cargo-hakari)", "⚠".yellow());
+        warnings += 1;
     }
 
     // Check git
@@ -106,29 +106,36 @@ pub fn run() -> Result<()> {
         warnings += 1;
     }
 
+    // Summary with next steps
     println!();
-    println!("{}", "Summary:".bold());
     if issues == 0 && warnings == 0 {
-        println!("{} All checks passed!", "✓".green().bold());
-        println!("Environment is fully configured for development.");
+        println!("{}", "✓ Environment checks passed!".green().bold());
+        println!();
+        println!("{}", "Next steps:".bold());
+        println!("  • Fast dev loop:  {}", "cargo xtask check".cyan());
+        println!("  • Before pushing: {}", "cargo xtask selftest".cyan());
+        println!("  • See all flows:  {}", "cargo xtask help-flows".cyan());
     } else {
         if issues > 0 {
             println!("{} {} critical issue(s) found", "✗".red().bold(), issues);
         }
         if warnings > 0 {
-            println!("{} {} warning(s)", "⚠".yellow().bold(), warnings);
-        }
-        println!();
-        if !std::env::var("IN_NIX_SHELL").is_ok() {
-            println!(
-                "{}",
-                "💡 Recommendation: Run 'nix develop' for a fully configured environment".cyan()
-            );
+            println!("{}", "⚠ Environment functional with warnings".yellow().bold());
+            println!();
+            println!("{}", "Recommendations:".bold());
+            if !has_cargo_hakari {
+                println!("  • Install hakari: {}", "cargo install cargo-hakari".dimmed());
+            }
+            if std::env::var("IN_NIX_SHELL").is_err() {
+                println!("  • Enter Nix shell: {}", "nix develop".cyan());
+                println!("    {}", "(Provides hermetic tools + policy tests)".dimmed());
+            }
+            println!("  • View flows: {}", "cargo xtask help-flows".cyan());
         }
     }
 
     if issues > 0 {
-        anyhow::bail!("{} critical issues prevent development", issues);
+        anyhow::bail!("{} critical environment issue(s)", issues);
     }
 
     Ok(())
