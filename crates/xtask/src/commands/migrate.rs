@@ -2,7 +2,6 @@ use crate::run_cmd;
 use anyhow::Result;
 use colored::Colorize;
 use std::path::{Path, PathBuf};
-use std::process::Command;
 
 fn project_root() -> PathBuf {
     let manifest_dir = env!("CARGO_MANIFEST_DIR");
@@ -25,9 +24,10 @@ pub fn run() -> Result<()> {
 
     println!("{}", "📦 Running sqlx migrate run...".blue());
 
-    let mut cmd = Command::new("cargo");
+    println!("{}", "📦 Running sqlx migrate run...".blue());
+
+    let mut cmd = crate::cargo_cmd("sqlx", &["migrate", "run", "--source", "migrations"]);
     cmd.current_dir(&crate_dir);
-    cmd.args(["sqlx", "migrate", "run", "--source", "migrations"]);
 
     // Pass through DATABASE_URL if present, otherwise let sqlx complain or use .env
     if let Ok(url) = std::env::var("DATABASE_URL") {
@@ -41,9 +41,9 @@ pub fn run() -> Result<()> {
     // Check for cargo-sqlx binary to run prepare
     if which::which("cargo-sqlx").is_ok() {
         println!("{}", "🔄 Regenerating sqlx types...".blue());
-        let mut cmd = Command::new("cargo");
+        println!("{}", "🔄 Regenerating sqlx types...".blue());
+        let mut cmd = crate::cargo_cmd("sqlx", &["prepare", "--", "--lib"]);
         cmd.current_dir(&crate_dir);
-        cmd.args(["sqlx", "prepare", "--", "--lib"]);
 
         if let Err(e) = run_cmd(&mut cmd) {
             eprintln!("{} Failed to regenerate sqlx types: {}", "⚠".yellow(), e);

@@ -316,3 +316,26 @@ Read:
 - [AGENT_GUIDE.md](AGENT_GUIDE.md) - Agent operations
 
 Still stuck? Open an issue with `[pilot]` prefix.
+
+---
+
+## 11. Low-Resource Environments
+
+If you are running on a constrained machine (e.g., small CI runner, cheap VPS, or old laptop), the default parallel builds and caching might be too heavy.
+
+**Use Low-Resource Mode:**
+
+```bash
+XTASK_LOW_RESOURCES=1 cargo run -p xtask -- check
+XTASK_LOW_RESOURCES=1 cargo run -p xtask -- selftest
+```
+
+**What this does:**
+- Sets `CARGO_BUILD_JOBS=1` (serial compilation)
+- Disables `sccache` (avoids cache overhead)
+- Reduces memory pressure significantly
+
+**When to use:**
+- CI runners with < 4GB RAM
+- Local dev on constrained hardware
+- If you see "OOM" or "Killed" messages during compilation

@@ -1,7 +1,6 @@
 use crate::run_cmd;
 use anyhow::Result;
 use colored::Colorize;
-use std::process::Command;
 
 pub fn run() -> Result<()> {
     // Check if cargo-hakari is installed
@@ -17,13 +16,12 @@ pub fn run() -> Result<()> {
     }
 
     println!("{}", "Running cargo hakari generate...".blue());
-    let mut cmd = Command::new("cargo");
-    cmd.args(["hakari", "generate"]);
+    println!("{}", "Running cargo hakari generate...".blue());
+    let mut cmd = crate::cargo_cmd("hakari", &["generate"]);
     run_cmd(&mut cmd)?;
 
     println!("{}", "Running cargo hakari verify...".blue());
-    let mut cmd = Command::new("cargo");
-    cmd.args(["hakari", "verify"]);
+    let mut cmd = crate::cargo_cmd("hakari", &["verify"]);
     run_cmd(&mut cmd)?;
 
     println!("{}", "✅ Hakari completed successfully!".green());

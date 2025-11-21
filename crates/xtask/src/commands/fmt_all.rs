@@ -11,8 +11,8 @@ pub fn run() -> Result<()> {
 
     // Format Rust code
     print!("Formatting Rust (cargo fmt --all)... ");
-    let mut cmd = Command::new("cargo");
-    cmd.args(["fmt", "--all"]);
+    print!("Formatting Rust (cargo fmt --all)... ");
+    let mut cmd = crate::cargo_cmd("fmt", &["--all"]);
     match run_cmd(&mut cmd) {
         Ok(_) => {
             println!("{}", "✓ Done".green());
