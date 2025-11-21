@@ -74,3 +74,37 @@ tasks:
     docs:
       design: []
       plan: []
+
+  - id: TASK-TPL-REL-BUNDLE-3-1-0
+    title: "Implement release-bundle command"
+    requirement: REQ-TPL-REL-BUNDLE
+    acs:
+      - AC-TPL-REL-EVIDENCE
+      - AC-TPL-REL-CHANGELOG
+    status: in_progress
+    owner: agent
+    labels: [platform, release, devex]
+    summary: "Implement `cargo xtask release-bundle X.Y.Z` that generates structured evidence bundles for releases with tasks, specs, git history, and governance status."
+    recommended_flows: ["ac_first"]
+    docs:
+      design: []
+      plan: []
+
+  - id: TASK-TPL-SKILLS-ALIGN-001
+    title: "Align Skills with AGENT_SKILLS.md guidance"
+    requirement: REQ-TPL-SKILLS-GUIDE
+    acs:
+      - AC-TPL-SKILLS-ALIGN-001
+    status: in_progress
+    owner: agent
+    labels: [platform, agent, docs, skills]
+    summary: >
+      Refactor .claude/skills/* to match the 5 recommended Skills
+      (bootstrap-dev-env, governed-feature-dev, governed-maintenance,
+      governed-release, governed-governance-debug) and ensure SKILL.md
+      files follow documented templates with proper frontmatter, workflow
+      references to devex_flows.yaml, and comprehensive guidance.
+    recommended_flows: ["ac_first"]
+    docs:
+      design: ["docs/AGENT_SKILLS.md"]
+      plan: []

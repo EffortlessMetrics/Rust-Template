@@ -100,6 +100,11 @@ stories:
             tests:
               - { type: integration, tag: "@AC-PLT-003", file: "specs/features/xtask_devex.feature" }
 
+          - id: AC-PLT-018
+            text: "`cargo xtask dev-up` runs doctor + install-hooks + check and displays next steps"
+            tests:
+              - { type: integration, tag: "@AC-PLT-018", file: "specs/features/xtask_devex.feature" }
+
       - id: REQ-PLT-DESIGN-SCAFFOLDING
         title: "Design decisions and ACs are easy to create correctly"
         tags: [platform, devex]
@@ -175,16 +180,35 @@ stories:
             text: "`cargo xtask release-prepare X.Y.Z` updates spec_ledger, README, CLAUDE, CHANGELOG"
             tests:
               - { type: integration, tag: "@AC-PLT-011", file: "specs/features/xtask_devex.feature" }
-          
+
           - id: AC-PLT-012
             text: "`cargo xtask release-verify` runs selftest + audit + docs-check + clean tree"
             tests:
               - { type: integration, tag: "@AC-PLT-012", file: "specs/features/xtask_devex.feature" }
-          
+
           - id: AC-PLT-013
             text: "`cargo xtask release-verify` provides git command sequence on success"
             tests:
               - { type: integration, tag: "@AC-PLT-013", file: "specs/features/xtask_devex.feature" }
+
+      - id: REQ-TPL-REL-BUNDLE
+        title: "Release evidence bundle generation"
+        tags: [platform, release, devex]
+        must_have_ac: true
+        description: >
+          The system MUST be able to produce a structured evidence bundle for a given
+          version, suitable for generating release notes.
+        adr: ADR-0005
+        acceptance_criteria:
+          - id: AC-TPL-REL-EVIDENCE
+            text: "`cargo xtask release-bundle X.Y.Z` writes `release_evidence/vX.Y.Z.md` containing: all tasks completed in this version, linked REQs/ACs/ADRs, git log since last tag, selftest summary, policy status, resolved friction entries."
+            tests:
+              - { type: integration, tag: "release_bundle_generation" }
+
+          - id: AC-TPL-REL-CHANGELOG
+            text: "Evidence file includes distinct sections (Tasks, Specs/ACs, ADRs, Git log, Governance signals) adequate for LLM formatting into Keep a Changelog format."
+            tests:
+              - { type: integration, tag: "release_bundle_structure" }
 
       - id: REQ-PLT-DEVEX-CONTRACT
         title: "DevEx flows and commands are spec-backed and CI-enforced"
@@ -209,6 +233,16 @@ stories:
             text: "`cargo xtask ci-local` orchestrates doctor + selftest + audit + docs-check"
             tests:
               - { type: integration, tag: "@AC-PLT-016", file: "specs/features/xtask_devex.feature" }
+
+          - id: AC-PLT-019
+            text: "`cargo xtask selftest` displays a condensed summary with clear pass/fail indicators for all 7 steps"
+            tests:
+              - { type: integration, tag: "@AC-PLT-019", file: "specs/features/xtask_devex.feature" }
+
+          - id: AC-PLT-020
+            text: "`XTASK_LOW_RESOURCES=1` environment variable skips resource-intensive steps in selftest for CI/constrained environments"
+            tests:
+              - { type: integration, tag: "@AC-PLT-020", file: "specs/features/xtask_devex.feature" }
 
       - id: REQ-PLT-STATUS-CLI
         title: "CLI governance status dashboard"
@@ -469,6 +503,38 @@ stories:
               each referencing the appropriate xtask commands and platform APIs.
             tests:
               - { type: manual, tag: "agent_skill_discovery" }
+
+          - id: AC-TPL-AGENT-HINTS
+            text: >
+              GET /platform/agent/hints returns prioritized task suggestions
+              for agents, filtering tasks by Todo/InProgress status.
+            tests:
+              - { type: bdd, tag: "@AC-TPL-AGENT-HINTS" }
+
+      - id: REQ-TPL-SKILLS-GUIDE
+        title: "Agent Skills documentation and governance"
+        tags: [platform, agent, docs]
+        must_have_ac: true
+        description: >
+          The template MUST provide repo-specific guidance for Agent Skills that
+          align with DevEx flows and governance, so Skills map to workflows
+          (feature dev, maintenance, release) rather than individual commands.
+        adr: [ADR-0004]
+        acceptance_criteria:
+          - id: AC-TPL-SKILLS-GUIDE-001
+            text: >
+              docs/AGENT_SKILLS.md exists and documents the recommended Skill set,
+              SKILL.md templates, and best practices for this repo.
+            tests:
+              - { type: docs, tag: "skills_guide_exists" }
+
+          - id: AC-TPL-SKILLS-ALIGN-001
+            text: >
+              Existing .claude/skills/* are aligned with documented workflows
+              (bootstrap-dev-env, governed-feature-dev, governed-maintenance,
+              governed-release, governed-governance-debug).
+            tests:
+              - { type: manual, tag: "skills_alignment_review" }
 
   - id: US-TPL-PLATFORM-V3
     title: "The Recursive Platform"

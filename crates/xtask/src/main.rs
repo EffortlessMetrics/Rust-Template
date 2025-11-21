@@ -147,6 +147,11 @@ enum Commands {
         /// Version to release (e.g., 2.5.0)
         version: String,
     },
+    /// Generate release evidence bundle
+    ReleaseBundle {
+        /// Version to generate evidence for (e.g., 3.1.0)
+        version: String,
+    },
     /// Verify release readiness (selftest + audit + docs-check)
     ReleaseVerify,
     /// Generate local SBOM
@@ -240,6 +245,7 @@ fn main() -> Result<()> {
         Commands::PolicyTest => commands::policy_test::run().map_err(|e| anyhow::anyhow!("{}", e)),
         Commands::Quickstart => commands::quickstart::run(),
         Commands::ReleasePrepare { version } => commands::release_prepare::run(&version),
+        Commands::ReleaseBundle { version } => commands::release_bundle::run(&version),
         Commands::ReleaseVerify => commands::release_verify::run(),
         Commands::SbomLocal => commands::sbom_local::run(),
         Commands::SuggestNext(args) => commands::suggest_next::run(args),
@@ -341,18 +347,23 @@ pub fn all_command_names() -> Vec<&'static str> {
         "audit",
         "doctor",
         "docs-check",
+        "dev-up",
         "fmt-all",
+        "graph-export",
         "hakari",
         "install-hooks",
         "migrate",
         "pin-actions",
         "policy-test",
         "release-prepare",
+        "release-bundle",
         "release-verify",
         "sbom-local",
         "quickstart",
         "selftest",
         "status",
+        "suggest-next",
+        "tasks-list",
         "help-flows",
     ]
 }
