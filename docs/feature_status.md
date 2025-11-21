@@ -28,7 +28,7 @@ Auto-generated AC status from acceptance tests.
 | AC-TPL-004 | US-TPL-001 | REQ-TPL-ERROR-HANDLING | ✅ pass | 3 |
 | AC-TPL-007 | US-TPL-001 | REQ-TPL-METRICS | ✅ pass | 1 |
 | AC-TPL-AGENT-SKILLS | US-TPL-PLT-001 | REQ-TPL-AGENT-INTERFACE | ❓ unknown | 0 |
-| AC-TPL-GOV-WRITE-TASK-STATUS-200 | US-TPL-PLATFORM-V3 | REQ-TPL-GOV-WRITE-001 | ❌ fail | 1 |
+| AC-TPL-GOV-WRITE-TASK-STATUS-200 | US-TPL-PLATFORM-V3 | REQ-TPL-GOV-WRITE-001 | ✅ pass | 1 |
 | AC-TPL-GRAPH-AC-HAS-TEST | US-TPL-PLT-001 | REQ-TPL-GRAPH-INVARIANTS | ❓ unknown | 0 |
 | AC-TPL-GRAPH-COMMAND-REACHABLE | US-TPL-PLT-001 | REQ-TPL-GRAPH-INVARIANTS | ❌ fail | 1 |
 | AC-TPL-GRAPH-MERMAID | US-TPL-PLT-001 | REQ-TPL-GRAPH-VISUALIZATION | ✅ pass | 1 |
@@ -45,8 +45,9 @@ Auto-generated AC status from acceptance tests.
 | AC-TPL-POLICY-STATUS-OVERVIEW | US-TPL-PLT-001 | REQ-TPL-PLATFORM-INTROSPECTION | ✅ pass | 1 |
 | AC-TPL-SUGGEST-NEXT-CLI | US-TPL-PLT-001 | REQ-TPL-SUGGEST-NEXT | ✅ pass | 1 |
 | AC-TPL-SUGGEST-NEXT-HTTP | US-TPL-PLT-001 | REQ-TPL-SUGGEST-NEXT | ✅ pass | 1 |
-| AC-TPL-TASKS-CLI | US-TPL-PLT-001 | REQ-TPL-PLATFORM-TASKS | ✅ pass | 1 |
-| AC-TPL-TASKS-HTTP | US-TPL-PLT-001 | REQ-TPL-PLATFORM-TASKS | ✅ pass | 1 |
+| AC-TPL-TASK-TRANSITIONS | US-TPL-PLATFORM-V3 | REQ-TPL-TASK-LIFECYCLE | ✅ pass | 2 |
+| AC-TPL-TASKS-CLI | US-TPL-PLT-001 | REQ-TPL-PLATFORM-TASKS | ❓ unknown | 0 |
+| AC-TPL-TASKS-HTTP | US-TPL-PLT-001 | REQ-TPL-PLATFORM-TASKS | ❓ unknown | 0 |
 
 ## Unmapped ACs
 
@@ -75,6 +76,10 @@ ACs with no mapped scenarios:
 - AC-TPL-HOOKS-INSTALL: The 'cargo xtask install-hooks' command creates a pre-commit hook that runs 'cargo xtask check' within the Nix environment when available.
 
 - AC-TPL-LOCAL-DOCKER: A docker-compose.yaml file exists providing Postgres and Jaeger, configured to match the application's default config for local development.
+
+- AC-TPL-TASKS-CLI: cargo xtask tasks-list prints tasks grouped by status, with requirement IDs and ACs visible, and supports status/requirement filters.
+
+- AC-TPL-TASKS-HTTP: GET /platform/tasks returns a JSON representation of tasks.yaml, including id, title, requirement, acs, status, owner, labels, and docs fields, and supports status/requirement filters.
 
 
 ## Unmapped Scenarios
