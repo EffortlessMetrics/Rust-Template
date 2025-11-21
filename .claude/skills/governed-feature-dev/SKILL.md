@@ -1,11 +1,18 @@
 ---
 name: governed-feature-dev
-description: >
-  AC-first feature development workflow for the Rust-as-Spec platform cell.
-  Use when implementing new features, adding ACs, or working on tasks with
-  status=Todo. Follows the ac_first flow from devex_flows.yaml and uses
-  xtask + /platform APIs for governance.
-allowed-tools: Read, Grep, Glob, Edit, Write, Bash
+description: 'AC-first feature development workflow for the Rust-as-Spec platform
+  cell. Use when implementing new features, adding ACs, or working on tasks with status=Todo.
+  Follows the ac_first flow from devex_flows.yaml and uses xtask + /platform APIs
+  for governance.
+
+  '
+allowed-tools:
+- Read
+- Grep
+- Glob
+- Edit
+- Write
+- Bash
 ---
 
 # Governed Feature Development
