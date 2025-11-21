@@ -198,13 +198,13 @@ Think of Cool Feature → Build It → Hope Someone Uses It
 
 ```bash
 # Get available tasks
-curl http://localhost:8080/platform/tasks | jq
+curl http://localhost:3000/platform/tasks | jq
 
 # Get guidance
-curl http://localhost:8080/platform/tasks/suggest-next?task=implement_ac | jq
+curl http://localhost:3000/platform/tasks/suggest-next?task=implement_ac | jq
 
 # Check health
-curl http://localhost:8080/platform/status | jq
+curl http://localhost:3000/platform/status | jq
 ```
 
 **Not:**

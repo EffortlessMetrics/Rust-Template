@@ -125,10 +125,10 @@ gh pr close && git checkout main && git branch -D test/ci-verification
 4. **Verify health endpoint:**
    ```bash
    kubectl port-forward -n app-http-dev svc/app-http 8080:80 &
-   curl http://localhost:8080/health
+   curl http://localhost:3000/health
    # Should return: {"status":"ok"}
 
-   curl http://localhost:8080/version
+   curl http://localhost:3000/version
    # Should return version info
 
    pkill -f port-forward

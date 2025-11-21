@@ -19,6 +19,20 @@ tasks:
         - DESIGN-TPL-PLATFORM-INTROSPECTION-001
       plan: []
 
+  - id: TASK-TPL-STATUS-CLI-001
+    title: "Implement CLI governance status dashboard"
+    requirement: REQ-PLT-STATUS-CLI
+    acs:
+      - AC-PLT-017
+    status: in_progress
+    owner: agent
+    labels: [platform, devex, observability]
+    summary: "Implement `cargo xtask status` command to display governance health, task counts, and next steps"
+    recommended_flows: ["ac_first"]
+    docs:
+      design: []
+      plan: []
+
   - id: implement_ac
     title: "Implement Acceptance Criterion"
     requirement: REQ-TPL-SUGGEST-NEXT

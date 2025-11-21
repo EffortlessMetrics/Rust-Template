@@ -210,6 +210,21 @@ stories:
             tests:
               - { type: integration, tag: "@AC-PLT-016", file: "specs/features/xtask_devex.feature" }
 
+      - id: REQ-PLT-STATUS-CLI
+        title: "CLI governance status dashboard"
+        tags: [platform, devex, observability]
+        must_have_ac: true
+        description: >
+          Developers and agents need a quick way to check governance health,
+          task status, and get oriented without navigating the web UI or
+          multiple API endpoints.
+        adr: ADR-0005
+        acceptance_criteria:
+          - id: AC-PLT-017
+            text: "`cargo xtask status` displays version, REQ/AC/task counts, selftest status, and suggested next tasks"
+            tests:
+              - { type: integration, tag: "@AC-PLT-017", file: "specs/features/xtask_devex.feature" }
+
       - id: REQ-TPL-PLATFORM-INTROSPECTION
         title: "Platform Introspection API"
         tags: [platform, devex, api]

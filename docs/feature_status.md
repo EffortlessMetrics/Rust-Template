@@ -22,6 +22,7 @@ Auto-generated AC status from acceptance tests.
 | AC-PLT-014 | US-TPL-PLT-001 | REQ-PLT-DEVEX-CONTRACT | ❓ unknown | 0 |
 | AC-PLT-015 | US-TPL-PLT-001 | REQ-PLT-DEVEX-CONTRACT | ❓ unknown | 0 |
 | AC-PLT-016 | US-TPL-PLT-001 | REQ-PLT-DEVEX-CONTRACT | ❓ unknown | 0 |
+| AC-PLT-017 | US-TPL-PLT-001 | REQ-PLT-STATUS-CLI | ❓ unknown | 0 |
 | AC-TPL-001 | US-TPL-001 | REQ-TPL-HEALTH | ✅ pass | 1 |
 | AC-TPL-002 | US-TPL-001 | REQ-TPL-VERSION | ✅ pass | 1 |
 | AC-TPL-003 | US-TPL-001 | REQ-TPL-ERROR-HANDLING | ✅ pass | 1 |
@@ -69,6 +70,7 @@ ACs with no mapped scenarios:
 - AC-PLT-014: Canonical flows and commands are defined in specs/devex_flows.yaml
 - AC-PLT-015: `cargo xtask selftest` enforces devex contract (required commands exist)
 - AC-PLT-016: `cargo xtask ci-local` orchestrates doctor + selftest + audit + docs-check
+- AC-PLT-017: `cargo xtask status` displays version, REQ/AC/task counts, selftest status, and suggested next tasks
 - AC-TPL-AGENT-SKILLS: The .claude/skills directory contains executable skill definitions for feature development, release, and maintenance workflows, each referencing the appropriate xtask commands and platform APIs.
 
 - AC-TPL-GRAPH-AC-HAS-TEST: Every AC with a tests mapping in spec_ledger.yaml has at least one test node linked in the graph.

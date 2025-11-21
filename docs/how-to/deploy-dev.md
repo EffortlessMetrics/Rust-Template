@@ -160,7 +160,7 @@ kubectl get service app-http
 kubectl port-forward service/app-http 8080:80
 ```
 
-Then access at: `http://localhost:8080/health`
+Then access at: `http://localhost:3000/health`
 
 #### Option B: Ingress (Cluster Access)
 For cluster-wide access, you'll need an Ingress controller and Ingress resource (not included in dev setup).

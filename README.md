@@ -88,14 +88,16 @@ cargo xtask doctor
 ### 30-Second Tour
 
 ```bash
-# 1. Verify governance contracts
-cargo xtask selftest
-# → 7 steps: fmt, clippy, tests, BDD, AC mapping, policies, graph invariants
+# 1. One-command bootstrap
+cargo run -p xtask -- dev-up
+# → Installs pre-commit hooks
+# → Checks Docker
+# → Runs governance check (low-resource mode)
 
 # 2. Start the service
 cargo run -p app-http
-# → Open http://localhost:8080/ui (governance dashboard)
-# → Open http://localhost:8080/platform/status (JSON API)
+# → Open http://localhost:3000/ui (governance dashboard)
+# → Open http://localhost:3000/platform/status (JSON API)
 
 # 3. Get guidance on next steps
 cargo xtask suggest-next --task implement_ac
@@ -420,6 +422,8 @@ No new platform features until validated by real-world service pilot.
 
 ### For LLMs/Agents
 - [CLAUDE.md](CLAUDE.md) - System prompt and standard workflows
+- [Agent Skills Guide](docs/AGENT_SKILLS.md) - How to author Skills for this repo
+- [Agent Guide](docs/AGENT_GUIDE.md) - Operational procedures for agents
 - [Platform API Reference](docs/reference/platform-api.md)
 
 ---

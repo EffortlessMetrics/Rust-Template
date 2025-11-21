@@ -4,6 +4,32 @@ use std::env;
 use std::path::{Path, PathBuf};
 use std::time::Instant;
 
+/// Result of a single selftest step
+struct StepResult {
+    name: &'static str,
+    ok: bool,
+    hint: Option<&'static str>,
+}
+
+/// Collection of all selftest step results
+struct SelftestResults {
+    steps: Vec<StepResult>,
+}
+
+impl SelftestResults {
+    fn new() -> Self {
+        Self { steps: Vec::new() }
+    }
+
+    fn push(&mut self, name: &'static str, ok: bool, hint: Option<&'static str>) {
+        self.steps.push(StepResult { name, ok, hint });
+    }
+
+    fn failed_count(&self) -> usize {
+        self.steps.iter().filter(|s| !s.ok).count()
+    }
+}
+
 /// Run full template self-test suite
 #[allow(dead_code)]
 pub fn run() -> Result<()> {
@@ -18,12 +44,12 @@ pub fn run_with_verbosity(verbosity: crate::Verbosity) -> Result<()> {
     println!("{}", "======================================".blue());
     println!();
 
-    let mut failed = 0;
+    let mut results = SelftestResults::new();
 
     // Step 1: Core checks
-    println!("{}", "[1/5] Running core checks (fmt, clippy, tests)...".blue());
+    println!("{}", "[1/7] Running core checks (fmt, clippy, tests)...".blue());
     let step_start = Instant::now();
-    match crate::commands::check::run() {
+    let core_ok = match crate::commands::check::run() {
         Ok(_) => {
             let elapsed = step_start.elapsed();
             if verbosity.is_verbose() {
@@ -31,18 +57,20 @@ pub fn run_with_verbosity(verbosity: crate::Verbosity) -> Result<()> {
             } else {
                 println!("  {} Core checks passed", "✓".green());
             }
+            true
         }
         Err(e) => {
             eprintln!("  {} Core checks failed: {}", "✗".red(), e);
-            failed += 1;
+            false
         }
-    }
+    };
+    results.push("Core checks", core_ok, Some("Run `cargo run -p xtask -- check`"));
     println!();
 
     // Step 2: BDD acceptance tests
-    println!("{}", "[2/5] Running BDD acceptance tests...".blue());
+    println!("{}", "[2/7] Running BDD acceptance tests...".blue());
     let step_start = Instant::now();
-    match crate::commands::bdd::run() {
+    let bdd_ok = match crate::commands::bdd::run() {
         Ok(_) => {
             let elapsed = step_start.elapsed();
             if verbosity.is_verbose() {
@@ -55,17 +83,21 @@ pub fn run_with_verbosity(verbosity: crate::Verbosity) -> Result<()> {
             } else {
                 println!("  {} JUnit XML not found", "⚠".yellow());
             }
+            true
         }
         Err(e) => {
             eprintln!("  {} BDD tests failed: {}", "✗".red(), e);
-            failed += 1;
+            false
         }
-    }
+    };
+    results.push("BDD acceptance tests", bdd_ok, Some("Run `cargo run -p xtask -- bdd`"));
     println!();
 
     // Step 3: AC status mapping & ADR references
-    println!("{}", "[3/5] Running AC status mapping & ADR references...".blue());
+    println!("{}", "[3/7] Running AC status mapping & ADR references...".blue());
     let step_start = Instant::now();
+
+    let mut mapping_ok = true;
 
     // 3a: AC status
     match run_ac_status(verbosity) {
@@ -93,7 +125,7 @@ pub fn run_with_verbosity(verbosity: crate::Verbosity) -> Result<()> {
         }
         Err(e) => {
             eprintln!("  {} ADR check failed: {}", "✗".red(), e);
-            failed += 1;
+            mapping_ok = false;
         }
     }
 
@@ -101,12 +133,13 @@ pub fn run_with_verbosity(verbosity: crate::Verbosity) -> Result<()> {
     if verbosity.is_verbose() {
         println!("  {} Step 3 completed ({:.2}s)", "✓".green(), elapsed.as_secs_f64());
     }
+    results.push("AC/ADR mapping", mapping_ok, Some("Run `cargo run -p xtask -- adr-check`"));
     println!();
 
     // Step 4: LLM context bundler
-    println!("{}", "[4/6] Testing LLM context bundler...".blue());
+    println!("{}", "[4/7] Testing LLM context bundler...".blue());
     let step_start = Instant::now();
-    match crate::commands::bundle::run("implement_ac") {
+    let bundler_ok = match crate::commands::bundle::run("implement_ac") {
         Ok(_) => {
             let elapsed = step_start.elapsed();
             if verbosity.is_verbose() {
@@ -117,18 +150,24 @@ pub fn run_with_verbosity(verbosity: crate::Verbosity) -> Result<()> {
             if let Ok(metadata) = std::fs::metadata(".llm/bundle/implement_ac.md") {
                 println!("  {} Bundle size: {} bytes", "✓".green(), metadata.len());
             }
+            true
         }
         Err(e) => {
             eprintln!("  {} Bundler failed: {}", "✗".red(), e);
-            failed += 1;
+            false
         }
-    }
+    };
+    results.push(
+        "LLM bundler",
+        bundler_ok,
+        Some("Run `cargo run -p xtask -- bundle implement_ac`"),
+    );
     println!();
 
     // Step 5: Policy tests (if conftest available)
-    println!("{}", "[5/6] Running policy tests...".blue());
+    println!("{}", "[5/7] Running policy tests...".blue());
     let step_start = Instant::now();
-    match crate::commands::policy_test::run() {
+    let policy_ok = match crate::commands::policy_test::run() {
         Ok(_) => {
             let elapsed = step_start.elapsed();
             if verbosity.is_verbose() {
@@ -136,6 +175,7 @@ pub fn run_with_verbosity(verbosity: crate::Verbosity) -> Result<()> {
             } else {
                 println!("  {} Policy tests passed", "✓".green());
             }
+            true
         }
         Err(e) => {
             // Check if this is a "conftest not found" error
@@ -154,7 +194,7 @@ pub fn run_with_verbosity(verbosity: crate::Verbosity) -> Result<()> {
                     if verbosity.is_verbose() {
                         eprintln!("\n{}", e);
                     }
-                    failed += 1;
+                    false
                 } else {
                     println!("  {} Policy tests skipped: conftest not found", "⚠".yellow());
 
@@ -174,18 +214,25 @@ pub fn run_with_verbosity(verbosity: crate::Verbosity) -> Result<()> {
                     if verbosity.is_verbose() {
                         println!("\n{}", e);
                     }
-                    // Don't increment failed counter for local development
+                    // Don't fail for local development
+                    true
                 }
             } else {
                 eprintln!("  {} Policy tests: {}", "✗".red(), e);
-                failed += 1;
+                false
             }
         }
-    }
+    };
+    results.push(
+        "Policy tests",
+        policy_ok,
+        Some("Run `cargo run -p xtask -- policy-test` or use `nix develop`"),
+    );
+    println!();
     // Step 6: DevEx contract
-    println!("{}", "[6/6] Checking DevEx contract...".blue());
+    println!("{}", "[6/7] Checking DevEx contract...".blue());
     let step_start = Instant::now();
-    match run_devex_contract(verbosity) {
+    let devex_ok = match run_devex_contract(verbosity) {
         Ok(_) => {
             let elapsed = step_start.elapsed();
             if verbosity.is_verbose() {
@@ -197,18 +244,24 @@ pub fn run_with_verbosity(verbosity: crate::Verbosity) -> Result<()> {
             } else {
                 println!("  {} DevEx contract satisfied", "✓".green());
             }
+            true
         }
         Err(e) => {
             eprintln!("  {} DevEx contract failed: {}", "✗".red(), e);
-            failed += 1;
+            false
         }
-    }
+    };
+    results.push(
+        "DevEx contract",
+        devex_ok,
+        Some("Check specs/devex_flows.yaml and implemented commands"),
+    );
     println!();
 
     // Step 7: Graph invariants
     println!("{}", "[7/7] Checking governance graph invariants...".blue());
     let step_start = Instant::now();
-    match crate::commands::graph_export::run_graph_invariants(verbosity.as_u8()) {
+    let graph_ok = match crate::commands::graph_export::run_graph_invariants(verbosity.as_u8()) {
         Ok(_) => {
             let elapsed = step_start.elapsed();
             if verbosity.is_verbose() {
@@ -220,22 +273,25 @@ pub fn run_with_verbosity(verbosity: crate::Verbosity) -> Result<()> {
             } else {
                 println!("  {} Graph invariants satisfied", "✓".green());
             }
+            true
         }
         Err(e) => {
             // The error message from run_graph_invariants already includes the violations list
             // but we want to format the header nicely
             eprintln!("  {} Graph invariants failed:", "✗".red());
             eprintln!("{}", e);
-            failed += 1;
+            false
         }
-    }
+    };
+    results.push("Graph invariants", graph_ok, Some("Check governance graph for violations"));
     println!();
 
-    // Summary
+    // Print summary
     let total_elapsed = start_time.elapsed();
-    println!("{}", "======================================".blue());
+    print_summary(&results);
+
+    let failed = results.failed_count();
     if failed == 0 {
-        println!("{}", "✓ All self-tests passed!".green());
         if verbosity.is_verbose() {
             println!("\n{} {:.2}s", "Total elapsed time:".bold(), total_elapsed.as_secs_f64());
         }
@@ -249,14 +305,11 @@ pub fn run_with_verbosity(verbosity: crate::Verbosity) -> Result<()> {
         println!("Ready for:");
         println!("  • Service development: {}", "docs/how-to/new-service-from-template.md".blue());
         println!("  • AC-first workflow: {}", "docs/tutorials/first-ac-change.md".blue());
-        println!("{}", "======================================".blue());
         Ok(())
     } else {
-        eprintln!("{}", format!("✗ {} test suite(s) failed", failed).red());
         if verbosity.is_verbose() {
             eprintln!("\n{} {:.2}s", "Total elapsed time:".bold(), total_elapsed.as_secs_f64());
         }
-        println!("{}", "======================================".blue());
         anyhow::bail!("{} test suites failed", failed)
     }
 }
@@ -307,4 +360,33 @@ fn run_devex_contract(_verbosity: crate::Verbosity) -> Result<()> {
     }
 
     Ok(())
+}
+
+/// Print a summary of selftest results with actionable hints
+fn print_summary(results: &SelftestResults) {
+    println!();
+    println!("{}", "======================================".blue());
+    println!("{}", "Selftest Summary:".bold());
+    println!("{}", "======================================".blue());
+
+    for (i, step) in results.steps.iter().enumerate() {
+        let status = if step.ok { "OK".green() } else { "FAIL".red() };
+        println!("  {}. {:32} {}", i + 1, format!("{} ...", step.name), status);
+    }
+
+    let failed: Vec<_> = results.steps.iter().filter(|s| !s.ok).collect();
+    if failed.is_empty() {
+        println!();
+        println!("{}", "All checks passed ✅".green().bold());
+        return;
+    }
+
+    println!();
+    println!("{}", "Next actions:".bold());
+    for step in failed {
+        if let Some(hint) = step.hint {
+            println!("  • {}", hint);
+        }
+    }
+    println!("{}", "======================================".blue());
 }
