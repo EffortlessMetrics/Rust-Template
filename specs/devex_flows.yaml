@@ -53,6 +53,24 @@ commands:
       contributing_flow: true
       claude_golden_path: true
 
+  dev-up:
+    category: onboarding
+    summary: "One-command developer bootstrap (doctor + install-hooks + check)"
+    required: true
+    docs:
+      readme_table: true
+      contributing_flow: true
+      claude_golden_path: true
+
+  status:
+    category: onboarding
+    summary: "Show governance status dashboard (version, REQ/AC/task counts, selftest status)"
+    required: true
+    docs:
+      readme_table: true
+      contributing_flow: false
+      claude_golden_path: true
+
   # Design & AC
   adr-new:
     category: design_ac
@@ -229,6 +247,34 @@ commands:
       contributing_flow: false
       claude_golden_path: false
 
+  # Platform Introspection
+  tasks-list:
+    category: platform
+    summary: "List tasks from specs/tasks.yaml"
+    required: true
+    docs:
+      readme_table: true
+      contributing_flow: false
+      claude_golden_path: true
+
+  suggest-next:
+    category: platform
+    summary: "Suggest next steps for a task"
+    required: true
+    docs:
+      readme_table: true
+      contributing_flow: false
+      claude_golden_path: true
+
+  graph-export:
+    category: platform
+    summary: "Export governance graph (JSON or Mermaid)"
+    required: true
+    docs:
+      readme_table: false
+      contributing_flow: false
+      claude_golden_path: true
+
   # Meta
   help-flows:
     category: meta
@@ -245,6 +291,13 @@ flows:
     description: "Validate environment, discover workflows, reach first green check"
     required: true
     documented_in: ["CONTRIBUTING.md", "CLAUDE.md", "README.md"]
+    steps: ["dev-up", "status", "selftest"]
+
+  onboarding_manual:
+    name: "Manual onboarding (step-by-step)"
+    description: "Alternative to dev-up for understanding each step"
+    required: false
+    documented_in: ["CONTRIBUTING.md"]
     steps: ["doctor", "install-hooks", "check", "selftest"]
 
   ac_first:
@@ -301,4 +354,11 @@ flows:
     description: "Explore available commands and flows"
     required: true
     documented_in: ["README.md"]
-    steps: ["help-flows", "ac-status"]
+    steps: ["help-flows", "ac-status", "tasks-list", "graph-export"]
+
+  platform_exploration:
+    name: "Platform Exploration"
+    description: "Explore governance graph and task management"
+    required: false
+    documented_in: ["AGENT_GUIDE.md"]
+    steps: ["status", "tasks-list", "graph-export", "suggest-next"]

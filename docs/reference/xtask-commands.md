@@ -10,6 +10,7 @@ Complete reference for all `xtask` CLI commands.
 - [ac-status](#xtask-ac-status) - Generate AC status report
 - [policy-test](#xtask-policy-test) - Test Rego policies
 - [bundle](#xtask-bundle) - Generate LLM context
+- [release-bundle](#xtask-release-bundle) - Generate release evidence bundle
 - [quickstart](#xtask-quickstart) - First-run validation
 - [selftest](#xtask-selftest) - Comprehensive 7-step validation suite
 
@@ -604,6 +605,218 @@ tasks:
       - crates/core/src/**/*.rs
     description: "Custom task description"
 ```
+
+---
+
+## xtask release-bundle
+
+Generate a structured release evidence bundle for a given version.
+
+### Usage
+
+```bash
+cargo run -p xtask -- release-bundle <version>
+
+# Example
+cargo run -p xtask -- release-bundle 3.1.0
+```
+
+### What It Does
+
+Creates a comprehensive evidence file at `release_evidence/v<version>.md` containing:
+
+1. **Tasks Completed** - All tasks with status "done" from `specs/tasks.yaml`
+2. **Acceptance Criteria & Requirements** - Linked REQs/ACs from `specs/spec_ledger.yaml`
+3. **Architecture Decisions** - List of ADRs from `docs/adr/`
+4. **Git Changelog** - Commit log since last git tag
+5. **Governance Status** - Selftest results and policy status
+6. **Resolved Friction** - Entries marked as resolved in `FRICTION_LOG.md`
+
+### Parameters
+
+- `<version>` - Version number (e.g., `3.1.0`) - format should be `X.Y.Z`
+
+### Exit Codes
+
+- `0`: Evidence bundle generated successfully
+- Non-zero: Invalid version format or generation failed
+
+### Output Artifacts
+
+- `release_evidence/v<version>.md` - Complete evidence bundle for the release
+
+### When to Use
+
+- **Before cutting a release** - Generate evidence to review what's included
+- **For changelog generation** - Feed evidence file to LLM for Keep a Changelog format
+- **For release notes** - Use as source material for GitHub releases
+- **For compliance** - Provide auditable evidence of what changed
+- **Post-release** - Commit evidence file for historical tracking
+
+### Example Output
+
+```
+📦 Generating release evidence bundle for 3.1.0...
+
+📋 Collecting evidence...
+
+✓ Evidence bundle written to: /path/to/release_evidence/v3.1.0.md
+
+Next steps:
+  1. Review evidence: cat release_evidence/v3.1.0.md
+  2. Feed to LLM for changelog generation
+  3. Update CHANGELOG.md with generated content
+```
+
+### Evidence File Structure
+
+The generated markdown file includes:
+
+```markdown
+# Release Evidence: v3.1.0
+
+**Generated:** 2025-01-21 10:30:00
+
+---
+
+## Tasks Completed
+
+**Total completed:** 3 tasks
+
+### TASK-TPL-REL-BUNDLE-3-1-0
+
+**Title:** Implement release-bundle command
+**Requirement:** REQ-TPL-REL-BUNDLE
+**ACs:** AC-TPL-REL-EVIDENCE, AC-TPL-REL-CHANGELOG
+...
+
+## Acceptance Criteria & Requirements
+
+### REQ-TPL-REL-BUNDLE - Release evidence bundle generation
+
+**Story:** US-TPL-PLT-001 - Platform: Developer Experience & Governance
+**Tags:** platform, release, devex
+...
+
+## Architecture Decisions
+
+**Total ADRs:** 7
+
+- 0001-adopt-hexagonal-architecture.md
+- 0002-nix-first-development.md
+...
+
+## Git Changelog
+
+**Since tag:** v2.4.0
+
+- abc1234 feat: add release-bundle command (Agent)
+- def5678 docs: update roadmap for v3.1.x (User)
+...
+
+## Governance Status
+
+### Selftest Status
+
+**Status:** ✅ PASSED
+
+```
+[7/7] Validating graph invariants...
+  ✓ Graph invariants validated
+
+======================================
+✓ All 7 steps passed!
+======================================
+```
+
+### Policy Status
+
+```json
+{"status": "pass", "tests": 8, "failures": 0}
+```
+
+## Resolved Friction
+
+**Total resolved entries:** 2
+
+### FE-001: Port confusion between 8080 and 3000
+...
+```
+
+### Integration with Release Workflow
+
+Typical release workflow:
+
+```bash
+# 1. Prepare release (update versions)
+cargo xtask release-prepare 3.1.0
+
+# 2. Generate evidence bundle
+cargo xtask release-bundle 3.1.0
+
+# 3. Review evidence and generate changelog
+cat release_evidence/v3.1.0.md
+# Feed to LLM: "Generate Keep a Changelog entry from this evidence"
+
+# 4. Update CHANGELOG.md with LLM-generated content
+
+# 5. Verify release readiness
+cargo xtask release-verify
+
+# 6. Commit and tag
+git add .
+git commit -m "Release v3.1.0"
+git tag -a v3.1.0 -m "Release 3.1.0"
+git push && git push --tags
+```
+
+### LLM Changelog Generation
+
+The evidence bundle is designed to be fed to an LLM with a prompt like:
+
+```
+Given this release evidence bundle, generate a CHANGELOG.md entry
+in Keep a Changelog format (Added/Changed/Fixed/Removed sections).
+Focus on user-visible changes and group related items logically.
+
+[Paste evidence bundle content]
+```
+
+The LLM can then:
+- Group tasks by category (Added/Changed/Fixed/Removed)
+- Convert technical AC language to user-friendly descriptions
+- Identify breaking changes from git log
+- Generate concise bullet points
+- Add links to issues/PRs if present in git log
+
+### Common Issues
+
+**No completed tasks found:**
+- Ensure tasks in `specs/tasks.yaml` have `status: done` (lowercase)
+- Check that tasks were completed for this release
+- Manually mark tasks as done if needed
+
+**Git log empty:**
+- Ensure you've made commits since the last tag
+- Check that git repository has at least one tag
+- First release: git log will show all commits
+
+**Selftest fails during evidence generation:**
+- Evidence bundle will still be created, but governance status will show failure
+- Fix selftest issues before releasing
+- Run `cargo xtask selftest` separately to diagnose
+
+**Policy status not found:**
+- Run `cargo xtask policy-test` to generate `target/policy_status.json`
+- Policy status section will note if file is missing
+
+### Notes
+
+- **Idempotent:** Running multiple times overwrites the evidence file
+- **Version-agnostic tasks:** Currently filters by status, not version field
+- **Git-dependent:** Requires git repository with at least one tag for changelog
+- **Selftest integration:** Runs selftest in low-resource mode for status
+- **Historical record:** Commit evidence files for audit trail
 
 ---
 
