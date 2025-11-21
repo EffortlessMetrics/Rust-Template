@@ -509,6 +509,11 @@ curl http://localhost:8080/platform/graph
 curl http://localhost:8080/platform/tasks
 ```
 
+### Environment Variables
+
+- `XTASK_LOW_RESOURCES=1`: Set this if running on a constrained environment (low RAM/CPU) to serialize builds and disable heavy caching.
+
+
 ### Essential URLs
 
 - Dashboard: `http://localhost:8080/ui`

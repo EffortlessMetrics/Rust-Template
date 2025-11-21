@@ -9,6 +9,7 @@ use tower_http::trace::TraceLayer;
 use tracing::{info, instrument};
 
 // Public modules
+pub mod agent;
 pub mod errors;
 pub mod metrics;
 pub mod middleware;
@@ -27,7 +28,9 @@ pub fn app(governance_repo: Arc<dyn GovernanceRepository>) -> Router {
     let tasks_router = Router::new()
         .route("/platform/tasks/{id}/status", post(tasks::update_task_status))
         .route("/ui/tasks", get(tasks::tasks_ui))
-        .with_state(governance_repo);
+        .with_state(governance_repo.clone());
+
+    let agent_router = agent::router(governance_repo.clone());
 
     Router::new()
         // Template core endpoints - keep these
@@ -39,6 +42,7 @@ pub fn app(governance_repo: Arc<dyn GovernanceRepository>) -> Router {
         .nest("/platform", platform::router())
         // Merge domain endpoints
         .merge(tasks_router)
+        .merge(agent_router)
         // Middleware layers (applied in reverse order - bottom to top)
         .layer(axum::middleware::from_fn(metrics::metrics_middleware))
         .layer(axum::middleware::from_fn(middleware::request_id_middleware))

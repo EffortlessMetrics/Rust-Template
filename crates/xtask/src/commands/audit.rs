@@ -1,7 +1,6 @@
 use crate::run_cmd;
 use anyhow::Result;
 use colored::Colorize;
-use std::process::Command;
 
 pub fn run() -> Result<()> {
     println!("{}", "🔒 Running security & dependency audit...".blue().bold());
@@ -26,8 +25,8 @@ pub fn run() -> Result<()> {
     // Run cargo audit
     if has_cargo_audit {
         print!("Running cargo audit... ");
-        let mut cmd = Command::new("cargo");
-        cmd.args(["audit", "--deny", "warnings"]);
+        print!("Running cargo audit... ");
+        let mut cmd = crate::cargo_cmd("audit", &["--deny", "warnings"]);
 
         match run_cmd(&mut cmd) {
             Ok(_) => println!("{}", "✓ No vulnerabilities".green()),
@@ -43,8 +42,8 @@ pub fn run() -> Result<()> {
     if has_cargo_deny {
         println!();
         print!("Running cargo deny... ");
-        let mut cmd = Command::new("cargo");
-        cmd.args(["deny", "check"]);
+        print!("Running cargo deny... ");
+        let mut cmd = crate::cargo_cmd("deny", &["check"]);
 
         match cmd.output() {
             Ok(output) => {

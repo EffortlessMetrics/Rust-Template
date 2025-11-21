@@ -25,14 +25,17 @@ Use this skill when asked to:
 
 ## Workflow Steps
 
-### 1. Check if REQ/AC exists
+### 1. Discover work
 
 ```bash
-# Search for existing requirement
-grep -r "description of feature" specs/spec_ledger.yaml
+# Get agent hints (recommended tasks)
+curl http://localhost:8080/platform/agent/hints | jq
 
-# Or query platform API
-curl http://localhost:8080/platform/graph | jq
+# Or list all tasks
+curl http://localhost:8080/platform/tasks | jq
+
+# Or check tasks.yaml directly
+grep -r "description of feature" specs/tasks.yaml
 ```
 
 **Decision:**
@@ -55,7 +58,16 @@ Read this file to understand:
 - Existing code structure
 - Related design docs
 
-### 3. Write BDD scenario (Test-First)
+### 3. Mark task as in progress
+
+```bash
+# Update task status
+curl -X POST http://localhost:8080/platform/tasks/TASK-ID/status \
+  -H "Content-Type: application/json" \
+  -d '{"status": "InProgress"}'
+```
+
+### 4. Write BDD scenario (Test-First)
 
 Create or update `specs/features/*.feature`:
 
@@ -90,7 +102,16 @@ cargo xtask bdd
 # Expect: Passing test
 ```
 
-### 6. Full validation
+### 7. Mark task as done
+
+```bash
+# Update task status
+curl -X POST http://localhost:8080/platform/tasks/TASK-ID/status \
+  -H "Content-Type: application/json" \
+  -d '{"status": "Done"}'
+```
+
+### 8. Full validation
 
 ```bash
 cargo xtask selftest

@@ -1,79 +1,43 @@
 # Friction Log
 
-**Purpose:** Track pain points encountered during development to refine the governance model
+This log captures friction points discovered during development or pilot usage.
 
-**Status:** Template - Copy to repo root as `FRICTION_LOG.md` and maintain actively
+## AGENT-001: UI/API Inconsistency - Tasks Not Shown in UI/Hints When tasks_state.yaml Missing
 
----
+**Date:** 2025-11-20
+**Reporter:** Agent verification run
+**Severity:** High
 
-## Active Friction Items
+**Problem:**  
+The `/platform/tasks` JSON API shows tasks correctly from `tasks.yaml`, but:
+- `/ui/tasks` (kanban board) shows empty columns
+- `/platform/agent/hints` returns empty `next_tasks` array
 
-### [2025-11-20] Pre-Commit Hook Calling Wrong Command
+**Root Cause:**  
+- `/platform/tasks` reads directly from `tasks.yaml` using `spec_runtime::load_tasks()` (works)
+- `/ui/tasks` and `/platform/agent/hints` use `TaskService.list_tasks()` which calls `GovernanceRepository.find_all_tasks()`
+- `FsGovernanceRepository.find_all_tasks()` only returns tasks from `tasks_state.yaml`
+- When `tasks_state.yaml` doesn't exist, `get_all_tasks()` returns an empty HashMap
 
-**Context:** Installed git hook via `cargo xtask install-hooks`
+**Expected Behavior:**  
+`FsGovernanceRepository.find_all_tasks()` should merge:
+- Task definitions (id, title) from `tasks.yaml`
+- Task status from `tasks_state.yaml` (or default to status field in tasks.yaml if no state file)
 
-**Friction:** Hook was calling `cargo xtask check` which doesn't exist inside `nix develop` (no cargo alias)
+**Impact:**  
+- UI is unusable - shows no tasks
+- Agent hints API returns no work - agent can't discover tasks
+- Data correctness verification incomplete
 
-**Impact:**
-- [x] Blocker (couldn't commit)
+**Fix Required:**  
+Update `FsGovernanceRepository.find_all_tasks()` in `adapters-spec-fs/src/lib.rs` to:
+1. Load all task definitions from `tasks.yaml`
+2. Load status overrides from `tasks_state.yaml` (if exists)
+3. Merge them together, using status from state file if available, otherwise from definition
+4. Parse status strings from tasks.yaml to TaskStatus enum
 
-**Root Cause:** Hook assumed `cargo xtask` alias exists, but xtask is a workspace crate, not a cargo plugin
-
-**Fix Applied:** Changed hook to call `cargo run -p xtask -- check` which works everywhere
-
-**Lesson:** Always use `cargo run -p xtask --` in automated contexts (hooks, CI, skills)
-
-**Related:**
-- Command: `cargo xtask install-hooks`
-- File: `crates/xtask/src/commands/install_hooks.rs`
-
----
-
-## Guidelines for New Entries
-
-```markdown
-### [YYYY-MM-DD] {Short Title}
-
-**Context:** What were you trying to do?
-
-**Friction:** What got in your way?
-
-**Impact:**
-- [ ] Blocker (couldn't proceed)
-- [ ] Major (lost > 30 min)
-- [ ] Minor (lost < 30 min)
-- [ ] Papercut (annoying but quick)
-
-**Root Cause:** Why did this happen?
-
-**Proposed Fix:** What would make this smoother?
-
-**Related:**
-- Task: {task_id}
-- Flow: {flow_name}
-- Command: `cargo xtask {command}`
-- File: {file and line}
-```
-
----
-
-## Triage Process (Weekly)
-
-1. **Blockers** → Immediate patch (v2.5.1, v2.5.2, etc.)
-2. **Major** → Batch into next minor (v2.5.x)
-3. **Minor** → Accumulate for v2.6.0
-4. **Papercuts** → Fix when quick wins needed
-
-**Decision Framework:**
-- Does it reduce cognitive load? → Consider
-- Does it increase spec/code drift risk? →Reject
-- Does it make agents smarter? → Prioritize
-- Does it require new state/config? → Scrutinize
-
----
-
-## Resolved Items
-
-*(Move entries here after they've been addressed)*
-
-None yet - just starting pilot!
+**Verification:**  
+After fix:
+- `/ui/tasks` should show all tasks from tasks.yaml
+- `/platform/agent/hints` should return tasks with Todo/InProgress status
+- Both should work whether or not tasks_state.yaml exists
