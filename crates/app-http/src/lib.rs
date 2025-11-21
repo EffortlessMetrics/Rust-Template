@@ -13,6 +13,7 @@ pub mod errors;
 pub mod metrics;
 pub mod middleware;
 pub mod platform;
+pub mod tasks;
 
 // Re-export commonly used types
 pub use errors::{AppError, ErrorCode};
@@ -23,6 +24,11 @@ use std::sync::Arc;
 
 /// Create the application router (reusable for both main and tests)
 pub fn app(governance_repo: Arc<dyn GovernanceRepository>) -> Router {
+    let tasks_router = Router::new()
+        .route("/platform/tasks/{id}/status", post(tasks::update_task_status))
+        .route("/ui/tasks", get(tasks::tasks_ui))
+        .with_state(governance_repo);
+
     Router::new()
         // Template core endpoints - keep these
         .route("/health", get(health))
@@ -31,11 +37,11 @@ pub fn app(governance_repo: Arc<dyn GovernanceRepository>) -> Router {
         .route("/api/echo", post(echo)) // For demonstrating error handling in tests
         // Platform introspection endpoints
         .nest("/platform", platform::router())
-        // Add your domain endpoints here - see docs/tutorials/first-ac-change.md
+        // Merge domain endpoints
+        .merge(tasks_router)
         // Middleware layers (applied in reverse order - bottom to top)
         .layer(axum::middleware::from_fn(metrics::metrics_middleware))
         .layer(axum::middleware::from_fn(middleware::request_id_middleware))
-        .layer(Extension(governance_repo))
         .layer(
             // Configure TraceLayer to include request_id field
             TraceLayer::new_for_http().make_span_with(|request: &axum::extract::Request| {

@@ -297,6 +297,22 @@ impl From<JsonRejection> for AppError {
     }
 }
 
+impl From<business_core::governance::GovernanceError> for AppError {
+    fn from(error: business_core::governance::GovernanceError) -> Self {
+        use business_core::governance::GovernanceError::*;
+        match error {
+            TaskNotFound(id) => AppError::not_found(format!("Task not found: {:?}", id)),
+            InvalidTransition { from, to } => AppError::business_logic_error(
+                ErrorCode::InvalidRequest,
+                format!("Invalid transition from {:?} to {:?}", from, to),
+            ),
+            Lock(msg) => AppError::internal_error(format!("Lock error: {}", msg)),
+            Io(e) => AppError::internal_error(format!("IO error: {}", e)),
+            Serialization(msg) => AppError::internal_error(format!("Serialization error: {}", msg)),
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

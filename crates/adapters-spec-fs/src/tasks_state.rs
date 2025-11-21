@@ -55,3 +55,52 @@ pub fn update_task_status(
 
     Ok(())
 }
+
+pub fn get_task_status(
+    path: &Path,
+    task_id: &TaskId,
+) -> Result<Option<TaskStatus>, Box<dyn std::error::Error + Send + Sync>> {
+    if !path.exists() {
+        return Ok(None);
+    }
+
+    let mut file = OpenOptions::new().read(true).open(path)?;
+
+    // Shared lock for reading
+    file.lock_shared()?;
+
+    let mut content = String::new();
+    file.read_to_string(&mut content)?;
+
+    file.unlock()?;
+
+    if content.trim().is_empty() {
+        return Ok(None);
+    }
+
+    let state: TasksState = serde_yaml::from_str(&content).unwrap_or_default();
+    Ok(state.tasks.get(task_id).cloned())
+}
+
+pub fn get_all_tasks(
+    path: &Path,
+) -> Result<HashMap<TaskId, TaskStatus>, Box<dyn std::error::Error + Send + Sync>> {
+    if !path.exists() {
+        return Ok(HashMap::new());
+    }
+
+    let mut file = OpenOptions::new().read(true).open(path)?;
+    file.lock_shared()?;
+
+    let mut content = String::new();
+    file.read_to_string(&mut content)?;
+
+    file.unlock()?;
+
+    if content.trim().is_empty() {
+        return Ok(HashMap::new());
+    }
+
+    let state: TasksState = serde_yaml::from_str(&content).unwrap_or_default();
+    Ok(state.tasks)
+}
