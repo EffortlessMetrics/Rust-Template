@@ -41,3 +41,28 @@ After fix:
 - `/ui/tasks` should show all tasks from tasks.yaml
 - `/platform/agent/hints` should return tasks with Todo/InProgress status
 - Both should work whether or not tasks_state.yaml exists
+
+---
+
+### AGENT-001: Port discovery for local development
+**Discovered**: 2025-11-20T22:42
+**Severity**: Low
+**Context**: Agent pilot run - Phase 1 (Discover Work)
+
+**What happened**:
+When attempting to call `GET /platform/agent/hints`, initially tried port 8080 (common default) but got connection refused. Had to use `lsof` to discover app-http was running on port 3000.
+
+**Expected behavior**:
+Either:
+1. Agent documentation should specify the default port (3000)
+2. `cargo xtask` should have a command to show running service ports
+3. App should log the URL it's listening on at startup
+
+**Workaround**:
+```bash
+lsof -i | grep app-http
+# OR
+ps aux | grep app-http | grep -v grep, then lsof -p <PID>
+```
+
+**Status**: Open
