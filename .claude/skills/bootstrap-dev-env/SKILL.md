@@ -1,10 +1,15 @@
 ---
 name: bootstrap-dev-env
-description: >
-  One-command environment setup and health check for the Rust-as-Spec platform cell.
-  Use when first entering the repository, after major environment changes, or when
-  the environment appears broken. Follows the 'onboarding' flow from devex_flows.yaml.
-allowed-tools: Read, Grep, Glob, Bash
+description: 'One-command environment setup and health check for the Rust-as-Spec
+  platform cell. Use when first entering the repository, after major environment changes,
+  or when the environment appears broken. Follows the ''onboarding'' flow from devex_flows.yaml.
+
+  '
+allowed-tools:
+- Read
+- Grep
+- Glob
+- Bash
 ---
 
 # Bootstrap Development Environment
