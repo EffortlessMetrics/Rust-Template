@@ -1,23 +1,16 @@
 # Friction Log
 
-This log captures friction points discovered during development or pilot usage.
+This log captures friction points discovered during developen http://localhost:3000/ui/graphge.
 
 ## AGENT-001: UI/API Inconsistency - Tasks Not Shown in UI/Hints When tasks_state.yaml Missing
 
 **Date:** 2025-11-20
 **Reporter:** Agent verification run
-**Severity:** High
-
-**Problem:**  
-The `/platform/tasks` JSON API shows tasks correctly from `tasks.yaml`, but:
-- `/ui/tasks` (kanban board) shows empty columns
-- `/platform/agent/hints` returns empty `next_tasks` array
-
 **Root Cause:**  
 - `/platform/tasks` reads directly from `tasks.yaml` using `spec_runtime::load_tasks()` (works)
 - `/ui/tasks` and `/platform/agent/hints` use `TaskService.list_tasks()` which calls `GovernanceRepository.find_all_tasks()`
-- `FsGovernanceRepository.find_all_tasks()` only returns tasks from `tasks_state.yaml`
-- When `tasks_state.yaml` doesn't exist, `get_all_tasks()` returns an empty HashMap
+- `FsGovernanceRepository.find_all_tasks()` only returned tasks from `tasks_state.yaml`
+- When `tasks_state.yaml` doesn't exist, `get_all_tasks()` returned an empty HashMap
 
 **Expected Behavior:**  
 `FsGovernanceRepository.find_all_tasks()` should merge:
@@ -29,12 +22,16 @@ The `/platform/tasks` JSON API shows tasks correctly from `tasks.yaml`, but:
 - Agent hints API returns no work - agent can't discover tasks
 - Data correctness verification incomplete
 
-**Fix Required:**  
-Update `FsGovernanceRepository.find_all_tasks()` in `adapters-spec-fs/src/lib.rs` to:
-1. Load all task definitions from `tasks.yaml`
-2. Load status overrides from `tasks_state.yaml` (if exists)
-3. Merge them together, using status from state file if available, otherwise from definition
-4. Parse status strings from tasks.yaml to TaskStatus enum
+**Fix Implemented:**  
+- Updated `FsGovernanceRepository.find_all_tasks()` to merge definitions and status correctly.
+- Added tests verifying UI and hints now show tasks regardless of `tasks_state.yaml` presence.
+
+**Verification:**  
+- `/ui/tasks` shows all tasks from `tasks.yaml`
+- `/platform/agent/hints` returns tasks with Todo/InProgress status
+- Both work whether or not `tasks_state.yaml` exists
+
+**Status:** Resolved (2025‑11‑20)num
 
 **Verification:**  
 After fix:
@@ -44,7 +41,7 @@ After fix:
 
 ---
 
-### AGENT-001: Port discovery for local development
+### AGENT-001: Port discovery focurl http://localhost:3000/healthopment
 **Discovered**: 2025-11-20T22:42
 **Severity**: Low
 **Context**: Agent pilot run - Phase 1 (Discover Work)
@@ -64,5 +61,4 @@ lsof -i | grep app-http
 # OR
 ps aux | grep app-http | grep -v grep, then lsof -p <PID>
 ```
-
 **Status**: Open
