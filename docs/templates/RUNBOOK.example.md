@@ -224,7 +224,7 @@ kubectl top pods -l app=example-api
 
 | Variable | Required | Default | Purpose |
 |----------|----------|---------|---------|
-| `PORT` | No | `8080` | HTTP listen port |
+| `PORT` | No | `3000` | HTTP listen port |
 | `DATABASE_URL` | Yes | N/A | PostgreSQL connection string |
 | `RUST_LOG` | No | `info` | Log level |
 | `OTLP_ENDPOINT` | No | N/A | OpenTelemetry collector endpoint |

@@ -61,4 +61,11 @@ lsof -i | grep app-http
 # OR
 ps aux | grep app-http | grep -v grep, then lsof -p <PID>
 ```
-**Status**: Open
+
+**Fix Implemented** (2025-11-21):
+1. Updated `docs/AGENT_GUIDE.md` - all localhost references now use port 3000
+2. Updated `README.md` - Quick Start section specifies port 3000
+3. Added `cargo run -p xtask -- dev-up` command which displays correct port (3000) in next steps
+4. Added "0. First Run" section to AGENT_GUIDE recommending dev-up as entry point
+
+**Status**: Resolved

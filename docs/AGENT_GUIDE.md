@@ -17,6 +17,25 @@ This repository is a **self-governing platform cell**. Your role as an agent is 
 
 ---
 
+## 0. First Run: Bootstrap the Environment
+
+**Preferred entry point for humans and agents:**
+
+```bash
+# One-command bootstrap
+cargo run -p xtask -- dev-up
+
+# What it does:
+# - Installs pre-commit hooks (if missing)
+# - Checks Docker availability
+# - Runs governance check (low-resource mode)
+# - Displays next steps
+```
+
+After `dev-up` completes successfully, you're ready to start the service and interact with the platform APIs.
+
+---
+
 ## 1. Discovering Work
 
 ### Query Available Tasks
@@ -31,7 +50,7 @@ cargo xtask tasks-list --json
 
 **HTTP API:**
 ```bash
-curl http://localhost:8080/platform/tasks
+curl http://localhost:3000/platform/tasks
 ```
 
 **Response structure:**
@@ -63,7 +82,7 @@ cargo xtask suggest-next --task implement_ac --json
 
 **HTTP API:**
 ```bash
-curl "http://localhost:8080/platform/tasks/suggest-next?task=implement_ac"
+curl "http://localhost:3000/platform/tasks/suggest-next?task=implement_ac"
 ```
 
 **Response includes:**
@@ -81,7 +100,7 @@ curl "http://localhost:8080/platform/tasks/suggest-next?task=implement_ac"
 
 ```bash
 # Get platform status
-curl http://localhost:8080/platform/status
+curl http://localhost:3000/platform/status
 ```
 
 **Key fields:**
@@ -99,10 +118,10 @@ curl http://localhost:8080/platform/status
 
 ```bash
 # Get full graph as JSON
-curl http://localhost:8080/platform/graph
+curl http://localhost:3000/platform/graph
 
 # View graph visually
-open http://localhost:8080/ui/graph
+open http://localhost:3000/ui/graph
 ```
 
 **Use cases:**
@@ -114,7 +133,7 @@ open http://localhost:8080/ui/graph
 
 ```bash
 # Get doc index
-curl http://localhost:8080/platform/docs/index
+curl http://localhost:3000/platform/docs/index
 ```
 
 **Use cases:**
@@ -126,7 +145,7 @@ curl http://localhost:8080/platform/docs/index
 
 ```bash
 # Get all flows
-curl http://localhost:8080/platform/devex/flows
+curl http://localhost:3000/platform/devex/flows
 ```
 
 **Use cases:**
@@ -323,12 +342,12 @@ Don't parse code ASTs. Instead:
 
 2. **Read design docs:**
    ```bash
-   curl http://localhost:8080/platform/docs/index | jq '.docs[] | select(.type=="design_doc")'
+   curl http://localhost:3000/platform/docs/index | jq '.docs[] | select(.type=="design_doc")'
    ```
 
 3. **Inspect graph:**
    ```bash
-   curl http://localhost:8080/platform/graph | jq
+   curl http://localhost:3000/platform/graph | jq
    ```
 
 ---
@@ -443,10 +462,10 @@ If parsing fails, the YAML has schema errors.
 cargo run -p app-http
 
 # Health check
-curl http://localhost:8080/health
+curl http://localhost:3000/health
 
 # Platform status
-curl http://localhost:8080/platform/status
+curl http://localhost:3000/platform/status
 ```
 
 If APIs return 404, routes may not be wired correctly in `app-http/src/main.rs`.
@@ -504,9 +523,9 @@ cargo xtask docs-check
 cargo xtask graph-export --check-invariants
 
 # Introspection
-curl http://localhost:8080/platform/status
-curl http://localhost:8080/platform/graph
-curl http://localhost:8080/platform/tasks
+curl http://localhost:3000/platform/status
+curl http://localhost:3000/platform/graph
+curl http://localhost:3000/platform/tasks
 ```
 
 ### Environment Variables
@@ -516,17 +535,19 @@ curl http://localhost:8080/platform/tasks
 
 ### Essential URLs
 
-- Dashboard: `http://localhost:8080/ui`
-- Graph: `http://localhost:8080/ui/graph`
-- Flows: `http://localhost:8080/ui/flows`
-- API Docs: `http://localhost:8080/platform/status`
+- Dashboard: `http://localhost:3000/ui`
+- Graph: `http://localhost:3000/ui/graph`
+- Flows: `http://localhost:3000/ui/flows`
+- API Docs: `http://localhost:3000/platform/status`
 
 ---
 
 ## 12. Further Reading
 
 - [CLAUDE.md](../CLAUDE.md) - High-level agent constitution
+- [Agent Skills Guide](AGENT_SKILLS.md) - **How to author Skills for this repo** (maps flows → Skills)
 - [Technical Overview](explanation/rust-as-spec-overview.md) - Architecture deep-dive
 - [ROADMAP.md](ROADMAP.md) - Strategic direction
 - [DevEx Flows Reference](../specs/devex_flows.yaml) - All available workflows
 - [Tasks Reference](../specs/tasks.yaml) - All available tasks
+- [xtask Commands Reference](reference/xtask-commands.md) - Complete command documentation

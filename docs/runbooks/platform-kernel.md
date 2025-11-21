@@ -35,7 +35,7 @@ Returns the complete governance graph including:
 
 **Example:**
 ```bash
-curl http://localhost:8080/platform/graph
+curl http://localhost:3000/platform/graph
 ```
 
 ### `GET /platform/devex/flows`
@@ -46,7 +46,7 @@ Returns DevEx flows and commands from `specs/devex_flows.yaml`.
 
 **Example:**
 ```bash
-curl http://localhost:8080/platform/devex/flows
+curl http://localhost:3000/platform/devex/flows
 ```
 
 ### `GET /platform/docs/index`
@@ -57,7 +57,7 @@ Returns the document index from `specs/doc_index.yaml`, mapping docs to the stor
 
 **Example:**
 ```bash
-curl http://localhost:8080/platform/docs/index
+curl http://localhost:3000/platform/docs/index
 ```
 
 ### `GET /platform/status`
@@ -66,7 +66,7 @@ Returns high-level governance health status.
 
 **Example:**
 ```bash
-curl http://localhost:8080/platform/status
+curl http://localhost:3000/platform/status
 ```
 
 ## Troubleshooting
@@ -105,7 +105,7 @@ cargo run -p xtask -- ac-status
 **Resolution:**
 ```bash
 # Check if port is in use
-lsof -i :8080
+lsof -i :3000
 
 # Run with different port
 SERVICE_PORT=8081 cargo run

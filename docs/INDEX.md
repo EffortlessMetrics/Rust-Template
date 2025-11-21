@@ -192,5 +192,5 @@ related_requirements: [REQ-ID-1, REQ-ID-2]
 1. **Check this index** for relevant docs
 2. **Search** the docs directory: `grep -r "your topic" docs/`
 3. **Try the CLI:** `cargo xtask help` or `cargo xtask help-flows`
-4. **Open the UI:** `http://localhost:8080/ui` for visual navigation
+4. **Open the UI:** `http://localhost:3000/ui` for visual navigation
 5. **Open an issue** if documentation is missing or unclear

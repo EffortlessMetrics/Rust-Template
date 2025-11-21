@@ -3,13 +3,196 @@
 Complete reference for all `xtask` CLI commands.
 
 **Quick Index:**
+- [dev-up](#xtask-dev-up) - One-command environment setup
+- [status](#xtask-status) - Governance status dashboard
 - [check](#xtask-check) - Format, lint, test
 - [bdd](#xtask-bdd) - Run BDD acceptance tests
 - [ac-status](#xtask-ac-status) - Generate AC status report
 - [policy-test](#xtask-policy-test) - Test Rego policies
 - [bundle](#xtask-bundle) - Generate LLM context
 - [quickstart](#xtask-quickstart) - First-run validation
-- [selftest](#xtask-selftest) - Comprehensive validation suite
+- [selftest](#xtask-selftest) - Comprehensive 7-step validation suite
+
+---
+
+## xtask dev-up
+
+One-command environment setup and health check.
+
+### Usage
+
+```bash
+cargo run -p xtask -- dev-up
+
+# Or in Nix shell
+nix develop -c cargo run -p xtask -- dev-up
+```
+
+### What It Does
+
+Performs a comprehensive environment setup and validation:
+
+1. **Dependency check:** Verifies required tools (cargo, rustc, conftest, etc.)
+2. **Platform health:** Checks if HTTP server is running (`http://localhost:3000/platform/status`)
+3. **Governance validation:** Parses specs and verifies structure
+4. **Core checks:** Runs `xtask check` (fmt, clippy, tests)
+5. **BDD tests:** Runs acceptance scenarios
+6. **Guidance:** Shows next steps and helpful URLs
+
+### Exit Codes
+
+- `0`: Environment ready
+- Non-zero: Setup issues detected
+
+### When to Use
+
+- **First time** - After cloning the repository
+- **After environment changes** - Tool updates, config changes
+- **Daily standup** - Quick "am I ready to code?" check
+- **For agents** - Automated environment verification
+
+### Example Output
+
+```
+======================================
+  Dev Environment Setup
+======================================
+
+[1/6] Checking dependencies...
+  ✓ cargo 1.91.0
+  ✓ rustc 1.91.0
+  ✓ conftest 0.49.1
+
+[2/6] Checking platform health...
+  ✓ Platform running at http://localhost:3000
+  ✓ /platform/status responding
+
+[3/6] Validating governance...
+  ✓ spec_ledger.yaml parsed
+  ✓ tasks.yaml parsed
+
+[4/6] Running core checks...
+  ✓ Format check passed
+  ✓ Clippy passed
+  ✓ Tests passed
+
+[5/6] Running BDD tests...
+  ✓ All scenarios passed
+
+[6/6] Checking commands...
+  ✓ All xtask commands available
+
+======================================
+✓ Environment ready!
+
+Next steps:
+  • View governance: http://localhost:3000/ui
+  • Check status: cargo xtask status
+  • List tasks: cargo xtask tasks-list
+  • Run selftest: cargo xtask selftest
+======================================
+```
+
+### Common Issues
+
+**Platform not running:**
+```bash
+# Start the platform first
+cargo run -p app-http &
+
+# Then run dev-up
+cargo xtask dev-up
+```
+
+**Missing dependencies:**
+```bash
+# Enter Nix shell (recommended)
+nix develop
+
+# Or install tools manually
+brew install conftest  # macOS
+```
+
+**Checks fail:**
+- Run `cargo xtask check` separately to see detailed errors
+- Fix issues and re-run `dev-up`
+
+---
+
+## xtask status
+
+Show governance status dashboard (CLI summary).
+
+### Usage
+
+```bash
+cargo run -p xtask -- status
+
+# Or with alias
+xt status
+```
+
+### What It Does
+
+Displays a quick governance health snapshot:
+
+1. Reads `specs/spec_ledger.yaml` to count Stories, Requirements, ACs
+2. Reads `specs/tasks.yaml` to count tasks by status (Todo, InProgress, Review, Done)
+3. Shows template version from ledger metadata
+4. Provides helpful next-step commands
+
+### Exit Codes
+
+- `0`: Always succeeds (read-only operation)
+
+### When to Use
+
+- **Quick orientation** - "What's the state of this cell?"
+- **Morning standup** - Check task counts without opening UI
+- **Agent workflows** - Lightweight status check before planning work
+- **CI reporting** - Include in build logs for visibility
+
+### Example Output
+
+```
+======================================
+Rust-as-Spec – 2.4.0
+======================================
+
+Governance:
+  Stories:      3
+  Requirements: 23
+  ACs:          46
+
+Tasks:
+  Todo:        3
+  InProgress:  2
+  Review:      1
+  Done:       15
+
+Next steps:
+  • View tasks:     cargo xtask tasks-list
+  • Run selftest:   cargo xtask selftest
+  • Start platform: cargo run -p app-http
+  • View UI:        http://localhost:3000/ui
+======================================
+```
+
+### Notes
+
+- **Read-only:** Never modifies files or state
+- **Fast:** Parses YAML files only, no network calls
+- **No dependencies:** Works even if platform is offline
+- **Complements `/platform/status`:** CLI equivalent of HTTP endpoint
+
+### Difference from `/platform/status`
+
+| Feature | `xtask status` | `/platform/status` |
+|---------|----------------|-------------------|
+| Type | CLI tool | HTTP API |
+| Data source | YAML files | In-memory runtime state |
+| Requires platform | No | Yes |
+| Use case | Quick CLI check | Programmatic access |
 
 ---
 
@@ -505,26 +688,31 @@ Next steps:
 
 ## xtask selftest
 
-Complete template self-test suite (used in CI).
+Complete template self-test suite (used in CI). **This is the governance gate** - if selftest passes, your changes are valid.
 
 ### Usage
 
 ```bash
 cargo run -p xtask -- selftest
 
-# Or in Nix shell
-nix develop -c cargo run -p xtask -- selftest
+# Low-resource mode (for CI/constrained environments)
+XTASK_LOW_RESOURCES=1 cargo run -p xtask -- selftest
+
+# Verbose mode
+cargo run -p xtask -- selftest -v
 ```
 
 ### What It Does
 
-Comprehensive validation in 5 steps:
+Comprehensive validation in **7 steps**:
 
 1. **Core checks:** format, clippy, tests
 2. **BDD tests:** acceptance scenarios + JUnit XML
-3. **AC status:** Maps tests → ACs, generates feature_status.md
+3. **AC/ADR mapping:** Validates traceability (tests → ACs, REQs → ADRs)
 4. **LLM bundler:** Validates context generation
 5. **Policy tests:** Runs Rego policies (if conftest available)
+6. **DevEx contract:** Verifies required commands exist
+7. **Graph invariants:** Validates structural integrity (no orphaned REQs, missing ACs)
 
 ### Exit Codes
 
@@ -543,46 +731,71 @@ Comprehensive validation in 5 steps:
 - **Before releases** - Full health check
 - **After major changes** - Verify nothing broke
 
-### Example Output
+### Example Output (Normal Mode)
 
 ```
 ======================================
   Template Self-Test Suite
 ======================================
 
-[1/5] Running core checks (fmt, clippy, tests)...
+[1/7] Running core checks (fmt, clippy, tests)...
   ✓ Core checks passed
 
-[2/5] Running BDD acceptance tests...
+[2/7] Running BDD acceptance tests...
   ✓ BDD scenarios passed
-  ✓ JUnit XML generated
 
-[3/5] Running AC status mapping...
-  ✓ AC status script executed
-  ✓ Feature status generated
+[3/7] Checking AC/ADR mapping...
+  ✓ AC status mapping verified
+  ✓ ADR references validated
 
-[4/5] Testing LLM context bundler...
-  ✓ Bundle generated
-  ✓ Bundle size: 2708 bytes
+[4/7] Testing LLM context bundler...
+  ✓ Bundle generated (2708 bytes)
 
-[5/5] Running policy tests...
-  ⚠ Policy tests: conftest not available
-  ℹ (Run 'nix develop' for full policy validation)
+[5/7] Running policy tests...
+  ✓ Ledger policy passed
+  ✓ LLM policy passed
+
+[6/7] Checking DevEx contract...
+  ✓ DevEx contract satisfied
+
+[7/7] Validating graph invariants...
+  ✓ Graph invariants validated
 
 ======================================
-✓ All self-tests passed!
-
-The template is working correctly:
-  • xtask commands functional
-  • BDD scenarios passing
-  • AC mapping operational
-  • LLM bundler working
-
-Ready for:
-  • Service development: docs/how-to/new-service-from-template.md
-  • AC-first workflow: docs/tutorials/first-ac-change.md
+✓ All 7 steps passed!
 ======================================
 ```
+
+### Example Output (Low-Resource Mode)
+
+When running with `XTASK_LOW_RESOURCES=1`:
+
+```
+[1/7] Core checks...
+  ✓ passed
+[2/7] BDD...
+  ✓ passed (summary output suppressed)
+[3/7] AC/ADR mapping...
+  ✓ passed
+[4/7] LLM bundler...
+  ✓ passed
+[5/7] Policy tests...
+  ✓ passed
+[6/7] DevEx contract...
+  ✓ passed
+[7/7] Graph invariants...
+  ✓ passed
+
+======================================
+✓ All 7 steps passed!
+======================================
+```
+
+**Low-resource mode benefits:**
+- Reduced output (less logging from BDD runner)
+- Same validation rigor
+- Faster in CI environments
+- Easier to parse for automation
 
 ### CI Integration
 
@@ -643,6 +856,30 @@ CARGO_TERM_COLOR=always cargo run -p xtask -- check
 # Disable colors
 CARGO_TERM_COLOR=never cargo run -p xtask -- check
 ```
+
+### XTASK_LOW_RESOURCES
+
+Enables low-resource mode for selftest (reduces output, optimizes for CI):
+
+```bash
+# Standard mode (verbose output)
+cargo run -p xtask -- selftest
+
+# Low-resource mode (condensed output)
+XTASK_LOW_RESOURCES=1 cargo run -p xtask -- selftest
+```
+
+**When to use:**
+- **CI environments** - Reduces log output, easier to parse results
+- **Constrained environments** - Lower memory/CPU usage
+- **Automated workflows** - Cleaner output for scripting
+- **Quick local checks** - Faster feedback without verbose BDD output
+
+**What it does:**
+- Suppresses detailed BDD scenario output
+- Condenses step-by-step progress messages
+- Maintains same validation rigor (all 7 steps run)
+- Same exit codes (0 = pass, non-zero = fail)
 
 ---
 
