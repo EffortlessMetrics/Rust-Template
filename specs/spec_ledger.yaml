@@ -478,6 +478,20 @@ stories:
             tests:
               - { type: integration, tag: "@AC-TPL-GOV-WRITE-TASK-STATUS-200" }
 
+      - id: REQ-TPL-TASK-LIFECYCLE
+        title: "Tasks must follow allowed status transitions"
+        tags: [platform, governance, domain]
+        must_have_ac: true
+        description: >
+          The platform MUST enforce valid state transitions for tasks (e.g. Todo -> InProgress)
+          to prevent invalid workflows.
+        adr: [ADR-0001]
+        acceptance_criteria:
+          - id: AC-TPL-TASK-TRANSITIONS
+            text: "Task status transitions are validated against the domain model."
+            tests:
+              - { type: unit, tag: "task_status_transitions" }
+
   # When adding your domain features:
   # - Copy the structure above (story → requirement → AC → tests)
   # - Use @AC-XXX tags in feature files

@@ -72,6 +72,27 @@ pub mod governance {
         Done,
     }
 
+    impl TaskStatus {
+        pub fn can_transition_to(&self, next: &TaskStatus) -> bool {
+            use TaskStatus::*;
+            match (self, next) {
+                (Todo, InProgress) => true,
+                (InProgress, Review) => true,
+                (Review, Done) => true,
+                (Review, InProgress) => true, // Backwards allowed
+                (InProgress, Todo) => true,   // Backwards allowed
+                _ => false,
+            }
+        }
+    }
+
+    #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+    pub struct Task {
+        pub id: TaskId,
+        pub title: String,
+        pub status: TaskStatus,
+    }
+
     #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
     pub struct TaskId(pub String);
 
@@ -85,13 +106,85 @@ pub mod governance {
         TaskNotFound(TaskId),
         #[error("Lock error: {0}")]
         Lock(String),
+        #[error("Invalid transition from {from:?} to {to:?}")]
+        InvalidTransition { from: TaskStatus, to: TaskStatus },
     }
 
     pub trait GovernanceRepository: Send + Sync {
+        fn load_task(&self, task_id: &TaskId) -> Result<Task, GovernanceError>;
+        fn find_all_tasks(&self) -> Result<Vec<Task>, GovernanceError>;
         fn set_task_status(
             &self,
             task_id: &TaskId,
             status: TaskStatus,
         ) -> Result<(), GovernanceError>;
+    }
+
+    impl GovernanceRepository for std::sync::Arc<dyn GovernanceRepository> {
+        fn load_task(&self, task_id: &TaskId) -> Result<Task, GovernanceError> {
+            (**self).load_task(task_id)
+        }
+
+        fn find_all_tasks(&self) -> Result<Vec<Task>, GovernanceError> {
+            (**self).find_all_tasks()
+        }
+
+        fn set_task_status(
+            &self,
+            task_id: &TaskId,
+            status: TaskStatus,
+        ) -> Result<(), GovernanceError> {
+            (**self).set_task_status(task_id, status)
+        }
+    }
+
+    pub struct TaskService<R: GovernanceRepository> {
+        repo: R,
+    }
+
+    impl<R: GovernanceRepository> TaskService<R> {
+        pub fn new(repo: R) -> Self {
+            Self { repo }
+        }
+
+        pub fn move_task(
+            &self,
+            id: &TaskId,
+            new_status: TaskStatus,
+        ) -> Result<(), GovernanceError> {
+            let mut task = self.repo.load_task(id)?;
+            if !task.status.can_transition_to(&new_status) {
+                return Err(GovernanceError::InvalidTransition {
+                    from: task.status,
+                    to: new_status,
+                });
+            }
+            task.status = new_status.clone();
+            self.repo.set_task_status(id, new_status)?;
+            Ok(())
+        }
+
+        pub fn list_tasks(&self) -> Result<Vec<Task>, GovernanceError> {
+            self.repo.find_all_tasks()
+        }
+    }
+
+    #[cfg(test)]
+    mod tests {
+        use super::*;
+
+        #[test]
+        fn test_allowed_transitions() {
+            assert!(TaskStatus::Todo.can_transition_to(&TaskStatus::InProgress));
+            assert!(TaskStatus::InProgress.can_transition_to(&TaskStatus::Review));
+            assert!(TaskStatus::Review.can_transition_to(&TaskStatus::Done));
+            assert!(TaskStatus::Review.can_transition_to(&TaskStatus::InProgress));
+        }
+
+        #[test]
+        fn test_forbidden_transitions() {
+            assert!(!TaskStatus::Done.can_transition_to(&TaskStatus::Todo));
+            assert!(!TaskStatus::Todo.can_transition_to(&TaskStatus::Done));
+        }
     }
 }

@@ -348,3 +348,20 @@ pub fn all_command_names() -> Vec<&'static str> {
         "help-flows",
     ]
 }
+
+/// Create a cargo command with optional low-resource overrides
+///
+/// If XTASK_LOW_RESOURCES is set:
+/// - CARGO_BUILD_JOBS=1
+/// - RUSTC_WRAPPER is removed (disabling sccache)
+pub fn cargo_cmd(subcommand: &str, args: &[&str]) -> Command {
+    let mut cmd = Command::new("cargo");
+    cmd.arg(subcommand).args(args);
+
+    if std::env::var_os("XTASK_LOW_RESOURCES").is_some() {
+        cmd.env("CARGO_BUILD_JOBS", "1");
+        cmd.env_remove("RUSTC_WRAPPER");
+    }
+
+    cmd
+}
