@@ -339,3 +339,151 @@ XTASK_LOW_RESOURCES=1 cargo run -p xtask -- selftest
 - CI runners with < 4GB RAM
 - Local dev on constrained hardware
 - If you see "OOM" or "Killed" messages during compilation
+
+---
+
+## 12. Platform Support
+
+This template supports development across multiple platforms with different validation guarantees.
+
+### Tier 1: Fully Validated (Recommended)
+- **Linux** with Nix devshell
+- **macOS** with Nix devshell
+- **WSL2 on Windows** with Nix devshell
+
+**Validation guarantee:** `cargo xtask selftest` runs with strict, hard gates on all kernel ACs. If selftest passes, the work is **canonically correct**.
+
+**Why Tier 1 is canonical:** Nix devshells ensure environment reproducibility matching CI exactly. No local drift between dev and CI.
+
+**Getting started:**
+```bash
+# Install Nix
+curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | \
+  sh -s -- install --determinate
+
+# Enter shell (matches CI environment)
+nix develop
+
+# Verify
+cargo xtask selftest
+```
+
+### Tier 2: Native Windows (Known Caveats)
+- **Windows 10/11** with PowerShell or Git Bash
+- **Rust 1.91+** installed manually
+- **Conftest** installed manually
+- **Docker Desktop** available
+
+**Validation guarantee:** `cargo xtask selftest` passes in normal conditions but may **intermittently fail** with `os error 5` ("failed to remove xtask.exe") during rebuild if antivirus or other processes lock the binary.
+
+**Why this happens:** Windows file locking is stricter than Unix. During `cargo rebuild`, the executable may be in use by:
+- Antivirus real-time scanning
+- File explorer (thumbnails)
+- IDE (background analysis)
+- Previous cargo process
+
+**This is not a behavioral failure.** It's a platform limitation specific to how Windows handles in-use executables.
+
+#### Workarounds for Native Windows
+
+**Option 1: Exclude target/ from Antivirus Scanning (Recommended)**
+```powershell
+# Windows Defender (run as Admin)
+Add-MpPreference -ExclusionPath "$env:USERPROFILE\...\target"
+
+# Third-party antivirus: Check your product's exclusion settings
+# Typically: Preferences → Scanning → Exclusions
+```
+
+**Option 2: Use WSL2 for Canonical Validation**
+```bash
+# If you hit file locking errors on native Windows:
+wsl
+cd /mnt/c/Code/Rust/Rust-Template
+nix develop
+cargo xtask selftest
+```
+
+**Option 3: Retry Strategy**
+```bash
+# Close all running cargo and xtask processes
+# Wait 5 seconds
+cargo xtask selftest
+```
+
+**When to do each:**
+
+| Scenario | Recommended Path |
+|----------|------------------|
+| **First setup** | Use WSL2 + Nix to match CI exactly |
+| **Daily dev on Windows** | Native Windows, antivirus excluded |
+| **Before PR/commit** | Run final selftest in WSL2 for canonical validation |
+| **CI only** | All CI builds use Nix devshell (Tier 1) |
+
+#### Windows Setup (Manual, Not Recommended)
+
+If you must use native Windows without Nix:
+
+```powershell
+# Install Rust
+rustup-init.exe
+rustup install 1.91
+
+# Install conftest
+cargo binstall conftest
+
+# Verify
+cargo xtask doctor
+```
+
+**Caveats:**
+- No guarantee environment matches CI
+- More setup steps (higher maintenance burden)
+- Toolchain version mismatches likely
+- Not recommended for production CI
+
+**Use Nix or WSL2 instead.**
+
+### Migration Path: Native Windows → WSL2
+
+If you're on native Windows and hitting repeated file locking errors:
+
+```bash
+# 1. Install WSL2
+wsl --install
+
+# 2. Set up Ubuntu in WSL2
+wsl --set-default-version 2
+
+# 3. Inside WSL2
+curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | \
+  sh -s -- install --determinate
+
+# 4. Clone repo into WSL2
+# Recommended: /home/username/projects/ (not /mnt/c/...)
+git clone https://github.com/.../Rust-Template.git
+cd Rust-Template
+
+# 5. Use normally
+nix develop
+cargo xtask selftest
+```
+
+**Why this works better:**
+- File paths use Unix semantics (faster, no locking issues)
+- Nix works as intended
+- Matches CI environment exactly
+- Native speed (direct Linux I/O, not emulation)
+
+---
+
+## 13. Summary: Choose Your Path
+
+| Your Situation | Recommended | Why |
+|---|---|---|
+| **Team starting fresh** | Nix (any OS) or WSL2 | Canonical CI environment match |
+| **Solo dev on macOS/Linux** | Nix devshell | Reproducible, fast |
+| **Solo dev on Windows, fast feedback** | Native Windows + antivirus exclusion | Quick iteration, acceptable file lock risk |
+| **Team on Windows** | WSL2 + Nix | No platform variance across team |
+| **CI only** | GitHub Actions (Nix devshell) | Canonical validation |
+| **Prototyping, no governance needed** | Nix devshell (simplest) | One command to reproducible env |

@@ -2,6 +2,12 @@ use acceptance::World;
 use cucumber::{World as _, WriterExt, writer};
 use std::fs::File;
 
+// Platform-specific null device
+#[cfg(unix)]
+const NULL_DEVICE: &str = "/dev/null";
+#[cfg(windows)]
+const NULL_DEVICE: &str = "nul";
+
 // Import steps module to ensure step definitions are registered
 #[allow(unused_imports)]
 use acceptance::steps;
@@ -46,11 +52,11 @@ async fn main() {
         std::process::exit(1);
     }
 
-    // Create output files
+    // Create output files (fall back to null device if creation fails)
     let junit_file =
-        File::create(&junit_path).unwrap_or_else(|_| std::fs::File::create("/dev/null").unwrap());
+        File::create(&junit_path).unwrap_or_else(|_| std::fs::File::create(NULL_DEVICE).unwrap());
     let json_file =
-        File::create(&json_path).unwrap_or_else(|_| std::fs::File::create("/dev/null").unwrap());
+        File::create(&json_path).unwrap_or_else(|_| std::fs::File::create(NULL_DEVICE).unwrap());
 
     // Triple output: console + JUnit + JSON
     World::cucumber()

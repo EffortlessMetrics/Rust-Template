@@ -725,7 +725,7 @@ async fn then_file_exists_matching_pattern(world: &mut World, directory: String,
     // Convert glob pattern to simple pattern matching
     // Pattern like "0*-test-decision.md" should match files like "0042-test-decision.md"
     let pattern_prefix = pattern.split('*').next().unwrap_or("");
-    let pattern_suffix = pattern.split('*').last().unwrap_or("");
+    let pattern_suffix = pattern.split('*').next_back().unwrap_or("");
 
     // Find matching files
     let mut matching_files = Vec::new();
@@ -784,10 +784,10 @@ async fn then_file_contains_text(world: &mut World, expected: String) {
 async fn then_cleanup_adr(world: &mut World) {
     let ctx = world.xtask_context_mut();
 
-    if let Some(adr_path) = ctx.test_adr_path.take() {
-        if adr_path.exists() {
-            let _ = fs::remove_file(&adr_path);
-        }
+    if let Some(adr_path) = ctx.test_adr_path.take()
+        && adr_path.exists()
+    {
+        let _ = fs::remove_file(&adr_path);
     }
 }
 
