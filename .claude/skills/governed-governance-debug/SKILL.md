@@ -1,11 +1,7 @@
 ---
 name: governed-governance-debug
-description: 'Diagnose and fix selftest failures in the Rust-as-Spec platform cell.
-  Use when cargo xtask selftest fails, when user reports "governance broken", or when
-  policy violations are detected. Systematically isolates and resolves issues across
-  the 7 selftest steps.
-
-  '
+description: |
+  Diagnose and fix selftest failures in the Rust-as-Spec platform cell. Use when cargo xtask selftest fails, when user reports "governance broken", or when policy violations are detected. Systematically isolates and resolves issues across the 7 selftest steps.
 allowed-tools:
 - Read
 - Grep

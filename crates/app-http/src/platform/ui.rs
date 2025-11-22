@@ -139,6 +139,7 @@ fn layout(title: &str, content: Markup) -> Markup {
                     a href="/" { "Dashboard" }
                     a href="/ui/graph" { "Graph" }
                     a href="/ui/flows" { "Flows & Tasks" }
+                    a href="/ui/coverage" { "AC Coverage" }
                     a href="/platform/status" target="_blank" { "API: Status" }
                     a href="/platform/graph" target="_blank" { "API: Graph" }
                 }
@@ -181,6 +182,31 @@ pub async fn dashboard() -> Html<String> {
                 _ => "status-unknown",
             };
 
+            // Read AC coverage from feature_status.md
+            let feature_status_path = root.join("docs/feature_status.md");
+            let mut passing = 0;
+            let mut failing = 0;
+            let mut unknown = 0;
+
+            if feature_status_path.exists()
+                && let Ok(content) = std::fs::read_to_string(&feature_status_path)
+            {
+                for line in content.lines() {
+                    if line.contains("✅") {
+                        passing += 1;
+                    } else if line.contains("❌") {
+                        failing += 1;
+                    } else if line.contains("❓") {
+                        unknown += 1;
+                    }
+                }
+            }
+
+            // If no coverage data, count all ACs as unknown
+            if passing == 0 && failing == 0 && unknown == 0 {
+                unknown = ac_count;
+            }
+
             html! {
                 .card {
                     h2 { "Platform Health" }
@@ -219,6 +245,24 @@ pub async fn dashboard() -> Html<String> {
                                 span class=(status_class) { (policy_status) }
                             }
                         }
+                    }
+                }
+
+                .card .coverage-card {
+                    h2 { "AC Coverage" }
+                    .stats style="display: flex; gap: 1.5rem; margin: 1rem 0;" {
+                        span .passing style="color: #155724; font-size: 1.1rem; font-weight: 500;" {
+                            "✅ " (passing) " passing"
+                        }
+                        span .failing style="color: #721c24; font-size: 1.1rem; font-weight: 500;" {
+                            "❌ " (failing) " failing"
+                        }
+                        span .unknown style="color: #856404; font-size: 1.1rem; font-weight: 500;" {
+                            "❓ " (unknown) " unknown"
+                        }
+                    }
+                    a href="/ui/coverage" style="color: #667eea; text-decoration: none; font-weight: 500;" {
+                        "View details →"
                     }
                 }
 
@@ -373,4 +417,248 @@ pub async fn flows_view() -> Html<String> {
     };
 
     Html(layout("Flows & Tasks", content).into_string())
+}
+
+/// Coverage details page
+pub async fn coverage_view() -> Html<String> {
+    let content = html! {
+        style {
+            r#"
+            .filter-controls {
+                margin-bottom: 1.5rem;
+                display: flex;
+                gap: 1rem;
+                align-items: center;
+                flex-wrap: wrap;
+            }
+            .filter-btn {
+                padding: 0.5rem 1rem;
+                border: 2px solid #667eea;
+                background: white;
+                color: #667eea;
+                border-radius: 6px;
+                cursor: pointer;
+                font-weight: 500;
+                transition: all 0.2s;
+            }
+            .filter-btn:hover {
+                background: #667eea;
+                color: white;
+            }
+            .filter-btn.active {
+                background: #667eea;
+                color: white;
+            }
+            .search-box {
+                flex: 1;
+                min-width: 250px;
+                padding: 0.5rem 1rem;
+                border: 2px solid #ddd;
+                border-radius: 6px;
+                font-size: 1rem;
+            }
+            .search-box:focus {
+                outline: none;
+                border-color: #667eea;
+            }
+            .coverage-table {
+                width: 100%;
+                border-collapse: collapse;
+                background: white;
+            }
+            .coverage-table th {
+                background: #f8f9fa;
+                padding: 0.75rem;
+                text-align: left;
+                font-weight: 600;
+                border-bottom: 2px solid #dee2e6;
+                position: sticky;
+                top: 0;
+            }
+            .coverage-table td {
+                padding: 0.75rem;
+                border-bottom: 1px solid #dee2e6;
+                vertical-align: top;
+            }
+            .coverage-table tr:hover {
+                background: #f8f9fa;
+            }
+            .ac-row {
+                transition: opacity 0.2s;
+            }
+            .ac-row.hidden {
+                display: none;
+            }
+            .scenario-list {
+                margin: 0;
+                padding-left: 1.5rem;
+                font-size: 0.875rem;
+            }
+            .scenario-list li {
+                margin: 0.25rem 0;
+            }
+            "#
+        }
+        script {
+            r#"
+            let currentFilter = 'all';
+            let allData = [];
+
+            // Fetch coverage data on page load
+            fetch('/platform/coverage')
+                .then(res => res.json())
+                .then(data => {
+                    allData = data.details;
+                    updateSummary(data.summary);
+                    renderTable(allData);
+                })
+                .catch(err => {
+                    console.error('Failed to load coverage data:', err);
+                    document.getElementById('table-container').innerHTML =
+                        '<p style="color: red;">Failed to load coverage data. Please try again.</p>';
+                });
+
+            function updateSummary(summary) {
+                document.getElementById('passing-count').textContent = summary.passing;
+                document.getElementById('failing-count').textContent = summary.failing;
+                document.getElementById('unknown-count').textContent = summary.unknown;
+                document.getElementById('total-count').textContent = summary.total;
+            }
+
+            function filterData(status) {
+                currentFilter = status;
+
+                // Update active button
+                document.querySelectorAll('.filter-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                document.getElementById('filter-' + status).classList.add('active');
+
+                // Apply filter
+                applyFilters();
+            }
+
+            function searchData() {
+                applyFilters();
+            }
+
+            function applyFilters() {
+                const searchTerm = document.getElementById('search-box').value.toLowerCase();
+                const rows = document.querySelectorAll('.ac-row');
+
+                rows.forEach(row => {
+                    const status = row.dataset.status;
+                    const text = row.textContent.toLowerCase();
+
+                    const statusMatch = currentFilter === 'all' || status === currentFilter;
+                    const searchMatch = searchTerm === '' || text.includes(searchTerm);
+
+                    if (statusMatch && searchMatch) {
+                        row.classList.remove('hidden');
+                    } else {
+                        row.classList.add('hidden');
+                    }
+                });
+            }
+
+            function renderTable(data) {
+                const tbody = document.getElementById('coverage-tbody');
+                tbody.innerHTML = '';
+
+                data.forEach(ac => {
+                    const row = document.createElement('tr');
+                    row.className = 'ac-row';
+                    row.dataset.status = ac.status;
+
+                    const statusBadge = ac.status === 'passing' ? '✅ pass' :
+                                       ac.status === 'failing' ? '❌ fail' :
+                                       '❓ unknown';
+                    const badgeClass = ac.status === 'passing' ? 'status-pass' :
+                                      ac.status === 'failing' ? 'status-fail' :
+                                      'status-unknown';
+
+                    const scenarios = ac.scenarios.length > 0
+                        ? '<ul class="scenario-list">' +
+                          ac.scenarios.map(s => '<li>' + s + '</li>').join('') +
+                          '</ul>'
+                        : '<em style="color: #999;">No scenarios</em>';
+
+                    row.innerHTML = `
+                        <td><code>${ac.id}</code></td>
+                        <td>${ac.title}</td>
+                        <td><span class="status-badge ${badgeClass}">${statusBadge}</span></td>
+                        <td><code>${ac.story}</code></td>
+                        <td><code>${ac.requirement}</code></td>
+                        <td>${scenarios}</td>
+                    `;
+
+                    tbody.appendChild(row);
+                });
+            }
+
+            // Initialize with 'all' filter active
+            window.addEventListener('DOMContentLoaded', () => {
+                document.getElementById('filter-all').classList.add('active');
+            });
+            "#
+        }
+
+        .card {
+            h2 { "AC Coverage Summary" }
+            .metrics {
+                .metric style="border-left-color: #155724;" {
+                    .metric-label { "Passing" }
+                    .metric-value style="color: #155724;" id="passing-count" { "..." }
+                }
+                .metric style="border-left-color: #721c24;" {
+                    .metric-label { "Failing" }
+                    .metric-value style="color: #721c24;" id="failing-count" { "..." }
+                }
+                .metric style="border-left-color: #856404;" {
+                    .metric-label { "Unknown" }
+                    .metric-value style="color: #856404;" id="unknown-count" { "..." }
+                }
+                .metric {
+                    .metric-label { "Total" }
+                    .metric-value id="total-count" { "..." }
+                }
+            }
+        }
+
+        .card {
+            h2 { "Acceptance Criteria Coverage" }
+            .filter-controls {
+                button #filter-all.filter-btn onclick="filterData('all')" { "All" }
+                button #filter-passing.filter-btn onclick="filterData('passing')" { "Passing" }
+                button #filter-failing.filter-btn onclick="filterData('failing')" { "Failing" }
+                button #filter-unknown.filter-btn onclick="filterData('unknown')" { "Unknown" }
+                input #search-box.search-box type="text" placeholder="Search by AC ID or title..."
+                    oninput="searchData()";
+            }
+
+            #table-container {
+                table .coverage-table {
+                    thead {
+                        tr {
+                            th { "AC ID" }
+                            th { "Title" }
+                            th { "Status" }
+                            th { "Story" }
+                            th { "Requirement" }
+                            th { "Scenarios" }
+                        }
+                    }
+                    tbody #coverage-tbody {
+                        tr {
+                            td colspan="6" style="text-align: center; padding: 2rem; color: #999;" {
+                                "Loading coverage data..."
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    };
+
+    Html(layout("AC Coverage", content).into_string())
 }

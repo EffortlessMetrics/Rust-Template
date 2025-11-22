@@ -90,8 +90,15 @@ impl IaCConfig {
             .map_err(|e| ConfigError::file_read_error(path.to_path_buf(), e))?;
 
         // Parse YAML
-        let config: IaCConfig =
+        let mut config: IaCConfig =
             serde_yaml::from_str(&contents).map_err(|e| ConfigError::InvalidYaml(e.to_string()))?;
+
+        // Resolve workspace_root relative to the config file location to avoid relying on the
+        // process working directory (tests modify it).
+        if config.project.workspace_root.is_relative() {
+            let config_dir = path.parent().unwrap_or_else(|| Path::new("."));
+            config.project.workspace_root = config_dir.join(&config.project.workspace_root);
+        }
 
         // Validate the configuration
         config.validate()?;

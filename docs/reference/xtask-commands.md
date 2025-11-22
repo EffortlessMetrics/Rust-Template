@@ -11,6 +11,8 @@ Complete reference for all `xtask` CLI commands.
 - [policy-test](#xtask-policy-test) - Test Rego policies
 - [bundle](#xtask-bundle) - Generate LLM context
 - [release-bundle](#xtask-release-bundle) - Generate release evidence bundle
+- [skills-fmt](#xtask-skills-fmt) - Normalize SKILL.md files
+- [skills-lint](#xtask-skills-lint) - Validate Skills definitions
 - [quickstart](#xtask-quickstart) - First-run validation
 - [selftest](#xtask-selftest) - Comprehensive 7-step validation suite
 
@@ -817,6 +819,152 @@ The LLM can then:
 - **Git-dependent:** Requires git repository with at least one tag for changelog
 - **Selftest integration:** Runs selftest in low-resource mode for status
 - **Historical record:** Commit evidence files for audit trail
+
+---
+
+## xtask skills-fmt
+
+Normalize Agent Skills definitions in `.claude/skills/*/SKILL.md`.
+
+### Usage
+
+```bash
+cargo run -p xtask -- skills-fmt
+```
+
+### What It Does
+
+Applies repository-wide formatting rules to Skills definitions:
+
+1. Locates all `SKILL.md` files under `.claude/skills/`
+2. Parses YAML frontmatter with `serde_yaml`
+3. Normalizes field order, required fields, and spacing
+4. Ensures consistent formatting across all Skills
+
+### Exit Codes
+
+- `0`: All Skills formatted successfully
+- Non-zero: Formatting failed or invalid Skills found
+
+### When to Use
+
+- **Before committing Skills changes** - Ensure consistency
+- **After creating/editing Skills** - Normalize formatting
+- **In pre-commit hooks** - Automatic formatting
+
+### Example Output
+
+```
+🎨 Formatting Agent Skills...
+
+Formatted:
+  ✓ .claude/skills/governed-feature-dev/SKILL.md
+  ✓ .claude/skills/governed-maintenance/SKILL.md
+  ✓ .claude/skills/governed-release/SKILL.md
+
+✓ 3 Skills formatted
+```
+
+### Common Issues
+
+**Permission errors:**
+- Ensure Skills files are writable
+- Check file permissions in `.claude/skills/`
+
+**Invalid YAML:**
+- Fix YAML syntax in frontmatter
+- Verify frontmatter is enclosed in `---` delimiters
+
+### Notes
+
+- **Idempotent:** Safe to run multiple times
+- **Preserves content:** Only formats, doesn't change meaning
+- **Part of governance:** Skills are governed artifacts
+
+---
+
+## xtask skills-lint
+
+Lint Agent Skills definitions for structural and governance correctness.
+
+### Usage
+
+```bash
+cargo run -p xtask -- skills-lint
+```
+
+### What It Checks
+
+Validates Skills definitions against repository standards:
+
+1. **Required frontmatter fields** - `name`, `description` exist
+2. **Name conventions** - Kebab-case, max length
+3. **Description quality** - Includes "what" and "when to use"
+4. **References** - Links to flows (`ac_first`, `onboarding`) and/or xtask commands
+5. **Location** - Skills live under `.claude/skills/` only
+
+### Exit Codes
+
+- `0`: All Skills valid
+- Non-zero: One or more Skills invalid; errors printed
+
+### When to Use
+
+- **Before committing Skills changes** - Validate structure
+- **In CI** - Prevent invalid Skills from landing
+- **When adding/refactoring Skills** - Ensure compliance
+- **In pre-commit hooks** - Automatic validation
+
+### Example Output
+
+```
+🔍 Linting Agent Skills...
+
+Checking:
+  ✓ .claude/skills/governed-feature-dev/SKILL.md
+  ✓ .claude/skills/governed-maintenance/SKILL.md
+  ✗ .claude/skills/governed-release/SKILL.md
+    → Missing description in frontmatter
+    → Description must include "when to use"
+
+✗ 1/3 Skills failed validation
+```
+
+### Common Issues
+
+**Missing frontmatter fields:**
+- Add required fields: `name`, `description`
+- Ensure frontmatter is valid YAML
+
+**Invalid name format:**
+- Use kebab-case: `governed-feature-dev`, not `GovernedFeatureDev`
+- Keep names concise (max 50 characters)
+
+**Description issues:**
+- Include both what the Skill does and when to use it
+- Reference flows from `specs/devex_flows.yaml`
+
+**No workflow references:**
+- Link to flows: `ac_first`, `onboarding`, etc.
+- Or reference xtask commands: `cargo xtask check`
+
+### Integration
+
+Part of `cargo xtask docs-check`:
+
+```bash
+# Runs as part of documentation validation
+cargo run -p xtask -- docs-check
+
+# Output includes Skills check:
+# Skills definitions... ✓ Valid
+```
+
+### Notes
+
+- **Non-invasive:** Read-only, doesn't modify files
+- **Use with skills-fmt:** Run `skills-fmt` to fix formatting first
+- **Governance integration:** Skills are governed artifacts like docs
 
 ---
 

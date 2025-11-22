@@ -3,14 +3,14 @@ repos:
     hooks:
       - id: skills-fmt
         name: Format Agent Skills
-        entry: python3 scripts/skills_fmt.py
+        entry: cargo run -p xtask -- skills-fmt
         language: system
         pass_filenames: false
         files: ^\.claude/skills/.*/SKILL\.md$
 
       - id: skills-lint
         name: Lint Agent Skills
-        entry: python3 scripts/skills_lint.py
+        entry: cargo run -p xtask -- skills-lint
         language: system
         pass_filenames: false
         files: ^\.claude/skills/.*/SKILL\.md$

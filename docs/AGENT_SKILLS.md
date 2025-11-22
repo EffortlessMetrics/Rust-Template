@@ -383,6 +383,103 @@ Concrete scenarios showing this Skill in action.
 
 ---
 
+## Skill Tooling (Rust-native)
+
+Skills are not freeform text; they are governed artifacts with enforced structure and formatting.
+
+### Formatting Skills
+
+Use `skills-fmt` to normalize SKILL.md files according to repository conventions:
+
+```bash
+# Normalize all Skills
+cargo run -p xtask -- skills-fmt
+```
+
+**What it does:**
+- Parses YAML frontmatter
+- Applies consistent field ordering
+- Normalizes spacing and formatting
+- Ensures required fields are present
+
+**When to use:**
+- Before committing changes to `.claude/skills/`
+- After creating or editing SKILL.md
+- When Skills appear inconsistent
+
+### Linting Skills
+
+Use `skills-lint` to validate Skills against governance rules:
+
+```bash
+# Validate all Skills
+cargo run -p xtask -- skills-lint
+```
+
+**What it checks:**
+- Required frontmatter fields (`name`, `description`)
+- Name conventions (kebab-case, max length)
+- Description quality (must explain "what" and "when")
+- References to flows (`ac_first`, `onboarding`) or xtask commands
+- Location (must be under `.claude/skills/`)
+
+**When to use:**
+- Before committing Skills changes
+- In CI to prevent invalid Skills from landing
+- When adding or refactoring Skills
+
+### Pre-commit Integration
+
+Skills linting runs automatically in pre-commit hooks:
+
+```yaml
+# .pre-commit-config.yaml
+- repo: local
+  hooks:
+    - id: skills-lint
+      name: Lint Agent Skills
+      entry: cargo run -p xtask -- skills-lint
+      language: system
+      pass_filenames: false
+```
+
+### Docs-check Integration
+
+Skills validation is part of `docs-check`:
+
+```bash
+cargo run -p xtask -- docs-check
+
+# Output includes:
+# Skills definitions... ✓ Valid
+```
+
+This ensures Skills stay consistent with other governed docs.
+
+### Common Issues
+
+**Frontmatter missing or invalid:**
+- Ensure SKILL.md starts with `---`
+- Add required fields: `name`, `description`
+- Close frontmatter with `---`
+
+**Description too vague:**
+- Include both "what" and "when to use"
+- Reference flows from `devex_flows.yaml`
+- Add trigger keywords for agent selection
+
+**No workflow references:**
+- Link to at least one flow: `ac_first`, `onboarding`, `maintenance`, `release`
+- Or reference specific xtask commands the Skill uses
+
+### Notes
+
+- **skills-fmt is idempotent:** Safe to run multiple times
+- **skills-lint is read-only:** Won't modify files
+- **Part of selftest (v3.2+):** Skills governance will be enforced in CI
+
+---
+
 ## Common Anti-Patterns
 
 ### ❌ One Skill Per Command

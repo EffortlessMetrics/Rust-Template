@@ -1,11 +1,7 @@
 ---
 name: governed-maintenance
-description: 'Platform upkeep, dependency updates, policy fixes, and doc maintenance
-  for the Rust-as-Spec platform cell. Use when fixing governance drift, updating dependencies,
-  resolving policy violations, or maintaining documentation. Follows the maintenance
-  flow from devex_flows.yaml.
-
-  '
+description: |
+  Platform upkeep, dependency updates, policy fixes, and doc maintenance for the Rust-as-Spec platform cell. Use when fixing governance drift, updating dependencies, resolving policy violations, or maintaining documentation. Follows the maintenance flow from devex_flows.yaml.
 allowed-tools:
 - Read
 - Grep
