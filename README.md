@@ -111,6 +111,28 @@ cargo xtask selftest
 
 ---
 
+## Platform Support
+
+### Tier 1 (Fully Validated)
+- Linux with Nix devshell
+- macOS with Nix devshell
+- WSL2 on Windows with Nix devshell
+
+These environments run `cargo xtask selftest` with strict, hard gates on all kernel ACs.
+
+### Tier 2 (Native Windows)
+- Windows 10/11 with PowerShell or Git Bash
+- Validated with known caveats
+
+On native Windows, `cargo xtask selftest` passes in normal conditions but may intermittently fail with `os error 5` ("failed to remove xtask.exe") if antivirus or other processes lock the binary during rebuild. This is a platform limitation, not a behavioral failure.
+
+**If you hit file locking errors on Windows:**
+1. Close any running xtask or cargo processes
+2. Exclude `target/` from real-time antivirus scanning
+3. Re-run `cargo xtask selftest`, or use WSL2 for canonical validation
+
+---
+
 ## Platform Introspection
 
 The same specs that power CI are exposed at runtime:

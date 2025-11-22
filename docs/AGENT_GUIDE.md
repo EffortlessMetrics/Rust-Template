@@ -34,6 +34,37 @@ cargo run -p xtask -- dev-up
 
 After `dev-up` completes successfully, you're ready to start the service and interact with the platform APIs.
 
+### Platform-Specific Notes
+
+**Linux/macOS with Nix:**
+```bash
+nix develop
+cargo run -p xtask -- dev-up
+# Works as documented, matches CI exactly
+```
+
+**WSL2 with Nix:**
+```bash
+# Inside WSL2 Ubuntu shell
+nix develop
+cargo run -p xtask -- dev-up
+# Recommended for Windows teams; matches CI exactly
+```
+
+**Native Windows (Known Caveat):**
+```powershell
+# Runs successfully, but may intermittently fail on `cargo rebuild` with:
+# error: failed to remove xtask.exe: os error 5
+#
+# This is Windows file locking, not a test failure. See:
+# docs/MISSING_MANUAL.md → "Platform Support" → "Tier 2: Native Windows"
+#
+# Mitigation:
+# 1. Exclude target/ from antivirus real-time scanning
+# 2. Or: Use WSL2 for canonical validation
+cargo run -p xtask -- dev-up
+```
+
 ---
 
 ## 1. Discovering Work
