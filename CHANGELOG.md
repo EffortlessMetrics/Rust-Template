@@ -13,46 +13,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **AC Coverage Tooling**: New `cargo xtask ac-coverage` command to analyze BDD coverage for acceptance criteria
-- **AC Scenario Scaffolding**: New `cargo xtask ac-suggest-scenarios` to generate missing BDD scenarios from AC descriptions
-- **Cross-Platform Support**: Windows as a Tier-2 platform with native tooling support (Linux/macOS + Nix remain Tier-1)
-- **Release Bundler**: New `cargo xtask release-bundle` command to generate comprehensive release evidence files
-- **Shared AC Parsing**: Common `ac_parsing` module for AC/feature/junit parsing across xtask commands
-- **Skills Tooling**: Integrated `skills-fmt` and `skills-lint` commands for `.claude/skills/` validation
-- **Platform Support Documentation**: Added comprehensive Tier-1/Tier-2 platform model documentation in `MISSING_MANUAL.md` and `README.md`
-- **Git Hooks Cross-Platform**: POSIX shell hooks that work on all platforms via Git for Windows `sh.exe`
-- **CI Matrix**: GitHub Actions now validates Linux, macOS (Tier-1), and Windows (Tier-2) on every push
-
-### Changed
-
-- **Selftest Summary UX**: Enhanced 7-step summary with "Next actions" hints and clearer output formatting
-- **AC Coverage in Dashboard**: AC coverage metrics now displayed in `cargo xtask status` and `/ui` dashboard
-- **Skills Integration**: Skills formatting/linting integrated into `docs-check` and pre-commit workflows
-- **xtask Build Strategy**: On Windows, xtask excluded from workspace commands to avoid file-locking during self-rebuild
-- **Null Device Handling**: Platform-aware null device constants (`/dev/null` on Unix, `nul` on Windows)
-
-### Fixed
-
-- **Windows Build Failures**: Fixed Unix-specific file permission APIs causing build failures on Windows
-- **Git Hook Installation**: Simplified to single POSIX hook script that works on all platforms
-- **Duplicate ADR Files**: Cleaned up duplicate `adr-*.md` files in docs/decisions/
-- **Test Artifacts**: Removed accidentally committed JUnit/JSON test output files
-- **AC Coverage Logic**: Fixed malformed JSON parsing issues; now uses proper junit/feature mapping
-- **Clippy Warnings**: Fixed `double_ended_iterator_last` and `collapsible_if` warnings in acceptance tests
-
-### Internal
-
-- **Governance Wiring**: Full BDD → AC → Requirement traceability implemented and validated
-- **Platform Model**: Established Tier-1 (Nix + hermetic) vs Tier-2 (native Windows with caveats) support model
-- **Evidence Generation**: Release artifacts (`release_evidence/*.md`) auto-generated from governance data
-- **Hook Generation**: Unified hook installation using POSIX scripts recognized by Git for Windows
-
----
-
-## [3.2.0] - 2025-11-22
-
-### Added
-
 - **AC Coverage Tooling:**
   - `cargo xtask ac-coverage` command for AC coverage summary grouped by requirement
   - `cargo xtask ac-suggest-scenarios` command to generate BDD scenario stubs from ACs
@@ -63,12 +23,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `cargo xtask skills-lint` command to validate Skills definitions
   - Skills are now governed artifacts with standardized structure
 
+- **Cross-Platform Support:**
+  - Windows as Tier-2 platform with native tooling support (Linux/macOS + Nix remain Tier-1)
+  - Platform-aware null device constants (`/dev/null` on Unix, `nul` on Windows)
+  - POSIX shell hooks that work on all platforms via Git for Windows `sh.exe`
+  - Comprehensive Tier-1/Tier-2 platform model documentation in `MISSING_MANUAL.md` and `README.md`
+
+- **Release & CI Infrastructure:**
+  - `cargo xtask release-bundle` command to generate comprehensive release evidence files
+  - GitHub Actions now validates Linux, macOS (Tier-1), and Windows (Tier-2) on every push
+  - Cross-platform CI matrix in `ci-template-selftest.yml`
+
 ### Changed
 
 - **Module Organization:**
   - Extracted common AC parsing logic into `crates/xtask/src/commands/ac_parsing.rs`
   - `ac_status`, `ac_coverage`, and `ac_suggest_scenarios` now share parsing infrastructure
   - Improved code reuse and consistency across AC-related commands
+
+- **UX & Dashboard:**
+  - Enhanced selftest summary with 7-step output and "Next actions" hints
+  - AC coverage metrics now displayed in `cargo xtask status` and `/ui` dashboard
+  - Skills formatting/linting integrated into `docs-check` and pre-commit workflows
+
+- **Platform-Specific Adjustments:**
+  - On Windows, xtask excluded from workspace commands to avoid file-locking during self-rebuild
+  - Unified Git hook installation using single POSIX script (no more batch file hooks)
 
 - **Documentation:**
   - Updated SKILL.md files for clarity and consistency
@@ -83,6 +63,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Resolved import issues for `CucumberReport`, `AC_PATTERN`, and other parsing utilities
   - AC tooling now provides complete workflow from coverage analysis to scenario generation
 
+- **Cross-Platform Issues:**
+  - Fixed Windows build failures caused by Unix-specific file permission APIs
+  - Git hook installation simplified to single POSIX script (works on all platforms)
+  - Fixed malformed JSON parsing in AC coverage logic; now uses proper junit/feature mapping
+
+- **Cleanup:**
+  - Removed duplicate `adr-*.md` files in docs/decisions/
+  - Removed accidentally committed JUnit/JSON test output files
+  - Fixed `double_ended_iterator_last` and `collapsible_if` clippy warnings in acceptance tests
+
+### Internal
+
+- **Governance Wiring**: Full BDD → AC → Requirement traceability implemented and validated
+- **Platform Model**: Established Tier-1 (Nix + hermetic) vs Tier-2 (native Windows with caveats) support model
+- **Evidence Generation**: Release artifacts (`release_evidence/*.md`) auto-generated from governance data
+- **Hook Generation**: Unified hook installation using POSIX scripts recognized by Git for Windows
+
+---
 
 ## [3.0.0-sprint1] - 2025-11-20 🚀 **v3.0.0 Sprint 1: The Write Layer**
 
