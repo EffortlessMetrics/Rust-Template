@@ -3,7 +3,7 @@ use anyhow::Result;
 use colored::Colorize;
 
 pub fn run() -> Result<()> {
-    println!("{}", "🔒 Running security & dependency audit...".blue().bold());
+    println!("{}", "Running security & dependency audit".blue().bold());
     println!();
 
     let mut issues = 0;
@@ -22,10 +22,9 @@ pub fn run() -> Result<()> {
         return Ok(());
     }
 
-    // Run cargo audit
+    // Run cargo-audit
     if has_cargo_audit {
-        print!("Running cargo audit... ");
-        print!("Running cargo audit... ");
+        println!("Running cargo-audit...");
         let mut cmd = crate::cargo_cmd("audit", &["--deny", "warnings"]);
 
         match run_cmd(&mut cmd) {
@@ -38,11 +37,10 @@ pub fn run() -> Result<()> {
         }
     }
 
-    // Run cargo deny
+    // Run cargo-deny
     if has_cargo_deny {
         println!();
-        print!("Running cargo deny... ");
-        print!("Running cargo deny... ");
+        println!("Running cargo-deny...");
         let mut cmd = crate::cargo_cmd("deny", &["check"]);
 
         match cmd.output() {

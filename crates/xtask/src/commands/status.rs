@@ -200,37 +200,38 @@ fn print_status_dashboard(
     println!("  Stories:      {}", story_count);
     println!("  Requirements: {}", req_count);
     println!("  ACs:          {}", ac_count);
-    println!();
 
-    // AC Coverage metrics
+    // AC Coverage metrics (integrated into Governance section)
     if let Some(coverage) = ac_coverage {
-        let with_tests = coverage.with_tests();
-        let total = coverage.total();
-
-        println!("{}", "AC Coverage:".bold());
-
-        // Build the summary line
-        let summary = if coverage.fail > 0 {
+        // Build the coverage line with color based on failures
+        let coverage_line = if coverage.fail > 0 {
             format!(
-                "  {}/{} ({} ✅ with tests, {} ❌ failing), {} unknown",
-                with_tests, total, coverage.pass, coverage.fail, coverage.unknown
+                "  AC coverage:  {} pass, {} fail, {} unknown (BDD)",
+                coverage.pass, coverage.fail, coverage.unknown
             )
             .yellow()
             .to_string()
-        } else if with_tests == 0 {
-            format!("  {}/{} (✅ with tests), {} unknown", with_tests, total, coverage.unknown)
-                .yellow()
-                .to_string()
+        } else if coverage.unknown == 0 && coverage.pass > 0 {
+            format!(
+                "  AC coverage:  {} pass, {} fail, {} unknown (BDD)",
+                coverage.pass, coverage.fail, coverage.unknown
+            )
+            .green()
+            .to_string()
         } else {
-            format!("  {}/{} (✅ with tests), {} unknown", with_tests, total, coverage.unknown)
-                .green()
-                .to_string()
+            format!(
+                "  AC coverage:  {} pass, {} fail, {} unknown (BDD)",
+                coverage.pass, coverage.fail, coverage.unknown
+            )
         };
 
-        println!("{}", summary);
-        println!("  See {} for details.", "docs/feature_status.md".blue());
-        println!();
+        println!("{}", coverage_line);
+        println!("  See: {}", "docs/feature_status.md".blue());
+    } else {
+        // No AC coverage data available yet
+        println!("  AC coverage:  N/A (run acceptance tests)");
     }
+    println!();
 
     // Task metrics
     if !task_counts.is_empty() {

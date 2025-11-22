@@ -1,3 +1,7 @@
+# Template Version: v3.0.0
+# Schema: spec_ledger.yaml v1.0
+# Last Updated: 2025-11-22
+
 Feature: Platform Web UI
   As a developer or platform operator
   I want a web-based UI to visualize governance and platform health

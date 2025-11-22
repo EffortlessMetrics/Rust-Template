@@ -1,3 +1,7 @@
+# Template Version: v3.0.0
+# Schema: spec_ledger.yaml v1.0
+# Last Updated: 2025-11-22
+
 Feature: Governance Write Capability
   As a platform engineer or agent
   I want to persist task status changes to the file system

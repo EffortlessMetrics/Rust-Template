@@ -39,15 +39,32 @@ pub fn run() -> Result<()> {
 /// Run full template self-test suite with specified verbosity
 pub fn run_with_verbosity(verbosity: crate::Verbosity) -> Result<()> {
     let start_time = Instant::now();
+
+    // Check for low-resource mode
+    let low_resource_mode = env::var("XTASK_LOW_RESOURCES").unwrap_or_default() == "1";
+
     println!("{}", "======================================".blue());
     println!("{}", "  Template Self-Test Suite".blue());
     println!("{}", "======================================".blue());
+
+    if low_resource_mode {
+        println!("{}", "  Running in low-resource mode".yellow());
+        println!("{}", "  (XTASK_LOW_RESOURCES=1)".yellow());
+
+        // Set CARGO_BUILD_JOBS=1 for limited parallelism
+        // SAFETY: We're setting this at the start of selftest before any child processes are spawned.
+        // This is the intended use case for controlling cargo build parallelism.
+        unsafe {
+            env::set_var("CARGO_BUILD_JOBS", "1");
+        }
+    }
+
     println!();
 
     let mut results = SelftestResults::new();
 
     // Step 1: Core checks
-    println!("{}", "[1/7] Running core checks (fmt, clippy, tests)...".blue());
+    println!("{}", "[1/8] Running core checks (fmt, clippy, tests)...".blue());
     let step_start = Instant::now();
     let core_ok = match crate::commands::check::run() {
         Ok(_) => {
@@ -68,7 +85,7 @@ pub fn run_with_verbosity(verbosity: crate::Verbosity) -> Result<()> {
     println!();
 
     // Step 2: BDD acceptance tests
-    println!("{}", "[2/7] Running BDD acceptance tests...".blue());
+    println!("{}", "[2/8] Running BDD acceptance tests...".blue());
     let step_start = Instant::now();
     let bdd_ok = match crate::commands::bdd::run() {
         Ok(_) => {
@@ -94,7 +111,7 @@ pub fn run_with_verbosity(verbosity: crate::Verbosity) -> Result<()> {
     println!();
 
     // Step 3: AC status mapping & ADR references
-    println!("{}", "[3/7] Running AC status mapping & ADR references...".blue());
+    println!("{}", "[3/8] Running AC status mapping & ADR references...".blue());
     let step_start = Instant::now();
 
     let mut mapping_ok = true;
@@ -137,7 +154,7 @@ pub fn run_with_verbosity(verbosity: crate::Verbosity) -> Result<()> {
     println!();
 
     // Step 4: LLM context bundler
-    println!("{}", "[4/7] Testing LLM context bundler...".blue());
+    println!("{}", "[4/8] Testing LLM context bundler...".blue());
     let step_start = Instant::now();
     let bundler_ok = match crate::commands::bundle::run("implement_ac") {
         Ok(_) => {
@@ -165,61 +182,72 @@ pub fn run_with_verbosity(verbosity: crate::Verbosity) -> Result<()> {
     println!();
 
     // Step 5: Policy tests (if conftest available)
-    println!("{}", "[5/7] Running policy tests...".blue());
+    println!("{}", "[5/8] Running policy tests...".blue());
     let step_start = Instant::now();
-    let policy_ok = match crate::commands::policy_test::run() {
-        Ok(_) => {
-            let elapsed = step_start.elapsed();
-            if verbosity.is_verbose() {
-                println!("  {} Policy tests passed ({:.2}s)", "✓".green(), elapsed.as_secs_f64());
-            } else {
-                println!("  {} Policy tests passed", "✓".green());
-            }
-            true
-        }
-        Err(e) => {
-            // Check if this is a "conftest not found" error
-            let is_conftest_not_found =
-                matches!(e, crate::commands::policy_test::PolicyTestError::ConftestNotFound(_));
-
-            if is_conftest_not_found {
-                // In CI, treat this as a failure; locally, just warn
-                let is_ci = std::env::var("CI").is_ok() || std::env::var("GITHUB_ACTIONS").is_ok();
-
-                if is_ci {
-                    eprintln!(
-                        "  {} Policy tests: conftest not found (CI requires conftest)",
-                        "✗".red()
+    let policy_ok = if low_resource_mode {
+        // Skip policy tests in low-resource mode as they can be resource-intensive
+        println!("  {} Policy tests skipped (low-resource mode)", "⚠".yellow());
+        true
+    } else {
+        match crate::commands::policy_test::run() {
+            Ok(_) => {
+                let elapsed = step_start.elapsed();
+                if verbosity.is_verbose() {
+                    println!(
+                        "  {} Policy tests passed ({:.2}s)",
+                        "✓".green(),
+                        elapsed.as_secs_f64()
                     );
-                    if verbosity.is_verbose() {
-                        eprintln!("\n{}", e);
-                    }
-                    false
                 } else {
-                    println!("  {} Policy tests skipped: conftest not found", "⚠".yellow());
-
-                    // Check if nix is available and provide helpful hint
-                    if which::which("nix").is_ok() {
-                        println!(
-                            "  💡 Hint: Run {} for full validation",
-                            "nix develop -c cargo run -p xtask -- selftest".cyan()
-                        );
-                    } else {
-                        println!(
-                            "  💡 For full policy testing, see: {}",
-                            "docs/dev-environment.md".cyan()
-                        );
-                    }
-
-                    if verbosity.is_verbose() {
-                        println!("\n{}", e);
-                    }
-                    // Don't fail for local development
-                    true
+                    println!("  {} Policy tests passed", "✓".green());
                 }
-            } else {
-                eprintln!("  {} Policy tests: {}", "✗".red(), e);
-                false
+                true
+            }
+            Err(e) => {
+                // Check if this is a "conftest not found" error
+                let is_conftest_not_found =
+                    matches!(e, crate::commands::policy_test::PolicyTestError::ConftestNotFound(_));
+
+                if is_conftest_not_found {
+                    // In CI, treat this as a failure; locally, just warn
+                    let is_ci =
+                        std::env::var("CI").is_ok() || std::env::var("GITHUB_ACTIONS").is_ok();
+
+                    if is_ci {
+                        eprintln!(
+                            "  {} Policy tests: conftest not found (CI requires conftest)",
+                            "✗".red()
+                        );
+                        if verbosity.is_verbose() {
+                            eprintln!("\n{}", e);
+                        }
+                        false
+                    } else {
+                        println!("  {} Policy tests skipped: conftest not found", "⚠".yellow());
+
+                        // Check if nix is available and provide helpful hint
+                        if which::which("nix").is_ok() {
+                            println!(
+                                "  💡 Hint: Run {} for full validation",
+                                "nix develop -c cargo run -p xtask -- selftest".cyan()
+                            );
+                        } else {
+                            println!(
+                                "  💡 For full policy testing, see: {}",
+                                "docs/dev-environment.md".cyan()
+                            );
+                        }
+
+                        if verbosity.is_verbose() {
+                            println!("\n{}", e);
+                        }
+                        // Don't fail for local development
+                        true
+                    }
+                } else {
+                    eprintln!("  {} Policy tests: {}", "✗".red(), e);
+                    false
+                }
             }
         }
     };
@@ -230,7 +258,7 @@ pub fn run_with_verbosity(verbosity: crate::Verbosity) -> Result<()> {
     );
     println!();
     // Step 6: DevEx contract
-    println!("{}", "[6/7] Checking DevEx contract...".blue());
+    println!("{}", "[6/8] Checking DevEx contract...".blue());
     let step_start = Instant::now();
     let devex_ok = match run_devex_contract(verbosity) {
         Ok(_) => {
@@ -259,7 +287,7 @@ pub fn run_with_verbosity(verbosity: crate::Verbosity) -> Result<()> {
     println!();
 
     // Step 7: Graph invariants
-    println!("{}", "[7/7] Checking governance graph invariants...".blue());
+    println!("{}", "[7/8] Checking governance graph invariants...".blue());
     let step_start = Instant::now();
     let graph_ok = match crate::commands::graph_export::run_graph_invariants(verbosity.as_u8()) {
         Ok(_) => {
@@ -284,6 +312,28 @@ pub fn run_with_verbosity(verbosity: crate::Verbosity) -> Result<()> {
         }
     };
     results.push("Graph invariants", graph_ok, Some("Check governance graph for violations"));
+    println!();
+
+    // Step 8: AC coverage
+    println!("{}", "[8/8] Checking AC coverage for v3.0 kernel...".blue());
+    let step_start = Instant::now();
+    let coverage_ok = match run_ac_coverage_check(verbosity) {
+        Ok(_) => {
+            let elapsed = step_start.elapsed();
+            if verbosity.is_verbose() {
+                println!("  {} AC coverage complete ({:.2}s)", "✓".green(), elapsed.as_secs_f64());
+            } else {
+                println!("  {} AC coverage complete", "✓".green());
+            }
+            true
+        }
+        Err(e) => {
+            eprintln!("  {} AC coverage incomplete:", "✗".red());
+            eprintln!("{}", e);
+            false
+        }
+    };
+    results.push("AC coverage", coverage_ok, Some("Run `cargo xtask ac-coverage` for details"));
     println!();
 
     // Print summary
@@ -329,7 +379,7 @@ fn run_adr_check(verbosity: crate::Verbosity) -> Result<()> {
     })
 }
 
-fn run_devex_contract(_verbosity: crate::Verbosity) -> Result<()> {
+fn run_devex_contract(verbosity: crate::Verbosity) -> Result<()> {
     let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     let root = manifest_dir.parent().unwrap().parent().unwrap();
 
@@ -340,9 +390,13 @@ fn run_devex_contract(_verbosity: crate::Verbosity) -> Result<()> {
     let available_commands = crate::all_command_names();
 
     let mut missing = Vec::new();
+    let mut required_count = 0;
     for (cmd_name, cmd_spec) in &spec.commands {
-        if cmd_spec.required && !available_commands.contains(&cmd_name.as_str()) {
-            missing.push(cmd_name.clone());
+        if cmd_spec.required {
+            required_count += 1;
+            if !available_commands.contains(&cmd_name.as_str()) {
+                missing.push(cmd_name.clone());
+            }
         }
     }
 
@@ -357,6 +411,244 @@ fn run_devex_contract(_verbosity: crate::Verbosity) -> Result<()> {
         eprintln!("  • Implement missing command(s) in crates/xtask");
         eprintln!("  • Or update specs/devex_flows.yaml if spec is outdated");
         anyhow::bail!("DevEx contract: {} required command(s) missing", missing.len());
+    }
+
+    // Success: report validation details
+    if verbosity.is_verbose() {
+        println!(
+            "  {} Validated {} required commands from devex_flows.yaml",
+            "✓".green(),
+            required_count
+        );
+    } else {
+        println!("  {} All required commands from devex_flows.yaml exist", "✓".green());
+    }
+
+    Ok(())
+}
+
+/// Check AC coverage for v3.0 kernel requirements
+fn run_ac_coverage_check(verbosity: crate::Verbosity) -> Result<()> {
+    use serde::Deserialize;
+    use std::collections::{HashMap, HashSet};
+    use std::fs;
+
+    #[derive(Debug, Deserialize)]
+    struct Ledger {
+        stories: Vec<Story>,
+    }
+
+    #[derive(Debug, Deserialize)]
+    struct Story {
+        id: String,
+        requirements: Vec<Requirement>,
+    }
+
+    #[derive(Debug, Deserialize)]
+    struct Requirement {
+        id: String,
+        #[serde(default = "default_must_have_ac")]
+        must_have_ac: bool,
+        acceptance_criteria: Vec<AcceptanceCriteria>,
+    }
+
+    fn default_must_have_ac() -> bool {
+        true
+    }
+
+    #[derive(Debug, Deserialize)]
+    struct AcceptanceCriteria {
+        id: String,
+        #[serde(default)]
+        text: String,
+    }
+
+    // Parse the ledger
+    let ledger_path = Path::new("specs/spec_ledger.yaml");
+    if !ledger_path.exists() {
+        anyhow::bail!("Ledger not found: {}", ledger_path.display());
+    }
+
+    let content = fs::read_to_string(ledger_path)?;
+    let ledger: Ledger = serde_yaml::from_str(&content)?;
+
+    // Collect all ACs, separating kernel (must_have_ac=true) from non-kernel (must_have_ac=false)
+    let mut kernel_acs: HashMap<String, String> = HashMap::new(); // ac_id -> req_id
+    let mut non_kernel_acs: HashMap<String, String> = HashMap::new(); // ac_id -> req_id
+
+    for story in &ledger.stories {
+        for req in &story.requirements {
+            for ac in &req.acceptance_criteria {
+                if req.must_have_ac {
+                    kernel_acs.insert(ac.id.clone(), req.id.clone());
+                } else {
+                    non_kernel_acs.insert(ac.id.clone(), req.id.clone());
+                }
+            }
+        }
+    }
+
+    if verbosity.is_verbose() {
+        println!(
+            "  Found {} kernel ACs (must_have_ac=true) across {} requirements",
+            kernel_acs.len(),
+            kernel_acs.values().collect::<HashSet<_>>().len()
+        );
+        println!(
+            "  Found {} non-kernel ACs (must_have_ac=false) across {} requirements",
+            non_kernel_acs.len(),
+            non_kernel_acs.values().collect::<HashSet<_>>().len()
+        );
+    }
+
+    // Get AC status by running ac-status and parsing the output
+    // We use the same logic as ac_status.rs but focus on kernel ACs only
+    let args = crate::commands::ac_status::AcStatusArgs {
+        verbosity: crate::Verbosity::Quiet,
+        summary: false,
+        ..Default::default()
+    };
+
+    // Run ac-status to generate feature_status.md
+    if let Err(e) = crate::commands::ac_status::run(args) {
+        // ac-status failed, which means some ACs are failing
+        // We'll parse the status anyway to give detailed feedback
+        if !verbosity.is_quiet() {
+            println!("  {} AC status check failed: {}", "⚠".yellow(), e);
+        }
+    }
+
+    // Parse feature_status.md to get AC statuses
+    let status_path = Path::new("docs/feature_status.md");
+    if !status_path.exists() {
+        anyhow::bail!("Feature status file not found. Run `cargo xtask ac-status` first.");
+    }
+
+    let status_content = fs::read_to_string(status_path)?;
+    let mut kernel_failing: Vec<(String, String)> = Vec::new(); // (ac_id, req_id)
+    let mut kernel_unknown: Vec<(String, String)> = Vec::new(); // (ac_id, req_id)
+    let mut non_kernel_failing: Vec<(String, String)> = Vec::new();
+    let mut non_kernel_unknown: Vec<(String, String)> = Vec::new();
+
+    // Parse the markdown table to extract AC statuses
+    for line in status_content.lines() {
+        if line.starts_with('|') && !line.starts_with("|----") && !line.starts_with("| AC ID") {
+            let parts: Vec<&str> = line.split('|').map(|s| s.trim()).collect();
+            if parts.len() >= 5 {
+                let ac_id = parts[1];
+                let req_id = parts[3];
+                let status = parts[4];
+
+                let is_kernel = kernel_acs.contains_key(ac_id);
+                let is_non_kernel = non_kernel_acs.contains_key(ac_id);
+
+                if status.contains("❌") || status.contains("fail") {
+                    if is_kernel {
+                        kernel_failing.push((ac_id.to_string(), req_id.to_string()));
+                    } else if is_non_kernel {
+                        non_kernel_failing.push((ac_id.to_string(), req_id.to_string()));
+                    }
+                } else if status.contains("❓") || status.contains("unknown") {
+                    if is_kernel {
+                        kernel_unknown.push((ac_id.to_string(), req_id.to_string()));
+                    } else if is_non_kernel {
+                        non_kernel_unknown.push((ac_id.to_string(), req_id.to_string()));
+                    }
+                }
+            }
+        }
+    }
+
+    // Report results
+    let total_kernel = kernel_acs.len();
+    let total_non_kernel = non_kernel_acs.len();
+
+    let kernel_failing_count = kernel_failing.len();
+    let kernel_unknown_count = kernel_unknown.len();
+    let kernel_passing = total_kernel - kernel_failing_count - kernel_unknown_count;
+
+    let non_kernel_failing_count = non_kernel_failing.len();
+    let non_kernel_unknown_count = non_kernel_unknown.len();
+    let non_kernel_passing = total_non_kernel - non_kernel_failing_count - non_kernel_unknown_count;
+
+    // Always show the breakdown
+    println!();
+    println!("  {} Kernel ACs (must_have_ac=true):", "🔒".bold());
+    println!("    Total:   {}", total_kernel);
+    println!("    {} Passing: {}", "✓".green(), kernel_passing);
+    if kernel_failing_count > 0 {
+        println!("    {} Failing: {}", "✗".red(), kernel_failing_count);
+    }
+    if kernel_unknown_count > 0 {
+        println!("    {} Unknown: {}", "?".yellow(), kernel_unknown_count);
+    }
+
+    if total_non_kernel > 0 {
+        println!();
+        println!("  {} Non-kernel ACs (must_have_ac=false):", "💡".bold());
+        println!("    Total:   {}", total_non_kernel);
+        println!("    {} Passing: {}", "✓".green(), non_kernel_passing);
+        if non_kernel_failing_count > 0 {
+            println!(
+                "    {} Failing: {} (informational only)",
+                "✗".yellow(),
+                non_kernel_failing_count
+            );
+        }
+        if non_kernel_unknown_count > 0 {
+            println!(
+                "    {} Unknown: {} (informational only)",
+                "?".yellow(),
+                non_kernel_unknown_count
+            );
+        }
+    }
+
+    // Only fail if kernel ACs are not green
+    if kernel_failing_count > 0 || kernel_unknown_count > 0 {
+        eprintln!();
+        eprintln!("{}", "❌ Kernel AC coverage gate failed".red().bold());
+        eprintln!();
+
+        if kernel_failing_count > 0 {
+            eprintln!("{}", "Failing kernel ACs:".bold());
+            for (ac_id, req_id) in &kernel_failing {
+                eprintln!("  • {} ({})", ac_id, req_id);
+            }
+            eprintln!();
+        }
+
+        if kernel_unknown_count > 0 {
+            eprintln!("{}", "Unknown kernel ACs (no BDD scenarios):".bold());
+            for (ac_id, req_id) in &kernel_unknown {
+                eprintln!("  • {} ({})", ac_id, req_id);
+            }
+            eprintln!();
+        }
+
+        eprintln!("{}", "Next steps:".bold());
+        eprintln!("  1. View detailed AC status: {}", "cargo xtask ac-coverage".cyan());
+        eprintln!("  2. Run failing tests: {}", "cargo xtask bdd".cyan());
+        eprintln!("  3. Add missing scenarios for unknown ACs");
+
+        anyhow::bail!(
+            "Kernel AC coverage incomplete: {} failing, {} unknown",
+            kernel_failing_count,
+            kernel_unknown_count
+        );
+    }
+
+    // Provide informational warning about non-kernel ACs if any are failing/unknown
+    if total_non_kernel > 0 && (non_kernel_failing_count > 0 || non_kernel_unknown_count > 0) {
+        println!();
+        println!("{}", "ℹ️  Non-kernel AC status (informational only):".cyan());
+        if non_kernel_failing_count > 0 {
+            println!("  {} failing non-kernel ACs", non_kernel_failing_count);
+        }
+        if non_kernel_unknown_count > 0 {
+            println!("  {} unknown non-kernel ACs", non_kernel_unknown_count);
+        }
+        println!("  These won't block the selftest gate but may affect feature completeness.");
     }
 
     Ok(())

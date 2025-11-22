@@ -1,5 +1,6 @@
-# Template Version: v2.4.0
+# Template Version: v3.0.0
 # Schema: spec_ledger.yaml v1.0
+# Last Updated: 2025-11-22
 
 Feature: Agent Hints API
   As an AI agent
@@ -9,7 +10,7 @@ Feature: Agent Hints API
   Background:
     Given the platform is running
 
-  @ac:AC-TPL-AGENT-HINTS
+  @AC-TPL-AGENT-HINTS
   Scenario: GET /platform/agent/hints returns context-aware hints
     Given the following tasks exist in "specs/tasks.yaml":
       | id                | title                     | status      | requirement           |
@@ -21,7 +22,7 @@ Feature: Agent Hints API
     And the response body should be valid JSON
     And the JSON response should have field "next_tasks"
 
-  @ac:AC-TPL-AGENT-HINTS
+  @AC-TPL-AGENT-HINTS
   Scenario: Hints include next steps based on current state
     Given the following tasks exist in "specs/tasks.yaml":
       | id                | title                     | status      | requirement           |
@@ -35,7 +36,7 @@ Feature: Agent Hints API
     And the "next_tasks" array should contain task "TASK-HINT-011"
     And the "next_tasks" array should not contain task "TASK-HINT-012"
 
-  @ac:AC-TPL-AGENT-HINTS
+  @AC-TPL-AGENT-HINTS
   Scenario: Hints filter tasks by Todo and InProgress status
     Given the following tasks exist in "specs/tasks.yaml":
       | id                | title                     | status      | requirement           |
@@ -50,7 +51,7 @@ Feature: Agent Hints API
     And the "next_tasks" array should not contain task "TASK-HINT-021"
     And the "next_tasks" array should not contain task "TASK-HINT-023"
 
-  @ac:AC-TPL-AGENT-HINTS
+  @AC-TPL-AGENT-HINTS
   Scenario: Each hint includes task id, status, and reason
     Given the following tasks exist in "specs/tasks.yaml":
       | id                | title                     | status      | requirement           |
@@ -65,7 +66,7 @@ Feature: Agent Hints API
     And the first hint "status" should equal "Todo"
     And the first hint "reason" should contain "ready for work"
 
-  @ac:AC-TPL-AGENT-HINTS
+  @AC-TPL-AGENT-HINTS
   Scenario: Hints include task title in reason
     Given the following tasks exist in "specs/tasks.yaml":
       | id                | title                     | status      | requirement           |
@@ -74,7 +75,7 @@ Feature: Agent Hints API
     Then the response status code should be 200
     And the first hint "reason" should contain "Implement user login"
 
-  @ac:AC-TPL-AGENT-HINTS
+  @AC-TPL-AGENT-HINTS
   Scenario: Empty hints when no tasks are Todo or InProgress
     Given the following tasks exist in "specs/tasks.yaml":
       | id                | title                     | status      | requirement           |

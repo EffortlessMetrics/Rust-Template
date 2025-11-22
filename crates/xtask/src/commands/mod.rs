@@ -1,5 +1,8 @@
+pub mod ac_coverage;
 pub mod ac_new;
+pub mod ac_parsing;
 pub mod ac_status;
+pub mod ac_suggest_scenarios;
 pub mod adr_check;
 pub mod adr_new;
 pub mod audit;

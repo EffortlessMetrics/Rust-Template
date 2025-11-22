@@ -32,6 +32,20 @@ async fn main() {
         let _ = std::fs::create_dir_all(parent);
     }
 
+    // Ensure xtask binary is built before running tests (to avoid Windows file locking)
+    let xtask_binary = if cfg!(windows) {
+        workspace_root.join("target/debug/xtask.exe")
+    } else {
+        workspace_root.join("target/debug/xtask")
+    };
+
+    if !xtask_binary.exists() {
+        eprintln!("ERROR: xtask binary not found at {}", xtask_binary.display());
+        eprintln!("Please build it first with: cargo build -p xtask");
+        eprintln!("\nThis is required to avoid Windows file locking issues during tests.");
+        std::process::exit(1);
+    }
+
     // Create output files
     let junit_file =
         File::create(&junit_path).unwrap_or_else(|_| std::fs::File::create("/dev/null").unwrap());

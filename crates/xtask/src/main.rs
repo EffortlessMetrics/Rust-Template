@@ -78,6 +78,13 @@ enum Commands {
         #[arg(long)]
         requirement: String,
     },
+    /// Show AC coverage grouped by requirement (which ACs need BDD scenarios)
+    AcCoverage,
+    /// Suggest BDD scenarios for a given AC
+    AcSuggestScenarios {
+        /// AC ID to suggest scenarios for (e.g., AC-TPL-001)
+        ac_id: String,
+    },
     /// Validate ADR references in spec ledger
     AdrCheck,
     /// Create new architecture decision record
@@ -226,6 +233,12 @@ fn main() -> Result<()> {
         Commands::AcNew { ac_id, description, story, requirement } => {
             commands::ac_new::run(&ac_id, &description, &story, &requirement)
         }
+        Commands::AcCoverage => {
+            commands::ac_coverage::run(commands::ac_coverage::AcCoverageArgs::default())
+        }
+        Commands::AcSuggestScenarios { ac_id } => commands::ac_suggest_scenarios::run(
+            commands::ac_suggest_scenarios::AcSuggestScenariosArgs { ac_id },
+        ),
         Commands::AdrCheck => commands::adr_check::run(commands::adr_check::AdrCheckArgs {
             verbosity,
             ..Default::default()

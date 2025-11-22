@@ -1,25 +1,18 @@
 use anyhow::{Context, Result};
 use colored::Colorize;
-use once_cell::sync::Lazy;
 use quick_xml::Reader;
 use quick_xml::events::Event;
-use regex::Regex;
 use serde::Deserialize;
 use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
 use walkdir::WalkDir;
 
-// Precompiled regex patterns for performance
-static AC_PATTERN: Lazy<Regex> = Lazy::new(|| Regex::new(r"^(AC-[A-Z0-9-]+)$").unwrap());
-static AC_PATTERN_WITH_AT: Lazy<Regex> = Lazy::new(|| Regex::new(r"@(AC-[A-Z0-9-]+)").unwrap());
-static SCENARIO_PATTERN: Lazy<Regex> =
-    Lazy::new(|| Regex::new(r"^\s*Scenario(?:\s+Outline)?:\s+(.+)").unwrap());
-static TAG_PATTERN: Lazy<Regex> = Lazy::new(|| Regex::new(r"@[\w-]+").unwrap());
-static TESTCASE_SCENARIO_PATTERN: Lazy<Regex> =
-    Lazy::new(|| Regex::new(r"Scenario:\s+(.+?):\s+").unwrap());
-static TESTCASE_SUFFIX_PATTERN: Lazy<Regex> =
-    Lazy::new(|| Regex::new(r"\s*\((?:row|example)\s+\d+\)\s*$").unwrap());
+use super::ac_parsing::{
+    AC_PATTERN_WITH_AT, AcStatus, SCENARIO_PATTERN, Scenario, TAG_PATTERN,
+    TESTCASE_SCENARIO_PATTERN, TESTCASE_SUFFIX_PATTERN, parse_cucumber_json_with_scenarios,
+    parse_features_with_metadata, parse_junit_with_scenarios,
+};
 
 #[derive(Debug, Clone)]
 pub struct AcStatusArgs {
@@ -56,13 +49,6 @@ struct Ac {
     scenarios: Vec<String>,
 }
 
-#[derive(Debug, Clone, PartialEq)]
-enum AcStatus {
-    Pass,
-    Fail,
-    Unknown,
-}
-
 impl AcStatus {
     fn icon(&self) -> &str {
         match self {
@@ -79,13 +65,6 @@ impl AcStatus {
             AcStatus::Unknown => "unknown",
         }
     }
-}
-
-#[derive(Debug, Clone)]
-struct Scenario {
-    name: String,
-    ac_id: String,
-    file: String,
 }
 
 // Ledger deserialization structures
@@ -115,59 +94,6 @@ struct AcceptanceCriteria {
     text: String,
 }
 
-// Cucumber JSON format structures
-#[derive(Debug, Deserialize)]
-struct CucumberReport(Vec<CucumberFeature>);
-
-#[derive(Debug, Deserialize)]
-struct CucumberFeature {
-    #[allow(dead_code)]
-    name: String,
-    uri: String,
-    elements: Vec<CucumberElement>,
-}
-
-#[derive(Debug, Deserialize)]
-struct CucumberElement {
-    name: String,
-    #[serde(rename = "type")]
-    element_type: String,
-    tags: Vec<CucumberTag>,
-    #[allow(dead_code)]
-    line: Option<u32>,
-    steps: Vec<CucumberStep>,
-}
-
-#[derive(Debug, Deserialize)]
-struct CucumberTag {
-    name: String,
-    #[serde(default)]
-    #[allow(dead_code)]
-    line: Option<u32>,
-}
-
-#[derive(Debug, Deserialize)]
-struct CucumberStep {
-    #[allow(dead_code)]
-    keyword: String,
-    #[allow(dead_code)]
-    name: String,
-    #[allow(dead_code)]
-    line: Option<u32>,
-    result: CucumberStepResult,
-}
-
-#[derive(Debug, Deserialize)]
-struct CucumberStepResult {
-    status: String,
-    #[serde(default)]
-    #[allow(dead_code)]
-    duration: Option<u64>, // nanoseconds
-    #[serde(default)]
-    #[allow(dead_code)]
-    error_message: Option<String>,
-}
-
 pub fn run(args: AcStatusArgs) -> Result<()> {
     // Validate inputs
     if !args.ledger.exists() {
@@ -185,36 +111,37 @@ pub fn run(args: AcStatusArgs) -> Result<()> {
         println!("  Found {} ACs", acs.len());
     }
 
-    // PRIMARY PATH: Structured JSON report from acceptance tests
-    // The Cucumber JSON format provides all necessary metadata (tags, status, etc.)
-    // in a single structured file, eliminating the need to parse Gherkin text.
+    // PRIMARY PATH: JUnit XML + feature file parsing
+    // JUnit is now the preferred path as it's more stable and consistent.
     //
-    // FALLBACK PATH: JUnit XML + feature file parsing
-    // This is a legacy path for backward compatibility and may be removed in a future major version.
-    // The JUnit path requires fragile text parsing and string matching.
-    let (scenarios, ac_results) = if let Some(json_path) = &args.json_report {
+    // FALLBACK PATH: Structured JSON report from acceptance tests
+    // The Cucumber JSON format is available as a fallback option.
+    let (scenarios, ac_results) = if args.junit.exists() {
+        if !args.verbosity.is_quiet() {
+            println!("Parsing JUnit results (primary path): {}", args.junit.display());
+        }
+        fallback_to_junit(&args)?
+    } else if let Some(json_path) = &args.json_report {
         if json_path.exists() {
             if !args.verbosity.is_quiet() {
-                println!("Parsing JSON report: {}", json_path.display());
+                println!("JUnit not found, falling back to JSON report: {}", json_path.display());
             }
-            let (scens, results) = parse_cucumber_json(json_path)?;
+            let (scens, results) = parse_cucumber_json_with_scenarios(json_path)?;
             if !args.verbosity.is_quiet() {
                 println!("  Found {} scenarios", scens.len());
                 println!("  Found results for {} ACs", results.len());
             }
             (scens, results)
         } else {
-            if !args.verbosity.is_quiet() {
-                println!("JSON report not found: {}", json_path.display());
-                println!("Falling back to JUnit + feature parsing (legacy)");
-            }
-            fallback_to_junit(&args)?
+            anyhow::bail!(
+                "Neither JUnit XML nor JSON report found.\nRun acceptance tests first: cargo test -p acceptance"
+            );
         }
     } else {
-        if !args.verbosity.is_quiet() {
-            println!("JSON report disabled, using JUnit + feature parsing (legacy)");
-        }
-        fallback_to_junit(&args)?
+        anyhow::bail!(
+            "JUnit XML not found: {}\nRun acceptance tests first: cargo test -p acceptance",
+            args.junit.display()
+        );
     };
 
     // Map scenarios to ACs and update status
@@ -261,17 +188,10 @@ pub fn run(args: AcStatusArgs) -> Result<()> {
 fn fallback_to_junit(
     args: &AcStatusArgs,
 ) -> Result<(HashMap<String, Scenario>, HashMap<String, AcStatus>)> {
-    if !args.junit.exists() {
-        anyhow::bail!(
-            "JUnit XML not found: {}\nRun acceptance tests first: cargo test -p acceptance",
-            args.junit.display()
-        );
-    }
-
     if !args.verbosity.is_quiet() {
         println!("Parsing features: {}", args.features_dir.display());
     }
-    let scenarios = parse_features(&args.features_dir)?;
+    let scenarios = parse_features_with_metadata(&args.features_dir)?;
     if !args.verbosity.is_quiet() {
         println!("  Found {} scenarios", scenarios.len());
     }
@@ -279,70 +199,12 @@ fn fallback_to_junit(
     if !args.verbosity.is_quiet() {
         println!("Parsing JUnit results: {}", args.junit.display());
     }
-    let ac_results = parse_junit(&args.junit, &scenarios)?;
+    let ac_results = parse_junit_with_scenarios(&args.junit, &scenarios)?;
     if !args.verbosity.is_quiet() {
         println!("  Found results for {} ACs", ac_results.len());
     }
 
     Ok((scenarios, ac_results))
-}
-
-fn parse_cucumber_json(
-    json_path: &Path,
-) -> Result<(HashMap<String, Scenario>, HashMap<String, AcStatus>)> {
-    let content = fs::read_to_string(json_path)
-        .with_context(|| format!("Failed to read JSON report: {}", json_path.display()))?;
-
-    let report: CucumberReport = serde_json::from_str(&content)
-        .with_context(|| format!("Failed to parse JSON report: {}", json_path.display()))?;
-
-    let mut scenarios: HashMap<String, Scenario> = HashMap::new();
-    let mut ac_results: HashMap<String, Vec<bool>> = HashMap::new();
-    // Note: Cucumber JSON doesn't include @ in tag names
-
-    for feature in report.0 {
-        for element in feature.elements {
-            // Only process scenarios (not hooks or backgrounds)
-            if element.element_type == "scenario" {
-                // Extract AC IDs from tags
-                let ac_ids: Vec<String> = element
-                    .tags
-                    .iter()
-                    .filter_map(|tag| {
-                        AC_PATTERN.captures(&tag.name).map(|caps| caps[1].to_string())
-                    })
-                    .collect();
-
-                // Determine if scenario passed (all steps passed)
-                let passed = element.steps.iter().all(|step| step.result.status == "passed");
-
-                // Record result for each AC ID
-                for ac_id in &ac_ids {
-                    ac_results.entry(ac_id.clone()).or_default().push(passed);
-
-                    // Store scenario information (using first AC ID)
-                    scenarios.insert(
-                        element.name.clone(),
-                        Scenario {
-                            name: element.name.clone(),
-                            ac_id: ac_id.clone(),
-                            file: feature.uri.clone(),
-                        },
-                    );
-                }
-            }
-        }
-    }
-
-    // Aggregate: AC passes only if all scenarios pass
-    let mut ac_status = HashMap::new();
-    for (ac_id, results) in ac_results {
-        let status =
-            if results.iter().all(|&passed| passed) { AcStatus::Pass } else { AcStatus::Fail };
-        ac_status.insert(ac_id, status);
-    }
-
-    Ok((scenarios, ac_status))
 }
 
 fn parse_ledger(ledger_path: &Path) -> Result<HashMap<String, Ac>> {

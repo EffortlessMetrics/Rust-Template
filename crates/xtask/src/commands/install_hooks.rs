@@ -1,6 +1,8 @@
 use anyhow::Result;
 use colored::Colorize;
 use std::fs;
+
+#[cfg(unix)]
 use std::os::unix::fs::PermissionsExt;
 
 pub fn run() -> Result<()> {
@@ -44,10 +46,13 @@ cargo run -p xtask -- check
 
     fs::write(&pre_commit_path, script)?;
 
-    // Make hook executable
-    let mut perms = fs::metadata(&pre_commit_path)?.permissions();
-    perms.set_mode(0o755);
-    fs::set_permissions(&pre_commit_path, perms)?;
+    // Make hook executable (Unix only)
+    #[cfg(unix)]
+    {
+        let mut perms = fs::metadata(&pre_commit_path)?.permissions();
+        perms.set_mode(0o755);
+        fs::set_permissions(&pre_commit_path, perms)?;
+    }
 
     println!("{} Installed .git/hooks/pre-commit", "✓".green());
     println!("   The hook will run {} before each commit", "cargo run -p xtask -- check".cyan());

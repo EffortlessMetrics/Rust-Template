@@ -1,4 +1,4 @@
-# Rust-as-Spec Platform Cell (v2.5.0) 🎉
+# Rust-as-Spec Platform Cell (v3.2.0) 🎉
 
 [![CI](https://github.com/EffortlessMetrics/Rust-Template/actions/workflows/ci-template-selftest.yml/badge.svg)](https://github.com/EffortlessMetrics/Rust-Template/actions/workflows/ci-template-selftest.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE-MIT)
@@ -186,6 +186,50 @@ open http://localhost:8080/ui/flows
 - Required commands not part of any flow → `COMMAND_UNREACHABLE` violation
 - Docs referenced but missing from disk → `DOC_ORPHANED` violation
 - ACs without BDD scenario tags → Policy violation
+
+---
+
+## Governance Health & Coverage
+
+The template includes commands for real-time traceability from requirements → ACs → tests → code:
+
+### Check Governance Status
+
+```bash
+# Overall governance health dashboard
+cargo xtask status
+
+# Detailed AC coverage report (shows which ACs have tests)
+cargo xtask ac-coverage
+
+# Export governance graph for visualization
+cargo xtask graph-export
+```
+
+### Validation Loop
+
+```bash
+# Fast dev loop (fmt, clippy, tests, basic checks)
+cargo xtask check
+
+# Full governance validation (7-step contract)
+cargo xtask selftest
+```
+
+### Extend Governance
+
+```bash
+# Generate BDD scenario stubs for an AC
+cargo xtask ac-suggest-scenarios AC-PLT-XXX
+
+# Create new AC
+cargo xtask ac-new AC-MYPROJ-001 "Description" --requirement REQ-MYPROJ-FEATURE
+
+# Create new Architecture Decision Record
+cargo xtask adr-new "My Architecture Decision"
+```
+
+**Key Property:** Every kernel AC has passing BDD or unit coverage. Run `cargo xtask ac-coverage` anytime to see real-time traceability.
 
 ---
 

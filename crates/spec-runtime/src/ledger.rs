@@ -29,15 +29,30 @@ pub struct Requirement {
     pub title: String,
     #[serde(default)]
     pub tags: Vec<String>,
-    #[serde(default)]
+    #[serde(default = "default_must_have_ac")]
     pub must_have_ac: bool,
     pub acceptance_criteria: Vec<AcceptanceCriterion>,
+}
+
+fn default_must_have_ac() -> bool {
+    true
+}
+
+#[derive(Debug, Deserialize, Serialize, Clone)]
+pub struct TestMapping {
+    #[serde(rename = "type")]
+    pub test_type: String,
+    pub tag: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub file: Option<String>,
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct AcceptanceCriterion {
     pub id: String,
     pub text: String,
+    #[serde(default)]
+    pub tests: Vec<TestMapping>,
 }
 
 pub fn load_spec_ledger(path: &Path) -> Result<SpecLedger> {

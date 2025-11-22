@@ -1,6 +1,6 @@
-# Template Version: v2.3.0 (added in v2.1.0)
+# Template Version: v3.0.0
 # Schema: spec_ledger.yaml v1.0
-# Last Updated: 2025-11-17
+# Last Updated: 2025-11-22
 
 Feature: Metrics endpoint
   As an operator

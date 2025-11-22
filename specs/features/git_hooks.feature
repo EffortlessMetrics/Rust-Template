@@ -1,6 +1,6 @@
-# Template Version: v2.4.0
+# Template Version: v3.0.0
 # Schema: spec_ledger.yaml v1.0
-# Last Updated: 2025-11-21
+# Last Updated: 2025-11-22
 
 Feature: Git Hooks Installation and Governance
   As a developer
@@ -11,12 +11,22 @@ Feature: Git Hooks Installation and Governance
     Given a clean development environment
 
   @AC-TPL-HOOKS-INSTALL @hooks
-  Scenario: install-hooks creates pre-commit hook
-    Given the pre-commit hook does not exist
+  Scenario: install-hooks creates executable pre-commit hook on Unix
+    Given I am on a Unix platform
+    And the pre-commit hook does not exist
     When I run "cargo xtask install-hooks"
     Then the command should succeed
-    And the pre-commit hook should be installed
-    And the pre-commit hook should be executable
+    And file ".git/hooks/pre-commit" should exist
+    And file ".git/hooks/pre-commit" should be executable
+    And the output should contain "Installed .git/hooks/pre-commit"
+
+  @AC-TPL-HOOKS-INSTALL @hooks
+  Scenario: install-hooks creates pre-commit hook on Windows
+    Given I am on a Windows platform
+    And the pre-commit hook does not exist
+    When I run "cargo xtask install-hooks"
+    Then the command should succeed
+    And file ".git/hooks/pre-commit" should exist
     And the output should contain "Installed .git/hooks/pre-commit"
 
   @AC-TPL-HOOKS-INSTALL @hooks
@@ -24,6 +34,7 @@ Feature: Git Hooks Installation and Governance
     Given the pre-commit hook exists
     When I run "cargo xtask install-hooks"
     Then the command should succeed
+    And file ".git/hooks/pre-commit" should exist
     And the output should contain "Installed .git/hooks/pre-commit"
 
   @AC-TPL-HOOKS-INSTALL @hooks

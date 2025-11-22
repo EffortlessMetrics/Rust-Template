@@ -161,24 +161,78 @@ curl http://localhost:3000/platform/devex/flows
 
 When implementing a new feature:
 
+#### Before Starting Work
+
 ```bash
-# 1. Create AC
-cargo xtask ac-new AC-MYSERV-001 "Description" --requirement REQ-ID
+# 1. Check what ACs exist for your feature area
+cargo xtask ac-coverage | grep FEATURE-NAME
+# Example: cargo xtask ac-coverage | grep PLT-GRAPH
 
-# 2. Get context bundle (for LLM consumption)
-cargo xtask bundle implement_ac
-# Output: .llm/bundle/implement_ac.md
+# 2. Inspect specific AC status
+cargo xtask ac-coverage | grep AC-PLT-XXX
+# Look for: ✅ (has tests) or ❌ (no tests)
 
-# 3. Implement (write code based on bundle context)
-
-# 4. Run BDD tests
-cargo xtask bdd
-
-# 5. Validate governance
-cargo xtask selftest
+# 3. Get context for a specific AC
+cargo xtask bundle implement_ac --ac AC-PLT-XXX
+# Output: .llm/bundle/implement_ac.md (max 250KB)
 ```
 
-**Critical:** Always end with `cargo xtask selftest`. If it fails, the work is incomplete.
+**Expected output from ac-coverage:**
+```
+Feature: Platform Graph Visualization
+  ✅ AC-PLT-GRAPH-001: Export graph as JSON
+  ❌ AC-PLT-GRAPH-002: Export graph as DOT format
+  ✅ AC-PLT-GRAPH-003: Validate graph invariants
+```
+
+**Interpretation:**
+- ✅ = AC has BDD tests wired
+- ❌ = AC has no tests (work needed)
+
+#### During Implementation
+
+```bash
+# 1. Create AC (if new)
+cargo xtask ac-new AC-MYSERV-001 "Description" --requirement REQ-ID
+
+# 2. Generate BDD scenario stubs
+cargo xtask ac-suggest-scenarios AC-MYSERV-001
+# Outputs suggested Gherkin scenarios based on AC description
+
+# 3. Add scenario to appropriate .feature file
+# Edit specs/features/your_feature.feature
+
+# 4. Implement step definitions
+# Edit crates/acceptance/src/steps/your_module.rs
+
+# 5. Run tests for specific AC
+cargo test -p acceptance --test acceptance -- --include-tag AC-MYSERV-001
+# Verifies your AC in isolation
+
+# 6. Implement code based on bundle context
+cargo xtask bundle implement_ac
+# Read .llm/bundle/implement_ac.md for context
+
+# 7. Run all BDD tests
+cargo xtask bdd
+```
+
+#### Before Committing
+
+```bash
+# 1. Validate kernel ACs are green
+cargo xtask ac-coverage
+# All kernel ACs MUST show ✅
+
+# 2. Full governance check
+cargo xtask selftest
+# All 7 steps must pass
+```
+
+**Critical:**
+- Always end with `cargo xtask selftest`. If it fails, the work is incomplete.
+- **You MUST run `cargo xtask ac-coverage` before claiming work is complete.**
+- If kernel ACs show ❌, work is NOT done.
 
 ### When to Use Which Task
 
@@ -237,8 +291,18 @@ For faster feedback during development:
 # Quick code checks
 cargo xtask check
 
+# AC coverage status (shows which ACs have tests)
+cargo xtask ac-coverage
+# Example output:
+#   Kernel ACs: 45/50 (90%)
+#   ✅ AC-PLT-001: Platform status endpoint
+#   ❌ AC-PLT-002: Platform graph endpoint (NO TESTS)
+
 # Just BDD scenarios
 cargo xtask bdd
+
+# BDD tests for specific AC
+cargo test -p acceptance --test acceptance -- --include-tag AC-PLT-001
 
 # Just policies
 cargo xtask policy-test
@@ -246,6 +310,38 @@ cargo xtask policy-test
 # Just graph
 cargo xtask graph-export --check-invariants
 ```
+
+### AC Coverage Validation Workflow
+
+**Before claiming work is complete:**
+
+```bash
+# Step 1: Check coverage
+cargo xtask ac-coverage
+
+# Step 2: Interpret results
+# ✅ = AC has tests wired (good)
+# ❌ = AC has no tests (must fix)
+
+# Step 3: For any ❌ ACs, generate scenarios
+cargo xtask ac-suggest-scenarios AC-PLT-XXX
+
+# Step 4: Wire up tests
+# - Add scenario to specs/features/*.feature
+# - Implement step definitions in crates/acceptance/src/steps/
+
+# Step 5: Verify
+cargo test -p acceptance --test acceptance -- --include-tag AC-PLT-XXX
+
+# Step 6: Re-check coverage
+cargo xtask ac-coverage | grep AC-PLT-XXX
+# Should now show ✅
+```
+
+**Golden Rule for Kernel ACs:**
+- All kernel ACs (marked with `kernel: true` in spec_ledger.yaml) **MUST** show ✅ in `ac-coverage`
+- If any kernel AC shows ❌, the work is not complete
+- Use `ac-suggest-scenarios` to generate BDD stubs rather than guessing scenario structure
 
 ---
 
@@ -419,7 +515,8 @@ Graph failures mean **structural integrity is broken**.
 - ✅ Implement ACs with clear specs
 - ✅ Fix failing tests
 - ✅ Update docs to match code
-- ✅ Add BDD scenarios for new behaviors
+- ✅ Add BDD scenarios for new behaviors (use `ac-suggest-scenarios` for scaffolding)
+- ✅ Run `ac-coverage` to verify all kernel ACs have tests
 - ✅ Run `selftest` and fix violations
 
 ### What Requires Human Approval
@@ -433,10 +530,12 @@ Graph failures mean **structural integrity is broken**.
 ### What You Should Never Do
 
 - ❌ **Bypass selftest** (force merge when it fails)
+- ❌ **Claim work is complete without running `ac-coverage`** (kernel ACs must be green)
 - ❌ **Edit specs without using `xtask` generators** (leads to ID collisions, schema errors)
 - ❌ **Duplicate AC/REQ IDs** (breaks graph integrity)
 - ❌ **Reference non-existent ADRs** (breaks traceability)
 - ❌ **Hardcode secrets** (violates privacy policies)
+- ❌ **Hand-write BDD scenarios without checking `ac-suggest-scenarios`** (leads to inconsistent structure)
 
 ---
 
@@ -509,15 +608,21 @@ If node/edge counts are zero, graph construction failed.
 cargo xtask tasks-list
 cargo xtask suggest-next --task <id>
 cargo xtask help-flows
+cargo xtask ac-coverage              # Check AC test coverage
+cargo xtask ac-coverage | grep FEATURE-NAME
 
 # Execution
 cargo xtask ac-new <id> "<desc>" --requirement <req>
+cargo xtask ac-suggest-scenarios <ac-id>    # Generate BDD scenario stubs
 cargo xtask bundle <task>
+cargo xtask bundle implement_ac --ac <ac-id>
 cargo xtask bdd
+cargo test -p acceptance --test acceptance -- --include-tag <ac-id>
 cargo xtask selftest
 
 # Validation
 cargo xtask check
+cargo xtask ac-coverage              # MUST show ✅ for kernel ACs
 cargo xtask policy-test
 cargo xtask docs-check
 cargo xtask graph-export --check-invariants

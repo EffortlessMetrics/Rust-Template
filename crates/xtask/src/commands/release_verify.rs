@@ -58,11 +58,10 @@ pub fn run() -> Result<()> {
     if failed.is_empty() {
         println!("{}", "✓ Release verification passed!".green().bold());
         println!();
-        println!("{}", "Next steps:".bold());
-        println!("  • Review changes: {}", "git diff".cyan());
-        println!("  • Commit: {}", "git commit -am 'Release vX.Y.Z'".cyan());
-        println!("  • Tag: {}", "git tag -a vX.Y.Z -m 'Release vX.Y.Z'".cyan());
-        println!("  • Push: {}", "git push origin main --follow-tags".cyan());
+        println!("{}", "Git command sequence:".bold());
+        println!("  {}", "git commit -am 'Release vX.Y.Z'".cyan());
+        println!("  {}", "git tag -a vX.Y.Z -m 'Release vX.Y.Z'".cyan());
+        println!("  {}", "git push origin main --follow-tags".cyan());
     } else {
         println!("{}", "✗ Release verification failed".red().bold());
         println!();
