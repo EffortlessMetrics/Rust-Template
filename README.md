@@ -71,6 +71,8 @@ cargo xtask selftest:    7-step validation (CI gate)
 
 This template is **Nix-first**. Development environments should be declarative, reproducible, and match CI exactly.
 
+**Platform Recommendation:** For the best experience, use a **Tier 1** platform (Linux, macOS, or WSL2 on Windows) with Nix devshell for exact CI parity and strict governance validation. See [Platform Support at a Glance](#platform-support-at-a-glance) below for tier details.
+
 ```bash
 # Install Nix (one-time setup)
 curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | \
@@ -83,7 +85,7 @@ nix develop
 cargo xtask doctor
 ```
 
-**Without Nix?** See [manual setup](docs/how-to/setup-without-nix.md) (requires Rust 1.91+, conftest, cargo-binstall).
+**Without Nix?** See [manual setup](docs/how-to/setup-without-nix.md) (requires Rust 1.91+, conftest, cargo-binstall). Native Windows users should review [Platform Support Reference](docs/reference/platform-support.md) for known limitations.
 
 ### 30-Second Tour
 
@@ -111,25 +113,37 @@ cargo xtask selftest
 
 ---
 
-## Platform Support
+## Platform Support at a Glance
 
-### Tier 1 (Fully Validated)
-- Linux with Nix devshell
-- macOS with Nix devshell
-- WSL2 on Windows with Nix devshell
+This template supports multiple platforms with different validation guarantees:
 
-These environments run `cargo xtask selftest` with strict, hard gates on all kernel ACs.
+| Platform | Tier | Environment | Supports selftest | Best For |
+|----------|------|-------------|------------------|----------|
+| Linux | 1 | Nix devshell | ✅ Strict gates | Server development, CI/CD |
+| macOS | 1 | Nix devshell | ✅ Strict gates | Cross-platform development |
+| WSL2 | 1 | Nix on WSL2 | ✅ Strict gates | Windows users needing Unix |
+| Windows | 2 | Native PowerShell/Bash | ⚠️ With caveats | Native Windows workflows |
 
-### Tier 2 (Native Windows)
-- Windows 10/11 with PowerShell or Git Bash
-- Validated with known caveats
+**Tier Definitions:**
+- **Tier 1** (Fully Validated): Exact CI parity, all governance gates strictly enforced, canonical environments
+- **Tier 2** (Supported): Core functionality validated, known platform limitations (e.g., file locking on Windows)
 
-On native Windows, `cargo xtask selftest` passes in normal conditions but may intermittently fail with `os error 5` ("failed to remove xtask.exe") if antivirus or other processes lock the binary during rebuild. This is a platform limitation, not a behavioral failure.
+**📖 Full details:** See [Platform Support Reference](docs/reference/platform-support.md) for detailed setup instructions, known issues, and troubleshooting.
 
-**If you hit file locking errors on Windows:**
+---
+
+## Platform Support Details
+
+All **Tier 1** platforms (Linux, macOS, WSL2 with Nix devshell) run `cargo xtask selftest` with strict, hard gates on all kernel ACs and provide exact CI parity.
+
+**Tier 2** (Native Windows 10/11 with PowerShell/Git Bash) is fully supported with known caveats: selftest passes in normal conditions but may intermittently encounter file locking errors (`os error 5`) if antivirus or other processes lock binaries during rebuild.
+
+**Quick fixes for Windows file locking:**
 1. Close any running xtask or cargo processes
 2. Exclude `target/` from real-time antivirus scanning
 3. Re-run `cargo xtask selftest`, or use WSL2 for canonical validation
+
+**For complete platform details, setup instructions, and troubleshooting:** See [Platform Support Reference](docs/reference/platform-support.md)
 
 ---
 
@@ -482,6 +496,7 @@ No new platform features until validated by real-world service pilot.
 - [Update Templates from Upstream](docs/how-to/template-updates.md)
 
 ### Reference
+- [Platform Support Reference](docs/reference/platform-support.md)
 - [ADR Index](docs/adr/README.md)
 - [Policy Reference](policy/README.md)
 - [xtask Command Reference](docs/reference/xtask-commands.md)
