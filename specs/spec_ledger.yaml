@@ -429,6 +429,22 @@ stories:
             tests:
               - { type: bdd, tag: "@AC-TPL-TASKS-CLI", file: "specs/features/platform_tasks.feature" }
 
+          - id: AC-TPL-TASKS-CREATE-CLI
+            text: >
+              cargo xtask task-create creates a new task in specs/tasks.yaml,
+              validates that the requirement and ACs exist in spec_ledger.yaml,
+              and rejects duplicate task IDs.
+            tests:
+              - { type: bdd, tag: "@AC-TPL-TASKS-CREATE-CLI", file: "specs/features/platform_tasks.feature" }
+
+          - id: AC-TPL-TASKS-UPDATE-CLI
+            text: >
+              cargo xtask task-update updates task fields (status, title, owner)
+              in specs/tasks.yaml, enforces valid status transitions, and
+              persists changes to the task definition.
+            tests:
+              - { type: bdd, tag: "@AC-TPL-TASKS-UPDATE-CLI", file: "specs/features/platform_tasks.feature" }
+
           - id: AC-TPL-TASKS-HTTP
             text: >
               GET /platform/tasks returns a JSON representation of tasks.yaml,
@@ -535,6 +551,30 @@ stories:
               governed-release, governed-governance-debug).
             tests:
               - { type: manual, tag: "skills_alignment_review" }
+
+      - id: REQ-TPL-SKILLS-TOOLING
+        title: "Rust-native Skills formatting and linting"
+        tags: [platform, agent, devex]
+        must_have_ac: true
+        description: >
+          Agent Skills definitions MUST be checked and normalized by Rust-native
+          xtask commands to ensure consistency, avoid drift, and eliminate external
+          scripting dependencies.
+        adr: [ADR-0004, ADR-0005]
+        acceptance_criteria:
+          - id: AC-TPL-SKILLS-FMT
+            text: >
+              `cargo run -p xtask -- skills-fmt` normalizes SKILL.md files
+              according to repo conventions (frontmatter, headings, links).
+            tests:
+              - { type: integration, tag: "@AC-TPL-SKILLS-FMT", file: "specs/features/xtask_devex.feature" }
+
+          - id: AC-TPL-SKILLS-LINT
+            text: >
+              `cargo run -p xtask -- skills-lint` validates Skills frontmatter and
+              content (name/description rules, references to flows and APIs).
+            tests:
+              - { type: integration, tag: "@AC-TPL-SKILLS-LINT", file: "specs/features/xtask_devex.feature" }
 
   - id: US-TPL-PLATFORM-V3
     title: "The Recursive Platform"

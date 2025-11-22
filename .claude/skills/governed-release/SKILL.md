@@ -1,11 +1,7 @@
 ---
 name: governed-release
-description: 'Version management and release tagging for the Rust-as-Spec platform
-  cell. Use when cutting a new version, preparing for production deployment, or when
-  user explicitly requests a release. Follows the release flow from devex_flows.yaml.
-  IMPORTANT: Always ask user before tagging (high-risk operation).
-
-  '
+description: |
+  Version management and release tagging for the Rust-as-Spec platform cell. Use when cutting a new version, preparing for production deployment, or when user explicitly requests a release. Follows the release flow from devex_flows.yaml. IMPORTANT: Always ask user before tagging (high-risk operation).
 allowed-tools:
 - Read
 - Grep

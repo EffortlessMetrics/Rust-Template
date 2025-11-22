@@ -68,6 +68,17 @@ pub fn run() -> Result<()> {
         }
     }
 
+    // Check Skills definitions
+    print!("Skills definitions... ");
+    match crate::commands::skills::run_lint() {
+        Ok(_) => println!("{}", "✓ Valid".green()),
+        Err(e) => {
+            println!("{}", "✗ Issues found".red());
+            eprintln!("  {}", e);
+            issues += 1;
+        }
+    }
+
     println!();
     if issues == 0 {
         println!("{} Documentation is consistent", "✓".green().bold());
@@ -78,6 +89,7 @@ pub fn run() -> Result<()> {
         println!("  • Align versions: {}", "cargo xtask release-prepare X.Y.Z".cyan());
         println!("  • Or manually sync: {}", "README.md, CLAUDE.md, spec_ledger.yaml".dimmed());
         println!("  • Commit generated docs if out of sync");
+        println!("  • Fix Skills definitions: {}", "cargo xtask skills-fmt".cyan());
         println!("  • See: {}", "docs/RELEASE_PLAYBOOK.md".dimmed());
     }
 
@@ -157,21 +169,40 @@ fn extract_version_from_claude() -> Result<String> {
 }
 
 fn check_ac_status_clean() -> Result<()> {
-    // Run ac-status to regenerate
-    crate::commands::ac_status::run(crate::commands::ac_status::AcStatusArgs {
+    // Read current feature_status.md before regeneration
+    let current_content = fs::read_to_string("docs/feature_status.md")
+        .context("Failed to read docs/feature_status.md")?;
+
+    // Generate fresh content to a temporary location
+    let temp_dir = std::env::temp_dir();
+    let temp_output = temp_dir.join("feature_status_check.md");
+
+    // Run ac-status to regenerate in temp location
+    // Note: We ignore the result because ac-status may fail if ACs are failing,
+    // but we still want to check if the file was manually edited.
+    // The file is written before the failure check, so we can still compare content.
+    let _ = crate::commands::ac_status::run(crate::commands::ac_status::AcStatusArgs {
         verbosity: crate::Verbosity::Quiet,
+        output: temp_output.clone(),
         ..Default::default()
-    })?;
+    });
 
-    // Check if git reports changes
-    let output = std::process::Command::new("git")
-        .args(["status", "--porcelain", "docs/feature_status.md"])
-        .output()?;
+    // Check if temp file was generated
+    if !temp_output.exists() {
+        anyhow::bail!("Failed to regenerate feature_status.md for comparison");
+    }
 
-    let status = String::from_utf8_lossy(&output.stdout);
-    if !status.trim().is_empty() {
+    // Read regenerated content
+    let regenerated_content =
+        fs::read_to_string(&temp_output).context("Failed to read regenerated feature_status.md")?;
+
+    // Clean up temp file
+    let _ = fs::remove_file(&temp_output);
+
+    // Compare content
+    if current_content != regenerated_content {
         anyhow::bail!(
-            "docs/feature_status.md is out of date. Run 'cargo xtask ac-status' and commit."
+            "docs/feature_status.md was manually edited. Run 'cargo xtask ac-status' to regenerate."
         );
     }
 

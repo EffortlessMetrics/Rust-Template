@@ -27,6 +27,7 @@ pub mod release_prepare;
 pub mod release_verify;
 pub mod sbom_local;
 pub mod selftest;
+pub mod skills;
 pub mod status;
 pub mod suggest_next;
 pub mod tasks_list;

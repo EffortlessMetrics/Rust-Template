@@ -1,6 +1,7 @@
 use axum::Router;
 use cucumber::World as CucumberWorld;
 use http::HeaderMap;
+use std::collections::HashMap;
 
 /// Test world state - includes real HTTP router for integration testing
 #[derive(Debug, CucumberWorld)]
@@ -13,6 +14,19 @@ pub struct World {
     pub request_headers: HeaderMap,
     /// Keep temp dir alive
     pub _temp_dir: std::sync::Arc<tempfile::TempDir>,
+    /// Last CLI command output (deprecated, use xtask_context)
+    pub last_command_output: Option<CommandOutput>,
+    /// XTask command execution context
+    xtask_context: XtaskContext,
+}
+
+/// Context for xtask command execution
+#[derive(Debug, Default)]
+pub struct XtaskContext {
+    pub last_command_output: Option<String>,
+    pub last_command_status: Option<i32>,
+    pub test_repo_path: Option<std::path::PathBuf>,
+    pub env: HashMap<String, String>,
 }
 
 impl Default for World {
@@ -30,6 +44,8 @@ impl Default for World {
             last_response: None,
             request_headers: HeaderMap::new(),
             _temp_dir: temp_dir,
+            last_command_output: None,
+            xtask_context: XtaskContext::default(),
         }
     }
 }
@@ -43,8 +59,25 @@ pub struct Response {
     pub raw_body: String,
 }
 
+#[derive(Debug, Clone)]
+pub struct CommandOutput {
+    pub exit_code: i32,
+    pub stdout: String,
+    pub stderr: String,
+}
+
 impl World {
     pub fn new() -> Self {
         Self::default()
+    }
+
+    /// Get immutable reference to xtask context
+    pub fn xtask_context(&self) -> &XtaskContext {
+        &self.xtask_context
+    }
+
+    /// Get mutable reference to xtask context
+    pub fn xtask_context_mut(&mut self) -> &mut XtaskContext {
+        &mut self.xtask_context
     }
 }

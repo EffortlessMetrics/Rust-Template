@@ -2,6 +2,8 @@ use anyhow::{Context, Result};
 use clap::{Parser, Subcommand};
 use colored::Colorize;
 use std::process::Command;
+use std::thread;
+use std::time::Duration;
 
 mod commands;
 mod devex;
@@ -58,7 +60,11 @@ struct Cli {
 #[derive(Subcommand)]
 enum Commands {
     /// Generate AC status report from acceptance tests
-    AcStatus,
+    AcStatus {
+        /// Print concise summary instead of generating full markdown file
+        #[arg(long)]
+        summary: bool,
+    },
     /// Create new acceptance criterion
     AcNew {
         /// AC ID (e.g., AC-TPL-001)
@@ -129,6 +135,9 @@ enum Commands {
     GraphExport {
         #[arg(long, value_enum, default_value = "json")]
         format: commands::graph_export::OutputFormat,
+        /// Validate graph invariants instead of emitting graph output
+        #[arg(long)]
+        check: bool,
     },
     /// List tasks from specs/tasks.yaml
     TasksList,
@@ -171,6 +180,12 @@ enum Commands {
     /// Install git hooks for pre-commit governance
     #[command(next_help_heading = "Onboarding")]
     InstallHooks,
+    /// Format Agent Skills (SKILL.md)
+    #[command(next_help_heading = "Governance")]
+    SkillsFmt,
+    /// Lint Agent Skills (SKILL.md)
+    #[command(next_help_heading = "Governance")]
+    SkillsLint,
 }
 
 fn main() -> Result<()> {
@@ -201,10 +216,13 @@ fn main() -> Result<()> {
     };
 
     match cli.command {
-        Commands::AcStatus => commands::ac_status::run(commands::ac_status::AcStatusArgs {
-            verbosity,
-            ..Default::default()
-        }),
+        Commands::AcStatus { summary } => {
+            commands::ac_status::run(commands::ac_status::AcStatusArgs {
+                verbosity,
+                summary,
+                ..Default::default()
+            })
+        }
         Commands::AcNew { ac_id, description, story, requirement } => {
             commands::ac_new::run(&ac_id, &description, &story, &requirement)
         }
@@ -231,11 +249,8 @@ fn main() -> Result<()> {
         }
         Commands::Doctor => commands::doctor::run(),
         Commands::DocsCheck => commands::docs_check::run(),
-        Commands::GraphExport { format } => {
-            commands::graph_export::run(commands::graph_export::GraphExportArgs {
-                format,
-                check: false,
-            })
+        Commands::GraphExport { format, check } => {
+            commands::graph_export::run(commands::graph_export::GraphExportArgs { format, check })
         }
         Commands::TasksList => commands::tasks_list::run(),
         Commands::FmtAll => commands::fmt_all::run(),
@@ -254,6 +269,8 @@ fn main() -> Result<()> {
         Commands::HelpFlows => commands::help_flows::run(),
         Commands::InstallHooks => commands::install_hooks::run(),
         Commands::DevUp => commands::dev_up::run(),
+        Commands::SkillsFmt => commands::skills::run_fmt(),
+        Commands::SkillsLint => commands::skills::run_lint(),
     }
 }
 
@@ -289,7 +306,25 @@ fn exec_via_nix() -> Result<()> {
 pub fn run_cmd(cmd: &mut Command) -> Result<()> {
     let cmd_repr = format_command(cmd);
 
-    let output = cmd.output().with_context(|| format!("Failed to execute: {}", cmd_repr))?;
+    // Some environments (CI, constrained containers) intermittently refuse to spawn new
+    // processes with `Os { kind: WouldBlock }`. Retry a few times and drop RUSTC_WRAPPER to
+    // avoid sccache overhead in those cases.
+    let mut attempts = 0;
+    let output = loop {
+        let result = cmd.output();
+        match result {
+            Ok(out) => break out,
+            Err(e) if e.kind() == std::io::ErrorKind::WouldBlock && attempts < 3 => {
+                cmd.env_remove("RUSTC_WRAPPER");
+                attempts += 1;
+                thread::sleep(Duration::from_millis(200 * attempts));
+                continue;
+            }
+            Err(e) => {
+                return Err(e).with_context(|| format!("Failed to execute: {}", cmd_repr));
+            }
+        }
+    };
 
     if !output.status.success() {
         eprintln!("\n{} Command failed: {}", "✗".bright_red(), cmd_repr);
@@ -361,6 +396,8 @@ pub fn all_command_names() -> Vec<&'static str> {
         "sbom-local",
         "quickstart",
         "selftest",
+        "skills-fmt",
+        "skills-lint",
         "status",
         "suggest-next",
         "tasks-list",

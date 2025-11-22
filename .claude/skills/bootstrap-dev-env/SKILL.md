@@ -1,10 +1,6 @@
 ---
 name: bootstrap-dev-env
-description: 'One-command environment setup and health check for the Rust-as-Spec
-  platform cell. Use when first entering the repository, after major environment changes,
-  or when the environment appears broken. Follows the ''onboarding'' flow from devex_flows.yaml.
-
-  '
+description: "One-command environment setup and health check for the Rust-as-Spec platform cell. Use when first entering the repository, after major environment changes, or when the environment appears broken. Follows the 'onboarding' flow from \n_flows.yaml.\n"
 allowed-tools:
 - Read
 - Grep
@@ -17,6 +13,7 @@ allowed-tools:
 ## When to Use
 
 Use this Skill when:
+
 - First time in the repository
 - After major environment changes (tool updates, Rust version changes, config changes)
 - Environment appears broken (commands failing, dependencies missing)
@@ -39,6 +36,7 @@ cargo xtask dev-up
 ```
 
 **What this does:**
+
 - Validates Rust toolchain (rustc, cargo)
 - Checks for optional tools (Nix, conftest)
 - Installs git hooks (pre-commit governance)
@@ -48,7 +46,8 @@ cargo xtask dev-up
 - Shows status and next steps
 
 **Expected output:**
-```
+
+```text
 ✅ Environment validated
 ✅ Git hooks installed
 ✅ Core checks passed
@@ -95,6 +94,7 @@ cargo xtask status
 ```
 
 **Shows:**
+
 - Environment health
 - Task counts by status
 - Policy compliance
@@ -103,6 +103,7 @@ cargo xtask status
 ### 5. Browse task board
 
 Open in browser:
+
 ```bash
 open http://localhost:3000/ui/tasks
 # or: xdg-open http://localhost:3000/ui/tasks (Linux)
@@ -112,6 +113,7 @@ open http://localhost:3000/ui/tasks
 ## Exit Criteria
 
 Environment is ready when:
+
 - ✅ `cargo xtask dev-up` exits with code 0
 - ✅ `GET /platform/status` returns 200 with `"status": "healthy"`
 - ✅ All URLs in output are reachable
@@ -119,7 +121,7 @@ Environment is ready when:
 
 ## Error Handling
 
-### If dev-up fails at environment validation:
+### If dev-up fails at environment validation
 
 ```bash
 # Run detailed diagnostics
@@ -127,11 +129,12 @@ cargo xtask doctor
 ```
 
 **Fix common issues:**
+
 - **Rust too old:** Update via `rustup update`
-- **conftest missing:** Install via Nix (`nix profile install nixpkgs#conftest`) or follow https://www.conftest.dev/install/
+- **conftest missing:** Install via Nix (`nix profile install nixpkgs#conftest`) or follow <https://www.conftest.dev/install/>
 - **Git not configured:** Set `user.name` and `user.email`
 
-### If dev-up fails at checks:
+### If dev-up fails at checks
 
 ```bash
 # Run checks individually
@@ -139,7 +142,7 @@ cargo xtask check
 # Fix any reported issues (fmt, clippy, test failures)
 ```
 
-### If dev-up fails at BDD:
+### If dev-up fails at BDD
 
 ```bash
 # Run BDD with verbose output
@@ -147,7 +150,7 @@ cargo xtask bdd
 # Check for missing step definitions or feature syntax errors
 ```
 
-### If platform doesn't start:
+### If platform doesn't start
 
 ```bash
 # Check if port 3000 is already in use
@@ -204,9 +207,10 @@ cargo xtask dev-up
 ## Success Criteria
 
 Bootstrap complete when:
+
 - ✅ `cargo xtask dev-up` passes all steps
-- ✅ Platform API responding at http://localhost:3000
-- ✅ Task board accessible at http://localhost:3000/ui/tasks
+- ✅ Platform API responding at <http://localhost:3000>
+- ✅ Task board accessible at <http://localhost:3000/ui/tasks>
 - ✅ `cargo xtask status` shows healthy state
 - ✅ Developer can see next steps clearly
 
@@ -215,7 +219,7 @@ Bootstrap complete when:
 - **Flow definition:** `specs/devex_flows.yaml` (onboarding flow)
 - **Detailed commands:** `docs/reference/xtask-commands.md`
 - **Operational guide:** `docs/AGENT_GUIDE.md`
-- **Platform APIs:** http://localhost:3000/platform/status
+- **Platform APIs:** <http://localhost:3000/platform/status>
 
 ## Notes
 

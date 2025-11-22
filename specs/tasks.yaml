@@ -108,3 +108,21 @@ tasks:
     docs:
       design: ["docs/AGENT_SKILLS.md"]
       plan: []
+
+  - id: TASK-TPL-SKILLS-TOOLING-001
+    title: "Port Skills tooling from Python to Rust xtask commands"
+    requirement: REQ-TPL-SKILLS-TOOLING
+    acs:
+      - AC-TPL-SKILLS-FMT
+      - AC-TPL-SKILLS-LINT
+    status: done
+    owner: agent
+    labels: [platform, agent, devex]
+    summary: >
+      Implement skills-fmt and skills-lint as xtask commands and integrate them
+      into pre-commit and selftest/docs-check flows. Replace Python scripts with
+      Rust-native commands to eliminate external dependencies and improve integration.
+    recommended_flows: ["ac_first"]
+    docs:
+      design: []
+      plan: []

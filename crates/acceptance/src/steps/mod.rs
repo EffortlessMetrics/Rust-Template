@@ -2,3 +2,4 @@
 pub mod governance_tasks;
 pub mod governance_write;
 pub mod template_core;
+pub mod xtask_devex;

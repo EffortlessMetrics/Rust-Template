@@ -1,6 +1,7 @@
 use axum::{Json, Router, extract::Query, routing::get};
 use serde::{Deserialize, Serialize};
 use spec_runtime::load_all_specs;
+use std::collections::HashMap;
 use std::fs;
 use std::path::PathBuf;
 
@@ -13,11 +14,13 @@ pub fn router() -> Router {
         .route("/ui", get(ui::dashboard))
         .route("/ui/graph", get(ui::graph_view))
         .route("/ui/flows", get(ui::flows_view))
+        .route("/ui/coverage", get(ui::coverage_view))
         // API routes
         .route("/graph", get(get_graph))
         .route("/devex/flows", get(get_devex_flows))
         .route("/docs/index", get(get_docs_index))
         .route("/status", get(get_status))
+        .route("/coverage", get(get_coverage))
         .route("/tasks", get(get_tasks))
         .route("/tasks/suggest-next", get(get_suggest_next))
 }
@@ -232,6 +235,172 @@ impl From<spec_runtime::Task> for TaskOut {
             docs: t.docs.map(|d| TaskDocsOut { design: d.design, plan: d.plan }),
         }
     }
+}
+
+#[derive(Serialize)]
+pub struct CoverageSummary {
+    pub passing: usize,
+    pub failing: usize,
+    pub unknown: usize,
+    pub total: usize,
+}
+
+#[derive(Serialize)]
+pub struct CoverageDetail {
+    pub id: String,
+    pub title: String,
+    pub status: String,
+    pub story: String,
+    pub requirement: String,
+    pub scenarios: Vec<String>,
+}
+
+#[derive(Serialize)]
+pub struct CoverageResponse {
+    pub summary: CoverageSummary,
+    pub details: Vec<CoverageDetail>,
+}
+
+// Cucumber JSON format structures for parsing BDD output
+#[derive(Debug, Deserialize)]
+struct CucumberReport(Vec<CucumberFeature>);
+
+#[derive(Debug, Deserialize)]
+struct CucumberFeature {
+    #[allow(dead_code)]
+    uri: String,
+    elements: Vec<CucumberElement>,
+}
+
+#[derive(Debug, Deserialize)]
+struct CucumberElement {
+    name: String,
+    #[serde(rename = "type")]
+    element_type: String,
+    tags: Vec<CucumberTag>,
+    steps: Vec<CucumberStep>,
+}
+
+#[derive(Debug, Deserialize)]
+struct CucumberTag {
+    name: String,
+}
+
+#[derive(Debug, Deserialize)]
+struct CucumberStep {
+    result: CucumberStepResult,
+}
+
+#[derive(Debug, Deserialize)]
+struct CucumberStepResult {
+    status: String,
+}
+
+async fn get_coverage() -> Json<CoverageResponse> {
+    let root = workspace_root();
+
+    // Load spec ledger to get all ACs
+    let specs = match load_all_specs(&root) {
+        Ok(s) => s,
+        Err(_) => {
+            // Return empty response if specs can't be loaded
+            return Json(CoverageResponse {
+                summary: CoverageSummary { passing: 0, failing: 0, unknown: 0, total: 0 },
+                details: vec![],
+            });
+        }
+    };
+
+    // Build a map of all ACs from the ledger
+    let mut ac_map: HashMap<String, (String, String, String)> = HashMap::new();
+    for story in &specs.ledger.stories {
+        for req in &story.requirements {
+            for ac in &req.acceptance_criteria {
+                ac_map.insert(ac.id.clone(), (story.id.clone(), req.id.clone(), ac.text.clone()));
+            }
+        }
+    }
+
+    // Try to parse BDD results from JSON report
+    let bdd_json_path = root.join("target/ac_report.json");
+    let mut ac_status: HashMap<String, String> = HashMap::new();
+    let mut ac_scenarios: HashMap<String, Vec<String>> = HashMap::new();
+
+    if bdd_json_path.exists()
+        && let Ok(content) = fs::read_to_string(&bdd_json_path)
+        && let Ok(report) = serde_json::from_str::<CucumberReport>(&content)
+    {
+        for feature in report.0 {
+            for element in feature.elements {
+                // Only process scenarios
+                if element.element_type == "scenario" {
+                    // Extract AC IDs from tags
+                    let ac_ids: Vec<String> = element
+                        .tags
+                        .iter()
+                        .filter_map(|tag| {
+                            // Tags in JSON don't have @ prefix, just the AC ID
+                            if tag.name.starts_with("AC-") { Some(tag.name.clone()) } else { None }
+                        })
+                        .collect();
+
+                    // Determine if scenario passed (all steps passed)
+                    let passed = element.steps.iter().all(|step| step.result.status == "passed");
+
+                    // Update status and scenarios for each AC
+                    for ac_id in ac_ids {
+                        // Track scenario name
+                        ac_scenarios.entry(ac_id.clone()).or_default().push(element.name.clone());
+
+                        // Update status (if any scenario fails, AC fails)
+                        let current_status = ac_status.entry(ac_id.clone()).or_insert_with(|| {
+                            if passed { "passing".to_string() } else { "failing".to_string() }
+                        });
+
+                        if !passed {
+                            *current_status = "failing".to_string();
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Build details and compute summary
+    let mut passing = 0;
+    let mut failing = 0;
+    let mut unknown = 0;
+    let mut details = Vec::new();
+
+    for (ac_id, (story_id, req_id, title)) in &ac_map {
+        let status = ac_status.get(ac_id).cloned().unwrap_or_else(|| "unknown".to_string());
+        let scenarios = ac_scenarios.get(ac_id).cloned().unwrap_or_default();
+
+        match status.as_str() {
+            "passing" => passing += 1,
+            "failing" => failing += 1,
+            _ => unknown += 1,
+        }
+
+        details.push(CoverageDetail {
+            id: ac_id.clone(),
+            title: title.clone(),
+            status,
+            story: story_id.clone(),
+            requirement: req_id.clone(),
+            scenarios,
+        });
+    }
+
+    // Sort details by ID for consistent output
+    details.sort_by(|a, b| a.id.cmp(&b.id));
+
+    let total = passing + failing + unknown;
+
+    Json(CoverageResponse {
+        summary: CoverageSummary { passing, failing, unknown, total },
+        details,
+    })
 }
 
 fn workspace_root() -> PathBuf {
