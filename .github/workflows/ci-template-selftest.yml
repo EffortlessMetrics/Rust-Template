@@ -10,7 +10,20 @@ concurrency:
 
 jobs:
   selftest:
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        include:
+          - os: ubuntu-latest
+            tier: "Tier 1 (Linux + Nix)"
+          - os: macos-latest
+            tier: "Tier 1 (macOS + Nix)"
+          - os: windows-latest
+            tier: "Tier 2 (Windows native)"
+
+    runs-on: ${{ matrix.os }}
+    name: ${{ matrix.tier }}
     timeout-minutes: 30
     permissions: { contents: read }
     steps:
@@ -19,25 +32,50 @@ jobs:
 
       - uses: Swatinem/rust-cache@v2
 
+      # Nix only on Linux/macOS (Tier 1 platforms)
       - uses: cachix/install-nix-action@v27
+        if: runner.os != 'Windows'
 
-      - name: Enable sccache
+      - name: Enable sccache (Linux/macOS)
+        if: runner.os != 'Windows'
         run: |
           echo "RUSTC_WRAPPER=$(nix develop -c which sccache)" >> $GITHUB_ENV
           echo "SCCACHE_GHA_ENABLED=1" >> $GITHUB_ENV
           echo "CARGO_INCREMENTAL=0" >> $GITHUB_ENV
           nix develop -c sccache --start-server || true
 
-      - name: Run template self-test suite
+      # Tier 1: Full selftest in Nix devshell (Linux/macOS)
+      - name: Run template self-test suite (Tier 1 - Nix)
+        if: runner.os != 'Windows'
         run: nix develop -c cargo run -p xtask -- selftest
 
+      # Tier 2: Basic validation without Nix (Windows)
+      - name: Build xtask (Tier 2 - Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: cargo build -p xtask
+
+      - name: Run governance checks (Tier 2 - Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: cargo run -p xtask -- check
+
+      - name: Run workspace tests (Tier 2 - Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: cargo test --workspace --exclude acceptance --exclude xtask
+
+      # Verify artifacts (Linux/macOS only - canonical validation)
       - name: Verify artifacts were generated
+        if: runner.os != 'Windows'
         run: |
           test -f docs/feature_status.md
           test -f .llm/bundle/implement_ac.md
           test -f target/junit/acceptance.xml
 
+      # Ensure clean git state (Linux/macOS only - docs-as-code enforcement)
       - name: Ensure clean git state (docs-as-code enforcement)
+        if: runner.os != 'Windows'
         run: |
           if [[ -n $(git status --porcelain) ]]; then
             echo "❌ Git tree is dirty after running selftest. The following files were modified:"
@@ -49,7 +87,7 @@ jobs:
           echo "✅ Git tree is clean. Docs and artifacts are up-to-date."
 
       - name: Show sccache stats
-        if: always()
+        if: always() && runner.os != 'Windows'
         run: nix develop -c sccache --show-stats || true
 
       - name: Upload artifacts

@@ -475,6 +475,44 @@ cargo xtask selftest
 - Matches CI environment exactly
 - Native speed (direct Linux I/O, not emulation)
 
+### Git Hooks on Windows
+
+The `cargo xtask install-hooks` command generates a **POSIX shell pre-commit hook** on all platforms.
+
+**How this works:**
+
+- We generate a `#!/usr/bin/env bash` hook on Linux, macOS, **and Windows**.
+- On Windows, **Git for Windows runs hooks via its bundled `sh.exe`**, so POSIX hooks work natively.
+- You don't need a `.cmd` or `.bat` version.
+
+**Expected behavior:**
+
+- ✅ **Git Bash on Windows**: Hook runs normally via `sh`
+- ✅ **PowerShell/CMD on Windows**: Git internally calls `sh.exe` to run the hook
+- ✅ **Linux/macOS**: Standard POSIX hook execution
+
+**If you see `cannot spawn .git/hooks/pre-commit`:**
+
+1. **Check line endings**: Windows Git may have converted LF to CRLF.
+   ```bash
+   # Fix line endings (run in Git Bash or PowerShell)
+   dos2unix .git/hooks/pre-commit   # or manually convert to LF
+   ```
+
+2. **Reinstall the hook**:
+   ```bash
+   cargo xtask install-hooks
+   ```
+
+3. **Verify you're using Git for Windows**: Custom Git builds without `sh.exe` won't work.
+
+**Workaround if hooks fail:** Use `--no-verify` to skip the hook temporarily:
+```bash
+git commit --no-verify -m "your message"
+```
+
+**Why we don't use batch scripts:** Git for Windows expects POSIX hooks, not `.bat` files. A batch hook would fail in Git Bash but work in CMD—exactly the opposite of what we want. The POSIX hook works everywhere.
+
 ---
 
 ## 13. Summary: Choose Your Path
