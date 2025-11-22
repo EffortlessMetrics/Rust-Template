@@ -68,6 +68,9 @@ New to this repository? Start here:
 
 ## Reference Documentation
 
+### Platform & Environment
+- **[Platform Support Reference](reference/platform-support.md)** - Complete platform support matrix, Tier 1/Tier 2, Windows guidance, troubleshooting
+
 ### APIs & Contracts
 - **[Platform API Reference](reference/platform-api.md)** - `/platform/*` HTTP endpoints *(stub)*
 - **[xtask Command Reference](reference/xtask-commands.md)** - All CLI commands and options *(stub)*
