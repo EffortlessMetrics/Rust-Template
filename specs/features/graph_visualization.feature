@@ -1,3 +1,7 @@
+# Template Version: v3.0.0
+# Schema: spec_ledger.yaml v1.0
+# Last Updated: 2025-11-22
+
 Feature: Governance Graph Visualization
   The template must provide a Mermaid visualization of the governance graph.
 

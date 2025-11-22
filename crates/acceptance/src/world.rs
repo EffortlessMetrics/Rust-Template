@@ -27,6 +27,10 @@ pub struct XtaskContext {
     pub last_command_status: Option<i32>,
     pub test_repo_path: Option<std::path::PathBuf>,
     pub env: HashMap<String, String>,
+    /// Path to test ADR file for cleanup (AC-PLT-004)
+    pub test_adr_path: Option<std::path::PathBuf>,
+    /// Path to backup file for cleanup (AC-PLT-009, AC-PLT-010)
+    pub test_backup_path: Option<std::path::PathBuf>,
 }
 
 impl Default for World {

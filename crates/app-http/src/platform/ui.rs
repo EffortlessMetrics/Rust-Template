@@ -248,21 +248,23 @@ pub async fn dashboard() -> Html<String> {
                     }
                 }
 
-                .card .coverage-card {
+                .card {
                     h2 { "AC Coverage" }
-                    .stats style="display: flex; gap: 1.5rem; margin: 1rem 0;" {
-                        span .passing style="color: #155724; font-size: 1.1rem; font-weight: 500;" {
+                    .stats style="display: flex; gap: 1.5rem; margin: 1rem 0; flex-wrap: wrap;" {
+                        span style="color: #155724; font-size: 1.1rem; font-weight: 500;" {
                             "✅ " (passing) " passing"
                         }
-                        span .failing style="color: #721c24; font-size: 1.1rem; font-weight: 500;" {
+                        span style="color: #721c24; font-size: 1.1rem; font-weight: 500;" {
                             "❌ " (failing) " failing"
                         }
-                        span .unknown style="color: #856404; font-size: 1.1rem; font-weight: 500;" {
+                        span style="color: #856404; font-size: 1.1rem; font-weight: 500;" {
                             "❓ " (unknown) " unknown"
                         }
                     }
-                    a href="/ui/coverage" style="color: #667eea; text-decoration: none; font-weight: 500;" {
-                        "View details →"
+                    p style="margin-top: 1rem;" {
+                        a href="/ui/coverage" style="color: #667eea; text-decoration: none; font-weight: 500;" {
+                            "View details →"
+                        }
                     }
                 }
 

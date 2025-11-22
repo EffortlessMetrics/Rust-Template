@@ -1,8 +1,10 @@
 use crate::world::World;
 use cucumber::{given, then, when};
 use std::fs;
-use std::os::unix::fs::PermissionsExt;
 use std::process::Command;
+
+#[cfg(unix)]
+use std::os::unix::fs::PermissionsExt;
 
 // ============================================================================
 // Given Steps
@@ -48,11 +50,14 @@ async fn given_hook_exists(world: &mut World) {
         let _ = fs::create_dir_all(parent);
     }
     let _ = fs::write(&hook, "#!/bin/sh\nexit 0\n");
-    let mut perms = fs::metadata(&hook)
-        .map(|m| m.permissions())
-        .unwrap_or_else(|_| fs::Permissions::from_mode(0o755));
-    perms.set_mode(0o755);
-    let _ = fs::set_permissions(&hook, perms);
+    #[cfg(unix)]
+    {
+        let mut perms = fs::metadata(&hook)
+            .map(|m| m.permissions())
+            .unwrap_or_else(|_| fs::Permissions::from_mode(0o755));
+        perms.set_mode(0o755);
+        let _ = fs::set_permissions(&hook, perms);
+    }
 }
 
 #[given("the .git/hooks directory does not exist")]
@@ -76,11 +81,7 @@ async fn given_skills_exist(_world: &mut World) {
 
     // Verify at least one SKILL.md exists
     let has_skills = fs::read_dir(&skills_dir)
-        .map(|entries| {
-            entries.filter_map(Result::ok).any(|e| {
-                e.path().join("SKILL.md").exists()
-            })
-        })
+        .map(|entries| entries.filter_map(Result::ok).any(|e| e.path().join("SKILL.md").exists()))
         .unwrap_or(false);
 
     assert!(has_skills, "At least one SKILL.md should exist in .claude/skills/");
@@ -353,9 +354,17 @@ async fn then_hook_absent(world: &mut World) {
 #[then("the pre-commit hook should be executable")]
 async fn then_hook_executable(world: &mut World) {
     let hook = workspace_root(world).join(".git/hooks/pre-commit");
-    let metadata = fs::metadata(&hook).expect("Hook metadata");
-    let mode = metadata.permissions().mode();
-    assert!(mode & 0o111 != 0, "Pre-commit hook should be executable (mode {:o})", mode);
+    #[cfg(unix)]
+    {
+        let metadata = fs::metadata(&hook).expect("Hook metadata");
+        let mode = metadata.permissions().mode();
+        assert!(mode & 0o111 != 0, "Pre-commit hook should be executable (mode {:o})", mode);
+    }
+    #[cfg(not(unix))]
+    {
+        // On Windows, just verify the hook file exists
+        assert!(hook.exists(), "Pre-commit hook should exist");
+    }
 }
 
 #[then(regex = r#"^the pre-commit hook should contain "([^"]+)"$"#)]
@@ -442,7 +451,11 @@ async fn then_skills_formatted(world: &mut World) {
         || output.contains("formatted")
         || output.contains("Skills")
         || output.contains("✓");
-    assert!(has_formatted, "Output should indicate Skills were formatted\nActual output:\n{}", output);
+    assert!(
+        has_formatted,
+        "Output should indicate Skills were formatted\nActual output:\n{}",
+        output
+    );
 }
 
 #[then("SKILL.md files should have consistent frontmatter formatting")]
@@ -561,9 +574,7 @@ async fn then_mentions_either(world: &mut World, option1: String, option2: Strin
     assert!(
         has_either,
         "Output should mention '{}' or '{}'\nActual output:\n{}",
-        option1,
-        option2,
-        output
+        option1, option2, output
     );
 }
 
@@ -691,4 +702,142 @@ async fn execute_command(world: &mut World, command: &str, env_vars: &[(&str, &s
     let ctx = world.xtask_context_mut();
     ctx.last_command_output = Some(combined);
     ctx.last_command_status = Some(status_code);
+}
+
+// ============================================================================
+// ADR Scenario Steps (AC-PLT-004)
+// ============================================================================
+
+#[given("I am in a clean workspace")]
+async fn given_clean_workspace(_world: &mut World) {
+    // Verify we're in a valid workspace
+    let workspace_root = actual_workspace_root();
+    assert!(workspace_root.join("Cargo.toml").exists(), "Should be in workspace");
+}
+
+#[then(regex = r#"^a new file should exist in "([^"]+)" matching pattern "([^"]+)"$"#)]
+async fn then_file_exists_matching_pattern(world: &mut World, directory: String, pattern: String) {
+    let workspace_root = workspace_root(world);
+    let dir_path = workspace_root.join(&directory);
+
+    assert!(dir_path.exists(), "Directory '{}' should exist", directory);
+
+    // Convert glob pattern to simple pattern matching
+    // Pattern like "0*-test-decision.md" should match files like "0042-test-decision.md"
+    let pattern_prefix = pattern.split('*').next().unwrap_or("");
+    let pattern_suffix = pattern.split('*').last().unwrap_or("");
+
+    // Find matching files
+    let mut matching_files = Vec::new();
+
+    if let Ok(entries) = fs::read_dir(&dir_path) {
+        for entry in entries.filter_map(Result::ok) {
+            let file_name = entry.file_name();
+            let file_name_str = file_name.to_string_lossy();
+
+            // Simple pattern matching: check prefix and suffix
+            let matches = if pattern.contains('*') {
+                file_name_str.starts_with(pattern_prefix) && file_name_str.ends_with(pattern_suffix)
+            } else {
+                file_name_str == pattern
+            };
+
+            if matches {
+                matching_files.push(entry.path());
+            }
+        }
+    }
+
+    assert!(
+        !matching_files.is_empty(),
+        "No files found in '{}' matching pattern '{}'\nSearched in: {}",
+        directory,
+        pattern,
+        dir_path.display()
+    );
+
+    // Store the newest matching file for subsequent steps
+    matching_files.sort_by_key(|p| {
+        fs::metadata(p).and_then(|m| m.modified()).unwrap_or(std::time::SystemTime::UNIX_EPOCH)
+    });
+
+    if let Some(newest) = matching_files.last() {
+        world.xtask_context_mut().test_adr_path = Some(newest.clone());
+    }
+}
+
+#[then(regex = r#"^the file should contain "([^"]+)"$"#)]
+async fn then_file_contains_text(world: &mut World, expected: String) {
+    let ctx = world.xtask_context();
+    let file_path = ctx.test_adr_path.as_ref().expect("No file path stored");
+    let content = fs::read_to_string(file_path).expect("Failed to read file");
+
+    assert!(
+        content.contains(&expected),
+        "File should contain '{}'\nActual content:\n{}",
+        expected,
+        content
+    );
+}
+
+#[then("I clean up the test ADR file")]
+async fn then_cleanup_adr(world: &mut World) {
+    let ctx = world.xtask_context_mut();
+
+    if let Some(adr_path) = ctx.test_adr_path.take() {
+        if adr_path.exists() {
+            let _ = fs::remove_file(&adr_path);
+        }
+    }
+}
+
+// ============================================================================
+// AC Scenario Steps (AC-PLT-005)
+// ============================================================================
+
+#[given(regex = r#"^an AC with ID "([^"]+)" already exists$"#)]
+async fn given_ac_exists(_world: &mut World, _ac_id: String) {
+    // This scenario tests duplicate detection - we use an AC ID that exists in spec_ledger
+}
+
+// ============================================================================
+// AC-PLT-006 and AC-PLT-008: Pattern Matching and File Validation Steps
+// ============================================================================
+
+#[then(regex = r#"^the output should match pattern "([^"]+)"$"#)]
+async fn then_output_matches_pattern(world: &mut World, pattern: String) {
+    let ctx = world.xtask_context();
+    let output = ctx.last_command_output.as_ref().expect("No command output");
+
+    // Use regex to match the pattern
+    let re = regex::Regex::new(&pattern).expect("Invalid regex pattern");
+    assert!(
+        re.is_match(output),
+        "Output should match pattern '{}'\nActual output:\n{}",
+        pattern,
+        output
+    );
+}
+
+#[then(regex = r#"^file "([^"]+)" should exist$"#)]
+async fn then_file_exists(world: &mut World, file_path: String) {
+    let workspace_root = workspace_root(world);
+    let full_path = workspace_root.join(&file_path);
+    assert!(full_path.exists(), "File '{}' should exist at {}", file_path, full_path.display());
+}
+
+#[then(regex = r#"^file "([^"]+)" should not be empty$"#)]
+async fn then_file_not_empty(world: &mut World, file_path: String) {
+    let workspace_root = workspace_root(world);
+    let full_path = workspace_root.join(&file_path);
+
+    assert!(full_path.exists(), "File '{}' should exist at {}", file_path, full_path.display());
+
+    let metadata = fs::metadata(&full_path).expect("Failed to get file metadata");
+    assert!(
+        metadata.len() > 0,
+        "File '{}' should not be empty (size: {} bytes)",
+        file_path,
+        metadata.len()
+    );
 }

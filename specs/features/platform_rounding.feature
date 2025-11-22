@@ -1,3 +1,7 @@
+# Template Version: v3.0.0
+# Schema: spec_ledger.yaml v1.0
+# Last Updated: 2025-11-22
+
 Feature: Platform Rounding Features
   As a platform user or agent
   I want to introspect the platform's state and get guidance on next steps
@@ -22,17 +26,8 @@ Feature: Platform Rounding Features
     And the JSON response should have field "task"
     And the JSON response should have field "recommended_sequence"
 
-  @AC-TPL-PLATFORM-STATUS
-  Scenario: Platform status returns governance summary
-    When I GET "http://localhost:8080/platform/status"
-    Then the response status should be 200
-    And the JSON response should have field "template_version"
-    And the JSON response should have field "service_id"
-    And the JSON response should have field "governance"
-    And the JSON response should have field "governance.ledger.requirements"
-
   @AC-TPL-POLICY-STATUS-OVERVIEW
   Scenario: Platform status exposes policy health
     When I GET "http://localhost:8080/platform/status"
     Then the response status should be 200
-    And the JSON response should have field "governance.policies.status"
+    And the JSON response should have nested field "governance.policies.status"

@@ -7,6 +7,720 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+(empty)
+
+## [3.2.0] - 2025-11-22
+
+### Added
+
+- 
+
+### Changed
+
+- 
+
+### Fixed
+
+- 
+
+
+(empty)
+
+## [3.2.0] - 2025-11-22
+
+### Added
+
+- 
+
+### Changed
+
+- 
+
+### Fixed
+
+- 
+
+
+(empty)
+
+## [3.2.0] - 2025-11-22
+
+### Added
+
+- 
+
+### Changed
+
+- 
+
+### Fixed
+
+- 
+
+
+(empty)
+
+## [3.2.0] - 2025-11-22
+
+### Added
+
+- 
+
+### Changed
+
+- 
+
+### Fixed
+
+- 
+
+
+(empty)
+
+## [3.2.0] - 2025-11-22
+
+### Added
+
+- 
+
+### Changed
+
+- 
+
+### Fixed
+
+- 
+
+
+(empty)
+
+## [3.2.0] - 2025-11-22
+
+### Added
+
+- 
+
+### Changed
+
+- 
+
+### Fixed
+
+- 
+
+
+(empty)
+
+## [3.2.0] - 2025-11-22
+
+### Added
+
+- 
+
+### Changed
+
+- 
+
+### Fixed
+
+- 
+
+
+(empty)
+
+## [3.2.0] - 2025-11-22
+
+### Added
+
+- 
+
+### Changed
+
+- 
+
+### Fixed
+
+- 
+
+
+(empty)
+
+## [3.2.0] - 2025-11-22
+
+### Added
+
+- 
+
+### Changed
+
+- 
+
+### Fixed
+
+- 
+
+
+(empty)
+
+## [3.2.0] - 2025-11-22
+
+### Added
+
+- 
+
+### Changed
+
+- 
+
+### Fixed
+
+- 
+
+
+(empty)
+
+## [3.2.0] - 2025-11-22
+
+### Added
+
+- 
+
+### Changed
+
+- 
+
+### Fixed
+
+- 
+
+
+(empty)
+
+## [3.2.0] - 2025-11-22
+
+### Added
+
+- 
+
+### Changed
+
+- 
+
+### Fixed
+
+- 
+
+
+(empty)
+
+## [3.2.0] - 2025-11-22
+
+### Added
+
+- 
+
+### Changed
+
+- 
+
+### Fixed
+
+- 
+
+
+(empty)
+
+## [3.2.0] - 2025-11-22
+
+### Added
+
+- 
+
+### Changed
+
+- 
+
+### Fixed
+
+- 
+
+
+(empty)
+
+## [3.2.0] - 2025-11-22
+
+### Added
+
+- 
+
+### Changed
+
+- 
+
+### Fixed
+
+- 
+
+
+(empty)
+
+## [3.2.0] - 2025-11-22
+
+### Added
+
+- 
+
+### Changed
+
+- 
+
+### Fixed
+
+- 
+
+
+(empty)
+
+## [3.2.0] - 2025-11-22
+
+### Added
+
+- 
+
+### Changed
+
+- 
+
+### Fixed
+
+- 
+
+
+(empty)
+
+## [3.2.0] - 2025-11-22
+
+### Added
+
+- 
+
+### Changed
+
+- 
+
+### Fixed
+
+- 
+
+
+(empty)
+
+## [3.2.0] - 2025-11-22
+
+### Added
+
+- 
+
+### Changed
+
+- 
+
+### Fixed
+
+- 
+
+
+(empty)
+
+## [3.2.0] - 2025-11-22
+
+### Added
+
+- 
+
+### Changed
+
+- 
+
+### Fixed
+
+- 
+
+
+(empty)
+
+## [3.2.0] - 2025-11-22
+
+### Added
+
+- 
+
+### Changed
+
+- 
+
+### Fixed
+
+- 
+
+
+(empty)
+
+## [3.2.0] - 2025-11-22
+
+### Added
+
+- 
+
+### Changed
+
+- 
+
+### Fixed
+
+- 
+
+
+(empty)
+
+## [3.2.0] - 2025-11-22
+
+### Added
+
+- 
+
+### Changed
+
+- 
+
+### Fixed
+
+- 
+
+
+(empty)
+
+## [3.2.0] - 2025-11-22
+
+### Added
+
+- 
+
+### Changed
+
+- 
+
+### Fixed
+
+- 
+
+
+(empty)
+
+## [3.2.0] - 2025-11-22
+
+### Added
+
+- **AC Coverage Tooling:**
+  - `cargo xtask ac-coverage` command for AC coverage summary grouped by requirement
+  - `cargo xtask ac-suggest-scenarios` command to generate BDD scenario stubs from ACs
+  - Shared `ac_parsing` module for consistent AC/scenario parsing across commands
+
+- **Skills Tooling:**
+  - `cargo xtask skills-fmt` command to normalize SKILL.md formatting
+  - `cargo xtask skills-lint` command to validate Skills definitions
+  - Skills are now governed artifacts with standardized structure
+
+### Changed
+
+- **Module Organization:**
+  - Extracted common AC parsing logic into `crates/xtask/src/commands/ac_parsing.rs`
+  - `ac_status`, `ac_coverage`, and `ac_suggest_scenarios` now share parsing infrastructure
+  - Improved code reuse and consistency across AC-related commands
+
+- **Documentation:**
+  - Updated SKILL.md files for clarity and consistency
+  - Replaced Python script references with Rust commands in Skills
+  - Updated `docs/reference/xtask-commands.md` with ac-coverage and ac-suggest-scenarios documentation
+
+### Fixed
+
+- **AC Wiring:**
+  - Fixed missing `ac_parsing`, `ac_coverage`, and `ac_suggest_scenarios` module exports in `crates/xtask/src/commands/mod.rs`
+  - All AC-related commands now compile and function correctly
+  - Resolved import issues for `CucumberReport`, `AC_PATTERN`, and other parsing utilities
+  - AC tooling now provides complete workflow from coverage analysis to scenario generation
+
+## [3.2.0] - 2025-11-22
+
+### Added
+
+- 
+
+### Changed
+
+- 
+
+### Fixed
+
+- 
+
+
+(empty)
+
+## [3.2.0] - 2025-11-22
+
+### Added
+
+- 
+
+### Changed
+
+- 
+
+### Fixed
+
+- 
+
+
+(empty)
+
+## [3.2.0] - 2025-11-22
+
+### Added
+
+- 
+
+### Changed
+
+- 
+
+### Fixed
+
+- 
+
+
+(empty)
+
+## [3.2.0] - 2025-11-22
+
+### Added
+
+- 
+
+### Changed
+
+- 
+
+### Fixed
+
+- 
+
+
+(empty)
+
+## [3.2.0] - 2025-11-22
+
+### Added
+
+- 
+
+### Changed
+
+- 
+
+### Fixed
+
+- 
+
+
+(empty)
+
+## [3.2.0] - 2025-11-22
+
+### Added
+
+- 
+
+### Changed
+
+- 
+
+### Fixed
+
+- 
+
+
+(empty)
+
+## [3.2.0] - 2025-11-22
+
+### Added
+
+- 
+
+### Changed
+
+- 
+
+### Fixed
+
+- 
+
+
+(empty)
+
+## [3.2.0] - 2025-11-22
+
+### Added
+
+- 
+
+### Changed
+
+- 
+
+### Fixed
+
+- 
+
+
+(empty)
+
+## [3.2.0] - 2025-11-22
+
+### Added
+
+- 
+
+### Changed
+
+- 
+
+### Fixed
+
+- 
+
+
+(empty)
+
+## [3.2.0] - 2025-11-22
+
+### Added
+
+- 
+
+### Changed
+
+- 
+
+### Fixed
+
+- 
+
+
+(empty)
+
+## [3.2.0] - 2025-11-22
+
+### Added
+
+- 
+
+### Changed
+
+- 
+
+### Fixed
+
+- 
+
+
+(empty)
+
+## [3.2.0] - 2025-11-22
+
+### Added
+
+- 
+
+### Changed
+
+- 
+
+### Fixed
+
+- 
+
+
+(empty)
+
+## [3.2.0] - 2025-11-22
+
+### Added
+
+- 
+
+### Changed
+
+- 
+
+### Fixed
+
+- 
+
+
+(empty)
+
+## [3.2.0] - 2025-11-22
+
+### Added
+
+- 
+
+### Changed
+
+- 
+
+### Fixed
+
+- 
+
+
+(empty)
+
+## [3.2.0] - 2025-11-22
+
+### Added
+
+- 
+
+### Changed
+
+- 
+
+### Fixed
+
+- 
+
+
+(empty)
+
+## [3.2.0] - 2025-11-22
+
+### Added
+
+- 
+
+### Changed
+
+- 
+
+### Fixed
+
+- 
+
+
 ## [3.0.0-sprint1] - 2025-11-20 🚀 **v3.0.0 Sprint 1: The Write Layer**
 
 ### Summary
@@ -897,6 +1611,703 @@ For users upgrading from v1.x:
 ---
 
 ## [Unreleased]
+
+(empty)
+
+## [3.2.0] - 2025-11-22
+
+### Added
+
+- 
+
+### Changed
+
+- 
+
+### Fixed
+
+- 
+
+
+(empty)
+
+## [3.2.0] - 2025-11-22
+
+### Added
+
+- 
+
+### Changed
+
+- 
+
+### Fixed
+
+- 
+
+
+(empty)
+
+## [3.2.0] - 2025-11-22
+
+### Added
+
+- 
+
+### Changed
+
+- 
+
+### Fixed
+
+- 
+
+
+(empty)
+
+## [3.2.0] - 2025-11-22
+
+### Added
+
+- 
+
+### Changed
+
+- 
+
+### Fixed
+
+- 
+
+
+(empty)
+
+## [3.2.0] - 2025-11-22
+
+### Added
+
+- 
+
+### Changed
+
+- 
+
+### Fixed
+
+- 
+
+
+(empty)
+
+## [3.2.0] - 2025-11-22
+
+### Added
+
+- 
+
+### Changed
+
+- 
+
+### Fixed
+
+- 
+
+
+(empty)
+
+## [3.2.0] - 2025-11-22
+
+### Added
+
+- 
+
+### Changed
+
+- 
+
+### Fixed
+
+- 
+
+
+(empty)
+
+## [3.2.0] - 2025-11-22
+
+### Added
+
+- 
+
+### Changed
+
+- 
+
+### Fixed
+
+- 
+
+
+(empty)
+
+## [3.2.0] - 2025-11-22
+
+### Added
+
+- 
+
+### Changed
+
+- 
+
+### Fixed
+
+- 
+
+
+(empty)
+
+## [3.2.0] - 2025-11-22
+
+### Added
+
+- 
+
+### Changed
+
+- 
+
+### Fixed
+
+- 
+
+
+(empty)
+
+## [3.2.0] - 2025-11-22
+
+### Added
+
+- 
+
+### Changed
+
+- 
+
+### Fixed
+
+- 
+
+
+(empty)
+
+## [3.2.0] - 2025-11-22
+
+### Added
+
+- 
+
+### Changed
+
+- 
+
+### Fixed
+
+- 
+
+
+(empty)
+
+## [3.2.0] - 2025-11-22
+
+### Added
+
+- 
+
+### Changed
+
+- 
+
+### Fixed
+
+- 
+
+
+(empty)
+
+## [3.2.0] - 2025-11-22
+
+### Added
+
+- 
+
+### Changed
+
+- 
+
+### Fixed
+
+- 
+
+
+(empty)
+
+## [3.2.0] - 2025-11-22
+
+### Added
+
+- 
+
+### Changed
+
+- 
+
+### Fixed
+
+- 
+
+
+(empty)
+
+## [3.2.0] - 2025-11-22
+
+### Added
+
+- 
+
+### Changed
+
+- 
+
+### Fixed
+
+- 
+
+
+(empty)
+
+## [3.2.0] - 2025-11-22
+
+### Added
+
+- 
+
+### Changed
+
+- 
+
+### Fixed
+
+- 
+
+
+(empty)
+
+## [3.2.0] - 2025-11-22
+
+### Added
+
+- 
+
+### Changed
+
+- 
+
+### Fixed
+
+- 
+
+
+(empty)
+
+## [3.2.0] - 2025-11-22
+
+### Added
+
+- 
+
+### Changed
+
+- 
+
+### Fixed
+
+- 
+
+
+(empty)
+
+## [3.2.0] - 2025-11-22
+
+### Added
+
+- 
+
+### Changed
+
+- 
+
+### Fixed
+
+- 
+
+
+(empty)
+
+## [3.2.0] - 2025-11-22
+
+### Added
+
+- 
+
+### Changed
+
+- 
+
+### Fixed
+
+- 
+
+
+(empty)
+
+## [3.2.0] - 2025-11-22
+
+### Added
+
+- 
+
+### Changed
+
+- 
+
+### Fixed
+
+- 
+
+
+(empty)
+
+## [3.2.0] - 2025-11-22
+
+### Added
+
+- 
+
+### Changed
+
+- 
+
+### Fixed
+
+- 
+
+
+(empty)
+
+## [3.2.0] - 2025-11-22
+
+### Added
+
+- 
+
+### Changed
+
+- 
+
+### Fixed
+
+- 
+
+
+(empty)
+
+## [3.2.0] - 2025-11-22
+
+### Added
+
+- 
+
+### Changed
+
+- 
+
+### Fixed
+
+- 
+
+
+(empty)
+
+## [3.2.0] - 2025-11-22
+
+### Added
+
+- 
+
+### Changed
+
+- 
+
+### Fixed
+
+- 
+
+
+(empty)
+
+## [3.2.0] - 2025-11-22
+
+### Added
+
+- 
+
+### Changed
+
+- 
+
+### Fixed
+
+- 
+
+
+(empty)
+
+## [3.2.0] - 2025-11-22
+
+### Added
+
+- 
+
+### Changed
+
+- 
+
+### Fixed
+
+- 
+
+
+(empty)
+
+## [3.2.0] - 2025-11-22
+
+### Added
+
+- 
+
+### Changed
+
+- 
+
+### Fixed
+
+- 
+
+
+(empty)
+
+## [3.2.0] - 2025-11-22
+
+### Added
+
+- 
+
+### Changed
+
+- 
+
+### Fixed
+
+- 
+
+
+(empty)
+
+## [3.2.0] - 2025-11-22
+
+### Added
+
+- 
+
+### Changed
+
+- 
+
+### Fixed
+
+- 
+
+
+(empty)
+
+## [3.2.0] - 2025-11-22
+
+### Added
+
+- 
+
+### Changed
+
+- 
+
+### Fixed
+
+- 
+
+
+(empty)
+
+## [3.2.0] - 2025-11-22
+
+### Added
+
+- 
+
+### Changed
+
+- 
+
+### Fixed
+
+- 
+
+
+(empty)
+
+## [3.2.0] - 2025-11-22
+
+### Added
+
+- 
+
+### Changed
+
+- 
+
+### Fixed
+
+- 
+
+
+(empty)
+
+## [3.2.0] - 2025-11-22
+
+### Added
+
+- 
+
+### Changed
+
+- 
+
+### Fixed
+
+- 
+
+
+(empty)
+
+## [3.2.0] - 2025-11-22
+
+### Added
+
+- 
+
+### Changed
+
+- 
+
+### Fixed
+
+- 
+
+
+(empty)
+
+## [3.2.0] - 2025-11-22
+
+### Added
+
+- 
+
+### Changed
+
+- 
+
+### Fixed
+
+- 
+
+
+(empty)
+
+## [3.2.0] - 2025-11-22
+
+### Added
+
+- 
+
+### Changed
+
+- 
+
+### Fixed
+
+- 
+
+
+(empty)
+
+## [3.2.0] - 2025-11-22
+
+### Added
+
+- 
+
+### Changed
+
+- 
+
+### Fixed
+
+- 
+
+
+(empty)
+
+## [3.2.0] - 2025-11-22
+
+### Added
+
+- 
+
+### Changed
+
+- 
+
+### Fixed
+
+- 
+
+
+(empty)
+
+## [3.2.0] - 2025-11-22
+
+### Added
+
+- 
+
+### Changed
+
+- 
+
+### Fixed
+
+- 
+
 
 ### Changed
 

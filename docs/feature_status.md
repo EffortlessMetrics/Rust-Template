@@ -22,31 +22,31 @@ Auto-generated AC status from acceptance tests.
 | AC ID | Story | Requirement | Status | Scenarios |
 |-------|-------|-------------|--------|----------|
 | AC-PLT-001 | US-TPL-PLT-001 | REQ-PLT-ONBOARDING | ❌ fail | 1 |
-| AC-PLT-002 | US-TPL-PLT-001 | REQ-PLT-ONBOARDING | ❌ fail | 1 |
-| AC-PLT-003 | US-TPL-PLT-001 | REQ-PLT-ONBOARDING | ❌ fail | 1 |
-| AC-PLT-004 | US-TPL-PLT-001 | REQ-PLT-DESIGN-SCAFFOLDING | ❌ fail | 1 |
-| AC-PLT-005 | US-TPL-PLT-001 | REQ-PLT-DESIGN-SCAFFOLDING | ❌ fail | 2 |
+| AC-PLT-002 | US-TPL-PLT-001 | REQ-PLT-ONBOARDING | ✅ pass | 1 |
+| AC-PLT-003 | US-TPL-PLT-001 | REQ-PLT-ONBOARDING | ✅ pass | 1 |
+| AC-PLT-004 | US-TPL-PLT-001 | REQ-PLT-DESIGN-SCAFFOLDING | ❌ fail | 5 |
+| AC-PLT-005 | US-TPL-PLT-001 | REQ-PLT-DESIGN-SCAFFOLDING | ❌ fail | 7 |
 | AC-PLT-006 | US-TPL-PLT-001 | REQ-PLT-SECURITY-GOVERNANCE | ❌ fail | 1 |
-| AC-PLT-007 | US-TPL-PLT-001 | REQ-PLT-SECURITY-GOVERNANCE | ❌ fail | 1 |
+| AC-PLT-007 | US-TPL-PLT-001 | REQ-PLT-SECURITY-GOVERNANCE | ✅ pass | 1 |
 | AC-PLT-008 | US-TPL-PLT-001 | REQ-PLT-SECURITY-GOVERNANCE | ❌ fail | 1 |
-| AC-PLT-009 | US-TPL-PLT-001 | REQ-PLT-DOCS-CONSISTENCY | ❌ fail | 1 |
-| AC-PLT-010 | US-TPL-PLT-001 | REQ-PLT-DOCS-CONSISTENCY | ❌ fail | 1 |
-| AC-PLT-011 | US-TPL-PLT-001 | REQ-PLT-RELEASE-SAFETY | ❌ fail | 1 |
-| AC-PLT-012 | US-TPL-PLT-001 | REQ-PLT-RELEASE-SAFETY | ❌ fail | 1 |
-| AC-PLT-013 | US-TPL-PLT-001 | REQ-PLT-RELEASE-SAFETY | ❌ fail | 1 |
+| AC-PLT-009 | US-TPL-PLT-001 | REQ-PLT-DOCS-CONSISTENCY | ❌ fail | 2 |
+| AC-PLT-010 | US-TPL-PLT-001 | REQ-PLT-DOCS-CONSISTENCY | ❌ fail | 2 |
+| AC-PLT-011 | US-TPL-PLT-001 | REQ-PLT-RELEASE-SAFETY | ✅ pass | 1 |
+| AC-PLT-012 | US-TPL-PLT-001 | REQ-PLT-RELEASE-SAFETY | ✅ pass | 1 |
+| AC-PLT-013 | US-TPL-PLT-001 | REQ-PLT-RELEASE-SAFETY | ✅ pass | 1 |
 | AC-PLT-014 | US-TPL-PLT-001 | REQ-PLT-DEVEX-CONTRACT | ❓ unknown | 0 |
-| AC-PLT-015 | US-TPL-PLT-001 | REQ-PLT-DEVEX-CONTRACT | ❌ fail | 1 |
-| AC-PLT-016 | US-TPL-PLT-001 | REQ-PLT-DEVEX-CONTRACT | ❌ fail | 1 |
+| AC-PLT-015 | US-TPL-PLT-001 | REQ-PLT-DEVEX-CONTRACT | ✅ pass | 1 |
+| AC-PLT-016 | US-TPL-PLT-001 | REQ-PLT-DEVEX-CONTRACT | ✅ pass | 1 |
 | AC-PLT-017 | US-TPL-PLT-001 | REQ-PLT-STATUS-CLI | ❌ fail | 6 |
 | AC-PLT-018 | US-TPL-PLT-001 | REQ-PLT-ONBOARDING | ❌ fail | 6 |
-| AC-PLT-019 | US-TPL-PLT-001 | REQ-PLT-DEVEX-CONTRACT | ❌ fail | 4 |
-| AC-PLT-020 | US-TPL-PLT-001 | REQ-PLT-DEVEX-CONTRACT | ❌ fail | 2 |
+| AC-PLT-019 | US-TPL-PLT-001 | REQ-PLT-DEVEX-CONTRACT | ✅ pass | 4 |
+| AC-PLT-020 | US-TPL-PLT-001 | REQ-PLT-DEVEX-CONTRACT | ✅ pass | 2 |
 | AC-TPL-001 | US-TPL-001 | REQ-TPL-HEALTH | ✅ pass | 1 |
 | AC-TPL-002 | US-TPL-001 | REQ-TPL-VERSION | ✅ pass | 1 |
 | AC-TPL-003 | US-TPL-001 | REQ-TPL-ERROR-HANDLING | ✅ pass | 1 |
 | AC-TPL-004 | US-TPL-001 | REQ-TPL-ERROR-HANDLING | ✅ pass | 3 |
 | AC-TPL-007 | US-TPL-001 | REQ-TPL-METRICS | ✅ pass | 1 |
-| AC-TPL-AGENT-HINTS | US-TPL-PLT-001 | REQ-TPL-AGENT-INTERFACE | ❓ unknown | 0 |
+| AC-TPL-AGENT-HINTS | US-TPL-PLT-001 | REQ-TPL-AGENT-INTERFACE | ✅ pass | 6 |
 | AC-TPL-AGENT-SKILLS | US-TPL-PLT-001 | REQ-TPL-AGENT-INTERFACE | ❓ unknown | 0 |
 | AC-TPL-GOV-WRITE-TASK-STATUS-200 | US-TPL-PLATFORM-V3 | REQ-TPL-GOV-WRITE-001 | ✅ pass | 1 |
 | AC-TPL-GRAPH-AC-HAS-TEST | US-TPL-PLT-001 | REQ-TPL-GRAPH-INVARIANTS | ❓ unknown | 0 |
@@ -54,51 +54,39 @@ Auto-generated AC status from acceptance tests.
 | AC-TPL-GRAPH-MERMAID | US-TPL-PLT-001 | REQ-TPL-GRAPH-VISUALIZATION | ✅ pass | 1 |
 | AC-TPL-GRAPH-REQ-HAS-AC | US-TPL-PLT-001 | REQ-TPL-GRAPH-INVARIANTS | ❌ fail | 1 |
 | AC-TPL-GRAPH-SELFTEST | US-TPL-PLT-001 | REQ-TPL-GRAPH-INVARIANTS | ❌ fail | 1 |
-| AC-TPL-HOOKS-INSTALL | US-TPL-PLT-001 | REQ-TPL-GOV-HOOKS | ❌ fail | 9 |
-| AC-TPL-LOCAL-DOCKER | US-TPL-PLT-001 | REQ-TPL-LOCAL-RUNTIME | ❓ unknown | 0 |
+| AC-TPL-HOOKS-INSTALL | US-TPL-PLT-001 | REQ-TPL-GOV-HOOKS | ❌ fail | 10 |
+| AC-TPL-LOCAL-DOCKER | US-TPL-PLT-001 | REQ-TPL-LOCAL-RUNTIME | ✅ pass | 1 |
 | AC-TPL-PLATFORM-DEVEX | US-TPL-PLT-001 | REQ-TPL-PLATFORM-INTROSPECTION | ✅ pass | 1 |
 | AC-TPL-PLATFORM-DOCS | US-TPL-PLT-001 | REQ-TPL-PLATFORM-INTROSPECTION | ✅ pass | 1 |
 | AC-TPL-PLATFORM-GRAPH | US-TPL-PLT-001 | REQ-TPL-PLATFORM-INTROSPECTION | ✅ pass | 1 |
-| AC-TPL-PLATFORM-UI-DASHBOARD | US-TPL-PLT-001 | REQ-TPL-PLATFORM-UI | ✅ pass | 1 |
-| AC-TPL-PLATFORM-UI-FLOWS | US-TPL-PLT-001 | REQ-TPL-PLATFORM-UI | ✅ pass | 1 |
-| AC-TPL-PLATFORM-UI-GRAPH | US-TPL-PLT-001 | REQ-TPL-PLATFORM-UI | ✅ pass | 1 |
+| AC-TPL-PLATFORM-UI-DASHBOARD | US-TPL-PLT-001 | REQ-TPL-PLATFORM-UI | ❌ fail | 1 |
+| AC-TPL-PLATFORM-UI-FLOWS | US-TPL-PLT-001 | REQ-TPL-PLATFORM-UI | ❌ fail | 1 |
+| AC-TPL-PLATFORM-UI-GRAPH | US-TPL-PLT-001 | REQ-TPL-PLATFORM-UI | ❌ fail | 1 |
 | AC-TPL-POLICY-STATUS-OVERVIEW | US-TPL-PLT-001 | REQ-TPL-PLATFORM-INTROSPECTION | ✅ pass | 1 |
-| AC-TPL-REL-CHANGELOG | US-TPL-PLT-001 | REQ-TPL-REL-BUNDLE | ❓ unknown | 0 |
-| AC-TPL-REL-EVIDENCE | US-TPL-PLT-001 | REQ-TPL-REL-BUNDLE | ❓ unknown | 0 |
-| AC-TPL-SKILLS-ALIGN-001 | US-TPL-PLT-001 | REQ-TPL-SKILLS-GUIDE | ❓ unknown | 0 |
+| AC-TPL-REL-CHANGELOG | US-TPL-PLT-001 | REQ-TPL-REL-BUNDLE | ❌ fail | 2 |
+| AC-TPL-REL-EVIDENCE | US-TPL-PLT-001 | REQ-TPL-REL-BUNDLE | ❌ fail | 7 |
+| AC-TPL-SKILLS-ALIGN-001 | US-TPL-PLT-001 | REQ-TPL-SKILLS-GUIDE | ❌ fail | 1 |
 | AC-TPL-SKILLS-FMT | US-TPL-PLT-001 | REQ-TPL-SKILLS-TOOLING | ❌ fail | 2 |
-| AC-TPL-SKILLS-GUIDE-001 | US-TPL-PLT-001 | REQ-TPL-SKILLS-GUIDE | ❓ unknown | 0 |
+| AC-TPL-SKILLS-GUIDE-001 | US-TPL-PLT-001 | REQ-TPL-SKILLS-GUIDE | ✅ pass | 1 |
 | AC-TPL-SKILLS-LINT | US-TPL-PLT-001 | REQ-TPL-SKILLS-TOOLING | ❌ fail | 4 |
 | AC-TPL-SUGGEST-NEXT-CLI | US-TPL-PLT-001 | REQ-TPL-SUGGEST-NEXT | ✅ pass | 1 |
 | AC-TPL-SUGGEST-NEXT-HTTP | US-TPL-PLT-001 | REQ-TPL-SUGGEST-NEXT | ✅ pass | 1 |
-| AC-TPL-TASK-TRANSITIONS | US-TPL-PLATFORM-V3 | REQ-TPL-TASK-LIFECYCLE | ✅ pass | 9 |
-| AC-TPL-TASKS-CLI | US-TPL-PLT-001 | REQ-TPL-PLATFORM-TASKS | ✅ pass | 3 |
-| AC-TPL-TASKS-CREATE-CLI | US-TPL-PLT-001 | REQ-TPL-PLATFORM-TASKS | ✅ pass | 3 |
-| AC-TPL-TASKS-HTTP | US-TPL-PLT-001 | REQ-TPL-PLATFORM-TASKS | ✅ pass | 12 |
-| AC-TPL-TASKS-UPDATE-CLI | US-TPL-PLT-001 | REQ-TPL-PLATFORM-TASKS | ✅ pass | 3 |
+| AC-TPL-TASK-TRANSITIONS | US-TPL-PLATFORM-V3 | REQ-TPL-TASK-LIFECYCLE | ✅ pass | 2 |
+| AC-TPL-TASKS-CLI | US-TPL-PLT-001 | REQ-TPL-PLATFORM-TASKS | ✅ pass | 1 |
+| AC-TPL-TASKS-CREATE-CLI | US-TPL-PLT-001 | REQ-TPL-PLATFORM-TASKS | ❓ unknown | 0 |
+| AC-TPL-TASKS-HTTP | US-TPL-PLT-001 | REQ-TPL-PLATFORM-TASKS | ✅ pass | 4 |
+| AC-TPL-TASKS-UPDATE-CLI | US-TPL-PLT-001 | REQ-TPL-PLATFORM-TASKS | ❓ unknown | 0 |
 
 ## Unmapped ACs
 
 ACs with no mapped scenarios:
 
 - AC-PLT-014: Canonical flows and commands are defined in specs/devex_flows.yaml
-- AC-TPL-AGENT-HINTS: GET /platform/agent/hints returns prioritized task suggestions for agents, filtering tasks by Todo/InProgress status.
-
 - AC-TPL-AGENT-SKILLS: The .claude/skills directory contains executable skill definitions for feature development, release, and maintenance workflows, each referencing the appropriate xtask commands and platform APIs.
 
 - AC-TPL-GRAPH-AC-HAS-TEST: Every AC with a tests mapping in spec_ledger.yaml has at least one test node linked in the graph.
 
-- AC-TPL-LOCAL-DOCKER: A docker-compose.yaml file exists providing Postgres and Jaeger, configured to match the application's default config for local development.
+- AC-TPL-TASKS-CREATE-CLI: cargo xtask task-create creates a new task in specs/tasks.yaml, validates that the requirement and ACs exist in spec_ledger.yaml, and rejects duplicate task IDs.
 
-- AC-TPL-REL-CHANGELOG: Evidence file includes distinct sections (Tasks, Specs/ACs, ADRs, Git log, Governance signals) adequate for LLM formatting into Keep a Changelog format.
-- AC-TPL-REL-EVIDENCE: `cargo xtask release-bundle X.Y.Z` writes `release_evidence/vX.Y.Z.md` containing: all tasks completed in this version, linked REQs/ACs/ADRs, git log since last tag, selftest summary, policy status, resolved friction entries.
-- AC-TPL-SKILLS-ALIGN-001: Existing .claude/skills/* are aligned with documented workflows (bootstrap-dev-env, governed-feature-dev, governed-maintenance, governed-release, governed-governance-debug).
+- AC-TPL-TASKS-UPDATE-CLI: cargo xtask task-update updates task fields (status, title, owner) in specs/tasks.yaml, enforces valid status transitions, and persists changes to the task definition.
 
-- AC-TPL-SKILLS-GUIDE-001: docs/AGENT_SKILLS.md exists and documents the recommended Skill set, SKILL.md templates, and best practices for this repo.
-
-
-## Unmapped Scenarios
-
-Scenarios referencing non-existent ACs:
-
-- Scenario 'Platform status returns governance summary' references AC-TPL-PLATFORM-STATUS (in home/steven/code/Rust/Rust-Template/specs/features/platform_rounding.feature)

@@ -75,6 +75,9 @@ cargo xtask bundle <task-id>
 # Quick check
 cargo xtask check
 
+# Check AC test coverage
+cargo xtask ac-coverage
+
 # Full governance validation
 cargo xtask selftest
 ```
@@ -98,6 +101,7 @@ It validates:
 
 **Never:**
 - ❌ Bypass selftest
+- ❌ Claim work is complete without running `ac-coverage` (kernel ACs must be green)
 - ❌ Force-merge failing work
 - ❌ Hand-edit YAML specs (use `xtask ac-new`, `adr-new`, etc.)
 - ❌ Guess at workflows (check skills first)

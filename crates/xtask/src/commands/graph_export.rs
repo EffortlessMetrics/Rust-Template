@@ -27,7 +27,9 @@ pub fn run(args: GraphExportArgs) -> Result<()> {
     let graph = spec_runtime::build_graph(&specs.ledger, &specs.devex, &specs.docs)?;
 
     if args.check {
-        if let Err(violations) = spec_runtime::graph::check_invariants(&graph, &specs.devex) {
+        if let Err(violations) =
+            spec_runtime::graph::check_invariants(&graph, &specs.devex, &specs.ledger)
+        {
             for v in violations {
                 eprintln!("  - {}", v);
             }
@@ -55,7 +57,7 @@ pub fn run_graph_invariants(_verbosity: u8) -> Result<()> {
     let specs = spec_runtime::load_all_specs(root)?;
     let graph = spec_runtime::build_graph(&specs.ledger, &specs.devex, &specs.docs)?;
 
-    match spec_runtime::graph::check_invariants(&graph, &specs.devex) {
+    match spec_runtime::graph::check_invariants(&graph, &specs.devex, &specs.ledger) {
         Ok(_) => Ok(()),
         Err(violations) => {
             for v in violations {

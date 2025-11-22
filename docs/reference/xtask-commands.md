@@ -8,6 +8,8 @@ Complete reference for all `xtask` CLI commands.
 - [check](#xtask-check) - Format, lint, test
 - [bdd](#xtask-bdd) - Run BDD acceptance tests
 - [ac-status](#xtask-ac-status) - Generate AC status report
+- [ac-coverage](#xtask-ac-coverage) - Show AC coverage and unknown ACs
+- [ac-suggest-scenarios](#xtask-ac-suggest-scenarios) - Generate BDD scenario stub
 - [policy-test](#xtask-policy-test) - Test Rego policies
 - [bundle](#xtask-bundle) - Generate LLM context
 - [release-bundle](#xtask-release-bundle) - Generate release evidence bundle
@@ -424,6 +426,228 @@ Falling back to JUnit + feature parsing (legacy)
 - Normalizes testcase names by removing ` (row N)` and ` (example N)` suffixes
 - Reports unmapped ACs (no scenarios) and unmapped scenarios (invalid AC refs)
 - Used by `xtask selftest` and CI workflows
+
+---
+
+## xtask ac-coverage
+
+Show AC coverage report grouped by requirement.
+
+### Usage
+
+```bash
+cargo run -p xtask -- ac-coverage
+
+# Or with alias
+xt ac-coverage
+```
+
+### What It Does
+
+Displays AC coverage summary and identifies which ACs need BDD scenarios:
+
+1. Reads `specs/spec_ledger.yaml` for all AC definitions
+2. Parses feature files in `specs/features/` to find `@AC-####` tags
+3. Reads test results from JSON or JUnit (same as `ac-status`)
+4. Groups unknown ACs by requirement
+5. Displays pass/fail/unknown counts and actionable next steps
+
+### Exit Codes
+
+- `0`: Always succeeds (read-only operation)
+
+### When to Use
+
+- **During AC development** - Identify which ACs still need scenarios
+- **Sprint planning** - See coverage gaps at a glance
+- **Before releases** - Ensure all ACs have test coverage
+- **Onboarding new features** - Understand what's missing
+
+### Example Output
+
+```
+📊 Computing AC coverage...
+
+📋 AC Coverage Summary
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ✓ 18 passing
+  ✗ 0 failing
+  ? 22 unknown (no BDD scenarios)
+
+📍 Unknown ACs (Need BDD scenarios)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  REQ-PLT-ONBOARDING: AC-PLT-001, AC-PLT-002, AC-PLT-003, AC-PLT-018
+  REQ-PLT-DESIGN-SCAFFOLDING: AC-PLT-004, AC-PLT-005
+  REQ-PLT-RELEASE-SAFETY: AC-PLT-011, AC-PLT-012, AC-PLT-013
+
+🎯 Suggested Next Steps
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  1. Generate scenario stub for AC-PLT-001:
+     $ cargo xtask ac-suggest-scenarios AC-PLT-001
+
+  2. Edit specs/features/your_feature.feature:
+     $ vim specs/features/your_feature.feature
+
+  3. Run BDD tests:
+     $ cargo xtask bdd
+
+  4. Check coverage again:
+     $ cargo xtask ac-coverage
+```
+
+### Difference from `ac-status`
+
+| Feature | `ac-coverage` | `ac-status` |
+|---------|---------------|------------|
+| **Purpose** | Quick coverage summary | Detailed AC status table |
+| **Output** | Terminal summary | Markdown file |
+| **Use case** | Sprint planning | CI/comprehensive validation |
+| **Unknown ACs** | Grouped by REQ | Listed with text |
+
+### Notes
+
+- Groups unknown ACs by requirement ID for easy navigation
+- Provides direct command suggestions for next steps
+- No side effects (read-only operation)
+- Fast execution (parses YAML + feature files)
+
+---
+
+## xtask ac-suggest-scenarios
+
+Generate BDD scenario stub for an acceptance criterion.
+
+### Usage
+
+```bash
+cargo run -p xtask -- ac-suggest-scenarios <AC-ID>
+
+# Examples
+cargo run -p xtask -- ac-suggest-scenarios AC-PLT-001
+cargo run -p xtask -- ac-suggest-scenarios AC-TPL-002
+
+# With alias
+xt ac-suggest-scenarios AC-PLT-001
+```
+
+### What It Does
+
+1. Reads `specs/spec_ledger.yaml` to find the AC text
+2. Analyzes the AC text to suggest scenario structure
+3. Generates a BDD scenario stub with appropriate Given/When/Then
+4. Provides guidance for customization
+
+### Parameters
+
+- `<AC-ID>` - Acceptance Criterion ID (e.g., `AC-PLT-001`)
+
+### Exit Codes
+
+- `0`: Scenario stub generated successfully
+- Non-zero: AC not found or invalid ID format
+
+### When to Use
+
+- **After creating a new AC** - Generate scenario template quickly
+- **Before writing BDD tests** - Get a starting point
+- **Batch scenario creation** - Streamline multiple ACs
+
+### Example Output
+
+```
+🔧 Generating BDD scenario stub...
+
+✓ Found AC: AC-PLT-001
+
+Suggested BDD Scenario (add to specs/features/*.feature):
+
+@AC-PLT-001
+Scenario: xtask doctor validates Rust, Nix, conftest
+  When I run the command
+  Then [assertion about outcome]
+
+
+Next steps:
+  1. Copy the scenario above
+  2. Edit specs/features/your_feature.feature
+  3. Paste and customize the scenario:
+     - Update When/Then steps to match the AC
+     - Add specific test data or assertions
+  4. Run: cargo xtask bdd
+  5. Run: cargo xtask ac-status
+```
+
+### Scenario Template Logic
+
+The command suggests steps based on AC text patterns:
+
+| AC Text Contains | Suggested Step |
+|------------------|----------------|
+| "GET /health" | `When I make a GET request` |
+| "POST /api" | `When I make a request` |
+| "returns" | `Then the response should be valid` |
+| "success" | `Then the operation should succeed` |
+| "validates" or "checks" | Both Given and When suggested |
+| "run" or "execute" | `When I run the command` |
+
+### Best Practices
+
+1. **Copy the stub** - The output is ready to paste into feature files
+2. **Customize assertions** - Replace `[...]` placeholders with specific checks
+3. **Use step definitions** - Check existing steps in `crates/acceptance/src/steps/`
+4. **Keep it focused** - Each scenario should test one behavior
+5. **Run immediately** - Test with `cargo xtask bdd` to validate syntax
+
+### Example Workflow
+
+```bash
+# 1. Create an AC
+cargo xtask ac-new AC-MY-001 "GET /api returns data" \
+  --story US-MY-001 \
+  --requirement REQ-MY-FEATURE
+
+# 2. Generate scenario stub
+cargo xtask ac-suggest-scenarios AC-MY-001
+
+# 3. Edit the feature file and paste the stub
+vim specs/features/my_feature.feature
+
+# 4. Customize the scenario with real steps
+# Edit: Given, When, Then to match the AC
+
+# 5. Run BDD tests
+cargo xtask bdd
+
+# 6. Check coverage
+cargo xtask ac-coverage
+```
+
+### Common Issues
+
+**AC ID not found:**
+- Verify AC exists in `specs/spec_ledger.yaml`
+- Check ID format: must start with `AC-`
+- Use exact case as in ledger
+
+**Wrong scenario type suggested:**
+- Template is a starting point only
+- Always customize to match your specific AC
+- Add multiple steps if needed
+
+**Steps don't match AC:**
+- Edit the Given/When/Then after pasting
+- Add more specific assertions
+- Reference actual API endpoints or commands
+
+### Notes
+
+- **Template-based** - Suggestion uses pattern matching, always review
+- **Non-destructive** - Only outputs to terminal, no file changes
+- **Quick iteration** - Regenerate with different AC ID easily
+- **Pairing tool** - Works well with `ac-coverage` for batch flows
 
 ---
 

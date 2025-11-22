@@ -12,6 +12,10 @@ pub fn run() -> Result<()> {
 
     println!("{}", "FLOWS & COMMAND GROUPS".bold());
     println!();
+    println!("{}", format!("Source: {}", "specs/devex_flows.yaml").dimmed());
+    println!();
+    println!("{}", "Workflow Categories:".cyan().bold());
+    println!();
 
     // Group commands by category
     let mut by_category: std::collections::HashMap<

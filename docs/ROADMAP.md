@@ -165,42 +165,81 @@ Currently, versions exist in `Cargo.toml` and metadata, but:
 
 ---
 
-## Upcoming: v3.2.x "Skills & Flows"
+## Completed: v3.2.0 "Skills & AC Tooling" ✅
 
-**Goal:** Explicit mapping between DevEx flows and Agent Skills, with repo-specific authoring guidance.
+**Goal:** Explicit mapping between DevEx flows and Agent Skills, with repo-specific authoring guidance, plus enhanced AC coverage tooling.
 
-### Motivation
-Currently:
-- `.claude/skills/` exists but without clear governance
-- No guidance on "which Skills should exist for this repo?"
-- Risk of creating one Skill per xtask command (wrong grain)
-- Skills should map to **workflows** (feature dev, release, maintenance), not buttons
-
-### Planned Features
-- **Skills Documentation**: `docs/AGENT_SKILLS.md` with repo-specific guidance:
-  - Recommended Skill set (bootstrap, feature-dev, maintenance, release, governance-debug)
-  - SKILL.md templates aligned with `specs/devex_flows.yaml`
+### What Was Delivered
+- **Skills Documentation**: `docs/AGENT_SKILLS.md` with repo-specific guidance
+  - Recommended Skill set aligned with `specs/devex_flows.yaml`
+  - SKILL.md templates for consistent authoring
   - Governance for Skill creation (REQ/AC/Task, not ad-hoc)
-- **Skill-Flow Alignment**: Each major flow in `devex_flows.yaml` gets a corresponding Skill
-- **Skill Lifecycle**: Skills are governed artifacts (AC-driven, tested, documented)
+- **Skills Tooling**:
+  - `cargo xtask skills-fmt` to normalize SKILL.md formatting
+  - `cargo xtask skills-lint` to validate Skills definitions
+  - Skills are now governed artifacts with standardized structure
+- **AC Coverage Tooling**:
+  - `cargo xtask ac-coverage` for AC coverage summary grouped by requirement
+  - `cargo xtask ac-suggest-scenarios` to generate BDD scenario stubs
+  - Shared `ac_parsing` module for consistent parsing across commands
+- **Module Wiring**:
+  - Fixed all AC-related module exports (`ac_parsing`, `ac_coverage`, `ac_suggest_scenarios`)
+  - Complete workflow from coverage analysis to scenario generation
 
-### Recommended Skills
-1. **bootstrap-dev-env**: Uses `dev-up`, `status`, `/platform/status` for first-time setup
-2. **governed-feature-dev**: AC-first workflow using `ac-new`, `bundle`, `bdd`, `selftest`, task API
-3. **governed-maintenance**: Policy/dependency/docs updates using `policy-test`, `audit`, `check`
-4. **governed-release**: Release workflow using `release-prepare`, `release-bundle`, `release-verify`
-5. **governed-governance-debug**: Diagnose selftest failures using summary, graph, policies
+### Skills Implemented
+1. **bootstrap-dev-env**: Uses `dev-up`, `status`, `/platform/status` for first-time setup ✅
+2. **governed-feature-dev**: AC-first workflow using `ac-new`, `bundle`, `bdd`, `selftest`, task API ✅
+3. **governed-maintenance**: Policy/dependency/docs updates using `policy-test`, `audit`, `check` ✅
+4. **governed-release**: Release workflow using `release-prepare`, `release-bundle`, `release-verify` ✅
+5. **governed-governance-debug**: Diagnose selftest failures using summary, graph, policies ✅
 
-### Acceptance Criteria
-- `REQ-TPL-SKILLS-GUIDE` – Documented pattern for Skills in this repo
-- `AC-TPL-SKILLS-GUIDE-001` – `docs/AGENT_SKILLS.md` exists with templates and flow mappings
-- `AC-TPL-SKILLS-ALIGN-001` – Existing `.claude/skills/*` align with documented patterns
+### Acceptance Criteria Met
+- ✅ `REQ-TPL-SKILLS-GUIDE` – Documented pattern for Skills in this repo
+- ✅ `AC-TPL-SKILLS-GUIDE-001` – `docs/AGENT_SKILLS.md` exists with templates and flow mappings
+- ✅ `AC-TPL-SKILLS-ALIGN-001` – Existing `.claude/skills/*` align with documented patterns
+- ✅ `REQ-TPL-SKILLS-TOOLING` – Skills formatting and linting commands exist
+- ✅ `AC-TPL-SKILLS-FMT` – Skills can be normalized with `skills-fmt`
+- ✅ `AC-TPL-SKILLS-LINT` – Skills validated with `skills-lint`
 
-### Benefits
+### Benefits Realized
 - Clarity: Agents and humans know which Skills exist and when to use them
 - Governance: Skills follow same AC-first rigor as code
-- Alignment: Skills match actual workflows, not arbitrary commands
+- Alignment: Skills match actual workflows from `devex_flows.yaml`
 - Maintainability: Skills are documented, tested, and traceable
+- Efficiency: AC coverage workflow streamlined from analysis to scenario generation
+
+---
+
+## v3.0.0 - Production-Ready Rust IDP Template
+
+**Status:** Target for completion
+
+### Kernel AC Coverage
+
+Every kernel AC (requirements marked `must_have_ac: true` and `kernel: true` tag) has:
+- ✅ Passing BDD scenario coverage OR unit test coverage
+- ✅ Traceability from REQ → AC → Test → Code
+- ✅ Validated by `cargo xtask ac-coverage`
+
+**Current kernel coverage:** 0/50 ACs passing (run `cargo xtask ac-coverage` for live status)
+
+### What "Green Out of the Box" Means
+
+1. **Onboarding**: `doctor`, `help-flows`, `check`, `dev-up` guide new users
+2. **Development**: `ac-new`, `adr-new`, skills-based workflows
+3. **Validation**: `selftest` enforces governance contracts
+4. **Release**: `release-prepare`, `release-verify`, `release-bundle` with evidence
+5. **Security**: `audit`, `sbom-local` supply-chain visibility
+6. **Observability**: `status`, `/platform/ui` real-time governance health
+
+Non-kernel ACs (future features, nice-to-haves) are tracked but don't block release.
+
+### Success Criteria
+
+- [ ] All kernel ACs green in `cargo xtask ac-coverage`
+- [ ] `cargo xtask selftest` passes on Linux, macOS, Windows
+- [ ] Documentation complete (README, AGENT_GUIDE, this ROADMAP)
+- [ ] Release evidence bundle generated
 
 ---
 
@@ -322,19 +361,22 @@ During the pilot, this roadmap is **living**. We update it based on friction log
 
 ## Summary
 
-**Current state (v3.0.0):**
-- ✅ 7-step selftest enforcing specs/docs/policies/graph
-- ✅ Platform introspection APIs + write-path task management
-- ✅ Web UI with dashboard, graph, Kanban board, flows
-- ✅ Agent loop (hints, status API, bundler, low-resource mode)
-- ✅ DevEx polish (dev-up, status, selftest summary, port 3000)
+**Current state:**
+- ✅ v3.2.0 complete: Skills, AC tooling, release bundle
+- ✅ Platform infrastructure: 7-step selftest, APIs, Web UI, agent loop
+- ✅ DevEx foundation: `dev-up`, `status`, selftest summary, port 3000
 
-**Upcoming work:**
-- **v3.1.x**: Release evidence bundles and LLM-assisted changelog generation
-- **v3.2.x**: Agent Skills documentation and flow-to-Skill alignment
-- **v3.3+**: Brownfield adoption, fleet view, Backstage integration
+**Production readiness (v3.0.0 milestone):**
+- 🎯 **Kernel AC Coverage**: 0/50 ACs passing (target: 100%)
+- 🎯 Every kernel AC has passing BDD scenario or unit test coverage
+- 🎯 Full traceability: REQ → AC → Test → Code
+- 🎯 Cross-platform selftest pass (Linux, macOS, Windows)
 
-**Next milestone:** Complete v3.1.0 release-bundle feature and ship first evidence-based changelog.
+**Completed milestones:**
+- ✅ **v3.1.x**: Release evidence bundles and LLM-assisted changelog generation
+- ✅ **v3.2.x**: Agent Skills documentation and flow-to-Skill alignment
+
+**Next milestone:** Complete kernel AC coverage for v3.0.0 production-ready release.
 
 **Pilot validated:**
 - ✅ Governance model is the right weight (with polish)

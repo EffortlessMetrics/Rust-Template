@@ -395,3 +395,85 @@ async fn then_empty_next_tasks_array(world: &mut World) {
         hints.len()
     );
 }
+
+// ============================================================================
+// Platform Introspection Step Definitions
+// ============================================================================
+
+#[then(regex = r#"^the field "([^"]+)" should be of type "([^"]+)"$"#)]
+async fn then_field_is_type(world: &mut World, field: String, expected_type: String) {
+    let response = world.last_response.as_ref().expect("response should exist");
+    let value = response.body.get(&field).unwrap_or_else(|| {
+        panic!("Expected field '{}' to exist in response. Response: {:?}", field, response.body)
+    });
+
+    let actual_type = match value {
+        serde_json::Value::Null => "null",
+        serde_json::Value::Bool(_) => "boolean",
+        serde_json::Value::Number(_) => "number",
+        serde_json::Value::String(_) => "string",
+        serde_json::Value::Array(_) => "array",
+        serde_json::Value::Object(_) => "object",
+    };
+
+    assert_eq!(
+        actual_type, expected_type,
+        "Expected field '{}' to be of type '{}', but got '{}'. Value: {:?}",
+        field, expected_type, actual_type, value
+    );
+}
+
+#[then(regex = r#"^the JSON response should have nested field "([^"]+)"$"#)]
+async fn then_nested_field_exists(world: &mut World, field_path: String) {
+    let response = world.last_response.as_ref().expect("response should exist");
+
+    // Split the path by dots (e.g., "governance.policies.status" -> ["governance", "policies", "status"])
+    let parts: Vec<&str> = field_path.split('.').collect();
+
+    let mut current_value = &response.body;
+
+    for (index, part) in parts.iter().enumerate() {
+        current_value = current_value.get(part).unwrap_or_else(|| {
+            panic!(
+                "Expected nested field '{}' to exist at path '{}'. Current path: '{}'. Response: {:?}",
+                field_path,
+                field_path,
+                parts[..=index].join("."),
+                response.body
+            )
+        });
+    }
+
+    // If we got here, all parts of the path exist
+    // Successfully found nested field
+    eprintln!("Successfully found nested field '{}' with value: {:?}", field_path, current_value);
+}
+
+#[then(regex = r#"^the field "([^"]+)" should not be empty$"#)]
+async fn then_array_not_empty(world: &mut World, field: String) {
+    let response = world.last_response.as_ref().expect("response should exist");
+    let value = response.body.get(&field).unwrap_or_else(|| {
+        panic!("Expected field '{}' to exist in response. Response: {:?}", field, response.body)
+    });
+
+    // Handle both arrays and objects
+    match value {
+        serde_json::Value::Array(arr) => {
+            assert!(
+                !arr.is_empty(),
+                "Expected field '{}' array to not be empty, but it has 0 items",
+                field
+            );
+        }
+        serde_json::Value::Object(obj) => {
+            assert!(
+                !obj.is_empty(),
+                "Expected field '{}' object to not be empty, but it has 0 keys",
+                field
+            );
+        }
+        _ => {
+            panic!("Expected field '{}' to be an array or object, but got: {:?}", field, value);
+        }
+    }
+}

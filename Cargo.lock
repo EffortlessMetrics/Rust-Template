@@ -19,6 +19,7 @@ dependencies = [
  "cucumber",
  "http",
  "http-body-util",
+ "regex",
  "serde_json",
  "telemetry",
  "tempfile",

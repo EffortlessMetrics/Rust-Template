@@ -3,7 +3,7 @@
 
 metadata:
   schema_version: "1.0"
-  template_version: "2.4.0"
+  template_version: "3.2.0"
   last_updated: "2025-11-20"
   description: "Template core capabilities - v2.4.0 includes health, version, errors, metrics, and supply chain hardening"
   # Template-wide ADRs (not tied to specific stories/requirements)
@@ -26,6 +26,8 @@ stories:
         acceptance_criteria:
           - id: AC-TPL-001
             text: "GET /health returns 200 with status 'ok' when service is healthy"
+            tags: [kernel]
+            must_have_ac: true
             tests: [ { type: bdd, tag: "@AC-TPL-005" } ]
             adr: ADR-0005  # Selftest as single gate
       - id: REQ-TPL-VERSION
@@ -36,6 +38,8 @@ stories:
         acceptance_criteria:
           - id: AC-TPL-002
             text: "GET /version returns build information including version and git SHA"
+            tags: [kernel]
+            must_have_ac: true
             tests: [ { type: bdd, tag: "@AC-TPL-002" } ]
             adr: ADR-0005  # Selftest as single gate
       - id: REQ-TPL-ERROR-HANDLING
@@ -46,10 +50,14 @@ stories:
         acceptance_criteria:
           - id: AC-TPL-003
             text: "All 4xx/5xx responses include an error code, message, and request ID"
+            tags: [kernel]
+            must_have_ac: true
             tests: [ { type: bdd, tag: "@AC-TPL-003" } ]
             adr: ADR-0005  # Selftest as single gate
           - id: AC-TPL-004
             text: "Handlers propagate or generate X-Request-ID and expose it in responses"
+            tags: [kernel]
+            must_have_ac: true
             tests: [ { type: bdd, tag: "@AC-TPL-004" } ]
             adr: ADR-0005  # Selftest as single gate
       - id: REQ-TPL-METRICS
@@ -60,6 +68,8 @@ stories:
         acceptance_criteria:
           - id: AC-TPL-007
             text: "GET /metrics returns Prometheus-formatted metrics including http_requests_total"
+            tags: [kernel]
+            must_have_ac: true
             tests: [ { type: bdd, tag: "@AC-TPL-007" } ]
             adr: ADR-0005  # Selftest as single gate
 
@@ -87,21 +97,29 @@ stories:
         acceptance_criteria:
           - id: AC-PLT-001
             text: "`cargo xtask doctor` validates Rust, Nix, conftest, git and provides next-steps guidance"
+            tags: [kernel]
+            must_have_ac: true
             tests:
               - { type: integration, tag: "@AC-PLT-001", file: "specs/features/xtask_devex.feature" }
           
           - id: AC-PLT-002
             text: "`cargo xtask help-flows` renders categorized command map from specs/devex_flows.yaml"
+            tags: [kernel]
+            must_have_ac: true
             tests:
               - { type: integration, tag: "@AC-PLT-002", file: "specs/features/xtask_devex.feature" }
-          
+
           - id: AC-PLT-003
             text: "`cargo xtask check` runs fmt + clippy + tests as fast dev loop"
+            tags: [kernel]
+            must_have_ac: true
             tests:
               - { type: integration, tag: "@AC-PLT-003", file: "specs/features/xtask_devex.feature" }
 
           - id: AC-PLT-018
             text: "`cargo xtask dev-up` runs doctor + install-hooks + check and displays next steps"
+            tags: [kernel]
+            must_have_ac: true
             tests:
               - { type: integration, tag: "@AC-PLT-018", file: "specs/features/xtask_devex.feature" }
 
@@ -116,11 +134,15 @@ stories:
         acceptance_criteria:
           - id: AC-PLT-004
             text: "`cargo xtask adr-new <title>` creates numbered ADR from template with metadata"
+            tags: [kernel]
+            must_have_ac: true
             tests:
               - { type: integration, tag: "@AC-PLT-004", file: "specs/features/xtask_devex.feature" }
-          
+
           - id: AC-PLT-005
             text: "`cargo xtask ac-new <ID> <desc>` rejects duplicate IDs and generates YAML snippet"
+            tags: [kernel]
+            must_have_ac: true
             tests:
               - { type: integration, tag: "@AC-PLT-005", file: "specs/features/xtask_devex.feature" }
 
@@ -135,16 +157,22 @@ stories:
         acceptance_criteria:
           - id: AC-PLT-006
             text: "`cargo xtask audit` runs cargo-audit + cargo-deny with repo policy (deny.toml)"
+            tags: [kernel]
+            must_have_ac: true
             tests:
               - { type: integration, tag: "@AC-PLT-006", file: "specs/features/xtask_devex.feature" }
-          
+
           - id: AC-PLT-007
             text: "`cargo xtask audit` provides 4-step recovery guidance on failure"
+            tags: [kernel]
+            must_have_ac: true
             tests:
               - { type: integration, tag: "@AC-PLT-007", file: "specs/features/xtask_devex.feature" }
-          
+
           - id: AC-PLT-008
             text: "`cargo xtask sbom-local` generates SPDX JSON to target/sbom.spdx.json"
+            tags: [kernel]
+            must_have_ac: true
             tests:
               - { type: integration, tag: "@AC-PLT-008", file: "specs/features/xtask_devex.feature" }
 
@@ -159,11 +187,15 @@ stories:
         acceptance_criteria:
           - id: AC-PLT-009
             text: "`cargo xtask docs-check` validates version alignment across spec_ledger, README, CLAUDE"
+            tags: [kernel]
+            must_have_ac: true
             tests:
               - { type: integration, tag: "@AC-PLT-009", file: "specs/features/xtask_devex.feature" }
-          
+
           - id: AC-PLT-010
             text: "`cargo xtask docs-check` regenerates feature_status and fails on dirty git tree"
+            tags: [kernel]
+            must_have_ac: true
             tests:
               - { type: integration, tag: "@AC-PLT-010", file: "specs/features/xtask_devex.feature" }
 
@@ -178,16 +210,22 @@ stories:
         acceptance_criteria:
           - id: AC-PLT-011
             text: "`cargo xtask release-prepare X.Y.Z` updates spec_ledger, README, CLAUDE, CHANGELOG"
+            tags: [kernel]
+            must_have_ac: true
             tests:
               - { type: integration, tag: "@AC-PLT-011", file: "specs/features/xtask_devex.feature" }
 
           - id: AC-PLT-012
             text: "`cargo xtask release-verify` runs selftest + audit + docs-check + clean tree"
+            tags: [kernel]
+            must_have_ac: true
             tests:
               - { type: integration, tag: "@AC-PLT-012", file: "specs/features/xtask_devex.feature" }
 
           - id: AC-PLT-013
             text: "`cargo xtask release-verify` provides git command sequence on success"
+            tags: [kernel]
+            must_have_ac: true
             tests:
               - { type: integration, tag: "@AC-PLT-013", file: "specs/features/xtask_devex.feature" }
 
@@ -202,11 +240,15 @@ stories:
         acceptance_criteria:
           - id: AC-TPL-REL-EVIDENCE
             text: "`cargo xtask release-bundle X.Y.Z` writes `release_evidence/vX.Y.Z.md` containing: all tasks completed in this version, linked REQs/ACs/ADRs, git log since last tag, selftest summary, policy status, resolved friction entries."
+            tags: [kernel]
+            must_have_ac: true
             tests:
               - { type: integration, tag: "release_bundle_generation" }
 
           - id: AC-TPL-REL-CHANGELOG
             text: "Evidence file includes distinct sections (Tasks, Specs/ACs, ADRs, Git log, Governance signals) adequate for LLM formatting into Keep a Changelog format."
+            tags: [kernel]
+            must_have_ac: true
             tests:
               - { type: integration, tag: "release_bundle_structure" }
 
@@ -221,26 +263,36 @@ stories:
         acceptance_criteria:
           - id: AC-PLT-014
             text: "Canonical flows and commands are defined in specs/devex_flows.yaml"
+            tags: [kernel]
+            must_have_ac: true
             tests:
-              - { type: unit, tag: "devex_flows_schema_valid" }
-          
+              - { type: unit, tag: "devex_flows_schema_valid", file: "crates/spec-runtime/src/devex.rs" }
+
           - id: AC-PLT-015
             text: "`cargo xtask selftest` enforces devex contract (required commands exist)"
+            tags: [kernel]
+            must_have_ac: true
             tests:
               - { type: integration, tag: "@AC-PLT-015", file: "specs/features/xtask_devex.feature" }
-          
+
           - id: AC-PLT-016
             text: "`cargo xtask ci-local` orchestrates doctor + selftest + audit + docs-check"
+            tags: [kernel]
+            must_have_ac: true
             tests:
               - { type: integration, tag: "@AC-PLT-016", file: "specs/features/xtask_devex.feature" }
 
           - id: AC-PLT-019
             text: "`cargo xtask selftest` displays a condensed summary with clear pass/fail indicators for all 7 steps"
+            tags: [kernel]
+            must_have_ac: true
             tests:
               - { type: integration, tag: "@AC-PLT-019", file: "specs/features/xtask_devex.feature" }
 
           - id: AC-PLT-020
             text: "`XTASK_LOW_RESOURCES=1` environment variable skips resource-intensive steps in selftest for CI/constrained environments"
+            tags: [kernel]
+            must_have_ac: true
             tests:
               - { type: integration, tag: "@AC-PLT-020", file: "specs/features/xtask_devex.feature" }
 
@@ -256,6 +308,8 @@ stories:
         acceptance_criteria:
           - id: AC-PLT-017
             text: "`cargo xtask status` displays version, REQ/AC/task counts, selftest status, and suggested next tasks"
+            tags: [kernel]
+            must_have_ac: true
             tests:
               - { type: integration, tag: "@AC-PLT-017", file: "specs/features/xtask_devex.feature" }
 
@@ -271,14 +325,20 @@ stories:
         acceptance_criteria:
           - id: AC-TPL-PLATFORM-GRAPH
             text: "GET /platform/graph returns the full governance graph in JSON format."
+            tags: [kernel]
+            must_have_ac: true
             tests:
               - { type: bdd, tag: "@AC-TPL-PLATFORM-GRAPH" }
           - id: AC-TPL-PLATFORM-DEVEX
             text: "GET /platform/devex/flows returns the canonical flows definition."
+            tags: [kernel]
+            must_have_ac: true
             tests:
               - { type: bdd, tag: "@AC-TPL-PLATFORM-DEVEX" }
           - id: AC-TPL-PLATFORM-DOCS
             text: "GET /platform/docs/index returns the documentation index."
+            tags: [kernel]
+            must_have_ac: true
             tests:
               - { type: bdd, tag: "@AC-TPL-PLATFORM-DOCS" }
           - id: AC-TPL-POLICY-STATUS-OVERVIEW
@@ -286,6 +346,8 @@ stories:
               GET /platform/status includes governance.policies.status field
               derived from the last policy-test run (pass/fail/unknown),
               read from target/policy_status.json.
+            tags: [kernel]
+            must_have_ac: true
             tests:
               - { type: bdd, tag: "@AC-TPL-PLATFORM-STATUS" }
 
@@ -304,6 +366,8 @@ stories:
               cargo xtask suggest-next --task <ID> prints a structured
               sequence of recommended commands and edits for the given
               task, based on its recommended_flows.
+            tags: [future]
+            must_have_ac: false
             tests:
               - { type: bdd, tag: "@AC-TPL-SUGGEST-NEXT-CLI" }
 
@@ -312,6 +376,8 @@ stories:
               GET /platform/tasks/suggest-next?task=<ID> returns a JSON
               payload with task metadata and a recommended_sequence of
               steps (commands/edits) for that task.
+            tags: [future]
+            must_have_ac: false
             tests:
               - { type: bdd, tag: "@AC-TPL-SUGGEST-NEXT-HTTP" }
 
@@ -330,6 +396,8 @@ stories:
               Every requirement with tags including platform, structural,
               security, devex, docs, or release has at least one AC node
               in the graph.
+            tags: [kernel]
+            must_have_ac: true
             tests:
               - { type: unit, tag: "graph_invariants_req_has_ac" }
 
@@ -337,14 +405,18 @@ stories:
             text: >
               Every AC with a tests mapping in spec_ledger.yaml has at
               least one test node linked in the graph.
+            tags: [kernel]
+            must_have_ac: true
             tests:
-              - { type: unit, tag: "graph_invariants_ac_has_test" }
+              - { type: unit, tag: "ac_with_tests_produces_graph_node_and_edge" }
 
           - id: AC-TPL-GRAPH-COMMAND-REACHABLE
             text: >
               Every command declared in specs/devex_flows.yaml is either
               referenced by a flow or explicitly marked internal; no
               orphan commands exist.
+            tags: [kernel]
+            must_have_ac: true
             tests:
               - { type: unit, tag: "graph_invariants_command_reachable" }
 
@@ -352,6 +424,8 @@ stories:
             text: >
               cargo xtask selftest fails when governance graph invariants fail,
               Mermaid syntax, and is suitable for documentation or debugging.
+            tags: [kernel]
+            must_have_ac: true
             tests:
               - { type: unit, tag: "graph_export_mermaid" }
 
@@ -369,6 +443,8 @@ stories:
             text: >
               GET / or /ui serves an HTML dashboard showing platform status,
               including governance health metrics from /platform/status.
+            tags: [kernel]
+            must_have_ac: true
             tests:
               - { type: bdd, tag: "@AC-TPL-PLATFORM-UI-DASHBOARD" }
 
@@ -376,6 +452,8 @@ stories:
             text: >
               The UI provides a graph visualization rendering the governance
               graph (stories, requirements, ACs, docs, commands) using Mermaid.js.
+            tags: [kernel]
+            must_have_ac: true
             tests:
               - { type: bdd, tag: "@AC-TPL-PLATFORM-UI-GRAPH" }
 
@@ -383,6 +461,8 @@ stories:
             text: >
               The UI provides a flows and tasks view displaying DevEx flows
               and available tasks from the platform APIs.
+            tags: [kernel]
+            must_have_ac: true
             tests:
               - { type: bdd, tag: "@AC-TPL-PLATFORM-UI-FLOWS" }
 
@@ -398,16 +478,22 @@ stories:
         acceptance_criteria:
           - id: AC-TPL-PLATFORM-GRAPH
             text: "GET /platform/graph returns the governance graph (stories, requirements, ACs, docs, commands, flows) as JSON with nodes[] and edges[]."
+            tags: [kernel]
+            must_have_ac: true
             tests:
               - { type: bdd, tag: "@AC-TPL-PLATFORM-GRAPH", file: "specs/features/platform_introspection.feature" }
 
           - id: AC-TPL-PLATFORM-DEVEX
             text: "GET /platform/devex/flows returns devex_flows.yaml as JSON, including commands and flows sections."
+            tags: [kernel]
+            must_have_ac: true
             tests:
               - { type: bdd, tag: "@AC-TPL-PLATFORM-DEVEX", file: "specs/features/platform_introspection.feature" }
 
           - id: AC-TPL-PLATFORM-DOCS
             text: "GET /platform/docs/index returns doc_index.yaml as JSON, including docs[] entries mapped to stories/requirements/ACs/ADRs."
+            tags: [kernel]
+            must_have_ac: true
             tests:
               - { type: bdd, tag: "@AC-TPL-PLATFORM-DOCS", file: "specs/features/platform_introspection.feature" }
 
@@ -423,9 +509,10 @@ stories:
         acceptance_criteria:
           - id: AC-TPL-TASKS-CLI
             text: >
-              cargo xtask tasks-list prints tasks grouped by status, with
-              requirement IDs and ACs visible, and supports status/requirement
-              filters.
+              cargo xtask tasks-list prints all tasks with their IDs, titles,
+              status, and requirement IDs (no filters implemented yet).
+            tags: [future]
+            must_have_ac: false
             tests:
               - { type: bdd, tag: "@AC-TPL-TASKS-CLI", file: "specs/features/platform_tasks.feature" }
 
@@ -434,6 +521,8 @@ stories:
               cargo xtask task-create creates a new task in specs/tasks.yaml,
               validates that the requirement and ACs exist in spec_ledger.yaml,
               and rejects duplicate task IDs.
+            tags: [future]
+            must_have_ac: false
             tests:
               - { type: bdd, tag: "@AC-TPL-TASKS-CREATE-CLI", file: "specs/features/platform_tasks.feature" }
 
@@ -442,6 +531,8 @@ stories:
               cargo xtask task-update updates task fields (status, title, owner)
               in specs/tasks.yaml, enforces valid status transitions, and
               persists changes to the task definition.
+            tags: [future]
+            must_have_ac: false
             tests:
               - { type: bdd, tag: "@AC-TPL-TASKS-UPDATE-CLI", file: "specs/features/platform_tasks.feature" }
 
@@ -450,6 +541,10 @@ stories:
               GET /platform/tasks returns a JSON representation of tasks.yaml,
               including id, title, requirement, acs, status, owner, labels,
               and docs fields, and supports status/requirement filters.
+              POST /platform/tasks/{id}/status updates task status via HTTP
+              (no POST /platform/tasks or PUT /platform/tasks/{id} implemented yet).
+            tags: [future]
+            must_have_ac: false
             tests:
               - { type: bdd, tag: "@AC-TPL-TASKS-HTTP", file: "specs/features/platform_tasks.feature" }
 
@@ -468,6 +563,8 @@ stories:
               cargo xtask graph-export --format mermaid emits a valid Mermaid
               graph (graph TD) that includes nodes for stories, requirements,
               and ACs, and edges showing their relationships.
+            tags: [kernel]
+            must_have_ac: true
             tests:
               - { type: bdd, tag: "@AC-TPL-GRAPH-MERMAID", file: "specs/features/graph_visualization.feature" }
 
@@ -484,6 +581,8 @@ stories:
             text: >
               A docker-compose.yaml file exists providing Postgres and Jaeger,
               configured to match the application's default config for local development.
+            tags: [future]
+            must_have_ac: false
             tests:
               - { type: manual, tag: "docker_compose_up" }
 
@@ -500,6 +599,8 @@ stories:
             text: >
               The 'cargo xtask install-hooks' command creates a pre-commit hook
               that runs 'cargo xtask check' within the Nix environment when available.
+            tags: [kernel]
+            must_have_ac: true
             tests:
               - { type: manual, tag: "git_commit_verify" }
 
@@ -517,6 +618,8 @@ stories:
               The .claude/skills directory contains executable skill definitions
               for feature development, release, and maintenance workflows,
               each referencing the appropriate xtask commands and platform APIs.
+            tags: [kernel]
+            must_have_ac: true
             tests:
               - { type: manual, tag: "agent_skill_discovery" }
 
@@ -524,6 +627,8 @@ stories:
             text: >
               GET /platform/agent/hints returns prioritized task suggestions
               for agents, filtering tasks by Todo/InProgress status.
+            tags: [future]
+            must_have_ac: false
             tests:
               - { type: bdd, tag: "@AC-TPL-AGENT-HINTS" }
 
@@ -541,6 +646,8 @@ stories:
             text: >
               docs/AGENT_SKILLS.md exists and documents the recommended Skill set,
               SKILL.md templates, and best practices for this repo.
+            tags: [kernel]
+            must_have_ac: true
             tests:
               - { type: docs, tag: "skills_guide_exists" }
 
@@ -549,6 +656,8 @@ stories:
               Existing .claude/skills/* are aligned with documented workflows
               (bootstrap-dev-env, governed-feature-dev, governed-maintenance,
               governed-release, governed-governance-debug).
+            tags: [kernel]
+            must_have_ac: true
             tests:
               - { type: manual, tag: "skills_alignment_review" }
 
@@ -566,6 +675,8 @@ stories:
             text: >
               `cargo run -p xtask -- skills-fmt` normalizes SKILL.md files
               according to repo conventions (frontmatter, headings, links).
+            tags: [kernel]
+            must_have_ac: true
             tests:
               - { type: integration, tag: "@AC-TPL-SKILLS-FMT", file: "specs/features/xtask_devex.feature" }
 
@@ -573,6 +684,8 @@ stories:
             text: >
               `cargo run -p xtask -- skills-lint` validates Skills frontmatter and
               content (name/description rules, references to flows and APIs).
+            tags: [kernel]
+            must_have_ac: true
             tests:
               - { type: integration, tag: "@AC-TPL-SKILLS-LINT", file: "specs/features/xtask_devex.feature" }
 
@@ -596,6 +709,8 @@ stories:
         acceptance_criteria:
           - id: AC-TPL-GOV-WRITE-TASK-STATUS-200
             text: "set_task_status writes durable state reflected in the governance graph."
+            tags: [kernel]
+            must_have_ac: true
             tests:
               - { type: integration, tag: "@AC-TPL-GOV-WRITE-TASK-STATUS-200" }
 
@@ -610,6 +725,8 @@ stories:
         acceptance_criteria:
           - id: AC-TPL-TASK-TRANSITIONS
             text: "Task status transitions are validated against the domain model."
+            tags: [kernel]
+            must_have_ac: true
             tests:
               - { type: unit, tag: "task_status_transitions" }
 

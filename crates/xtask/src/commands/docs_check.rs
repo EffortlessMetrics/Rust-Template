@@ -117,9 +117,27 @@ fn check_version_alignment() -> Result<()> {
     let ledger_version = extract_version_from_ledger()?;
     let claude_version = extract_version_from_claude()?;
 
-    if readme_version != ledger_version || readme_version != claude_version {
+    // Always log what we found for BDD test verification
+    eprintln!("  README version: {}", readme_version);
+    eprintln!("  spec_ledger version: {}", ledger_version);
+    if claude_version != "unknown" {
+        eprintln!("  CLAUDE version: {}", claude_version);
+    }
+
+    // CLAUDE.md version is optional (returns "unknown" if not present)
+    // Only check README vs spec_ledger as mandatory
+    if readme_version != ledger_version {
         anyhow::bail!(
-            "Version mismatch: README={}, ledger={}, CLAUDE={}",
+            "Version mismatch: README={}, spec_ledger={}",
+            readme_version,
+            ledger_version
+        );
+    }
+
+    // If CLAUDE has a version, it must match
+    if claude_version != "unknown" && readme_version != claude_version {
+        anyhow::bail!(
+            "Version mismatch: README={}, spec_ledger={}, CLAUDE={}",
             readme_version,
             ledger_version,
             claude_version
@@ -131,9 +149,10 @@ fn check_version_alignment() -> Result<()> {
 
 fn extract_version_from_readme() -> Result<String> {
     let content = fs::read_to_string("README.md")?;
-    // Look for "# Rust Spec-as-Code Template (vX.Y.Z)"
+    // Look for "# Rust-as-Spec Platform Cell (vX.Y.Z)" or "# Rust Spec-as-Code Template (vX.Y.Z)"
     for line in content.lines() {
-        if line.starts_with("# Rust Spec-as-Code Template")
+        if (line.starts_with("# Rust-as-Spec Platform Cell")
+            || line.starts_with("# Rust Spec-as-Code Template"))
             && let Some(start) = line.find("(v")
             && let Some(end) = line[start..].find(')')
         {
@@ -169,40 +188,38 @@ fn extract_version_from_claude() -> Result<String> {
 }
 
 fn check_ac_status_clean() -> Result<()> {
-    // Read current feature_status.md before regeneration
-    let current_content = fs::read_to_string("docs/feature_status.md")
-        .context("Failed to read docs/feature_status.md")?;
-
-    // Generate fresh content to a temporary location
-    let temp_dir = std::env::temp_dir();
-    let temp_output = temp_dir.join("feature_status_check.md");
-
-    // Run ac-status to regenerate in temp location
+    // Regenerate feature_status.md in place
     // Note: We ignore the result because ac-status may fail if ACs are failing,
-    // but we still want to check if the file was manually edited.
-    // The file is written before the failure check, so we can still compare content.
+    // but we still want to check if the regenerated file differs from what was committed.
+    // The file is written before the failure check, so we can still verify cleanliness.
     let _ = crate::commands::ac_status::run(crate::commands::ac_status::AcStatusArgs {
         verbosity: crate::Verbosity::Quiet,
-        output: temp_output.clone(),
         ..Default::default()
     });
 
-    // Check if temp file was generated
-    if !temp_output.exists() {
-        anyhow::bail!("Failed to regenerate feature_status.md for comparison");
-    }
+    // Check if git tree is dirty (uncommitted changes to tracked files)
+    let output = std::process::Command::new("git")
+        .args(["status", "--porcelain"])
+        .output()
+        .context("Failed to run git status")?;
 
-    // Read regenerated content
-    let regenerated_content =
-        fs::read_to_string(&temp_output).context("Failed to read regenerated feature_status.md")?;
+    let status = String::from_utf8_lossy(&output.stdout);
 
-    // Clean up temp file
-    let _ = fs::remove_file(&temp_output);
+    // Filter for changes to tracked files only (lines starting with M, D, R, etc., not ??)
+    let tracked_changes: Vec<&str> = status
+        .lines()
+        .filter(|line| {
+            let trimmed = line.trim();
+            !trimmed.is_empty() && !trimmed.starts_with("??")
+        })
+        .collect();
 
-    // Compare content
-    if current_content != regenerated_content {
+    if !tracked_changes.is_empty() {
         anyhow::bail!(
-            "docs/feature_status.md was manually edited. Run 'cargo xtask ac-status' to regenerate."
+            "Regenerated docs/feature_status.md differs from committed version.\n\
+            Run 'cargo xtask ac-status' and commit the changes.\n\
+            Uncommitted changes:\n{}",
+            tracked_changes.join("\n")
         );
     }
 
