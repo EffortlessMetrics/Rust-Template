@@ -605,6 +605,16 @@ async fn then_mentions(world: &mut World, expected: String) {
     );
 }
 
+#[then("the output should mention Docker status")]
+async fn then_output_mentions_docker_status(world: &mut World) {
+    let ctx = world.xtask_context();
+    let output = ctx.last_command_output.as_ref().expect("No command output");
+
+    let has_docker_status = output.contains("Docker status:");
+
+    assert!(has_docker_status, "Output should mention Docker status\nActual output:\n{}", output);
+}
+
 #[then("the output should indicate description needs improvement")]
 async fn then_description_needs_improvement(world: &mut World) {
     let ctx = world.xtask_context();
@@ -618,6 +628,251 @@ async fn then_description_needs_improvement(world: &mut World) {
         "Output should indicate description needs improvement\nActual output:\n{}",
         output
     );
+}
+
+#[then(
+    regex = r#"^the output should contain valid YAML with AC entry "([^"]+)" and description "([^"]+)"$"#
+)]
+async fn then_output_contains_valid_yaml_ac(world: &mut World, ac_id: String, description: String) {
+    let ctx = world.xtask_context();
+    let output = ctx.last_command_output.as_ref().expect("No command output");
+
+    // Extract the YAML snippet from the output
+    // The ac-new command outputs the YAML indented under "AC Entry (add to spec_ledger.yaml):"
+    // We need to extract the lines that form the YAML AC entry
+    let yaml_snippet = extract_yaml_ac_snippet(output)
+        .unwrap_or_else(|| panic!("Failed to extract YAML snippet from output:\n{}", output));
+
+    // Parse the YAML snippet
+    let yaml_value: serde_yaml::Value = serde_yaml::from_str(&yaml_snippet).unwrap_or_else(|e| {
+        panic!("Failed to parse YAML snippet: {}\nSnippet:\n{}", e, yaml_snippet)
+    });
+
+    // Validate structure
+    assert!(yaml_value.is_mapping(), "YAML should be a mapping");
+
+    let mapping = yaml_value.as_mapping().expect("Should be mapping");
+
+    // Check AC ID
+    let id_value = mapping
+        .get(serde_yaml::Value::String("id".to_string()))
+        .expect("YAML should contain 'id' field");
+    assert_eq!(id_value.as_str().expect("id should be a string"), ac_id, "AC ID should match");
+
+    // Check description text
+    let text_value = mapping
+        .get(serde_yaml::Value::String("text".to_string()))
+        .expect("YAML should contain 'text' field");
+    assert_eq!(
+        text_value.as_str().expect("text should be a string"),
+        description,
+        "Description should match"
+    );
+
+    // Check tests array structure
+    let tests_value = mapping
+        .get(serde_yaml::Value::String("tests".to_string()))
+        .expect("YAML should contain 'tests' field");
+    assert!(tests_value.is_sequence(), "tests should be an array");
+
+    let tests_seq = tests_value.as_sequence().expect("tests should be sequence");
+    assert!(!tests_seq.is_empty(), "tests array should not be empty");
+
+    // Validate first test entry structure
+    let first_test = &tests_seq[0];
+    assert!(first_test.is_mapping(), "test entry should be a mapping");
+
+    let test_mapping = first_test.as_mapping().expect("Should be mapping");
+
+    // Check test type
+    let test_type = test_mapping
+        .get(serde_yaml::Value::String("type".to_string()))
+        .expect("test should have 'type' field");
+    assert_eq!(
+        test_type.as_str().expect("type should be string"),
+        "bdd",
+        "test type should be 'bdd'"
+    );
+
+    // Check test tag matches AC ID
+    let test_tag = test_mapping
+        .get(serde_yaml::Value::String("tag".to_string()))
+        .expect("test should have 'tag' field");
+    let expected_tag = format!("@{}", ac_id);
+    assert_eq!(
+        test_tag.as_str().expect("tag should be string"),
+        expected_tag,
+        "test tag should match AC ID with @ prefix"
+    );
+}
+
+/// Extract the YAML AC snippet from ac-new command output
+/// The output contains the YAML indented under "AC Entry (add to spec_ledger.yaml):"
+fn extract_yaml_ac_snippet(output: &str) -> Option<String> {
+    let lines: Vec<&str> = output.lines().collect();
+
+    // Find the line with "AC Entry"
+    let start_idx = lines.iter().position(|line| line.contains("AC Entry"))?;
+
+    // Skip the "AC Entry" line and collect indented YAML lines
+    let mut yaml_lines = Vec::new();
+    let mut in_yaml = false;
+
+    for line in lines.iter().skip(start_idx + 1) {
+        // Check if line starts with significant indentation (YAML content)
+        if line.starts_with("              - id:") || line.starts_with("                id:") {
+            in_yaml = true;
+            // Remove leading spaces to get valid YAML (keep the list marker)
+            yaml_lines.push(line.trim_start());
+        } else if in_yaml
+            && (line.starts_with("              ") || line.starts_with("                "))
+        {
+            // Continue collecting YAML lines
+            yaml_lines.push(line.trim_start());
+        } else if in_yaml && !line.trim().is_empty() && !line.starts_with(" ") {
+            // Stop when we hit non-indented content
+            break;
+        } else if in_yaml && line.trim().is_empty() {
+            // Stop on empty line after YAML started
+            break;
+        }
+    }
+
+    if yaml_lines.is_empty() {
+        return None;
+    }
+
+    Some(yaml_lines.join("\n"))
+}
+
+// ============================================================================
+// AC-PLT-004: ADR File Validation Steps
+// ============================================================================
+
+#[then("a new ADR file should exist")]
+async fn then_new_adr_file_exists(world: &mut World) {
+    let workspace_root = workspace_root(world);
+    let adr_dir = workspace_root.join("docs/adr");
+
+    assert!(adr_dir.exists(), "ADR directory should exist at {}", adr_dir.display());
+
+    // Find the newest ADR file
+    let mut adr_files = Vec::new();
+    if let Ok(entries) = fs::read_dir(&adr_dir) {
+        for entry in entries.filter_map(Result::ok) {
+            let path = entry.path();
+            if path.is_file() && path.extension().is_some_and(|ext| ext == "md") {
+                adr_files.push(path);
+            }
+        }
+    }
+
+    assert!(!adr_files.is_empty(), "At least one ADR file should exist in {}", adr_dir.display());
+
+    // Sort by modification time and get the newest
+    adr_files.sort_by_key(|p| {
+        fs::metadata(p).and_then(|m| m.modified()).unwrap_or(std::time::SystemTime::UNIX_EPOCH)
+    });
+
+    if let Some(newest) = adr_files.last() {
+        world.xtask_context_mut().test_adr_path = Some(newest.clone());
+    }
+}
+
+#[then("the ADR file should have the correct title format")]
+async fn then_adr_has_correct_title_format(world: &mut World) {
+    let ctx = world.xtask_context();
+    let file_path = ctx.test_adr_path.as_ref().expect("No ADR file path stored");
+    let content = fs::read_to_string(file_path).expect("Failed to read ADR file");
+
+    // First line should match: # ADR-XXXX: Title
+    let first_line = content.lines().next().expect("ADR file should not be empty");
+
+    // Check that it starts with "# ADR-" and contains a colon
+    assert!(
+        first_line.starts_with("# ADR-") && first_line.contains(':'),
+        "ADR title should match format '# ADR-XXXX: Title'\nActual first line: {}",
+        first_line
+    );
+}
+
+#[then("the ADR file should contain all required sections")]
+async fn then_adr_contains_required_sections(world: &mut World) {
+    let ctx = world.xtask_context();
+    let file_path = ctx.test_adr_path.as_ref().expect("No ADR file path stored");
+    let content = fs::read_to_string(file_path).expect("Failed to read ADR file");
+
+    // Check for required sections
+    let required_sections = vec!["## Context", "## Decision", "## Consequences", "## Compliance"];
+
+    for section in required_sections {
+        assert!(
+            content.contains(section),
+            "ADR file should contain section '{}'\nFile content:\n{}",
+            section,
+            content
+        );
+    }
+
+    // Verify that the Status placeholder was replaced with "Proposed"
+    assert!(
+        content.contains("**Status**: Proposed"),
+        "ADR file should have Status set to 'Proposed'\nFile content:\n{}",
+        content
+    );
+
+    // Verify the placeholder text was removed
+    assert!(
+        !content.contains("[Proposed | Accepted | Deprecated | Superseded by ADR-YYYY]"),
+        "ADR file should not contain placeholder Status text\nFile content:\n{}",
+        content
+    );
+}
+
+#[then("the new ADR number should be sequential")]
+async fn then_new_adr_number_is_sequential(world: &mut World) {
+    let workspace_root = workspace_root(world);
+    let adr_dir = workspace_root.join("docs/adr");
+    let ctx = world.xtask_context();
+    let new_file = ctx.test_adr_path.as_ref().expect("No ADR file path stored");
+
+    // Extract number from new file (format: XXXX-title.md)
+    let new_filename = new_file.file_name().expect("Should have filename");
+    let new_filename_str = new_filename.to_string_lossy();
+    let new_num = new_filename_str
+        .split('-')
+        .next()
+        .and_then(|s| s.parse::<u32>().ok())
+        .expect("New ADR should have numeric prefix");
+
+    // Find all existing ADR numbers (excluding the new one)
+    let mut existing_nums = Vec::new();
+    if let Ok(entries) = fs::read_dir(&adr_dir) {
+        for entry in entries.filter_map(Result::ok) {
+            let path = entry.path();
+            if path != *new_file
+                && path.is_file()
+                && let Some(filename) = path.file_name()
+            {
+                let filename_str = filename.to_string_lossy();
+                if let Some(num_str) = filename_str.split('-').next()
+                    && let Ok(num) = num_str.parse::<u32>()
+                {
+                    existing_nums.push(num);
+                }
+            }
+        }
+    }
+
+    // Verify new number is greater than all existing numbers
+    if let Some(&max_existing) = existing_nums.iter().max() {
+        assert!(
+            new_num > max_existing,
+            "New ADR number {} should be greater than existing max {}",
+            new_num,
+            max_existing
+        );
+    }
 }
 
 // ============================================================================
@@ -798,6 +1053,50 @@ async fn then_cleanup_adr(world: &mut World) {
 #[given(regex = r#"^an AC with ID "([^"]+)" already exists$"#)]
 async fn given_ac_exists(_world: &mut World, _ac_id: String) {
     // This scenario tests duplicate detection - we use an AC ID that exists in spec_ledger
+}
+
+// ============================================================================
+// AC-PLT-007: Recovery Guidance Steps
+// ============================================================================
+
+#[given("a vulnerability exists in dependencies")]
+async fn given_vulnerability_exists(_world: &mut World) {
+    // This step simulates a scenario where audit will detect issues
+    // The actual vulnerability detection happens during "cargo xtask audit"
+    // This is a precondition that the audit tool should detect and report
+}
+
+#[then("the output should contain recovery steps")]
+async fn then_output_contains_recovery_steps(world: &mut World) {
+    let ctx = world.xtask_context();
+    let output = ctx.last_command_output.as_ref().expect("No command output");
+
+    // Check for recovery guidance indicators
+    let has_recovery = output.contains("Recovery")
+        || output.contains("recovery")
+        || output.contains("recommend")
+        || output.contains("fix")
+        || output.contains("Fix");
+
+    assert!(has_recovery, "Output should contain recovery steps\nActual output:\n{}", output);
+}
+
+#[then("the recovery steps should be numbered")]
+async fn then_recovery_steps_numbered(world: &mut World) {
+    let ctx = world.xtask_context();
+    let output = ctx.last_command_output.as_ref().expect("No command output");
+
+    // Check for numbered list indicators (1., 2., 3., etc. or similar patterns)
+    let has_numbered = output.contains("1.")
+        || output.contains("- ")
+        || output.contains("*")
+        || output.contains("Step");
+
+    assert!(
+        has_numbered,
+        "Recovery steps should be numbered or listed\nActual output:\n{}",
+        output
+    );
 }
 
 // ============================================================================

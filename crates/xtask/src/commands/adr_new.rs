@@ -41,9 +41,12 @@ pub fn run(title: &str) -> Result<()> {
     // Fill in template
     let content = template
         .replace("# ADR-XXXX: [Title]", &format!("# {}: {}", adr_id, title))
-        .replace("**Status:** Draft", "**Status:** Proposed")
-        .replace("**Date:** YYYY-MM-DD", &format!("**Date:** {}", date))
-        .replace("**Authors:** [Your Name]", &format!("**Authors:** {}", author));
+        .replace(
+            "**Status**: [Proposed | Accepted | Deprecated | Superseded by ADR-YYYY]",
+            "**Status**: Proposed",
+        )
+        .replace("**Date**: YYYY-MM-DD", &format!("**Date**: {}", date))
+        .replace("**Authors**: [Author names or teams]", &format!("**Authors**: {}", author));
 
     // Write file
     fs::write(&filepath, content)?;
