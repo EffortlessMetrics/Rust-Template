@@ -16,7 +16,7 @@ anyhow = "1.0.100"
 clap = { version = "4.5.51", features = ["derive"] }
 colored = "3.0.0"
 serde = { version = "1.0.228", features = ["derive"] }
-serde_yaml = { package = "serde_yaml_ng", version = "0.10.0" }
+serde_yaml = { workspace = true }
 toml = "0.8.19"
 walkdir = "2.5.0"
 

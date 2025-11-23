@@ -21,6 +21,7 @@ dependencies = [
  "http-body-util",
  "regex",
  "serde_json",
+ "serde_yaml",
  "telemetry",
  "tempfile",
  "tokio",
