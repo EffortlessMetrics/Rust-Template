@@ -69,6 +69,8 @@ cargo xtask selftest:    7-step validation (CI gate)
 
 ### Prerequisites
 
+Editor recommendation: Visual Studio Code with the `rust-analyzer` extension (`rust-lang.rust-analyzer`). This repository includes a `.vscode/extensions.json` workspace recommendation.
+
 This template is **Nix-first**. Development environments should be declarative, reproducible, and match CI exactly.
 
 **Platform Recommendation:** For the best experience, use a **Tier 1** platform (Linux, macOS, or WSL2 on Windows) with Nix devshell for exact CI parity and strict governance validation. See [Platform Support at a Glance](#platform-support-at-a-glance) below for tier details.
