@@ -247,12 +247,20 @@ cargo xtask graph-export
 ### Validation Loop
 
 ```bash
-# Fast dev loop (fmt, clippy, tests, basic checks)
+# Fast dev loop (fmt, clippy, unit tests only)
 cargo xtask check
 
-# Full governance validation (7-step contract)
+# Selective testing: Test only what changed (RECOMMENDED for iteration)
+cargo xtask test-changed
+
+# Test a specific acceptance criterion
+cargo xtask test-ac AC-PLT-001
+
+# Full governance validation (7-step contract - use Tier-1 environment)
 cargo xtask selftest
 ```
+
+**📖 Performance Guide:** On native Windows (Tier-2), `selftest` can take 2+ hours due to file locking. Use `test-changed` for fast iteration (seconds to minutes) and reserve `selftest` for WSL2/Linux validation. See [Selective Testing Guide](docs/SELECTIVE_TESTING.md) for details.
 
 ### Extend Governance
 

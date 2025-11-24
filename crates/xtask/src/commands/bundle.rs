@@ -62,12 +62,12 @@ pub fn run(task_name: &str) -> Result<()> {
     let (file_count, total_bytes) =
         build_bundle(&bundle_path, task, &files, &git_sha, &workspace_root)?;
 
-    println!("{} Generated {}", "✓".green(), bundle_path.display());
+    println!("{} Generated {}", "[OK]".green(), bundle_path.display());
     println!("  Files: {}", file_count);
     println!("  Size: {} bytes", total_bytes);
 
     if total_bytes > task.max_bytes {
-        println!("  {} Size limit exceeded!", "⚠".yellow());
+        println!("  {} Size limit exceeded!", "[WARN]".yellow());
     }
 
     Ok(())
@@ -200,7 +200,10 @@ fn build_bundle(
                 let new_total = total_bytes + file_section.len();
 
                 if new_total > task.max_bytes {
-                    eprintln!("  {} Size limit reached, skipping remaining files", "⚠".yellow());
+                    eprintln!(
+                        "  {} Size limit reached, skipping remaining files",
+                        "[WARN]".yellow()
+                    );
                     break;
                 }
 
@@ -209,7 +212,7 @@ fn build_bundle(
                 file_count += 1;
             }
             Err(e) => {
-                eprintln!("  {} Failed to read {}: {}", "⚠".yellow(), file_path.display(), e);
+                eprintln!("  {} Failed to read {}: {}", "[WARN]".yellow(), file_path.display(), e);
             }
         }
     }

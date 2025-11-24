@@ -34,3 +34,5 @@ pub mod skills;
 pub mod status;
 pub mod suggest_next;
 pub mod tasks_list;
+pub mod test_ac;
+pub mod test_changed;

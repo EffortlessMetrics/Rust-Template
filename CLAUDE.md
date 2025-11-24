@@ -70,17 +70,35 @@ cargo xtask bundle <task-id>
 # Output: .llm/bundle/<task-id>.md (max 250KB)
 ```
 
+### Selective Testing (Fast Iteration)
+```bash
+# Test only what changed (fast)
+cargo xtask test-changed
+
+# Test specific acceptance criterion
+cargo xtask test-ac AC-PLT-001
+
+# Compare against different base
+cargo xtask test-changed --base main
+```
+
 ### Validation
 ```bash
-# Quick check
+# Quick check (fmt, clippy, unit tests)
 cargo xtask check
 
 # Check AC test coverage
 cargo xtask ac-coverage
 
-# Full governance validation
+# Full governance validation (use Tier-1: Nix+Linux/WSL2)
 cargo xtask selftest
 ```
+
+**Performance Note:**
+- On **native Windows** (Tier-2): Use `test-changed` and `test-ac` for fast iteration. Reserve `selftest` for CI or WSL2.
+- On **Nix+Linux/WSL2** (Tier-1): All commands run efficiently. Use `selftest` as pre-merge gate.
+
+See `docs/SELECTIVE_TESTING.md` for complete guide.
 
 ---
 

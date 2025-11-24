@@ -32,7 +32,7 @@ This implements REQ-TPL-HEALTH from the Service Core Capabilities story and alig
 
 ## 3. Edge Cases & Failure Modes
 
-- If service crashes, TCP connection fails → load balancer removes instance
+- If service crashes, TCP connection fails -> load balancer removes instance
 - No authentication required (public health check)
 - Idempotent, safe to call repeatedly
 

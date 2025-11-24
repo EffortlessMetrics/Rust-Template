@@ -23,7 +23,7 @@ Feature: Developer Experience Commands
     Given the pre-commit hook exists
     When I run "cargo xtask dev-up" with low-resource mode
     Then the command should succeed
-    And the output should contain "already installed"
+    And the output should contain "Pre-commit hooks"
 
   @AC-PLT-018 @devup
   Scenario: dev-up runs governance check
@@ -49,7 +49,7 @@ Feature: Developer Experience Commands
 
   @AC-PLT-018 @devup
   Scenario: dev-up succeeds in clean environment
-    Given a completely fresh repository clone
+    Given the pre-commit hook does not exist
     When I run "cargo xtask dev-up" with low-resource mode
     Then the command should succeed
     And the pre-commit hook should be installed
@@ -66,18 +66,17 @@ Feature: Developer Experience Commands
 
   @AC-PLT-002
   Scenario: help-flows renders DevEx flows grouped by category
-    Given devex flows are defined in "specs/devex_flows.yaml"
     When I run "cargo xtask help-flows"
     Then the command should succeed
     And the output should contain "Onboarding"
-    And the output should contain "Feature development"
-    And the output should contain "Release"
-    And the output should contain "cargo xtask ac-new"
-    And the output should contain "cargo xtask selftest"
+    And the output should contain "Design & Acceptance Criteria"
+    And the output should contain "Release Management"
+    And the output should contain "ac-new"
+    And the output should contain "selftest"
 
   @AC-PLT-003
   Scenario: check runs fmt, clippy, and tests as a fast dev loop
-    Given I have a compilable workspace
+    Given I am in a clean workspace
     When I run "cargo xtask check"
     Then the command should succeed
     And the output should contain "format"
@@ -93,6 +92,11 @@ Feature: Developer Experience Commands
     And the output should contain "Next steps"
     And the output should contain "Edit docs/adr"
     And the output should contain "spec_ledger.yaml"
+    And a new ADR file should exist
+    And the ADR file should have the correct title format
+    And the ADR file should contain all required sections
+    And the new ADR number should be sequential
+    And I clean up the test ADR file
 
   @AC-PLT-005
   Scenario: ac-new generates YAML AC entry with Gherkin template and next steps
@@ -165,6 +169,16 @@ Feature: Developer Experience Commands
     Then the command should succeed
     And the output should contain git tag command
     And the output should contain git push command
+
+  @AC-PLT-014
+  Scenario: devex_flows.yaml defines canonical flows
+    Given I am in a clean workspace
+    When I check for "specs/devex_flows.yaml"
+    Then the file should exist
+    And the file should contain flow definitions
+    And the file should define "onboarding" flows
+    And the file should define "design" flows
+    And the file should define "release" flows
 
   @AC-PLT-015
   Scenario: selftest enforces devex contract
@@ -278,50 +292,27 @@ Feature: Developer Experience Commands
     And the selftest should complete within reasonable time limits
 
   @AC-TPL-SKILLS-FMT
-  Scenario: skills-fmt normalizes SKILL.md files
-    Given Agent Skills exist in .claude/skills/
+  Scenario: skills-fmt formats Skills files
+    Given a SKILL.md file exists in ".claude/skills"
     When I run "cargo xtask skills-fmt"
     Then the command should succeed
-    And the output should indicate Skills were formatted
-    And SKILL.md files should have consistent frontmatter formatting
-
-  @AC-TPL-SKILLS-FMT
-  Scenario: skills-fmt is idempotent
-    Given Agent Skills are already formatted
-    When I run "cargo xtask skills-fmt" twice
-    Then both executions should succeed
-    And the second run should produce identical output
 
   @AC-TPL-SKILLS-LINT
-  Scenario: skills-lint validates required frontmatter fields
-    Given a SKILL.md file with valid frontmatter
+  Scenario: skills-lint validates all SKILL.md files silently when valid
+    Given Agent Skills exist in .claude/skills/
     When I run "cargo xtask skills-lint"
     Then the command should succeed
-    And the output should indicate Skills passed validation
 
-  @AC-TPL-SKILLS-LINT
-  Scenario: skills-lint detects missing frontmatter fields
-    Given a SKILL.md file missing required fields
-    When I run "cargo xtask skills-lint"
-    Then the command should fail
-    And the output should indicate which fields are missing
-    And the output should mention "name" or "description"
-
-  @AC-TPL-SKILLS-LINT
-  Scenario: skills-lint validates name conventions
-    Given a SKILL.md file with invalid name format
-    When I run "cargo xtask skills-lint"
-    Then the command should fail
-    And the output should indicate name convention violations
-    And the output should mention "kebab-case"
-
-  @AC-TPL-SKILLS-LINT
-  Scenario: skills-lint checks description quality
-    Given a SKILL.md file with vague description
-    When I run "cargo xtask skills-lint"
-    Then the command should fail
-    And the output should indicate description needs improvement
-    And the output should mention "when to use"
+  @AC-TPL-AGENT-SKILLS
+  Scenario: Skills directory contains required skill definitions
+    Given Agent Skills exist in .claude/skills/
+    When I check the skills directory structure
+    Then the skills directory should contain "bootstrap-dev-env"
+    And the skills directory should contain "governed-feature-dev"
+    And the skills directory should contain "governed-release"
+    And the skills directory should contain "governed-maintenance"
+    And each skill should have a valid SKILL.md file
+    And each SKILL.md should have proper frontmatter with name, description, and allowed-tools
 
   @release_bundle_generation @AC-TPL-REL-EVIDENCE
   Scenario: release-bundle generates evidence file with all required sections

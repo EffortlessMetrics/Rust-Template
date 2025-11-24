@@ -1,2 +1,6 @@
 [term]
 verbose = false
+
+[alias]
+# Allow `cargo xtask <cmd>` to run the workspace xtask binary.
+xtask = "run -p xtask --"

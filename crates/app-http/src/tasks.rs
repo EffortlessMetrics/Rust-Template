@@ -1,7 +1,9 @@
-use crate::AppError;
-use axum::http::StatusCode;
+use crate::{AppError, ErrorCode};
 use axum::{
-    Json,
+    body::Bytes,
+    http::{HeaderMap, StatusCode},
+};
+use axum::{
     extract::{Path, State},
     response::{Html, IntoResponse},
 };
@@ -17,11 +19,50 @@ pub struct UpdateTaskStatusRequest {
 pub async fn update_task_status(
     State(repo): State<Arc<dyn GovernanceRepository>>,
     Path(id): Path<String>,
-    Json(body): Json<UpdateTaskStatusRequest>,
+    headers: HeaderMap,
+    body: Bytes,
 ) -> Result<impl IntoResponse, AppError> {
+    let payload = parse_update_task_status(&headers, &body)?;
     let service = TaskService::new(repo);
-    service.move_task(&TaskId(id), body.status)?;
+    service.move_task(&TaskId(id), payload.status)?;
     Ok(StatusCode::NO_CONTENT)
+}
+
+fn parse_update_task_status(
+    headers: &HeaderMap,
+    body: &[u8],
+) -> Result<UpdateTaskStatusRequest, AppError> {
+    let content_type =
+        headers.get(axum::http::header::CONTENT_TYPE).and_then(|h| h.to_str().ok()).unwrap_or("");
+
+    if content_type.starts_with("application/json") {
+        return serde_json::from_slice(body).map_err(|err| {
+            AppError::validation_error(ErrorCode::InvalidRequest, format!("Invalid JSON: {}", err))
+        });
+    }
+
+    if content_type.starts_with("application/x-www-form-urlencoded") {
+        return serde_urlencoded::from_bytes(body).map_err(|err| {
+            AppError::validation_error(
+                ErrorCode::InvalidRequest,
+                format!("Invalid form data: {}", err),
+            )
+        });
+    }
+
+    // Fallback: try to parse as JSON first, then form data to be forgiving
+    if let Ok(value) = serde_json::from_slice(body) {
+        return Ok(value);
+    }
+
+    if let Ok(value) = serde_urlencoded::from_bytes(body) {
+        return Ok(value);
+    }
+
+    Err(AppError::validation_error(
+        ErrorCode::InvalidRequest,
+        "Unsupported body format; use JSON or x-www-form-urlencoded",
+    ))
 }
 
 pub async fn tasks_ui(

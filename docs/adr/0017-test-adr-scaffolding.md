@@ -1,7 +1,7 @@
 # ADR-0017: test-adr-scaffolding
 
 **Status**: Proposed
-**Date**: 2025-11-22
+**Date**: 2025-11-23
 **Authors**: Steven Zimmerman
 **Related ACs**: [AC-XXX-YYY, AC-XXX-ZZZ] (if applicable)
 

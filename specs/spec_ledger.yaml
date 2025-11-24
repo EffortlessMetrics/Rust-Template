@@ -237,6 +237,7 @@ stories:
           The system MUST be able to produce a structured evidence bundle for a given
           version, suitable for generating release notes.
         adr: ADR-0005
+        docs: docs/design/release-bundling.md
         acceptance_criteria:
           - id: AC-TPL-REL-EVIDENCE
             text: "`cargo xtask release-bundle X.Y.Z` writes `release_evidence/vX.Y.Z.md` containing: all tasks completed in this version, linked REQs/ACs/ADRs, git log since last tag, selftest summary, policy status, resolved friction entries."
@@ -305,6 +306,7 @@ stories:
           task status, and get oriented without navigating the web UI or
           multiple API endpoints.
         adr: ADR-0005
+        docs: docs/design/status-cli.md
         acceptance_criteria:
           - id: AC-PLT-017
             text: "`cargo xtask status` displays version, REQ/AC/task counts, selftest status, and suggested next tasks"
@@ -360,6 +362,8 @@ stories:
           to get a suggested next-step sequence for a given task, derived
           from specs/tasks.yaml and specs/devex_flows.yaml.
         adr: [ADR-0001]
+        docs:
+          - design_doc: "docs/design/suggest-next.md"
         acceptance_criteria:
           - id: AC-TPL-SUGGEST-NEXT-CLI
             text: >
@@ -390,6 +394,7 @@ stories:
           so that missing coverage and dead configuration are detected
           automatically.
         adr: [ADR-0001]
+        docs: ["DESIGN-TPL-GRAPH-INVARIANTS-001"]
         acceptance_criteria:
           - id: AC-TPL-GRAPH-REQ-HAS-AC
             text: >
@@ -399,7 +404,7 @@ stories:
             tags: [kernel]
             must_have_ac: true
             tests:
-              - { type: unit, tag: "graph_invariants_req_has_ac" }
+              - { type: unit, tag: "graph_invariants_req_has_ac", file: "crates/spec-runtime/src/graph.rs" }
 
           - id: AC-TPL-GRAPH-AC-HAS-TEST
             text: >
@@ -408,7 +413,7 @@ stories:
             tags: [kernel]
             must_have_ac: true
             tests:
-              - { type: unit, tag: "ac_with_tests_produces_graph_node_and_edge" }
+              - { type: unit, tag: "ac_with_tests_produces_graph_node_and_edge", file: "crates/spec-runtime/src/graph.rs" }
 
           - id: AC-TPL-GRAPH-COMMAND-REACHABLE
             text: >
@@ -418,16 +423,16 @@ stories:
             tags: [kernel]
             must_have_ac: true
             tests:
-              - { type: unit, tag: "graph_invariants_command_reachable" }
+              - { type: unit, tag: "graph_invariants_command_reachable", file: "crates/spec-runtime/src/graph.rs" }
 
           - id: AC-TPL-GRAPH-SELFTEST
             text: >
-              cargo xtask selftest fails when governance graph invariants fail,
-              Mermaid syntax, and is suitable for documentation or debugging.
+              cargo xtask selftest validates graph invariants and outputs
+              'Graph invariants satisfied' when all checks pass.
             tags: [kernel]
             must_have_ac: true
             tests:
-              - { type: unit, tag: "graph_export_mermaid" }
+              - { type: bdd, tag: "@AC-TPL-GRAPH-SELFTEST", file: "specs/features/graph_invariants.feature" }
 
       - id: REQ-TPL-PLATFORM-UI
         title: "Platform Web UI"
@@ -438,6 +443,7 @@ stories:
           interacting with the governance platform, served by the same
           binary that provides the API endpoints.
         adr: [ADR-0004]
+        docs: [DESIGN-TPL-PLATFORM-UI-001]
         acceptance_criteria:
           - id: AC-TPL-PLATFORM-UI-DASHBOARD
             text: >
@@ -566,6 +572,7 @@ stories:
             tags: [kernel]
             must_have_ac: true
             tests:
+              - { type: unit, tag: "graph_export_mermaid", file: "crates/spec-runtime/src/graph.rs" }
               - { type: bdd, tag: "@AC-TPL-GRAPH-MERMAID", file: "specs/features/graph_visualization.feature" }
 
       - id: REQ-TPL-LOCAL-RUNTIME
@@ -576,6 +583,7 @@ stories:
           The template MUST provide a reproducible local runtime environment
           (Database, Observability) that works out-of-the-box with sensible defaults.
         adr: [ADR-0002]
+        docs: [DESIGN-TPL-LOCAL-RUNTIME-001]
         acceptance_criteria:
           - id: AC-TPL-LOCAL-DOCKER
             text: >
@@ -594,6 +602,7 @@ stories:
           The template MUST provide a mechanism to install Git hooks that
           enforce governance checks (fmt, clippy, tests) before commit.
         adr: [ADR-0005]
+        docs: [DESIGN-TPL-GOV-HOOKS-001]
         acceptance_criteria:
           - id: AC-TPL-HOOKS-INSTALL
             text: >
@@ -612,6 +621,7 @@ stories:
           The template MUST provide structured Skills for AI agents
           to execute governance workflows autonomously without guessing.
         adr: [ADR-0004]
+        docs: [DESIGN-TPL-AGENT-INTERFACE-001]
         acceptance_criteria:
           - id: AC-TPL-AGENT-SKILLS
             text: >
@@ -641,6 +651,7 @@ stories:
           align with DevEx flows and governance, so Skills map to workflows
           (feature dev, maintenance, release) rather than individual commands.
         adr: [ADR-0004]
+        docs: [DESIGN-TPL-SKILLS-GUIDE-001]
         acceptance_criteria:
           - id: AC-TPL-SKILLS-GUIDE-001
             text: >
@@ -670,6 +681,7 @@ stories:
           xtask commands to ensure consistency, avoid drift, and eliminate external
           scripting dependencies.
         adr: [ADR-0004, ADR-0005]
+        docs: [DESIGN-TPL-SKILLS-TOOLING-001]
         acceptance_criteria:
           - id: AC-TPL-SKILLS-FMT
             text: >
@@ -706,6 +718,7 @@ stories:
           durable way that is reflected in the governance graph, without
           destroying human comments in the source YAML.
         adr: [ADR-0001]
+        docs: [DESIGN-TPL-GOV-WRITE-001]
         acceptance_criteria:
           - id: AC-TPL-GOV-WRITE-TASK-STATUS-200
             text: "set_task_status writes durable state reflected in the governance graph."
@@ -722,6 +735,7 @@ stories:
           The platform MUST enforce valid state transitions for tasks (e.g. Todo -> InProgress)
           to prevent invalid workflows.
         adr: [ADR-0001]
+        docs: [DESIGN-TPL-TASK-LIFECYCLE-001]
         acceptance_criteria:
           - id: AC-TPL-TASK-TRANSITIONS
             text: "Task status transitions are validated against the domain model."

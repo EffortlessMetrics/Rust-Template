@@ -40,6 +40,8 @@ pub fn app(governance_repo: Arc<dyn GovernanceRepository>) -> Router {
         .route("/api/echo", post(echo)) // For demonstrating error handling in tests
         // Platform introspection endpoints
         .nest("/platform", platform::router())
+        // Platform UI routes (at root level)
+        .merge(platform::ui_router())
         // Merge domain endpoints
         .merge(tasks_router)
         .merge(agent_router)
@@ -60,7 +62,7 @@ pub fn app(governance_repo: Arc<dyn GovernanceRepository>) -> Router {
 }
 
 // ============================================================================
-// Handlers - showing edge → core path
+// Handlers - showing edge -> core path
 // ============================================================================
 
 // ============================================================================
@@ -205,8 +207,8 @@ struct EchoResponse {
 //
 // 1. HTTP layer (this file):
 //    - Handles HTTP concerns (routing, serialization, status codes)
-//    - Translates HTTP requests → domain operations
-//    - Translates domain errors → HTTP responses
+//    - Translates HTTP requests -> domain operations
+//    - Translates domain errors -> HTTP responses
 //
 // 2. Domain layer (crates/core):
 //    - Pure business logic, no HTTP knowledge
@@ -221,6 +223,6 @@ struct EchoResponse {
 //    - Initialized once at startup
 //
 // Key pattern: The dependency arrow points INWARD
-//   app-http → core  (✓ correct)
-//   core → app-http  (✗ never!)
+//   app-http -> core  ([OK] correct)
+//   core -> app-http  ([X] never!)
 // ============================================================================

@@ -22,6 +22,13 @@ async fn given_in_workspace(_world: &mut World) {
     assert!(workspace_root.join("Cargo.toml").exists(), "Should be in workspace");
 }
 
+#[given("I have a valid workspace")]
+async fn given_valid_workspace(_world: &mut World) {
+    // Verify we're in a valid workspace
+    let workspace_root = actual_workspace_root();
+    assert!(workspace_root.join("Cargo.toml").exists(), "Should be in workspace");
+}
+
 #[given("the governance specifications are loaded")]
 async fn given_specs_loaded(_world: &mut World) {
     // Verify specs exist
@@ -74,7 +81,7 @@ async fn given_outside_git(world: &mut World) {
 }
 
 #[given(regex = r"Agent Skills exist in \.claude/skills/")]
-async fn given_skills_exist(_world: &mut World) {
+async fn given_skills_exist(world: &mut World) {
     let workspace_root = actual_workspace_root();
     let skills_dir = workspace_root.join(".claude/skills");
     assert!(skills_dir.exists(), ".claude/skills directory should exist");
@@ -85,6 +92,9 @@ async fn given_skills_exist(_world: &mut World) {
         .unwrap_or(false);
 
     assert!(has_skills, "At least one SKILL.md should exist in .claude/skills/");
+
+    // Store skills directory for later steps (AC-TPL-AGENT-SKILLS)
+    world.xtask_context_mut().test_skills_dir = Some(skills_dir);
 }
 
 #[given("Agent Skills are already formatted")]
@@ -93,6 +103,23 @@ async fn given_skills_formatted(_world: &mut World) {
     let workspace_root = actual_workspace_root();
     let skills_dir = workspace_root.join(".claude/skills");
     assert!(skills_dir.exists(), "Skills directory should exist");
+}
+
+#[given(regex = r#"^a SKILL\.md file exists in "([^"]+)"$"#)]
+async fn given_skill_file_exists(world: &mut World, _path: String) {
+    let workspace_root = actual_workspace_root();
+    let skills_dir = workspace_root.join(".claude/skills");
+    assert!(skills_dir.exists(), ".claude/skills directory should exist");
+
+    // Verify at least one SKILL.md exists
+    let has_skills = fs::read_dir(&skills_dir)
+        .map(|entries| entries.filter_map(Result::ok).any(|e| e.path().join("SKILL.md").exists()))
+        .unwrap_or(false);
+
+    assert!(has_skills, "At least one SKILL.md should exist in .claude/skills/");
+
+    // Store for later use
+    world.xtask_context_mut().test_skills_dir = Some(skills_dir);
 }
 
 #[given("a SKILL.md file with valid frontmatter")]
@@ -133,6 +160,20 @@ async fn given_low_resources_set(world: &mut World, val: String) {
 #[given("XTASK_LOW_RESOURCES is not set")]
 async fn given_low_resources_unset(world: &mut World) {
     world.xtask_context_mut().env.remove("XTASK_LOW_RESOURCES");
+}
+
+// Platform detection steps - only compiled for the target platform
+// This ensures platform-specific scenarios are only defined on compatible platforms
+#[given("I am on a Unix platform")]
+#[cfg(unix)]
+async fn given_unix_platform(_world: &mut World) {
+    // Step exists only on Unix - no-op guard
+}
+
+#[given("I am on a Windows platform")]
+#[cfg(windows)]
+async fn given_windows_platform(_world: &mut World) {
+    // Step exists only on Windows - no-op guard
 }
 
 #[when("I delete the pre-commit hook file")]
@@ -630,6 +671,100 @@ async fn then_description_needs_improvement(world: &mut World) {
     );
 }
 
+// ============================================================================
+// AC-TPL-AGENT-SKILLS: Skills Directory Validation Steps
+// ============================================================================
+
+#[when("I check the skills directory structure")]
+async fn when_check_skills_directory(world: &mut World) {
+    // This is a no-op step - the validation happens in the then steps
+    // We just need to ensure the skills directory was stored
+    let ctx = world.xtask_context();
+    assert!(ctx.test_skills_dir.is_some(), "Skills directory should be set from Given step");
+}
+
+#[then(regex = r#"^the skills directory should contain "([^"]+)"$"#)]
+async fn then_skills_dir_contains(world: &mut World, skill_name: String) {
+    let ctx = world.xtask_context();
+    let skills_dir = ctx.test_skills_dir.as_ref().expect("Skills directory should be set");
+    let skill_path = skills_dir.join(&skill_name);
+
+    assert!(
+        skill_path.exists() && skill_path.is_dir(),
+        "Skills directory should contain '{}'",
+        skill_name
+    );
+}
+
+#[then("each skill should have a valid SKILL.md file")]
+async fn then_each_skill_has_skill_md(world: &mut World) {
+    let ctx = world.xtask_context();
+    let skills_dir = ctx.test_skills_dir.as_ref().expect("Skills directory should be set");
+
+    let entries = fs::read_dir(skills_dir).expect("Should be able to read skills directory");
+
+    let mut skill_count = 0;
+    for entry in entries.filter_map(Result::ok) {
+        let path = entry.path();
+        if path.is_dir() {
+            skill_count += 1;
+            let skill_md = path.join("SKILL.md");
+            assert!(
+                skill_md.exists(),
+                "Skill directory '{}' should contain SKILL.md",
+                path.display()
+            );
+        }
+    }
+
+    assert!(skill_count > 0, "Should have at least one skill directory");
+}
+
+#[then("each SKILL.md should have proper frontmatter with name, description, and allowed-tools")]
+async fn then_skill_md_has_proper_frontmatter(world: &mut World) {
+    let ctx = world.xtask_context();
+    let skills_dir = ctx.test_skills_dir.as_ref().expect("Skills directory should be set");
+
+    let entries = fs::read_dir(skills_dir).expect("Should be able to read skills directory");
+
+    for entry in entries.filter_map(Result::ok) {
+        let path = entry.path();
+        if path.is_dir() {
+            let skill_md = path.join("SKILL.md");
+            if skill_md.exists() {
+                let content =
+                    fs::read_to_string(&skill_md).expect("Should be able to read SKILL.md");
+
+                // Check for frontmatter delimiters
+                assert!(
+                    content.starts_with("---\n"),
+                    "SKILL.md at {} should start with frontmatter delimiter '---'",
+                    skill_md.display()
+                );
+
+                // Check for required fields in frontmatter
+                assert!(
+                    content.contains("name:"),
+                    "SKILL.md at {} should have 'name' field in frontmatter",
+                    skill_md.display()
+                );
+
+                assert!(
+                    content.contains("description:"),
+                    "SKILL.md at {} should have 'description' field in frontmatter",
+                    skill_md.display()
+                );
+
+                assert!(
+                    content.contains("allowed-tools:"),
+                    "SKILL.md at {} should have 'allowed-tools' field in frontmatter",
+                    skill_md.display()
+                );
+            }
+        }
+    }
+}
+
 #[then(
     regex = r#"^the output should contain valid YAML with AC entry "([^"]+)" and description "([^"]+)"$"#
 )]
@@ -1044,6 +1179,64 @@ async fn then_cleanup_adr(world: &mut World) {
     {
         let _ = fs::remove_file(&adr_path);
     }
+}
+
+// ============================================================================
+// AC-PLT-014: devex_flows.yaml validation steps
+// ============================================================================
+
+#[when(regex = r#"^I check for "([^"]+)"$"#)]
+async fn when_check_for_file(world: &mut World, file_path: String) {
+    let workspace_root = workspace_root(world);
+    let full_path = workspace_root.join(&file_path);
+
+    let ctx = world.xtask_context_mut();
+    ctx.test_adr_path = Some(full_path.clone());
+
+    // Store result for then steps
+    if full_path.exists() {
+        ctx.last_command_status = Some(0);
+        ctx.last_command_output = Some(format!("File exists: {}", full_path.display()));
+    } else {
+        ctx.last_command_status = Some(1);
+        ctx.last_command_output = Some(format!("File not found: {}", full_path.display()));
+    }
+}
+
+#[then("the file should exist")]
+async fn then_file_should_exist(world: &mut World) {
+    let ctx = world.xtask_context();
+    let file_path = ctx.test_adr_path.as_ref().expect("No file path checked");
+    assert!(file_path.exists(), "File should exist at {}", file_path.display());
+}
+
+#[then("the file should contain flow definitions")]
+async fn then_contains_flow_definitions(world: &mut World) {
+    let ctx = world.xtask_context();
+    let file_path = ctx.test_adr_path.as_ref().expect("No file path checked");
+    let content = fs::read_to_string(file_path).expect("Failed to read file");
+
+    // Check for flow-related keywords
+    let has_flows = content.contains("flows:") || content.contains("flow:");
+    assert!(has_flows, "File should contain flow definitions\nActual content:\n{}", content);
+}
+
+#[then(regex = r#"^the file should define "([^"]+)" flows$"#)]
+async fn then_defines_flow_category(world: &mut World, category: String) {
+    let ctx = world.xtask_context();
+    let file_path = ctx.test_adr_path.as_ref().expect("No file path checked");
+    let content = fs::read_to_string(file_path).expect("Failed to read file");
+
+    // Case-insensitive check for flow category
+    let content_lower = content.to_lowercase();
+    let category_lower = category.to_lowercase();
+
+    assert!(
+        content_lower.contains(&category_lower),
+        "File should define '{}' flows\nActual content:\n{}",
+        category,
+        content
+    );
 }
 
 // ============================================================================

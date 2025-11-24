@@ -52,9 +52,9 @@ struct Ac {
 impl AcStatus {
     fn icon(&self) -> &str {
         match self {
-            AcStatus::Pass => "✅",
-            AcStatus::Fail => "❌",
-            AcStatus::Unknown => "❓",
+            AcStatus::Pass => "[PASS]",
+            AcStatus::Fail => "[FAIL]",
+            AcStatus::Unknown => "[UNKNOWN]",
         }
     }
 
@@ -175,11 +175,11 @@ pub fn run(args: AcStatusArgs) -> Result<()> {
             .collect();
 
         if !failed.is_empty() {
-            eprintln!("\n{} {} AC(s) failed: {}", "❌".red(), failed.len(), failed.join(", "));
+            eprintln!("\n{} {} AC(s) failed: {}", "[FAIL]".red(), failed.len(), failed.join(", "));
             anyhow::bail!("One or more ACs failed");
         }
 
-        println!("\n{} All ACs passed", "✓".green());
+        println!("\n{} All ACs passed", "[OK]".green());
     }
 
     Ok(())
@@ -480,7 +480,7 @@ fn generate_status_md(
 
     fs::write(output_path, output)?;
     if !args.verbosity.is_quiet() {
-        println!("{} Generated {}", "✓".green(), output_path.display());
+        println!("{} Generated {}", "[OK]".green(), output_path.display());
     }
 
     Ok(())

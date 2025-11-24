@@ -84,3 +84,4 @@ Feature: Agent Hints API
     When I send a GET request to "/platform/agent/hints"
     Then the response status code should be 200
     And the JSON should have an empty next_tasks array
+

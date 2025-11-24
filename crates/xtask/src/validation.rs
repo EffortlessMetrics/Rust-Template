@@ -326,11 +326,11 @@ mod ac_report_validation {
         // Validate
         let validation_result = validator.validate(&report);
         if let Err(error) = validation_result {
-            panic!("AC report validation failed:\n  - {}: {}", error.instance_path, error);
+            panic!("AC report validation failed:\n  - {}: {}", error.instance_path(), error);
         }
 
         // If we get here, validation passed
-        println!("✓ AC report validates successfully against schema");
+        println!("[OK] AC report validates successfully against schema");
     }
 
     #[test]
@@ -379,7 +379,7 @@ mod ac_report_validation {
         assert!(
             result.is_ok(),
             "Sample report should validate: {:?}",
-            result.err().map(|e| format!("{}: {}", e.instance_path, e))
+            result.err().map(|e| format!("{}: {}", e.instance_path(), e))
         );
     }
 }
