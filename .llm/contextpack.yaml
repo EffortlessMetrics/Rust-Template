@@ -4,7 +4,7 @@
 # Schema Version: 1.0
 # Last Updated: 2025-11-22
 #
-# This file defines context bundles for LLM-assisted development.
+# This file defines context bundles for LLM-native development.
 # Each bundle packages relevant files into markdown for AI code generation.
 #
 # See: docs/how-to/use-llm-bundles.md for usage guide

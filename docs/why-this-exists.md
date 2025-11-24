@@ -54,11 +54,19 @@ Concretely, it provides:
   - `policy/testdata/*.yaml/json` - fixtures proving "good" vs "bad" configs
   - `xtask policy-test` - conftest-based validation (strict in CI, optional locally)
 
-- **LLM-Native, Governance-Bounded**
-  - `.llm/contextpack.yaml` - declarative bundles of relevant files
-  - `xtask bundle <task>` - generates bounded Markdown context for the model
-  - `CLAUDE.md` - standard prompts, workflows, and guardrails
-  - Version metadata in specs and bundles (`template_version: "2.4.0"`)
+- **LLM-native, governance-first**
+  - `.llm/contextpack.yaml` – declarative bundles of relevant files
+  - `xtask bundle <task>` – generates bounded, structured context for agents
+  - `.claude/skills/*` – repo-specific Skills that encode how agents should use
+    `xtask`, specs, and `/platform/*` APIs
+  - Agents are expected to:
+    - create new AC IDs and scenarios,
+    - propose policy changes,
+    - and touch infra/CI configs.
+  - The guardrail is not “never let the LLM do X.” The guardrail is:
+    - every change must still deserialize into the spec structs,
+    - pass BDD, policy, and graph invariants via `xtask selftest`,
+    - and show up in `/platform/status` and the governance graph.
 
 - **Nix-first development environment**
   - `flake.nix` - devshell that matches CI (Rust toolchain, conftest, yq, jq...)
@@ -114,6 +122,24 @@ You probably don't want this template if:
 
 You can still use the **library crates** (`rust_iac_xtask_core`, `rust_iac_config`) without adopting the full template, but the repo itself assumes you *care* about these things.
 
+### 3.3 LLM-native vs human-first teams
+
+This template is heavy on structure and boilerplate by design:
+- spec ledgers,
+- AC IDs and feature files,
+- tasks and devex flows,
+- policies and governance graph invariants.
+
+For an all-human team, that can feel like overhead.
+
+For an LLM-native team, it is fuel:
+- agents are good at filling in structured boilerplate,
+- humans are good at deciding which structures and trade-offs matter.
+
+This repo is designed to shift humans from "vibe coding" to "vibe architecting":
+you shape stories, requirements, and policies; agents fill in scaffolding and
+code under `xtask selftest` and the `/platform/*` contract.
+
 ---
 
 ## 4. Design Principles
@@ -142,33 +168,26 @@ This template is built around a few principles:
    - Local dev without Nix is supported (with reduced guarantees).
    - CI always runs **inside** the pinned Nix environment.
 
-4. **LLM-Native, Governance-Bounded**
+4. **LLM-native, not unbounded**
 
-The template assumes most of the **mechanical work** is done by agents:
+Agents are first-class contributors in this repo.
 
-- writing and updating specs and ACs,
-- generating BDD scenarios and boilerplate tests,
-- wiring new modules, configs, and skills,
-- drafting policy and infra changes.
+They are allowed to:
+- create new AC IDs and BDD scenarios,
+- propose changes to policies,
+- edit infra and CI configuration.
 
-The guardrail is not “the LLM never touches X”. The guardrail is:
+What they are not allowed to do is bypass the kernel:
 
-- Every agent action runs through a **named flow** (`devex_flows.yaml`, `tasks.yaml`).
-- Every change is validated by **deterministic checks** (`selftest`, `policy-test`, `ac-coverage`, graph invariants).
-- Every merge is still a **human decision** with full evidence (release bundles, AC status, task history).
+- Specs still have to deserialize into Rust structs.
+- Graph invariants still have to hold (no orphan REQs/ACs/commands).
+- Policies still have to pass Rego tests.
+- Kernel ACs still have to meet coverage gates.
 
-In practice:
+If `xtask selftest` is green in a Tier 1 environment, the contract is satisfied,
+regardless of whether a human or an agent authored the diff.
 
-- Agents can mint new IDs (ACs, tasks, skills) as long as they respect the schemas and naming rules.
-- Agents can propose policy and infra changes, but those changes must:
-  - pass policy tests and graph invariants, and
-  - survive human review before merging.
-
-The template turns “vibe coding” into **“vibe architecting”**:
-
-- Humans set direction (stories, requirements, flows, risks).
-- Agents do the bulk of the boilerplate under strict validation.
-- The system itself (selftest, policies, graph) refuses to accept changes that break the contract.
+If selftest is red, nothing – human or agent – gets a free pass.
 
 5. **Selftest as a Contract**
    `xtask selftest` is the contract between:
@@ -185,7 +204,7 @@ The template turns “vibe coding” into **“vibe architecting”**:
 
 ### 5.1 Cell vs Portal vs Orchestrator
 
-- This repo is a governed Rust cell: per-service specs, policies, graph invariants, `/platform/*` introspection, and agent-safe bundles (`xtask bundle`, `suggest-next`).
+- This repo is a governed, LLM-native Rust cell: per-service specs, policies, graph invariants, `/platform/*` introspection, and agent-safe bundles (`xtask bundle`, `/platform/tasks/suggest-next`) plus `.claude/skills/*`.
 - It is not a portal (no fleet view, scorecards, or multi-service catalog) and not an orchestrator (no environment or infra wiring). It composes under portals and above orchestrators.
 
 ### 5.2 Practical Alternatives Teams Choose

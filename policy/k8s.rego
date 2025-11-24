@@ -37,7 +37,7 @@ package main
 # - Forces use of K8s Secrets (encrypted at rest when configured)
 # - Makes it obvious in code review when sensitive data is mishandled
 # - Reduces attack surface for credential theft from manifest files
-# - Enables LLM-assisted code generation to be safer by default
+# - Enables LLM-native code generation to be safer by default
 #
 # ============================================================================
 

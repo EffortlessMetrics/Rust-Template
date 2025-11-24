@@ -6,6 +6,8 @@
 
 **A self-healing platform cell where governance enforces itself and agents can move fast safely.**
 
+Optimized for LLM-native teams: the boilerplate that slows humans down gives agents the structure they need to work safely.
+
 > **What is this?**
 >
 > A **governed Rust service cell** for LLM-native development:
