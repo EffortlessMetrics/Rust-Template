@@ -149,7 +149,7 @@ Currently, versions exist in `Cargo.toml` and metadata, but:
   - Selftest summary at release time
   - Policy compliance status
   - Resolved friction log entries
-- **LLM-Assisted Changelogs**: Feed evidence bundle to LLM to generate Keep a Changelog format entries
+- **LLM-Native Changelogs**: Feed evidence bundle to LLM to generate Keep a Changelog format entries
 - **Version-Aware Specs**: Tasks and ACs can reference target version
 
 ### Acceptance Criteria
@@ -373,7 +373,7 @@ During the pilot, this roadmap is **living**. We update it based on friction log
 - 🎯 Cross-platform selftest pass (Linux, macOS, Windows)
 
 **Completed milestones:**
-- ✅ **v3.1.x**: Release evidence bundles and LLM-assisted changelog generation
+- ✅ **v3.1.x**: Release evidence bundles and LLM-native changelog generation
 - ✅ **v3.2.x**: Agent Skills documentation and flow-to-Skill alignment
 
 **Next milestone:** Complete kernel AC coverage for v3.0.0 production-ready release.

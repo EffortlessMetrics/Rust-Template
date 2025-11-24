@@ -39,7 +39,7 @@ This template exists to give a **strong, opinionated "yes"** to those three pres
 At a high level, this is:
 
 > A Rust service template + library that bakes in
-> spec-as-code, policy-as-code, LLM-assisted workflows, and a Nix dev environment
+> spec-as-code, policy-as-code, LLM-native workflows, and a Nix dev environment
 > so dev/CI/governance all align by default.
 
 Concretely, it provides:
@@ -54,7 +54,7 @@ Concretely, it provides:
   - `policy/testdata/*.yaml/json` - fixtures proving "good" vs "bad" configs
   - `xtask policy-test` - conftest-based validation (strict in CI, optional locally)
 
-- **LLM-assisted, not LLM-driven**
+- **LLM-Native, Governance-Bounded**
   - `.llm/contextpack.yaml` - declarative bundles of relevant files
   - `xtask bundle <task>` - generates bounded Markdown context for the model
   - `CLAUDE.md` - standard prompts, workflows, and guardrails

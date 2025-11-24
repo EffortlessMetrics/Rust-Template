@@ -331,7 +331,7 @@ The template is now in the **Pilot Validation Phase**. We have completed the obs
 - ✅ Complete observability stack (logs, metrics, OTLP traces)
 - ✅ Hexagonal architecture with production adapters
 - ✅ Governance infrastructure (policy-as-code, specs, BDD)
-- ✅ LLM-assisted workflow with context bundling
+- ✅ LLM-native workflow with context bundling
 - ✅ Release polish (docs, friction logs, reliability fixes)
 
 ### Current Phase: Pilot Validation

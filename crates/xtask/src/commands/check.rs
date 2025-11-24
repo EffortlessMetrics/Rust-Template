@@ -38,18 +38,16 @@ pub fn run() -> Result<()> {
 }
 
 /// Run all checks with explicit options (used by selftest to relax fmt on Tier-2/low-resource)
-    pub fn run_with_options(options: CheckOptions) -> Result<()> {
-        if options.skip_fmt {
-            let reason = options
-                .fmt_skip_reason
-                .unwrap_or("Tier-2 or low-resource mode");
+pub fn run_with_options(options: CheckOptions) -> Result<()> {
+    if options.skip_fmt {
+        let reason = options.fmt_skip_reason.unwrap_or("Tier-2 or low-resource mode");
         // Keep the word "format" in the message so UX tests that look for it still pass even when skipped.
         println!("{} format (fmt) check skipped ({reason})", "[WARN]".yellow());
-        } else {
-            println!("Running format check (fmt)...");
-            crate::run_cmd(&mut crate::cargo_cmd("fmt", &["--all", "--", "--check"]))?;
-            println!("fmt was checked");
-        }
+    } else {
+        println!("Running format check (fmt)...");
+        crate::run_cmd(&mut crate::cargo_cmd("fmt", &["--all", "--", "--check"]))?;
+        println!("fmt was checked");
+    }
 
     println!("Running clippy...");
     // On Windows, exclude xtask to avoid file locking issues (can't rebuild running binary)

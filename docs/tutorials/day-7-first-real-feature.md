@@ -1083,7 +1083,7 @@ You've completed a real-world feature using the full template workflow:
 - **Implemented** across three layers (model, core, app-http)
 - **Validated** with BDD tests hitting real HTTP stack
 - **Tracked** with auto-generated AC status
-- **Bundled** for LLM-assisted development
+- **Bundled** for LLM-native development
 
 This is how you build **every** feature in this template. The structure gives you:
 - Traceability (AC → test → code)
