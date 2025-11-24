@@ -6,7 +6,7 @@ This repo is a **governed Rust service template + library**. It bakes in:
 
 - spec-as-code (ledger → features → tests → code),
 - policy-as-code (Rego),
-- LLM-assisted workflows (bundles, CLAUDE.md),
+- LLM-native workflows (bundles, CLAUDE.md),
 - Nix-pinned dev environment.
 
 That means contributions should preserve (or improve) those properties, not bypass them.
@@ -240,7 +240,7 @@ A typical feature flow:
    cargo run -p xtask -- bundle implement_ac
    ```
 
-4. Use the instructions and prompts in `CLAUDE.md` to drive LLM-assisted changes.
+4. Use the instructions and prompts in `CLAUDE.md` to drive LLM-native changes.
 
 5. Apply/curate the changes locally.
 
