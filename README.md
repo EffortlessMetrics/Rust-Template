@@ -8,7 +8,9 @@
 
 > **What is this?**
 >
-> A **governed Rust service** that maintains a living contract between specs, code, docs, and policies—enforced automatically by CI and introspectable via HTTP APIs and a web UI.
+> A **governed Rust service cell** for LLM-native development:
+> specs, code, docs, and policies are enforced by CI (`cargo xtask selftest`)
+> and exposed via `/platform/*` so humans and agents can move fast safely.
 
 > **Status: Kernel Frozen** (v2.5.0)
 >
