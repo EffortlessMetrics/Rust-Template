@@ -65,6 +65,18 @@ cargo xtask selftest:    7-step validation (CI gate)
 
 ---
 
+## Positioning in the IDP Landscape
+
+This repo is a **governed Rust cell**: one service per repo with specs, policies, graph invariants, `/platform/*` introspection, and agent-safe bundles (`xtask bundle`, `suggest-next`). It is not a portal (no fleet view) and not an orchestrator (no opinions about K8s wiring); it is the per-service kernel those tools can rely on.
+
+If you already run a portal like Backstage/Port/OpsLevel, they give you catalogs, scorecards, and golden paths but assume each repo enforces its own discipline. This template is the missing Rust golden path: specs, ACs, docs, and policies are wired together and enforced by `xtask selftest`, with `/platform/status` and `/ui` exposing the same state portals can display.
+
+If you use a platform orchestrator (Humanitec or similar), it standardizes environments and deployments. Pair it with this template to standardize what each Rust service **is**: self-describing contracts, governance health (`ac-status`, policy tests), and predictable APIs (`/platform/*`) the orchestrator can call.
+
+Compared to generic Rust templates, this goes deeper than "hello world + CI." It ships a governed service: specs -> ACs -> tests -> docs -> policies, graph invariants to prevent nonsense, and agent ergonomics by default. The single contract remains `cargo xtask selftest`.
+
+---
+
 ## Quick Start
 
 ### Prerequisites
