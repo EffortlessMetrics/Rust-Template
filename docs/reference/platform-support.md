@@ -95,7 +95,9 @@ Windows has stricter file locking than Unix. During `cargo rebuild`, the executa
 - IDE background analysis (Rust Analyzer, VS Code)
 - Previous cargo process not fully terminated
 
-**This is not a behavioral failure**—it's a platform limitation in how Windows handles in-use executables.
+**This is not a behavioral failure**-it's a platform limitation in how Windows handles in-use executables.
+
+**Fmt gate policy:** `cargo fmt --all -- --check` is enforced only on Tier 1 (Nix devshell/CI). Tier 2 runs and any session with `XTASK_LOW_RESOURCES=1` skip the fmt gate and print a warning to avoid rustfmt recursion; use a Tier 1 shell for final formatting.
 
 **When to use:**
 - Solo Windows development

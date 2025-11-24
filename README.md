@@ -145,6 +145,8 @@ All **Tier 1** platforms (Linux, macOS, WSL2 with Nix devshell) run `cargo xtask
 2. Exclude `target/` from real-time antivirus scanning
 3. Re-run `cargo xtask selftest`, or use WSL2 for canonical validation
 
+**Fmt gate policy:** Tier 1 (Nix devshell/CI) runs `cargo fmt --all -- --check` as a hard gate. Tier 2 (native Windows) and any run with `XTASK_LOW_RESOURCES=1` skip fmt and emit a warning to avoid rustfmt recursion. Use a Tier 1 shell before merging to ensure formatting is enforced.
+
 **For complete platform details, setup instructions, and troubleshooting:** See [Platform Support Reference](docs/reference/platform-support.md)
 
 ---
