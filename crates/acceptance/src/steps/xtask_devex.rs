@@ -1077,6 +1077,9 @@ async fn execute_command(world: &mut World, command: &str, env_vars: &[(&str, &s
     }
 
     cmd.env("XTASK_LOW_RESOURCES", low_resource);
+    if command.contains("selftest") {
+        cmd.env("XTASK_SKIP_BDD", "1");
+    }
     cmd.env_remove("RUSTC_WRAPPER");
 
     cmd.current_dir(&workspace_root);

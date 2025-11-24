@@ -186,6 +186,18 @@ enum Commands {
     /// Show governance status dashboard
     #[command(next_help_heading = "Meta")]
     Status,
+    /// Generate service descriptor (e.g., Backstage catalog info)
+    ServiceDescriptor {
+        /// Output format (backstage)
+        #[arg(long, default_value = "backstage")]
+        format: String,
+    },
+    /// Validate config schema for an environment
+    ConfigValidate {
+        /// Target environment: dev, staging, prod
+        #[arg(short, long, default_value = "dev")]
+        env: String,
+    },
     /// Show flow-based command map
     #[command(next_help_heading = "Meta")]
     HelpFlows,
@@ -292,6 +304,10 @@ fn main() -> Result<()> {
         Commands::SuggestNext(args) => commands::suggest_next::run(args),
         Commands::Selftest => commands::selftest::run_with_verbosity(verbosity),
         Commands::Status => commands::status::run(),
+        Commands::ServiceDescriptor { format } => commands::service_descriptor::run(&format)
+            .map_err(|e| anyhow::anyhow!("service-descriptor failed: {}", e)),
+        Commands::ConfigValidate { env } => commands::config_validate::run(&env)
+            .map_err(|e| anyhow::anyhow!("config-validate failed: {}", e)),
         Commands::HelpFlows => commands::help_flows::run(),
         Commands::InstallHooks => commands::install_hooks::run(),
         Commands::DevUp => commands::dev_up::run(),
@@ -432,6 +448,8 @@ pub fn all_command_names() -> Vec<&'static str> {
         "tasks-list",
         "test-ac",
         "test-changed",
+        "service-descriptor",
+        "config-validate",
         "help-flows",
     ]
 }

@@ -42,6 +42,7 @@ pub fn run_with_verbosity(verbosity: crate::Verbosity) -> Result<()> {
 
     // Check for low-resource mode
     let low_resource_mode = env::var("XTASK_LOW_RESOURCES").unwrap_or_default() == "1";
+    let skip_bdd = env::var("XTASK_SKIP_BDD").unwrap_or_default() == "1";
 
     println!("{}", "======================================".blue());
     println!("{}", "  Template Self-Test Suite".blue());
@@ -86,25 +87,37 @@ pub fn run_with_verbosity(verbosity: crate::Verbosity) -> Result<()> {
 
     // Step 2: BDD acceptance tests
     println!("{}", "[2/8] Running BDD acceptance tests...".blue());
-    let step_start = Instant::now();
-    let bdd_ok = match crate::commands::bdd::run() {
-        Ok(_) => {
-            let elapsed = step_start.elapsed();
-            if verbosity.is_verbose() {
-                println!("  {} BDD scenarios passed ({:.2}s)", "✓".green(), elapsed.as_secs_f64());
-            } else {
-                println!("  {} BDD scenarios passed", "✓".green());
+    let bdd_ok = if skip_bdd {
+        println!(
+            "  {} Skipping BDD tests because XTASK_SKIP_BDD=1 (avoid recursion in harness)",
+            "⚠".yellow()
+        );
+        true
+    } else {
+        let step_start = Instant::now();
+        match crate::commands::bdd::run() {
+            Ok(_) => {
+                let elapsed = step_start.elapsed();
+                if verbosity.is_verbose() {
+                    println!(
+                        "  {} BDD scenarios passed ({:.2}s)",
+                        "✓".green(),
+                        elapsed.as_secs_f64()
+                    );
+                } else {
+                    println!("  {} BDD scenarios passed", "✓".green());
+                }
+                if Path::new("target/junit/acceptance.xml").exists() {
+                    println!("  {} JUnit XML generated", "✓".green());
+                } else {
+                    println!("  {} JUnit XML not found", "⚠".yellow());
+                }
+                true
             }
-            if Path::new("target/junit/acceptance.xml").exists() {
-                println!("  {} JUnit XML generated", "✓".green());
-            } else {
-                println!("  {} JUnit XML not found", "⚠".yellow());
+            Err(e) => {
+                eprintln!("  {} BDD tests failed: {}", "✗".red(), e);
+                false
             }
-            true
-        }
-        Err(e) => {
-            eprintln!("  {} BDD tests failed: {}", "✗".red(), e);
-            false
         }
     };
     results.push("BDD acceptance tests", bdd_ok, Some("Run `cargo run -p xtask -- bdd`"));

@@ -1,0 +1,28 @@
+schema_version: 1
+
+envs:
+  - name: dev
+    required: false
+  - name: staging
+    required: true
+  - name: prod
+    required: true
+
+settings:
+  - key: http.port
+    type: int
+    default: 3000
+    description: "HTTP listen port"
+  - key: telemetry.otlp_endpoint
+    type: string
+    description: "OTLP collector URL"
+    required: false
+
+secrets:
+  - key: db.url
+    type: string
+    description: "Postgres connection string"
+    required: true
+  - key: auth.jwt_signing_key
+    type: string
+    required: true
