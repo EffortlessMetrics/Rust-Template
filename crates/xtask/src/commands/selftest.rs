@@ -67,7 +67,9 @@ pub fn run_with_verbosity(verbosity: crate::Verbosity) -> Result<()> {
     // Step 1: Core checks
     println!("{}", "[1/8] Running core checks (fmt, clippy, tests)...".blue());
     let step_start = Instant::now();
-    let core_ok = match crate::commands::check::run() {
+    let core_ok = match crate::commands::check::run_with_options(
+        crate::commands::check::CheckOptions::from_env(),
+    ) {
         Ok(_) => {
             let elapsed = step_start.elapsed();
             if verbosity.is_verbose() {
