@@ -58,7 +58,7 @@ Concretely, it provides:
   - `.llm/contextpack.yaml` - declarative bundles of relevant files
   - `xtask bundle <task>` - generates bounded Markdown context for the model
   - `CLAUDE.md` - standard prompts, workflows, and guardrails
-  - Version metadata in specs and bundles (`template_version: "2.3.0"`)
+  - Version metadata in specs and bundles (`template_version: "2.4.0"`)
 
 - **Nix-first development environment**
   - `flake.nix` - devshell that matches CI (Rust toolchain, conftest, yq, jq...)
@@ -142,16 +142,33 @@ This template is built around a few principles:
    - Local dev without Nix is supported (with reduced guarantees).
    - CI always runs **inside** the pinned Nix environment.
 
-4. **LLM-Assisted, Not Autonomous**
-   The model is:
-   - Given structured context (bundles),
-   - Pointed at specific tasks (ACs, failing scenarios),
-   - Checked by selftest.
+4. **LLM-Native, Governance-Bounded**
 
-   It is **never** trusted to:
-   - Invent new AC IDs,
-   - Change policies,
-   - Modify infra/CI without human review.
+The template assumes most of the **mechanical work** is done by agents:
+
+- writing and updating specs and ACs,
+- generating BDD scenarios and boilerplate tests,
+- wiring new modules, configs, and skills,
+- drafting policy and infra changes.
+
+The guardrail is not “the LLM never touches X”. The guardrail is:
+
+- Every agent action runs through a **named flow** (`devex_flows.yaml`, `tasks.yaml`).
+- Every change is validated by **deterministic checks** (`selftest`, `policy-test`, `ac-coverage`, graph invariants).
+- Every merge is still a **human decision** with full evidence (release bundles, AC status, task history).
+
+In practice:
+
+- Agents can mint new IDs (ACs, tasks, skills) as long as they respect the schemas and naming rules.
+- Agents can propose policy and infra changes, but those changes must:
+  - pass policy tests and graph invariants, and
+  - survive human review before merging.
+
+The template turns “vibe coding” into **“vibe architecting”**:
+
+- Humans set direction (stories, requirements, flows, risks).
+- Agents do the bulk of the boilerplate under strict validation.
+- The system itself (selftest, policies, graph) refuses to accept changes that break the contract.
 
 5. **Selftest as a Contract**
    `xtask selftest` is the contract between:
@@ -184,6 +201,31 @@ This template is built around a few principles:
 - Versus generic templates: they scaffold; this enforces specs -> ACs -> tests -> docs -> policies and exposes them to humans and agents.
 
 ---
+
+### 5.4 LLM-Native Flows (How Work Actually Moves)
+
+The cell is designed for **LLM-native flows**, not just “AI autocomplete”:
+
+- **Flow 1 – Clarify the signal**  
+  Noisy issue or ticket → structured problem + ACs  
+  Agents use `spec_ledger.yaml` and BDD templates to turn a Slack thread into a well-formed requirement with tagged scenarios.
+
+- **Flow 2 – Shape the plan**  
+  Requirements → ADR + design + test inventory  
+  Agents draft ADRs and design docs linked into `specs/` and `docs/`, ready for human edits.
+
+- **Flow 3 – Build the change**  
+  Plan → branch + code + tests  
+  Agents use `xtask bundle`, `tasks.yaml`, and Skills to open branches, add tests, and implement changes against ACs and flows.
+
+- **Flow 4 – Gate and verify**  
+  Draft PR → selftest → evidence bundle  
+  Agents run `xtask selftest`, fix what they can, and produce a draft PR plus release evidence. Humans review and merge.
+
+The boilerplate that feels heavy for human-only teams (schemas, specs, tasks, flows) is exactly what makes **agent-heavy teams viable**:
+
+- Agents can move fast on a rich, structured surface.
+- Humans spend their time on architecture, risk, and trade-offs, not wiring.
 
 ## 6. How This Fits With Your Orchestration Layer
 
