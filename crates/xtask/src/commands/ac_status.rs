@@ -49,6 +49,34 @@ struct Ac {
     scenarios: Vec<String>,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum ReportStatus {
+    Missing,
+    Empty,
+    NonEmpty,
+}
+
+impl ReportStatus {
+    fn from_path(path: &Path) -> Self {
+        match fs::metadata(path) {
+            Ok(meta) if meta.len() > 0 => ReportStatus::NonEmpty,
+            Ok(_) => ReportStatus::Empty,
+            Err(_) => ReportStatus::Missing,
+        }
+    }
+}
+
+impl std::fmt::Display for ReportStatus {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let label = match self {
+            ReportStatus::Missing => "missing",
+            ReportStatus::Empty => "empty",
+            ReportStatus::NonEmpty => "present",
+        };
+        write!(f, "{label}")
+    }
+}
+
 impl AcStatus {
     fn icon(&self) -> &str {
         match self {
@@ -111,20 +139,27 @@ pub fn run(args: AcStatusArgs) -> Result<()> {
         println!("  Found {} ACs", acs.len());
     }
 
+    let junit_status = ReportStatus::from_path(&args.junit);
+    let json_status = args.json_report.as_ref().map(|p| ReportStatus::from_path(p));
+
     // PRIMARY PATH: JUnit XML + feature file parsing
     // JUnit is now the preferred path as it's more stable and consistent.
     //
     // FALLBACK PATH: Structured JSON report from acceptance tests
     // The Cucumber JSON format is available as a fallback option.
-    let (scenarios, ac_results) = if args.junit.exists() {
+    let (scenarios, ac_results) = if junit_status == ReportStatus::NonEmpty {
         if !args.verbosity.is_quiet() {
             println!("Parsing JUnit results (primary path): {}", args.junit.display());
         }
         fallback_to_junit(&args)?
     } else if let Some(json_path) = &args.json_report {
-        if json_path.exists() {
+        if json_status == Some(ReportStatus::NonEmpty) {
             if !args.verbosity.is_quiet() {
-                println!("JUnit not found, falling back to JSON report: {}", json_path.display());
+                println!(
+                    "JUnit not found or empty ({}); falling back to JSON report: {}",
+                    junit_status,
+                    json_path.display()
+                );
             }
             let (scens, results) = parse_cucumber_json_with_scenarios(json_path)?;
             if !args.verbosity.is_quiet() {
@@ -133,13 +168,16 @@ pub fn run(args: AcStatusArgs) -> Result<()> {
             }
             (scens, results)
         } else {
+            let json_state = json_status.unwrap_or(ReportStatus::Missing);
             anyhow::bail!(
-                "Neither JUnit XML nor JSON report found.\nRun acceptance tests first: cargo test -p acceptance"
+                "Acceptance test results missing or empty:\n  - JUnit XML: {} ({junit_status})\n  - JSON report: {} ({json_state})\nRun acceptance tests first: cargo test -p acceptance --tests\nOr generate reports via: cargo xtask bdd",
+                args.junit.display(),
+                json_path.display()
             );
         }
     } else {
         anyhow::bail!(
-            "JUnit XML not found: {}\nRun acceptance tests first: cargo test -p acceptance",
+            "Acceptance test results missing or empty:\n  - JUnit XML: {} ({junit_status})\n  - JSON report: not configured\nRun acceptance tests first: cargo test -p acceptance --tests\nOr generate reports via: cargo xtask bdd",
             args.junit.display()
         );
     };
@@ -491,6 +529,22 @@ mod tests {
     use super::*;
     use std::fs;
     use tempfile::TempDir;
+
+    #[test]
+    fn report_status_handles_empty_and_non_empty() {
+        let temp_dir = TempDir::new().unwrap();
+
+        let missing = temp_dir.path().join("missing.xml");
+        assert_eq!(ReportStatus::from_path(&missing), ReportStatus::Missing);
+
+        let empty = temp_dir.path().join("empty.xml");
+        fs::write(&empty, "").unwrap();
+        assert_eq!(ReportStatus::from_path(&empty), ReportStatus::Empty);
+
+        let populated = temp_dir.path().join("populated.xml");
+        fs::write(&populated, "<xml>data</xml>").unwrap();
+        assert_eq!(ReportStatus::from_path(&populated), ReportStatus::NonEmpty);
+    }
 
     #[test]
     fn test_parse_features_with_tags_on_previous_line() {
