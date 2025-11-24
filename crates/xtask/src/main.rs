@@ -85,6 +85,11 @@ enum Commands {
         /// AC ID to suggest scenarios for (e.g., AC-TPL-001)
         ac_id: String,
     },
+    /// Run tests for a specific acceptance criterion
+    TestAc {
+        /// AC ID to test (e.g., AC-TPL-001)
+        ac_id: String,
+    },
     /// Validate ADR references in spec ledger
     AdrCheck,
     /// Create new architecture decision record
@@ -193,6 +198,13 @@ enum Commands {
     /// Lint Agent Skills (SKILL.md)
     #[command(next_help_heading = "Governance")]
     SkillsLint,
+    /// Run tests affected by git changes
+    #[command(next_help_heading = "Development")]
+    TestChanged {
+        /// Git ref to compare against (default: origin/main)
+        #[arg(long, default_value = "origin/main")]
+        base: String,
+    },
 }
 
 fn main() -> Result<()> {
@@ -208,7 +220,7 @@ fn main() -> Result<()> {
 
     // Warn when Nix is missing (gentle reminder, not an error)
     if !cli.quiet && std::env::var("IN_NIX_SHELL").is_err() {
-        eprintln!("{}", "⚠️  Running without Nix (hermetic environment unavailable)".yellow());
+        eprintln!("{}", "[WARN] Running without Nix (hermetic environment unavailable)".yellow());
         eprintln!("{}", "   Install Nix for full CI parity: https://nixos.org/download".dimmed());
         eprintln!();
     }
@@ -239,6 +251,7 @@ fn main() -> Result<()> {
         Commands::AcSuggestScenarios { ac_id } => commands::ac_suggest_scenarios::run(
             commands::ac_suggest_scenarios::AcSuggestScenariosArgs { ac_id },
         ),
+        Commands::TestAc { ac_id } => commands::test_ac::run(&ac_id),
         Commands::AdrCheck => commands::adr_check::run(commands::adr_check::AdrCheckArgs {
             verbosity,
             ..Default::default()
@@ -284,6 +297,9 @@ fn main() -> Result<()> {
         Commands::DevUp => commands::dev_up::run(),
         Commands::SkillsFmt => commands::skills::run_fmt(),
         Commands::SkillsLint => commands::skills::run_lint(),
+        Commands::TestChanged { base } => {
+            commands::test_changed::run(commands::test_changed::TestChangedArgs { base })
+        }
     }
 }
 
@@ -340,7 +356,7 @@ pub fn run_cmd(cmd: &mut Command) -> Result<()> {
     };
 
     if !output.status.success() {
-        eprintln!("\n{} Command failed: {}", "✗".bright_red(), cmd_repr);
+        eprintln!("\n{} Command failed: {}", "[FAIL]".bright_red(), cmd_repr);
 
         let stdout = String::from_utf8_lossy(&output.stdout);
         let stderr = String::from_utf8_lossy(&output.stderr);
@@ -414,6 +430,8 @@ pub fn all_command_names() -> Vec<&'static str> {
         "status",
         "suggest-next",
         "tasks-list",
+        "test-ac",
+        "test-changed",
         "help-flows",
     ]
 }

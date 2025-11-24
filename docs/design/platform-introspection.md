@@ -20,7 +20,7 @@ adrs: [ADR-0001]
 ## Context
 
 The Rust-as-Spec platform has built comprehensive governance machinery:
-- Spec ledger (stories → requirements → ACs)
+- Spec ledger (stories -> requirements -> ACs)
 - DevEx flows (commands and workflows)
 - Doc index (design docs, plans, runbooks)
 - Policies (doc policies, service policies)
@@ -44,12 +44,12 @@ Create `crates/spec-runtime` as a library crate containing:
 
 ```
 spec-runtime/
-├── src/
-│   ├── lib.rs
-│   ├── ledger.rs    # Load spec_ledger.yaml
-│   ├── devex.rs     # Load devex_flows.yaml
-│   ├── docs.rs      # Load doc_index.yaml
-│   └── graph.rs     # build_graph() from all specs
++-- src/
+|   +-- lib.rs
+|   +-- ledger.rs    # Load spec_ledger.yaml
+|   +-- devex.rs     # Load devex_flows.yaml
+|   +-- docs.rs      # Load doc_index.yaml
+|   +-- graph.rs     # build_graph() from all specs
 ```
 
 This crate is shared between:

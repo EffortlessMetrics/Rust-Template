@@ -236,34 +236,58 @@ cargo xtask ac-suggest-scenarios AC-MYSERV-001
 # 4. Implement step definitions
 # Edit crates/acceptance/src/steps/your_module.rs
 
-# 5. Run tests for specific AC
+# 5. Run tests for specific AC (RECOMMENDED: Use selective testing)
+cargo xtask test-ac AC-MYSERV-001
+# Fast, focused testing of your AC only
+
+# Alternative: Direct cucumber invocation
 cargo test -p acceptance --test acceptance -- --include-tag AC-MYSERV-001
-# Verifies your AC in isolation
 
 # 6. Implement code based on bundle context
 cargo xtask bundle implement_ac
 # Read .llm/bundle/implement_ac.md for context
 
-# 7. Run all BDD tests
+# 7. Validate your changes (RECOMMENDED: Selective testing)
+cargo xtask test-changed
+# Runs only tests affected by your edits
+
+# Alternative: Full BDD suite (slower, especially on Windows)
 cargo xtask bdd
 ```
 
 #### Before Committing
 
+**Recommended workflow (fast):**
 ```bash
-# 1. Validate kernel ACs are green
+# 1. Test only what changed
+cargo xtask test-changed
+# Runs affected tests only (seconds to minutes)
+
+# 2. Validate kernel ACs are green
 cargo xtask ac-coverage
 # All kernel ACs MUST show ✅
+```
 
-# 2. Full governance check
+**Full validation (use Tier-1 environment):**
+```bash
+# In WSL2 or Linux with Nix (matches CI)
+nix develop
 cargo xtask selftest
-# All 7 steps must pass
+# All 7 steps must pass (10-20 minutes on Tier-1)
 ```
 
 **Critical:**
-- Always end with `cargo xtask selftest`. If it fails, the work is incomplete.
-- **You MUST run `cargo xtask ac-coverage` before claiming work is complete.**
-- If kernel ACs show ❌, work is NOT done.
+- **Pre-commit:** Use `cargo xtask test-changed` for fast feedback
+- **Pre-merge:** Run `cargo xtask selftest` in Tier-1 (Nix+Linux/WSL2)
+- **You MUST run `cargo xtask ac-coverage`** before claiming work is complete
+- If kernel ACs show ❌, work is NOT done
+- **Never skip selftest** - but run it in the right environment (Tier-1)
+
+**Performance Note:**
+- On **native Windows** (Tier-2): `selftest` may take 2+ hours due to file locking. Use `test-changed` for iteration, `selftest` in WSL2 for final validation.
+- On **Nix+Linux/WSL2** (Tier-1): `selftest` takes 10-20 minutes. This is your canonical validation environment.
+
+See `docs/SELECTIVE_TESTING.md` for complete guide.
 
 ### When to Use Which Task
 

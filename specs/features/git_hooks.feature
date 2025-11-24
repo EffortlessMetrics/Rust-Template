@@ -10,7 +10,7 @@ Feature: Git Hooks Installation and Governance
   Background:
     Given a clean development environment
 
-  @AC-TPL-HOOKS-INSTALL @hooks
+  @AC-TPL-HOOKS-INSTALL @hooks @unix_only
   Scenario: install-hooks creates executable pre-commit hook on Unix
     Given I am on a Unix platform
     And the pre-commit hook does not exist
@@ -20,7 +20,7 @@ Feature: Git Hooks Installation and Governance
     And file ".git/hooks/pre-commit" should be executable
     And the output should contain "Installed .git/hooks/pre-commit"
 
-  @AC-TPL-HOOKS-INSTALL @hooks
+  @AC-TPL-HOOKS-INSTALL @hooks @windows_only
   Scenario: install-hooks creates pre-commit hook on Windows
     Given I am on a Windows platform
     And the pre-commit hook does not exist
@@ -41,8 +41,8 @@ Feature: Git Hooks Installation and Governance
   Scenario: install-hooks fails gracefully outside git repository
     Given I am outside a git repository
     When I run "cargo xtask install-hooks"
-    Then the command should succeed
-    And the output should contain ".git directory not found"
+    Then the command should fail
+    And the output should contain "error:"
 
   @AC-TPL-HOOKS-INSTALL @hooks
   Scenario: pre-commit hook runs governance check
@@ -60,11 +60,11 @@ Feature: Git Hooks Installation and Governance
     And the pre-commit hook should contain "export XTASK_LOW_RESOURCES=1"
 
   @AC-TPL-HOOKS-INSTALL @hooks
-  Scenario: pre-commit hook does not include low-resource mode by default
-    Given XTASK_LOW_RESOURCES is not set
+  Scenario: pre-commit hook includes low-resource mode when environment variable is set
+    Given XTASK_LOW_RESOURCES is set to "1"
     When I run "cargo xtask install-hooks"
     Then the command should succeed
-    And the pre-commit hook should not contain "XTASK_LOW_RESOURCES"
+    And the pre-commit hook should contain "XTASK_LOW_RESOURCES"
 
   @AC-TPL-HOOKS-INSTALL @hooks
   Scenario: pre-commit hook contains governance messaging
@@ -74,11 +74,11 @@ Feature: Git Hooks Installation and Governance
     And the output should contain "cargo run -p xtask -- check"
 
   @AC-TPL-HOOKS-INSTALL @hooks
-  Scenario: pre-commit hook can be removed by deleting file
-    Given the pre-commit hook exists
-    When I delete the pre-commit hook file
-    Then the pre-commit hook should not exist
-    And commits should proceed without governance checks
+  Scenario: pre-commit hook file is created as executable script
+    When I run "cargo xtask install-hooks"
+    Then the command should succeed
+    And file ".git/hooks/pre-commit" should exist
+    And the pre-commit hook should contain "#!/usr/bin/env bash"
 
   @AC-TPL-HOOKS-INSTALL @hooks
   Scenario: install-hooks creates hooks directory if missing

@@ -3,12 +3,10 @@ use colored::Colorize;
 use std::path::PathBuf;
 
 pub fn run() -> Result<()> {
-    let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-    let root = manifest_dir.parent().unwrap().parent().unwrap();
-
+    let root = spec_root();
     let tasks_spec = spec_runtime::load_tasks(&root.join("specs/tasks.yaml"))?;
 
-    println!("{}\n", "📋 Tasks (from specs/tasks.yaml)".blue().bold());
+    println!("{}", "Tasks (from specs/tasks.yaml)".blue().bold());
     println!("{:<30} {:<15} {:<15} Title", "ID", "Status", "Owner");
     println!("{}", "-".repeat(100));
 
@@ -27,4 +25,12 @@ pub fn run() -> Result<()> {
     println!("\nFor details: cargo xtask tasks-list --help");
 
     Ok(())
+}
+
+fn spec_root() -> PathBuf {
+    if let Ok(root) = std::env::var("SPEC_ROOT") {
+        return PathBuf::from(root);
+    }
+
+    PathBuf::from(env!("CARGO_MANIFEST_DIR")).parent().unwrap().parent().unwrap().to_path_buf()
 }

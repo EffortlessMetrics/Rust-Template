@@ -228,11 +228,7 @@ pub fn check_invariants(
         }
     }
 
-    if violations.is_empty() {
-        Ok(())
-    } else {
-        Err(violations)
-    }
+    if violations.is_empty() { Ok(()) } else { Err(violations) }
 }
 
 impl Graph {
@@ -445,5 +441,239 @@ mod tests {
             assert_eq!(violations[0].code, "AC_HAS_NO_TEST");
             assert!(violations[0].message.contains("AC-TEST-002"));
         }
+    }
+
+    /// AC-TPL-GRAPH-REQ-HAS-AC: Validates that requirements with must_have_ac: true
+    /// have at least one AC in the graph.
+    #[test]
+    fn graph_invariants_req_has_ac() {
+        use std::collections::HashMap;
+
+        // Create a minimal DevExFlows
+        let devex = DevExFlows {
+            schema_version: "1.0".to_string(),
+            template_version: "3.2.0".to_string(),
+            commands: HashMap::new(),
+            flows: HashMap::new(),
+        };
+
+        let docs = crate::DocIndex {
+            schema_version: "1.0".to_string(),
+            template_version: "3.2.0".to_string(),
+            docs: vec![],
+        };
+
+        // Test case 1: Requirement with must_have_ac and an AC should pass
+        let ledger_valid = SpecLedger {
+            metadata: Metadata {
+                schema_version: "1.0".to_string(),
+                template_version: "3.2.0".to_string(),
+                last_updated: "2025-11-22".to_string(),
+                description: "Test ledger".to_string(),
+            },
+            stories: vec![Story {
+                id: "US-TEST-001".to_string(),
+                title: "Test Story".to_string(),
+                requirements: vec![Requirement {
+                    id: "REQ-TEST-001".to_string(),
+                    title: "Test Requirement".to_string(),
+                    tags: vec![],
+                    must_have_ac: true,
+                    acceptance_criteria: vec![AcceptanceCriterion {
+                        id: "AC-TEST-001".to_string(),
+                        text: "Test AC".to_string(),
+                        tests: vec![TestMapping {
+                            test_type: "unit".to_string(),
+                            tag: "test_tag".to_string(),
+                            file: None,
+                        }],
+                    }],
+                }],
+            }],
+        };
+
+        let graph = build_graph(&ledger_valid, &devex, &docs).expect("build_graph should succeed");
+        let result = check_invariants(&graph, &devex, &ledger_valid);
+        assert!(result.is_ok(), "Requirement with AC should pass validation");
+
+        // Test case 2: Requirement with must_have_ac but no AC should fail
+        let ledger_invalid = SpecLedger {
+            metadata: Metadata {
+                schema_version: "1.0".to_string(),
+                template_version: "3.2.0".to_string(),
+                last_updated: "2025-11-22".to_string(),
+                description: "Test ledger".to_string(),
+            },
+            stories: vec![Story {
+                id: "US-TEST-002".to_string(),
+                title: "Test Story 2".to_string(),
+                requirements: vec![Requirement {
+                    id: "REQ-TEST-002".to_string(),
+                    title: "Test Requirement 2".to_string(),
+                    tags: vec![],
+                    must_have_ac: true,
+                    acceptance_criteria: vec![],
+                }],
+            }],
+        };
+
+        let graph =
+            build_graph(&ledger_invalid, &devex, &docs).expect("build_graph should succeed");
+        let result = check_invariants(&graph, &devex, &ledger_invalid);
+        assert!(result.is_err(), "Requirement without AC should fail validation");
+
+        if let Err(violations) = result {
+            assert!(violations.iter().any(|v| v.code == "REQ_HAS_NO_AC"));
+            let req_violation = violations.iter().find(|v| v.code == "REQ_HAS_NO_AC").unwrap();
+            assert!(req_violation.message.contains("REQ-TEST-002"));
+        }
+    }
+
+    /// AC-TPL-GRAPH-COMMAND-REACHABLE: Validates that required DevEx commands
+    /// are reachable (used in at least one flow).
+    #[test]
+    fn graph_invariants_command_reachable() {
+        use crate::devex::{CommandSpec, FlowSpec};
+        use std::collections::HashMap;
+
+        let docs = crate::DocIndex {
+            schema_version: "1.0".to_string(),
+            template_version: "3.2.0".to_string(),
+            docs: vec![],
+        };
+
+        let ledger = SpecLedger {
+            metadata: Metadata {
+                schema_version: "1.0".to_string(),
+                template_version: "3.2.0".to_string(),
+                last_updated: "2025-11-22".to_string(),
+                description: "Test ledger".to_string(),
+            },
+            stories: vec![],
+        };
+
+        // Test case 1: Required command that is used in a flow should pass
+        let mut commands_valid = HashMap::new();
+        commands_valid.insert(
+            "check".to_string(),
+            CommandSpec {
+                category: "validation".to_string(),
+                summary: "Run checks".to_string(),
+                required: true,
+                docs: Default::default(),
+            },
+        );
+
+        let mut flows_valid = HashMap::new();
+        flows_valid.insert(
+            "validate".to_string(),
+            FlowSpec {
+                name: "Validate".to_string(),
+                description: "Run validation".to_string(),
+                required: false,
+                documented_in: vec![],
+                steps: vec!["check".to_string()],
+            },
+        );
+
+        let devex_valid = DevExFlows {
+            schema_version: "1.0".to_string(),
+            template_version: "3.2.0".to_string(),
+            commands: commands_valid,
+            flows: flows_valid,
+        };
+
+        let graph = build_graph(&ledger, &devex_valid, &docs).expect("build_graph should succeed");
+        let result = check_invariants(&graph, &devex_valid, &ledger);
+        assert!(result.is_ok(), "Required command used in flow should pass validation");
+
+        // Test case 2: Required command not used in any flow should fail
+        let mut commands_invalid = HashMap::new();
+        commands_invalid.insert(
+            "orphan-cmd".to_string(),
+            CommandSpec {
+                category: "validation".to_string(),
+                summary: "Orphaned command".to_string(),
+                required: true,
+                docs: Default::default(),
+            },
+        );
+
+        let devex_invalid = DevExFlows {
+            schema_version: "1.0".to_string(),
+            template_version: "3.2.0".to_string(),
+            commands: commands_invalid,
+            flows: HashMap::new(),
+        };
+
+        let graph =
+            build_graph(&ledger, &devex_invalid, &docs).expect("build_graph should succeed");
+        let result = check_invariants(&graph, &devex_invalid, &ledger);
+        assert!(result.is_err(), "Required command not in any flow should fail validation");
+
+        if let Err(violations) = result {
+            assert!(violations.iter().any(|v| v.code == "COMMAND_UNREACHABLE"));
+            let cmd_violation =
+                violations.iter().find(|v| v.code == "COMMAND_UNREACHABLE").unwrap();
+            assert!(cmd_violation.message.contains("orphan-cmd"));
+        }
+    }
+
+    /// AC-TPL-GRAPH-SELFTEST: Validates that the mermaid export produces valid
+    /// Mermaid graph syntax.
+    #[test]
+    fn graph_export_mermaid() {
+        use std::collections::HashMap;
+
+        let ledger = SpecLedger {
+            metadata: Metadata {
+                schema_version: "1.0".to_string(),
+                template_version: "3.2.0".to_string(),
+                last_updated: "2025-11-22".to_string(),
+                description: "Test ledger".to_string(),
+            },
+            stories: vec![Story {
+                id: "US-TEST-001".to_string(),
+                title: "Test Story".to_string(),
+                requirements: vec![Requirement {
+                    id: "REQ-TEST-001".to_string(),
+                    title: "Test Requirement".to_string(),
+                    tags: vec![],
+                    must_have_ac: false,
+                    acceptance_criteria: vec![AcceptanceCriterion {
+                        id: "AC-TEST-001".to_string(),
+                        text: "Test AC".to_string(),
+                        tests: vec![TestMapping {
+                            test_type: "unit".to_string(),
+                            tag: "test_tag".to_string(),
+                            file: None,
+                        }],
+                    }],
+                }],
+            }],
+        };
+
+        let devex = DevExFlows {
+            schema_version: "1.0".to_string(),
+            template_version: "3.2.0".to_string(),
+            commands: HashMap::new(),
+            flows: HashMap::new(),
+        };
+
+        let docs = crate::DocIndex {
+            schema_version: "1.0".to_string(),
+            template_version: "3.2.0".to_string(),
+            docs: vec![],
+        };
+
+        let graph = build_graph(&ledger, &devex, &docs).expect("build_graph should succeed");
+        let mermaid = graph.to_mermaid();
+
+        // Validate basic Mermaid structure
+        assert!(mermaid.starts_with("graph TD\n"), "Mermaid should start with 'graph TD'");
+        assert!(mermaid.contains("US_TEST_001"), "Mermaid should contain story node");
+        assert!(mermaid.contains("REQ_TEST_001"), "Mermaid should contain requirement node");
+        assert!(mermaid.contains("AC_TEST_001"), "Mermaid should contain AC node");
+        assert!(mermaid.contains("-->"), "Mermaid should contain edges");
     }
 }

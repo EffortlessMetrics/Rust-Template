@@ -7,14 +7,9 @@ use std::path::PathBuf;
 
 mod ui;
 
+/// Platform API routes (mounted at /platform)
 pub fn router() -> Router {
     Router::new()
-        // UI routes
-        .route("/", get(ui::dashboard))
-        .route("/ui", get(ui::dashboard))
-        .route("/ui/graph", get(ui::graph_view))
-        .route("/ui/flows", get(ui::flows_view))
-        .route("/ui/coverage", get(ui::coverage_view))
         // API routes
         .route("/graph", get(get_graph))
         .route("/devex/flows", get(get_devex_flows))
@@ -23,6 +18,16 @@ pub fn router() -> Router {
         .route("/coverage", get(get_coverage))
         .route("/tasks", get(get_tasks))
         .route("/tasks/suggest-next", get(get_suggest_next))
+}
+
+/// UI routes (mounted at root)
+pub fn ui_router() -> Router {
+    Router::new()
+        .route("/", get(ui::dashboard))
+        .route("/ui", get(ui::dashboard))
+        .route("/ui/graph", get(ui::graph_view))
+        .route("/ui/flows", get(ui::flows_view))
+        .route("/ui/coverage", get(ui::coverage_view))
 }
 
 #[derive(Deserialize)]
@@ -339,8 +344,13 @@ async fn get_coverage() -> Json<CoverageResponse> {
                         .tags
                         .iter()
                         .filter_map(|tag| {
-                            // Tags in JSON don't have @ prefix, just the AC ID
-                            if tag.name.starts_with("AC-") { Some(tag.name.clone()) } else { None }
+                            // Tags in Cucumber JSON include an @ prefix - normalize before matching
+                            let tag_name = tag.name.trim_start_matches('@');
+                            if tag_name.starts_with("AC-") {
+                                Some(tag_name.to_string())
+                            } else {
+                                None
+                            }
                         })
                         .collect();
 
@@ -404,5 +414,9 @@ async fn get_coverage() -> Json<CoverageResponse> {
 }
 
 fn workspace_root() -> PathBuf {
+    if let Ok(root) = std::env::var("SPEC_ROOT") {
+        return PathBuf::from(root);
+    }
+
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).parent().unwrap().parent().unwrap().to_path_buf()
 }

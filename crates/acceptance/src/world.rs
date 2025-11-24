@@ -1,7 +1,7 @@
 use axum::Router;
 use cucumber::World as CucumberWorld;
 use http::HeaderMap;
-use std::collections::HashMap;
+use std::{collections::HashMap, fs, path::Path};
 
 /// Test world state - includes real HTTP router for integration testing
 #[derive(Debug, CucumberWorld)]
@@ -31,6 +31,8 @@ pub struct XtaskContext {
     pub test_adr_path: Option<std::path::PathBuf>,
     /// Path to backup file for cleanup (AC-PLT-009, AC-PLT-010)
     pub test_backup_path: Option<std::path::PathBuf>,
+    /// Path to skills directory for validation (AC-TPL-AGENT-SKILLS)
+    pub test_skills_dir: Option<std::path::PathBuf>,
 }
 
 impl Default for World {
@@ -39,7 +41,22 @@ impl Default for World {
         telemetry::init_tracing("acceptance-tests");
 
         let temp_dir = std::sync::Arc::new(tempfile::tempdir().expect("Failed to create temp dir"));
-        let specs_dir = temp_dir.path().to_path_buf();
+        let specs_dir = temp_dir.path().join("specs");
+        fs::create_dir_all(&specs_dir).expect("Failed to create temp specs directory");
+
+        // Seed temp specs with a copy of the workspace specs so endpoints can operate
+        let workspace_root =
+            Path::new(env!("CARGO_MANIFEST_DIR")).parent().unwrap().parent().unwrap();
+        let workspace_specs = workspace_root.join("specs");
+        copy_dir_recursive(&workspace_specs, &specs_dir)
+            .expect("Failed to copy workspace specs into temp dir");
+
+        // Make the spec root discoverable for app-http/xtask consumers.
+        // SAFETY: Updating process environment here is confined to the test runner setup.
+        unsafe {
+            std::env::set_var("SPEC_ROOT", temp_dir.path());
+        }
+
         let governance_repo =
             std::sync::Arc::new(adapters_spec_fs::FsGovernanceRepository::new(specs_dir));
 
@@ -84,4 +101,22 @@ impl World {
     pub fn xtask_context_mut(&mut self) -> &mut XtaskContext {
         &mut self.xtask_context
     }
+}
+
+fn copy_dir_recursive(src: &Path, dst: &Path) -> std::io::Result<()> {
+    fs::create_dir_all(dst)?;
+
+    for entry in fs::read_dir(src)? {
+        let entry = entry?;
+        let file_type = entry.file_type()?;
+        let dest_path = dst.join(entry.file_name());
+
+        if file_type.is_dir() {
+            copy_dir_recursive(&entry.path(), &dest_path)?;
+        } else if file_type.is_file() {
+            fs::copy(entry.path(), dest_path)?;
+        }
+    }
+
+    Ok(())
 }

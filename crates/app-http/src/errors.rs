@@ -302,10 +302,10 @@ impl From<business_core::governance::GovernanceError> for AppError {
         use business_core::governance::GovernanceError::*;
         match error {
             TaskNotFound(id) => AppError::not_found(format!("Task not found: {:?}", id)),
-            InvalidTransition { from, to } => AppError::business_logic_error(
-                ErrorCode::InvalidRequest,
-                format!("Invalid transition from {:?} to {:?}", from, to),
-            ),
+            InvalidTransition { from, to } => AppError::internal_error(format!(
+                "Invalid status transition from {:?} to {:?}",
+                from, to
+            )),
             Lock(msg) => AppError::internal_error(format!("Lock error: {}", msg)),
             Io(e) => AppError::internal_error(format!("IO error: {}", e)),
             Serialization(msg) => AppError::internal_error(format!("Serialization error: {}", msg)),
@@ -377,5 +377,23 @@ mod tests {
         assert!(json.contains(r#""error":"INVALID_AMOUNT""#));
         // Verify it uses "requestId" not "request_id" (AC-TPL-003)
         assert!(json.contains(r#""requestId":"req-test-123""#));
+    }
+
+    #[test]
+    fn test_governance_invalid_transition_maps_to_server_error() {
+        use business_core::governance::TaskStatus;
+
+        let app_error: AppError = business_core::governance::GovernanceError::InvalidTransition {
+            from: TaskStatus::Todo,
+            to: TaskStatus::Done,
+        }
+        .into();
+
+        assert_eq!(app_error.status, StatusCode::INTERNAL_SERVER_ERROR);
+        assert!(
+            app_error.message.contains("Invalid status transition"),
+            "message should mention status transition, got: {}",
+            app_error.message
+        );
     }
 }

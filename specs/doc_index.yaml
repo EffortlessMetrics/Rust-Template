@@ -4,7 +4,7 @@
 # This is the canonical registry for "serious" documentation with front-matter
 
 schema_version: "1.0"
-template_version: "v2.4.0"
+template_version: "3.2.0"
 
 docs:
   # Example design doc entry
@@ -89,3 +89,124 @@ docs:
     stories: [US-TPL-001]
     requirements: [REQ-TPL-VERSION]
     adrs: [ADR-0003]
+
+  # Task Suggest-Next Design
+  - id: DESIGN-TPL-SUGGEST-NEXT-001
+    file: docs/design/suggest-next.md
+    doc_type: design_doc
+    stories: [US-TPL-PLT-001]
+    requirements: [REQ-TPL-SUGGEST-NEXT]
+    acs: [AC-TPL-SUGGEST-NEXT-CLI, AC-TPL-SUGGEST-NEXT-HTTP]
+    adrs: [ADR-0001]
+
+  # Graph Invariants Design
+  - id: DESIGN-TPL-GRAPH-INVARIANTS-001
+    file: docs/design/graph-invariants.md
+    doc_type: design_doc
+    stories: [US-TPL-PLT-001]
+    requirements: [REQ-TPL-GRAPH-INVARIANTS]
+    acs:
+      - AC-TPL-GRAPH-REQ-HAS-AC
+      - AC-TPL-GRAPH-AC-HAS-TEST
+      - AC-TPL-GRAPH-COMMAND-REACHABLE
+      - AC-TPL-GRAPH-SELFTEST
+    adrs: [ADR-0001, ADR-0005]
+
+  # Release Bundle Design
+  - id: DESIGN-TPL-REL-BUNDLE
+    file: docs/design/release-bundling.md
+    doc_type: design_doc
+    stories: [US-TPL-PLT-001]
+    requirements: [REQ-TPL-REL-BUNDLE]
+    acs: [AC-TPL-REL-EVIDENCE, AC-TPL-REL-CHANGELOG]
+    adrs: [ADR-0005]
+
+  # Platform Status CLI Dashboard
+  - id: DESIGN-PLT-STATUS
+    file: docs/design/status-cli.md
+    doc_type: design_doc
+    stories: [US-TPL-PLT-001]
+    requirements: [REQ-PLT-STATUS-CLI]
+    acs: []
+    adrs: [ADR-0005]
+
+  # Platform Web UI
+  - id: DESIGN-TPL-PLATFORM-UI-001
+    file: docs/design/platform-ui.md
+    doc_type: design_doc
+    stories: [US-TPL-PLT-001]
+    requirements: [REQ-TPL-PLATFORM-UI]
+    acs: [AC-TPL-PLATFORM-UI-DASHBOARD, AC-TPL-PLATFORM-UI-GRAPH, AC-TPL-PLATFORM-UI-FLOWS]
+    adrs: [ADR-0004]
+
+  # Local Runtime Sovereignty
+  - id: DESIGN-TPL-LOCAL-RUNTIME-001
+    file: docs/design/local-runtime.md
+    doc_type: design_doc
+    stories: [US-TPL-PLT-001]
+    requirements: [REQ-TPL-LOCAL-RUNTIME]
+    acs: [AC-TPL-LOCAL-DOCKER]
+    adrs: [ADR-0002]
+
+  # Governance Hooks
+  - id: DESIGN-TPL-GOV-HOOKS-001
+    file: docs/design/governance-hooks.md
+    doc_type: design_doc
+    stories: [US-TPL-PLT-001]
+    requirements: [REQ-TPL-GOV-HOOKS]
+    acs: [AC-TPL-HOOKS-INSTALL]
+    adrs: [ADR-0005]
+
+  # Agent-Native Interface
+  - id: DESIGN-TPL-AGENT-INTERFACE-001
+    file: docs/design/agent-interface.md
+    doc_type: design_doc
+    stories: [US-TPL-PLT-001]
+    requirements: [REQ-TPL-AGENT-INTERFACE]
+    acs: [AC-TPL-AGENT-SKILLS, AC-TPL-AGENT-HINTS]
+    adrs: [ADR-0004]
+
+  # Agent Skills Documentation and Governance
+  - id: DESIGN-TPL-SKILLS-GUIDE-001
+    file: docs/design/skills-guide.md
+    doc_type: design_doc
+    stories: [US-TPL-PLT-001]
+    requirements: [REQ-TPL-SKILLS-GUIDE]
+    acs: [AC-TPL-SKILLS-GUIDE-001, AC-TPL-SKILLS-ALIGN-001]
+    adrs: [ADR-0004]
+
+  # Rust-native Skills Formatting and Linting
+  - id: DESIGN-TPL-SKILLS-TOOLING-001
+    file: docs/design/skills-tooling.md
+    doc_type: design_doc
+    stories: [US-TPL-PLT-001]
+    requirements: [REQ-TPL-SKILLS-TOOLING]
+    acs: [AC-TPL-SKILLS-FMT, AC-TPL-SKILLS-LINT]
+    adrs: [ADR-0004, ADR-0005]
+
+  # Task Status Persistence
+  - id: DESIGN-TPL-GOV-WRITE-001
+    file: docs/design/gov-write-001.md
+    doc_type: design_doc
+    stories: [US-TPL-PLATFORM-V3]
+    requirements: [REQ-TPL-GOV-WRITE-001]
+    acs: [AC-TPL-GOV-WRITE-TASK-STATUS-200]
+    adrs: [ADR-0001]
+
+  # Task Status Transitions
+  - id: DESIGN-TPL-TASK-LIFECYCLE-001
+    file: docs/design/task-lifecycle.md
+    doc_type: design_doc
+    stories: [US-TPL-PLATFORM-V3]
+    requirements: [REQ-TPL-TASK-LIFECYCLE]
+    acs: [AC-TPL-TASK-TRANSITIONS]
+    adrs: [ADR-0001]
+
+  # Selective Testing Guide
+  - id: GUIDE-TPL-SELECTIVE-TESTING-001
+    file: docs/SELECTIVE_TESTING.md
+    doc_type: guide
+    stories: [US-TPL-PLT-001]
+    requirements: [REQ-PLT-DEVEX-CONTRACT]
+    acs: []
+    adrs: [ADR-0005]

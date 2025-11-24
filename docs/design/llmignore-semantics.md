@@ -99,14 +99,14 @@ fn load_ignore_patterns(workspace_root: &Path) -> Result<Vec<String>> {
 
 **Bug 1: Overly broad component matching**
 - Pattern: `test`
-- Matches: `test`, `src/test`, `src/test.rs` ✓
+- Matches: `test`, `src/test`, `src/test.rs` [OK]
 - Also matches: `src/test_utils.rs` (WRONG - should only match exact component)
 - Current code matches if ANY component equals pattern, but doesn't handle partial filename matches correctly
 
 **Bug 2: Directory pattern doesn't match recursively as expected**
 - Pattern: `target/`
-- Matches: `target/debug/app` ✓
-- Matches: `target` ✓
+- Matches: `target/debug/app` [OK]
+- Matches: `target` [OK]
 - Does NOT match: `nested/target/debug/app` (inconsistent - gitignore WOULD match this)
 
 ---

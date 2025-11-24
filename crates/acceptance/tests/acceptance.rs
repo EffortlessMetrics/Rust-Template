@@ -1,5 +1,6 @@
 use acceptance::World;
-use cucumber::{World as _, WriterExt, writer};
+use cucumber::{World as _, WriterExt, tag::Ext as _, writer};
+use gherkin::tagexpr::TagOperation;
 use std::fs::File;
 
 // Platform-specific null device
@@ -14,6 +15,12 @@ use acceptance::steps;
 
 #[tokio::main]
 async fn main() {
+    // Print a backtrace for any panic so failures in steps are easier to debug.
+    std::panic::set_hook(Box::new(|info| {
+        eprintln!("panic: {info}");
+        eprintln!("{}", std::backtrace::Backtrace::force_capture());
+    }));
+
     // Find the workspace root by going up from CARGO_MANIFEST_DIR
     let manifest_dir = env!("CARGO_MANIFEST_DIR");
     let workspace_root =
@@ -58,8 +65,15 @@ async fn main() {
     let json_file =
         File::create(&json_path).unwrap_or_else(|_| std::fs::File::create(NULL_DEVICE).unwrap());
 
+    let tag_expression: Option<TagOperation> = std::env::var("CUCUMBER_TAG_EXPRESSION")
+        .ok()
+        .and_then(|expr| expr.parse::<TagOperation>().ok());
+
     // Triple output: console + JUnit + JSON
     World::cucumber()
+        // Run scenarios sequentially to avoid cross-test interference.
+        // The test app uses the global SPEC_ROOT env var, so concurrent runs would race.
+        .max_concurrent_scenarios(1)
         .before(|_feature, _rule, _scenario, world| {
             Box::pin(async move {
                 *world = World::new();
@@ -71,6 +85,34 @@ async fn main() {
                     .tee::<World, _>(writer::Json::for_tee(json_file).normalized()),
             ),
         )
-        .run(features_path.to_str().unwrap_or("specs/features"))
+        .filter_run(
+            features_path.to_str().unwrap_or("specs/features"),
+            move |feature, rule, scenario| {
+                let tags: Vec<String> = feature
+                    .tags
+                    .iter()
+                    .chain(rule.iter().flat_map(|r| r.tags.iter()))
+                    .chain(scenario.tags.iter())
+                    .map(|t| t.trim_start_matches('@').to_string())
+                    .collect();
+
+                let is_windows_only = tags.iter().any(|t| t == "windows_only");
+                let is_unix_only = tags.iter().any(|t| t == "unix_only");
+
+                if cfg!(windows) && is_unix_only {
+                    return false;
+                }
+
+                if cfg!(unix) && is_windows_only {
+                    return false;
+                }
+
+                if let Some(expr) = &tag_expression {
+                    return expr.eval(tags.iter());
+                }
+
+                true
+            },
+        )
         .await;
 }

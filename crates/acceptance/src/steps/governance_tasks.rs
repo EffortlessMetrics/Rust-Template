@@ -2,29 +2,55 @@ use crate::world::{Response, World};
 use adapters_spec_fs::tasks_state;
 use axum::body::Body;
 use business_core::governance::{TaskId, TaskStatus};
-use cucumber::{given, then, when};
+use cucumber::{gherkin::Step, given, then, when};
 use http::Request;
 use http_body_util::BodyExt;
+use spec_runtime::tasks::{Task, TaskDocs, TasksSpec};
+use std::{fs, path::Path};
 use tower::util::ServiceExt;
+
+#[given("the platform is running")]
+async fn given_platform_running(_world: &mut World) {
+    // Background step for platform tests
+    // For HTTP API tests, the platform (app) is initialized in World::new()
+    // For CLI tests, this is a no-op since CLI commands don't require the HTTP server
+}
 
 #[given(regex = r#"^a task "([^"]+)" exists with status "([^"]+)"$"#)]
 async fn given_task_exists(world: &mut World, task_id: String, status_str: String) {
-    let status = match status_str.as_str() {
-        "Todo" => TaskStatus::Todo,
-        "InProgress" => TaskStatus::InProgress,
-        "Review" => TaskStatus::Review,
-        "Done" => TaskStatus::Done,
-        _ => panic!("Invalid status: {}", status_str),
-    };
+    let (status, status_text) = parse_status(&status_str);
 
-    let path = world._temp_dir.path().join("tasks_state.yaml");
-    tasks_state::update_task_status(&path, TaskId(task_id), status)
+    let specs_dir = world._temp_dir.path().join("specs");
+    let state_path = specs_dir.join("tasks_state.yaml");
+    tasks_state::update_task_status(&state_path, TaskId(task_id.clone()), status)
         .expect("Failed to update task status");
+
+    ensure_tasks_file(
+        &specs_dir.join("tasks.yaml"),
+        vec![Task {
+            id: task_id.clone(),
+            title: task_id.clone(),
+            requirement: "REQ-TBD".to_string(),
+            acs: Vec::new(),
+            status: status_text,
+            owner: None,
+            labels: Vec::new(),
+            docs: Some(empty_task_docs()),
+            summary: task_id,
+            recommended_flows: Vec::new(),
+        }],
+    );
 }
 
 #[given(expr = r#"the following tasks exist in {string}:"#)]
-async fn given_tasks_exist(world: &mut World, _file: String, step: &cucumber::gherkin::Step) {
-    let path = world._temp_dir.path().join("tasks_state.yaml");
+async fn given_tasks_exist(world: &mut World, file: String, step: &cucumber::gherkin::Step) {
+    let tasks_path = world._temp_dir.path().join(&file);
+    let specs_dir = tasks_path.parent().unwrap_or_else(|| world._temp_dir.path()).to_path_buf();
+    fs::create_dir_all(&specs_dir).expect("Failed to create specs directory");
+
+    let state_path = specs_dir.join("tasks_state.yaml");
+
+    let mut tasks: Vec<Task> = Vec::new();
 
     // Parse table and create tasks
     if let Some(table) = &step.table {
@@ -36,36 +62,53 @@ async fn given_tasks_exist(world: &mut World, _file: String, step: &cucumber::gh
 
         for row in table.rows.iter().skip(1) {
             let mut task_id = String::new();
-            let mut status = TaskStatus::Todo;
+            let mut status_text = "Todo".to_string();
+            let mut title = String::from("Untitled Task");
+            let mut requirement = String::from("REQ-TBD");
 
             for (i, cell) in row.iter().enumerate() {
                 if let Some(&header) = headers.get(i) {
                     match header {
                         "id" => task_id = cell.to_string(),
-                        "status" => {
-                            status = match cell.as_str() {
-                                "Todo" => TaskStatus::Todo,
-                                "InProgress" => TaskStatus::InProgress,
-                                "Review" => TaskStatus::Review,
-                                "Done" => TaskStatus::Done,
-                                _ => TaskStatus::Todo,
-                            };
-                        }
+                        "title" => title = cell.to_string(),
+                        "requirement" => requirement = cell.to_string(),
+                        "status" => status_text = cell.to_string(),
                         _ => {} // Ignore other fields for now
                     }
                 }
             }
 
             if !task_id.is_empty() {
-                tasks_state::update_task_status(&path, TaskId(task_id), status)
+                let (status, status_label) = parse_status(&status_text);
+                tasks_state::update_task_status(&state_path, TaskId(task_id.clone()), status)
                     .expect("Failed to update task status");
+
+                tasks.push(Task {
+                    id: task_id.clone(),
+                    title: title.clone(),
+                    requirement: requirement.clone(),
+                    acs: Vec::new(),
+                    status: status_label,
+                    owner: None,
+                    labels: Vec::new(),
+                    docs: Some(empty_task_docs()),
+                    summary: title.clone(),
+                    recommended_flows: Vec::new(),
+                });
             }
         }
     }
+
+    ensure_tasks_file(&tasks_path, tasks);
 }
 
 #[when(regex = r#"^I send a POST request to "([^"]+)" with body:$"#)]
-async fn when_post_request(world: &mut World, path: String, body: String) {
+async fn when_post_request(world: &mut World, path: String, step: &Step) {
+    let body = step
+        .docstring
+        .as_ref()
+        .cloned()
+        .unwrap_or_else(|| panic!("Docstring body not provided for POST {}", path));
     let mut request_builder =
         Request::builder().method("POST").uri(&path).header("content-type", "application/json");
 
@@ -75,7 +118,12 @@ async fn when_post_request(world: &mut World, path: String, body: String) {
 
     let request = request_builder.body(Body::from(body)).expect("Failed to build request");
 
-    let response = world.app.clone().oneshot(request).await.expect("App request failed");
+    let response = world
+        .app
+        .clone()
+        .oneshot(request)
+        .await
+        .unwrap_or_else(|err| panic!("App request failed for POST {}: {}", path, err));
 
     let status = response.status().as_u16();
     let headers = response.headers().clone();
@@ -100,7 +148,7 @@ async fn then_status_code(world: &mut World, status_code: u16) {
 
 #[then(regex = r#"^the task "([^"]+)" should have status "([^"]+)"$"#)]
 async fn then_task_status(world: &mut World, task_id: String, expected_status_str: String) {
-    let path = world._temp_dir.path().join("tasks_state.yaml");
+    let path = world._temp_dir.path().join("specs/tasks_state.yaml");
     let status = tasks_state::get_task_status(&path, &TaskId(task_id))
         .expect("Failed to get task status")
         .expect("Task not found");
@@ -116,6 +164,61 @@ async fn then_task_status(world: &mut World, task_id: String, expected_status_st
     assert_eq!(status, expected_status, "Expected status {:?}, got {:?}", expected_status, status);
 }
 
+fn parse_status(status_str: &str) -> (TaskStatus, String) {
+    match status_str.to_lowercase().as_str() {
+        "todo" => (TaskStatus::Todo, "Todo".to_string()),
+        "inprogress" | "in_progress" | "in-progress" => {
+            (TaskStatus::InProgress, "InProgress".to_string())
+        }
+        "review" => (TaskStatus::Review, "Review".to_string()),
+        "done" => (TaskStatus::Done, "Done".to_string()),
+        other => (TaskStatus::Todo, other.to_string()),
+    }
+}
+
+fn empty_task_docs() -> TaskDocs {
+    TaskDocs { design: Vec::new(), plan: Vec::new() }
+}
+
+fn default_tasks_spec() -> TasksSpec {
+    TasksSpec {
+        schema_version: "1.0.0".to_string(),
+        template_version: "0.1.0".to_string(),
+        tasks: Vec::new(),
+    }
+}
+
+fn ensure_tasks_file(tasks_file: &Path, tasks: Vec<Task>) {
+    if let Some(parent) = tasks_file.parent() {
+        fs::create_dir_all(parent).expect("Failed to create specs directory");
+    }
+
+    let mut spec = if tasks_file.exists() {
+        fs::read_to_string(tasks_file)
+            .ok()
+            .and_then(|content| serde_yaml::from_str::<TasksSpec>(&content).ok())
+            .unwrap_or_else(default_tasks_spec)
+    } else {
+        default_tasks_spec()
+    };
+
+    // Tests expect the tasks.yaml content to exactly match the table in the scenario.
+    // Start fresh instead of merging with the workspace copy to avoid leaking other tasks.
+    let mut new_tasks = Vec::new();
+    for mut task in tasks {
+        if task.summary.is_empty() {
+            task.summary = task.title.clone();
+        }
+
+        new_tasks.push(task);
+    }
+
+    spec.tasks = new_tasks;
+
+    let content = serde_yaml::to_string(&spec).expect("Failed to serialize tasks.yaml");
+    fs::write(tasks_file, content).expect("Failed to write tasks.yaml");
+}
+
 #[when(regex = r#"^I send a GET request to "([^"]+)"$"#)]
 async fn when_get_request(world: &mut World, path: String) {
     let mut request_builder = Request::builder().method("GET").uri(&path);
@@ -126,7 +229,12 @@ async fn when_get_request(world: &mut World, path: String) {
 
     let request = request_builder.body(Body::empty()).expect("Failed to build request");
 
-    let response = world.app.clone().oneshot(request).await.expect("App request failed");
+    let response = world
+        .app
+        .clone()
+        .oneshot(request)
+        .await
+        .unwrap_or_else(|err| panic!("App request failed for GET {}: {}", path, err));
 
     let status = response.status().as_u16();
     let headers = response.headers().clone();
@@ -140,7 +248,12 @@ async fn when_get_request(world: &mut World, path: String) {
 }
 
 #[when(regex = r#"^I send a PUT request to "([^"]+)" with body:$"#)]
-async fn when_put_request(world: &mut World, path: String, body: String) {
+async fn when_put_request(world: &mut World, path: String, step: &Step) {
+    let body = step
+        .docstring
+        .as_ref()
+        .cloned()
+        .unwrap_or_else(|| panic!("Docstring body not provided for PUT {}", path));
     let mut request_builder =
         Request::builder().method("PUT").uri(&path).header("content-type", "application/json");
 
@@ -150,7 +263,12 @@ async fn when_put_request(world: &mut World, path: String, body: String) {
 
     let request = request_builder.body(Body::from(body)).expect("Failed to build request");
 
-    let response = world.app.clone().oneshot(request).await.expect("App request failed");
+    let response = world
+        .app
+        .clone()
+        .oneshot(request)
+        .await
+        .unwrap_or_else(|err| panic!("App request failed for PUT {}: {}", path, err));
 
     let status = response.status().as_u16();
     let headers = response.headers().clone();
@@ -475,5 +593,44 @@ async fn then_array_not_empty(world: &mut World, field: String) {
         _ => {
             panic!("Expected field '{}' to be an array or object, but got: {:?}", field, value);
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn post_status_step_updates_task() {
+        let mut world = World::new();
+
+        given_task_exists(&mut world, "TASK-TEST".to_string(), "Todo".to_string()).await;
+        let request = Request::builder()
+            .method("POST")
+            .uri("/platform/tasks/TASK-TEST/status")
+            .header("content-type", "application/json")
+            .body(Body::from(r#"{ "status": "InProgress" }"#))
+            .expect("failed to build request");
+
+        let response = world.app.clone().oneshot(request).await.expect("request should not fail");
+
+        assert_eq!(response.status(), http::StatusCode::NO_CONTENT);
+
+        // Mirror the cucumber step behavior so later assertions see the response
+        let status = response.status().as_u16();
+        let headers = response.headers().clone();
+        let body_bytes =
+            response.into_body().collect().await.map(|c| c.to_bytes()).unwrap_or_default();
+        let raw_body = String::from_utf8_lossy(&body_bytes).to_string();
+        let body: serde_json::Value = serde_json::from_slice(&body_bytes).unwrap_or_default();
+        world.last_response = Some(Response { status, body, headers, raw_body });
+
+        then_status_code(&mut world, 204).await;
+
+        // Verify the state file was updated
+        let state_path = world._temp_dir.path().join("specs/tasks_state.yaml");
+        let status =
+            tasks_state::get_task_status(&state_path, &TaskId("TASK-TEST".into())).unwrap();
+        assert_eq!(status, Some(TaskStatus::InProgress));
     }
 }
