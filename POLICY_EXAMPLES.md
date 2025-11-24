@@ -316,5 +316,5 @@ The K8s secrets policy:
 - ✅ Prevents credential leakage in git
 - ✅ Enforces separation of sensitive/non-sensitive config
 - ✅ Provides clear error messages
-- ✅ Enables safe LLM-assisted development
+- ✅ Enables safe LLM-native development
 - ✅ Follows K8s security best practices

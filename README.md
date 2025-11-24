@@ -378,7 +378,7 @@ cargo xtask bdd
 cargo xtask selftest
 ```
 
-**For LLM-assisted development:** See [CLAUDE.md](CLAUDE.md) for standard prompts and workflows.
+**For LLM-native development:** See [CLAUDE.md](CLAUDE.md) for standard prompts and workflows.
 
 ---
 

@@ -41,7 +41,7 @@ architecture:
   # Nix-first development environment (ADR-0002)
   nix_first: true
 
-  # LLM-assisted development workflow enabled (CLAUDE.md + bundles)
+  # LLM-native development workflow enabled (CLAUDE.md + bundles)
   llm_bundles: true
 
   # Policy-as-code enforcement (Rego + conftest)

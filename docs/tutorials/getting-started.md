@@ -422,4 +422,4 @@ You've now seen the template's core workflow:
 
 The template enforces quality by default - doing things right is the path of least resistance.
 
-Welcome to AC-first, policy-driven, LLM-assisted Rust development! 🦀
+Welcome to AC-first, policy-driven, LLM-native, governance-bounded Rust development! 🦀

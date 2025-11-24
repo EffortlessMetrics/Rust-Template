@@ -23,7 +23,7 @@ Traditional enforcement:
 3. **Runtime gates**: too late (policy violated before deploy)
 4. **Documentation**: ignored unless enforced
 
-With LLM-assisted development:
+With LLM-native development:
 
 - Agents can generate compliant code *or* violate policies at scale
 - Need machine-readable policies that both CI and LLMs can check

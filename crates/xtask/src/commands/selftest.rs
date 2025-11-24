@@ -478,6 +478,17 @@ fn run_ac_coverage_check(verbosity: crate::Verbosity) -> Result<()> {
         text: String,
     }
 
+    // When BDD execution is explicitly skipped (e.g., in harnesses to avoid recursion),
+    // there is no fresh acceptance report to evaluate, so treat coverage as informational.
+    let bdd_skipped = std::env::var("XTASK_SKIP_BDD").unwrap_or_default() == "1";
+    if bdd_skipped {
+        println!(
+            "  {} AC coverage skipped (XTASK_SKIP_BDD=1; acceptance results not generated)",
+            "?".yellow()
+        );
+        return Ok(());
+    }
+
     // Parse the ledger
     let ledger_path = Path::new("specs/spec_ledger.yaml");
     if !ledger_path.exists() {
