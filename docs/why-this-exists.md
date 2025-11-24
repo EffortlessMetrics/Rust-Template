@@ -20,9 +20,9 @@ Most teams building Rust services today end up with one of these:
 
 Three converging pressures make that brittle:
 
-1. **Multi-service Rust** – orgs want repeatable service patterns, not one-offs.
-2. **Governance expectations** – security, privacy, infra, and auditors all care about how things are built and changed.
-3. **LLM-era development** – engineers are starting to offload work to models, but most repos give the model zero guardrails.
+1. **Multi-service Rust** - orgs want repeatable service patterns, not one-offs.
+2. **Governance expectations** - security, privacy, infra, and auditors all care about how things are built and changed.
+3. **LLM-era development** - engineers are starting to offload work to models, but most repos give the model zero guardrails.
 
 The usual outcome: everybody "does their best", CI is green enough, but:
 
@@ -45,30 +45,30 @@ At a high level, this is:
 Concretely, it provides:
 
 - **Spec-as-code**
-  - `specs/spec_ledger.yaml` – story → requirement → AC mapping
-  - `specs/features/*.feature` – BDD scenarios tagged with `@AC-XXX`
-  - `docs/feature_status.md` – generated AC coverage report
+  - `specs/spec_ledger.yaml` - story -> requirement -> AC mapping
+  - `specs/features/*.feature` - BDD scenarios tagged with `@AC-XXX`
+  - `docs/feature_status.md` - generated AC coverage report
 
 - **Policy-as-code**
-  - `policy/*.rego` – K8s, flags, privacy, LLM bundle rules
-  - `policy/testdata/*.yaml/json` – fixtures proving "good" vs "bad" configs
-  - `xtask policy-test` – conftest-based validation (strict in CI, optional locally)
+  - `policy/*.rego` - K8s, flags, privacy, LLM bundle rules
+  - `policy/testdata/*.yaml/json` - fixtures proving "good" vs "bad" configs
+  - `xtask policy-test` - conftest-based validation (strict in CI, optional locally)
 
 - **LLM-assisted, not LLM-driven**
-  - `.llm/contextpack.yaml` – declarative bundles of relevant files
-  - `xtask bundle <task>` – generates bounded Markdown context for the model
-  - `CLAUDE.md` – standard prompts, workflows, and guardrails
+  - `.llm/contextpack.yaml` - declarative bundles of relevant files
+  - `xtask bundle <task>` - generates bounded Markdown context for the model
+  - `CLAUDE.md` - standard prompts, workflows, and guardrails
   - Version metadata in specs and bundles (`template_version: "2.3.0"`)
 
 - **Nix-first development environment**
-  - `flake.nix` – devshell that matches CI (Rust toolchain, conftest, yq, jq…)
-  - `nix develop` – one command to get a CI-equivalent environment
+  - `flake.nix` - devshell that matches CI (Rust toolchain, conftest, yq, jq...)
+  - `nix develop` - one command to get a CI-equivalent environment
   - Selftest behaves differently inside vs outside devshell:
     - Outside Nix: policy tests skipped with a clear hint to use Nix.
     - Inside Nix/CI: all policy tests enforced.
 
 - **Orchestrated developer workflow**
-  - `xtask selftest` – single entrypoint that runs:
+  - `xtask selftest` - single entrypoint that runs:
     1. fmt + clippy + tests
     2. BDD scenarios
     3. AC status mapping
@@ -120,7 +120,7 @@ You can still use the **library crates** (`rust_iac_xtask_core`, `rust_iac_confi
 
 This template is built around a few principles:
 
-1. **Spec → Tests → Code (AC-first)**
+1. **Spec -> Tests -> Code (AC-first)**
    ACs live in the ledger and features first. Code follows.
    You should always be able to answer:
    - "Which AC does this test prove?"
@@ -164,7 +164,28 @@ This template is built around a few principles:
 
 ---
 
-## 5. How This Fits With Your Orchestration Layer
+## 5. Where This Sits in the IDP Landscape
+
+### 5.1 Cell vs Portal vs Orchestrator
+
+- This repo is a governed Rust cell: per-service specs, policies, graph invariants, `/platform/*` introspection, and agent-safe bundles (`xtask bundle`, `suggest-next`).
+- It is not a portal (no fleet view, scorecards, or multi-service catalog) and not an orchestrator (no environment or infra wiring). It composes under portals and above orchestrators.
+
+### 5.2 Practical Alternatives Teams Choose
+
+- **Portal + thin templates** (Backstage/Port/OpsLevel + Axum cookiecutter): Pros - multi-language, instant catalog and scorecards. Cons - no per-repo governance kernel; specs/ACs/docs/policies drift independently; no graph invariants; agent surface is "whatever is in the repo."
+- **Platform orchestrator + bare repo** (Humanitec or similar): Pros - runtime wiring and environment management. Cons - each repo is still ad hoc; governance inside the repo is out of scope. Complementary if each service exposes this cell surface (`/platform/status`, `ac-status`, policy tests).
+- **Just a Rust starter**: Fastest to "hello world + CI." Missing spec ledger, AC traceability, policies, graph invariants, and agent ergonomics.
+
+### 5.3 One-Line Comparisons
+
+- Versus portals: portals give fleet scorecards; this gives a governed Rust cell with `/platform/status` and `xtask selftest` as the contract.
+- Versus orchestrators: orchestrators deploy and wire environments; this makes each deployable thing self-describing and governed.
+- Versus generic templates: they scaffold; this enforces specs -> ACs -> tests -> docs -> policies and exposes them to humans and agents.
+
+---
+
+## 6. How This Fits With Your Orchestration Layer
 
 This template is designed to play nicely with an orchestration layer that can:
 
@@ -177,9 +198,9 @@ This template is designed to play nicely with an orchestration layer that can:
 
 In other words, this repo is the **"governed cell"** your orchestrator can stamp out:
 
-- Nix dev env → no drift between dev and CI.
-- xtask commands → stable automation surface.
-- Specs/policies → machine-readable governance.
+- Nix dev env -> no drift between dev and CI.
+- xtask commands -> stable automation surface.
+- Specs/policies -> machine-readable governance.
 
 Your orchestration layer doesn't have to guess; it can:
 
@@ -189,7 +210,7 @@ Your orchestration layer doesn't have to guess; it can:
 
 ---
 
-## 6. How to Position This Externally
+## 7. How to Position This Externally
 
 When you put this on your public profile / GitHub:
 
@@ -200,7 +221,7 @@ You're not just showing "I can write Rust". You're showing:
 - I can **land it in a repo** with:
   - clear docs,
   - a stable CLI surface (xtask),
-  - and a documented release history (v2.0.0–v2.3.0).
+  - and a documented release history (v2.0.0-v2.3.0).
 
 For a Head of Platform / Head of DevEx audience, that's the difference between:
 
@@ -209,7 +230,7 @@ For a Head of Platform / Head of DevEx audience, that's the difference between:
 
 ---
 
-## 7. How to Use This Doc
+## 8. How to Use This Doc
 
 You can point people to this file as:
 
