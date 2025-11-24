@@ -81,7 +81,7 @@ tasks:
     acs:
       - AC-TPL-REL-EVIDENCE
       - AC-TPL-REL-CHANGELOG
-    status: in_progress
+    status: done
     owner: agent
     labels: [platform, release, devex]
     summary: "Implement `cargo xtask release-bundle X.Y.Z` that generates structured evidence bundles for releases with tasks, specs, git history, and governance status."
@@ -95,7 +95,7 @@ tasks:
     requirement: REQ-TPL-SKILLS-GUIDE
     acs:
       - AC-TPL-SKILLS-ALIGN-001
-    status: in_progress
+    status: done
     owner: agent
     labels: [platform, agent, docs, skills]
     summary: >

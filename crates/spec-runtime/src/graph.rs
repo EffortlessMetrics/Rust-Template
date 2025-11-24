@@ -213,18 +213,14 @@ pub fn check_invariants(
     for cmd_name in devex.commands.keys() {
         let cmd_id = format!("cmd:{}", cmd_name);
         let is_reachable = graph.edges.iter().any(|e| e.target == cmd_id);
-        if !is_reachable {
-            if let Some(cmd_spec) = devex.commands.get(cmd_name) {
-                if cmd_spec.required {
-                    violations.push(InvariantViolation {
-                        code: "COMMAND_UNREACHABLE".into(),
-                        message: format!(
-                            "Required command '{}' is not used in any flow or task",
-                            cmd_name
-                        ),
-                    });
-                }
-            }
+        if let Some(cmd_spec) = devex.commands.get(cmd_name)
+            && cmd_spec.required
+            && !is_reachable
+        {
+            violations.push(InvariantViolation {
+                code: "COMMAND_UNREACHABLE".into(),
+                message: format!("Required command '{}' is not used in any flow or task", cmd_name),
+            });
         }
     }
 

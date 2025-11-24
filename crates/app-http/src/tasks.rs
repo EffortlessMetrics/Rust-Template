@@ -28,6 +28,7 @@ pub async fn update_task_status(
     Ok(StatusCode::NO_CONTENT)
 }
 
+#[allow(clippy::result_large_err)] // AppError is shared across handlers; keep signature consistent
 fn parse_update_task_status(
     headers: &HeaderMap,
     body: &[u8],
