@@ -15,7 +15,7 @@ use std::fs;
 mod ui;
 
 /// Platform API routes (mounted at /platform)
-pub fn router(state: AppState) -> Router {
+pub fn router(state: AppState) -> Router<AppState> {
     Router::new()
         // API routes
         .route("/graph", get(get_graph))
@@ -30,7 +30,7 @@ pub fn router(state: AppState) -> Router {
 }
 
 /// UI routes (mounted at root)
-pub fn ui_router(state: AppState) -> Router {
+pub fn ui_router(state: AppState) -> Router<AppState> {
     Router::new()
         .route("/", get(ui::dashboard))
         .route("/ui", get(ui::dashboard))
@@ -306,12 +306,21 @@ pub struct TaskDocsOut {
 }
 
 fn normalize_status(raw: &str) -> String {
-    match raw.to_ascii_lowercase().as_str() {
+    let key = raw.trim().to_ascii_lowercase().replace([' ', '-'], "_");
+
+    match key.as_str() {
         "todo" | "open" => "Todo".to_string(),
-        "inprogress" | "in_progress" | "in-progress" => "InProgress".to_string(),
+        "inprogress" | "in_progress" => "InProgress".to_string(),
         "review" => "Review".to_string(),
         "done" | "closed" => "Done".to_string(),
-        other => other.to_string(),
+        _ => {
+            tracing::warn!(
+                raw_status = raw,
+                normalized_status = "Todo",
+                "Unknown task status provided; defaulting to Todo"
+            );
+            "Todo".to_string()
+        }
     }
 }
 
@@ -634,10 +643,15 @@ mod tests {
     fn normalizes_common_status_variants() {
         assert_eq!(normalize_status("open"), "Todo");
         assert_eq!(normalize_status("in_progress"), "InProgress");
+        assert_eq!(normalize_status("in-progress"), "InProgress");
         assert_eq!(normalize_status("review"), "Review");
         assert_eq!(normalize_status("done"), "Done");
         assert_eq!(normalize_status("InProgress"), "InProgress");
-        // Unknown values pass through unchanged for forward compatibility
-        assert_eq!(normalize_status("blocked"), "blocked");
+    }
+
+    #[test]
+    fn defaults_unknown_statuses_to_todo() {
+        assert_eq!(normalize_status("blocked"), "Todo");
+        assert_eq!(normalize_status(""), "Todo");
     }
 }

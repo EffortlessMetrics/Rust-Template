@@ -48,7 +48,7 @@ Feature: Git Hooks Installation and Governance
   Scenario: pre-commit hook runs governance check
     Given the pre-commit hook exists
     When I attempt to commit changes
-    Then the pre-commit hook should run "cargo run -p xtask -- check"
+    Then the pre-commit hook should run "cargo run -p xtask -- precommit"
     And the commit should succeed if checks pass
     And the commit should be blocked if checks fail
 
@@ -71,7 +71,7 @@ Feature: Git Hooks Installation and Governance
     When I run "cargo xtask install-hooks"
     Then the command should succeed
     And the pre-commit hook should contain "Rust-as-Spec Governance Pre-Commit Hook"
-    And the output should contain "cargo run -p xtask -- check"
+    And the output should contain "cargo run -p xtask -- precommit"
 
   @AC-TPL-HOOKS-INSTALL @hooks
   Scenario: pre-commit hook file is created as executable script

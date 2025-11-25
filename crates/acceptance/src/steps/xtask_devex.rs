@@ -746,8 +746,9 @@ async fn then_hooks_dir_exists(world: &mut World) {
 #[when("I attempt to commit changes")]
 async fn when_attempt_commit(world: &mut World) {
     let ctx = world.xtask_context_mut();
-    ctx.last_command_output =
-        Some("Simulated commit running cargo run -p xtask -- check\nCommit succeeded".to_string());
+    ctx.last_command_output = Some(
+        "Simulated commit running cargo run -p xtask -- precommit\nCommit succeeded".to_string(),
+    );
     ctx.last_command_status = Some(0);
 }
 
@@ -1598,10 +1599,10 @@ async fn execute_command(world: &mut World, command: &str, env_vars: &[(&str, &s
             if let Some(val) = world.xtask_context().env.get("XTASK_LOW_RESOURCES") {
                 content.push_str(&format!("export XTASK_LOW_RESOURCES={}\n", val));
             }
-            content.push_str("cargo run -p xtask -- check\n");
+            content.push_str("cargo run -p xtask -- precommit\n");
             let _ = fs::write(&hook_path, content);
             world.xtask_context_mut().last_command_output =
-                Some("Installed .git/hooks/pre-commit\ncargo run -p xtask -- check".to_string());
+                Some("Installed .git/hooks/pre-commit\ncargo run -p xtask -- precommit".to_string());
             world.xtask_context_mut().last_command_status = Some(0);
             return;
         }
@@ -1636,7 +1637,7 @@ async fn execute_command(world: &mut World, command: &str, env_vars: &[(&str, &s
             if let Some(parent) = hook_path.parent() {
                 let _ = fs::create_dir_all(parent);
             }
-            let _ = fs::write(&hook_path, "#!/usr/bin/env bash\ncargo run -p xtask -- check\n");
+            let _ = fs::write(&hook_path, "#!/usr/bin/env bash\ncargo run -p xtask -- precommit\n");
 
             world.xtask_context_mut().last_command_output = Some(
                 "Pre-commit hooks\nDocker status: ok\ngovernance check\nlow-resource mode\nNext steps\ncargo run -p app-http\nhttp://localhost:8080/ui\ndev-up complete"

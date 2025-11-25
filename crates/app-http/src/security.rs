@@ -57,12 +57,18 @@ impl PlatformAuthConfig {
         self.token.as_ref().map(|t| !t.is_empty()).unwrap_or(false)
     }
 
-    pub fn warn_if_misconfigured(&self) {
-        if self.requires_auth() && !self.token_present() {
+    /// Emit a warning when `basic` auth is enabled without a token.
+    ///
+    /// Returns `true` when a warning was emitted so tests can assert the behavior without
+    /// scraping logs.
+    pub fn warn_if_misconfigured(&self) -> bool {
+        let misconfigured = self.requires_auth() && !self.token_present();
+        if misconfigured {
             tracing::warn!(
                 "Platform auth is set to basic but no token was provided; writes will be rejected"
             );
         }
+        misconfigured
     }
 }
 
@@ -70,6 +76,7 @@ impl From<&str> for PlatformAuthMode {
     fn from(value: &str) -> Self {
         match value.to_ascii_lowercase().as_str() {
             "basic" => PlatformAuthMode::Basic,
+            "none" => PlatformAuthMode::Open,
             _ => PlatformAuthMode::Open,
         }
     }
@@ -87,4 +94,38 @@ fn constant_time_eq(a: &str, b: &str) -> bool {
     }
 
     result == 0
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn parses_auth_mode_and_warns_on_missing_token() {
+        let config = PlatformAuthConfig { mode: PlatformAuthMode::Basic, token: None };
+        assert!(config.warn_if_misconfigured());
+        assert!(config.requires_auth());
+        assert!(!config.is_authorized(Some("anything")));
+    }
+
+    #[test]
+    fn accepts_correct_token_in_basic_mode() {
+        let config = PlatformAuthConfig {
+            mode: PlatformAuthMode::Basic,
+            token: Some("secret".into()),
+        };
+
+        assert!(!config.warn_if_misconfigured());
+        assert!(config.requires_auth());
+        assert!(config.is_authorized(Some("secret")));
+        assert!(!config.is_authorized(Some("other")));
+    }
+
+    #[test]
+    fn open_mode_requires_no_token() {
+        let config = PlatformAuthConfig { mode: PlatformAuthMode::Open, token: None };
+        assert!(!config.requires_auth());
+        assert!(config.is_authorized(None));
+        assert!(config.is_authorized(Some("anything")));
+    }
 }

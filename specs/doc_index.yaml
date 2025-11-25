@@ -139,6 +139,31 @@ docs:
     acs: [AC-TPL-PLATFORM-UI-DASHBOARD, AC-TPL-PLATFORM-UI-GRAPH, AC-TPL-PLATFORM-UI-FLOWS]
     adrs: [ADR-0004]
 
+  # Platform Runtime Contract (schema/auth/metadata/log hygiene)
+  - id: DESIGN-TPL-RUNTIME-CONTRACT-001
+    file: docs/design/platform-runtime-contract.md
+    doc_type: design_doc
+    stories: [US-TPL-PLT-001]
+    requirements:
+      - REQ-TPL-PLATFORM-SCHEMA
+      - REQ-TPL-METADATA-CONSISTENT
+      - REQ-TPL-PLATFORM-AUTH
+      - REQ-TPL-LOG-HYGIENE
+      - REQ-TPL-QUESTIONS-AS-ARTIFACTS
+      - REQ-TPL-FLOW-IDEMPOTENCY
+      - REQ-TPL-CONFIG-INTEGRITY
+      - REQ-TPL-IAC-ALIGNMENT
+    acs:
+      - AC-TPL-PLATFORM-SCHEMA
+      - AC-TPL-METADATA-COMPLETE
+      - AC-TPL-PLATFORM-AUTH-BASIC
+      - AC-TPL-LOG-NO-SECRETS
+      - AC-TPL-QUESTIONS-LOGGED
+      - AC-TPL-FLOW-IDEMPOTENT
+      - AC-TPL-CONFIG-VALIDATION
+      - AC-TPL-IAC-COMPOSE-ALIGN
+    adrs: [ADR-0001, ADR-0005]
+
   # Local Runtime Sovereignty
   - id: DESIGN-TPL-LOCAL-RUNTIME-001
     file: docs/design/local-runtime.md

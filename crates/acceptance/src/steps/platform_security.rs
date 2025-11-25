@@ -11,6 +11,16 @@ async fn given_platform_auth_mode(world: &mut World, mode: String, token: String
     world.reload_app();
 }
 
+#[given(r#"^platform auth mode is "basic" without a token$"#)]
+async fn given_basic_auth_without_token(world: &mut World) {
+    // SAFETY: Tests mutate process env in a single-threaded runner to configure the app instance.
+    unsafe {
+        std::env::set_var("PLATFORM_AUTH_MODE", "basic");
+        std::env::remove_var("PLATFORM_AUTH_TOKEN");
+    }
+    world.reload_app();
+}
+
 #[then(regex = r#"^the response body should not contain "([^"]+)"$"#)]
 async fn response_body_not_contains(world: &mut World, needle: String) {
     let response = world.last_response.as_ref().expect("response should exist");
