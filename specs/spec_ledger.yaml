@@ -353,6 +353,81 @@ stories:
             tests:
               - { type: bdd, tag: "@AC-TPL-PLATFORM-STATUS" }
 
+      - id: REQ-TPL-PLATFORM-SCHEMA
+        title: "Machine-readable platform contract"
+        tags: [platform, api, structural]
+        must_have_ac: true
+        description: >
+          Platform APIs MUST expose a machine-readable schema so IDP dashboards,
+          agents, and platform tooling can consume endpoints without scraping examples.
+        adr: [ADR-0001]
+        acceptance_criteria:
+          - id: AC-TPL-PLATFORM-SCHEMA
+            text: >
+              GET /platform/schema (or /platform/openapi) returns a JSON
+              schema/OpenAPI document that includes /platform/status,
+              /platform/graph, /platform/tasks, and /platform/agent/hints.
+            tags: [kernel]
+            must_have_ac: true
+            tests:
+              - { type: bdd, tag: "@AC-TPL-PLATFORM-SCHEMA" }
+
+      - id: REQ-TPL-METADATA-CONSISTENT
+        title: "Platform metadata is coherent and exposed"
+        tags: [platform, docs, metadata]
+        must_have_ac: true
+        description: >
+          Service metadata MUST be complete in source files and surfaced
+          consistently via platform status and the UI so fleet tooling can rely on it.
+        acceptance_criteria:
+          - id: AC-TPL-METADATA-COMPLETE
+            text: >
+              service_metadata.yaml includes service_id, template_version,
+              URLs, and tags; /platform/status returns the same identifiers;
+              the UI links to runbook, roadmap, agent guide, feature status,
+              and platform support docs.
+            tags: [kernel]
+            must_have_ac: true
+            tests:
+              - { type: bdd, tag: "@AC-TPL-METADATA-COMPLETE" }
+
+      - id: REQ-TPL-PLATFORM-AUTH
+        title: "Platform introspection supports authenticated mode"
+        tags: [platform, security]
+        must_have_ac: true
+        description: >
+          Platform endpoints SHOULD support authenticated production mode while
+          remaining open for local/dev use.
+        acceptance_criteria:
+          - id: AC-TPL-PLATFORM-AUTH-BASIC
+            text: >
+              When PLATFORM_AUTH_MODE=basic, write endpoints under /platform/*
+              reject unauthenticated requests with 401/403 and accept requests
+              with the configured credential header; read endpoints may remain
+              open or use the same guard.
+            tags: [future, security]
+            must_have_ac: false
+            tests:
+              - { type: bdd, tag: "@AC-TPL-PLATFORM-AUTH-BASIC" }
+
+      - id: REQ-TPL-LOG-HYGIENE
+        title: "Secrets are not exposed in status or logs"
+        tags: [platform, security, observability]
+        must_have_ac: true
+        description: >
+          Platform status, UI output, and selftest summaries MUST avoid leaking
+          secret values or PII; only redacted markers or key names may appear.
+        acceptance_criteria:
+          - id: AC-TPL-LOG-NO-SECRETS
+            text: >
+              Rendering of /platform/status and UI dashboards redacts or omits
+              secret values, and selftest/log output does not include raw secret
+              data from config.
+            tags: [future, security]
+            must_have_ac: false
+            tests:
+              - { type: unit, tag: "log_hygiene_redacts_secrets" }
+
       - id: REQ-TPL-SUGGEST-NEXT
         title: "Task-Aware Next-Step Suggestions"
         tags: [platform, devex, structural]
@@ -384,6 +459,43 @@ stories:
             must_have_ac: false
             tests:
               - { type: bdd, tag: "@AC-TPL-SUGGEST-NEXT-HTTP" }
+
+      - id: REQ-TPL-QUESTIONS-AS-ARTIFACTS
+        title: "Ambiguity is logged as a question, not a blocker"
+        tags: [platform, ai, devex]
+        must_have_ac: true
+        description: >
+          When flows encounter ambiguous or missing input, the system should
+          emit a structured question artifact instead of silently failing or
+          stalling work.
+        acceptance_criteria:
+          - id: AC-TPL-QUESTIONS-LOGGED
+            text: >
+              Ambiguity during automated flows or suggest-next emits a
+              structured question (file/PR comment/status entry) that can be
+              surfaced to humans or agents without halting progress.
+            tags: [future]
+            must_have_ac: false
+            tests:
+              - { type: bdd, tag: "@AC-TPL-QUESTIONS-LOGGED" }
+
+      - id: REQ-TPL-FLOW-IDEMPOTENCY
+        title: "Platform flows are safe to rerun"
+        tags: [platform, devex, ai]
+        must_have_ac: true
+        description: >
+          Self-healing and agent-driven flows should be idempotent so running
+          them multiple times does not duplicate artifacts or corrupt state.
+        acceptance_criteria:
+          - id: AC-TPL-FLOW-IDEMPOTENT
+            text: >
+              Running cargo xtask selftest or cargo xtask suggest-next multiple
+              times without changes produces stable outputs and no duplicate
+              artifacts.
+            tags: [future]
+            must_have_ac: false
+            tests:
+              - { type: bdd, tag: "@AC-TPL-FLOW-IDEMPOTENT" }
 
       - id: REQ-TPL-GRAPH-INVARIANTS
         title: "Governance Graph Invariants"
@@ -575,6 +687,62 @@ stories:
               - { type: unit, tag: "graph_export_mermaid", module: "graph::tests::graph_export_mermaid", file: "crates/spec-runtime/src/graph.rs" }
               - { type: bdd, tag: "@AC-TPL-GRAPH-MERMAID", file: "specs/features/graph_visualization.feature" }
 
+      - id: REQ-TPL-CONFIG-INTEGRITY
+        title: "Configuration is validated at startup"
+        tags: [platform, config, structural]
+        must_have_ac: true
+        description: >
+          Application startup MUST validate configuration against config_schema.yaml
+          and fail fast with a clear error when invalid.
+        acceptance_criteria:
+          - id: AC-TPL-CONFIG-VALIDATION
+            text: >
+              On startup the service validates configuration against
+              config_schema.yaml and exits non-zero with a clear validation
+              error when the config is invalid.
+            tags: [kernel]
+            must_have_ac: true
+            tests:
+              - { type: unit, tag: "config_validation_rejects_invalid" }
+
+      - id: REQ-TPL-IAC-ALIGNMENT
+        title: "Infrastructure templates align with config schema"
+        tags: [platform, ops, iac]
+        must_have_ac: true
+        description: >
+          Sample IaC artifacts (docker-compose, k8s, terraform) MUST use the
+          same ports and environment keys defined in config_schema.yaml and
+          envs.yaml so examples stay trustworthy.
+        acceptance_criteria:
+          - id: AC-TPL-IAC-COMPOSE-ALIGN
+            text: >
+              docker-compose.yaml services (database, tracing, app) use the
+              ports and env vars defined for the local environment in
+              config_schema.yaml and envs.yaml.
+            tags: [future]
+            must_have_ac: false
+            tests:
+              - { type: unit, tag: "iac_compose_aligns_with_config" }
+
+          - id: AC-TPL-IAC-K8S-ALIGN
+            text: >
+              Kubernetes manifests under infra/k8s (Deployment/Service) use
+              ports and env vars consistent with config_schema.yaml and the
+              default environment.
+            tags: [future]
+            must_have_ac: false
+            tests:
+              - { type: unit, tag: "iac_k8s_aligns_with_config" }
+
+          - id: AC-TPL-IAC-TF-ALIGN
+            text: >
+              Terraform examples (when present) reference the same variables
+              and defaults as config_schema.yaml for services and dependencies.
+            tags: [future]
+            must_have_ac: false
+            tests:
+              - { type: unit, tag: "iac_tf_aligns_with_config" }
+
       - id: REQ-TPL-LOCAL-RUNTIME
         title: "Local Runtime Sovereignty"
         tags: [platform, devex]
@@ -593,7 +761,7 @@ stories:
             tags: [future]
             must_have_ac: false
             tests:
-              - { type: manual, tag: "docker_compose_up" }
+              - { type: unit, tag: "local_docker_compose_exists", module: "local_docker::tests::local_docker_compose_exists_and_has_core_services", file: "crates/spec-runtime/src/local_docker.rs" }
 
       - id: REQ-TPL-GOV-HOOKS
         title: "Governance Hooks"

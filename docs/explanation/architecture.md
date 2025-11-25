@@ -6,10 +6,14 @@ This document explains the architectural decisions, design patterns, and philoso
 
 1. [Design Philosophy](#design-philosophy)
 2. [Crate Structure](#crate-structure)
-3. [Hexagonal Architecture](#hexagonal-architecture)
-4. [Governance Model](#governance-model)
-5. [Observability Strategy](#observability-strategy)
-6. [Why These Choices](#why-these-choices)
+3. [Platform Cell Surfaces](#platform-cell-surfaces)
+4. [Hexagonal Architecture](#hexagonal-architecture)
+5. [Governance Kernel & Selftest](#governance-kernel--selftest)
+6. [Governance Model](#governance-model)
+7. [Observability Strategy](#observability-strategy)
+8. [Environment Model](#environment-model)
+9. [Security & Access](#security--access)
+10. [Why These Choices](#why-these-choices)
 
 ---
 
@@ -171,6 +175,16 @@ pub fn create_refund(order_id: &str, amount: u64) -> Result<Refund> {
 
 ---
 
+## Platform Cell Surfaces
+
+The template exposes three governed faces that share the same runtime and specs:
+
+- **CLI (`cargo xtask`)**: kernel interface for doctor, dev-up, check, selftest, suggest-next, policy-test, release-bundle, and tasks commands.
+- **HTTP (`/platform/*`)**: introspection and control-plane APIs for status, graph, tasks, agent hints, docs index, and flows.
+- **Web UI (`/ui`)**: thin console backed by the same runtime as `/platform/*`, surfacing status, graph, flows, tasks, and key documentation links.
+
+---
+
 ## Hexagonal Architecture
 
 The template follows hexagonal (ports & adapters) architecture:
@@ -230,6 +244,32 @@ pub fn create() {
 **Adapters** (implementations for specific technologies):
 - `app-http`: HTTP adapter using Axum
 - Future: `app-grpc`, `infra-postgres`, etc.
+
+**Adapters for persistence and external systems:**
+```
+          (HTTP)       (gRPC)       (Jobs)
+        app-http     app-grpc     app-worker
+            \           |            /
+             \          |           /
+              \         |          /
+               +-------------------+
+               |       core        |
+               |   domain rules    |
+               +-------------------+
+              /         |          \
+             /          |           \
+            /           |            \
+    adapters-db   adapters-queue  adapters-external
+```
+Persistence, queues, and external APIs live in adapter crates; core only sees traits.
+
+---
+
+## Governance Kernel & Selftest
+
+- `crates/spec-runtime` loads the ledger, builds the REQ/AC/test/task graph, and enforces invariants.
+- `cargo xtask selftest` is the canonical gate: fmt, clippy, unit/integration/BDD, AC/test mapping, policy tests, graph invariants, and regeneration of feature status + bundles.
+- `/platform/status` and `/ui` surface this kernel state so humans and agents see the same truth.
 
 ---
 
@@ -342,7 +382,26 @@ let app = Router::new()
 
 ---
 
+## Environment Model
+
+- Tier-1 (canonical): Nix dev shell on Linux/macOS/WSL2; selftest and kernel ACs are guaranteed here.
+- Tier-1b: Non-Nix Linux/macOS hosts use the same xtask commands with slightly less enforcement on toolchain versions.
+- Tier-2: Native Windows uses the low-resource path (check, test-changed, selftest with skips) for constrained contributors.
+- Docker: `docker-compose.yaml` provides Postgres + Jaeger as convenience, covered by a non-kernel AC instead of a hard gate.
+
+---
+
+## Security & Access
+
+- Local/dev: `/platform/*` and `/ui` are open by default for fast iteration.
+- Prod hook: `PLATFORM_AUTH_MODE` enables a basic auth guard on write endpoints; adopters can swap in OAuth/OIDC/mTLS while keeping the same contract.
+- Log hygiene: `/platform/status`, `/ui`, and selftest output must redact secret values; secrets belong in config, not logs.
+
+---
+
 ## Why These Choices
+
+This template is intended to be cloned as an IDP cell: `service_metadata.yaml` describes the cell, `/platform/*` exposes its runtime state, and `cargo xtask release-bundle` generates evidence per version so fleet tooling can consume it without bespoke scraping.
 
 ### Why Rust-native tooling (xtask)?
 
