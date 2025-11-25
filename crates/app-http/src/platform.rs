@@ -8,7 +8,7 @@ use axum::{
 };
 use business_core::governance::{TaskId, TaskStatus};
 use serde::{Deserialize, Serialize};
-use spec_runtime::load_all_specs;
+use spec_runtime::{load_all_specs, load_service_metadata};
 use std::collections::HashMap;
 use std::fs;
 
@@ -19,6 +19,7 @@ pub fn router(state: AppState) -> Router {
     Router::new()
         // API routes
         .route("/graph", get(get_graph))
+        .route("/schema", get(get_schema))
         .route("/devex/flows", get(get_devex_flows))
         .route("/docs/index", get(get_docs_index))
         .route("/status", get(get_status))
@@ -65,9 +66,22 @@ async fn get_suggest_next(
 
 #[derive(Serialize)]
 struct PlatformStatus {
+    service: ServiceInfo,
+    governance: GovernanceStatus,
+}
+
+#[derive(Serialize)]
+struct ServiceInfo {
     service_id: String,
     template_version: String,
-    governance: GovernanceStatus,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    display_name: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    description: Option<String>,
+    #[serde(skip_serializing_if = "HashMap::is_empty", default)]
+    links: HashMap<String, String>,
+    #[serde(skip_serializing_if = "Vec::is_empty", default)]
+    tags: Vec<String>,
 }
 
 #[derive(Serialize)]
@@ -173,9 +187,23 @@ async fn get_status(State(state): State<AppState>) -> Json<PlatformStatus> {
         "unknown".to_string()
     };
 
+    let metadata = load_service_metadata(&root.join("specs/service_metadata.yaml"))
+        .expect("Failed to load service_metadata.yaml");
+
+    let template_version =
+        metadata.template_version.clone().unwrap_or_else(|| env!("CARGO_PKG_VERSION").to_string());
+
+    let service_info = ServiceInfo {
+        service_id: metadata.service_id.clone(),
+        template_version,
+        display_name: metadata.display_name.clone(),
+        description: metadata.description.clone(),
+        links: metadata.links.clone(),
+        tags: metadata.tags.clone(),
+    };
+
     Json(PlatformStatus {
-        service_id: "rust-as-spec-kernel".to_string(),
-        template_version: env!("CARGO_PKG_VERSION").to_string(),
+        service: service_info,
         governance: GovernanceStatus {
             ledger: ledger_counts,
             devex: devex_counts,
@@ -302,6 +330,19 @@ pub struct CoverageDetail {
 pub struct CoverageResponse {
     pub summary: CoverageSummary,
     pub details: Vec<CoverageDetail>,
+}
+
+#[derive(Serialize)]
+struct PlatformEndpointSchema {
+    path: String,
+    method: String,
+    request_type: Option<String>,
+    response_type: String,
+}
+
+#[derive(Serialize)]
+struct PlatformSchema {
+    endpoints: Vec<PlatformEndpointSchema>,
 }
 
 // Cucumber JSON format structures for parsing BDD output
@@ -448,6 +489,33 @@ async fn get_coverage(State(state): State<AppState>) -> Json<CoverageResponse> {
     Json(CoverageResponse {
         summary: CoverageSummary { passing, failing, unknown, total },
         details,
+    })
+}
+
+async fn get_schema() -> Json<PlatformSchema> {
+    fn ep(
+        path: &str,
+        method: &str,
+        request: Option<&str>,
+        response: &str,
+    ) -> PlatformEndpointSchema {
+        PlatformEndpointSchema {
+            path: path.to_string(),
+            method: method.to_string(),
+            request_type: request.map(|s| s.to_string()),
+            response_type: response.to_string(),
+        }
+    }
+
+    Json(PlatformSchema {
+        endpoints: vec![
+            ep("/platform/status", "GET", None, "PlatformStatus"),
+            ep("/platform/graph", "GET", None, "PlatformGraph"),
+            ep("/platform/devex/flows", "GET", None, "PlatformDevExFlows"),
+            ep("/platform/docs/index", "GET", None, "PlatformDocsIndex"),
+            ep("/platform/tasks", "GET", None, "TasksResponse"),
+            ep("/platform/agent/hints", "GET", None, "AgentHints"),
+        ],
     })
 }
 

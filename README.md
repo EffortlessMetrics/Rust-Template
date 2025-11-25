@@ -1,6 +1,6 @@
-# Rust-as-Spec Platform Cell (v3.2.0) 🎉
-**Current Template Version:** v3.1.0
+# Rust-as-Spec Platform Cell (v3.3.0) 🎉
 **Current Template Version:** v3.2.0
+**Current Template Version:** v3.3.0
 
 [![CI](https://github.com/EffortlessMetrics/Rust-Template/actions/workflows/ci-template-selftest.yml/badge.svg)](https://github.com/EffortlessMetrics/Rust-Template/actions/workflows/ci-template-selftest.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE-MIT)
@@ -595,4 +595,3 @@ cargo run -p app-http
 ```
 
 **Questions?** See [docs/](docs/) or open an issue.
-

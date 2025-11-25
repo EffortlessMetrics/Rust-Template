@@ -1,5 +1,7 @@
+use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::path::Path;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ServiceMetadata {
@@ -8,6 +10,8 @@ pub struct ServiceMetadata {
     pub display_name: Option<String>,
     #[serde(default)]
     pub description: Option<String>,
+    #[serde(default)]
+    pub template_version: Option<String>,
     pub ownership: Ownership,
     pub lifecycle: Lifecycle,
     #[serde(default)]
@@ -52,6 +56,14 @@ pub struct Capability {
     pub default_roles: Vec<String>,
 }
 
+pub fn load_service_metadata(path: &Path) -> Result<ServiceMetadata> {
+    let content = std::fs::read_to_string(path)
+        .with_context(|| format!("Failed to read {}", path.display()))?;
+    let meta = serde_yaml::from_str(&content)
+        .with_context(|| format!("Failed to parse {}", path.display()))?;
+    Ok(meta)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -87,5 +99,27 @@ tags:
         assert_eq!(meta.ownership.team, "plat-governance");
         assert_eq!(meta.lifecycle.tier, 1);
         assert_eq!(meta.tags.len(), 2);
+    }
+
+    #[test]
+    fn load_service_metadata_reads_file() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("service_metadata.yaml");
+        std::fs::write(
+            &path,
+            r#"
+service_id: test-service
+ownership:
+  team: test
+lifecycle:
+  tier: 1
+  data_class: internal
+  criticality: low
+"#,
+        )
+        .unwrap();
+
+        let meta = load_service_metadata(&path).unwrap();
+        assert_eq!(meta.service_id, "test-service");
     }
 }

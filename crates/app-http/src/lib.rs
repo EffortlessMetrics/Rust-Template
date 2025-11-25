@@ -255,7 +255,7 @@ struct EchoResponse {
 //   core -> app-http  ([X] never!)
 // ============================================================================
 
-fn resolve_workspace_root() -> PathBuf {
+pub fn resolve_workspace_root() -> PathBuf {
     if let Ok(root) = std::env::var("SPEC_ROOT") {
         return PathBuf::from(root);
     }

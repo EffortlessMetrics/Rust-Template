@@ -158,12 +158,12 @@ Feature: Developer Experience Commands
 
   @AC-PLT-011
   Scenario: release-prepare updates version files
-    Given the current version is "3.1.0"
-    When I run "cargo xtask release-prepare 3.2.0"
+    Given the current version is "3.2.0"
+    When I run "cargo xtask release-prepare 3.3.0"
     Then the command should succeed
-    And "specs/spec_ledger.yaml" should contain "3.2.0"
-    And "README.md" should contain "3.2.0"
-    And "CLAUDE.md" should contain "3.2.0"
+    And "specs/spec_ledger.yaml" should contain "3.3.0"
+    And "README.md" should contain "3.3.0"
+    And "CLAUDE.md" should contain "3.3.0"
 
   @AC-PLT-012
   Scenario: release-verify runs comprehensive checks

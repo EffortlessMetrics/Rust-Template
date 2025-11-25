@@ -48,6 +48,8 @@ Auto-generated AC status from acceptance (BDD) and unit tests.
 | AC-TPL-007 | US-TPL-001 | REQ-TPL-METRICS | [PASS] pass | 1 / 1 |
 | AC-TPL-AGENT-HINTS | US-TPL-PLT-001 | REQ-TPL-AGENT-INTERFACE | [PASS] pass | 1 / 1 |
 | AC-TPL-AGENT-SKILLS | US-TPL-PLT-001 | REQ-TPL-AGENT-INTERFACE | [PASS] pass | 1 / 1 |
+| AC-TPL-CONFIG-VALIDATION | US-TPL-PLT-001 | REQ-TPL-CONFIG-INTEGRITY | [PASS] pass | 2 / 2 |
+| AC-TPL-FLOW-IDEMPOTENT | US-TPL-PLT-001 | REQ-TPL-FLOW-IDEMPOTENCY | [UNKNOWN] unknown | 0 / 1 |
 | AC-TPL-GOV-WRITE-TASK-STATUS-200 | US-TPL-PLATFORM-V3 | REQ-TPL-GOV-WRITE-001 | [PASS] pass | 1 / 1 |
 | AC-TPL-GRAPH-AC-HAS-TEST | US-TPL-PLT-001 | REQ-TPL-GRAPH-INVARIANTS | [PASS] pass | 1 / 1 |
 | AC-TPL-GRAPH-COMMAND-REACHABLE | US-TPL-PLT-001 | REQ-TPL-GRAPH-INVARIANTS | [PASS] pass | 1 / 1 |
@@ -55,14 +57,22 @@ Auto-generated AC status from acceptance (BDD) and unit tests.
 | AC-TPL-GRAPH-REQ-HAS-AC | US-TPL-PLT-001 | REQ-TPL-GRAPH-INVARIANTS | [PASS] pass | 1 / 1 |
 | AC-TPL-GRAPH-SELFTEST | US-TPL-PLT-001 | REQ-TPL-GRAPH-INVARIANTS | [PASS] pass | 1 / 1 |
 | AC-TPL-HOOKS-INSTALL | US-TPL-PLT-001 | REQ-TPL-GOV-HOOKS | [PASS] pass | 1 / 1 |
+| AC-TPL-IAC-COMPOSE-ALIGN | US-TPL-PLT-001 | REQ-TPL-IAC-ALIGNMENT | [UNKNOWN] unknown | 0 / 1 |
+| AC-TPL-IAC-K8S-ALIGN | US-TPL-PLT-001 | REQ-TPL-IAC-ALIGNMENT | [UNKNOWN] unknown | 0 / 1 |
+| AC-TPL-IAC-TF-ALIGN | US-TPL-PLT-001 | REQ-TPL-IAC-ALIGNMENT | [UNKNOWN] unknown | 0 / 1 |
 | AC-TPL-LOCAL-DOCKER | US-TPL-PLT-001 | REQ-TPL-LOCAL-RUNTIME | [PASS] pass | 1 / 1 |
+| AC-TPL-LOG-NO-SECRETS | US-TPL-PLT-001 | REQ-TPL-LOG-HYGIENE | [UNKNOWN] unknown | 0 / 1 |
+| AC-TPL-METADATA-COMPLETE | US-TPL-PLT-001 | REQ-TPL-METADATA-CONSISTENT | [PASS] pass | 1 / 1 |
+| AC-TPL-PLATFORM-AUTH-BASIC | US-TPL-PLT-001 | REQ-TPL-PLATFORM-AUTH | [UNKNOWN] unknown | 0 / 1 |
 | AC-TPL-PLATFORM-DEVEX | US-TPL-PLT-001 | REQ-TPL-PLATFORM-INTROSPECTION | [PASS] pass | 1 / 1 |
 | AC-TPL-PLATFORM-DOCS | US-TPL-PLT-001 | REQ-TPL-PLATFORM-INTROSPECTION | [PASS] pass | 1 / 1 |
 | AC-TPL-PLATFORM-GRAPH | US-TPL-PLT-001 | REQ-TPL-PLATFORM-INTROSPECTION | [PASS] pass | 1 / 1 |
+| AC-TPL-PLATFORM-SCHEMA | US-TPL-PLT-001 | REQ-TPL-PLATFORM-SCHEMA | [PASS] pass | 1 / 1 |
 | AC-TPL-PLATFORM-UI-DASHBOARD | US-TPL-PLT-001 | REQ-TPL-PLATFORM-UI | [PASS] pass | 1 / 1 |
 | AC-TPL-PLATFORM-UI-FLOWS | US-TPL-PLT-001 | REQ-TPL-PLATFORM-UI | [PASS] pass | 1 / 1 |
 | AC-TPL-PLATFORM-UI-GRAPH | US-TPL-PLT-001 | REQ-TPL-PLATFORM-UI | [PASS] pass | 1 / 1 |
 | AC-TPL-POLICY-STATUS-OVERVIEW | US-TPL-PLT-001 | REQ-TPL-PLATFORM-INTROSPECTION | [PASS] pass | 1 / 1 |
+| AC-TPL-QUESTIONS-LOGGED | US-TPL-PLT-001 | REQ-TPL-QUESTIONS-AS-ARTIFACTS | [UNKNOWN] unknown | 0 / 1 |
 | AC-TPL-REL-CHANGELOG | US-TPL-PLT-001 | REQ-TPL-REL-BUNDLE | [PASS] pass | 1 / 1 |
 | AC-TPL-REL-EVIDENCE | US-TPL-PLT-001 | REQ-TPL-REL-BUNDLE | [PASS] pass | 1 / 1 |
 | AC-TPL-SKILLS-ALIGN-001 | US-TPL-PLT-001 | REQ-TPL-SKILLS-GUIDE | [PASS] pass | 1 / 1 |
@@ -76,3 +86,22 @@ Auto-generated AC status from acceptance (BDD) and unit tests.
 | AC-TPL-TASKS-CREATE-CLI | US-TPL-PLT-001 | REQ-TPL-PLATFORM-TASKS | [PASS] pass | 1 / 1 |
 | AC-TPL-TASKS-HTTP | US-TPL-PLT-001 | REQ-TPL-PLATFORM-TASKS | [PASS] pass | 1 / 1 |
 | AC-TPL-TASKS-UPDATE-CLI | US-TPL-PLT-001 | REQ-TPL-PLATFORM-TASKS | [PASS] pass | 1 / 1 |
+
+## Unmapped ACs
+
+ACs with no mapped or executed tests:
+
+- AC-TPL-FLOW-IDEMPOTENT: Running cargo xtask selftest or cargo xtask suggest-next multiple times without changes produces stable outputs and no duplicate artifacts.
+
+- AC-TPL-IAC-COMPOSE-ALIGN: docker-compose.yaml services (database, tracing, app) use the ports and env vars defined for the local environment in config_schema.yaml and envs.yaml.
+
+- AC-TPL-IAC-K8S-ALIGN: Kubernetes manifests under infra/k8s (Deployment/Service) use ports and env vars consistent with config_schema.yaml and the default environment.
+
+- AC-TPL-IAC-TF-ALIGN: Terraform examples (when present) reference the same variables and defaults as config_schema.yaml for services and dependencies.
+
+- AC-TPL-LOG-NO-SECRETS: Rendering of /platform/status and UI dashboards redacts or omits secret values, and selftest/log output does not include raw secret data from config.
+
+- AC-TPL-PLATFORM-AUTH-BASIC: When PLATFORM_AUTH_MODE=basic, write endpoints under /platform/* reject unauthenticated requests with 401/403 and accept requests with the configured credential header; read endpoints may remain open or use the same guard.
+
+- AC-TPL-QUESTIONS-LOGGED: Ambiguity during automated flows or suggest-next emits a structured question (file/PR comment/status entry) that can be surfaced to humans or agents without halting progress.
+

@@ -1,11 +1,20 @@
 use axum::{extract::State, response::Html};
 use maud::{DOCTYPE, Markup, html};
-use spec_runtime::load_all_specs;
+use spec_runtime::{ServiceMetadata, load_all_specs, load_service_metadata};
 
 use crate::AppState;
 
 /// Shared layout for all UI pages
-fn layout(title: &str, content: Markup) -> Markup {
+fn layout(title: &str, metadata: &Option<ServiceMetadata>, content: Markup) -> Markup {
+    let service_name = metadata
+        .as_ref()
+        .and_then(|m| m.display_name.as_deref())
+        .unwrap_or("Rust-as-Spec Platform");
+    let service_tagline =
+        metadata.as_ref().and_then(|m| m.description.as_deref()).unwrap_or_default();
+
+    let links = metadata.as_ref().map(|m| m.links.clone()).unwrap_or_default();
+
     html! {
         (DOCTYPE)
         html lang="en" {
@@ -131,8 +140,8 @@ fn layout(title: &str, content: Markup) -> Markup {
             body {
                 header {
                     .container {
-                        h1 { "Rust-as-Spec Platform" }
-                        p { "Self-Governing Platform Cell - Real-time Governance Dashboard" }
+                        h1 { (service_name) }
+                        p { (service_tagline) }
                     }
                 }
                 nav .container {
@@ -142,6 +151,21 @@ fn layout(title: &str, content: Markup) -> Markup {
                     a href="/ui/coverage" { "AC Coverage" }
                     a href="/platform/status" target="_blank" { "API: Status" }
                     a href="/platform/graph" target="_blank" { "API: Graph" }
+                    @if let Some(runbook) = links.get("kernel_contract") {
+                        a href=(runbook) target="_blank" { "Runbook" }
+                    }
+                    @if let Some(roadmap) = links.get("roadmap") {
+                        a href=(roadmap) target="_blank" { "Roadmap" }
+                    }
+                    @if let Some(agent_guide) = links.get("agent_guide") {
+                        a href=(agent_guide) target="_blank" { "Agent Guide" }
+                    }
+                    @if let Some(feature_status) = links.get("feature_status") {
+                        a href=(feature_status) target="_blank" { "Feature Status" }
+                    }
+                    @if let Some(support) = links.get("support") {
+                        a href=(support) target="_blank" { "Platform Support" }
+                    }
                 }
                 main .container {
                     (content)
@@ -156,6 +180,7 @@ pub async fn dashboard(State(state): State<AppState>) -> Html<String> {
     let root = &state.workspace_root;
     let status_result = load_all_specs(root);
     let tasks_result = spec_runtime::load_tasks(&root.join("specs/tasks.yaml"));
+    let metadata = load_service_metadata(&root.join("specs/service_metadata.yaml")).ok();
 
     let content = match (status_result, tasks_result) {
         (Ok(specs), Ok(tasks_spec)) => {
@@ -315,12 +340,13 @@ pub async fn dashboard(State(state): State<AppState>) -> Html<String> {
         }
     };
 
-    Html(layout("Dashboard", content).into_string())
+    Html(layout("Dashboard", &metadata, content).into_string())
 }
 
 /// Graph visualization page
 pub async fn graph_view(State(state): State<AppState>) -> Html<String> {
     let root = &state.workspace_root;
+    let metadata = load_service_metadata(&root.join("specs/service_metadata.yaml")).ok();
 
     let content = match load_all_specs(root) {
         Ok(specs) => match spec_runtime::build_graph(&specs.ledger, &specs.devex, &specs.docs) {
@@ -359,12 +385,13 @@ pub async fn graph_view(State(state): State<AppState>) -> Html<String> {
         }
     };
 
-    Html(layout("Graph", content).into_string())
+    Html(layout("Graph", &metadata, content).into_string())
 }
 
 /// Flows and tasks page
 pub async fn flows_view(State(state): State<AppState>) -> Html<String> {
     let root = &state.workspace_root;
+    let metadata = load_service_metadata(&root.join("specs/service_metadata.yaml")).ok();
 
     let flows_result = spec_runtime::load_devex_flows(&root.join("specs/devex_flows.yaml"));
     let tasks_result = spec_runtime::load_tasks(&root.join("specs/tasks.yaml"));
@@ -430,11 +457,13 @@ pub async fn flows_view(State(state): State<AppState>) -> Html<String> {
         }
     };
 
-    Html(layout("Flows & Tasks", content).into_string())
+    Html(layout("Flows & Tasks", &metadata, content).into_string())
 }
 
 /// Coverage details page
-pub async fn coverage_view() -> Html<String> {
+pub async fn coverage_view(State(state): State<AppState>) -> Html<String> {
+    let metadata =
+        load_service_metadata(&state.workspace_root.join("specs/service_metadata.yaml")).ok();
     let content = html! {
         style {
             r#"
@@ -674,5 +703,5 @@ pub async fn coverage_view() -> Html<String> {
         }
     };
 
-    Html(layout("AC Coverage", content).into_string())
+    Html(layout("AC Coverage", &metadata, content).into_string())
 }

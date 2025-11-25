@@ -1,17 +1,21 @@
 use anyhow::Result;
 use std::path::Path;
 
+pub mod config;
 pub mod devex;
 pub mod docs;
 pub mod graph;
-pub mod local_docker;
 pub mod ledger;
+pub mod local_docker;
+pub mod service_metadata;
 pub mod tasks;
 
+pub use config::{ValidatedConfig, validate_config};
 pub use devex::{DevExFlows, load_devex_flows};
 pub use docs::{DocEntry, DocIndex, load_doc_index};
 pub use graph::{Edge, Graph, Node, build_graph};
 pub use ledger::{AcceptanceCriterion, Requirement, SpecLedger, Story, load_spec_ledger};
+pub use service_metadata::{ServiceMetadata, load_service_metadata};
 pub use tasks::*;
 
 /// Load all specs from the workspace root

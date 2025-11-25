@@ -1655,7 +1655,7 @@ async fn execute_command(world: &mut World, command: &str, env_vars: &[(&str, &s
     } else if let Some("status") = subcommand {
         if low_resource == "1" {
             world.xtask_context_mut().last_command_output = Some(
-                "Rust-as-Spec Platform\nVersion: v3.2.0\n---\nGovernance:\nStories: 3\nRequirements: 3\nACs: 3\nTasks:\nTodo 1\nInProgress 1\nReview 1\nDone 1\n---\nNext steps:\ncargo xtask tasks-list\ncargo xtask selftest\ncargo run -p app-http\nhttp://localhost:8080/ui\nRust-as-Spec".to_string(),
+                "Rust-as-Spec Platform\nVersion: v3.3.0\n---\nGovernance:\nStories: 3\nRequirements: 3\nACs: 3\nTasks:\nTodo 1\nInProgress 1\nReview 1\nDone 1\n---\nNext steps:\ncargo xtask tasks-list\ncargo xtask selftest\ncargo run -p app-http\nhttp://localhost:8080/ui\nRust-as-Spec".to_string(),
             );
             world.xtask_context_mut().last_command_status = Some(0);
             return;
