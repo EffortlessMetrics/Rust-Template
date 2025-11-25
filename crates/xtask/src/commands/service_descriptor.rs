@@ -32,10 +32,10 @@ pub fn run(format: &str) -> Result<()> {
 
     // annotations
     let mut annotations = serde_yaml::Mapping::new();
-    if let Some(Value::Mapping(links)) = spec.get("links") {
-        if let Some(Value::String(repo)) = links.get(&Value::from("repo")) {
-            annotations.insert(Value::from("github.com/project-slug"), Value::from(repo.clone()));
-        }
+    if let Some(Value::Mapping(links)) = spec.get("links")
+        && let Some(Value::String(repo)) = links.get(Value::from("repo"))
+    {
+        annotations.insert(Value::from("github.com/project-slug"), Value::from(repo.clone()));
     }
 
     if !annotations.is_empty() {
@@ -48,10 +48,10 @@ pub fn run(format: &str) -> Result<()> {
     let mut spec_map = serde_yaml::Mapping::new();
     spec_map.insert(Value::from("type"), Value::from("service"));
     spec_map.insert(Value::from("lifecycle"), Value::from("production"));
-    if let Some(Value::Mapping(ownership)) = spec.get("ownership") {
-        if let Some(Value::String(team)) = ownership.get(&Value::from("team")) {
-            spec_map.insert(Value::from("owner"), Value::from(format!("team:{}", team)));
-        }
+    if let Some(Value::Mapping(ownership)) = spec.get("ownership")
+        && let Some(Value::String(team)) = ownership.get(Value::from("team"))
+    {
+        spec_map.insert(Value::from("owner"), Value::from(format!("team:{}", team)));
     }
     spec_map.insert(Value::from("system"), Value::from("platform"));
 

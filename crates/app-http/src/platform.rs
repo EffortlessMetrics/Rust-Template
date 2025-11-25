@@ -1,14 +1,21 @@
-use axum::{Json, Router, extract::Query, routing::get};
+use crate::{AppError, AppState, ErrorCode};
+use adapters_spec_fs::tasks_state;
+use axum::{
+    Json, Router,
+    extract::{Query, State},
+    http::StatusCode,
+    routing::get,
+};
+use business_core::governance::{TaskId, TaskStatus};
 use serde::{Deserialize, Serialize};
 use spec_runtime::load_all_specs;
 use std::collections::HashMap;
 use std::fs;
-use std::path::PathBuf;
 
 mod ui;
 
 /// Platform API routes (mounted at /platform)
-pub fn router() -> Router {
+pub fn router(state: AppState) -> Router {
     Router::new()
         // API routes
         .route("/graph", get(get_graph))
@@ -18,16 +25,18 @@ pub fn router() -> Router {
         .route("/coverage", get(get_coverage))
         .route("/tasks", get(get_tasks))
         .route("/tasks/suggest-next", get(get_suggest_next))
+        .with_state(state)
 }
 
 /// UI routes (mounted at root)
-pub fn ui_router() -> Router {
+pub fn ui_router(state: AppState) -> Router {
     Router::new()
         .route("/", get(ui::dashboard))
         .route("/ui", get(ui::dashboard))
         .route("/ui/graph", get(ui::graph_view))
         .route("/ui/flows", get(ui::flows_view))
         .route("/ui/coverage", get(ui::coverage_view))
+        .with_state(state)
 }
 
 #[derive(Deserialize)]
@@ -36,9 +45,10 @@ struct SuggestNextQuery {
 }
 
 async fn get_suggest_next(
+    State(state): State<AppState>,
     Query(q): Query<SuggestNextQuery>,
 ) -> Json<spec_runtime::tasks::SuggestedSequence> {
-    let root = workspace_root();
+    let root = &state.workspace_root;
     let tasks_spec = spec_runtime::load_tasks(&root.join("specs/tasks.yaml"))
         .expect("Failed to load tasks.yaml");
     let devex_spec = spec_runtime::load_devex_flows(&root.join("specs/devex_flows.yaml"))
@@ -47,7 +57,7 @@ async fn get_suggest_next(
         .expect("Failed to load spec_ledger.yaml");
 
     let suggestion =
-        spec_runtime::tasks::suggest_next(&root, &q.task, &tasks_spec, &devex_spec, &ledger)
+        spec_runtime::tasks::suggest_next(root, &q.task, &tasks_spec, &devex_spec, &ledger)
             .expect("Failed to generate suggestion");
 
     Json(suggestion)
@@ -103,31 +113,31 @@ struct PolicyStatusReport {
     summary: String,
 }
 
-async fn get_graph() -> Json<spec_runtime::Graph> {
-    let root = workspace_root();
-    let specs = load_all_specs(&root).expect("Failed to load specs");
+async fn get_graph(State(state): State<AppState>) -> Json<spec_runtime::Graph> {
+    let root = &state.workspace_root;
+    let specs = load_all_specs(root).expect("Failed to load specs");
     let graph = spec_runtime::build_graph(&specs.ledger, &specs.devex, &specs.docs)
         .expect("Failed to build graph");
     Json(graph)
 }
 
-async fn get_devex_flows() -> Json<serde_json::Value> {
-    let root = workspace_root();
+async fn get_devex_flows(State(state): State<AppState>) -> Json<serde_json::Value> {
+    let root = &state.workspace_root;
     let devex = spec_runtime::load_devex_flows(&root.join("specs/devex_flows.yaml"))
         .expect("Failed to load devex flows");
     Json(serde_json::to_value(devex).unwrap())
 }
 
-async fn get_docs_index() -> Json<serde_json::Value> {
-    let root = workspace_root();
+async fn get_docs_index(State(state): State<AppState>) -> Json<serde_json::Value> {
+    let root = &state.workspace_root;
     let docs = spec_runtime::load_doc_index(&root.join("specs/doc_index.yaml"))
         .expect("Failed to load doc index");
     Json(serde_json::to_value(docs).unwrap())
 }
 
-async fn get_status() -> Json<PlatformStatus> {
-    let root = workspace_root();
-    let specs = load_all_specs(&root).expect("Failed to load specs");
+async fn get_status(State(state): State<AppState>) -> Json<PlatformStatus> {
+    let root = &state.workspace_root;
+    let specs = load_all_specs(root).expect("Failed to load specs");
     let tasks_spec =
         spec_runtime::load_tasks(&root.join("specs/tasks.yaml")).expect("Failed to load tasks");
 
@@ -182,12 +192,12 @@ pub struct TaskFilters {
     pub req: Option<String>,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize)]
 pub struct TasksResponse {
     pub tasks: Vec<TaskOut>,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize)]
 pub struct TaskOut {
     pub id: String,
     pub title: String,
@@ -199,32 +209,60 @@ pub struct TaskOut {
     pub docs: Option<TaskDocsOut>,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize)]
 pub struct TaskDocsOut {
     pub design: Vec<String>,
     pub plan: Vec<String>,
 }
 
-async fn get_tasks(Query(filters): Query<TaskFilters>) -> Json<TasksResponse> {
-    let root = workspace_root();
-    let spec = spec_runtime::load_tasks(&root.join("specs/tasks.yaml"))
-        .expect("Failed to load specs/tasks.yaml");
+async fn get_tasks(
+    State(state): State<AppState>,
+    Query(filters): Query<TaskFilters>,
+) -> Result<Json<TasksResponse>, AppError> {
+    let root = &state.workspace_root;
+    let tasks_spec = spec_runtime::load_tasks(&root.join("specs/tasks.yaml")).map_err(|err| {
+        AppError::new(
+            StatusCode::INTERNAL_SERVER_ERROR,
+            ErrorCode::InternalError,
+            format!("Failed to load specs/tasks.yaml: {}", err),
+        )
+    })?;
 
-    let tasks = spec
+    let state_map =
+        tasks_state::get_all_tasks(&root.join("specs/tasks_state.yaml")).map_err(|err| {
+            AppError::new(
+                StatusCode::INTERNAL_SERVER_ERROR,
+                ErrorCode::InternalError,
+                format!("Failed to load task state: {}", err),
+            )
+        })?;
+
+    let tasks = tasks_spec
         .tasks
         .into_iter()
-        .filter(|t| match &filters.status {
-            Some(s) => t.status.eq_ignore_ascii_case(s),
-            None => true,
+        .filter_map(|t| {
+            let effective_status = state_map
+                .get(&TaskId(t.id.clone()))
+                .cloned()
+                .map(task_status_to_string)
+                .unwrap_or_else(|| t.status.clone());
+
+            if filters.status.as_ref().is_some_and(|s| !effective_status.eq_ignore_ascii_case(s)) {
+                return None;
+            }
+
+            if filters.req.as_ref().is_some_and(|r| t.requirement != *r) {
+                return None;
+            }
+
+            let mut task_out: TaskOut = t.into();
+            task_out.status = effective_status;
+
+            Some(task_out)
         })
-        .filter(|t| match &filters.req {
-            Some(r) => t.requirement == *r,
-            None => true,
-        })
-        .map(TaskOut::from)
         .collect();
 
-    Json(TasksResponse { tasks })
+    Ok(Json(TasksResponse { tasks }))
 }
 
 impl From<spec_runtime::Task> for TaskOut {
@@ -301,11 +339,11 @@ struct CucumberStepResult {
     status: String,
 }
 
-async fn get_coverage() -> Json<CoverageResponse> {
-    let root = workspace_root();
+async fn get_coverage(State(state): State<AppState>) -> Json<CoverageResponse> {
+    let root = &state.workspace_root;
 
     // Load spec ledger to get all ACs
-    let specs = match load_all_specs(&root) {
+    let specs = match load_all_specs(root) {
         Ok(s) => s,
         Err(_) => {
             // Return empty response if specs can't be loaded
@@ -413,10 +451,6 @@ async fn get_coverage() -> Json<CoverageResponse> {
     })
 }
 
-fn workspace_root() -> PathBuf {
-    if let Ok(root) = std::env::var("SPEC_ROOT") {
-        return PathBuf::from(root);
-    }
-
-    PathBuf::from(env!("CARGO_MANIFEST_DIR")).parent().unwrap().parent().unwrap().to_path_buf()
+fn task_status_to_string(status: TaskStatus) -> String {
+    format!("{status:?}")
 }

@@ -495,7 +495,7 @@ async fn api_running(world: &mut TaskWorld) {
 #[when(regex = r"^I POST to \"([^\"]*)\" with:$")]
 async fn post_with_body(world: &mut TaskWorld, path: String, body: String) {
     world.response = world.client
-        .post(&format!("http://localhost:3000{}", path))
+        .post(&format!("http://localhost:8080{}", path))
         .json(&serde_json::from_str::<serde_json::Value>(&body).unwrap())
         .send()
         .await
@@ -603,3 +603,4 @@ Once v1.0.0 is tagged and protected, you can begin this pilot immediately. The p
 4. Document everything
 
 Good luck! 🚀
+

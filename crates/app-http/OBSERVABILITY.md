@@ -334,14 +334,14 @@ export RUST_LOG=info,app_http=debug
 
 ### Example Metrics Output
 ```bash
-curl http://localhost:3000/metrics | grep http_requests
+curl http://localhost:8080/metrics | grep http_requests
 # http_requests_total{method="GET",outcome="success",status="200",uri="/health"} 5 1734251234567
 # http_requests_duration_seconds_bucket{...le="0.005"} 2
 ```
 
 ### Complete Stack
 ```
-Client → app-http:3000 → OTLP(gRPC):4317 → Collector → Backend
+Client → app-http:8080 → OTLP(gRPC):4317 → Collector → Backend
                            ↓
                        Prometheus:9090 ← /metrics
 ```
@@ -379,11 +379,11 @@ To add actual metrics (currently stubbed):
 
 ```bash
 # Without request ID
-curl -v http://localhost:3000/health
+curl -v http://localhost:8080/health
 # Response will include: X-Request-ID: <generated-uuid>
 
 # With request ID
-curl -v -H "X-Request-ID: my-test-id" http://localhost:3000/health
+curl -v -H "X-Request-ID: my-test-id" http://localhost:8080/health
 # Response will include: X-Request-ID: my-test-id
 ```
 
@@ -391,7 +391,7 @@ curl -v -H "X-Request-ID: my-test-id" http://localhost:3000/health
 
 ```bash
 # Trigger validation error
-curl -X POST http://localhost:3000/refunds \
+curl -X POST http://localhost:8080/refunds \
   -H "Content-Type: application/json" \
   -d '{"orderId": "ORD-123", "amountCents": 0}'
 
@@ -437,3 +437,4 @@ This observability implementation follows the template's hexagonal architecture:
 - **Cross-cutting**: Request ID flows through all layers automatically via span context
 
 The request ID and structured logging work across layer boundaries, providing full request lifecycle visibility.
+

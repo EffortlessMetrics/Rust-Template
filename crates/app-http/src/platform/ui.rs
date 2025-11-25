@@ -1,8 +1,8 @@
-use axum::response::Html;
+use axum::{extract::State, response::Html};
 use maud::{DOCTYPE, Markup, html};
 use spec_runtime::load_all_specs;
 
-use super::workspace_root;
+use crate::AppState;
 
 /// Shared layout for all UI pages
 fn layout(title: &str, content: Markup) -> Markup {
@@ -131,7 +131,7 @@ fn layout(title: &str, content: Markup) -> Markup {
             body {
                 header {
                     .container {
-                        h1 { "🦀 Rust-as-Spec Platform" }
+                        h1 { "Rust-as-Spec Platform" }
                         p { "Self-Governing Platform Cell - Real-time Governance Dashboard" }
                     }
                 }
@@ -152,9 +152,9 @@ fn layout(title: &str, content: Markup) -> Markup {
 }
 
 /// Dashboard page
-pub async fn dashboard() -> Html<String> {
-    let root = workspace_root();
-    let status_result = load_all_specs(&root);
+pub async fn dashboard(State(state): State<AppState>) -> Html<String> {
+    let root = &state.workspace_root;
+    let status_result = load_all_specs(root);
     let tasks_result = spec_runtime::load_tasks(&root.join("specs/tasks.yaml"));
 
     let content = match (status_result, tasks_result) {
@@ -187,24 +187,36 @@ pub async fn dashboard() -> Html<String> {
             let mut passing = 0;
             let mut failing = 0;
             let mut unknown = 0;
+            let mut coverage_rows = 0;
 
             if feature_status_path.exists()
                 && let Ok(content) = std::fs::read_to_string(&feature_status_path)
             {
                 for line in content.lines() {
-                    if line.contains("✅") {
+                    if !line.starts_with("| AC-") {
+                        continue;
+                    }
+
+                    coverage_rows += 1;
+
+                    if line.contains("[PASS]") {
                         passing += 1;
-                    } else if line.contains("❌") {
+                    } else if line.contains("[FAIL]") {
                         failing += 1;
-                    } else if line.contains("❓") {
+                    } else if line.contains("[UNKNOWN]") {
                         unknown += 1;
                     }
                 }
             }
 
             // If no coverage data, count all ACs as unknown
-            if passing == 0 && failing == 0 && unknown == 0 {
+            if coverage_rows == 0 {
                 unknown = ac_count;
+            } else {
+                let accounted_for = passing + failing + unknown;
+                if accounted_for < ac_count {
+                    unknown += ac_count - accounted_for;
+                }
             }
 
             html! {
@@ -307,10 +319,10 @@ pub async fn dashboard() -> Html<String> {
 }
 
 /// Graph visualization page
-pub async fn graph_view() -> Html<String> {
-    let root = workspace_root();
+pub async fn graph_view(State(state): State<AppState>) -> Html<String> {
+    let root = &state.workspace_root;
 
-    let content = match load_all_specs(&root) {
+    let content = match load_all_specs(root) {
         Ok(specs) => match spec_runtime::build_graph(&specs.ledger, &specs.devex, &specs.docs) {
             Ok(graph) => {
                 let mermaid_diagram = graph.to_mermaid();
@@ -351,8 +363,8 @@ pub async fn graph_view() -> Html<String> {
 }
 
 /// Flows and tasks page
-pub async fn flows_view() -> Html<String> {
-    let root = workspace_root();
+pub async fn flows_view(State(state): State<AppState>) -> Html<String> {
+    let root = &state.workspace_root;
 
     let flows_result = spec_runtime::load_devex_flows(&root.join("specs/devex_flows.yaml"));
     let tasks_result = spec_runtime::load_tasks(&root.join("specs/tasks.yaml"));

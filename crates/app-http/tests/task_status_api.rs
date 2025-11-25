@@ -1,5 +1,5 @@
 use adapters_spec_fs::tasks_state;
-use app_http::app;
+use app_http::{app_with_workspace_root, platform::TasksResponse};
 use axum::{body::Body, http::Request};
 use business_core::governance::{TaskId, TaskStatus};
 use http_body_util::BodyExt;
@@ -47,14 +47,8 @@ async fn update_task_status_endpoint_accepts_json_body() {
     let spec_root = temp.path().to_path_buf();
     write_tasks_files(&spec_root, "TASK-001", TaskStatus::Todo);
 
-    // Point the application at the temp specs
-    // Safe in test context: no other threads rely on SPEC_ROOT.
-    unsafe {
-        std::env::set_var("SPEC_ROOT", &spec_root);
-    }
-
     let repo = Arc::new(adapters_spec_fs::FsGovernanceRepository::new(spec_root.join("specs")));
-    let app = app(repo);
+    let app = app_with_workspace_root(repo, spec_root.clone());
 
     let body = r#"{ "status": "InProgress" }"#;
     let request = Request::builder()
@@ -89,12 +83,8 @@ async fn update_task_status_endpoint_accepts_form_body() {
     let spec_root = temp.path().to_path_buf();
     write_tasks_files(&spec_root, "TASK-002", TaskStatus::Todo);
 
-    unsafe {
-        std::env::set_var("SPEC_ROOT", &spec_root);
-    }
-
     let repo = Arc::new(adapters_spec_fs::FsGovernanceRepository::new(spec_root.join("specs")));
-    let app = app(repo);
+    let app = app_with_workspace_root(repo, spec_root.clone());
 
     let request = Request::builder()
         .method("POST")
@@ -119,4 +109,39 @@ async fn update_task_status_endpoint_accepts_form_body() {
     let stored_status =
         tasks_state::get_task_status(&state_path, &TaskId("TASK-002".to_string())).unwrap();
     assert_eq!(stored_status, Some(TaskStatus::InProgress));
+}
+
+#[tokio::test]
+async fn tasks_endpoint_returns_persisted_status() {
+    let temp = tempdir().expect("failed to create temp dir");
+    let spec_root = temp.path().to_path_buf();
+    write_tasks_files(&spec_root, "TASK-003", TaskStatus::Review);
+
+    let repo = Arc::new(adapters_spec_fs::FsGovernanceRepository::new(spec_root.join("specs")));
+    let app = app_with_workspace_root(repo, spec_root.clone());
+
+    let request = Request::builder()
+        .method("GET")
+        .uri("/platform/tasks")
+        .body(Body::empty())
+        .expect("failed to build request");
+
+    let response = app.oneshot(request).await.expect("service should not fail");
+    let status = response.status();
+    let body =
+        BodyExt::collect(response.into_body()).await.map(|c| c.to_bytes()).unwrap_or_default();
+
+    if !status.is_success() {
+        panic!(
+            "expected success status, got {} with body: {}",
+            status,
+            String::from_utf8_lossy(&body)
+        );
+    }
+
+    let tasks: TasksResponse =
+        serde_json::from_slice(&body).expect("failed to deserialize tasks response");
+
+    assert_eq!(tasks.tasks.len(), 1);
+    assert_eq!(tasks.tasks[0].status, "Review");
 }

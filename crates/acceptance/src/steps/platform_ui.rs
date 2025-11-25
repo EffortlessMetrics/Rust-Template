@@ -1,7 +1,7 @@
 use crate::world::{Response, World};
 use axum::body::Body;
 use cucumber::{given, then, when};
-use http::Request;
+use http::{Request, StatusCode};
 use http_body_util::BodyExt;
 use tower::util::ServiceExt;
 
@@ -13,6 +13,16 @@ use tower::util::ServiceExt;
 async fn given_platform_running(_world: &mut World) {
     // The platform is always running in tests via World::default()
     // UI is enabled by default in the app router
+}
+
+#[given(regex = r#"^the platform service is running on port (\d+)$"#)]
+async fn given_platform_running_on_port(world: &mut World, port: String) {
+    assert_eq!(port, "8080", "Acceptance tests expect port 8080 for platform service");
+
+    // Sanity check: the in-process app responds to health requests
+    let request = Request::builder().method("GET").uri("/health").body(Body::empty()).unwrap();
+    let response = world.app.clone().oneshot(request).await.expect("health request should work");
+    assert_eq!(response.status(), StatusCode::OK, "Health check should return 200");
 }
 
 #[when(regex = r#"^I GET "([^"]+)"$"#)]

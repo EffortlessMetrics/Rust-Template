@@ -17,8 +17,8 @@ lifecycle:
 
 links:
   docs: "https://.../docs"
-  ui: "http://localhost:3000/ui"
-  status: "http://localhost:3000/platform/status"
+  ui: "http://localhost:8080/ui"
+  status: "http://localhost:8080/platform/status"
   repo: "https://github.com/EffortlessMetrics/Rust-Template"
 
 tags:

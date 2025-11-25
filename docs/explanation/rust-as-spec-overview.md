@@ -487,7 +487,7 @@ Based on pilot feedback, we may add:
 - Inline spec editing (generates patches, not direct writes)
 
 **Tier 3: Agent Skills**
-- `.claude/skills/` for LLM-driven workflows
+- `.claude/skills/` for LLM-native, governance-bounded workflows
 - `AGENT_GUIDE.md` as system prompt
 - Skill validation via selftest
 

@@ -43,6 +43,7 @@ No migration needed - new endpoint, backward compatible.
 
 **Validation**:
 - BDD scenario passes
-- Manual curl test: `curl http://localhost:3000/health`
+- Manual curl test: `curl http://localhost:8080/health`
 
 **Success**: Endpoint available, returns correct JSON, BDD green
+

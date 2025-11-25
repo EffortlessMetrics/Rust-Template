@@ -17,8 +17,8 @@ async fn main() -> anyhow::Result<()> {
     // Build our application router from lib
     let app = app_http::app(governance_repo);
 
-    // Start server
-    let addr = SocketAddr::from(([0, 0, 0, 0], 3000));
+    // Start server on the documented platform port
+    let addr = SocketAddr::from(([0, 0, 0, 0], 8080));
     info!("Listening on {}", addr);
 
     let listener = tokio::net::TcpListener::bind(&addr).await?;

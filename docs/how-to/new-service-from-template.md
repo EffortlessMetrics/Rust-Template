@@ -52,7 +52,7 @@ Edit `Cargo.toml`:
 ```toml
 [workspace.package]
 version = "0.1.0"
-edition = "2021"
+edition = "2024"
 authors = ["Your Team <team@company.com>"]
 repository = "https://github.com/your-org/your-service-name"
 ```

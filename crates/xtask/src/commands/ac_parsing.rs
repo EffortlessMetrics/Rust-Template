@@ -62,6 +62,7 @@ struct Ledger {
 
 #[derive(Debug, Deserialize)]
 struct Story {
+    #[allow(dead_code)]
     id: String,
     requirements: Vec<Requirement>,
 }
@@ -78,6 +79,7 @@ struct Requirement {
 #[derive(Debug, Deserialize)]
 struct AcceptanceCriteria {
     id: String,
+    #[allow(dead_code)]
     text: String,
 }
 

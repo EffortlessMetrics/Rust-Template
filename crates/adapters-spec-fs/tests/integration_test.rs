@@ -35,3 +35,35 @@ fn test_set_task_status_persists() {
     let content = fs::read_to_string(specs_dir.join("tasks_state.yaml")).unwrap();
     assert!(content.contains("Done"));
 }
+
+#[test]
+fn load_task_falls_back_to_tasks_yaml_status() {
+    // Setup temp dir with tasks.yaml but no tasks_state.yaml entry
+    let temp_dir = tempfile::tempdir().unwrap();
+    let specs_dir = temp_dir.path().to_path_buf();
+
+    let tasks_yaml = r#"
+schema_version: "1.0"
+template_version: "1.0"
+tasks:
+  - id: TASK-STATELESS
+    title: "Task without state"
+    requirement: REQ-TEST
+    status: in_progress
+    acs: []
+    labels: []
+    summary: "Example"
+    recommended_flows: []
+    docs:
+      design: []
+      plan: []
+"#;
+
+    fs::create_dir_all(&specs_dir).unwrap();
+    fs::write(specs_dir.join("tasks.yaml"), tasks_yaml.trim()).unwrap();
+
+    let repo = FsGovernanceRepository::new(specs_dir.clone());
+    let task = repo.load_task(&TaskId("TASK-STATELESS".to_string())).unwrap();
+
+    assert_eq!(task.status, TaskStatus::InProgress);
+}

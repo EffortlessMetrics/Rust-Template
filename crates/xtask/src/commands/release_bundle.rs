@@ -1,9 +1,62 @@
 use anyhow::{Context, Result};
 use colored::Colorize;
-use std::collections::HashSet;
+use serde::Deserialize;
+use std::collections::{HashMap, HashSet};
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
+
+/// Normalized task status used for release evidence generation.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum TaskStatus {
+    Todo,
+    InProgress,
+    Review,
+    Done,
+}
+
+impl TaskStatus {
+    fn is_done(&self) -> bool {
+        matches!(self, TaskStatus::Done)
+    }
+}
+
+/// Parse task status strings from tasks.yaml or tasks_state.yaml into a normalized enum.
+fn parse_task_status(status: &str) -> Option<TaskStatus> {
+    match status.to_lowercase().as_str() {
+        "todo" | "open" => Some(TaskStatus::Todo),
+        "in_progress" | "inprogress" | "in-progress" => Some(TaskStatus::InProgress),
+        "review" => Some(TaskStatus::Review),
+        "done" | "closed" | "complete" | "completed" => Some(TaskStatus::Done),
+        _ => None,
+    }
+}
+
+#[derive(Debug, Default, Deserialize)]
+struct TasksState {
+    tasks: HashMap<String, String>,
+}
+
+fn load_task_status_overrides(root: &Path) -> Result<HashMap<String, TaskStatus>> {
+    let path = root.join("specs/tasks_state.yaml");
+    if !path.exists() {
+        return Ok(HashMap::new());
+    }
+
+    let content =
+        fs::read_to_string(&path).with_context(|| format!("Failed to read {}", path.display()))?;
+    let state: TasksState =
+        serde_yaml::from_str(&content).context("Failed to parse specs/tasks_state.yaml")?;
+
+    let mut overrides = HashMap::new();
+    for (id, status) in state.tasks {
+        if let Some(normalized) = parse_task_status(&status) {
+            overrides.insert(id, normalized);
+        }
+    }
+
+    Ok(overrides)
+}
 
 pub fn run(version: &str) -> Result<()> {
     println!(
@@ -88,13 +141,24 @@ pub fn run(version: &str) -> Result<()> {
 /// Collect completed tasks (returns list of requirement IDs and markdown content)
 fn collect_tasks_section(root: &Path, _version: &str) -> Result<(Vec<String>, String)> {
     let tasks_spec = spec_runtime::load_tasks(&root.join("specs/tasks.yaml"))?;
+    let status_overrides = load_task_status_overrides(root)?;
 
     let mut requirement_ids = Vec::new();
     let mut content = String::new();
 
-    // Filter tasks with status "done" (case-insensitive)
-    let done_tasks: Vec<_> =
-        tasks_spec.tasks.iter().filter(|t| t.status.to_lowercase() == "done").collect();
+    // Filter tasks with final status "done" (consider tasks_state overrides)
+    let done_tasks: Vec<_> = tasks_spec
+        .tasks
+        .iter()
+        .filter(|t| {
+            status_overrides
+                .get(&t.id)
+                .copied()
+                .or_else(|| parse_task_status(&t.status))
+                .unwrap_or(TaskStatus::Todo)
+                .is_done()
+        })
+        .collect();
 
     if done_tasks.is_empty() {
         content.push_str("*No tasks marked as done for this release.*\n");
@@ -348,4 +412,57 @@ fn collect_friction_entries(root: &Path) -> Result<String> {
     }
 
     Ok(content)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use tempfile::tempdir;
+
+    #[test]
+    fn tasks_state_overrides_tasks_yaml_status() {
+        let temp = tempdir().unwrap();
+        let specs_dir = temp.path().join("specs");
+        fs::create_dir_all(&specs_dir).unwrap();
+
+        let tasks_yaml = r#"
+schema_version: "1.0"
+template_version: "1.0"
+tasks:
+  - id: TASK-1
+    title: "Example task"
+    requirement: REQ-1
+    acs: []
+    status: todo
+    owner:
+    labels: []
+    docs:
+      design: []
+      plan: []
+    summary: "Example summary"
+    recommended_flows: []
+  - id: TASK-2
+    title: "Still pending"
+    requirement: REQ-2
+    acs: []
+    status: todo
+    owner:
+    labels: []
+    docs:
+      design: []
+      plan: []
+    summary: "Another summary"
+    recommended_flows: []
+"#;
+
+        fs::write(specs_dir.join("tasks.yaml"), tasks_yaml.trim()).unwrap();
+        fs::write(specs_dir.join("tasks_state.yaml"), "tasks:\n  TASK-1: Done\n").unwrap();
+
+        let (requirements, content) = collect_tasks_section(temp.path(), "1.0.0").unwrap();
+
+        assert!(requirements.contains(&"REQ-1".to_string()));
+        assert!(content.contains("TASK-1"));
+        assert!(!content.contains("TASK-2"));
+        assert!(!content.contains("No tasks marked as done"));
+    }
 }

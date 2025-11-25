@@ -38,7 +38,7 @@ nix develop -c cargo run -p xtask -- dev-up
 Performs a comprehensive environment setup and validation:
 
 1. **Dependency check:** Verifies required tools (cargo, rustc, conftest, etc.)
-2. **Platform health:** Checks if HTTP server is running (`http://localhost:3000/platform/status`)
+2. **Platform health:** Checks if HTTP server is running (`http://localhost:8080/platform/status`)
 3. **Governance validation:** Parses specs and verifies structure
 4. **Core checks:** Runs `xtask check` (fmt, clippy, tests)
 5. **BDD tests:** Runs acceptance scenarios
@@ -69,7 +69,7 @@ Performs a comprehensive environment setup and validation:
   ✓ conftest 0.49.1
 
 [2/6] Checking platform health...
-  ✓ Platform running at http://localhost:3000
+  ✓ Platform running at http://localhost:8080
   ✓ /platform/status responding
 
 [3/6] Validating governance...
@@ -91,7 +91,7 @@ Performs a comprehensive environment setup and validation:
 ✓ Environment ready!
 
 Next steps:
-  • View governance: http://localhost:3000/ui
+  • View governance: http://localhost:8080/ui
   • Check status: cargo xtask status
   • List tasks: cargo xtask tasks-list
   • Run selftest: cargo xtask selftest
@@ -179,7 +179,7 @@ Next steps:
   • View tasks:     cargo xtask tasks-list
   • Run selftest:   cargo xtask selftest
   • Start platform: cargo run -p app-http
-  • View UI:        http://localhost:3000/ui
+  • View UI:        http://localhost:8080/ui
 ======================================
 ```
 
@@ -1525,3 +1525,4 @@ xt bundle implement_ac
 - `TEMPLATE_API.md` - Full API specification with schemas
 - `docs/how-to/` - Task-oriented guides
 - `docs/explanation/architecture.md` - Design rationale
+

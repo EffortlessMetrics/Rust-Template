@@ -139,7 +139,7 @@ pub fn suggest_next(
                         });
                     }
                     "sbom-local" => {
-                        let sbom_path = root.join("sbom.spdx.json");
+                        let sbom_path = root.join("target").join("sbom.spdx.json");
                         if sbom_path.exists() {
                             status = StepStatus::Satisfied;
                         }
@@ -218,4 +218,96 @@ pub fn suggest_next(
         recommended_flows: task.recommended_flows.clone(),
         recommended_sequence: sequence,
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::devex::{CommandSpec, DevExFlows, DocsRequirement, FlowSpec};
+    use crate::ledger::{Metadata, SpecLedger};
+    use std::collections::HashMap;
+    use tempfile::tempdir;
+
+    #[test]
+    fn sbom_step_reflects_existing_artifact() {
+        let temp_dir = tempdir().expect("temp directory is created");
+        let root = temp_dir.path();
+
+        let tasks_spec = TasksSpec {
+            schema_version: "1".to_string(),
+            template_version: "1".to_string(),
+            tasks: vec![Task {
+                id: "TASK-SBOM-001".to_string(),
+                title: "Generate SBOM".to_string(),
+                requirement: "REQ-1".to_string(),
+                acs: vec![],
+                status: "Todo".to_string(),
+                owner: None,
+                labels: vec![],
+                docs: None,
+                summary: "Ensure SBOM exists".to_string(),
+                recommended_flows: vec!["release".to_string()],
+            }],
+        };
+
+        let mut commands = HashMap::new();
+        commands.insert(
+            "sbom-local".to_string(),
+            CommandSpec {
+                category: "release".to_string(),
+                summary: "Generate SBOM".to_string(),
+                required: true,
+                docs: DocsRequirement::default(),
+            },
+        );
+
+        let mut flows = HashMap::new();
+        flows.insert(
+            "release".to_string(),
+            FlowSpec {
+                name: "release".to_string(),
+                description: "Release flow".to_string(),
+                required: true,
+                documented_in: vec!["docs".to_string()],
+                steps: vec!["sbom-local".to_string()],
+            },
+        );
+
+        let devex_spec = DevExFlows {
+            schema_version: "1".to_string(),
+            template_version: "1".to_string(),
+            commands,
+            flows,
+        };
+
+        let ledger = SpecLedger {
+            metadata: Metadata {
+                schema_version: "1".to_string(),
+                template_version: "1".to_string(),
+                last_updated: "today".to_string(),
+                description: "test ledger".to_string(),
+            },
+            stories: vec![],
+        };
+
+        let sbom_path = root.join("target").join("sbom.spdx.json");
+        std::fs::create_dir_all(sbom_path.parent().unwrap()).expect("target directory is created");
+        std::fs::write(&sbom_path, "{}").expect("sbom artifact is written");
+
+        let sequence =
+            suggest_next(root, "TASK-SBOM-001", &tasks_spec, &devex_spec, &ledger).unwrap();
+
+        let sbom_step_status = sequence
+            .recommended_sequence
+            .iter()
+            .find_map(|action| match action {
+                Action::Command { cmd, status, .. } if cmd == "cargo xtask sbom-local" => {
+                    Some(status)
+                }
+                _ => None,
+            })
+            .expect("sbom-local step is present");
+
+        assert_eq!(*sbom_step_status, StepStatus::Satisfied);
+    }
 }

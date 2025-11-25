@@ -1,4 +1,6 @@
 # Rust-as-Spec Platform Cell (v3.2.0) 🎉
+**Current Template Version:** v3.1.0
+**Current Template Version:** v3.2.0
 
 [![CI](https://github.com/EffortlessMetrics/Rust-Template/actions/workflows/ci-template-selftest.yml/badge.svg)](https://github.com/EffortlessMetrics/Rust-Template/actions/workflows/ci-template-selftest.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE-MIT)
@@ -6,13 +8,16 @@
 
 **A self-healing platform cell where governance enforces itself and agents can move fast safely.**
 
+LLM-native, governance-bounded: agents do the mechanical work inside named flows; deterministic gates (`cargo xtask selftest`, policy tests, graph invariants) and human merge keep it safe.
+
 Optimized for LLM-native teams: the boilerplate that slows humans down gives agents the structure they need to work safely.
 
 > **What is this?**
 >
-> A **governed Rust service cell** for LLM-native development:
-> specs, code, docs, and policies are enforced by CI (`cargo xtask selftest`)
-> and exposed via `/platform/*` so humans and agents can move fast safely.
+> A **governed Rust service cell for LLM-native development**:
+> specs, code, docs, and policies are enforced by CI (`cargo xtask selftest`),
+> validated by policy tests and graph invariants, and exposed via `/platform/*`
+> so agents can do the mechanical work and humans can approve with evidence.
 
 > **Status: Kernel Frozen** (v2.5.0)
 >
@@ -116,8 +121,8 @@ cargo run -p xtask -- dev-up
 
 # 2. Start the service
 cargo run -p app-http
-# → Open http://localhost:3000/ui (governance dashboard)
-# → Open http://localhost:3000/platform/status (JSON API)
+# → Open http://localhost:8080/ui (governance dashboard)
+# → Open http://localhost:8080/platform/status (JSON API)
 
 # 3. Get guidance on next steps
 cargo xtask suggest-next --task implement_ac
@@ -590,3 +595,4 @@ cargo run -p app-http
 ```
 
 **Questions?** See [docs/](docs/) or open an issue.
+

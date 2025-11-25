@@ -1,7 +1,8 @@
 use axum::{Json, Router, extract::State, routing::get};
-use business_core::governance::{GovernanceRepository, TaskService};
+use business_core::governance::TaskService;
 use serde::{Deserialize, Serialize};
-use std::sync::Arc;
+
+use crate::AppState;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct AgentHint {
@@ -15,14 +16,14 @@ pub struct AgentHintsResponse {
     pub next_tasks: Vec<AgentHint>,
 }
 
-pub fn router(repo: Arc<dyn GovernanceRepository>) -> Router {
-    Router::new().route("/platform/agent/hints", get(agent_hints)).with_state(repo)
+pub fn router(state: AppState) -> Router {
+    Router::new().route("/platform/agent/hints", get(agent_hints)).with_state(state)
 }
 
 async fn agent_hints(
-    State(repo): State<Arc<dyn GovernanceRepository>>,
+    State(state): State<AppState>,
 ) -> Result<Json<AgentHintsResponse>, crate::AppError> {
-    let service = TaskService::new(repo);
+    let service = TaskService::new(state.governance_repo.clone());
     let tasks = service.list_tasks().map_err(|e| {
         crate::AppError::new(
             axum::http::StatusCode::INTERNAL_SERVER_ERROR,

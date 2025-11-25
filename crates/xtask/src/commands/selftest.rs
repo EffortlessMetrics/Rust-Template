@@ -455,6 +455,7 @@ fn run_ac_coverage_check(verbosity: crate::Verbosity) -> Result<()> {
 
     #[derive(Debug, Deserialize)]
     struct Story {
+        #[allow(dead_code)]
         id: String,
         requirements: Vec<Requirement>,
     }
@@ -475,6 +476,7 @@ fn run_ac_coverage_check(verbosity: crate::Verbosity) -> Result<()> {
     struct AcceptanceCriteria {
         id: String,
         #[serde(default)]
+        #[allow(dead_code)]
         text: String,
     }
 

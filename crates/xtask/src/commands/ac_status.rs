@@ -275,6 +275,7 @@ fn parse_ledger(ledger_path: &Path) -> Result<HashMap<String, Ac>> {
     Ok(acs)
 }
 
+#[allow(dead_code)]
 fn parse_features(features_dir: &Path) -> Result<HashMap<String, Scenario>> {
     let mut scenarios = HashMap::new();
 
@@ -348,6 +349,7 @@ fn parse_features(features_dir: &Path) -> Result<HashMap<String, Scenario>> {
     Ok(scenarios)
 }
 
+#[allow(dead_code)]
 fn normalize_testcase_name(name: &str) -> String {
     // Extract scenario name from JUnit testcase name
     // Format: "Scenario: <name>: <file>:<line>:<col>"
@@ -361,6 +363,7 @@ fn normalize_testcase_name(name: &str) -> String {
     name.to_string()
 }
 
+#[allow(dead_code)]
 fn parse_junit(
     junit_path: &Path,
     scenarios: &HashMap<String, Scenario>,

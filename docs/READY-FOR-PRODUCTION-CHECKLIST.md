@@ -125,10 +125,10 @@ gh pr close && git checkout main && git branch -D test/ci-verification
 4. **Verify health endpoint:**
    ```bash
    kubectl port-forward -n app-http-dev svc/app-http 8080:80 &
-   curl http://localhost:3000/health
+   curl http://localhost:8080/health
    # Should return: {"status":"ok"}
 
-   curl http://localhost:3000/version
+   curl http://localhost:8080/version
    # Should return version info
 
    pkill -f port-forward
@@ -237,3 +237,4 @@ Once this checklist is complete, the template is **done**. Further evolution sho
 The code is green, policies enforce contracts, and multi-env infrastructure is in place. The remaining steps are operational (branch protection, CI billing) rather than development work.
 
 **The template is ready to use. Stop adding features. Start using it.**
+

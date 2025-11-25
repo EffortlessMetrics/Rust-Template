@@ -21,16 +21,44 @@ pub use errors::{AppError, ErrorCode};
 pub use middleware::{REQUEST_ID_HEADER, RequestId};
 
 use business_core::governance::GovernanceRepository;
+use std::path::PathBuf;
 use std::sync::Arc;
+
+#[derive(Clone)]
+pub struct AppState {
+    pub governance_repo: Arc<dyn GovernanceRepository>,
+    pub workspace_root: PathBuf,
+}
+
+impl AppState {
+    fn new(governance_repo: Arc<dyn GovernanceRepository>) -> Self {
+        Self { governance_repo, workspace_root: resolve_workspace_root() }
+    }
+}
 
 /// Create the application router (reusable for both main and tests)
 pub fn app(governance_repo: Arc<dyn GovernanceRepository>) -> Router {
+    let app_state = AppState::new(governance_repo);
+    build_router(app_state)
+}
+
+/// Create the application router with an explicit workspace root.
+/// Useful for tests to avoid reliance on global environment variables.
+pub fn app_with_workspace_root(
+    governance_repo: Arc<dyn GovernanceRepository>,
+    workspace_root: PathBuf,
+) -> Router {
+    build_router(AppState { governance_repo, workspace_root })
+}
+
+fn build_router(app_state: AppState) -> Router {
     let tasks_router = Router::new()
         .route("/platform/tasks/{id}/status", post(tasks::update_task_status))
         .route("/ui/tasks", get(tasks::tasks_ui))
-        .with_state(governance_repo.clone());
+        .with_state(app_state.clone());
 
-    let agent_router = agent::router(governance_repo.clone());
+    let agent_router = agent::router(app_state.clone());
+    let platform_state = app_state.clone();
 
     Router::new()
         // Template core endpoints - keep these
@@ -39,9 +67,9 @@ pub fn app(governance_repo: Arc<dyn GovernanceRepository>) -> Router {
         .route("/metrics", get(metrics::metrics_handler))
         .route("/api/echo", post(echo)) // For demonstrating error handling in tests
         // Platform introspection endpoints
-        .nest("/platform", platform::router())
+        .nest("/platform", platform::router(platform_state.clone()))
         // Platform UI routes (at root level)
-        .merge(platform::ui_router())
+        .merge(platform::ui_router(platform_state))
         // Merge domain endpoints
         .merge(tasks_router)
         .merge(agent_router)
@@ -226,3 +254,11 @@ struct EchoResponse {
 //   app-http -> core  ([OK] correct)
 //   core -> app-http  ([X] never!)
 // ============================================================================
+
+fn resolve_workspace_root() -> PathBuf {
+    if let Ok(root) = std::env::var("SPEC_ROOT") {
+        return PathBuf::from(root);
+    }
+
+    PathBuf::from(env!("CARGO_MANIFEST_DIR")).parent().unwrap().parent().unwrap().to_path_buf()
+}
