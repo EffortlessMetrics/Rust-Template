@@ -267,7 +267,7 @@ stories:
             tags: [kernel]
             must_have_ac: true
             tests:
-              - { type: unit, tag: "devex_flows_schema_valid", file: "crates/spec-runtime/src/devex.rs" }
+              - { type: unit, tag: "devex_flows_schema_valid", module: "devex::tests::devex_flows_schema_valid", file: "crates/spec-runtime/src/devex.rs" }
 
           - id: AC-PLT-015
             text: "`cargo xtask selftest` enforces devex contract (required commands exist)"
@@ -404,7 +404,7 @@ stories:
             tags: [kernel]
             must_have_ac: true
             tests:
-              - { type: unit, tag: "graph_invariants_req_has_ac", file: "crates/spec-runtime/src/graph.rs" }
+              - { type: unit, tag: "graph_invariants_req_has_ac", module: "graph::tests::graph_invariants_req_has_ac", file: "crates/spec-runtime/src/graph.rs" }
 
           - id: AC-TPL-GRAPH-AC-HAS-TEST
             text: >
@@ -413,7 +413,7 @@ stories:
             tags: [kernel]
             must_have_ac: true
             tests:
-              - { type: unit, tag: "ac_with_tests_produces_graph_node_and_edge", file: "crates/spec-runtime/src/graph.rs" }
+              - { type: unit, tag: "ac_with_tests_produces_graph_node_and_edge", module: "graph::tests::ac_with_tests_produces_graph_node_and_edge", file: "crates/spec-runtime/src/graph.rs" }
 
           - id: AC-TPL-GRAPH-COMMAND-REACHABLE
             text: >
@@ -423,7 +423,7 @@ stories:
             tags: [kernel]
             must_have_ac: true
             tests:
-              - { type: unit, tag: "graph_invariants_command_reachable", file: "crates/spec-runtime/src/graph.rs" }
+              - { type: unit, tag: "graph_invariants_command_reachable", module: "graph::tests::graph_invariants_command_reachable", file: "crates/spec-runtime/src/graph.rs" }
 
           - id: AC-TPL-GRAPH-SELFTEST
             text: >
@@ -572,7 +572,7 @@ stories:
             tags: [kernel]
             must_have_ac: true
             tests:
-              - { type: unit, tag: "graph_export_mermaid", file: "crates/spec-runtime/src/graph.rs" }
+              - { type: unit, tag: "graph_export_mermaid", module: "graph::tests::graph_export_mermaid", file: "crates/spec-runtime/src/graph.rs" }
               - { type: bdd, tag: "@AC-TPL-GRAPH-MERMAID", file: "specs/features/graph_visualization.feature" }
 
       - id: REQ-TPL-LOCAL-RUNTIME
@@ -612,6 +612,7 @@ stories:
             must_have_ac: true
             tests:
               - { type: manual, tag: "git_commit_verify" }
+              - { type: bdd, tag: "@AC-TPL-HOOKS-INSTALL", file: "specs/features/git_hooks.feature" }
 
       - id: REQ-TPL-AGENT-INTERFACE
         title: "Agent-Native Interface"
@@ -632,6 +633,7 @@ stories:
             must_have_ac: true
             tests:
               - { type: manual, tag: "agent_skill_discovery" }
+              - { type: bdd, tag: "@AC-TPL-AGENT-SKILLS", file: "specs/features/xtask_devex.feature" }
 
           - id: AC-TPL-AGENT-HINTS
             text: >
@@ -661,6 +663,7 @@ stories:
             must_have_ac: true
             tests:
               - { type: docs, tag: "skills_guide_exists" }
+              - { type: bdd, tag: "@AC-TPL-SKILLS-GUIDE-001", file: "specs/features/xtask_devex.feature" }
 
           - id: AC-TPL-SKILLS-ALIGN-001
             text: >
@@ -671,6 +674,7 @@ stories:
             must_have_ac: true
             tests:
               - { type: manual, tag: "skills_alignment_review" }
+              - { type: bdd, tag: "@AC-TPL-SKILLS-ALIGN-001", file: "specs/features/xtask_devex.feature" }
 
       - id: REQ-TPL-SKILLS-TOOLING
         title: "Rust-native Skills formatting and linting"
@@ -742,7 +746,8 @@ stories:
             tags: [kernel]
             must_have_ac: true
             tests:
-              - { type: unit, tag: "task_status_transitions" }
+              - { type: unit, tag: "test_allowed_transitions", module: "governance::tests::test_allowed_transitions", file: "crates/business-core/src/lib.rs" }
+              - { type: unit, tag: "test_forbidden_transitions", module: "governance::tests::test_forbidden_transitions", file: "crates/business-core/src/lib.rs" }
 
   # When adding your domain features:
   # - Copy the structure above (story → requirement → AC → tests)

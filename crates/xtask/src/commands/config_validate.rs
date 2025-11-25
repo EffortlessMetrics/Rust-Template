@@ -17,7 +17,9 @@ pub fn run(env: &str) -> Result<()> {
     println!("Parsed config schema for env='{}' successfully", env);
     if let Some(Value::Sequence(secrets)) = doc.get("secrets") {
         for s in secrets.iter() {
-            if let Value::Mapping(m) = s && !m.contains_key(Value::from("key")) {
+            if let Value::Mapping(m) = s
+                && !m.contains_key(Value::from("key"))
+            {
                 anyhow::bail!("each secret entry must have a 'key' field");
             }
         }

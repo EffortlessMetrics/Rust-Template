@@ -2,10 +2,13 @@ use anyhow::{Context, Result};
 use colored::Colorize;
 use quick_xml::Reader;
 use quick_xml::events::Event;
+use regex::Regex;
 use serde::Deserialize;
-use std::collections::HashMap;
+use spec_runtime::ledger::TestMapping;
+use std::collections::{HashMap, HashSet};
 use std::fs;
 use std::path::{Path, PathBuf};
+use std::process::Command;
 use walkdir::WalkDir;
 
 use super::ac_parsing::{
@@ -47,6 +50,9 @@ struct Ac {
     text: String,
     status: AcStatus,
     scenarios: Vec<String>,
+    tests: Vec<TestMapping>,
+    tests_total: usize,
+    tests_executed: usize,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -75,6 +81,13 @@ impl std::fmt::Display for ReportStatus {
         };
         write!(f, "{label}")
     }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum TestOutcome {
+    Pass,
+    Fail,
+    Missing,
 }
 
 impl AcStatus {
@@ -120,6 +133,8 @@ struct Requirement {
 struct AcceptanceCriteria {
     id: String,
     text: String,
+    #[serde(default)]
+    tests: Vec<TestMapping>,
 }
 
 pub fn run(args: AcStatusArgs) -> Result<()> {
@@ -147,7 +162,7 @@ pub fn run(args: AcStatusArgs) -> Result<()> {
     //
     // FALLBACK PATH: Structured JSON report from acceptance tests
     // The Cucumber JSON format is available as a fallback option.
-    let (scenarios, ac_results) = if junit_status == ReportStatus::NonEmpty {
+    let (scenarios, bdd_results) = if junit_status == ReportStatus::NonEmpty {
         if !args.verbosity.is_quiet() {
             println!("Parsing JUnit results (primary path): {}", args.junit.display());
         }
@@ -182,18 +197,18 @@ pub fn run(args: AcStatusArgs) -> Result<()> {
         );
     };
 
-    // Map scenarios to ACs and update status
+    // Map scenarios to ACs
     for scenario in scenarios.values() {
         if let Some(ac) = acs.get_mut(&scenario.ac_id) {
             ac.scenarios.push(scenario.name.clone());
         }
     }
 
-    for (ac_id, status) in &ac_results {
-        if let Some(ac) = acs.get_mut(ac_id) {
-            ac.status = status.clone();
-        }
-    }
+    // Collect unit test results for ACs that declare unit tests
+    let unit_results = collect_unit_test_results(&acs, args.verbosity)?;
+
+    // Combine BDD + unit results into a final AC status
+    update_ac_statuses(&mut acs, &bdd_results, &unit_results);
 
     if args.summary {
         // Print concise summary instead of generating markdown file
@@ -257,6 +272,7 @@ fn parse_ledger(ledger_path: &Path) -> Result<HashMap<String, Ac>> {
     for story in ledger.stories {
         for req in story.requirements {
             for ac in req.acceptance_criteria {
+                let tests_total = ac.tests.iter().filter(|t| is_automated_test(t)).count();
                 acs.insert(
                     ac.id.clone(),
                     Ac {
@@ -266,6 +282,9 @@ fn parse_ledger(ledger_path: &Path) -> Result<HashMap<String, Ac>> {
                         text: ac.text,
                         status: AcStatus::Unknown,
                         scenarios: Vec::new(),
+                        tests: ac.tests,
+                        tests_total,
+                        tests_executed: 0,
                     },
                 );
             }
@@ -273,6 +292,154 @@ fn parse_ledger(ledger_path: &Path) -> Result<HashMap<String, Ac>> {
     }
 
     Ok(acs)
+}
+
+fn has_unit_tests(acs: &HashMap<String, Ac>) -> bool {
+    acs.values().any(|ac| ac.tests.iter().any(|t| t.test_type.eq_ignore_ascii_case("unit")))
+}
+
+fn is_automated_test(test: &TestMapping) -> bool {
+    matches!(test.test_type.to_lowercase().as_str(), "unit" | "integration" | "bdd")
+}
+
+fn collect_unit_test_results(
+    acs: &HashMap<String, Ac>,
+    verbosity: crate::Verbosity,
+) -> Result<HashMap<String, bool>> {
+    if !has_unit_tests(acs) {
+        return Ok(HashMap::new());
+    }
+
+    if !verbosity.is_quiet() {
+        println!("Running unit tests for AC mappings...");
+    }
+
+    let mut cmd = Command::new("cargo");
+    cmd.args(["test", "--workspace", "--exclude", "acceptance", "--exclude", "xtask"]);
+    // Avoid clobbering the active xtask binary on Windows by using a throwaway target dir
+    cmd.env("CARGO_TARGET_DIR", "target/ac-status-unit");
+
+    let output = cmd.output().context("Failed to run cargo test for unit AC mappings")?;
+    let succeeded = output.status.success();
+
+    let mut results = HashMap::new();
+    let test_line = Regex::new(r"^test\s+([^\s]+)\s+\.\.\.\s+(ok|FAILED)$").unwrap();
+    for line in String::from_utf8_lossy(&output.stdout).lines() {
+        if let Some(caps) = test_line.captures(line.trim()) {
+            let name = caps[1].to_string();
+            let status = &caps[2] == "ok";
+            results.insert(name, status);
+        }
+    }
+
+    if !verbosity.is_quiet() {
+        println!("  Captured results for {} unit tests", results.len());
+    }
+
+    if !succeeded {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        eprintln!(
+            "{} unit test run reported failures (status {:?})\nstderr:\n{}",
+            "[WARN]".yellow(),
+            output.status.code(),
+            stderr
+        );
+    }
+
+    Ok(results)
+}
+
+fn outcome_for_unit_test(
+    mapping: &TestMapping,
+    unit_results: &HashMap<String, bool>,
+) -> TestOutcome {
+    let mut candidates: HashSet<String> = HashSet::new();
+
+    if let Some(module) = &mapping.module {
+        candidates.insert(module.clone());
+        if let Some((_, rest)) = module.split_once("::") {
+            candidates.insert(rest.to_string());
+        }
+        if let Some(last) = module.rsplit("::").next() {
+            candidates.insert(last.to_string());
+        }
+    }
+
+    if !mapping.tag.is_empty() {
+        candidates.insert(mapping.tag.clone());
+        if let Some((_, rest)) = mapping.tag.split_once("::") {
+            candidates.insert(rest.to_string());
+        }
+    }
+
+    for candidate in candidates {
+        if let Some(&passed) = unit_results.get(&candidate) {
+            return if passed { TestOutcome::Pass } else { TestOutcome::Fail };
+        }
+    }
+
+    TestOutcome::Missing
+}
+
+fn update_ac_statuses(
+    acs: &mut HashMap<String, Ac>,
+    bdd_results: &HashMap<String, AcStatus>,
+    unit_results: &HashMap<String, bool>,
+) {
+    for ac in acs.values_mut() {
+        ac.tests_executed = 0;
+
+        if ac.tests_total == 0 {
+            ac.status = AcStatus::Unknown;
+            continue;
+        }
+
+        let mut failed = false;
+        let mut missing = false;
+
+        for test in &ac.tests {
+            if !is_automated_test(test) {
+                continue;
+            }
+
+            let outcome = match test.test_type.to_lowercase().as_str() {
+                "bdd" | "integration" => bdd_results
+                    .get(&ac.id)
+                    .cloned()
+                    .map(|status| match status {
+                        AcStatus::Pass => TestOutcome::Pass,
+                        AcStatus::Fail => TestOutcome::Fail,
+                        AcStatus::Unknown => TestOutcome::Missing,
+                    })
+                    .unwrap_or(TestOutcome::Missing),
+                "unit" => outcome_for_unit_test(test, unit_results),
+                _ => TestOutcome::Missing,
+            };
+
+            match outcome {
+                TestOutcome::Pass => {
+                    ac.tests_executed += 1;
+                }
+                TestOutcome::Fail => {
+                    ac.tests_executed += 1;
+                    failed = true;
+                }
+                TestOutcome::Missing => {
+                    missing = true;
+                }
+            }
+        }
+
+        ac.status = if failed {
+            AcStatus::Fail
+        } else if ac.tests_executed == ac.tests_total {
+            AcStatus::Pass
+        } else if missing {
+            AcStatus::Unknown
+        } else {
+            AcStatus::Unknown
+        };
+    }
 }
 
 #[allow(dead_code)]
@@ -435,7 +602,7 @@ fn print_summary(acs: &HashMap<String, Ac>) -> Result<()> {
     println!("AC Status Summary:");
     println!("  {} {} passing", AcStatus::Pass.icon(), passing);
     println!("  {} {} failing", AcStatus::Fail.icon(), failing);
-    println!("  {} {} unknown (no mapped scenarios)", AcStatus::Unknown.icon(), unknown);
+    println!("  {} {} unknown (no mapped tests)", AcStatus::Unknown.icon(), unknown);
 
     if failing > 0 {
         anyhow::bail!("One or more ACs failed");
@@ -460,7 +627,7 @@ fn generate_status_md(
     output.push_str("  AUTO-GENERATED FILE: DO NOT EDIT BY HAND.\n\n");
     output.push_str("  Source of truth:\n");
     output.push_str("    - Specs: specs/spec_ledger.yaml\n");
-    output.push_str("    - Tests: specs/features/**/*.feature + acceptance test output\n");
+    output.push_str("    - Tests: specs/features/**/*.feature + unit test results (cargo test)\n");
     output.push_str("  Generated by:\n");
     output.push_str("    - cargo run -p xtask -- ac-status\n");
     output.push_str("  Regenerated by:\n");
@@ -470,11 +637,11 @@ fn generate_status_md(
     output.push_str("    cargo xtask ac-status\n");
     output.push_str("-->\n\n");
     output.push_str("# Feature Status\n\n");
-    output.push_str("Auto-generated AC status from acceptance tests.\n\n");
+    output.push_str("Auto-generated AC status from acceptance (BDD) and unit tests.\n\n");
 
     output.push_str("## AC Status Summary\n\n");
-    output.push_str("| AC ID | Story | Requirement | Status | Scenarios |\n");
-    output.push_str("|-------|-------|-------------|--------|----------|\n");
+    output.push_str("| AC ID | Story | Requirement | Status | Tests (executed/total) |\n");
+    output.push_str("|-------|-------|-------------|--------|------------------------|\n");
 
     // Sort ACs for deterministic output
     let mut sorted_acs: Vec<_> = acs.values().collect();
@@ -488,17 +655,18 @@ fn generate_status_md(
             ac.req_id,
             ac.status.icon(),
             ac.status.name(),
-            ac.scenarios.len()
+            format!("{} / {}", ac.tests_executed, ac.tests_total)
         ));
     }
 
     // Unmapped ACs
-    let mut unmapped_acs: Vec<_> = acs.values().filter(|ac| ac.scenarios.is_empty()).collect();
+    let mut unmapped_acs: Vec<_> =
+        acs.values().filter(|ac| ac.tests_total == 0 || ac.tests_executed == 0).collect();
     unmapped_acs.sort_by_key(|ac| &ac.id);
 
     if !unmapped_acs.is_empty() {
         output.push_str("\n## Unmapped ACs\n\n");
-        output.push_str("ACs with no mapped scenarios:\n\n");
+        output.push_str("ACs with no mapped or executed tests:\n\n");
         for ac in unmapped_acs {
             output.push_str(&format!("- {}: {}\n", ac.id, ac.text));
         }
@@ -530,6 +698,7 @@ fn generate_status_md(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::collections::HashMap;
     use std::fs;
     use tempfile::TempDir;
 
@@ -547,6 +716,90 @@ mod tests {
         let populated = temp_dir.path().join("populated.xml");
         fs::write(&populated, "<xml>data</xml>").unwrap();
         assert_eq!(ReportStatus::from_path(&populated), ReportStatus::NonEmpty);
+    }
+
+    #[test]
+    fn update_ac_statuses_combines_bdd_and_unit_results() {
+        let mut acs = HashMap::new();
+
+        acs.insert(
+            "AC-UNIT".to_string(),
+            Ac {
+                id: "AC-UNIT".to_string(),
+                story_id: "US-TEST".to_string(),
+                req_id: "REQ-TEST".to_string(),
+                text: "Unit-backed AC".to_string(),
+                status: AcStatus::Unknown,
+                scenarios: Vec::new(),
+                tests_total: 1,
+                tests_executed: 0,
+                tests: vec![TestMapping {
+                    test_type: "unit".to_string(),
+                    tag: "graph_invariants_req_has_ac".to_string(),
+                    file: None,
+                    module: Some("graph::tests::graph_invariants_req_has_ac".to_string()),
+                }],
+            },
+        );
+
+        acs.insert(
+            "AC-BDD".to_string(),
+            Ac {
+                id: "AC-BDD".to_string(),
+                story_id: "US-TEST".to_string(),
+                req_id: "REQ-TEST".to_string(),
+                text: "BDD-backed AC".to_string(),
+                status: AcStatus::Unknown,
+                scenarios: vec!["Scenario A".to_string()],
+                tests_total: 1,
+                tests_executed: 0,
+                tests: vec![TestMapping {
+                    test_type: "integration".to_string(),
+                    tag: "@AC-BDD".to_string(),
+                    file: None,
+                    module: None,
+                }],
+            },
+        );
+
+        let bdd_results = HashMap::from([("AC-BDD".to_string(), AcStatus::Fail)]);
+        let unit_results =
+            HashMap::from([("graph::tests::graph_invariants_req_has_ac".to_string(), true)]);
+
+        update_ac_statuses(&mut acs, &bdd_results, &unit_results);
+
+        let ac_unit = acs.get("AC-UNIT").unwrap();
+        assert_eq!(ac_unit.status, AcStatus::Pass);
+        assert_eq!(ac_unit.tests_executed, 1);
+
+        let ac_bdd = acs.get("AC-BDD").unwrap();
+        assert_eq!(ac_bdd.status, AcStatus::Fail);
+        assert_eq!(ac_bdd.tests_executed, 1);
+
+        acs.insert(
+            "AC-MISSING".to_string(),
+            Ac {
+                id: "AC-MISSING".to_string(),
+                story_id: "US-TEST".to_string(),
+                req_id: "REQ-TEST".to_string(),
+                text: "Missing coverage".to_string(),
+                status: AcStatus::Unknown,
+                scenarios: Vec::new(),
+                tests_total: 1,
+                tests_executed: 0,
+                tests: vec![TestMapping {
+                    test_type: "unit".to_string(),
+                    tag: "nonexistent_test".to_string(),
+                    file: None,
+                    module: Some("missing::test".to_string()),
+                }],
+            },
+        );
+
+        update_ac_statuses(&mut acs, &bdd_results, &unit_results);
+        let ac_missing = acs.get("AC-MISSING").unwrap();
+        assert_eq!(ac_missing.status, AcStatus::Unknown);
+        assert_eq!(ac_missing.tests_executed, 0);
     }
 
     #[test]

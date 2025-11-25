@@ -83,10 +83,15 @@ pub fn build_graph(ledger: &SpecLedger, devex: &DevExFlows, docs: &DocIndex) -> 
                 // Add test nodes and edges for each test mapping
                 for (idx, test_mapping) in ac.tests.iter().enumerate() {
                     let test_node_id = format!("{}:test:{}", ac.id, idx);
+                    let base_label = test_mapping
+                        .module
+                        .as_ref()
+                        .cloned()
+                        .unwrap_or_else(|| test_mapping.tag.clone());
                     let test_label = if let Some(file) = &test_mapping.file {
-                        format!("{} - {}", test_mapping.tag, file)
+                        format!("{base_label} - {file}")
                     } else {
-                        test_mapping.tag.clone()
+                        base_label
                     };
 
                     graph.nodes.push(Node {
@@ -303,11 +308,13 @@ mod tests {
                                 test_type: "unit".to_string(),
                                 tag: "test_tag_1".to_string(),
                                 file: Some("tests/test_file.rs".to_string()),
+                                module: None,
                             },
                             TestMapping {
                                 test_type: "integration".to_string(),
                                 tag: "@test-tag-2".to_string(),
                                 file: None,
+                                module: None,
                             },
                         ],
                     }],
@@ -395,6 +402,7 @@ mod tests {
                             test_type: "unit".to_string(),
                             tag: "test_tag".to_string(),
                             file: None,
+                            module: None,
                         }],
                     }],
                 }],
@@ -482,6 +490,7 @@ mod tests {
                             test_type: "unit".to_string(),
                             tag: "test_tag".to_string(),
                             file: None,
+                            module: None,
                         }],
                     }],
                 }],
@@ -643,6 +652,7 @@ mod tests {
                             test_type: "unit".to_string(),
                             tag: "test_tag".to_string(),
                             file: None,
+                            module: None,
                         }],
                     }],
                 }],

@@ -10,8 +10,13 @@
 |---------|---------|---------|
 | `cargo xtask test-ac <AC-ID>` | Test single acceptance criterion | `cargo xtask test-ac AC-PLT-001` |
 | `cargo xtask test-changed [--base <ref>]` | Test only changed files | `cargo xtask test-changed` |
-| `cargo xtask check` | Fast core checks (fmt, clippy, unit tests) | `cargo xtask check` |
+| `cargo xtask check` | Fast core checks (fmt, clippy, unit tests, change-aware BDD) | `cargo xtask check` |
 | `cargo xtask selftest` | Full validation (Tier-1 only) | `nix develop && cargo xtask selftest` |
+
+**Default validation ladder**
+- After edits: `cargo xtask test-changed`
+- Specific AC touched: `cargo xtask test-ac <AC-ID>`
+- Pre-merge (Tier-1): `nix develop && cargo xtask selftest`
 
 ---
 
@@ -93,13 +98,20 @@ Test plan:
   2. Run unit tests: xtask (xtask crate changes)
 
 Executing tests:
-  [run] cargo test -p acceptance --test acceptance -- --tags "@AC-PLT-018"
+  [run] cargo test -p acceptance --test acceptance (tags: "@AC-PLT-018")
     [ok] Changed feature files
   [run] cargo test -p xtask
     [ok] xtask crate changes
 
 [ok] All tests passed
 ```
+
+**Tag syntax**
+- Feature files should tag scenarios as `@AC-...`
+- `CUCUMBER_TAG_EXPRESSION` accepts `AC-...` or `@AC-...`; `test-changed` normalizes to `@AC-...` when invoking Cucumber
+
+**Plan-only preview**
+- `XTASK_TEST_CHANGED_PLAN_ONLY=1 XTASK_CHANGED_BASE=HEAD cargo xtask test-changed` prints the change-aware plan and tag expression without executing tests (handy for acceptance tests or slow machines)
 
 **No changes detected:**
 ```
@@ -283,6 +295,14 @@ cargo xtask test-ac AC-PLT-002
 cargo test -p acceptance --test acceptance -- --tags "@AC-PLT-001 or @AC-PLT-002"
 ```
 
+### Plan-only (no test execution)
+
+```bash
+XTASK_TEST_CHANGED_PLAN_ONLY=1 cargo xtask test-changed
+```
+
+Shows the change-aware plan and `CUCUMBER_TAG_EXPRESSION` without running any tests. Combine with `XTASK_CHANGED_BASE=HEAD` for fully local diffs.
+
 ### Custom Test Plans
 
 For complex changes spanning multiple crates:
@@ -433,7 +453,7 @@ match file_path {
 Potential additions (not yet implemented):
 
 1. **Parallel execution:** Run independent test groups concurrently
-2. **Dry-run mode:** `--dry-run` to show plan without executing
+2. **First-class plan-only flag:** Promote `XTASK_TEST_CHANGED_PLAN_ONLY` to `--plan-only`
 3. **Test caching:** Skip tests for unchanged code
 4. **Impact graph:** Use cargo metadata to detect transitive impacts
 5. **Watch mode:** `--watch` to re-run on file changes

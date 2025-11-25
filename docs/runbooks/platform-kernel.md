@@ -69,6 +69,30 @@ Returns high-level governance health status.
 curl http://localhost:8080/platform/status
 ```
 
+## Kernel Contract
+
+- **Kernel AC set:** Tracked in `specs/spec_ledger.yaml` and `docs/feature_status.md` (all kernel ACs are ✅ via `cargo xtask selftest`).
+  - DevEx: AC-PLT-001/003/008/014/018 (doctor, check, sbom-local, devex flows, dev-up)
+  - Observability/Core: AC-TPL-001/002/003/004/007 (health, version, error envelope, metrics)
+  - Governance Graph: AC-TPL-GRAPH-REQ-HAS-AC / AC-HAS-TEST / COMMAND-REACHABLE / SELFTEST / MERMAID
+  - Tasks + Agent: AC-TPL-TASKS-CLI/CREATE-CLI/UPDATE-CLI/HTTP, AC-TPL-AGENT-SKILLS, AC-TPL-AGENT-HINTS
+- **Required xtask commands (Tier-1 gate):**
+  - `cargo xtask selftest` (single gate; runs check + BDD + ac-status + graph invariants)
+  - `cargo xtask check` (fmt/clippy/tests + change-aware BDD)
+  - `cargo xtask test-changed --plan-only` (selective testing ladder)
+  - `cargo xtask test-ac <AC-ID>` (targeted AC execution)
+  - `cargo xtask ac-status` (AC ↔ test mapping; reads BDD + unit results)
+  - `cargo xtask graph-export --check` (graph invariants)
+  - `cargo xtask tasks-list | task-create | task-update` (tasks surfacing CLI)
+- **Required platform endpoints:**
+  - `/platform/status`, `/platform/graph`, `/platform/devex/flows`, `/platform/docs/index`
+  - `/platform/tasks` (list/filter) and `/platform/tasks/{id}/status` (update)
+  - `/platform/agent/hints` (agent-facing task suggestions)
+- **Metadata & release expectations:**
+  - `specs/service_metadata.yaml` template_version: `3.2.0`, links to ROADMAP, kernel contract, AGENT_GUIDE, SELECTIVE_TESTING, platform support.
+  - Release bundles via `cargo xtask release-bundle <version>` capture selftest, AC status, tasks, and policies.
+  - Governance evidence lives in `release_evidence/` and `FRICTION_LOG.md`.
+
 ## Troubleshooting
 
 ### Graph endpoint returns 500

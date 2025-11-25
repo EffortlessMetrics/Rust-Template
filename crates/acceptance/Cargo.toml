@@ -15,9 +15,10 @@ gherkin = "0.14.0"
 tokio = { version = "1.48.0", features=["rt-multi-thread","macros"] }
 axum = "0.8.7"
 tower = { version = "0.5.2", features = ["util"] }
-http = "1.3.1"
+http = "1.4.0"
 http-body-util = "0.1.3"
-regex = "1.11.1"
+regex = "1.12.2"
+shell-words = "1.1.0"
 
 # Internal crates
 app-http = { path = "../app-http" }
@@ -26,4 +27,4 @@ telemetry = { path = "../telemetry" }
 adapters-spec-fs = { path = "../adapters-spec-fs" }
 spec-runtime = { path = "../spec-runtime" }
 tracing.workspace = true
-tempfile = "3.10.1"
+tempfile = "3.23.0"

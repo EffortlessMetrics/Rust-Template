@@ -2,6 +2,7 @@ service_id: rust-template
 display_name: "Rust-as-Spec Platform Cell"
 description: >
   Governed Rust service template with selftest, platform APIs, and agent support.
+template_version: "3.2.0"
 
 ownership:
   team: plat-governance
@@ -16,10 +17,14 @@ lifecycle:
   runtime: [kubernetes]
 
 links:
-  docs: "https://.../docs"
+  roadmap: "docs/ROADMAP.md"
+  kernel_contract: "docs/runbooks/platform-kernel.md"
+  agent_guide: "docs/AGENT_GUIDE.md"
+  selective_testing: "docs/SELECTIVE_TESTING.md"
   ui: "http://localhost:8080/ui"
   status: "http://localhost:8080/platform/status"
   repo: "https://github.com/EffortlessMetrics/Rust-Template"
+  support: "docs/MISSING_MANUAL.md"
 
 tags:
   - rust

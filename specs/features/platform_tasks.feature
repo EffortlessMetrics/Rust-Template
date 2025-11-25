@@ -25,6 +25,27 @@ Feature: Platform Tasks Management
     And the output should contain "TASK-003"
     And the output should contain "Implement API"
 
+  @AC-TPL-TASKS-CREATE-CLI
+  Scenario: Create a new task via CLI
+    Given the following tasks exist in "specs/tasks.yaml":
+      | id            | title              | status | requirement                  |
+      | TASK-SEED-001 | Seed existing task | Todo   | REQ-TPL-PLATFORM-INTROSPECTION |
+    When I run "cargo xtask task-create --id TASK-NEW-001 --title 'New platform task' --req REQ-TPL-PLATFORM-INTROSPECTION"
+    Then the command should succeed
+    And task "TASK-NEW-001" should exist with title "New platform task" and requirement "REQ-TPL-PLATFORM-INTROSPECTION"
+    And task "TASK-NEW-001" should have status "Todo" in tasks.yaml
+
+  @AC-TPL-TASKS-UPDATE-CLI
+  Scenario: Update a task via CLI
+    Given the following tasks exist in "specs/tasks.yaml":
+      | id            | title               | status | requirement     |
+      | TASK-UPD-001  | Update candidate    | Todo   | REQ-TPL-HEALTH |
+    When I run "cargo xtask task-update --id TASK-UPD-001 --status InProgress --owner agent --title 'Updated platform task'"
+    Then the command should succeed
+    And task "TASK-UPD-001" should have status "InProgress" in tasks.yaml
+    And task "TASK-UPD-001" should have owner "agent"
+    And task "TASK-UPD-001" should have title "Updated platform task"
+
   # HTTP API Tests
   @AC-TPL-TASKS-HTTP
   Scenario: Get tasks via HTTP API

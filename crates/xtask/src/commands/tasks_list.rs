@@ -1,9 +1,10 @@
 use anyhow::Result;
 use colored::Colorize;
-use std::path::PathBuf;
+
+use crate::commands::tasks;
 
 pub fn run() -> Result<()> {
-    let root = spec_root();
+    let root = tasks::spec_root();
     let tasks_spec = spec_runtime::load_tasks(&root.join("specs/tasks.yaml"))?;
 
     println!("{}", "Tasks (from specs/tasks.yaml)".blue().bold());
@@ -25,12 +26,4 @@ pub fn run() -> Result<()> {
     println!("\nFor details: cargo xtask tasks-list --help");
 
     Ok(())
-}
-
-fn spec_root() -> PathBuf {
-    if let Ok(root) = std::env::var("SPEC_ROOT") {
-        return PathBuf::from(root);
-    }
-
-    PathBuf::from(env!("CARGO_MANIFEST_DIR")).parent().unwrap().parent().unwrap().to_path_buf()
 }
