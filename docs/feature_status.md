@@ -55,7 +55,7 @@ Auto-generated AC status from acceptance (BDD) and unit tests.
 | AC-TPL-GRAPH-REQ-HAS-AC | US-TPL-PLT-001 | REQ-TPL-GRAPH-INVARIANTS | [PASS] pass | 1 / 1 |
 | AC-TPL-GRAPH-SELFTEST | US-TPL-PLT-001 | REQ-TPL-GRAPH-INVARIANTS | [PASS] pass | 1 / 1 |
 | AC-TPL-HOOKS-INSTALL | US-TPL-PLT-001 | REQ-TPL-GOV-HOOKS | [PASS] pass | 1 / 1 |
-| AC-TPL-LOCAL-DOCKER | US-TPL-PLT-001 | REQ-TPL-LOCAL-RUNTIME | [UNKNOWN] unknown | 0 / 0 |
+| AC-TPL-LOCAL-DOCKER | US-TPL-PLT-001 | REQ-TPL-LOCAL-RUNTIME | [PASS] pass | 1 / 1 |
 | AC-TPL-PLATFORM-DEVEX | US-TPL-PLT-001 | REQ-TPL-PLATFORM-INTROSPECTION | [PASS] pass | 1 / 1 |
 | AC-TPL-PLATFORM-DOCS | US-TPL-PLT-001 | REQ-TPL-PLATFORM-INTROSPECTION | [PASS] pass | 1 / 1 |
 | AC-TPL-PLATFORM-GRAPH | US-TPL-PLT-001 | REQ-TPL-PLATFORM-INTROSPECTION | [PASS] pass | 1 / 1 |
@@ -76,10 +76,3 @@ Auto-generated AC status from acceptance (BDD) and unit tests.
 | AC-TPL-TASKS-CREATE-CLI | US-TPL-PLT-001 | REQ-TPL-PLATFORM-TASKS | [PASS] pass | 1 / 1 |
 | AC-TPL-TASKS-HTTP | US-TPL-PLT-001 | REQ-TPL-PLATFORM-TASKS | [PASS] pass | 1 / 1 |
 | AC-TPL-TASKS-UPDATE-CLI | US-TPL-PLT-001 | REQ-TPL-PLATFORM-TASKS | [PASS] pass | 1 / 1 |
-
-## Unmapped ACs
-
-ACs with no mapped or executed tests:
-
-- AC-TPL-LOCAL-DOCKER: Optional local Docker compose (Postgres + Jaeger) aligns with the application's default local config; convenience only, not a gating kernel requirement.
-

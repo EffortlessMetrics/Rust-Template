@@ -4,6 +4,7 @@ use std::path::Path;
 pub mod devex;
 pub mod docs;
 pub mod graph;
+pub mod local_docker;
 pub mod ledger;
 pub mod tasks;
 
