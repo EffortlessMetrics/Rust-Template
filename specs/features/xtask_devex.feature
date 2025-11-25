@@ -83,6 +83,17 @@ Feature: Developer Experience Commands
     And the output should contain "clippy"
     And the output should contain "tests"
 
+  @AC-PLT-003 @selective_testing
+  Scenario: test-changed builds tag expression for changed features
+    Given a temporary git worktree for test-changed
+    And I add a selective test-changed feature file
+    When I run "cargo xtask test-changed" in plan-only mode
+    Then the command should succeed
+    And the output should contain "Plan-only mode enabled"
+    And the output should contain "@AC-PLT-003"
+    And the output should contain "CUCUMBER_TAG_EXPRESSION=\"@AC-PLT-003\""
+    And I clean up the selective testing worktree
+
   @AC-PLT-004
   Scenario: adr-new creates numbered ADR from template with next steps
     When I run "cargo xtask adr-new test-adr-scaffolding"

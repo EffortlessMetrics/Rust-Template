@@ -201,6 +201,45 @@ enum Commands {
     /// Show flow-based command map
     #[command(next_help_heading = "Meta")]
     HelpFlows,
+    /// Create a new task in specs/tasks.yaml
+    TaskCreate {
+        /// Task ID (e.g., TASK-123)
+        #[arg(long)]
+        id: String,
+        /// Task title
+        #[arg(long)]
+        title: String,
+        /// Requirement ID the task belongs to
+        #[arg(long = "req")]
+        requirement: String,
+        /// Acceptance criteria linked to the task (repeatable)
+        #[arg(long = "ac")]
+        acs: Vec<String>,
+        /// Optional owner label
+        #[arg(long)]
+        owner: Option<String>,
+        /// Task status (Todo, InProgress, Review, Done)
+        #[arg(long)]
+        status: Option<String>,
+        /// Labels to attach to the task
+        #[arg(long)]
+        labels: Vec<String>,
+    },
+    /// Update an existing task in specs/tasks.yaml
+    TaskUpdate {
+        /// Task ID to update
+        #[arg(long)]
+        id: String,
+        /// New title (optional)
+        #[arg(long)]
+        title: Option<String>,
+        /// New owner (optional)
+        #[arg(long)]
+        owner: Option<String>,
+        /// New status (Todo, InProgress, Review, Done)
+        #[arg(long)]
+        status: Option<String>,
+    },
     /// Install git hooks for pre-commit governance
     #[command(next_help_heading = "Onboarding")]
     InstallHooks,
@@ -216,6 +255,9 @@ enum Commands {
         /// Git ref to compare against (default: origin/main)
         #[arg(long, default_value = "origin/main")]
         base: String,
+        /// Plan-only mode: compute test plan without executing it (env: XTASK_TEST_CHANGED_PLAN_ONLY)
+        #[arg(long, action = clap::ArgAction::SetTrue)]
+        plan_only: bool,
     },
 }
 
@@ -290,6 +332,12 @@ fn main() -> Result<()> {
         Commands::GraphExport { format, check } => {
             commands::graph_export::run(commands::graph_export::GraphExportArgs { format, check })
         }
+        Commands::TaskCreate { id, title, requirement, acs, owner, status, labels } => {
+            commands::tasks::create_task(&id, &title, &requirement, &acs, owner, status, &labels)
+        }
+        Commands::TaskUpdate { id, title, owner, status } => {
+            commands::tasks::update_task(&id, title, owner, status)
+        }
         Commands::TasksList => commands::tasks_list::run(),
         Commands::FmtAll => commands::fmt_all::run(),
         Commands::Hakari => commands::hakari::run(),
@@ -313,8 +361,8 @@ fn main() -> Result<()> {
         Commands::DevUp => commands::dev_up::run(),
         Commands::SkillsFmt => commands::skills::run_fmt(),
         Commands::SkillsLint => commands::skills::run_lint(),
-        Commands::TestChanged { base } => {
-            commands::test_changed::run(commands::test_changed::TestChangedArgs { base })
+        Commands::TestChanged { base, plan_only } => {
+            commands::test_changed::run(commands::test_changed::TestChangedArgs { base, plan_only })
         }
     }
 }

@@ -82,6 +82,7 @@ cargo xtask test-ac AC-PLT-001
 # Compare against different base
 cargo xtask test-changed --base main
 ```
+Tag expressions: use `@AC-...` (input with or without `@` is normalized for `CUCUMBER_TAG_EXPRESSION`). Default ladder: `test-changed` after edits -> `test-ac <ID>` when focused -> `nix develop && cargo xtask selftest` before merge (Tier-1).
 
 ### Validation
 ```bash

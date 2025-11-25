@@ -1,387 +1,160 @@
-# Roadmap: Self-Healing Platform Cell
+# Roadmap: Rust-as-Spec Platform Cell
 
-## Vision
-
-This template is a **self-healing platform cell**: a governed Rust service that enforces its own integrity through executable contracts and surfaces that state via multiple interfaces (CLI, HTTP API, Web UI, and agent skills).
-
-Unlike conventional templates that drift from their documented behavior over time, this repository maintains a living contract between **what the code promises** (specs) and **what it delivers** (runtime), enforced automatically by CI.
-
-It is deliberately **LLM-native and governance-bounded**: agents handle the mechanical work through named flows, deterministic gates (`cargo xtask selftest`, policy tests, graph invariants) keep changes honest, and humans still merge with evidence.
+This roadmap is the shortest path to “fully implemented”: kernel ACs green on Tier-1, flows and APIs stable enough that other teams can drop this cell in and trust it. Current state is roughly 85–90% complete.
 
 ---
 
-   - Concrete work items with recommended flows
-   - Context-aware `suggest-next` showing satisfied vs pending steps
-   - Agent-friendly guidance for LLM-native, governance-bounded workflows
+## Definition of “Fully Implemented”
 
-5. **Self-Governing Infrastructure**
-   - **7-Step Selftest** as mandatory CI gate:
-     1. Core checks (fmt, clippy, tests)
-     2. BDD acceptance tests (specs → runtime behavior)
-     3. AC status mapping & ADR references (traceability)
-     4. LLM context bundler (governance-bounded agent work)
-     5. Policy tests (compliance via OPA/Rego)
-     6. DevEx contract (required commands exist)
-     7. Graph invariants (structural integrity)
-   - **Graph invariants** prevent orphaned requirements, missing ACs, unreachable commands
-   - **Real-time policy status** exposed via `/platform/status`
-
-6. **Platform Introspection APIs** ([`/platform/*`](http://localhost:8080/platform/status))
-   - `/platform/status` – Governance health metrics
-   - `/platform/graph` – Full governance graph as JSON
-   - `/platform/tasks` – Work queue for agents and humans
-   - `/platform/agent/hints` – Suggested next tasks for agents
-   - `/platform/devex/flows` – Developer workflows
-   - `/platform/docs/index` – Documentation inventory
-
-7. **Web UI** ([`/ui`](http://localhost:8080/ui))
-   - Rust-native governance console (maud + htmx, zero build step)
-   - Dashboard: Platform health + policy status + governance contracts
-   - Graph: Interactive Mermaid visualization
-   - Flows: DevEx workflows + task guidance
-   - Tasks: Kanban board with task lifecycle management
-
-### Key Architectural Decisions
-
-- **Single source of truth**: YAML specs → Rust runtime → HTTP API → UI (no drift possible)
-- **Type-safe everything**: Specs deserialized via `serde`, validated at compile time
-- **Self-healing**: UI/API data derived from same loaders/validators that power CI
-- **Zero external dependencies**: UI compiles into binary, no npm/webpack/SPA complexity
-
-### What This Enables
-
-**For Platform Teams:**
-- Clone → `nix develop` → `cargo run` → working governed service in 5 minutes
-- Governance enforced automatically; impossible to merge broken specs/policies
-- Real-time visibility into compliance via dashboard
-
-**For Developers:**
-- `cargo xtask suggest-next --task implement_ac` tells you exactly what to do
-- Specs stay current because CI fails if they drift
-- Documentation validated as rigorously as code
-
-**For Agents (LLMs):**
-- Structured `/platform/*` APIs provide bounded context windows
-- `suggest-next` provides deterministic "next step" guidance
-- Selftest provides instant validation of agent-generated changes
+1. **Kernel is clean**
+   - `cargo xtask selftest` green on Tier-1 (Linux/macOS/WSL2).
+   - All ACs marked `kernel: true` or `must_have_ac: true` are ✅ (no ❌/❓).
+   - Graph invariants (REQ→AC, AC→tests, command reachability) enforced by code and referenced in the AC ledger.
+2. **DevEx is predictable**
+   - `xtask check`, `test-changed`, `test-ac`, `selftest` behave as documented.
+   - Selective testing (change-aware BDD) stable, including plan-only mode.
+   - Tier-2 (Windows) path documented and matches behaviour.
+3. **Agent interface is complete**
+   - `/platform/status`, `/platform/graph`, `/platform/tasks`, `/platform/agent/hints` match their ACs.
+   - Agent skills + validation ladder are aligned with actual CLI behaviour.
+4. **IDP / platform-cell story holds**
+   - `service_metadata.yaml` + `/platform/*` expose enough to treat this as a reusable IDP cell.
+   - Release bundles contain expected evidence (tasks, ACs, policies, selftest, friction log).
+   - Docs (`why-this-exists`, `AGENT_GUIDE`, `SELECTIVE_TESTING`, platform support) tell one coherent story.
 
 ---
 
-## Pilot Status: v3.0.0 – Completed
+## Phase 0 — Establish Baseline
 
-**Timeline:** 2025-Q1
-**Status:** ✅ Pilot phase complete; governance model validated
+**Objective:** Know exactly what is red on Tier-1 today.
 
-### What Was Built
-- **7-step selftest**: Core checks, BDD, AC mapping, bundler, policies, DevEx contract, graph invariants
-- **Platform APIs**: Read-only governance introspection + write-path task management
-- **Web UI**: Dashboard, graph visualization, Kanban board, flow guidance
-- **Agent Loop**: Task hints, status updates, low-resource mode
-- **DevEx Polish**: `dev-up`, `status`, selftest summary, standardized ports
+Commands:
+```bash
+cargo xtask selftest || true
+cargo xtask ac-status > target/ac-status-baseline.txt
+```
 
-### Lessons Learned
-- **Friction log was critical**: Captured real pain points and drove polish
-- **Selftest summary matters**: Condensed output reduced cognitive load
-- **Tasks as first-class entities**: Game-changer for agent workflows
-- **Port consistency**: Small details (3000 vs 8080) cause disproportionate friction
-- **One-command setup**: `dev-up` dramatically improved first-run experience
+Capture all ❌ and core ❓ ACs (DevEx, graph, tasks, hints) into a short checklist (issue or tasks.md). Use this list to track the rest of the phases.
 
-### Success Metrics Met
-- ✅ All 7 selftest steps pass consistently
-- ✅ Friction log actively maintained with 12+ resolved entries
-- ✅ 15+ ACs implemented end-to-end across platform features
-- ✅ Agent integration validated (task hints, status API, bundler)
-- ✅ Onboarding time reduced from ~30min to ~5min (via `dev-up`)
-
-### Risks That Materialized
-- **Tool complexity**: Addressed via help text improvements and `suggest-next`
-- **Cognitive overhead**: Mitigated via selftest summary and status dashboard
-- **Port confusion**: Resolved via standardization to 3000
+Exit: Checklist of named ACs to fix is recorded.
 
 ---
 
----
+## Phase 1 — Close the Kernel (ACs + BDD + Graph)
 
-## Current State: v3.0.0 "Living Platform" (Complete ✅)
+**Goal:** Tier-1 selftest green; kernel ACs all ✅; no surprises in `docs/feature_status.md`.
 
-**Goal:** Transform from "Code that Agents help write" to "An Environment where Agents live."
+### 1.1 DevEx ACs (doctor / check / dev-up / sbom-local)
+- Run:
+  ```bash
+  CUCUMBER_TAG_EXPRESSION="@AC-PLT-001 or @AC-PLT-003 or @AC-PLT-008 or @AC-PLT-018" \
+    cargo test -p acceptance --test acceptance -- --format=pretty
+  ```
+- For each failure, pick one layer to fix: AC text (`specs/spec_ledger.yaml`), feature (`specs/xtask_devex.feature`), or steps (`crates/acceptance/src/steps/xtask_devex.rs`); align implementation as needed.
+- Re-run until clean, then:
+  ```bash
+  cargo xtask selftest
+  cargo xtask ac-status
+  ```
+Exit: `AC-PLT-001/003/008/018` all ✅; dev-up output, check messaging, and SBOM path match docs.
 
-### Sprint 1: The Write Layer (Completed ✅)
-- [x] **Governance Repository**: Abstract trait for state persistence
-- [x] **FS Adapter**: `adapters-spec-fs` with file locking and `tasks_state.yaml`
-- [x] **Wiring**: `app-http` and acceptance tests wired to use the repository
-- [x] **Verification**: BDD scenario for task persistence
-
-### Sprint 2: Domain Rules (Completed ✅)
-- [x] **Task Status Machine**: Enforce valid transitions (Todo -> InProgress -> Review -> Done)
-- [x] **Task <-> Requirement Linking**: Domain model for traceability
-- [x] **Update Use Case**: Pure business logic for status updates via `TaskService`
-
-### Sprint 3: API & UI (Completed ✅)
-- [x] **Write API**: `POST /platform/tasks/{id}/status` for agents and humans
-- [x] **Kanban Board**: Interactive UI at `/ui/tasks` with drag-and-drop
-- [x] **Agent Hints**: `GET /platform/agent/hints` returns prioritized task suggestions
-
-### v3.0.0 Polish (Completed ✅)
-- [x] **Dev-up Command**: `cargo xtask dev-up` for one-command environment setup
-- [x] **Status Dashboard**: `cargo xtask status` shows governance health at a glance
-- [x] **Selftest Summary**: Condensed output with clear pass/fail indicators
-- [x] **Low-Resource Mode**: `XTASK_LOW_RESOURCES=1` for CI/constrained environments
-- [x] **Port Standardization**: All services on `localhost:8080` (was 3000)
-- [x] **Friction Log Integration**: Resolved entries tracked in governance
+### 1.2 Graph invariants in AC ledger
+- For each `AC-TPL-GRAPH-*`, identify enforcing unit test(s) in `spec-runtime`.
+- In `specs/spec_ledger.yaml`, add `tests:` entries of `type: unit` pointing to those tests.
+- Extend AC status logic to handle `type: unit` (fail beats pass; no results = ❓).
+- Decide `AC-TPL-GRAPH-SELFTEST` meaning:
+  - Either add a thin BDD that breaks the graph and asserts `selftest` fails, or
+  - Treat it as covered by unit tests.
+- Re-run `cargo xtask selftest` and `cargo xtask ac-status`.
+Exit: All `AC-TPL-GRAPH-*` ACs ✅ (or explicitly non-kernel); none left ❓.
 
 ---
 
-## Upcoming: v3.1.x "Release & Versioning"
+## Phase 2 — Finish the Agent Interface
 
-**Goal:** Make versions first-class in governance and enable evidence-based changelog generation.
+**Goal:** Agent-facing surfaces are trustworthy: “agents do the work, kernel keeps it safe.”
 
-### Motivation
-Currently, versions exist in `Cargo.toml` and metadata, but:
-- No bounded evidence file per release
-- Changelog generation is manual
-- Hard to answer "what's in v3.1.0?" without git archaeology
+### 2.1 `/platform/agent/hints`
+- Clarify contract in `specs/spec_ledger.yaml` (inputs, response fields, ordering/determinism).
+- Align HTTP handler + runtime logic with that contract.
+- Add/fix BDD for hints; run:
+  ```bash
+  CUCUMBER_TAG_EXPRESSION="@AC-TPL-AGENT-HINTS" \
+    cargo test -p acceptance --test acceptance -- --format=pretty
+  ```
+- Update `docs/AGENT_GUIDE.md` with a JSON example and consumption guidance.
+Exit: `AC-TPL-AGENT-HINTS` ✅; endpoint is documented and stable.
 
-### Planned Features
-- **Release Evidence Bundle**: `cargo xtask release-bundle X.Y.Z` generates a bounded markdown file:
-  - All tasks completed in this version
-  - Related REQs/ACs and their status
-  - ADRs introduced or updated
-  - Git log of commits since last tag
-  - Selftest summary at release time
-  - Policy compliance status
-  - Resolved friction log entries
-- **LLM-Native Changelogs**: Feed evidence bundle to LLM to generate Keep a Changelog format entries
-- **Version-Aware Specs**: Tasks and ACs can reference target version
-
-### Acceptance Criteria
-- `REQ-TPL-REL-BUNDLE` – Release evidence bundle requirement
-- `AC-TPL-REL-EVIDENCE` – `cargo xtask release-bundle X.Y.Z` writes to `release_evidence/vX.Y.Z.md`
-- `AC-TPL-REL-CHANGELOG` – Generated evidence includes all required sections (tasks, specs, git, selftest)
-
-### Benefits
-- Traceable: Every release has a provable evidence file
-- Auditable: Compliance teams can verify what changed
-- Agent-friendly: Structured data for LLM changelog generation
-- Historical: Evidence files are committed, not regenerated
+### 2.2 Task CLI/HTTP semantics
+- Target ACs: `AC-TPL-TASKS-CLI`, `AC-TPL-TASKS-CREATE-CLI`, `AC-TPL-TASKS-UPDATE-CLI`, `AC-TPL-TASKS-HTTP`.
+- Decide exact UX (CLI flags/exit codes/output; HTTP status/JSON shape). Adjust `xtask` and `/platform/tasks` to match; add unit tests as needed.
+- Update BDDs to assert on stable substrings/fields; run:
+  ```bash
+  CUCUMBER_TAG_EXPRESSION="@AC-TPL-TASKS-CLI or @AC-TPL-TASKS-CREATE-CLI or @AC-TPL-TASKS-UPDATE-CLI or @AC-TPL-TASKS-HTTP" \
+    cargo test -p acceptance --test acceptance -- --format=pretty
+  ```
+- Refresh `AGENT_GUIDE.md` examples (mark done via CLI/HTTP).
+Exit: All task ACs ✅; agent docs reflect real UX.
 
 ---
 
-## Completed: v3.2.0 "Skills & AC Tooling" ✅
+## Phase 3 — Cement Selective Testing & Cross-Platform Story
 
-**Goal:** Explicit mapping between DevEx flows and Agent Skills, with repo-specific authoring guidance, plus enhanced AC coverage tooling.
+**Goal:** `check` / `test-changed` / `test-ac` + Tier-2 behaviour are boringly predictable.
 
-### What Was Delivered
-- **Skills Documentation**: `docs/AGENT_SKILLS.md` with repo-specific guidance
-  - Recommended Skill set aligned with `specs/devex_flows.yaml`
-  - SKILL.md templates for consistent authoring
-  - Governance for Skill creation (REQ/AC/Task, not ad-hoc)
-- **Skills Tooling**:
-  - `cargo xtask skills-fmt` to normalize SKILL.md formatting
-  - `cargo xtask skills-lint` to validate Skills definitions
-  - Skills are now governed artifacts with standardized structure
-- **AC Coverage Tooling**:
-  - `cargo xtask ac-coverage` for AC coverage summary grouped by requirement
-  - `cargo xtask ac-suggest-scenarios` to generate BDD scenario stubs
-  - Shared `ac_parsing` module for consistent parsing across commands
-- **Module Wiring**:
-  - Fixed all AC-related module exports (`ac_parsing`, `ac_coverage`, `ac_suggest_scenarios`)
-  - Complete workflow from coverage analysis to scenario generation
+### 3.1 Selective testing as contract
+- Treat the selective-testing scenario as canonical; ensure git worktree setup/teardown is robust and tag expression stable.
+- Add a scenario where only specs change (no `.feature`) to prove `test-changed` finds ACs via the ledger; plan-only mode should emit correct tags.
+- Ensure `docs/SELECTIVE_TESTING.md` + `AGENT_GUIDE.md` match behaviour (validation ladder: `test-changed` → `test-ac` → `selftest`).
+Exit: Selective-testing BDDs ✅; docs read like reference, not aspiration.
 
-### Skills Implemented
-1. **bootstrap-dev-env**: Uses `dev-up`, `status`, `/platform/status` for first-time setup ✅
-2. **governed-feature-dev**: AC-first workflow using `ac-new`, `bundle`, `bdd`, `selftest`, task API ✅
-3. **governed-maintenance**: Policy/dependency/docs updates using `policy-test`, `audit`, `check` ✅
-4. **governed-release**: Release workflow using `release-prepare`, `release-bundle`, `release-verify` ✅
-5. **governed-governance-debug**: Diagnose selftest failures using summary, graph, policies ✅
-
-### Acceptance Criteria Met
-- ✅ `REQ-TPL-SKILLS-GUIDE` – Documented pattern for Skills in this repo
-- ✅ `AC-TPL-SKILLS-GUIDE-001` – `docs/AGENT_SKILLS.md` exists with templates and flow mappings
-- ✅ `AC-TPL-SKILLS-ALIGN-001` – Existing `.claude/skills/*` align with documented patterns
-- ✅ `REQ-TPL-SKILLS-TOOLING` – Skills formatting and linting commands exist
-- ✅ `AC-TPL-SKILLS-FMT` – Skills can be normalized with `skills-fmt`
-- ✅ `AC-TPL-SKILLS-LINT` – Skills validated with `skills-lint`
-
-### Benefits Realized
-- Clarity: Agents and humans know which Skills exist and when to use them
-- Governance: Skills follow same AC-first rigor as code
-- Alignment: Skills match actual workflows from `devex_flows.yaml`
-- Maintainability: Skills are documented, tested, and traceable
-- Efficiency: AC coverage workflow streamlined from analysis to scenario generation
+### 3.2 Tier-2 (Windows) path
+- On native Windows:
+  ```powershell
+  $env:XTASK_LOW_RESOURCES = "1"
+  cargo xtask check
+  cargo xtask test-changed
+  ```
+- Confirm no panics/permission crashes; logs state skipped steps; plan-only works with `XTASK_TEST_CHANGED_PLAN_ONLY=1`.
+- Update `docs/reference/platform-support.md` and `MISSING_MANUAL.md` with the single recommended Windows flow (local low-resource; full selftest via WSL2/Nix/CI).
+Exit: Tier-2 docs match reality; one clear Windows happy path.
 
 ---
 
-## v3.0.0 - Production-Ready Rust IDP Template
+## Phase 4 — Freeze the Template Contract
 
-**Status:** Target for completion
+**Goal:** The cell is a reusable IDP unit with a clear, stable contract.
 
-### Kernel AC Coverage
+- Add/update a kernel contract doc (e.g., `docs/platform-kernel.md` or `TEMPLATE_CONTRACT.md`):
+  - Kernel ACs that must remain in derived services.
+  - Required `xtask` commands and intents.
+  - Required `/platform/*` endpoints and behaviours.
+  - Expectations for `service_metadata.yaml`, release bundles, `FRICTION_LOG.md`.
+- Update `service_metadata.yaml` with the new baseline `template_version` (e.g., `3.3.0`) and links to kernel docs.
+- Align `docs/why-this-exists.md`, `AGENT_GUIDE.md`, `CLAUDE.md` so they tell the same LLM-native, kernel-governed story.
 
-Every kernel AC (requirements marked `must_have_ac: true` and `kernel: true` tag) has:
-- ✅ Passing BDD scenario coverage OR unit test coverage
-- ✅ Traceability from REQ → AC → Test → Code
-- ✅ Validated by `cargo xtask ac-coverage`
-
-**Current kernel coverage:** 0/50 ACs passing (run `cargo xtask ac-coverage` for live status)
-
-### What "Green Out of the Box" Means
-
-1. **Onboarding**: `doctor`, `help-flows`, `check`, `dev-up` guide new users
-2. **Development**: `ac-new`, `adr-new`, skills-based workflows
-3. **Validation**: `selftest` enforces governance contracts
-4. **Release**: `release-prepare`, `release-verify`, `release-bundle` with evidence
-5. **Security**: `audit`, `sbom-local` supply-chain visibility
-6. **Observability**: `status`, `/platform/ui` real-time governance health
-
-Non-kernel ACs (future features, nice-to-haves) are tracked but don't block release.
-
-### Success Criteria
-
-- [ ] All kernel ACs green in `cargo xtask ac-coverage`
-- [ ] `cargo xtask selftest` passes on Linux, macOS, Windows
-- [ ] Documentation complete (README, AGENT_GUIDE, this ROADMAP)
-- [ ] Release evidence bundle generated
+Exit: “What does it mean to be a compliant Rust-as-Spec cell?” is answerable on one page and matches enforcement in `selftest`.
 
 ---
 
-## Future: v3.3+ "Adoption & Fleet View"
+## Phase 5 — Prove Reuse (Optional but Powerful)
 
-**Goal:** Enable brownfield adoption and multi-cell observability.
+**Goal:** Validate the template by using it twice.
 
-### Brownfield Kernel Extraction
-- Extract core governance crates for reuse in existing services:
-  - `spec-runtime` (standalone spec loading/validation)
-  - `governance-core` (AC/REQ domain models)
-  - `policy-runtime` (OPA/Rego integration)
-- Let teams adopt incrementally (specs only → BDD → graph → full stack)
-- Provide migration guides for non-template services
+- Instantiate a second service from this cell; adjust metadata, ledger, and minimal domain logic.
+- Run Bootstrap → Feature Dev → Maintenance → Release using only `xtask`, `/platform/*`, and documented Skills.
+- Capture friction in that service’s `FRICTION_LOG.md` and backport improvements.
 
-### Multi-Cell Observatory
-- **Backstage Plugin**: Integrate `/platform/*` APIs into Backstage
-- **Fleet Dashboard**: Cross-service governance health view
-- **Drift Detection**: Alert when cloned services diverge from template contracts
-- **Aggregated Metrics**: Track governance adoption across multiple cells
-
-### Enhanced UI (Optional)
-- Code tree view showing AC ↔ module mappings
-- Inline spec editing with patch generation
-- Cross-cell navigation and comparison
-
-### If Pilot Struggles: Simplify or Pivot
-
-**Option A: Lighter Governance** (if overhead is too high)
-- Remove graph invariants or `must_have_ac` constraints
-- Make BDD optional
-- Keep only core selftest steps (fmt, clippy, tests, policies)
-
-**Option B: Different Target** (if unsuitable for general services)
-- Position as "regulated services only" (FinTech, HealthTech)
-- Build vertical-specific policy packs (PCI-DSS, HIPAA, SOC2)
-- Partner with compliance teams, not general platform teams
-
-**Option C: Extract Components** (if full stack is too coupled)
-- Publish `spec-runtime` as standalone crate
-- Publish policy packs separately
-- Let teams adopt incrementally (specs only, then BDD, then graph)
+Exit: At least one surprise removed via reuse; the cell feels like an IDP product, not a one-off.
 
 ---
 
-## Principles (Invariant Across All Futures)
+## Ultra-Compressed Path
 
-Regardless of pilot outcome, we maintain these constraints:
+1. Green the kernel: fix DevEx BDDs; wire graph ACs to unit tests; get selftest + kernel ACs fully green on Tier-1.
+2. Finish agent surfaces: `/platform/agent/hints` + tasks CLI/HTTP match ACs and `AGENT_GUIDE`.
+3. Lock flows: `check` / `test-changed` / `test-ac` + Tier-2 behaviour documented and tested.
+4. Freeze contract: document kernel ACs + required surfaces; bump `template_version`; treat this repo as the canonical Rust-as-Spec cell.
+5. (Optional) Reuse once to shake out final seams.
 
-1. **Specs as Source of Truth**
-   - Code that doesn't match specs fails CI
-   - Specs that don't match code fail CI
-   - There is no third state
-
-2. **Self-Healing First**
-   - UI never maintains state; it projects specs/runtime
-   - Policies auto-update from file changes
-   - Graph invariants catch drift, not humans
-
-3. **Agent-Compatible by Default**
-   - All workflows exposed as `/platform/*` APIs
-   - All guidance structured (not prose)
-   - All validation deterministic (no "vibes-based" checks)
-
-4. **Zero Vendor Lock**
-   - Pure Rust; no proprietary runtimes
-   - No SaaS dependencies
-   - Cloneable, forkable, offline-capable
-
----
-
-## How to Contribute to the Roadmap
-
-During the pilot, this roadmap is **living**. We update it based on friction log entries.
-
-**Process:**
-1. Friction log entry created
-2. Weekly triage: Is this a blocker, nice-to-have, or won't-fix?
-3. Blockers → immediate patch release (v2.4.x)
-4. Nice-to-haves → roadmap for v2.5.0
-5. Won't-fix → document as "anti-pattern" in runbooks
-
-**Decision Framework:**
-- **Does it reduce cognitive load?** → Consider
-- **Does it increase spec/code drift risk?** → Reject
-- **Does it make agents smarter?** → Prioritize
-- **Does it require new state/config?** → Scrutinize
-
----
-
-## Appendix: Technology Choices
-
-### Why Rust?
-- **Type safety**: Specs are validated at compile time
-- **Performance**: CLI tools are instant; no Node.js startup tax
-- **Single binary**: `app-http` bundles UI + API + business logic
-
-### Why YAML (not JSON/TOML/custom DSL)?
-- **Readable**: Non-developers can edit specs
-- **Comments**: Inline documentation stays with the spec
-- **Ecosystem**: `serde_yaml` is mature and well-tested
-
-### Why OPA/Rego for Policies?
-- **Declarative**: Policy logic separated from enforcement
-- **Testable**: `conftest` enables policy unit tests
-- **Industry standard**: Used by Kubernetes, Envoy, Terraform
-
-### Why Maud (not Askama/Tera)?
-- **Compile-time HTML checking**: Typos caught by compiler
-- **Zero runtime cost**: Templates are Rust macros
-- **Type-safe**: Data models are enforced
-
-### Why No GraphQL/gRPC for `/platform/*`?
-- **Simplicity**: REST + JSON is universal
-- **Introspectable**: `curl` works; no special clients needed
-- **Agent-friendly**: LLMs understand JSON natively
-
----
-
-## Summary
-
-**Current state:**
-- ✅ v3.2.0 complete: Skills, AC tooling, release bundle
-- ✅ Platform infrastructure: 7-step selftest, APIs, Web UI, agent loop
-- ✅ DevEx foundation: `dev-up`, `status`, selftest summary, port 3000
-
-**Production readiness (v3.0.0 milestone):**
-- 🎯 **Kernel AC Coverage**: 0/50 ACs passing (target: 100%)
-- 🎯 Every kernel AC has passing BDD scenario or unit test coverage
-- 🎯 Full traceability: REQ → AC → Test → Code
-- 🎯 Cross-platform selftest pass (Linux, macOS, Windows)
-
-**Completed milestones:**
-- ✅ **v3.1.x**: Release evidence bundles and LLM-native changelog generation
-- ✅ **v3.2.x**: Agent Skills documentation and flow-to-Skill alignment
-
-**Next milestone:** Complete kernel AC coverage for v3.0.0 production-ready release.
-
-**Pilot validated:**
-- ✅ Governance model is the right weight (with polish)
-- ✅ Agents can effectively use the platform APIs
-- ✅ Selftest + friction log drives continuous improvement
-
+When 1–4 are done, you can say: this is a fully implemented, self-governing platform cell you can drop into any Rust shop and safely let agents work inside.

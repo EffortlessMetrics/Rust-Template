@@ -8,23 +8,43 @@
 
 use anyhow::{Context, Result};
 use colored::Colorize;
-use std::collections::HashSet;
-use std::path::PathBuf;
-use std::process::Command;
+use std::{collections::HashSet, fs, path::PathBuf, process::Command};
 
-use super::ac_parsing::parse_features_with_metadata;
+use super::ac_parsing::{AC_PATTERN_WITH_AT, parse_features_with_metadata};
 
 /// Arguments for test-changed command
 #[derive(Debug, Clone)]
 pub struct TestChangedArgs {
     /// Git ref to compare against (default: origin/main)
     pub base: String,
+    /// Whether to run in plan-only mode (do not execute tests)
+    pub plan_only: bool,
 }
 
 impl Default for TestChangedArgs {
     fn default() -> Self {
-        Self { base: "origin/main".to_string() }
+        Self { base: "origin/main".to_string(), plan_only: false }
     }
+}
+
+/// BDD execution plan derived from changed files
+#[derive(Debug, Clone)]
+pub enum BddPlan {
+    /// No BDD needed for these changes
+    None { reason: String },
+    /// Run a subset of scenarios filtered by AC tags
+    Tags { ac_tags: Vec<String>, reason: String },
+    /// Run the full BDD suite
+    All { reason: String },
+}
+
+fn canonical_tag(tag: &str) -> String {
+    format!("@{}", tag.trim_start_matches('@'))
+}
+
+/// Render a tag expression in canonical @AC-... form for Cucumber
+pub fn format_tag_expression(tags: &[String]) -> String {
+    tags.iter().map(|t| canonical_tag(t)).collect::<Vec<_>>().join(" or ")
 }
 
 /// Represents a test command to execute
@@ -35,7 +55,7 @@ enum TestCommand {
     /// Run BDD tests for specific AC tags
     BddWithTags { ac_tags: Vec<String>, description: String },
     /// Run all BDD tests
-    BddAll,
+    BddAll { description: String },
     /// Run docs-check command
     DocsCheck,
     /// Run graph invariants tests
@@ -66,8 +86,8 @@ impl TestPlan {
         }
     }
 
-    fn add_bdd_all(&mut self) {
-        self.commands.push(TestCommand::BddAll);
+    fn add_bdd_all(&mut self, description: &str) {
+        self.commands.push(TestCommand::BddAll { description: description.to_string() });
     }
 
     fn add_docs_check(&mut self) {
@@ -88,19 +108,21 @@ impl TestPlan {
         self.commands.retain(|cmd| seen.insert(cmd.clone()));
 
         // If we have BddAll, remove all BddWithTags commands
-        if self.commands.iter().any(|c| matches!(c, TestCommand::BddAll)) {
+        if self.commands.iter().any(|c| matches!(c, TestCommand::BddAll { .. })) {
             self.commands.retain(|c| !matches!(c, TestCommand::BddWithTags { .. }));
         }
     }
 }
 
 /// Get list of changed files from git
-fn get_changed_files(base: &str) -> Result<Vec<String>> {
+pub fn get_changed_files(base: &str) -> Result<(String, Vec<String>)> {
+    let base_ref = resolve_base_ref(base);
     let mut files = HashSet::new();
 
     // 1) Changes between base and HEAD (committed diff)
-    let history_diff =
-        Command::new("git").args(["diff", "--name-only", &format!("{}...HEAD", base)]).output()?;
+    let history_diff = Command::new("git")
+        .args(["diff", "--name-only", &format!("{}...HEAD", base_ref)])
+        .output()?;
     if !history_diff.status.success() {
         let stderr = String::from_utf8_lossy(&history_diff.stderr);
         anyhow::bail!("git diff (history) failed: {}", stderr.trim());
@@ -134,14 +156,54 @@ fn get_changed_files(base: &str) -> Result<Vec<String>> {
         for line in
             String::from_utf8_lossy(&output.stdout).lines().map(str::trim).filter(|l| !l.is_empty())
         {
-            files.insert(line.to_string());
+            files.insert(normalize_path(line));
         }
     }
 
     let mut files: Vec<_> = files.into_iter().collect();
     files.sort();
 
-    Ok(files)
+    Ok((base_ref, files))
+}
+
+fn resolve_base_ref(base: &str) -> String {
+    let mut candidates = Vec::new();
+    if !base.is_empty() {
+        candidates.push(base.to_string());
+    }
+
+    for fallback in ["origin/main", "main", "master", "HEAD"] {
+        if base != fallback {
+            candidates.push(fallback.to_string());
+        }
+    }
+
+    for cand in candidates {
+        if let Ok(output) = Command::new("git").args(["rev-parse", "--verify", &cand]).output() {
+            if output.status.success() {
+                return cand;
+            }
+        }
+    }
+
+    base.to_string()
+}
+
+fn normalize_path(path: &str) -> String {
+    path.replace('\\', "/").trim_start_matches("./").to_string()
+}
+
+fn plan_only_mode() -> bool {
+    match std::env::var("XTASK_TEST_CHANGED_PLAN_ONLY") {
+        Ok(val) => {
+            let v = val.trim();
+            !(v.is_empty()
+                || v == "0"
+                || v.eq_ignore_ascii_case("false")
+                || v.eq_ignore_ascii_case("no"))
+        }
+        Err(_) => false,
+    }
 }
 
 /// Extract AC tags from changed feature files
@@ -158,19 +220,71 @@ fn extract_ac_tags_from_features(changed_features: &[String]) -> Result<Vec<Stri
 
     // For each changed feature file, extract AC tags from scenarios in that file
     for feature_file in changed_features {
+        let feature_path = PathBuf::from(feature_file);
+        let normalized = normalize_path(feature_file);
+        let normalized_rel = feature_path
+            .strip_prefix(features_dir.parent().unwrap_or(&features_dir))
+            .map(|p| normalize_path(&p.to_string_lossy()))
+            .unwrap_or_else(|_| normalized.clone());
+
         for scenario in scenarios.values() {
-            // Check if this scenario is in the changed file
-            if scenario.file.contains(feature_file) || feature_file.contains(&scenario.file) {
+            let scenario_path = normalize_path(&scenario.file);
+            if scenario_path == normalized
+                || scenario_path == normalized_rel
+                || normalized.ends_with(&scenario_path)
+                || scenario_path.ends_with(&normalized)
+            {
                 ac_tags.insert(scenario.ac_id.clone());
+            }
+        }
+
+        // Fallback: parse AC tags directly from the feature file so we don't miss newly-added tags
+        if let Ok(content) = fs::read_to_string(&feature_path) {
+            for caps in AC_PATTERN_WITH_AT.captures_iter(&content) {
+                if let Some(ac) = caps.get(1) {
+                    ac_tags.insert(ac.as_str().to_string());
+                }
             }
         }
     }
 
-    Ok(ac_tags.into_iter().collect())
+    let mut acs: Vec<_> = ac_tags.into_iter().collect();
+    acs.sort();
+    Ok(acs)
+}
+
+/// Derive the BDD execution plan from changed files
+pub fn bdd_plan_from_changes(changed_files: &[String]) -> Result<BddPlan> {
+    if changed_files.is_empty() {
+        return Ok(BddPlan::None { reason: "No changes detected".to_string() });
+    }
+
+    if changed_files.iter().any(|f| f == "specs/spec_ledger.yaml") {
+        return Ok(BddPlan::All { reason: "spec_ledger.yaml changed".to_string() });
+    }
+
+    if changed_files.iter().any(|f| f.starts_with("crates/acceptance/")) {
+        return Ok(BddPlan::All { reason: "acceptance harness changed".to_string() });
+    }
+
+    let feature_files: Vec<String> = changed_files
+        .iter()
+        .filter(|f| f.starts_with("specs/features/") && f.ends_with(".feature"))
+        .cloned()
+        .collect();
+
+    if !feature_files.is_empty() {
+        let ac_tags = extract_ac_tags_from_features(&feature_files)?;
+        if !ac_tags.is_empty() {
+            return Ok(BddPlan::Tags { ac_tags, reason: "feature files changed".to_string() });
+        }
+    }
+
+    Ok(BddPlan::None { reason: "No BDD-relevant changes detected".to_string() })
 }
 
 /// Build test plan based on changed files
-fn build_test_plan(changed_files: Vec<String>) -> Result<TestPlan> {
+fn build_test_plan(changed_files: Vec<String>, bdd_plan: &BddPlan) -> Result<TestPlan> {
     let mut plan = TestPlan::new();
 
     if changed_files.is_empty() {
@@ -178,8 +292,6 @@ fn build_test_plan(changed_files: Vec<String>) -> Result<TestPlan> {
     }
 
     // Track file types
-    let mut has_spec_ledger = false;
-    let mut has_feature_files = Vec::new();
     let mut has_xtask = false;
     let mut has_app_http = false;
     let mut has_spec_runtime = false;
@@ -189,10 +301,8 @@ fn build_test_plan(changed_files: Vec<String>) -> Result<TestPlan> {
 
     for file in &changed_files {
         if file == "specs/spec_ledger.yaml" {
-            has_spec_ledger = true;
             only_docs = false;
         } else if file.starts_with("specs/features/") && file.ends_with(".feature") {
-            has_feature_files.push(file.clone());
             only_docs = false;
         } else if file.starts_with("crates/xtask/") {
             has_xtask = true;
@@ -220,26 +330,18 @@ fn build_test_plan(changed_files: Vec<String>) -> Result<TestPlan> {
         // Only docs changed - run docs-check if it exists
         plan.add_docs_check();
     } else {
-        // Handle spec_ledger changes
-        if has_spec_ledger {
-            // If spec ledger changed, we might need to run all BDD tests
-            // For now, we'll run all BDD since we can't easily determine which ACs changed
-            plan.add_bdd_all();
-        }
-
-        // Handle feature file changes
-        if !has_feature_files.is_empty() {
-            let ac_tags = extract_ac_tags_from_features(&has_feature_files)?;
-            if !ac_tags.is_empty() {
-                plan.add_bdd_with_tags(ac_tags, "Changed feature files");
-            }
+        // Handle BDD coverage
+        match bdd_plan {
+            BddPlan::All { reason } => plan.add_bdd_all(reason),
+            BddPlan::Tags { ac_tags, reason } => plan.add_bdd_with_tags(ac_tags.clone(), reason),
+            BddPlan::None { .. } => {}
         }
 
         // Handle crate changes
         if has_xtask {
             plan.add_cargo_test("xtask", "xtask crate changes");
             // Also run xtask_devex BDD scenarios
-            plan.add_bdd_with_tags(vec!["@AC-PLT-018".to_string()], "xtask devex contract");
+            plan.add_bdd_with_tags(vec!["AC-PLT-018".to_string()], "xtask devex contract");
         }
 
         if has_app_http {
@@ -259,7 +361,7 @@ fn build_test_plan(changed_files: Vec<String>) -> Result<TestPlan> {
 
         if has_acceptance {
             // If acceptance tests themselves changed, run all BDD
-            plan.add_bdd_all();
+            plan.add_bdd_all("Acceptance harness changed");
         }
     }
 
@@ -274,10 +376,16 @@ fn execute_test_command(cmd: &TestCommand) -> Result<bool> {
     let run_icon = "[run]".cyan();
     let ok_icon = "[ok]".green();
     let fail_icon = "[fail]".red();
+    let plan_only = plan_only_mode();
 
     match cmd {
         TestCommand::CargoTest { package, description } => {
             println!("  {} cargo test -p {}", run_icon, package);
+            if plan_only {
+                println!("    {} {} (plan-only)", ok_icon, description);
+                return Ok(true);
+            }
+
             let output = crate::cargo_cmd("test", &["-p", package]).output()?;
 
             if output.status.success() {
@@ -296,17 +404,23 @@ fn execute_test_command(cmd: &TestCommand) -> Result<bool> {
             }
         }
         TestCommand::BddWithTags { ac_tags, description } => {
-            let tags_arg = ac_tags.join(" or ");
+            let tag_expr = format_tag_expression(ac_tags);
             println!(
-                "  {} cargo test -p acceptance --test acceptance -- --tags \"{}\"",
-                run_icon, tags_arg
+                "  {} cargo test -p acceptance --test acceptance (tags: \"{}\")",
+                run_icon, tag_expr
             );
 
-            let output = crate::cargo_cmd(
-                "test",
-                &["-p", "acceptance", "--test", "acceptance", "--", "--tags", &tags_arg],
-            )
-            .output()?;
+            if plan_only {
+                println!(
+                    "    {} {} (plan-only, CUCUMBER_TAG_EXPRESSION=\"{}\")",
+                    ok_icon, description, tag_expr
+                );
+                return Ok(true);
+            }
+
+            let mut cmd = crate::cargo_cmd("test", &["-p", "acceptance", "--test", "acceptance"]);
+            cmd.env("CUCUMBER_TAG_EXPRESSION", &tag_expr);
+            let output = cmd.output()?;
 
             if output.status.success() {
                 println!("    {} {}", ok_icon, description);
@@ -322,13 +436,18 @@ fn execute_test_command(cmd: &TestCommand) -> Result<bool> {
                 Ok(false)
             }
         }
-        TestCommand::BddAll => {
+        TestCommand::BddAll { description } => {
             println!("  {} cargo test -p acceptance --test acceptance", run_icon);
-            let output =
-                crate::cargo_cmd("test", &["-p", "acceptance", "--test", "acceptance"]).output()?;
+            let mut cmd = crate::cargo_cmd("test", &["-p", "acceptance", "--test", "acceptance"]);
+            cmd.env_remove("CUCUMBER_TAG_EXPRESSION");
+            if plan_only {
+                println!("    {} {} (plan-only)", ok_icon, description);
+                return Ok(true);
+            }
+            let output = cmd.output()?;
 
             if output.status.success() {
-                println!("    {} All BDD scenarios", ok_icon);
+                println!("    {} {}", ok_icon, description);
                 Ok(true)
             } else {
                 println!("    {} BDD scenarios failed", fail_icon);
@@ -343,6 +462,10 @@ fn execute_test_command(cmd: &TestCommand) -> Result<bool> {
         }
         TestCommand::DocsCheck => {
             println!("  {} cargo xtask docs-check", run_icon);
+            if plan_only {
+                println!("    {} Documentation checks (plan-only)", ok_icon);
+                return Ok(true);
+            }
             let output =
                 Command::new("cargo").args(["run", "-p", "xtask", "--", "docs-check"]).output()?;
 
@@ -362,6 +485,10 @@ fn execute_test_command(cmd: &TestCommand) -> Result<bool> {
         }
         TestCommand::GraphInvariants => {
             println!("  {} cargo xtask graph-export --check", run_icon);
+            if plan_only {
+                println!("    {} Graph invariants (plan-only)", ok_icon);
+                return Ok(true);
+            }
             let output = Command::new("cargo")
                 .args(["run", "-p", "xtask", "--", "graph-export", "--check"])
                 .output()?;
@@ -388,23 +515,45 @@ pub fn run(args: TestChangedArgs) -> Result<()> {
     println!("{}", "Analyzing changed files...".bold());
 
     // Get changed files
-    let changed_files = get_changed_files(&args.base).context("Failed to get changed files")?;
+    let plan_only = args.plan_only || plan_only_mode();
+    let (base_ref, changed_files) =
+        get_changed_files(&args.base).context("Failed to get changed files")?;
 
     if changed_files.is_empty() {
         println!("{}", "No changes detected - no tests needed.".green());
         return Ok(());
     }
 
-    println!("\nChanged files (vs {}):", args.base.cyan());
+    println!("\nChanged files (vs {}):", base_ref.cyan());
     for file in &changed_files {
         println!("  - {}", file);
     }
 
+    // Derive BDD plan from the changes
+    let bdd_plan = bdd_plan_from_changes(&changed_files)?;
+
     // Build test plan
-    let plan = build_test_plan(changed_files)?;
+    let plan = build_test_plan(changed_files, &bdd_plan)?;
+
+    // Capture resolved BDD tag expression (if any) for plan-only output
+    let resolved_tag_expr = match &bdd_plan {
+        BddPlan::Tags { ac_tags, .. } if !ac_tags.is_empty() => {
+            Some(format_tag_expression(ac_tags))
+        }
+        _ => None,
+    };
 
     if plan.is_empty() {
         println!("\n{}", "No tests needed for these changes.".green());
+        if plan_only {
+            println!(
+                "\nPlan-only mode enabled (XTASK_TEST_CHANGED_PLAN_ONLY); commands will be reported \
+                 but not executed."
+            );
+            if let Some(expr) = &resolved_tag_expr {
+                println!("CUCUMBER_TAG_EXPRESSION=\"{}\"", expr);
+            }
+        }
         return Ok(());
     }
 
@@ -416,10 +565,11 @@ pub fn run(args: TestChangedArgs) -> Result<()> {
                 println!("  {}. Run unit tests: {} ({})", i + 1, package, description);
             }
             TestCommand::BddWithTags { ac_tags, description } => {
-                println!("  {}. Run BDD: {} ({})", i + 1, ac_tags.join(", "), description);
+                let tags = ac_tags.iter().map(|t| canonical_tag(t)).collect::<Vec<_>>().join(", ");
+                println!("  {}. Run BDD: {} ({})", i + 1, tags, description);
             }
-            TestCommand::BddAll => {
-                println!("  {}. Run all BDD scenarios", i + 1);
+            TestCommand::BddAll { description } => {
+                println!("  {}. Run all BDD scenarios ({})", i + 1, description);
             }
             TestCommand::DocsCheck => {
                 println!("  {}. Run documentation checks", i + 1);
@@ -428,6 +578,18 @@ pub fn run(args: TestChangedArgs) -> Result<()> {
                 println!("  {}. Validate graph invariants", i + 1);
             }
         }
+    }
+
+    if plan_only {
+        println!(
+            "\nPlan-only mode enabled (XTASK_TEST_CHANGED_PLAN_ONLY); commands will be reported \
+             but not executed."
+        );
+        if let Some(expr) = &resolved_tag_expr {
+            println!("Resolved BDD tag expression: {}", expr);
+            println!("CUCUMBER_TAG_EXPRESSION=\"{}\"", expr);
+        }
+        return Ok(());
     }
 
     // Execute test plan
@@ -505,7 +667,7 @@ mod tests {
         fs::write(repo.path().join("untracked.txt"), "untracked").expect("write untracked");
 
         let _guard = CwdGuard::new(repo.path());
-        let files = get_changed_files("HEAD").expect("get_changed_files");
+        let (_base, files) = get_changed_files("HEAD").expect("get_changed_files");
 
         assert!(files.contains(&"tracked.txt".to_string()));
         assert!(files.contains(&"staged.txt".to_string()));

@@ -77,6 +77,10 @@ cargo xtask tasks-list
 
 # Get JSON output for programmatic use
 cargo xtask tasks-list --json
+
+# Create or update tasks (validated against spec_ledger.yaml)
+cargo xtask task-create --id TASK-NEW-001 --title "New task title" --req REQ-TPL-HEALTH
+cargo xtask task-update --id TASK-NEW-001 --status InProgress --owner agent
 ```
 
 **HTTP API:**
@@ -277,6 +281,7 @@ cargo xtask selftest
 ```
 
 **Critical:**
+- **Default ladder:** `cargo xtask test-changed` after edits -> `cargo xtask test-ac <ID>` when you touched a single AC -> `nix develop && cargo xtask selftest` before merge (Tier-1)
 - **Pre-commit:** Use `cargo xtask test-changed` for fast feedback
 - **Pre-merge:** Run `cargo xtask selftest` in Tier-1 (Nix+Linux/WSL2)
 - **You MUST run `cargo xtask ac-coverage`** before claiming work is complete

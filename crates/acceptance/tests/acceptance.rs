@@ -65,9 +65,10 @@ async fn main() {
     let json_file =
         File::create(&json_path).unwrap_or_else(|_| std::fs::File::create(NULL_DEVICE).unwrap());
 
-    let tag_expression: Option<TagOperation> = std::env::var("CUCUMBER_TAG_EXPRESSION")
-        .ok()
-        .and_then(|expr| expr.parse::<TagOperation>().ok());
+    let raw_tag_expr = std::env::var("CUCUMBER_TAG_EXPRESSION").ok();
+    let tag_expression: Option<TagOperation> =
+        raw_tag_expr.as_deref().and_then(|expr| expr.parse::<TagOperation>().ok());
+    let simple_tags = raw_tag_expr.as_deref().map(parse_simple_tag_list).unwrap_or_default();
 
     // Triple output: console + JUnit + JSON
     World::cucumber()
@@ -111,8 +112,27 @@ async fn main() {
                     return expr.eval(tags.iter());
                 }
 
+                if !simple_tags.is_empty() {
+                    return tags.iter().any(|t| {
+                        simple_tags.iter().any(|filter| {
+                            t.eq_ignore_ascii_case(filter)
+                                || t.eq_ignore_ascii_case(filter.trim_start_matches('@'))
+                        })
+                    });
+                }
+
                 true
             },
         )
         .await;
+}
+
+fn parse_simple_tag_list(expr: &str) -> Vec<String> {
+    expr.split(|c| [',', '|'].contains(&c))
+        .flat_map(|part| part.split("or"))
+        .flat_map(|part| part.split_whitespace())
+        .map(|tag| tag.trim_matches(|c| c == '@' || c == '(' || c == ')' || c == '"'))
+        .filter(|tag| !tag.is_empty())
+        .map(|tag| tag.to_string())
+        .collect()
 }

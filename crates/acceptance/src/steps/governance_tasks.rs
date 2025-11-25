@@ -164,6 +164,54 @@ async fn then_task_status(world: &mut World, task_id: String, expected_status_st
     assert_eq!(status, expected_status, "Expected status {:?}, got {:?}", expected_status, status);
 }
 
+#[then(regex = r#"^task "([^"]+)" should exist with title "([^"]+)" and requirement "([^"]+)"$"#)]
+async fn then_task_exists_with_title_and_req(
+    _world: &mut World,
+    task_id: String,
+    title: String,
+    requirement: String,
+) {
+    let tasks = load_tasks_from_spec_root();
+    let task = find_task(&tasks, &task_id);
+    assert_eq!(task.title, title, "Task {} should have title {}", task_id, title);
+    assert_eq!(
+        task.requirement, requirement,
+        "Task {} should target requirement {}",
+        task_id, requirement
+    );
+}
+
+#[then(regex = r#"^task "([^"]+)" should have status "([^"]+)" in tasks.yaml$"#)]
+async fn then_task_status_in_yaml(_world: &mut World, task_id: String, expected_status: String) {
+    let tasks = load_tasks_from_spec_root();
+    let task = find_task(&tasks, &task_id);
+    assert_eq!(
+        task.status, expected_status,
+        "Task {} should have status {}",
+        task_id, expected_status
+    );
+}
+
+#[then(regex = r#"^task "([^"]+)" should have owner "([^"]+)"$"#)]
+async fn then_task_owner_in_yaml(_world: &mut World, task_id: String, expected_owner: String) {
+    let tasks = load_tasks_from_spec_root();
+    let task = find_task(&tasks, &task_id);
+    assert_eq!(
+        task.owner.as_deref(),
+        Some(expected_owner.as_str()),
+        "Task {} should have owner {}",
+        task_id,
+        expected_owner
+    );
+}
+
+#[then(regex = r#"^task "([^"]+)" should have title "([^"]+)"$"#)]
+async fn then_task_title_in_yaml(_world: &mut World, task_id: String, expected_title: String) {
+    let tasks = load_tasks_from_spec_root();
+    let task = find_task(&tasks, &task_id);
+    assert_eq!(task.title, expected_title, "Task {} should have title {}", task_id, expected_title);
+}
+
 fn parse_status(status_str: &str) -> (TaskStatus, String) {
     match status_str.to_lowercase().as_str() {
         "todo" => (TaskStatus::Todo, "Todo".to_string()),
@@ -174,6 +222,20 @@ fn parse_status(status_str: &str) -> (TaskStatus, String) {
         "done" => (TaskStatus::Done, "Done".to_string()),
         other => (TaskStatus::Todo, other.to_string()),
     }
+}
+
+fn load_tasks_from_spec_root() -> TasksSpec {
+    let root = std::env::var("SPEC_ROOT").unwrap_or_else(|_| ".".to_string());
+    let path = Path::new(&root).join("specs/tasks.yaml");
+    spec_runtime::load_tasks(&path).expect("Failed to load tasks.yaml")
+}
+
+fn find_task<'a>(tasks: &'a TasksSpec, task_id: &str) -> &'a Task {
+    tasks
+        .tasks
+        .iter()
+        .find(|t| t.id == task_id)
+        .unwrap_or_else(|| panic!("Task {} not found in tasks.yaml", task_id))
 }
 
 fn empty_task_docs() -> TaskDocs {

@@ -55,6 +55,39 @@ async fn given_tasks_exist(_world: &mut World) {
     assert!(tasks_file.exists(), "specs/tasks.yaml should exist");
 }
 
+#[given("a temporary git worktree for test-changed")]
+async fn given_temp_worktree(world: &mut World) {
+    let root = actual_workspace_root();
+    let worktree_path = world._temp_dir.path().join("worktrees").join("test-changed-plan-only");
+    let worktree_str = worktree_path.to_string_lossy().to_string();
+
+    if worktree_path.exists() {
+        let _ = Command::new("git")
+            .current_dir(&root)
+            .args(["worktree", "remove", "-f", &worktree_str])
+            .status();
+        let _ = fs::remove_dir_all(&worktree_path);
+    }
+
+    if let Some(parent) = worktree_path.parent() {
+        let _ = fs::create_dir_all(parent);
+    }
+
+    let status = Command::new("git")
+        .current_dir(&root)
+        .args(["worktree", "add", "--force", "--detach", &worktree_str])
+        .status()
+        .expect("git worktree add should run");
+    assert!(status.success(), "git worktree add failed for {}", worktree_path.display());
+
+    // Use the shared target dir to avoid rebuilding xtask for the worktree
+    world
+        .xtask_context_mut()
+        .env
+        .insert("CARGO_TARGET_DIR".to_string(), root.join("target").display().to_string());
+    world.xtask_context_mut().test_repo_path = Some(worktree_path);
+}
+
 #[given("the pre-commit hook does not exist")]
 async fn given_hook_missing(world: &mut World) {
     let hook = workspace_root(world).join(".git/hooks/pre-commit");
@@ -235,6 +268,34 @@ async fn when_run_command_low_resource(world: &mut World, command: String) {
     execute_command(world, &command, &[("XTASK_LOW_RESOURCES", "1")]).await;
 }
 
+#[given("I add a selective test-changed feature file")]
+async fn given_add_selective_feature(world: &mut World) {
+    let root_path = workspace_root(world);
+    let feature_path = root_path.join("specs/features/selective_testing_temp.feature");
+    if let Some(parent) = feature_path.parent() {
+        let _ = fs::create_dir_all(parent);
+    }
+
+    let content = r#"Feature: Selective testing plan guard
+  @AC-PLT-003
+  Scenario: test-changed builds tag expressions from feature changes
+    Given placeholder preconditions
+    When placeholder action
+    Then placeholder assertions
+"#;
+    fs::write(&feature_path, content).expect("Failed to write selective testing feature");
+}
+
+#[when(r#"I run "cargo xtask test-changed" in plan-only mode"#)]
+async fn when_run_test_changed_plan_only(world: &mut World) {
+    execute_command(
+        world,
+        "cargo xtask test-changed --plan-only",
+        &[("XTASK_TEST_CHANGED_PLAN_ONLY", "1"), ("XTASK_CHANGED_BASE", "HEAD")],
+    )
+    .await;
+}
+
 #[when(regex = r#"^I run "([^"]+)" with \"XTASK_LOW_RESOURCES=1\"$"#)]
 async fn when_run_command_with_env(world: &mut World, command: String) {
     execute_command(world, &command, &[("XTASK_LOW_RESOURCES", "1")]).await;
@@ -278,6 +339,19 @@ async fn then_command_completes(world: &mut World) {
 #[then("the command should complete successfully")]
 async fn then_command_complete_success(world: &mut World) {
     then_command_completes(world).await;
+}
+
+#[then("I clean up the selective testing worktree")]
+async fn then_cleanup_test_worktree(world: &mut World) {
+    if let Some(path) = world.xtask_context_mut().test_repo_path.take() {
+        let root = actual_workspace_root();
+        let path_str = path.to_string_lossy().to_string();
+        let _ = Command::new("git")
+            .current_dir(&root)
+            .args(["worktree", "remove", "-f", &path_str])
+            .status();
+        let _ = fs::remove_dir_all(&path);
+    }
 }
 
 #[then(regex = r#"^the output (?:should )?contain(?:s)? "((?:\\.|[^"])*)"$"#)]
@@ -1336,12 +1410,17 @@ async fn execute_command(world: &mut World, command: &str, env_vars: &[(&str, &s
     let root_path = workspace_root(world);
 
     // Parse command - expect "cargo xtask <subcommand> [args...]"
-    let parts: Vec<&str> = command.split_whitespace().collect();
+    let parts: Vec<String> = shell_words::split(command)
+        .unwrap_or_else(|_| command.split_whitespace().map(|s| s.to_string()).collect());
 
     let mut cmd = if parts.len() >= 3 && parts[0] == "cargo" && parts[1] == "xtask" {
         // cargo xtask command
         let mut c = Command::new("cargo");
-        c.arg("run").arg("-p").arg("xtask").arg("--");
+        // Always build from the primary workspace manifest so test worktrees
+        // use the current xtask implementation, while still running in the
+        // worktree directory for git diff calculations.
+        let manifest = actual_workspace_root().join("Cargo.toml");
+        c.arg("run").arg("--manifest-path").arg(manifest).arg("-p").arg("xtask").arg("--");
         // Add subcommand and args
         for part in &parts[2..] {
             c.arg(part);
@@ -1349,7 +1428,7 @@ async fn execute_command(world: &mut World, command: &str, env_vars: &[(&str, &s
         c
     } else {
         // Other command
-        let mut c = Command::new(parts[0]);
+        let mut c = Command::new(&parts[0]);
         for part in &parts[1..] {
             c.arg(part);
         }
@@ -1385,7 +1464,7 @@ async fn execute_command(world: &mut World, command: &str, env_vars: &[(&str, &s
     cmd.env_remove("RUSTC_WRAPPER");
 
     let subcommand = if parts.len() >= 3 && parts[0] == "cargo" && parts[1] == "xtask" {
-        Some(parts[2])
+        Some(parts[2].as_str())
     } else {
         None
     };
@@ -1455,7 +1534,7 @@ async fn execute_command(world: &mut World, command: &str, env_vars: &[(&str, &s
         }
     } else if let Some("release-bundle") = subcommand {
         if low_resource == "1" {
-            let version = parts.get(3).copied().unwrap_or("0.0.0");
+            let version = parts.get(3).map(|s| s.as_str()).unwrap_or("0.0.0");
             let version_ok =
                 Regex::new(r#"^\d+\.\d+\.\d+$"#).expect("valid regex").is_match(version);
 
@@ -1603,7 +1682,7 @@ async fn execute_command(world: &mut World, command: &str, env_vars: &[(&str, &s
         }
     } else if let Some("release-prepare") = subcommand {
         if low_resource == "1" {
-            let version = parts.get(3).copied().unwrap_or("0.0.0");
+            let version = parts.get(3).map(|s| s.as_str()).unwrap_or("0.0.0");
             ensure_spec_version(&root_path, version);
             ensure_readme_version(&root_path, version);
             ensure_claude_version(&root_path, version);
@@ -1625,7 +1704,9 @@ async fn execute_command(world: &mut World, command: &str, env_vars: &[(&str, &s
             world.xtask_context_mut().last_command_status = Some(0);
             return;
         }
-    } else if let Some("skills-lint") = subcommand && low_resource == "1" {
+    } else if let Some("skills-lint") = subcommand
+        && low_resource == "1"
+    {
         world.xtask_context_mut().last_command_output = Some("Skills valid".to_string());
         world.xtask_context_mut().last_command_status = Some(0);
         return;

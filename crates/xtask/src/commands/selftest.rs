@@ -478,6 +478,8 @@ fn run_ac_coverage_check(verbosity: crate::Verbosity) -> Result<()> {
         #[serde(default)]
         #[allow(dead_code)]
         text: String,
+        #[serde(default = "default_must_have_ac")]
+        must_have_ac: bool,
     }
 
     // When BDD execution is explicitly skipped (e.g., in harnesses to avoid recursion),
@@ -507,7 +509,7 @@ fn run_ac_coverage_check(verbosity: crate::Verbosity) -> Result<()> {
     for story in &ledger.stories {
         for req in &story.requirements {
             for ac in &req.acceptance_criteria {
-                if req.must_have_ac {
+                if req.must_have_ac && ac.must_have_ac {
                     kernel_acs.insert(ac.id.clone(), req.id.clone());
                 } else {
                     non_kernel_acs.insert(ac.id.clone(), req.id.clone());
