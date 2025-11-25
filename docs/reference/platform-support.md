@@ -99,6 +99,8 @@ Windows has stricter file locking than Unix. During `cargo rebuild`, the executa
 
 **Fmt gate policy:** `cargo fmt --all -- --check` is enforced only on Tier 1 (Nix devshell/CI). Tier 2 runs and any session with `XTASK_LOW_RESOURCES=1` skip the fmt gate and print a warning to avoid rustfmt recursion; use a Tier 1 shell for final formatting.
 
+**Policy tests:** `cargo xtask policy-test` (conftest/OPA) runs in Tier 1 (`tier1-selftest` in CI). Tier 2/Windows may skip policy tests locally; use WSL/Nix for canonical policy validation before merging.
+
 **When to use:**
 - Solo Windows development
 - Fast iteration (daily dev work)

@@ -47,22 +47,23 @@ This process adds **four governance layers** to your existing codebase:
 3. **Policy enforcement** - Rego rules for governance
 4. **LLM context bundles** - Safe AI-assisted development
 
-**You keep:**
-- ✅ All existing code
-- ✅ Your current architecture
-- ✅ Existing tests and workflows
-- ✅ Project structure
+**What stays the same (KEEP):**
+- Your existing crates, architecture, CI, and tests
+- Release process and branch protections already in place
+- Current secrets/config layout (no forced rewrites)
 
-**You add:**
-- ✅ AC-first workflow tooling
-- ✅ Policy-as-code validation
-- ✅ LLM context bundler
-- ✅ Acceptance test framework (BDD)
+**What you add (ADD):**
+- `specs/`, `policy/`, `xtask/`, and DevEx specs (`spec_ledger.yaml`, `devex_flows.yaml`, `tasks.yaml`, `specs/tasks_state.yaml`)
+- Governance jobs: `cargo xtask selftest`, `tier1-selftest` CI gate, and optional hooks via `cargo xtask install-hooks`
+- Platform auth guard on `/platform/*` (modes: `none`/`basic`) plus policy tests for governance drift
 
 **Security defaults**
-- Starts open for quick spins.
-- Set PLATFORM_AUTH_MODE=basic and PLATFORM_AUTH_TOKEN=<secret> in .env or config to require a token on write endpoints (e.g., task status updates).
-- The app will warn at startup if basic is selected without a token.
+- `PLATFORM_AUTH_MODE=none` (or unset): local/dev only; platform routes are open for GET/POST/etc.
+- `PLATFORM_AUTH_MODE=basic`: POST/PUT/PATCH/DELETE under `/platform/*` require `PLATFORM_AUTH_TOKEN` (header `X-Platform-Token`).
+- If `basic` is set without a token, startup logs a warning and write endpoints reject until a token is provided.
+
+**Task status normalization**
+- Specs may use `open`, `in_progress`, or other variants; the platform normalizes everything to the canonical `Todo`/`InProgress`/`Review`/`Done` set for filtering and UI consistency.
 
 ---
 

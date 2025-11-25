@@ -78,14 +78,18 @@ pub fn app_with_state(app_state: AppState) -> Router {
 
 fn build_router(app_state: AppState) -> Router {
     let auth_state = app_state.clone();
-    let tasks_router = Router::new()
-        .route("/platform/tasks/{id}/status", post(tasks::update_task_status))
-        .route("/ui/tasks", get(tasks::tasks_ui))
+    let platform_state = app_state.clone();
+    let platform_router = Router::new()
+        .with_state(platform_state.clone())
+        .merge(platform::router(platform_state.clone()))
+        .route("/tasks/{id}/status", post(tasks::update_task_status))
         .layer(axum::middleware::from_fn_with_state(auth_state, middleware::platform_auth_guard))
-        .with_state(app_state.clone());
+        .with_state(platform_state.clone());
+
+    let tasks_router =
+        Router::new().with_state(app_state.clone()).route("/ui/tasks", get(tasks::tasks_ui));
 
     let agent_router = agent::router(app_state.clone());
-    let platform_state = app_state.clone();
 
     Router::new()
         // Template core endpoints - keep these
@@ -94,7 +98,7 @@ fn build_router(app_state: AppState) -> Router {
         .route("/metrics", get(metrics::metrics_handler))
         .route("/api/echo", post(echo)) // For demonstrating error handling in tests
         // Platform introspection endpoints
-        .nest("/platform", platform::router(platform_state.clone()))
+        .nest("/platform", platform_router)
         // Platform UI routes (at root level)
         .merge(platform::ui_router(platform_state))
         // Merge domain endpoints
@@ -114,6 +118,7 @@ fn build_router(app_state: AppState) -> Router {
                 )
             }),
         )
+        .with_state(app_state)
 }
 
 // ============================================================================

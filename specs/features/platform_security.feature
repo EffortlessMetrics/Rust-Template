@@ -30,6 +30,14 @@ Feature: Platform security and log hygiene
       """
     Then the response status code should be 204
 
+  @AC-TPL-PLATFORM-AUTH-BASIC
+  Scenario: Basic auth without a token surfaces a warning state
+    Given platform auth mode is "basic" without a token
+    When I send a GET request to "/platform/status"
+    Then the response status code should be 200
+    And the response body should contain "\"mode\":\"basic\""
+    And the response body should contain "\"token_present\":false"
+
   @AC-TPL-LOG-NO-SECRETS
   Scenario: Platform status redacts secrets
     When I send a GET request to "/platform/status"

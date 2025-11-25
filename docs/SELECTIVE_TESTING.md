@@ -1,8 +1,17 @@
+---
+id: GUIDE-TPL-SELECTIVE-TESTING-001
+title: Selective Testing Guide
+doc_type: guide
+status: draft
+stories: [US-TPL-PLT-001]
+requirements: [REQ-PLT-DEVEX-CONTRACT]
+acs: []
+adrs: [ADR-0005]
+---
+
 # Selective Testing Guide
 
 **Purpose:** Run only the tests affected by your changes, avoiding slow full test suite runs on Tier-2 platforms (native Windows).
-
----
 
 ## Quick Reference
 

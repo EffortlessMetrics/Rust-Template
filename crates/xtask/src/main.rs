@@ -99,6 +99,8 @@ enum Commands {
     },
     /// Run all checks: fmt, clippy, tests
     Check,
+    /// Run pre-commit guardrail checks (fmt/clippy/tests/docs/spellcheck)
+    Precommit,
     /// Run BDD acceptance tests
     Bdd,
     /// Generate LLM context bundle for a task
@@ -141,6 +143,8 @@ enum Commands {
     Doctor,
     /// Verify documentation consistency
     DocsCheck,
+    /// Run spellcheck across docs/specs
+    Spellcheck,
     /// One-command developer bootstrap
     DevUp,
     /// Export dependency graph
@@ -312,6 +316,7 @@ fn main() -> Result<()> {
         }),
         Commands::AdrNew { title } => commands::adr_new::run(&title),
         Commands::Check => commands::check::run(),
+        Commands::Precommit => commands::precommit::run(),
         Commands::Bdd => commands::bdd::run(),
         Commands::Bundle { task } => commands::bundle::run(&task),
         Commands::Audit => commands::audit::run(),
@@ -329,6 +334,7 @@ fn main() -> Result<()> {
         }
         Commands::Doctor => commands::doctor::run(),
         Commands::DocsCheck => commands::docs_check::run(),
+        Commands::Spellcheck => commands::spellcheck::run_with_default_targets(),
         Commands::GraphExport { format, check } => {
             commands::graph_export::run(commands::graph_export::GraphExportArgs { format, check })
         }
@@ -467,6 +473,7 @@ pub fn all_command_names() -> Vec<&'static str> {
         "adr-check",
         "adr-new",
         "check",
+        "precommit",
         "bdd",
         "bundle",
         "clean",
@@ -475,6 +482,7 @@ pub fn all_command_names() -> Vec<&'static str> {
         "audit",
         "doctor",
         "docs-check",
+        "spellcheck",
         "dev-up",
         "fmt-all",
         "graph-export",

@@ -16,7 +16,7 @@ pub struct AgentHintsResponse {
     pub next_tasks: Vec<AgentHint>,
 }
 
-pub fn router(state: AppState) -> Router {
+pub fn router(state: AppState) -> Router<AppState> {
     Router::new().route("/platform/agent/hints", get(agent_hints)).with_state(state)
 }
 
