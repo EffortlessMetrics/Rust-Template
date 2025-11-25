@@ -2,6 +2,7 @@ use axum::{extract::State, response::Html};
 use maud::{DOCTYPE, Markup, html};
 use spec_runtime::{ServiceMetadata, load_all_specs, load_service_metadata};
 
+use super::config_summary;
 use crate::AppState;
 
 /// Shared layout for all UI pages
@@ -181,6 +182,7 @@ pub async fn dashboard(State(state): State<AppState>) -> Html<String> {
     let status_result = load_all_specs(root);
     let tasks_result = spec_runtime::load_tasks(&root.join("specs/tasks.yaml"));
     let metadata = load_service_metadata(&root.join("specs/service_metadata.yaml")).ok();
+    let config = config_summary(&state);
 
     let content = match (status_result, tasks_result) {
         (Ok(specs), Ok(tasks_spec)) => {
@@ -301,6 +303,51 @@ pub async fn dashboard(State(state): State<AppState>) -> Html<String> {
                     p style="margin-top: 1rem;" {
                         a href="/ui/coverage" style="color: #667eea; text-decoration: none; font-weight: 500;" {
                             "View details →"
+                        }
+                    }
+                }
+
+                @if let Some(cfg) = config.clone() {
+                    .card {
+                        h2 { "Runtime Config (redacted)" }
+                        p style="margin-bottom: 0.75rem; color: #555;" {
+                            "Config values are rendered for visibility without leaking secrets; tokens are never shown."
+                        }
+                        ul style="margin-left: 1.25rem; line-height: 1.6;" {
+                            li {
+                                strong { "Env: " }
+                                (cfg.env.clone().unwrap_or_else(|| "unknown".to_string()))
+                            }
+                            li { strong { "HTTP port: " } (cfg.http_port) }
+                            li {
+                                strong { "Auth mode: " }
+                                (cfg.auth.mode.clone())
+                                " ("
+                                @if cfg.auth.token_present { "token configured" } @else { "no token" }
+                                ")"
+                            }
+                        }
+
+                        @if !cfg.settings.is_empty() {
+                            details style="margin-top: 0.75rem;" {
+                                summary style="cursor: pointer; color: #667eea;" { "Settings" }
+                                ul style="margin: 0.5rem 0 0 1.25rem;" {
+                                    @for (k, v) in cfg.settings.iter() {
+                                        li { code { (k) } ": " (v) }
+                                    }
+                                }
+                            }
+                        }
+
+                        @if !cfg.secrets_redacted.is_empty() {
+                            details style="margin-top: 0.75rem;" {
+                                summary style="cursor: pointer; color: #667eea;" { "Secrets (redacted)" }
+                                ul style="margin: 0.5rem 0 0 1.25rem;" {
+                                    @for (k, _) in cfg.secrets_redacted.iter() {
+                                        li { code { (k) } ": " "[REDACTED]" }
+                                    }
+                                }
+                            }
                         }
                     }
                 }

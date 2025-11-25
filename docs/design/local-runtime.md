@@ -25,6 +25,7 @@ Provide a `docker-compose.yaml` at repository root that defines all runtime depe
 Services included:
 - **Postgres**: Database with default credentials matching `config/default.toml`
 - **Jaeger**: OpenTelemetry tracing backend with UI on `localhost:16686`
+- **App (placeholder)**: Binds the same HTTP port as `config/local.yaml` so port alignment is tested even if you don't run the app in Docker
 
 ## Implementation Approach
 
@@ -53,5 +54,19 @@ Update `README.md` and `docs/dev-environment.md` with:
 docker-compose up -d
 cargo run
 ```
+
+Document the environment surface in `config/envs.yaml` so compose defaults, config schema, and local dev shells stay in sync:
+
+```yaml
+envs:
+  dev:
+    HTTP_PORT: 8080
+    DATABASE_URL: postgres://postgres:postgres@localhost:5432/app
+    OTEL_EXPORTER_OTLP_ENDPOINT: http://localhost:4317
+    PLATFORM_AUTH_MODE: open
+    PLATFORM_AUTH_TOKEN: dev-platform-token
+```
+
+This file drives the IaC alignment test (`iac_compose_aligns_with_config`) to keep sample IaC and config/defaults from drifting.
 
 **Benefits**: One command to start all dependencies, matches default config, works on any machine with Docker.

@@ -288,7 +288,7 @@ mod tests {
         let ledger = SpecLedger {
             metadata: Metadata {
                 schema_version: "1.0".to_string(),
-                template_version: "3.3.0".to_string(),
+                template_version: "3.3.1".to_string(),
                 last_updated: "2025-11-22".to_string(),
                 description: "Test ledger for graph AC-has-test validation".to_string(),
             },
@@ -324,14 +324,14 @@ mod tests {
 
         let devex = DevExFlows {
             schema_version: "1.0".to_string(),
-            template_version: "3.3.0".to_string(),
+            template_version: "3.3.1".to_string(),
             commands: std::collections::HashMap::new(),
             flows: std::collections::HashMap::new(),
         };
 
         let docs = crate::DocIndex {
             schema_version: "1.0".to_string(),
-            template_version: "3.3.0".to_string(),
+            template_version: "3.3.1".to_string(),
             docs: vec![],
         };
 
@@ -371,7 +371,7 @@ mod tests {
         // Create a minimal DevExFlows with no commands
         let devex = DevExFlows {
             schema_version: "1.0".to_string(),
-            template_version: "3.3.0".to_string(),
+            template_version: "3.3.1".to_string(),
             commands: std::collections::HashMap::new(),
             flows: std::collections::HashMap::new(),
         };
@@ -383,7 +383,7 @@ mod tests {
         let ledger_with_tests = SpecLedger {
             metadata: Metadata {
                 schema_version: "1.0".to_string(),
-                template_version: "3.3.0".to_string(),
+                template_version: "3.3.1".to_string(),
                 last_updated: "2025-11-22".to_string(),
                 description: "Test ledger".to_string(),
             },
@@ -416,7 +416,7 @@ mod tests {
         let ledger_without_tests = SpecLedger {
             metadata: Metadata {
                 schema_version: "1.0".to_string(),
-                template_version: "3.3.0".to_string(),
+                template_version: "3.3.1".to_string(),
                 last_updated: "2025-11-22".to_string(),
                 description: "Test ledger".to_string(),
             },
@@ -456,14 +456,14 @@ mod tests {
         // Create a minimal DevExFlows
         let devex = DevExFlows {
             schema_version: "1.0".to_string(),
-            template_version: "3.3.0".to_string(),
+            template_version: "3.3.1".to_string(),
             commands: HashMap::new(),
             flows: HashMap::new(),
         };
 
         let docs = crate::DocIndex {
             schema_version: "1.0".to_string(),
-            template_version: "3.3.0".to_string(),
+            template_version: "3.3.1".to_string(),
             docs: vec![],
         };
 
@@ -471,7 +471,7 @@ mod tests {
         let ledger_valid = SpecLedger {
             metadata: Metadata {
                 schema_version: "1.0".to_string(),
-                template_version: "3.3.0".to_string(),
+                template_version: "3.3.1".to_string(),
                 last_updated: "2025-11-22".to_string(),
                 description: "Test ledger".to_string(),
             },
@@ -505,7 +505,7 @@ mod tests {
         let ledger_invalid = SpecLedger {
             metadata: Metadata {
                 schema_version: "1.0".to_string(),
-                template_version: "3.3.0".to_string(),
+                template_version: "3.3.1".to_string(),
                 last_updated: "2025-11-22".to_string(),
                 description: "Test ledger".to_string(),
             },
@@ -543,14 +543,14 @@ mod tests {
 
         let docs = crate::DocIndex {
             schema_version: "1.0".to_string(),
-            template_version: "3.3.0".to_string(),
+            template_version: "3.3.1".to_string(),
             docs: vec![],
         };
 
         let ledger = SpecLedger {
             metadata: Metadata {
                 schema_version: "1.0".to_string(),
-                template_version: "3.3.0".to_string(),
+                template_version: "3.3.1".to_string(),
                 last_updated: "2025-11-22".to_string(),
                 description: "Test ledger".to_string(),
             },
@@ -583,7 +583,7 @@ mod tests {
 
         let devex_valid = DevExFlows {
             schema_version: "1.0".to_string(),
-            template_version: "3.3.0".to_string(),
+            template_version: "3.3.1".to_string(),
             commands: commands_valid,
             flows: flows_valid,
         };
@@ -606,7 +606,7 @@ mod tests {
 
         let devex_invalid = DevExFlows {
             schema_version: "1.0".to_string(),
-            template_version: "3.3.0".to_string(),
+            template_version: "3.3.1".to_string(),
             commands: commands_invalid,
             flows: HashMap::new(),
         };
@@ -633,7 +633,7 @@ mod tests {
         let ledger = SpecLedger {
             metadata: Metadata {
                 schema_version: "1.0".to_string(),
-                template_version: "3.3.0".to_string(),
+                template_version: "3.3.1".to_string(),
                 last_updated: "2025-11-22".to_string(),
                 description: "Test ledger".to_string(),
             },
@@ -661,14 +661,14 @@ mod tests {
 
         let devex = DevExFlows {
             schema_version: "1.0".to_string(),
-            template_version: "3.3.0".to_string(),
+            template_version: "3.3.1".to_string(),
             commands: HashMap::new(),
             flows: HashMap::new(),
         };
 
         let docs = crate::DocIndex {
             schema_version: "1.0".to_string(),
-            template_version: "3.3.0".to_string(),
+            template_version: "3.3.1".to_string(),
             docs: vec![],
         };
 

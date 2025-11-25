@@ -5,8 +5,8 @@ services:
     image: postgres:16-alpine
     container_name: rust-template-db
     environment:
-      POSTGRES_USER: app
-      POSTGRES_PASSWORD: app
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
       POSTGRES_DB: app
     ports:
       - "5432:5432"
@@ -32,6 +32,22 @@ services:
       interval: 5s
       timeout: 3s
       retries: 5
+
+  app:
+    image: alpine:3.20
+    container_name: rust-template-app
+    command: ["sh", "-c", "tail -f /dev/null"]
+    environment:
+      HTTP_PORT: ${HTTP_PORT:-8080}
+      DATABASE_URL: ${DATABASE_URL:-postgres://postgres:postgres@localhost:5432/app}
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-http://localhost:4317}
+      PLATFORM_AUTH_MODE: ${PLATFORM_AUTH_MODE:-open}
+      PLATFORM_AUTH_TOKEN: ${PLATFORM_AUTH_TOKEN:-dev-platform-token}
+    ports:
+      - "${HTTP_PORT:-8080}:${HTTP_PORT:-8080}"
+    depends_on:
+      - postgres
+      - jaeger
 
 volumes:
   postgres_data:

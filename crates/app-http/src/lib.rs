@@ -14,6 +14,7 @@ pub mod errors;
 pub mod metrics;
 pub mod middleware;
 pub mod platform;
+pub mod security;
 pub mod tasks;
 
 // Re-export commonly used types
@@ -21,24 +22,42 @@ pub use errors::{AppError, ErrorCode};
 pub use middleware::{REQUEST_ID_HEADER, RequestId};
 
 use business_core::governance::GovernanceRepository;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 #[derive(Clone)]
 pub struct AppState {
     pub governance_repo: Arc<dyn GovernanceRepository>,
     pub workspace_root: PathBuf,
+    pub config: Option<spec_runtime::ValidatedConfig>,
+    pub platform_auth: security::PlatformAuthConfig,
 }
 
 impl AppState {
+    #[allow(dead_code)]
     fn new(governance_repo: Arc<dyn GovernanceRepository>) -> Self {
-        Self { governance_repo, workspace_root: resolve_workspace_root() }
+        let workspace_root = resolve_workspace_root();
+        Self::with_config(governance_repo, workspace_root, None)
+    }
+
+    pub fn with_config(
+        governance_repo: Arc<dyn GovernanceRepository>,
+        workspace_root: PathBuf,
+        config: Option<spec_runtime::ValidatedConfig>,
+    ) -> Self {
+        let config = config.or_else(|| load_validated_config(&workspace_root));
+        let platform_auth = security::PlatformAuthConfig::from_sources(config.as_ref());
+        platform_auth.warn_if_misconfigured();
+
+        Self { governance_repo, workspace_root, config, platform_auth }
     }
 }
 
 /// Create the application router (reusable for both main and tests)
 pub fn app(governance_repo: Arc<dyn GovernanceRepository>) -> Router {
-    let app_state = AppState::new(governance_repo);
+    let workspace_root = resolve_workspace_root();
+    let config = load_validated_config(&workspace_root);
+    let app_state = AppState::with_config(governance_repo, workspace_root, config);
     build_router(app_state)
 }
 
@@ -48,13 +67,21 @@ pub fn app_with_workspace_root(
     governance_repo: Arc<dyn GovernanceRepository>,
     workspace_root: PathBuf,
 ) -> Router {
-    build_router(AppState { governance_repo, workspace_root })
+    let config = load_validated_config(&workspace_root);
+    build_router(AppState::with_config(governance_repo, workspace_root, config))
+}
+
+/// Create an application router from an already-constructed state (e.g., when main has validated config).
+pub fn app_with_state(app_state: AppState) -> Router {
+    build_router(app_state)
 }
 
 fn build_router(app_state: AppState) -> Router {
+    let auth_state = app_state.clone();
     let tasks_router = Router::new()
         .route("/platform/tasks/{id}/status", post(tasks::update_task_status))
         .route("/ui/tasks", get(tasks::tasks_ui))
+        .layer(axum::middleware::from_fn_with_state(auth_state, middleware::platform_auth_guard))
         .with_state(app_state.clone());
 
     let agent_router = agent::router(app_state.clone());
@@ -261,4 +288,22 @@ pub fn resolve_workspace_root() -> PathBuf {
     }
 
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).parent().unwrap().parent().unwrap().to_path_buf()
+}
+
+fn load_validated_config(workspace_root: &Path) -> Option<spec_runtime::ValidatedConfig> {
+    let config_path = workspace_root.join("config/local.yaml");
+    let schema_path = workspace_root.join("specs/config_schema.yaml");
+
+    match spec_runtime::validate_config(&schema_path, &config_path) {
+        Ok(cfg) => Some(cfg),
+        Err(err) => {
+            tracing::warn!(
+                "Failed to validate config at {} against {}: {}",
+                config_path.display(),
+                schema_path.display(),
+                err
+            );
+            None
+        }
+    }
 }
