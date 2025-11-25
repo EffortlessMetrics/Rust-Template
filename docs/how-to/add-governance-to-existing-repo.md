@@ -54,10 +54,15 @@ This process adds **four governance layers** to your existing codebase:
 - ✅ Project structure
 
 **You add:**
-- ➕ AC-first workflow tooling
-- ➕ Policy-as-code validation
-- ➕ LLM context bundler
-- ➕ Acceptance test framework (BDD)
+- ✅ AC-first workflow tooling
+- ✅ Policy-as-code validation
+- ✅ LLM context bundler
+- ✅ Acceptance test framework (BDD)
+
+**Security defaults**
+- Starts open for quick spins.
+- Set PLATFORM_AUTH_MODE=basic and PLATFORM_AUTH_TOKEN=<secret> in .env or config to require a token on write endpoints (e.g., task status updates).
+- The app will warn at startup if basic is selected without a token.
 
 ---
 

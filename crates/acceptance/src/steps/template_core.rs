@@ -198,6 +198,7 @@ async fn then_body_field_matches_header(
 }
 
 #[given(regex = r#"^I set "([^"]+)" header to "([^"]+)"$"#)]
+#[when(regex = r#"^I set "([^"]+)" header to "([^"]+)"$"#)]
 async fn given_set_header(world: &mut World, header_name: String, header_value: String) {
     use http::HeaderValue;
     use http::header::HeaderName;

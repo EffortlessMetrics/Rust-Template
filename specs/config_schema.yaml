@@ -17,6 +17,16 @@ settings:
     type: string
     description: "OTLP collector URL"
     required: false
+  - key: platform.auth_mode
+    type: string
+    description: "Authentication mode for platform endpoints (open|basic)"
+    default: "open"
+    required: false
+  - key: platform.redact_secrets
+    type: bool
+    description: "Whether to redact secrets from status/UI output"
+    default: true
+    required: false
 
 secrets:
   - key: db.url
@@ -26,3 +36,7 @@ secrets:
   - key: auth.jwt_signing_key
     type: string
     required: true
+  - key: platform.auth_token
+    type: string
+    description: "Shared secret for platform basic auth mode"
+    required: false

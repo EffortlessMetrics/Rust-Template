@@ -50,6 +50,13 @@ impl Default for World {
         let specs_dir = temp_dir.path().join("specs");
         fs::create_dir_all(&specs_dir).expect("Failed to create temp specs directory");
 
+        // Reset auth-related env vars so scenarios start from a known state
+        // SAFETY: Test runner is single-threaded here; resetting env vars is scoped to the test process.
+        unsafe {
+            std::env::remove_var("PLATFORM_AUTH_MODE");
+            std::env::remove_var("PLATFORM_AUTH_TOKEN");
+        }
+
         // Seed temp specs with a copy of the workspace specs so endpoints can operate
         let workspace_root =
             Path::new(env!("CARGO_MANIFEST_DIR")).parent().unwrap().parent().unwrap();
@@ -118,6 +125,15 @@ impl World {
     /// Get mutable reference to xtask context
     pub fn xtask_context_mut(&mut self) -> &mut XtaskContext {
         &mut self.xtask_context
+    }
+
+    /// Rebuild the application router after mutating environment variables.
+    pub fn reload_app(&mut self) {
+        let specs_dir = self._temp_dir.path().join("specs");
+        let governance_repo =
+            std::sync::Arc::new(adapters_spec_fs::FsGovernanceRepository::new(specs_dir));
+        self.app =
+            app_http::app_with_workspace_root(governance_repo, self._temp_dir.path().to_path_buf());
     }
 }
 

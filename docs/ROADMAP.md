@@ -130,7 +130,7 @@ Exit: Tier-2 docs match reality; one clear Windows happy path.
   - Required `xtask` commands and intents.
   - Required `/platform/*` endpoints and behaviours.
   - Expectations for `service_metadata.yaml`, release bundles, `FRICTION_LOG.md`.
-- Update `service_metadata.yaml` with the new baseline `template_version` (e.g., `3.3.0`) and links to kernel docs.
+- Update `service_metadata.yaml` with the new baseline `template_version` (e.g., `3.3.1`) and links to kernel docs.
 - Align `docs/why-this-exists.md`, `AGENT_GUIDE.md`, `CLAUDE.md` so they tell the same LLM-native, kernel-governed story.
 
 Exit: “What does it mean to be a compliant Rust-as-Spec cell?” is answerable on one page and matches enforcement in `selftest`.

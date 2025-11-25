@@ -1,6 +1,7 @@
-# Rust-as-Spec Platform Cell (v3.3.0) 🎉
-**Current Template Version:** v3.2.0
+# Rust-as-Spec Platform Cell (v3.3.1) 🎉
 **Current Template Version:** v3.3.0
+**Current Template Version:** v3.3.1
+
 
 [![CI](https://github.com/EffortlessMetrics/Rust-Template/actions/workflows/ci-template-selftest.yml/badge.svg)](https://github.com/EffortlessMetrics/Rust-Template/actions/workflows/ci-template-selftest.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE-MIT)

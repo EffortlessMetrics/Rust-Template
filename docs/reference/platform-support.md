@@ -7,7 +7,7 @@ tags: [platform, windows, linux, macos, wsl2, nix, troubleshooting]
 related_requirements:
   - REQ-TPL-DEV-ENVIRONMENT
   - REQ-TPL-CROSS-PLATFORM
-last_updated: 2025-11-22
+last_updated: 2025-11-25
 ---
 
 # Platform Support Reference
@@ -424,7 +424,7 @@ cargo xtask selftest
 
 ## Git Hooks (Cross-Platform)
 
-### Unified POSIX Hooks (v3.3.0)
+### Unified POSIX Hooks (v3.3.1)
 
 Git hooks are **POSIX shell scripts** on all platforms, including Windows.
 
@@ -951,4 +951,4 @@ Are you on Linux/macOS?
 
 ---
 
-**Last Updated:** 2025-11-22 (v3.3.0)
+**Last Updated:** 2025-11-25 (v3.3.1)

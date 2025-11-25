@@ -1,4 +1,4 @@
-use app_http::resolve_workspace_root;
+use app_http::{AppState, app_with_state, resolve_workspace_root};
 use std::net::SocketAddr;
 use tracing::info;
 
@@ -32,8 +32,13 @@ async fn main() -> anyhow::Result<()> {
     let governance_repo =
         std::sync::Arc::new(adapters_spec_fs::FsGovernanceRepository::new(specs_dir));
 
-    // Build our application router from lib
-    let app = app_http::app(governance_repo);
+    // Build our application router from lib, reusing validated config
+    let app_state = AppState::with_config(
+        governance_repo,
+        workspace_root.clone(),
+        Some(validated_config.clone()),
+    );
+    let app = app_with_state(app_state);
 
     // Start server on the documented platform port
     let addr = SocketAddr::from(([0, 0, 0, 0], validated_config.http_port));

@@ -7,6 +7,7 @@ use std::path::Path;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ValidatedConfig {
+    pub env: Option<String>,
     pub http_port: u16,
     pub settings: HashMap<String, Value>,
     pub secrets: HashMap<String, String>,
@@ -121,6 +122,7 @@ pub fn validate_config(schema_path: &Path, config_path: &Path) -> Result<Validat
     }
 
     Ok(ValidatedConfig {
+        env: config.env.clone(),
         http_port: http_port.unwrap_or(8080),
         settings: merged_settings,
         secrets: merged_secrets,

@@ -65,6 +65,7 @@ pub enum ErrorCode {
     InvalidAmount,
     MissingField,
     InvalidFormat,
+    Unauthorized,
 
     // Business logic errors (4xx)
     RefundNotEligible,
@@ -87,6 +88,7 @@ impl std::fmt::Display for ErrorCode {
             ErrorCode::InvalidAmount => write!(f, "INVALID_AMOUNT"),
             ErrorCode::MissingField => write!(f, "MISSING_FIELD"),
             ErrorCode::InvalidFormat => write!(f, "INVALID_FORMAT"),
+            ErrorCode::Unauthorized => write!(f, "UNAUTHORIZED"),
             ErrorCode::RefundNotEligible => write!(f, "REFUND_NOT_ELIGIBLE"),
             ErrorCode::OrderNotFound => write!(f, "ORDER_NOT_FOUND"),
             ErrorCode::InsufficientFunds => write!(f, "INSUFFICIENT_FUNDS"),

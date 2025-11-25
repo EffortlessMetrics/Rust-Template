@@ -2,6 +2,9 @@ env: dev
 settings:
   http.port: 8080
   telemetry.otlp_endpoint: "http://localhost:4317"
+  platform.auth_mode: "open"
+  platform.redact_secrets: true
 secrets:
   db.url: "postgres://postgres:postgres@localhost:5432/app"
   auth.jwt_signing_key: "dev-secret-key"
+  platform.auth_token: "dev-platform-token"

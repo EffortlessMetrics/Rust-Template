@@ -1,0 +1,13 @@
+envs:
+  dev:
+    HTTP_PORT: 8080
+    DATABASE_URL: "postgres://postgres:postgres@localhost:5432/app"
+    OTEL_EXPORTER_OTLP_ENDPOINT: "http://localhost:4317"
+    PLATFORM_AUTH_MODE: "open"
+    PLATFORM_AUTH_TOKEN: "dev-platform-token"
+    POSTGRES_USER: "postgres"
+    POSTGRES_PASSWORD: "postgres"
+    POSTGRES_DB: "app"
+    JAEGER_UI_PORT: 16686
+    OTLP_GRPC_PORT: 4317
+    OTLP_HTTP_PORT: 4318
