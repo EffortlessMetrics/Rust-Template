@@ -3,7 +3,7 @@
 
 metadata:
   schema_version: "1.0"
-  template_version: "3.2.0"
+  template_version: "3.3.0"
   last_updated: "2025-11-20"
   description: "Template core capabilities - v2.4.0 includes health, version, errors, metrics, and supply chain hardening"
   # Template-wide ADRs (not tied to specific stories/requirements)
@@ -584,37 +584,6 @@ stories:
             tests:
               - { type: bdd, tag: "@AC-TPL-PLATFORM-UI-FLOWS" }
 
-      - id: REQ-TPL-PLATFORM-INTROSPECTION
-        title: "Platform Introspection API"
-        tags: [platform, structural]
-        must_have_ac: true
-        description: >
-          The service MUST expose introspection endpoints for specs,
-          DevEx flows, and docs index, so humans and agents can query
-          governance state at runtime.
-        adr: ADR-0001  # Hexagonal architecture
-        acceptance_criteria:
-          - id: AC-TPL-PLATFORM-GRAPH
-            text: "GET /platform/graph returns the governance graph (stories, requirements, ACs, docs, commands, flows) as JSON with nodes[] and edges[]."
-            tags: [kernel]
-            must_have_ac: true
-            tests:
-              - { type: bdd, tag: "@AC-TPL-PLATFORM-GRAPH", file: "specs/features/platform_introspection.feature" }
-
-          - id: AC-TPL-PLATFORM-DEVEX
-            text: "GET /platform/devex/flows returns devex_flows.yaml as JSON, including commands and flows sections."
-            tags: [kernel]
-            must_have_ac: true
-            tests:
-              - { type: bdd, tag: "@AC-TPL-PLATFORM-DEVEX", file: "specs/features/platform_introspection.feature" }
-
-          - id: AC-TPL-PLATFORM-DOCS
-            text: "GET /platform/docs/index returns doc_index.yaml as JSON, including docs[] entries mapped to stories/requirements/ACs/ADRs."
-            tags: [kernel]
-            must_have_ac: true
-            tests:
-              - { type: bdd, tag: "@AC-TPL-PLATFORM-DOCS", file: "specs/features/platform_introspection.feature" }
-
       - id: REQ-TPL-PLATFORM-TASKS
         title: "Platform Tasks Surfacing"
         tags: [platform, devex, structural]
@@ -703,7 +672,8 @@ stories:
             tags: [kernel]
             must_have_ac: true
             tests:
-              - { type: unit, tag: "config_validation_rejects_invalid" }
+              - { type: bdd, tag: "@AC-TPL-CONFIG-VALIDATION" }
+              - { type: unit, tag: "config_validation_rejects_invalid", module: "config::tests::config_validation_rejects_invalid", file: "crates/spec-runtime/src/config.rs" }
 
       - id: REQ-TPL-IAC-ALIGNMENT
         title: "Infrastructure templates align with config schema"

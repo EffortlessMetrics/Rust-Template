@@ -424,7 +424,7 @@ cargo xtask selftest
 
 ## Git Hooks (Cross-Platform)
 
-### Unified POSIX Hooks (v3.2.0)
+### Unified POSIX Hooks (v3.3.0)
 
 Git hooks are **POSIX shell scripts** on all platforms, including Windows.
 
@@ -951,4 +951,4 @@ Are you on Linux/macOS?
 
 ---
 
-**Last Updated:** 2025-11-22 (v3.2.0)
+**Last Updated:** 2025-11-22 (v3.3.0)

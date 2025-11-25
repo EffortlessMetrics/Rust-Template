@@ -16,6 +16,10 @@ pub struct World {
     pub _temp_dir: std::sync::Arc<tempfile::TempDir>,
     /// Last CLI command output (deprecated, use xtask_context)
     pub last_command_output: Option<CommandOutput>,
+    /// Result of the most recent config validation
+    pub config_validation_ok: Option<bool>,
+    /// Error message from config validation (if any)
+    pub config_validation_error: Option<String>,
     /// XTask command execution context
     xtask_context: XtaskContext,
 }
@@ -53,6 +57,16 @@ impl Default for World {
         copy_dir_recursive(&workspace_specs, &specs_dir)
             .expect("Failed to copy workspace specs into temp dir");
 
+        // Copy config directory so startup validation succeeds in tests
+        let workspace_config = workspace_root.join("config");
+        let temp_config = temp_dir.path().join("config");
+        if workspace_config.exists() {
+            copy_dir_recursive(&workspace_config, &temp_config)
+                .expect("Failed to copy workspace config into temp dir");
+        } else {
+            std::fs::create_dir_all(&temp_config).expect("Failed to create temp config directory");
+        }
+
         // Make the spec root discoverable for app-http/xtask consumers.
         // SAFETY: Updating process environment here is confined to the test runner setup.
         unsafe {
@@ -68,6 +82,8 @@ impl Default for World {
             request_headers: HeaderMap::new(),
             _temp_dir: temp_dir,
             last_command_output: None,
+            config_validation_ok: None,
+            config_validation_error: None,
             xtask_context: XtaskContext::default(),
         }
     }

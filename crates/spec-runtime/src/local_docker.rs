@@ -24,17 +24,14 @@ mod tests {
             compose_path.display()
         );
 
-        let contents = fs::read_to_string(&compose_path)
-            .expect("Failed to read docker-compose.yaml");
+        let contents =
+            fs::read_to_string(&compose_path).expect("Failed to read docker-compose.yaml");
 
         assert!(
             contents.contains("postgres"),
             "docker-compose.yaml should define a postgres service"
         );
-        assert!(
-            contents.contains("jaeger"),
-            "docker-compose.yaml should define a jaeger service"
-        );
+        assert!(contents.contains("jaeger"), "docker-compose.yaml should define a jaeger service");
         assert!(
             contents.contains("5432"),
             "docker-compose.yaml should expose postgres on the expected port"
