@@ -8,7 +8,7 @@
 
 use anyhow::{Context, Result};
 use colored::Colorize;
-use std::{collections::HashSet, fs, path::PathBuf, process::Command};
+use std::{collections::HashSet, env, fs, path::PathBuf, process::Command};
 
 use super::ac_parsing::{AC_PATTERN_WITH_AT, parse_features_with_metadata};
 
@@ -514,10 +514,13 @@ fn execute_test_command(cmd: &TestCommand) -> Result<bool> {
 pub fn run(args: TestChangedArgs) -> Result<()> {
     println!("{}", "Analyzing changed files...".bold());
 
+    let base =
+        env::var("XTASK_CHANGED_BASE").ok().filter(|b| !b.trim().is_empty()).unwrap_or(args.base);
+
     // Get changed files
     let plan_only = args.plan_only || plan_only_mode();
     let (base_ref, changed_files) =
-        get_changed_files(&args.base).context("Failed to get changed files")?;
+        get_changed_files(&base).context("Failed to get changed files")?;
 
     if changed_files.is_empty() {
         println!("{}", "No changes detected - no tests needed.".green());

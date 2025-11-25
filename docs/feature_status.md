@@ -81,5 +81,5 @@ Auto-generated AC status from acceptance (BDD) and unit tests.
 
 ACs with no mapped or executed tests:
 
-- AC-TPL-LOCAL-DOCKER: A docker-compose.yaml file exists providing Postgres and Jaeger, configured to match the application's default config for local development.
+- AC-TPL-LOCAL-DOCKER: Optional local Docker compose (Postgres + Jaeger) aligns with the application's default local config; convenience only, not a gating kernel requirement.
 

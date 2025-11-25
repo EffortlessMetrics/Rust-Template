@@ -1,6 +1,6 @@
 # Roadmap: Rust-as-Spec Platform Cell
 
-This roadmap is the shortest path to “fully implemented”: kernel ACs green on Tier-1, flows and APIs stable enough that other teams can drop this cell in and trust it. Current state is roughly 85–90% complete.
+This roadmap is the shortest path to “fully implemented”: kernel ACs green on Tier-1, flows and APIs stable enough that other teams can drop this cell in and trust it. Current state: Kernel ACs are 100% passing on Tier-1 (Nix dev shell on Linux/macOS/WSL2). The only open item is a non-kernel local Docker convenience AC (`AC-TPL-LOCAL-DOCKER`), which is intentionally optional and not a gating requirement.
 
 ---
 
