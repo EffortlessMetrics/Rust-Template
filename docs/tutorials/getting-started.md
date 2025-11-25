@@ -132,7 +132,7 @@ cargo run
 **Expected output:**
 ```
 INFO app_http: Starting HTTP service
-INFO app_http: Listening on 0.0.0.0:3000
+INFO app_http: Listening on 0.0.0.0:8080
 ```
 
 ### Test the endpoints
@@ -141,14 +141,14 @@ In another terminal:
 
 ```bash
 # Health check
-curl http://localhost:3000/health
+curl http://localhost:8080/health
 
 # Expected: {"status":"ok","service":"refunds-api"}
 ```
 
 ```bash
 # Create a refund
-curl -X POST http://localhost:3000/refunds \
+curl -X POST http://localhost:8080/refunds \
   -H "Content-Type: application/json" \
   -d '{"order_id":"ORD-123","amount_cents":5000}'
 
@@ -230,7 +230,7 @@ cargo run -p app-http
 
 Make a request:
 ```bash
-curl -X POST http://localhost:3000/refunds \
+curl -X POST http://localhost:8080/refunds \
   -H "Content-Type: application/json" \
   -d '{"order_id":"ORD-456","amount_cents":3000}'
 ```
@@ -400,8 +400,8 @@ See `docs/how-to/use-llm-bundles.md` for best practices.
 - Then retry `cargo run -p xtask -- quickstart`
 
 **HTTP service won't start:**
-- Check port 3000 isn't in use: `lsof -i :3000`
-- Try different port: Edit `crates/app-http/src/main.rs`, change `3000` to `8080`
+- Check port 8080 isn't in use: `lsof -i :8080`
+- Try different port: Edit `crates/app-http/src/main.rs`, change `8080` to your chosen port
 
 **BDD tests fail:**
 - Check `specs/features/*.feature` syntax
@@ -423,3 +423,4 @@ You've now seen the template's core workflow:
 The template enforces quality by default - doing things right is the path of least resistance.
 
 Welcome to AC-first, policy-driven, LLM-native, governance-bounded Rust development! 🦀
+

@@ -33,6 +33,8 @@ pub struct XtaskContext {
     pub test_backup_path: Option<std::path::PathBuf>,
     /// Path to skills directory for validation (AC-TPL-AGENT-SKILLS)
     pub test_skills_dir: Option<std::path::PathBuf>,
+    /// Path to release evidence generated during tests
+    pub test_evidence_path: Option<std::path::PathBuf>,
 }
 
 impl Default for World {

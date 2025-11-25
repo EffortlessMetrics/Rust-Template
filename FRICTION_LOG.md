@@ -1,6 +1,6 @@
 # Friction Log
 
-This log captures friction points discovered during developen http://localhost:3000/ui/graphge.
+This log captures friction points discovered during development.
 
 ## AGENT-001: UI/API Inconsistency - Tasks Not Shown in UI/Hints When tasks_state.yaml Missing
 
@@ -41,7 +41,7 @@ After fix:
 
 ---
 
-### AGENT-001: Port discovery focurl http://localhost:3000/healthopment
+### AGENT-001: Port discovery
 **Discovered**: 2025-11-20T22:42
 **Severity**: Low
 **Context**: Agent pilot run - Phase 1 (Discover Work)
@@ -51,7 +51,7 @@ When attempting to call `GET /platform/agent/hints`, initially tried port 8080 (
 
 **Expected behavior**:
 Either:
-1. Agent documentation should specify the default port (3000)
+1. Agent documentation should specify the default port (8080)
 2. `cargo xtask` should have a command to show running service ports
 3. App should log the URL it's listening on at startup
 
@@ -63,9 +63,10 @@ ps aux | grep app-http | grep -v grep, then lsof -p <PID>
 ```
 
 **Fix Implemented** (2025-11-21):
-1. Updated `docs/AGENT_GUIDE.md` - all localhost references now use port 3000
-2. Updated `README.md` - Quick Start section specifies port 3000
-3. Added `cargo run -p xtask -- dev-up` command which displays correct port (3000) in next steps
-4. Added "0. First Run" section to AGENT_GUIDE recommending dev-up as entry point
+1. Standardized app-http to listen on port 8080 by default
+2. Updated `docs/AGENT_GUIDE.md` - all localhost references now use port 8080
+3. Updated `README.md` - Quick Start section specifies port 8080
+4. `cargo run -p xtask -- dev-up` next-steps output now shows port 8080
+5. Added "0. First Run" section to AGENT_GUIDE recommending dev-up as entry point
 
 **Status**: Resolved

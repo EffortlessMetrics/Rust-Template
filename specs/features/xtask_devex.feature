@@ -39,7 +39,7 @@ Feature: Developer Experience Commands
     And the output should contain "dev-up complete"
     And the output should contain "Next steps"
     And the output should contain "cargo run -p app-http"
-    And the output should contain "http://localhost:3000/ui"
+    And the output should contain "http://localhost:8080/ui"
 
   @AC-PLT-018 @devup
   Scenario: dev-up checks Docker availability
@@ -244,7 +244,7 @@ Feature: Developer Experience Commands
     And the output should suggest "cargo xtask tasks-list"
     And the output should suggest "cargo xtask selftest"
     And the output should suggest "cargo run -p app-http"
-    And the output should suggest the UI URL "http://localhost:3000/ui"
+    And the output should suggest the UI URL "http://localhost:8080/ui"
 
   @AC-PLT-019
   Scenario: selftest displays condensed summary with 7 steps

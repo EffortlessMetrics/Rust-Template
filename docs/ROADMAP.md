@@ -6,25 +6,27 @@ This template is a **self-healing platform cell**: a governed Rust service that 
 
 Unlike conventional templates that drift from their documented behavior over time, this repository maintains a living contract between **what the code promises** (specs) and **what it delivers** (runtime), enforced automatically by CI.
 
+It is deliberately **LLM-native and governance-bounded**: agents handle the mechanical work through named flows, deterministic gates (`cargo xtask selftest`, policy tests, graph invariants) keep changes honest, and humans still merge with evidence.
+
 ---
 
    - Concrete work items with recommended flows
    - Context-aware `suggest-next` showing satisfied vs pending steps
-   - Agent-friendly guidance for LLM-driven workflows
+   - Agent-friendly guidance for LLM-native, governance-bounded workflows
 
 5. **Self-Governing Infrastructure**
    - **7-Step Selftest** as mandatory CI gate:
      1. Core checks (fmt, clippy, tests)
      2. BDD acceptance tests (specs → runtime behavior)
      3. AC status mapping & ADR references (traceability)
-     4. LLM context bundler (safe AI augmentation)
+     4. LLM context bundler (governance-bounded agent work)
      5. Policy tests (compliance via OPA/Rego)
      6. DevEx contract (required commands exist)
      7. Graph invariants (structural integrity)
    - **Graph invariants** prevent orphaned requirements, missing ACs, unreachable commands
    - **Real-time policy status** exposed via `/platform/status`
 
-6. **Platform Introspection APIs** ([`/platform/*`](http://localhost:3000/platform/status))
+6. **Platform Introspection APIs** ([`/platform/*`](http://localhost:8080/platform/status))
    - `/platform/status` – Governance health metrics
    - `/platform/graph` – Full governance graph as JSON
    - `/platform/tasks` – Work queue for agents and humans
@@ -32,7 +34,7 @@ Unlike conventional templates that drift from their documented behavior over tim
    - `/platform/devex/flows` – Developer workflows
    - `/platform/docs/index` – Documentation inventory
 
-7. **Web UI** ([`/ui`](http://localhost:3000/ui))
+7. **Web UI** ([`/ui`](http://localhost:8080/ui))
    - Rust-native governance console (maud + htmx, zero build step)
    - Dashboard: Platform health + policy status + governance contracts
    - Graph: Interactive Mermaid visualization
@@ -125,7 +127,7 @@ Unlike conventional templates that drift from their documented behavior over tim
 - [x] **Status Dashboard**: `cargo xtask status` shows governance health at a glance
 - [x] **Selftest Summary**: Condensed output with clear pass/fail indicators
 - [x] **Low-Resource Mode**: `XTASK_LOW_RESOURCES=1` for CI/constrained environments
-- [x] **Port Standardization**: All services on `localhost:3000` (was 8080)
+- [x] **Port Standardization**: All services on `localhost:8080` (was 3000)
 - [x] **Friction Log Integration**: Resolved entries tracked in governance
 
 ---
@@ -382,3 +384,4 @@ During the pilot, this roadmap is **living**. We update it based on friction log
 - ✅ Governance model is the right weight (with polish)
 - ✅ Agents can effectively use the platform APIs
 - ✅ Selftest + friction log drives continuous improvement
+

@@ -73,6 +73,7 @@ impl AcCoverage {
         self.pass + self.fail + self.unknown
     }
 
+    #[allow(dead_code)]
     fn with_tests(&self) -> usize {
         self.pass + self.fail
     }
@@ -254,7 +255,7 @@ fn print_status_dashboard(
     println!("  • View tasks:     {}", "cargo xtask tasks-list".blue());
     println!("  • Run selftest:   {}", "cargo xtask selftest".blue());
     println!("  • Start platform: {}", "cargo run -p app-http".blue());
-    println!("  • View UI:        {}", "http://localhost:3000/ui".blue());
+    println!("  • View UI:        {}", "http://localhost:8080/ui".blue());
     println!("{}", "======================================".blue());
     println!();
 }

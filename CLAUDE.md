@@ -1,4 +1,5 @@
 # Agent Guidelines: Rust-as-Spec Platform Cell
+**Template Version:** v3.2.0
 
 **You are a team member working in a self-governing platform cell.**
 

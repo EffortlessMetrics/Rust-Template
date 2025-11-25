@@ -34,19 +34,21 @@ impl GovernanceRepository for FsGovernanceRepository {
         &self,
         task_id: &TaskId,
     ) -> Result<business_core::governance::Task, GovernanceError> {
-        // Load status from tasks_state.yaml
-        let status = tasks_state::get_task_status(&self.state_file_path, task_id)
-            .map_err(|e| GovernanceError::Io(std::io::Error::other(e)))?
-            .unwrap_or(TaskStatus::Todo);
-
-        // Load title from tasks.yaml
         let definitions = tasks_def::load_tasks_definitions(&self.tasks_file_path)
             .map_err(|e| GovernanceError::Io(std::io::Error::other(e)))?;
 
-        let title = definitions
-            .get(task_id.0.as_str())
-            .map(|def| def.title.clone())
-            .unwrap_or_else(|| task_id.0.clone());
+        let definition = definitions.get(task_id.0.as_str());
+
+        // Load status from tasks_state.yaml, falling back to tasks.yaml definition
+        let status = tasks_state::get_task_status(&self.state_file_path, task_id)
+            .map_err(|e| GovernanceError::Io(std::io::Error::other(e)))?
+            .or_else(|| {
+                definition.and_then(|def| def.status.as_deref().and_then(parse_task_status))
+            })
+            .unwrap_or(TaskStatus::Todo);
+
+        // Load title from tasks.yaml (or use ID as last resort)
+        let title = definition.map(|def| def.title.clone()).unwrap_or_else(|| task_id.0.clone());
 
         Ok(business_core::governance::Task { id: task_id.clone(), title, status })
     }

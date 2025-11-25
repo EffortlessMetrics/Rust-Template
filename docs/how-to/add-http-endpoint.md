@@ -123,10 +123,10 @@ cargo run -p app-http
 Test the endpoint:
 ```bash
 # Should return refund
-curl http://localhost:3000/refunds/REF-12345
+curl http://localhost:8080/refunds/REF-12345
 
 # Should return 404
-curl http://localhost:3000/refunds/INVALID
+curl http://localhost:8080/refunds/INVALID
 ```
 
 ---
@@ -317,3 +317,4 @@ async fn test_get_refund_endpoint() {
 - `docs/tutorials/first-ac-change.md` - AC-first workflow
 - `docs/explanation/architecture.md` - Hexagonal architecture details
 - `TEMPLATE_API.md` - xtask commands reference
+

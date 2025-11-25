@@ -63,7 +63,7 @@ pub fn run() -> Result<()> {
     println!("{}", "✅ dev-up complete.".green().bold());
     println!("Next steps:");
     println!("  1. {}", "cargo run -p app-http".cyan());
-    println!("  2. Open {}", "http://localhost:3000/ui".cyan());
+    println!("  2. Open {}", "http://localhost:8080/ui".cyan());
 
     Ok(())
 }

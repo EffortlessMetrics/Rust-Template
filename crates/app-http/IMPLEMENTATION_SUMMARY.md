@@ -279,18 +279,18 @@ cargo test -p app-http
 ### Manual Testing
 ```bash
 # Test request ID generation
-curl -v http://localhost:3000/health
+curl -v http://localhost:8080/health
 
 # Test request ID preservation
-curl -v -H "X-Request-ID: my-test-id" http://localhost:3000/health
+curl -v -H "X-Request-ID: my-test-id" http://localhost:8080/health
 
 # Test validation error
-curl -X POST http://localhost:3000/refunds \
+curl -X POST http://localhost:8080/refunds \
   -H "Content-Type: application/json" \
   -d '{"orderId": "ORD-123", "amountCents": 0}'
 
 # Test successful creation
-curl -X POST http://localhost:3000/refunds \
+curl -X POST http://localhost:8080/refunds \
   -H "Content-Type: application/json" \
   -d '{"orderId": "ORD-123", "amountCents": 1000}'
 ```
@@ -370,3 +370,4 @@ This implementation provides a production-ready observability foundation with:
 - ✅ Clean architecture integration
 
 The patterns demonstrated in the `health` and `create_refund` handlers serve as reference implementations for the rest of the service.
+

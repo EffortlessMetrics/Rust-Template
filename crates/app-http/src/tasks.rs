@@ -7,9 +7,10 @@ use axum::{
     extract::{Path, State},
     response::{Html, IntoResponse},
 };
-use business_core::governance::{GovernanceRepository, TaskId, TaskService, TaskStatus};
+use business_core::governance::{TaskId, TaskService, TaskStatus};
 use serde::Deserialize;
-use std::sync::Arc;
+
+use crate::AppState;
 
 #[derive(Deserialize)]
 pub struct UpdateTaskStatusRequest {
@@ -17,13 +18,13 @@ pub struct UpdateTaskStatusRequest {
 }
 
 pub async fn update_task_status(
-    State(repo): State<Arc<dyn GovernanceRepository>>,
+    State(state): State<AppState>,
     Path(id): Path<String>,
     headers: HeaderMap,
     body: Bytes,
 ) -> Result<impl IntoResponse, AppError> {
     let payload = parse_update_task_status(&headers, &body)?;
-    let service = TaskService::new(repo);
+    let service = TaskService::new(state.governance_repo.clone());
     service.move_task(&TaskId(id), payload.status)?;
     Ok(StatusCode::NO_CONTENT)
 }
@@ -66,10 +67,8 @@ fn parse_update_task_status(
     ))
 }
 
-pub async fn tasks_ui(
-    State(repo): State<Arc<dyn GovernanceRepository>>,
-) -> Result<impl IntoResponse, AppError> {
-    let service = TaskService::new(repo);
+pub async fn tasks_ui(State(state): State<AppState>) -> Result<impl IntoResponse, AppError> {
+    let service = TaskService::new(state.governance_repo.clone());
     let tasks = service.list_tasks()?;
 
     let mut todo = Vec::new();

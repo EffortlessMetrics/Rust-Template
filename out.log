@@ -1,0 +1,422 @@
+Feature: Agent Hints API
+  Scenario: GET /platform/agent/hints returns context-aware hints
+   ✔> Given the platform is running
+   ✔  Given the following tasks exist in "specs/tasks.yaml":
+       | id            | title                    | status     | requirement |
+       | TASK-HINT-001 | Implement authentication | Todo       | REQ-TPL-001 |
+       | TASK-HINT-002 | Write unit tests         | InProgress | REQ-TPL-002 |
+       | TASK-HINT-003 | Deploy to production     | Done       | REQ-TPL-003 |
+   ✔  When I send a GET request to "/platform/agent/hints"
+   ✔  Then the response status code should be 200
+   ✔  And the response body should be valid JSON
+   ✔  And the JSON response should have field "next_tasks"
+  Scenario: Hints include next steps based on current state
+   ✔> Given the platform is running
+   ✔  Given the following tasks exist in "specs/tasks.yaml":
+       | id            | title                  | status     | requirement |
+       | TASK-HINT-010 | Fix authentication bug | Todo       | REQ-TPL-001 |
+       | TASK-HINT-011 | Add integration tests  | InProgress | REQ-TPL-002 |
+       | TASK-HINT-012 | Update documentation   | Done       | REQ-TPL-003 |
+   ✔  When I send a GET request to "/platform/agent/hints"
+   ✔  Then the response status code should be 200
+   ✔  And the JSON response should have field "next_tasks"
+   ✔  And the "next_tasks" array should contain task "TASK-HINT-010"
+   ✔  And the "next_tasks" array should contain task "TASK-HINT-011"
+   ✔  And the "next_tasks" array should not contain task "TASK-HINT-012"
+  Scenario: Hints filter tasks by Todo and InProgress status
+   ✔> Given the platform is running
+   ✔  Given the following tasks exist in "specs/tasks.yaml":
+       | id            | title                  | status     | requirement |
+       | TASK-HINT-020 | Refactor auth module   | Todo       | REQ-TPL-001 |
+       | TASK-HINT-021 | Review PR #123         | Review     | REQ-TPL-002 |
+       | TASK-HINT-022 | Implement API endpoint | InProgress | REQ-TPL-001 |
+       | TASK-HINT-023 | Release v1.2.0         | Done       | REQ-TPL-003 |
+   ✔  When I send a GET request to "/platform/agent/hints"
+   ✔  Then the response status code should be 200
+   ✔  And the "next_tasks" array should contain task "TASK-HINT-020"
+   ✔  And the "next_tasks" array should contain task "TASK-HINT-022"
+   ✔  And the "next_tasks" array should not contain task "TASK-HINT-021"
+   ✔  And the "next_tasks" array should not contain task "TASK-HINT-023"
+  Scenario: Each hint includes task id, status, and reason
+   ✔> Given the platform is running
+   ✔  Given the following tasks exist in "specs/tasks.yaml":
+       | id            | title               | status | requirement |
+       | TASK-HINT-030 | Update dependencies | Todo   | REQ-TPL-001 |
+   ✔  When I send a GET request to "/platform/agent/hints"
+   ✔  Then the response status code should be 200
+   ✔  And the JSON response should have field "next_tasks"
+   ✔  And the first hint should have field "id"
+   ✔  And the first hint should have field "status"
+   ✔  And the first hint should have field "reason"
+   ✔  And the first hint "id" should equal "TASK-HINT-030"
+   ✔  And the first hint "status" should equal "Todo"
+   ✔  And the first hint "reason" should contain "ready for work"
+  Scenario: Hints include task title in reason
+   ✔> Given the platform is running
+   ✔  Given the following tasks exist in "specs/tasks.yaml":
+       | id            | title                | status     | requirement |
+       | TASK-HINT-040 | Implement user login | InProgress | REQ-TPL-001 |
+   ✔  When I send a GET request to "/platform/agent/hints"
+   ✔  Then the response status code should be 200
+   ✔  And the first hint "reason" should contain "Implement user login"
+  Scenario: Empty hints when no tasks are Todo or InProgress
+   ✔> Given the platform is running
+   ✔  Given the following tasks exist in "specs/tasks.yaml":
+       | id            | title               | status | requirement |
+       | TASK-HINT-050 | Complete milestone  | Done   | REQ-TPL-001 |
+       | TASK-HINT-051 | Review architecture | Review | REQ-TPL-002 |
+   ✔  When I send a GET request to "/platform/agent/hints"
+   ✔  Then the response status code should be 200
+   ✔  And the JSON should have an empty next_tasks array
+Feature: Git Hooks Installation and Governance
+  Scenario: install-hooks creates pre-commit hook on Windows
+   ✔> Given a clean development environment
+   ✔  Given I am on a Windows platform
+   ✔  And the pre-commit hook does not exist
+   ✔  When I run "cargo xtask install-hooks"
+   ✔  Then the command should succeed
+   ✔  And file ".git/hooks/pre-commit" should exist
+   ✔  And the output should contain "Installed .git/hooks/pre-commit"
+  Scenario: install-hooks reports success when hook already exists
+   ✔> Given a clean development environment
+   ✔  Given the pre-commit hook exists
+   ✔  When I run "cargo xtask install-hooks"
+   ✔  Then the command should succeed
+   ✔  And file ".git/hooks/pre-commit" should exist
+   ✔  And the output should contain "Installed .git/hooks/pre-commit"
+  Scenario: install-hooks fails gracefully outside git repository
+   ✔> Given a clean development environment
+   ✔  Given I am outside a git repository
+   ✔  When I run "cargo xtask install-hooks"
+   ✔  Then the command should fail
+   ✔  And the output should contain "error:"
+  Scenario: pre-commit hook runs governance check
+   ✔> Given a clean development environment
+   ✔  Given the pre-commit hook exists
+   ✔  When I attempt to commit changes
+   ✔  Then the pre-commit hook should run "cargo run -p xtask -- check"
+   ✔  And the commit should succeed if checks pass
+   ✔  And the commit should be blocked if checks fail
+  Scenario: pre-commit hook respects XTASK_LOW_RESOURCES environment variable
+   ✔> Given a clean development environment
+   ✔  Given XTASK_LOW_RESOURCES is set to "1"
+   ✔  When I run "cargo xtask install-hooks"
+   ✔  Then the command should succeed
+   ✔  And the pre-commit hook should contain "export XTASK_LOW_RESOURCES=1"
+  Scenario: pre-commit hook includes low-resource mode when environment variable is set
+   ✔> Given a clean development environment
+   ✔  Given XTASK_LOW_RESOURCES is set to "1"
+   ✔  When I run "cargo xtask install-hooks"
+   ✔  Then the command should succeed
+   ✔  And the pre-commit hook should contain "XTASK_LOW_RESOURCES"
+  Scenario: pre-commit hook contains governance messaging
+   ✔> Given a clean development environment
+   ✔  When I run "cargo xtask install-hooks"
+   ✔  Then the command should succeed
+   ✔  And the pre-commit hook should contain "Rust-as-Spec Governance Pre-Commit Hook"
+   ✔  And the output should contain "cargo run -p xtask -- check"
+  Scenario: pre-commit hook file is created as executable script
+   ✔> Given a clean development environment
+   ✔  When I run "cargo xtask install-hooks"
+   ✔  Then the command should succeed
+   ✔  And file ".git/hooks/pre-commit" should exist
+   ✔  And the pre-commit hook should contain "#!/usr/bin/env bash"
+  Scenario: install-hooks creates hooks directory if missing
+   ✔> Given a clean development environment
+   ✔  Given the .git/hooks directory does not exist
+   ✔  When I run "cargo xtask install-hooks"
+   ✔  Then the command should succeed
+   ✔  And the .git/hooks directory should exist
+   ✔  And the pre-commit hook should be installed
+Feature: Governance graph invariants
+  Scenario: Selftest validates graph invariants
+   ✔  When I run "cargo xtask selftest"
+   ✔  Then the command succeeds
+   ✔  And the output contains "Checking governance graph invariants"
+   ✔  And the output contains "Graph invariants satisfied"
+  Scenario: Graph invariants enforce coverage for requirements, commands, and AC tests
+   ✔  When I run "cargo xtask selftest" with low-resource mode
+   ✔  Then the command should succeed
+   ✔  And the output should contain "Graph invariants satisfied"
+Feature: Governance Graph Visualization
+  Scenario: graph-export emits Mermaid with stories and requirements
+   ✔> Given I am in a Rust-Template workspace
+   ✔> And I am in a Nix devshell
+   ✔  When I run "cargo xtask graph-export --format mermaid"
+   ✔  Then the command succeeds
+   ✔  And the output contains "graph TD"
+   ✔  And the output contains "US_TPL_PLT_001"
+   ✔  And the output contains "REQ_TPL_PLATFORM_INTROSPECTION"
+   ✔  And the output contains "-->|\"contains\"|"
+Feature: Local Runtime Infrastructure
+  Scenario: docker-compose.yaml provides Postgres and Jaeger
+   ✔> Given I am in a Rust-Template workspace
+   ✔  Then the file "docker-compose.yaml" should exist
+   ✔  And "docker-compose.yaml" should contain "postgres:16"
+   ✔  And "docker-compose.yaml" should contain "jaegertracing/all-in-one"
+Feature: Metrics endpoint
+  Scenario: Metrics endpoint is available
+   ✔  When I GET /health
+   ✔  And I GET /metrics
+   ✔  Then I receive a 200 response
+   ✔  And the response body contains "http_requests_total"
+Feature: Governance Write Capability
+  Scenario: Task status is persisted via governance repository
+   ✔  Given a task "TASK-TPL-GOV-WRITE-001" exists
+   ✔  When the system updates its status to "InProgress"
+   ✔  Then specs/tasks_state.yaml should contain that task with status "InProgress"
+Feature: Platform Introspection API
+  Scenario: Graph endpoint returns governance graph
+   ✔> Given the platform service is running on port 8080
+   ✔  When I GET "http://localhost:8080/platform/graph"
+   ✔  Then the response status should be 200
+   ✔  And the JSON response should have field "nodes"
+   ✔  And the field "nodes" should be of type "array"
+   ✔  And the JSON response should have field "edges"
+   ✔  And the field "edges" should be of type "array"
+  Scenario: DevEx flows endpoint returns flows
+   ✔> Given the platform service is running on port 8080
+   ✔  When I GET "http://localhost:8080/platform/devex/flows"
+   ✔  Then the response status should be 200
+   ✔  And the JSON response should have field "commands"
+   ✔  And the field "commands" should be of type "object"
+   ✔  And the field "commands" should not be empty
+   ✔  And the JSON response should have field "flows"
+   ✔  And the field "flows" should be of type "object"
+  Scenario: Docs index endpoint returns document index
+   ✔> Given the platform service is running on port 8080
+   ✔  When I GET "http://localhost:8080/platform/docs/index"
+   ✔  Then the response status should be 200
+   ✔  And the JSON response should have field "docs"
+   ✔  And the field "docs" should be of type "array"
+Feature: Platform Rounding Features
+  Scenario: suggest-next prints structured steps for a task
+   ✔> Given the platform is running
+   ✔> And I have a valid workspace
+   ✔  When I run "cargo xtask suggest-next --task implement_ac"
+   ✔  Then the command succeeds
+   ✔  And the output contains "Suggested next steps for task"
+   ✔  And the output contains "cargo xtask ac-new"
+   ✔  And the output contains "cargo xtask bundle"
+  Scenario: suggest-next HTTP endpoint returns JSON
+   ✔> Given the platform is running
+   ✔> And I have a valid workspace
+   ✔  When I GET "http://localhost:8080/platform/tasks/suggest-next?task=implement_ac"
+   ✔  Then the response status should be 200
+   ✔  And the JSON response should have field "task"
+   ✔  And the JSON response should have field "recommended_sequence"
+  Scenario: Platform status exposes policy health
+   ✔> Given the platform is running
+   ✔> And I have a valid workspace
+   ✔  When I GET "http://localhost:8080/platform/status"
+   ✔  Then the response status should be 200
+   ✔  And the JSON response should have nested field "governance.policies.status"
+Feature: Platform Tasks Management
+  Scenario: List all tasks via CLI
+   ✔> Given the platform is running
+   ✔  Given the following tasks exist in "specs/tasks.yaml":
+       | id       | title          | status     | requirement |
+       | TASK-001 | Implement API  | Todo       | REQ-TPL-001 |
+       | TASK-002 | Write tests    | InProgress | REQ-TPL-002 |
+       | TASK-003 | Deploy service | Done       | REQ-TPL-003 |
+   ✔  When I run "cargo xtask tasks-list"
+   ✔  Then the command should succeed
+   ✔  And the output should contain "TASK-001"
+   ✔  And the output should contain "TASK-002"
+   ✔  And the output should contain "TASK-003"
+   ✔  And the output should contain "Implement API"
+  Scenario: Get tasks via HTTP API
+   ✔> Given the platform is running
+   ✔  Given the following tasks exist in "specs/tasks.yaml":
+       | id           | title         | status     | requirement |
+       | TASK-API-001 | Implement API | Todo       | REQ-TPL-001 |
+       | TASK-API-002 | Write tests   | InProgress | REQ-TPL-002 |
+   ✔  When I send a GET request to "/platform/tasks"
+   ✔  Then the response status code should be 200
+   ✔  And the response body should be valid JSON
+   ✔  And the JSON should contain a task with id "TASK-API-001"
+   ✔  And the JSON should contain a task with id "TASK-API-002"
+  Scenario: Get tasks filtered by status via HTTP API
+   ✔> Given the platform is running
+   ✔  Given the following tasks exist in "specs/tasks.yaml":
+       | id           | title         | status     | requirement |
+       | TASK-API-003 | Implement API | Todo       | REQ-TPL-001 |
+       | TASK-API-004 | Write tests   | InProgress | REQ-TPL-002 |
+   ✔  When I send a GET request to "/platform/tasks?status=InProgress"
+   ✔  Then the response status code should be 200
+   ✔  And the JSON should contain a task with id "TASK-API-004"
+   ✔  And the JSON should not contain a task with id "TASK-API-003"
+  Scenario: Update task status via HTTP API
+   ✔> Given the platform is running
+   ✔  Given a task "TASK-001" exists with status "Todo"
+   ✔  When I send a POST request to "/platform/tasks/TASK-001/status" with body:
+   ✔  Then the response status code should be 204
+   ✔  And the task "TASK-001" should have status "InProgress"
+  Scenario: Invalid task transition via HTTP API
+[2m2025-11-24T12:16:36.538430Z[0m [31mERROR[0m [2mapp_http::errors[0m[2m:[0m Internal server error occurred [3merror_code[0m[2m=[0mINTERNAL_ERROR [3mstatus_code[0m[2m=[0m500 Invalid status transition from Done to Todo [3mcontext[0m[2m=[0m{} [3mac_id[0m[2m=[0mNone [3mfeature_id[0m[2m=[0mNone
+[2m2025-11-24T12:16:36.538629Z[0m [31mERROR[0m [2mtower_http::trace::on_failure[0m[2m:[0m response failed [3mclassification[0m[2m=[0mStatus code: 500 Internal Server Error [3mlatency[0m[2m=[0m0 ms
+   ✔> Given the platform is running
+   ✔  Given a task "TASK-002" exists with status "Done"
+   ✔  When I send a POST request to "/platform/tasks/TASK-002/status" with body:
+   ✔  Then the response status code should be 500
+   ✔  And the response body should contain "Invalid status transition"
+  Scenario: Get tasks filtered by requirement via HTTP API
+   ✔> Given the platform is running
+   ✔  Given the following tasks exist in "specs/tasks.yaml":
+       | id           | title               | status     | requirement     |
+       | TASK-REQ-001 | Health task         | Todo       | REQ-TPL-HEALTH  |
+       | TASK-REQ-002 | Version task        | InProgress | REQ-TPL-VERSION |
+       | TASK-REQ-003 | Another health task | Done       | REQ-TPL-HEALTH  |
+   ✔  When I send a GET request to "/platform/tasks?req=REQ-TPL-HEALTH"
+   ✔  Then the response status code should be 200
+   ✔  And the JSON should contain a task with id "TASK-REQ-001"
+   ✔  And the JSON should contain a task with id "TASK-REQ-003"
+   ✔  And the JSON should not contain a task with id "TASK-REQ-002"
+  Scenario: Get empty task list when no tasks match filters
+   ✔> Given the platform is running
+   ✔  Given the following tasks exist in "specs/tasks.yaml":
+       | id           | title     | status | requirement    |
+       | TASK-FIL-001 | Some task | Todo   | REQ-TPL-HEALTH |
+   ✔  When I send a GET request to "/platform/tasks?status=Done"
+   ✔  Then the response status code should be 200
+   ✔  And the JSON should have an empty tasks array
+Feature: Platform Web UI
+  Scenario: Dashboard serves HTML with platform metrics
+   ✔> Given the platform is running with UI enabled
+   ✔  When I GET "http://localhost:8080/"
+   ✔  Then the response status should be 200
+   ✔  And the response content-type should be "text/html"
+   ✔  And the response body should contain "Rust-as-Spec Platform"
+   ✔  And the response body should contain "Platform Health"
+  Scenario: Graph view renders Mermaid diagram
+   ✔> Given the platform is running with UI enabled
+   ✔  When I GET "http://localhost:8080/ui/graph"
+   ✔  Then the response status should be 200
+   ✔  And the response content-type should be "text/html"
+   ✔  And the response body should contain "Governance Graph"
+   ✔  And the response body should contain "mermaid"
+  Scenario: Flows view displays DevEx flows and tasks
+   ✔> Given the platform is running with UI enabled
+   ✔  When I GET "http://localhost:8080/ui/flows"
+   ✔  Then the response status should be 200
+   ✔  And the response content-type should be "text/html"
+   ✔  And the response body should contain "DevEx Flows"
+   ✔  And the response body should contain "Tasks"
+Feature: Template Core Endpoints
+  Scenario: Health endpoint reports service is healthy
+   ✔  When I GET /health
+   ✔  Then I receive 200 with status "ok"
+  Scenario: Version endpoint reports build information
+   ✔  When I GET /version
+   ✔  Then I receive 200 with JSON containing "version" and "gitSha"
+  Scenario: Error responses include standardized error envelope
+[2m2025-11-24T12:16:37.212109Z[0m [33m WARN[0m [2mapp_http::errors[0m[2m:[0m Client error occurred [3merror_code[0m[2m=[0mMISSING_FIELD [3mstatus_code[0m[2m=[0m400 Message cannot be empty [3mcontext[0m[2m=[0m{"field": String("message")} [3mac_id[0m[2m=[0mSome("AC-TPL-003") [3mfeature_id[0m[2m=[0mNone
+   ✔  When I POST /api/echo with invalid data { "message": "" }
+   ✔  Then I receive a 4xx response
+   ✔  And the response body contains "error" field
+   ✔  And the response body contains "message" field
+   ✔  And the response body contains "requestId" field
+  Scenario: Error responses include X-Request-ID header
+[2m2025-11-24T12:16:37.262835Z[0m [33m WARN[0m [2mapp_http::errors[0m[2m:[0m Client error occurred [3merror_code[0m[2m=[0mMISSING_FIELD [3mstatus_code[0m[2m=[0m400 Message cannot be empty [3mcontext[0m[2m=[0m{"field": String("message")} [3mac_id[0m[2m=[0mSome("AC-TPL-003") [3mfeature_id[0m[2m=[0mNone
+   ✔  When I POST /api/echo with invalid data { "message": "" }
+   ✔  Then I receive a 4xx response
+   ✔  And the response includes "X-Request-ID" header
+   ✔  And the "requestId" field in response body matches the "X-Request-ID" header
+  Scenario: X-Request-ID is propagated when provided in request
+[2m2025-11-24T12:16:37.313416Z[0m [33m WARN[0m [2mapp_http::errors[0m[2m:[0m Client error occurred [3merror_code[0m[2m=[0mMISSING_FIELD [3mstatus_code[0m[2m=[0m400 Message cannot be empty [3mcontext[0m[2m=[0m{"field": String("message")} [3mac_id[0m[2m=[0mSome("AC-TPL-003") [3mfeature_id[0m[2m=[0mNone
+   ✔  Given I set "X-Request-ID" header to "test-request-123"
+   ✔  When I POST /api/echo with invalid data { "message": "" }
+   ✔  Then I receive a 4xx response
+   ✔  And the response includes "X-Request-ID" header with value "test-request-123"
+   ✔  And the "requestId" field in response body equals "test-request-123"
+  Scenario: X-Request-ID is generated when not provided in request
+[2m2025-11-24T12:16:37.361765Z[0m [33m WARN[0m [2mapp_http::errors[0m[2m:[0m Client error occurred [3merror_code[0m[2m=[0mMISSING_FIELD [3mstatus_code[0m[2m=[0m400 Message cannot be empty [3mcontext[0m[2m=[0m{"field": String("message")} [3mac_id[0m[2m=[0mSome("AC-TPL-003") [3mfeature_id[0m[2m=[0mNone
+   ✔  When I POST /api/echo with invalid data { "message": "" }
+   ✔  Then I receive a 4xx response
+   ✔  And the response includes "X-Request-ID" header
+   ✔  And the "X-Request-ID" header is a valid UUID or request identifier
+Feature: Developer Experience Commands
+  Scenario: dev-up installs pre-commit hooks
+   ✔> Given a clean development environment
+   ✔  Given the pre-commit hook does not exist
+   ✔  When I run "cargo xtask dev-up" with low-resource mode
+   ✔  Then the command should succeed
+   ✔  And the pre-commit hook should be installed
+   ✔  And the output should contain "Pre-commit hooks"
+  Scenario: dev-up skips hook installation if already present
+   ✔> Given a clean development environment
+   ✔  Given the pre-commit hook exists
+   ✔  When I run "cargo xtask dev-up" with low-resource mode
+   ✔  Then the command should succeed
+   ✔  And the output should contain "Pre-commit hooks"
+  Scenario: dev-up runs governance check
+   ✔> Given a clean development environment
+   ✔  When I run "cargo xtask dev-up" with low-resource mode
+   ✔  Then the command should succeed
+   ✔  And the output should contain "governance check"
+   ✔  And the output should contain "low-resource mode"
+  Scenario: dev-up displays next steps on success
+   ✔> Given a clean development environment
+   ✔  When I run "cargo xtask dev-up" with low-resource mode
+   ✔  Then the command should succeed
+   ✔  And the output should contain "dev-up complete"
+   ✔  And the output should contain "Next steps"
+   ✔  And the output should contain "cargo run -p app-http"
+   ✘  And the output should contain "http://localhost:3000/ui"
+      Step failed:
+      Defined: ?\C:\Code\Rust\Rust-Template\specs\features\xtask_devex.feature:42:5
+      Matched: crates\acceptance\src\steps\xtask_devex.rs:286:1
+      Step panicked. Captured output: Output should contain 'http://localhost:3000/ui'
+      Actual output:
+      Pre-commit hooks
+      Docker status: ok
+      governance check
+      low-resource mode
+      Next steps
+      cargo run -p app-http
+      dev-up complete
+  Scenario: dev-up checks Docker availability
+   ✔> Given a clean development environment
+   ✔  When I run "cargo xtask dev-up" with low-resource mode
+   ✔  Then the command should succeed
+   ✔  And the output should mention Docker status
+  Scenario: dev-up succeeds in clean environment
+   ✔> Given a clean development environment
+   ✔  Given the pre-commit hook does not exist
+   ✔  When I run "cargo xtask dev-up" with low-resource mode
+   ✔  Then the command should succeed
+   ✔  And the pre-commit hook should be installed
+   ✔  And the output should contain "dev-up complete"
+  Scenario: doctor validates the environment and prints next steps
+   ✔> Given a clean development environment
+   ✔  Given I am in a clean workspace
+   ✔  When I run "cargo xtask doctor"
+   ✔  Then the command should succeed
+   ✔  And the output should contain "environment"
+   ✔  And the output should contain "Rust"
+   ✔  And the output should contain "Recommendations"
+  Scenario: help-flows renders DevEx flows grouped by category
+   ✔> Given a clean development environment
+   ✔  When I run "cargo xtask help-flows"
+   ✔  Then the command should succeed
+   ✔  And the output should contain "Onboarding"
+   ✔  And the output should contain "Design & Acceptance Criteria"
+   ✔  And the output should contain "Release Management"
+   ✔  And the output should contain "ac-new"
+   ✔  And the output should contain "selftest"
+  Scenario: check runs fmt, clippy, and tests as a fast dev loop
+   ✔> Given a clean development environment
+   ✔  Given I am in a clean workspace
+   ✔  When I run "cargo xtask check"
+   ✔  Then the command should succeed
+   ✔  And the output should contain "format"
+   ✔  And the output should contain "clippy"
+   ✔  And the output should contain "tests"
+  Scenario: adr-new creates numbered ADR from template with next steps
+   ✔> Given a clean development environment
+   ✔  When I run "cargo xtask adr-new test-adr-scaffolding"
+   ✔  Then the command should succeed
+   ✔  And the output should contain "Created"
+   ✔  And the output should contain "docs/adr"
+   ✔  And the output should contain "Next steps"
+   ✔  A

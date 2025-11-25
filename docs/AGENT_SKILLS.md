@@ -91,13 +91,13 @@ Step-by-step process, referencing `devex_flows.yaml`:
 
 1. **Discover work:**
    ```bash
-   curl http://localhost:3000/platform/agent/hints | jq
+   curl http://localhost:8080/platform/agent/hints | jq
    ```
    Pick a task from `tasks` array.
 
 2. **Claim task:**
    ```bash
-   curl -X POST http://localhost:3000/platform/tasks/{id}/status \
+   curl -X POST http://localhost:8080/platform/tasks/{id}/status \
      -H "Content-Type: application/json" \
      -d '{"status": "InProgress"}'
    ```
@@ -111,7 +111,7 @@ Step-by-step process, referencing `devex_flows.yaml`:
 
 4. **Mark done:**
    ```bash
-   curl -X POST http://localhost:3000/platform/tasks/{id}/status \
+   curl -X POST http://localhost:8080/platform/tasks/{id}/status \
      -H "Content-Type: application/json" \
      -d '{"status": "Done"}'
    ```
@@ -551,13 +551,13 @@ allowed-tools: Read, Grep, Glob, Edit, Write, Bash
 
 1. **Discover work:**
    ```bash
-   curl http://localhost:3000/platform/agent/hints | jq '.tasks[] | select(.status == "Todo")'
+   curl http://localhost:8080/platform/agent/hints | jq '.tasks[] | select(.status == "Todo")'
    ```
 
 2. **Claim task:**
    ```bash
    TASK_ID="TASK-TPL-XXX-001"
-   curl -X POST "http://localhost:3000/platform/tasks/${TASK_ID}/status" \
+   curl -X POST "http://localhost:8080/platform/tasks/${TASK_ID}/status" \
      -H "Content-Type: application/json" \
      -d '{"status": "InProgress"}'
    ```
@@ -575,7 +575,7 @@ allowed-tools: Read, Grep, Glob, Edit, Write, Bash
 
 5. **Mark done:**
    ```bash
-   curl -X POST "http://localhost:3000/platform/tasks/${TASK_ID}/status" \
+   curl -X POST "http://localhost:8080/platform/tasks/${TASK_ID}/status" \
      -H "Content-Type: application/json" \
      -d '{"status": "Done"}'
    ```
@@ -623,7 +623,7 @@ In v3.2+, we may add:
 - **Anthropic's Skills Docs:** https://docs.anthropic.com/claude/docs/agent-skills
 - **DevEx Flows:** `specs/devex_flows.yaml` - Canonical workflow definitions
 - **Agent Guide:** `docs/AGENT_GUIDE.md` - Operational procedures
-- **Platform APIs:** `http://localhost:3000/platform/status` - Runtime introspection
+- **Platform APIs:** `http://localhost:8080/platform/status` - Runtime introspection
 - **xtask Reference:** `docs/reference/xtask-commands.md` - Command documentation
 
 ---
@@ -647,3 +647,4 @@ In v3.2+, we may add:
 ---
 
 **Remember:** Skills are **governed workflows**, not wrappers around commands. If you're tempted to create `skill-xtask-foo`, stop and ask: "What workflow uses this command?"
+

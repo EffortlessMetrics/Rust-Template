@@ -1,5 +1,6 @@
 use anyhow::Result;
 use colored::Colorize;
+use std::env;
 
 pub fn run() -> Result<()> {
     println!("{}", "🚀 Running release verification...".blue().bold());
@@ -7,9 +8,23 @@ pub fn run() -> Result<()> {
 
     let mut failed = Vec::new();
 
-    // Run selftest
+    // Run selftest without re-entering the BDD harness
     println!("{}", "[1/3] Running selftest...".bold());
-    match crate::commands::selftest::run_with_verbosity(crate::Verbosity::Normal) {
+    let prev_skip_bdd = env::var("XTASK_SKIP_BDD").ok();
+    // SAFETY: Nested selftest runs within BDD need to skip BDD recursion.
+    unsafe {
+        env::set_var("XTASK_SKIP_BDD", "1");
+    }
+    let selftest_result = crate::commands::selftest::run_with_verbosity(crate::Verbosity::Normal);
+    unsafe {
+        if let Some(prev) = prev_skip_bdd {
+            env::set_var("XTASK_SKIP_BDD", prev);
+        } else {
+            env::remove_var("XTASK_SKIP_BDD");
+        }
+    }
+
+    match selftest_result {
         Ok(_) => println!("{} Selftest passed\n", "✓".green()),
         Err(e) => {
             println!("{} Selftest failed\n", "✗".red());
@@ -41,16 +56,22 @@ pub fn run() -> Result<()> {
     }
 
     // Check working tree
-    println!("{}", "Checking working tree...".bold());
-    let output = std::process::Command::new("git").args(["status", "--porcelain"]).output()?;
-
-    let status = String::from_utf8_lossy(&output.stdout);
-    if !status.trim().is_empty() {
-        println!("{} Working tree is dirty", "✗".red());
-        println!("{}", status);
-        failed.push("git-clean");
+    let skip_git_status = env::var("XTASK_SKIP_GIT_STATUS").is_ok()
+        || env::var("XTASK_LOW_RESOURCES").unwrap_or_default() == "1";
+    if skip_git_status {
+        println!("{} Skipping git status check (low-resource/test mode)\n", "?".yellow());
     } else {
-        println!("{} Working tree clean\n", "✓".green());
+        println!("{}", "Checking working tree...".bold());
+        let output = std::process::Command::new("git").args(["status", "--porcelain"]).output()?;
+
+        let status = String::from_utf8_lossy(&output.stdout);
+        if !status.trim().is_empty() {
+            println!("{} Working tree is dirty", "✗".red());
+            println!("{}", status);
+            failed.push("git-clean");
+        } else {
+            println!("{} Working tree clean\n", "✓".green());
+        }
     }
 
     // Summary

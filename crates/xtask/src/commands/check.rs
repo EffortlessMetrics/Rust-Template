@@ -25,10 +25,7 @@ impl CheckOptions {
             None
         };
 
-        Self {
-            skip_fmt,
-            fmt_skip_reason,
-        }
+        Self { skip_fmt, fmt_skip_reason }
     }
 }
 

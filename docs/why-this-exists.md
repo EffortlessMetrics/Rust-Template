@@ -40,7 +40,7 @@ At a high level, this is:
 
 > A Rust service template + library that bakes in
 > spec-as-code, policy-as-code, LLM-native workflows, and a Nix dev environment
-> so dev/CI/governance all align by default.
+> so dev/CI/governance all align by default and agents can work safely at full speed.
 
 Concretely, it provides:
 
@@ -54,16 +54,16 @@ Concretely, it provides:
   - `policy/testdata/*.yaml/json` - fixtures proving "good" vs "bad" configs
   - `xtask policy-test` - conftest-based validation (strict in CI, optional locally)
 
-- **LLM-native, governance-first**
-  - `.llm/contextpack.yaml` – declarative bundles of relevant files
-  - `xtask bundle <task>` – generates bounded, structured context for agents
-  - `.claude/skills/*` – repo-specific Skills that encode how agents should use
+- **LLM-native, governance-bounded**
+  - `.llm/contextpack.yaml` - declarative bundles of relevant files
+  - `xtask bundle <task>` - generates bounded, structured context for agents
+  - `.claude/skills/*` - repo-specific Skills that encode how agents should use
     `xtask`, specs, and `/platform/*` APIs
   - Agents are expected to:
     - create new AC IDs and scenarios,
     - propose policy changes,
     - and touch infra/CI configs.
-  - The guardrail is not “never let the LLM do X.” The guardrail is:
+  - The guardrail is not "never let the LLM do X." The guardrail is:
     - every change must still deserialize into the spec structs,
     - pass BDD, policy, and graph invariants via `xtask selftest`,
     - and show up in `/platform/status` and the governance graph.
@@ -168,26 +168,26 @@ This template is built around a few principles:
    - Local dev without Nix is supported (with reduced guarantees).
    - CI always runs **inside** the pinned Nix environment.
 
-4. **LLM-native, not unbounded**
+4. **LLM-Native, Kernel-Governed**
 
-Agents are first-class contributors in this repo.
+This repo is built for agents to do real work, not just autocomplete.
 
-They are allowed to:
-- create new AC IDs and BDD scenarios,
-- propose changes to policies,
-- edit infra and CI configuration.
+Agents are allowed to:
 
-What they are not allowed to do is bypass the kernel:
+- Propose new stories, requirements, AC IDs, and tasks.
+- Edit specs, docs, policies, and even infra/CI wiring.
+- Drive the inner loop from “we saw a signal” to “there is a branch and a draft PR”.
 
-- Specs still have to deserialize into Rust structs.
-- Graph invariants still have to hold (no orphan REQs/ACs/commands).
-- Policies still have to pass Rego tests.
-- Kernel ACs still have to meet coverage gates.
+We do not rely on “the LLM is careful”. We rely on the kernel:
 
-If `xtask selftest` is green in a Tier 1 environment, the contract is satisfied,
-regardless of whether a human or an agent authored the diff.
+- Specs must deserialize into Rust structs and pass schema validation.
+- Policies must pass OPA/Rego tests against known-good and known-bad fixtures.
+- Governance graph invariants must hold (no orphaned requirements, missing ACs, unreachable commands).
+- Unit tests and BDD scenarios must pass.
+- `xtask selftest` must be green in a Tier 1 environment.
+- A human still owns the final merge decision.
 
-If selftest is red, nothing – human or agent – gets a free pass.
+Agents have write access. The governance kernel has veto power.
 
 5. **Selftest as a Contract**
    `xtask selftest` is the contract between:
@@ -197,6 +197,22 @@ If selftest is red, nothing – human or agent – gets a free pass.
    - Security/governance.
 
    If selftest is green (in the devshell), the template is behaving as designed.
+
+### 4.5 LLM-Assisted vs LLM-Native
+
+You can use this template in a classic “LLM-assisted” way:
+
+- Humans edit specs and code.
+- Models help draft tests, docs, and refactors.
+- `xtask selftest` keeps everyone honest.
+
+But the design assumes “LLM-native” work:
+
+- Swarms of agents run the full flow from signal -> problem -> plan -> branch -> draft PR.
+- Humans shape problems, choose trade-offs, and approve merges.
+- Boilerplate is a feature, not a tax: models fill out structured specs, ACs, and tasks quickly, and the kernel enforces that everything lines up.
+
+The very structure that feels heavy to a manual-only team is what makes agent-native development safe. It turns vibe coding into vibe architecting.
 
 ---
 
@@ -221,30 +237,21 @@ If selftest is red, nothing – human or agent – gets a free pass.
 
 ---
 
-### 5.4 LLM-Native Flows (How Work Actually Moves)
+### 5.4 Agent-Native Cells in a Human Platform
 
-The cell is designed for **LLM-native flows**, not just “AI autocomplete”:
+Most IDP stories today are human-first:
 
-- **Flow 1 – Clarify the signal**  
-  Noisy issue or ticket → structured problem + ACs  
-  Agents use `spec_ledger.yaml` and BDD templates to turn a Slack thread into a well-formed requirement with tagged scenarios.
+- Portals give humans scorecards and catalogs.
+- Orchestrators give humans environment wiring.
+- Templates give humans a starting point.
 
-- **Flow 2 – Shape the plan**  
-  Requirements → ADR + design + test inventory  
-  Agents draft ADRs and design docs linked into `specs/` and `docs/`, ready for human edits.
+This template assumes a mixed world:
 
-- **Flow 3 – Build the change**  
-  Plan → branch + code + tests  
-  Agents use `xtask bundle`, `tasks.yaml`, and Skills to open branches, add tests, and implement changes against ACs and flows.
+- Humans own direction, risk, and merge decisions.
+- Agents own most of the mechanical work inside a single cell.
+- The kernel (`xtask selftest`, policies, graph invariants, AC coverage) is the referee between them.
 
-- **Flow 4 – Gate and verify**  
-  Draft PR → selftest → evidence bundle  
-  Agents run `xtask selftest`, fix what they can, and produce a draft PR plus release evidence. Humans review and merge.
-
-The boilerplate that feels heavy for human-only teams (schemas, specs, tasks, flows) is exactly what makes **agent-heavy teams viable**:
-
-- Agents can move fast on a rich, structured surface.
-- Humans spend their time on architecture, risk, and trade-offs, not wiring.
+From a platform point of view, this repo is a unit of capacity you can hand to a swarm: "Here is the governed box you are allowed to change. If you keep selftest green, your work is admissible."
 
 ## 6. How This Fits With Your Orchestration Layer
 
@@ -269,9 +276,61 @@ Your orchestration layer doesn't have to guess; it can:
 - Call `xtask selftest` to validate outputs.
 - Enforce that new services **start** from a known-good baseline.
 
+## 7. Agent Flows: How Swarms Use This Repo
+
+Agents do not get a single giant prompt. They move work through four flows that line up with the governed surfaces in this repo:
+
+1. **Signal -> Problem -> Requirements**
+
+   Entry: noisy issue, Slack thread, support ticket.  
+   Exit: a clean problem statement, scoped requirements, and ACs in the ledger.
+
+   Agents:
+
+   - Canonicalize issues into structured problems.
+   - Propose or update REQs and ACs in `specs/spec_ledger.yaml`.
+   - Draft BDD scenarios in `specs/features/*.feature`.
+
+2. **Requirements -> Design -> Plan**
+
+   Entry: problem statement and requirements.  
+   Exit: ADRs, design docs, and an implementation plan.
+
+   Agents:
+
+   - Draft ADRs under `docs/adr/`, tied back to REQs and ACs.
+   - Sketch designs under `docs/design/`.
+   - Produce an implementation plan and test inventory that a human can review.
+
+3. **Plan -> Branch -> Draft PR**
+
+   Entry: implementation plan and test inventory.  
+   Exit: a branch with code and tests, plus a draft PR.
+
+   Agents:
+
+   - Use `xtask bundle` and `.llm/contextpack.yaml` to stay in-bounds.
+   - Extend BDD scenarios and unit tests.
+   - Implement code to satisfy those tests.
+   - Open a draft PR that links back to the issue and design.
+
+4. **Draft PR -> Reviewed -> Merged -> Verified**
+
+   Entry: draft PR.  
+   Exit: a merge recommendation and verification notes.
+
+   Agents:
+
+   - Run `xtask selftest` and read its output.
+   - Check AC coverage, policy tests, and graph invariants.
+   - Summarize risks and open questions in the PR.
+   - Propose a merge decision; humans still own the merge button.
+
+These flows are just structured ways of using the same kernel surfaces humans use today. The difference is that agents handle the boilerplate; humans spend their time on shaping, design, and risk.
+
 ---
 
-## 7. How to Position This Externally
+## 8. How to Position This Externally
 
 When you put this on your public profile / GitHub:
 
@@ -291,7 +350,7 @@ For a Head of Platform / Head of DevEx audience, that's the difference between:
 
 ---
 
-## 8. How to Use This Doc
+## 9. How to Use This Doc
 
 You can point people to this file as:
 
@@ -303,3 +362,4 @@ You can point people to this file as:
   - or client-facing primers.
 
 If you need to adapt it for a specific client or org, you can fork this into a `WHY_TEMPLATE_FITS_<CLIENT>.md` with concrete examples.
+

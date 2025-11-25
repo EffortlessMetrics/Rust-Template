@@ -42,13 +42,13 @@ OTLP_ENDPOINT=http://localhost:4317 \
 
 ```bash
 # Health check
-curl http://localhost:3000/health
+curl http://localhost:8080/health
 
 # Version endpoint
-curl http://localhost:3000/version
+curl http://localhost:8080/version
 
 # Metrics endpoint
-curl http://localhost:3000/metrics
+curl http://localhost:8080/metrics
 ```
 
 ### 4. View Traces in Jaeger UI
@@ -256,3 +256,4 @@ Use this checklist to validate OTLP integration:
 - [OpenTelemetry Rust Documentation](https://github.com/open-telemetry/opentelemetry-rust)
 - [Jaeger Documentation](https://www.jaegertracing.io/docs/)
 - [OTLP Specification](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/protocol/otlp.md)
+

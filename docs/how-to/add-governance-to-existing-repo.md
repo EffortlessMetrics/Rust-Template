@@ -81,7 +81,7 @@ Create `crates/xtask/Cargo.toml`:
 [package]
 name = "xtask"
 version = "0.1.0"
-edition = "2021"
+edition = "2024"
 
 [dependencies]
 clap = { version = "4.5", features = ["derive"] }
@@ -473,7 +473,7 @@ Edit `crates/acceptance/Cargo.toml`:
 [package]
 name = "acceptance"
 version = "0.1.0"
-edition = "2021"
+edition = "2024"
 
 [dependencies]
 cucumber = "0.21"
