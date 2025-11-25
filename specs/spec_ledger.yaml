@@ -587,8 +587,9 @@ stories:
         acceptance_criteria:
           - id: AC-TPL-LOCAL-DOCKER
             text: >
-              A docker-compose.yaml file exists providing Postgres and Jaeger,
-              configured to match the application's default config for local development.
+              Optional local Docker compose (Postgres + Jaeger) aligns with the
+              application's default local config; convenience only, not a gating
+              kernel requirement.
             tags: [future]
             must_have_ac: false
             tests:
