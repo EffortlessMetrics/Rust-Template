@@ -128,10 +128,7 @@ async fn given_record_before_suggest_next(world: &mut World) {
 
     // Also record git status BEFORE running suggest-next
     let git_status_before = get_git_status(world);
-    world
-        .xtask_context_mut()
-        .env
-        .insert("IDEMPOTENCY_GIT_BEFORE".to_string(), git_status_before);
+    world.xtask_context_mut().env.insert("IDEMPOTENCY_GIT_BEFORE".to_string(), git_status_before);
 
     world
         .xtask_context_mut()
@@ -501,22 +498,16 @@ async fn then_no_new_files_suggest_next(world: &mut World) {
 
 #[then("no existing files should be modified by suggest-next")]
 async fn then_no_modified_files_suggest_next(world: &mut World) {
-    let git_before = world
-        .xtask_context()
-        .env
-        .get("IDEMPOTENCY_GIT_BEFORE")
-        .map(|s| s.as_str())
-        .unwrap_or("");
+    let git_before =
+        world.xtask_context().env.get("IDEMPOTENCY_GIT_BEFORE").map(|s| s.as_str()).unwrap_or("");
     let git_after = get_git_status(world);
 
     // Only fail if suggest-next introduced NEW changes
     // (ignore pre-existing uncommitted files)
     assert_eq!(
-        git_before,
-        git_after,
+        git_before, git_after,
         "suggest-next should not modify files, but git status changed from:\nBEFORE:\n{}\nAFTER:\n{}",
-        git_before,
-        git_after
+        git_before, git_after
     );
 }
 
