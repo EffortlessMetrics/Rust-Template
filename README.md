@@ -1,6 +1,6 @@
-# Rust-as-Spec Platform Cell (v3.3.0)
-**Current Template Version:** v3.3.0
-**Current Template Version:** v3.3.1
+# Rust-as-Spec Platform Cell (v3.3.2)
+**Current Template Version:** v3.3.2
+**Kernel Baseline:** [v3.3.2-kernel](./docs/KERNEL_SNAPSHOT.md)
 
 **A governed Rust service template where specs, tests, docs, policies, and infra all agree – and the repo can prove it.**
 
@@ -37,7 +37,30 @@ Don’t use this if:
 
 ---
 
-## 2. What you actually get
+## 2. Quick Start
+
+**For humans getting oriented:**
+```bash
+nix develop                    # Enter the dev shell (installs all tools)
+cargo xtask doctor             # Check your environment
+cargo xtask selftest           # Run full governance validation
+cargo run -p app-http          # Start the service (http://localhost:8080)
+```
+
+Visit http://localhost:8080/ui to see the governance dashboard.
+
+**For agents working autonomously:**
+```bash
+cargo xtask help-flows         # Discover available flows and commands
+cargo xtask ac-status          # View AC health
+cargo xtask bundle implement_ac # Generate LLM context for implementation
+```
+
+See [CLAUDE.md](./CLAUDE.md) for the full agent guide and [docs/how-to/new-service-from-template.md](./docs/how-to/new-service-from-template.md) to fork this template.
+
+---
+
+## 3. What you actually get
 
 ### 2.1 Specs and governance as code
 
@@ -90,7 +113,7 @@ If the UI shows it, CI enforces it.
 
 ---
 
-## 3. High-level architecture
+## 4. High-level architecture
 
 The pipeline is:
 

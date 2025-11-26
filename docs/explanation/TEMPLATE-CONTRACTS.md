@@ -4,6 +4,24 @@
 **Schema Version:** spec_ledger.yaml v1.0
 **Last Updated:** 2025-11-26
 
+---
+
+## TL;DR: What You Must Preserve When Forking
+
+If you're building a new service from this template (like the Knowledge Hub), you **MUST**:
+
+1. **Run `cargo xtask selftest` in CI** as a merge gate on your main branch
+2. **Keep these files aligned**: `spec_ledger.yaml` (your stories/REQs/ACs) + `specs/features/*.feature` (BDD tests) + test code
+3. **Expose these HTTP endpoints**: `/platform/status`, `/platform/graph`, `/platform/tasks`, `/platform/agent/hints`, `/platform/docs/index`, `/platform/schema`
+4. **Maintain these files**: `service_metadata.yaml`, `specs/tasks.yaml`, release evidence bundles
+5. **Tag kernel ACs with** `must_have_ac: true` only if they're truly required for your service
+
+Everything else (your domain logic, additional routes, crates, deployment) is yours to customize.
+
+**See [docs/KERNEL_SNAPSHOT.md](../KERNEL_SNAPSHOT.md) for the baseline v3.3.2 kernel ACs.**
+
+---
+
 This document defines the **template kernel contracts** – the core APIs, behaviors, and structures that MUST be preserved in every service built from this template – versus the **customization surface** where you're free to extend, modify, or replace.
 
 ## Purpose and Scope
