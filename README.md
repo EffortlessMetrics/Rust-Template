@@ -4,13 +4,17 @@
 
 This cell gives you a **single Rust service** with:
 
-- **Schema-driven specs** (`specs/spec_ledger.yaml`, `config_schema.yaml`)
+- **Schema-driven specs** (`specs/spec_ledger.yaml`, `specs/config_schema.yaml`)
 - **BDD-backed acceptance criteria** (Cucumber + Rust)
 - **A 7-step selftest gate** (`cargo xtask selftest`)
 - **Introspection APIs** under `/platform/*`
 - **A Web UI** at `/ui` that shows the same governance state CI enforces
 
-Use it when you want a Rust service that **explains itself**, is **safe for LLMs/agents to work inside**, and **stays governed over time**.
+Use it when you want a Rust service that:
+
+- **Explains itself** through specs and schemas
+- Is **safe for humans and agents to work inside autonomously**
+- **Stays governed over time** by design, not by habit
 
 ---
 
@@ -18,16 +22,16 @@ Use it when you want a Rust service that **explains itself**, is **safe for LLMs
 
 Use this template if:
 
-- You ship Rust services in **regulated or multi-team environments** (FinTech, health, platform engineering).
+- You ship Rust services in **regulated or multi-team environments** (FinTech, health, platform/platform-engineering).
 - You want **spec-as-code and doc-as-code** with real teeth: CI fails if specs/tests/docs drift.
-- You plan to use **LLMs/agents as contributors** and need hard guardrails.
+- You plan to use **LLMs/agents as active contributors**, not just copilots.
 - You want a **repeatable service cell** to plug into a portal/IDP (Backstage/Port/Humanitec/etc.).
 
 Don’t use this if:
 
-- You just want “hello world in Axum”.
+- You just need a quick Axum “hello world”.
+- You’re experimenting without any governance requirements.
 - You don’t care about AC traceability or policy tests yet.
-- You’re experimenting and don’t want any governance overhead.
 
 ---
 
@@ -72,7 +76,7 @@ If selftest is red, the service is **not** in a governed state.
   - `/platform/devex/flows` – developer flows and commands.
   - `/platform/docs/index` – documentation inventory.
   - `/platform/schema` – machine-readable schema/OpenAPI for the platform.
-  - `/platform/agent/hints` – task suggestions for agents.
+  - `/platform/agent/hints` – suggestions for where to work next.
 
 - **Web UI (`/ui`):**
   - Dashboard view for status and governance metrics.
@@ -86,7 +90,7 @@ If the UI shows it, CI enforces it.
 
 ## 3. High-level architecture
 
-The pipeline is simple:
+The pipeline is:
 
 ```text
 Specs (YAML) ──> Loader (Rust) ──> Selftest (CI) ──> Introspection (HTTP/UI)
@@ -277,7 +281,7 @@ curl http://localhost:8080/platform/schema
 
 ## 8. Developer workflows (xtask)
 
-Everything runs through the `xtask` binary.
+Everything runs through the `xtask` binary. It’s designed to be friendly for humans and agents.
 
 ### 8.1 Onboarding & sanity
 
@@ -288,27 +292,33 @@ cargo xtask doctor
 # Quick code quality check (fmt, clippy, unit tests)
 cargo xtask check
 
-# Full governance gate
+# Full governance gate (Tier-1)
 cargo xtask selftest
 ```
 
 ### 8.2 AC-first feature development
 
 ```bash
-# 1. Define a new AC
+# 1. Create a new AC
 cargo xtask ac-new AC-MYSERV-001 "Users can list todos" --requirement REQ-MYSERV-TODOS
 
-# 2. Add or adjust BDD scenarios in specs/features/*.feature
+# 2. Edit the spec ledger to add context
+#    (specs/spec_ledger.yaml is updated by step 1)
 
-# 3. Generate an LLM context bundle for the AC
+# 3. Create a BDD scenario
+#    Edit specs/features/todos.feature and tag with @AC-MYSERV-001
+
+# 4. Generate an LLM context bundle
 cargo xtask bundle implement_ac
 
-# 4. Implement the feature (by hand or with an LLM using the bundle)
+# 5. Implement the feature
+#    (Use the bundle with your own editor or an LLM)
 
-# 5. Run just the relevant BDD tests
-cargo xtask bdd
+# 6. Run focused tests
+cargo xtask test-ac AC-MYSERV-001
+cargo xtask test-changed
 
-# 6. Update AC status and validate everything
+# 7. Verify governance
 cargo xtask ac-status
 cargo xtask selftest
 ```
@@ -321,6 +331,9 @@ cargo xtask test-changed
 
 # Plan-only mode (see what would be run)
 XTASK_TEST_CHANGED_PLAN_ONLY=1 cargo xtask test-changed
+
+# Test a specific acceptance criterion
+cargo xtask test-ac AC-PLT-001
 ```
 
 ### 8.4 Releases
@@ -332,7 +345,7 @@ cargo xtask sbom-local
 # Prepare a release (version bump + docs)
 cargo xtask release-prepare 3.3.1
 
-# Generate release evidence bundle
+# Generate release evidence
 cargo xtask release-bundle 3.3.1
 # -> release_evidence/v3.3.1.md
 ```
@@ -341,35 +354,57 @@ cargo xtask release-bundle 3.3.1
 
 ## 9. LLM / agent ergonomics
 
-This repo is designed for agents to do the mechanical work safely, and humans to review.
+This repo is designed so that an agent can act as a **real teammate**, not a glorified autocomplete:
 
-Key pieces:
+* **Specs & schemas** give a precise brief (`spec_ledger.yaml`, `config_schema.yaml`, `devex_flows.yaml`, `tasks.yaml`).
+* **Bundles** give a bounded context:
 
-* **Specs are structured** (ledger, flows, tasks).
+  * `cargo xtask bundle implement_ac` produces a curated context pack for a feature or AC.
+* **Flows & Skills** provide the patterns:
 
-* **Bundles are explicit** (`cargo xtask bundle implement_ac`).
+  * `.claude/skills/*/SKILL.md` describe governed-feature-dev, governed-maintenance, governed-release, and governance-debug flows.
+* **Platform APIs** provide live telemetry:
 
-* **Suggest-next is task-aware**:
+  * `/platform/status`, `/platform/graph`, `/platform/tasks`, `/platform/agent/hints`, `/platform/docs/index`, `/platform/schema`.
 
-  ```bash
-  cargo xtask suggest-next --task IMPLEMENT_AC
-  ```
+The expected agent loop looks like:
 
-* **Platform hints**:
+1. **Orient**
 
-  * `/platform/agent/hints` exposes high-priority tasks and recommended sequences.
+   * Run `cargo xtask doctor`, `cargo xtask ac-status`, `cargo xtask help-flows`.
+   * Call `/platform/status` and `/platform/graph` to understand the current state.
 
-LLMs should:
+2. **Pick work**
 
-1. Use `/platform/status`, `/platform/graph`, `/platform/tasks`, `/platform/agent/hints` to understand the work.
-2. Use `xtask` commands to make changes and run checks.
-3. Let `selftest` be the final arbiter.
+   * Use `cargo xtask tasks-list` and `/platform/agent/hints` to identify a task.
+   * Read the relevant REQ/AC entries in `spec_ledger.yaml`.
 
-See:
+3. **Plan with a bundle**
 
-* `CLAUDE.md` – system prompt and recommended workflows.
-* `docs/AGENT_GUIDE.md` – how agents should operate in this repo.
-* `docs/AGENT_SKILLS.md` – Skills and their mapping to flows.
+   * Generate a bundle with `cargo xtask bundle implement_ac` or a task-specific bundle.
+   * Use only what’s in the bundle plus linked specs/docs unless you have a good reason to widen scope.
+
+4. **Execute via xtask and code**
+
+   * Follow the appropriate Skill (feature dev, maintenance, release).
+   * Use `test-changed` and `test-ac` while iterating.
+
+5. **Validate and capture decisions**
+
+   * End with `cargo xtask selftest` in Tier-1.
+   * If you had to make non-obvious choices, record them:
+
+     * draft ADRs,
+     * GitHub issues,
+     * friction log entries.
+
+Agents don’t need synchronous human approval to move forward; the spec ledger, flows, xtask commands, `/platform/*` APIs, and selftest provide the guardrails. Humans review the artifacts and CI results asynchronously.
+
+For details, see:
+
+* `CLAUDE.md` – agent operational prompt
+* `docs/AGENT_GUIDE.md` – deeper guidance for agent-driven work
+* `docs/SELECTIVE_TESTING.md` – validation ladder and change-aware testing
 
 ---
 
@@ -378,7 +413,7 @@ See:
 ### 10.1 Greenfield: new service
 
 * Clone this template into a new repo.
-* Adjust `service_metadata.yaml`, ledger entries, tasks to your domain.
+* Adjust `service_metadata.yaml`, ledger entries, and tasks to your domain.
 * Keep the platform kernel as-is; build your business logic in new crates or modules.
 * Use `selftest` as the gate from day one.
 
@@ -386,9 +421,9 @@ See:
 
 See `docs/how-to/add-governance-to-existing-repo.md`.
 
-At a high level:
+High-level flow:
 
-* Add `governance/` subtree (specs, policy, docs) to your existing repo.
+* Add a `governance/` subtree (specs, policy, docs) to your existing repo.
 * Add `spec-runtime` + `xtask` crates to your workspace.
 * Configure your CI to run `cargo xtask selftest` as a gate.
 * Gradually map your existing tests/docs into the spec ledger.
@@ -397,7 +432,7 @@ At a high level:
 
 ## 11. Relationship to portals/IDPs
 
-This template is **not** a portal. It is the **per-service kernel** that a portal/IDP can trust.
+This template is **not** a portal. It is the **per-service kernel** that a portal/IDP can rely on.
 
 * If you use Backstage/Port/OpsLevel/etc.:
 
@@ -409,15 +444,19 @@ This template is **not** a portal. It is the **per-service kernel** that a porta
   * They standardize deployments and environments.
   * This template standardizes the **service contract**: specs, policies, AC coverage, `/platform/*` introspection.
 
-The integration surface is `/platform/*` and the evidence bundles under `release_evidence/`.
+The integration surface is:
+
+* `/platform/*` APIs
+* `release_evidence/vX.Y.Z.md` bundles
+* `docs/feature_status.md` and `service_metadata.yaml`
 
 ---
 
 ## 12. Current status & roadmap
 
 * **Template version:** v3.3.1
-* **Kernel status:** “Governing Kernel” is frozen – the core contract is in place and validated via selftest.
-* **Known non-kernel ACs:** Some advanced features (idempotent flows, question artifacts, K8s/TF IaC alignment) are tracked as ACs with `[UNKNOWN]` status and explicitly documented as such.
+* **Kernel status:** “Governing Kernel” is implemented; Tier-1 selftest is green.
+* **Non-kernel ACs:** Some advanced features (flow idempotency, question artifacts, K8s/TF IaC alignment) are tracked as ACs with `[UNKNOWN]` status and explicitly documented as template/future work.
 
 See:
 
@@ -436,7 +475,6 @@ This template is dual-licensed:
 
 You may use it under either license.
 
----
-
 ```
+
 ::contentReference[oaicite:0]{index=0}

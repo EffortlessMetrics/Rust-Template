@@ -1,130 +1,148 @@
-# Roadmap: Rust-as-Spec Platform Cell
+# Roadmap: Rust-as-Spec Platform Cell (v3.3.x)
 
-This roadmap is the shortest path to “fully implemented”: kernel ACs green on Tier-1, flows and APIs stable enough that other teams can drop this cell in and trust it. Current state: Kernel ACs are 100% passing on Tier-1 (Nix dev shell on Linux/macOS/WSL2). The only open item is a non-kernel local Docker convenience AC (`AC-TPL-LOCAL-DOCKER`), which is intentionally optional and not a gating requirement.
+This roadmap describes how we take the **v3.3.x kernel** from “implemented and selftesting” to a **fully reusable platform cell**:
 
----
+- Kernel ACs green on **Tier-1** (Nix devshell on Linux/macOS/WSL2)
+- Flows and APIs stable enough that humans and agents can work autonomously
+- CI enforcing the same contracts that `/platform/*` and `/ui` expose
 
-## Definition of “Fully Implemented”
-
-1. **Kernel is clean**
-   - `cargo xtask selftest` green on Tier-1 (Linux/macOS/WSL2).
-   - All ACs marked `kernel: true` or `must_have_ac: true` are ✅ (no ❌/❓).
-   - Graph invariants (REQ→AC, AC→tests, command reachability) enforced by code and referenced in the AC ledger.
-2. **DevEx is predictable**
-   - `xtask check`, `test-changed`, `test-ac`, `selftest` behave as documented.
-   - Selective testing (change-aware BDD) stable, including plan-only mode.
-   - Tier-2 (Windows) path documented and matches behaviour.
-3. **Agent interface is complete**
-   - `/platform/status`, `/platform/graph`, `/platform/tasks`, `/platform/agent/hints` match their ACs.
-   - Agent skills + validation ladder are aligned with actual CLI behaviour.
-4. **IDP / platform-cell story holds**
-   - `service_metadata.yaml` + `/platform/*` expose enough to treat this as a reusable IDP cell.
-   - Release bundles contain expected evidence (tasks, ACs, policies, selftest, friction log).
-   - Docs (`why-this-exists`, `AGENT_GUIDE`, `SELECTIVE_TESTING`, platform support) tell one coherent story.
+The emphasis is on **enabling**: we want a cell where the easiest path is also the governed one, for both people and LLMs.
 
 ---
 
-## Phase 0 — Establish Baseline
+## 1. Current position (v3.3.1)
 
-**Objective:** Know exactly what is red on Tier-1 today.
+Today, the cell already provides:
 
-Commands:
+- **Governed kernel**
+  - `cargo xtask selftest` passes on Tier-1 and exercises:
+    - fmt, clippy, unit tests
+    - BDD / Cucumber acceptance tests
+    - AC ↔ tests ↔ ADR mapping
+    - LLM context bundler checks
+    - Policy tests (OPA/Conftest)
+    - DevEx contract checks
+    - Graph invariants and AC coverage sanity
+  - All **kernel** ACs are `[PASS]` in `docs/feature_status.md`; remaining `[UNKNOWN]` ACs are explicitly marked as template/future.
 
-```bash
-cargo xtask selftest || true
-cargo xtask ac-status > target/ac-status-baseline.txt
-```
+- **Introspection**
+  - `/platform/status`, `/platform/graph`, `/platform/tasks`, `/platform/devex/flows`, `/platform/docs/index`, `/platform/schema`, `/platform/agent/hints` are implemented and wired to the same spec/runtime the kernel uses.
+  - `/ui` renders status, graph, flows, and tasks with no separate DB.
 
-Capture all ❌ and core ❓ ACs (DevEx, graph, tasks, hints) into a short checklist (issue or tasks.md). Use this list to track the rest of the phases.
+- **DevEx flows**
+  - `xtask doctor`, `check`, `test-changed`, `test-ac`, `selftest`, `release-*` and related commands are implemented and covered by ACs/BDD.
+  - Selective testing (`test-changed` + plan-only) is present and documented.
 
-Exit: Checklist of named ACs to fix is recorded.
+- **Docs and spellcheck**
+  - Spec ledger, flows, tasks, and docs are aligned.
+  - `cspell` is pinned inside the Nix devshell; `cspell.json` is curated for the domain so Tier-1 spellcheck is clean.
+
+From here, the roadmap focuses on **finishing the contract** and **smoothing the experience** for humans and agents.
 
 ---
 
-## Phase 1 — Close the Kernel (ACs + BDD + Graph)
+## 2. Definition of “Fully Implemented”
 
-**Goal:** Tier-1 selftest green; kernel ACs all ✅; no surprises in `docs/feature_status.md`.
+We’ll call the template “fully implemented” when all of the following hold:
 
-### 1.1 DevEx ACs (doctor / check / dev-up / sbom-local)
+1. **Kernel is clean and enforced**
+   - Tier-1 `cargo xtask selftest` green on `main`.
+   - A Tier-1 selftest job in CI is **required** for merges.
+   - All `kernel: true` / `must_have_ac: true` ACs are `[PASS]`, and graph invariants are enforced by code and referenced from the ledger.
 
-- Run:
+2. **DevEx is predictable and low-friction**
+   - `xtask check`, `test-changed`, `test-ac`, `selftest` behave exactly as described in docs.
+   - Pre-commit hooks regenerate/auto-stage derived artifacts (like `feature_status`) and give fast, actionable feedback.
+   - Tier-2 (native Windows) flow is documented and matches reality; Tier-1/WSL2 is the canonical gate.
+
+3. **Agent interface is ready for real work**
+   - `/platform/*` endpoints and `xtask` flows give agents everything required to:
+     - discover tasks,
+     - get bounded context,
+     - apply changes,
+     - run checks,
+     - and surface questions/decisions as artifacts.
+   - Skills (in `.claude/skills/*`) and `CLAUDE.md` / `AGENT_GUIDE.md` are aligned with actual behaviour.
+
+4. **IaC and CI are part of the contract**
+   - Docker compose, K8s, and Terraform examples are consistent with `config_schema.yaml` and `envs.yaml`.
+   - CI workflows are referenced from REQs/ACs where appropriate.
+
+5. **IDP/platform-cell story is explicit**
+   - `service_metadata.yaml` + `/platform/*` expose enough to treat the repo as a **per-service IDP unit**.
+   - Release bundles (`release_evidence/vX.Y.Z.md`) contain usable evidence (tasks, ACs, policies, selftest, friction log).
+   - Template contracts and positioning docs explain “what a compliant cell is” on a single page.
+
+---
+
+## 3. Phase 1 – Lock Tier-1 and CI
+
+**Goal:** Tier-1 selftest is not just healthy, it’s also the enforced gate on `main`.
+
+### 3.1 Tier-1 baseline
+
+- Inside Nix devshell on Linux/macOS/WSL2:
 
   ```bash
-  CUCUMBER_TAG_EXPRESSION="@AC-PLT-001 or @AC-PLT-003 or @AC-PLT-008 or @AC-PLT-018" \
-    cargo test -p acceptance --test acceptance -- --format=pretty
-  ```
-
-- For each failure, pick one layer to fix: AC text (`specs/spec_ledger.yaml`), feature (`specs/xtask_devex.feature`), or steps (`crates/acceptance/src/steps/xtask_devex.rs`); align implementation as needed.
-- Re-run until clean, then:
-
-  ```bash
+  nix develop
+  cargo xtask precommit
   cargo xtask selftest
-  cargo xtask ac-status
+````
+
+* Confirm both are clean on `main` with no skip flags.
+
+**Exit criteria:**
+
+* Tier-1 precommit and selftest pass on the current template version without manual intervention.
+
+### 3.2 CI wiring
+
+* Add or confirm a CI job (e.g. `tier1-selftest`) that runs:
+
+  ```bash
+  nix develop --command cargo xtask selftest
   ```
 
-Exit: `AC-PLT-001/003/008/018` all ✅; dev-up output, check messaging, and SBOM path match docs.
+* Mark this job as **required** on `main` in branch protection.
 
-### 1.2 Graph invariants in AC ledger
+**Exit criteria:**
 
-- For each `AC-TPL-GRAPH-*`, identify enforcing unit test(s) in `spec-runtime`.
-- In `specs/spec_ledger.yaml`, add `tests:` entries of `type: unit` pointing to those tests.
-- Extend AC status logic to handle `type: unit` (fail beats pass; no results = ❓).
-- Decide `AC-TPL-GRAPH-SELFTEST` meaning:
-  - Either add a thin BDD that breaks the graph and asserts `selftest` fails, or
-  - Treat it as covered by unit tests.
-- Re-run `cargo xtask selftest` and `cargo xtask ac-status`.
-Exit: All `AC-TPL-GRAPH-*` ACs ✅ (or explicitly non-kernel); none left ❓.
+* Any change that breaks selftest cannot merge to `main`.
 
 ---
 
-## Phase 2 — Finish the Agent Interface
+## 4. Phase 2 – Smooth DevEx & Pre-Commit
 
-**Goal:** Agent-facing surfaces are trustworthy: “agents do the work, kernel keeps it safe.”
+**Goal:** Day-to-day work (including from agents) feels natural: `git commit` “just works” and governance shows up as helpful feedback.
 
-### 2.1 `/platform/agent/hints`
+### 4.1 Pre-commit ergonomics
 
-- Clarify contract in `specs/spec_ledger.yaml` (inputs, response fields, ordering/determinism).
-- Align HTTP handler + runtime logic with that contract.
-- Add/fix BDD for hints; run:
+Implement the following behaviour in `xtask precommit`:
 
-  ```bash
-  CUCUMBER_TAG_EXPRESSION="@AC-TPL-AGENT-HINTS" \
-    cargo test -p acceptance --test acceptance -- --format=pretty
-  ```
+* Regenerate `docs/feature_status.md` via `ac-status`.
+* If it changed:
 
-- Update `docs/AGENT_GUIDE.md` with a JSON example and consumption guidance.
-Exit: `AC-TPL-AGENT-HINTS` ✅; endpoint is documented and stable.
+  * `git add docs/feature_status.md`
+  * Log a concise note about the update.
+* Run fmt, clippy, unit tests, and relevant acceptance tests.
+* Run docs-check and spellcheck in a **soft mode** for local pre-commit:
 
-### 2.2 Task CLI/HTTP semantics
+  * log problems clearly,
+  * do not block the commit unless a strict env flag is set (e.g. `XTASK_STRICT_PRECOMMIT=1`).
 
-- Target ACs: `AC-TPL-TASKS-CLI`, `AC-TPL-TASKS-CREATE-CLI`, `AC-TPL-TASKS-UPDATE-CLI`, `AC-TPL-TASKS-HTTP`.
-- Decide exact UX (CLI flags/exit codes/output; HTTP status/JSON shape). Adjust `xtask` and `/platform/tasks` to match; add unit tests as needed.
-- Update BDDs to assert on stable substrings/fields; run:
+In `selftest`, keep docs-check and spellcheck **strict**.
 
-  ```bash
-  CUCUMBER_TAG_EXPRESSION="@AC-TPL-TASKS-CLI or @AC-TPL-TASKS-CREATE-CLI or @AC-TPL-TASKS-UPDATE-CLI or @AC-TPL-TASKS-HTTP" \
-    cargo test -p acceptance --test acceptance -- --format=pretty
-  ```
+**Exit criteria:**
 
-- Refresh `AGENT_GUIDE.md` examples (mark done via CLI/HTTP).
-Exit: All task ACs ✅; agent docs reflect real UX.
+* On a clean tree, a typical `git commit`:
 
----
+  * regenerates+stages `feature_status` if needed,
+  * provides docs/spellcheck feedback,
+  * only fails on true breakage (tests, compilation, selftest failures).
 
-## Phase 3 — Cement Selective Testing & Cross-Platform Story
+### 4.2 Tier-2 (Windows) story
 
-**Goal:** `check` / `test-changed` / `test-ac` + Tier-2 behaviour are boringly predictable.
-
-### 3.1 Selective testing as contract
-
-- Treat the selective-testing scenario as canonical; ensure git worktree setup/teardown is robust and tag expression stable.
-- Add a scenario where only specs change (no `.feature`) to prove `test-changed` finds ACs via the ledger; plan-only mode should emit correct tags.
-- Ensure `docs/SELECTIVE_TESTING.md` + `AGENT_GUIDE.md` match behaviour (validation ladder: `test-changed` → `test-ac` → `selftest`).
-Exit: Selective-testing BDDs ✅; docs read like reference, not aspiration.
-
-### 3.2 Tier-2 (Windows) path
-
-- On native Windows:
+* Confirm the recommended Tier-2 flow:
 
   ```powershell
   $env:XTASK_LOW_RESOURCES = "1"
@@ -132,46 +150,212 @@ Exit: Selective-testing BDDs ✅; docs read like reference, not aspiration.
   cargo xtask test-changed
   ```
 
-- Confirm no panics/permission crashes; logs state skipped steps; plan-only works with `XTASK_TEST_CHANGED_PLAN_ONLY=1`.
-- Update `docs/reference/platform-support.md` and `MISSING_MANUAL.md` with the single recommended Windows flow (local low-resource; full selftest via WSL2/Nix/CI).
-Exit: Tier-2 docs match reality; one clear Windows happy path.
+* Ensure logs clearly indicate which steps are skipped.
+
+* Use WSL2/Nix/CI for full `selftest`.
+
+Update:
+
+* `docs/reference/platform-support.md`
+* `docs/MISSING_MANUAL.md`
+
+with the canonical Windows/WSL2 guidance.
+
+**Exit criteria:**
+
+* One clearly documented and tested Windows happy path:
+
+  * Native for fast local loops,
+  * WSL2/CI for authoritative governance.
 
 ---
 
-## Phase 4 — Freeze the Template Contract
+## 5. Phase 3 – Finish Agent Surfaces & Flows
 
-**Goal:** The cell is a reusable IDP unit with a clear, stable contract.
+**Goal:** Agents can execute meaningful work end-to-end using specs, flows, tasks, `xtask`, and `/platform/*`, without guesswork.
 
-- Add/update a kernel contract doc (e.g., `docs/platform-kernel.md` or `TEMPLATE_CONTRACT.md`):
-  - Kernel ACs that must remain in derived services.
-  - Required `xtask` commands and intents.
-  - Required `/platform/*` endpoints and behaviours.
-  - Expectations for `service_metadata.yaml`, release bundles, `FRICTION_LOG.md`.
-- Update `service_metadata.yaml` with the new baseline `template_version` (e.g., `3.3.1`) and links to kernel docs.
-- Align `docs/why-this-exists.md`, `AGENT_GUIDE.md`, `CLAUDE.md` so they tell the same LLM-native, kernel-governed story.
+### 5.1 `/platform/agent/hints`
 
-Exit: “What does it mean to be a compliant Rust-as-Spec cell?” is answerable on one page and matches enforcement in `selftest`.
+* Confirm and refine the contract for `AC-TPL-AGENT-HINTS`:
+
+  * Inputs, response schema, semantics of `status`, recommended actions, ordering.
+* Align handler and spec (ledger + docs).
+* Ensure BDD for hints is stable and passing.
+* Add a concrete example + usage notes to `docs/AGENT_GUIDE.md` and `CLAUDE.md`.
+
+**Exit criteria:**
+
+* Hints endpoint returns stable, documented JSON and has passing AC coverage.
+
+### 5.2 Task flows (CLI + HTTP)
+
+* Clarify and implement the semantics for:
+
+  * CLI: `tasks-list`, `task-create`, `task-update`.
+  * HTTP: `GET /platform/tasks`, `POST /platform/tasks/{id}/status`.
+
+* Align with the relevant ACs: `AC-TPL-TASKS-CLI`, `AC-TPL-TASKS-CREATE-CLI`, `AC-TPL-TASKS-UPDATE-CLI`, `AC-TPL-TASKS-HTTP`.
+
+* Update BDD expectations and docs to match the actual UX.
+
+* Reflect this in `AGENT_GUIDE.md` as a canonical “agent task lifecycle”.
+
+**Exit criteria:**
+
+* Tasks can be discovered, created, updated, and observed consistently via CLI and HTTP, and ACs are `[PASS]`.
+
+### 5.3 Flow idempotency
+
+* Implement and test `AC-TPL-FLOW-IDEMPOTENT`:
+
+  * Repeated runs of:
+
+    ```bash
+    cargo xtask selftest
+    cargo xtask suggest-next
+    ```
+
+    do not generate duplicates or drift when there are no underlying changes.
+
+* Add tests to assert stability over multiple runs and wire them into the spec ledger.
+
+**Exit criteria:**
+
+* Agents and humans can safely rerun flows without worrying about corrupting state or duplicating artifacts.
+
+### 5.4 Questions as artifacts
+
+* Implement `AC-TPL-QUESTIONS-LOGGED`:
+
+  * Define a light “questions” mechanism (e.g. `questions/*.yaml`, friction log entries, or structured status).
+  * Have flows record questions when they encounter ambiguity or missing data.
+  * Surface a summary via `cargo xtask status` and/or `/platform/status`.
+
+* Add BDD coverage and link it from the ledger.
+
+**Exit criteria:**
+
+* Ambiguity is recorded as structured questions, not lost or handled ad hoc; agents can move forward and leave a clear trail.
 
 ---
 
-## Phase 5 — Prove Reuse (Optional but Powerful)
+## 6. Phase 4 – IaC & CI as Contracted Surfaces
 
-**Goal:** Validate the template by using it twice.
+**Goal:** Compose, K8s, Terraform, and CI aren’t “supporting docs”; they’re part of the governed system.
 
-- Instantiate a second service from this cell; adjust metadata, ledger, and minimal domain logic.
-- Run Bootstrap → Feature Dev → Maintenance → Release using only `xtask`, `/platform/*`, and documented Skills.
-- Capture friction in that service’s `FRICTION_LOG.md` and backport improvements.
+### 6.1 docker-compose (local runtime)
 
-Exit: At least one surprise removed via reuse; the cell feels like an IDP product, not a one-off.
+* Ensure `AC-TPL-IAC-COMPOSE-ALIGN` is fully backed by tests in `local_docker`:
+
+  * Ports and environment keys match `config_schema.yaml` and `envs.yaml`.
+  * Local services (DB, tracing) follow the documented defaults.
+
+**Exit criteria:**
+
+* Local Docker is a trustworthy convenience example; its alignment AC is `[PASS]`.
+
+### 6.2 K8s and Terraform examples
+
+For K8s (`AC-TPL-IAC-K8S-ALIGN`):
+
+* Add minimal manifests under `infra/k8s`.
+* Write a test that parses manifests and checks ports/env names against the config schema.
+
+For Terraform (`AC-TPL-IAC-TF-ALIGN`):
+
+* Add a minimal module under `infra/tf`.
+* Write a test to check variable names/defaults against the config schema.
+
+Wire both tests into the ledger.
+
+**Exit criteria:**
+
+* K8s/TF examples exist, are small, and are verifiably consistent with the config schema.
+
+### 6.3 CI workflows
+
+* Reference the CI workflows (especially Tier-1 selftest) from:
+
+  * `doc_index.yaml`
+  * Relevant REQs/ACs (DevEx, release, governance).
+
+**Exit criteria:**
+
+* Pipelines are visible in the governance graph and treated as first-class infrastructure.
 
 ---
 
-## Ultra-Compressed Path
+## 7. Phase 5 – Contract, Positioning, and Reuse
 
-1. Green the kernel: fix DevEx BDDs; wire graph ACs to unit tests; get selftest + kernel ACs fully green on Tier-1.
-2. Finish agent surfaces: `/platform/agent/hints` + tasks CLI/HTTP match ACs and `AGENT_GUIDE`.
-3. Lock flows: `check` / `test-changed` / `test-ac` + Tier-2 behaviour documented and tested.
-4. Freeze contract: document kernel ACs + required surfaces; bump `template_version`; treat this repo as the canonical Rust-as-Spec cell.
-5. (Optional) Reuse once to shake out final seams.
+**Goal:** The cell is clearly defined, easy to adopt, and proven in reuse.
 
-When 1–4 are done, you can say: this is a fully implemented, self-governing platform cell you can drop into any Rust shop and safely let agents work inside.
+### 7.1 Template contract
+
+* Finalize `TEMPLATE-CONTRACTS.md` (or `platform-kernel.md`) so it answers:
+
+  * Which ACs define the kernel.
+  * Which `xtask` commands are mandatory for a derived service.
+  * Which `/platform/*` endpoints must exist and what they return.
+  * Expectations for `service_metadata.yaml`, release evidence, and friction logs.
+
+**Exit criteria:**
+
+* A new team can understand “what makes a service a Rust-as-Spec cell” in one document, and selftest enforces everything listed there.
+
+### 7.2 IDP/portal positioning
+
+* Add `docs/explanation/idp-positioning.md`:
+
+  * How this cell plugs under Backstage/Port/Humanitec/etc.
+  * Which endpoints and artifacts a portal or orchestrator should consume (`/platform/status`, `/platform/graph`, `/platform/tasks`, `/platform/schema`, `release_evidence/...`).
+
+**Exit criteria:**
+
+* Platform/IDP owners understand how to integrate this cell into their existing toolchain.
+
+### 7.3 Brownfield / second service
+
+* Instantiate a second service from this cell or wrap an existing service.
+
+* Use only:
+
+  * documented Skills,
+  * `xtask` commands,
+  * `/platform/*` APIs
+    to complete:
+
+  ```text
+  Bootstrap → Feature Dev → Maintenance → Release
+  ```
+
+* Capture a `FRICTION_LOG.md` in that repo and feed any systemic improvements back into the template.
+
+**Exit criteria:**
+
+* At least one reuse story demonstrates the template behaves as intended in practice, not just in theory.
+
+---
+
+## 8. Ultra-compressed path
+
+If you need the roadmap in one page:
+
+1. **Lock Tier-1 & CI**
+   Make `cargo xtask selftest` in Nix devshell the required CI gate on `main`.
+
+2. **Smooth pre-commit & DevEx**
+   Pre-commit regenerates docs and helps developers/agents; docs/spellcheck are strict in selftest.
+
+3. **Finish agent surfaces**
+   `/platform/agent/hints`, tasks CLI/HTTP, bundles, and Skills give agents a complete, safe loop.
+
+4. **Align IaC & pipelines**
+   Compose/K8s/TF/CI are small, tested, and consistent with the config schema and REQs.
+
+5. **Freeze contract & prove reuse**
+   Document the kernel contract, explain IDP positioning, and validate with at least one additional service.
+
+Once these are done, you have a **fully implemented, self-governing Rust-as-Spec platform cell** that humans and agents can work in confidently, and that a portal/IDP can treat as a first-class building block.
+
+```
+::contentReference[oaicite:0]{index=0}
