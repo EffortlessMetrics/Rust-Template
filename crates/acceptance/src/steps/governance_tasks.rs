@@ -668,6 +668,23 @@ async fn then_field_is_type(world: &mut World, field: String, expected_type: Str
     );
 }
 
+#[then(regex = r#"^the field "([^"]+)" should equal "([^"]+)"$"#)]
+async fn then_field_equals(world: &mut World, field: String, expected_value: String) {
+    let response = world.last_response.as_ref().expect("response should exist");
+    let actual = response.body.get(&field).and_then(|v| v.as_str()).unwrap_or_else(|| {
+        panic!(
+            "Expected field '{}' to exist and be a string in response. Response: {:?}",
+            field, response.body
+        )
+    });
+
+    assert_eq!(
+        actual, expected_value,
+        "Expected field '{}' to equal '{}', but got '{}'. Response: {:?}",
+        field, expected_value, actual, response.body
+    );
+}
+
 #[then(regex = r#"^the JSON response should have nested field "([^"]+)"$"#)]
 async fn then_nested_field_exists(world: &mut World, field_path: String) {
     let response = world.last_response.as_ref().expect("response should exist");

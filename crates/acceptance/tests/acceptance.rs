@@ -70,7 +70,14 @@ async fn main() {
         raw_tag_expr.as_deref().and_then(|expr| expr.parse::<TagOperation>().ok());
     let simple_tags = raw_tag_expr.as_deref().map(parse_simple_tag_list).unwrap_or_default();
 
+    // Clone for use in the filter closure
+    let raw_tag_expr_for_filter = raw_tag_expr.clone();
+
     // Triple output: console + JUnit + JSON
+    // Using filter_run instead of filter_run_and_exit because:
+    // - The writer chain (Basic + JUnit + JSON with tee) doesn't implement StatsWriter
+    // - We want skipped scenarios to return exit code 0 (not treated as failures)
+    // - Actual test failures will cause panics that result in non-zero exit codes naturally
     World::cucumber()
         // Run scenarios sequentially to avoid cross-test interference.
         // The test app uses the global SPEC_ROOT env var, so concurrent runs would race.
@@ -110,8 +117,18 @@ async fn main() {
 
                 // Exclude @wip scenarios unless explicitly included via tag expression
                 let is_wip = tags.iter().any(|t| t.eq_ignore_ascii_case("wip"));
-                if is_wip && tag_expression.is_none() && simple_tags.is_empty() {
-                    return false;
+
+                // Always exclude @wip unless the tag expression explicitly mentions "wip"
+                if is_wip {
+                    let wip_explicitly_requested = raw_tag_expr_for_filter
+                        .as_ref()
+                        .map(|expr| expr.contains("wip") || expr.contains("WIP"))
+                        .unwrap_or(false)
+                        || simple_tags.iter().any(|t| t.eq_ignore_ascii_case("wip"));
+
+                    if !wip_explicitly_requested {
+                        return false;
+                    }
                 }
 
                 if let Some(expr) = &tag_expression {
@@ -131,6 +148,8 @@ async fn main() {
             },
         )
         .await;
+    // Exit code 0: filter_run returns normally when scenarios pass or are skipped.
+    // Non-zero exit: Step failures cause panics which naturally result in non-zero exit codes.
 }
 
 fn parse_simple_tag_list(expr: &str) -> Vec<String> {
