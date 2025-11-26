@@ -182,4 +182,95 @@ mod tests {
             value
         );
     }
+
+    #[test]
+    fn iac_tf_aligns_with_config() {
+        let root = workspace_root();
+        let tf_path = root.join("infra/tf/main.tf");
+
+        assert!(
+            tf_path.is_file(),
+            "Expected Terraform config at {} for AC-TPL-IAC-TF-ALIGN",
+            tf_path.display()
+        );
+
+        let tf_contents = fs::read_to_string(&tf_path).expect("Failed to read main.tf");
+
+        // Load config schema to get expected variables
+        let schema_path = root.join("specs/config_schema.yaml");
+        let schema_contents =
+            fs::read_to_string(&schema_path).expect("Failed to read config_schema.yaml");
+        let schema: Value =
+            serde_yaml::from_str(&schema_contents).expect("Failed to parse config_schema.yaml");
+
+        // Validate settings are present as Terraform variables
+        let settings = schema
+            .get("settings")
+            .and_then(Value::as_sequence)
+            .expect("config_schema.yaml should have settings array");
+
+        for setting in settings {
+            let key = setting.get("key").and_then(Value::as_str).expect("setting should have key");
+            let tf_var_name = key.replace('.', "_");
+
+            assert!(
+                tf_contents.contains(&format!("variable \"{}\"", tf_var_name)),
+                "Terraform should define variable '{}' matching config setting '{}'",
+                tf_var_name,
+                key
+            );
+
+            // Check default value if present
+            if let Some(default) = setting.get("default") {
+                let default_str = match default {
+                    Value::String(s) => format!("\"{}\"", s),
+                    Value::Number(n) => n.to_string(),
+                    Value::Bool(b) => b.to_string(),
+                    _ => continue,
+                };
+
+                assert!(
+                    tf_contents.contains(&format!("default     = {}", default_str))
+                        || tf_contents.contains(&format!("default = {}", default_str)),
+                    "Terraform variable '{}' should have default value {}",
+                    tf_var_name,
+                    default_str
+                );
+            }
+        }
+
+        // Validate secrets are present as Terraform variables
+        let secrets = schema
+            .get("secrets")
+            .and_then(Value::as_sequence)
+            .expect("config_schema.yaml should have secrets array");
+
+        for secret in secrets {
+            let key = secret.get("key").and_then(Value::as_str).expect("secret should have key");
+            let tf_var_name = key.replace('.', "_");
+
+            assert!(
+                tf_contents.contains(&format!("variable \"{}\"", tf_var_name)),
+                "Terraform should define variable '{}' matching config secret '{}'",
+                tf_var_name,
+                key
+            );
+
+            // Secrets should be marked as sensitive
+            let var_block_start = tf_contents
+                .find(&format!("variable \"{}\"", tf_var_name))
+                .expect("variable should exist");
+            let var_block_end = tf_contents[var_block_start..]
+                .find('}')
+                .map(|i| var_block_start + i)
+                .expect("variable block should close");
+            let var_block = &tf_contents[var_block_start..var_block_end];
+
+            assert!(
+                var_block.contains("sensitive   = true") || var_block.contains("sensitive = true"),
+                "Terraform variable '{}' should be marked as sensitive",
+                tf_var_name
+            );
+        }
+    }
 }

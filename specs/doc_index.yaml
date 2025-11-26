@@ -235,3 +235,255 @@ docs:
     requirements: [REQ-PLT-DEVEX-CONTRACT]
     acs: []
     adrs: [ADR-0005]
+
+  # Platform Support Reference
+  - id: GUIDE-TPL-PLATFORM-SUPPORT-001
+    file: docs/reference/platform-support.md
+    doc_type: reference
+    stories: [US-TPL-PLT-001]
+    requirements: [REQ-PLT-DEVEX-CONTRACT, REQ-PLT-ONBOARDING]
+    acs: [AC-PLT-015, AC-PLT-016, AC-PLT-019, AC-PLT-020]
+    adrs: [ADR-0002, ADR-0005, ADR-0017]
+
+  # IDP Positioning Guide
+  - id: EXPLANATION-TPL-IDP-POSITIONING-001
+    file: docs/explanation/idp-positioning.md
+    title: "IDP Positioning: Integrating Platform Cells with Internal Developer Portals"
+    doc_type: explanation
+    stories: [US-TPL-PLT-001]
+    requirements:
+      - REQ-TPL-PLATFORM-INTROSPECTION
+      - REQ-TPL-METADATA-CONSISTENT
+      - REQ-TPL-PLATFORM-SCHEMA
+      - REQ-TPL-REL-BUNDLE
+    acs:
+      - AC-TPL-PLATFORM-GRAPH
+      - AC-TPL-PLATFORM-DEVEX
+      - AC-TPL-PLATFORM-DOCS
+      - AC-TPL-PLATFORM-SCHEMA
+      - AC-TPL-METADATA-COMPLETE
+      - AC-TPL-REL-EVIDENCE
+    adrs: [ADR-0001, ADR-0004, ADR-0005]
+
+  # CI Workflows - Tier 1 Governance
+  - id: CI-TIER1-SELFTEST
+    file: .github/workflows/tier1-selftest.yml
+    doc_type: ci_workflow
+    title: "Tier 1 Selftest - Main Gate"
+    stories: [US-TPL-PLT-001]
+    requirements: [REQ-PLT-DEVEX-CONTRACT]
+    acs: [AC-PLT-015, AC-PLT-019, AC-PLT-020]
+    adrs: [ADR-0005, ADR-0017]
+
+  - id: CI-TEMPLATE-SELFTEST
+    file: .github/workflows/ci-template-selftest.yml
+    doc_type: ci_workflow
+    title: "Multi-Platform Selftest (Linux, macOS, Windows)"
+    stories: [US-TPL-PLT-001]
+    requirements: [REQ-PLT-DEVEX-CONTRACT]
+    acs: [AC-PLT-015, AC-PLT-019, AC-PLT-020]
+    adrs: [ADR-0002, ADR-0005]
+
+  # CI Workflows - Governance and Spec Validation
+  - id: CI-GOVERNANCE
+    file: .github/workflows/ci-governance.yml
+    doc_type: ci_workflow
+    title: "Governance PR Checks (Spec Impact, Title Validation)"
+    stories: [US-TPL-PLT-001]
+    requirements: [REQ-PLT-DEVEX-CONTRACT]
+    acs: [AC-PLT-014]
+    adrs: [ADR-0005]
+
+  - id: CI-GHERKIN
+    file: .github/workflows/ci-gherkin.yml
+    doc_type: ci_workflow
+    title: "Gherkin/BDD Validation (Lint + AC Tag Enforcement)"
+    stories: [US-TPL-001, US-TPL-PLT-001]
+    requirements: [REQ-PLT-DEVEX-CONTRACT]
+    acs: [AC-PLT-014, AC-PLT-015]
+    adrs: [ADR-0003, ADR-0005]
+
+  - id: CI-POLICY-VERIFY
+    file: .github/workflows/ci-policy-verify.yml
+    doc_type: ci_workflow
+    title: "Policy-as-Code Verification (Conftest)"
+    stories: [US-TPL-PLT-001]
+    requirements: [REQ-PLT-SECURITY-GOVERNANCE]
+    acs: [AC-PLT-006]
+    adrs: [ADR-0004, ADR-0007]
+
+  # CI Workflows - Security
+  - id: CI-SECURITY
+    file: .github/workflows/ci-security.yml
+    doc_type: ci_workflow
+    title: "Security Scanning (CodeQL, Gitleaks, Audit)"
+    stories: [US-TPL-PLT-001]
+    requirements: [REQ-PLT-SECURITY-GOVERNANCE]
+    acs: [AC-PLT-006, AC-PLT-007]
+    adrs: [ADR-0006, ADR-0007]
+
+  - id: CI-SUPPLY-CHAIN
+    file: .github/workflows/ci-supply-chain.yml
+    doc_type: ci_workflow
+    title: "Supply Chain Hardening (SBOM, Provenance, Attestation)"
+    stories: [US-TPL-PLT-001]
+    requirements: [REQ-PLT-SECURITY-GOVERNANCE, REQ-PLT-RELEASE-SAFETY]
+    acs: [AC-PLT-008, AC-PLT-012]
+    adrs: [ADR-0006, ADR-0007]
+
+  # CI Workflows - API and Contract Validation
+  - id: CI-OPENAPI
+    file: .github/workflows/ci-openapi.yml
+    doc_type: ci_workflow
+    title: "OpenAPI Schema Validation and Breaking Change Detection"
+    stories: [US-TPL-PLT-001]
+    requirements: [REQ-TPL-PLATFORM-SCHEMA]
+    acs: [AC-TPL-PLATFORM-SCHEMA]
+    adrs: [ADR-0001]
+
+  # CI Workflows - Code Quality Gates
+  - id: CI-AC
+    file: .github/workflows/ci-ac.yml
+    doc_type: ci_workflow
+    title: "Acceptance Criteria Status Check"
+    stories: [US-TPL-PLT-001]
+    requirements: [REQ-PLT-DEVEX-CONTRACT]
+    acs: [AC-PLT-014, AC-PLT-015]
+    adrs: [ADR-0005]
+
+  - id: CI-COVERAGE
+    file: .github/workflows/ci-coverage.yml
+    doc_type: ci_workflow
+    title: "Test Coverage Analysis"
+    stories: [US-TPL-PLT-001]
+    requirements: [REQ-PLT-DEVEX-CONTRACT]
+    acs: [AC-PLT-015]
+    adrs: [ADR-0005]
+
+  - id: CI-FEATURES
+    file: .github/workflows/ci-features.yml
+    doc_type: ci_workflow
+    title: "Feature Flag and Conditional Compilation Tests"
+    stories: [US-TPL-PLT-001]
+    requirements: [REQ-PLT-DEVEX-CONTRACT]
+    acs: [AC-PLT-003]
+    adrs: [ADR-0005]
+
+  - id: CI-LINTS
+    file: .github/workflows/ci-lints.yml
+    doc_type: ci_workflow
+    title: "Clippy and Rustfmt Linting"
+    stories: [US-TPL-PLT-001]
+    requirements: [REQ-PLT-DEVEX-CONTRACT]
+    acs: [AC-PLT-003]
+    adrs: [ADR-0005]
+
+  - id: CI-MSRV
+    file: .github/workflows/ci-msrv.yml
+    doc_type: ci_workflow
+    title: "Minimum Supported Rust Version (MSRV) Validation"
+    stories: [US-TPL-PLT-001]
+    requirements: [REQ-PLT-DEVEX-CONTRACT]
+    acs: [AC-PLT-003]
+    adrs: [ADR-0005]
+
+  # CI Workflows - Specialized Checks
+  - id: CI-DB
+    file: .github/workflows/ci-db.yml
+    doc_type: ci_workflow
+    title: "Database Migration and Schema Tests"
+    stories: [US-TPL-001]
+    requirements: []
+    acs: []
+    adrs: []
+
+  - id: CI-DOCS
+    file: .github/workflows/ci-docs.yml
+    doc_type: ci_workflow
+    title: "Documentation Build and Link Checks"
+    stories: [US-TPL-PLT-001]
+    requirements: [REQ-PLT-DOCS-CONSISTENCY]
+    acs: [AC-PLT-009, AC-PLT-010]
+    adrs: [ADR-0005]
+
+  - id: CI-EVENTS
+    file: .github/workflows/ci-events.yml
+    doc_type: ci_workflow
+    title: "Event Schema Validation"
+    stories: [US-TPL-001]
+    requirements: []
+    acs: []
+    adrs: []
+
+  - id: CI-FLAGS
+    file: .github/workflows/ci-flags.yml
+    doc_type: ci_workflow
+    title: "Feature Flag Matrix Testing"
+    stories: [US-TPL-PLT-001]
+    requirements: [REQ-PLT-DEVEX-CONTRACT]
+    acs: [AC-PLT-003]
+    adrs: [ADR-0005]
+
+  - id: CI-FLAGS-WARN
+    file: .github/workflows/ci-flags-warn.yml
+    doc_type: ci_workflow
+    title: "Feature Flag Warning Mode (Informational)"
+    stories: [US-TPL-PLT-001]
+    requirements: [REQ-PLT-DEVEX-CONTRACT]
+    acs: []
+    adrs: [ADR-0005]
+
+  - id: CI-NIX
+    file: .github/workflows/ci-nix.yml
+    doc_type: ci_workflow
+    title: "Nix Build Validation"
+    stories: [US-TPL-PLT-001]
+    requirements: [REQ-PLT-ONBOARDING]
+    acs: [AC-PLT-001]
+    adrs: [ADR-0002]
+
+  - id: CI-PRIVACY
+    file: .github/workflows/ci-privacy.yml
+    doc_type: ci_workflow
+    title: "Privacy Compliance Checks"
+    stories: [US-TPL-PLT-001]
+    requirements: [REQ-TPL-LOG-HYGIENE]
+    acs: [AC-TPL-LOG-NO-SECRETS]
+    adrs: [ADR-0004]
+
+  - id: CI-PROTO
+    file: .github/workflows/ci-proto.yml
+    doc_type: ci_workflow
+    title: "Protobuf Schema Validation and Breaking Change Detection"
+    stories: [US-TPL-001]
+    requirements: []
+    acs: []
+    adrs: []
+
+  - id: CI-SCOPE-GUARD
+    file: .github/workflows/ci-scope-guard.yml
+    doc_type: ci_workflow
+    title: "Scope and Boundary Enforcement"
+    stories: [US-TPL-PLT-001]
+    requirements: [REQ-PLT-DEVEX-CONTRACT]
+    acs: []
+    adrs: [ADR-0005]
+
+  # CI Workflows - Maintenance and Automation
+  - id: CI-MAINTENANCE-PIN-ACTIONS
+    file: .github/workflows/maintenance-pin-actions.yml
+    doc_type: ci_workflow
+    title: "GitHub Actions Version Pinning (Dependabot Support)"
+    stories: [US-TPL-PLT-001]
+    requirements: [REQ-PLT-SECURITY-GOVERNANCE]
+    acs: []
+    adrs: [ADR-0006]
+
+  - id: CI-RELEASE-SBOM-SIGN
+    file: .github/workflows/release-sbom-sign.yml
+    doc_type: ci_workflow
+    title: "Release Artifact Signing and SBOM Generation"
+    stories: [US-TPL-PLT-001]
+    requirements: [REQ-PLT-RELEASE-SAFETY]
+    acs: [AC-PLT-008]
+    adrs: [ADR-0006]

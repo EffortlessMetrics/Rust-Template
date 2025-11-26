@@ -1,4 +1,4 @@
-# Rust-as-Spec Platform Cell (v3.3.1)
+# Rust-as-Spec Platform Cell (v3.3.0)
 **Current Template Version:** v3.3.0
 **Current Template Version:** v3.3.1
 

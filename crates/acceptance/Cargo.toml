@@ -19,6 +19,7 @@ http = "1.4.0"
 http-body-util = "0.1.3"
 regex = "1.12.2"
 shell-words = "1.1.0"
+md5 = "0.7.0"
 
 # Internal crates
 app-http = { path = "../app-http" }

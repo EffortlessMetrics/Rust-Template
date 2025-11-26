@@ -1,5 +1,6 @@
 // Step definitions are automatically registered via cucumber macros
 pub mod config_validation;
+pub mod flow_idempotency;
 pub mod governance_tasks;
 pub mod governance_write;
 pub mod platform_security;

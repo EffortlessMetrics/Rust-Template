@@ -259,6 +259,11 @@ fn validate_doc_index() -> Result<()> {
             continue;
         }
 
+        // Skip front-matter validation for CI workflows (they are YAML files themselves)
+        if entry.doc_type == "ci_workflow" {
+            continue;
+        }
+
         let content = fs::read_to_string(&doc_path)?;
         match parse_front_matter(&content) {
             Ok(fm) => {

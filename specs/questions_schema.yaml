@@ -1,0 +1,195 @@
+# Questions Schema - Structured Ambiguity Artifacts
+#
+# When flows encounter ambiguity or missing information, they emit question
+# artifacts instead of stalling. These questions can be surfaced to humans
+# or agents for resolution, enabling continuous progress.
+
+schema_version: "1.0"
+template_version: "v3.3.1"
+
+description: >
+  Questions are structured artifacts emitted when automated flows encounter
+  ambiguity, missing requirements, or unclear specifications. Rather than
+  failing or stalling, flows create a question file that can be reviewed
+  and resolved asynchronously.
+
+question_schema:
+  type: object
+  required:
+    - id
+    - created_by
+    - created_at
+    - summary
+    - context
+  properties:
+    id:
+      type: string
+      pattern: "^Q-[A-Z0-9]+-\\d{3}$"
+      description: "Unique question identifier (e.g., Q-TPL-001)"
+
+    task_id:
+      type: string
+      description: "Optional task ID this question is blocking or related to"
+
+    req_ids:
+      type: array
+      items:
+        type: string
+      description: "Related requirement IDs from spec_ledger.yaml"
+
+    ac_ids:
+      type: array
+      items:
+        type: string
+      description: "Related AC IDs from spec_ledger.yaml"
+
+    summary:
+      type: string
+      description: "Brief summary of the question or ambiguity"
+      maxLength: 200
+
+    context:
+      type: object
+      required:
+        - flow
+        - phase
+        - description
+      properties:
+        flow:
+          type: string
+          description: "Flow that generated this question (e.g., 'bundle', 'suggest-next')"
+        phase:
+          type: string
+          description: "Phase within the flow where ambiguity occurred"
+        description:
+          type: string
+          description: "Detailed description of the ambiguity or missing information"
+        files_involved:
+          type: array
+          items:
+            type: string
+          description: "Files that were being processed when ambiguity was detected"
+
+    options:
+      type: array
+      items:
+        type: object
+        required:
+          - label
+          - description
+        properties:
+          label:
+            type: string
+            description: "Short label for this option"
+          description:
+            type: string
+            description: "Detailed explanation of this option"
+          risk:
+            type: string
+            enum: [low, medium, high]
+            description: "Risk level of this option"
+          reversible:
+            type: boolean
+            description: "Whether this option can be easily reversed"
+      description: "Possible resolution options"
+
+    recommendation:
+      type: object
+      properties:
+        option_label:
+          type: string
+          description: "Which option is recommended"
+        rationale:
+          type: string
+          description: "Why this option is recommended"
+        confidence:
+          type: string
+          enum: [low, medium, high]
+          description: "Confidence level in the recommendation"
+      description: "Recommended resolution with rationale"
+
+    created_by:
+      type: string
+      enum: [agent, human, flow]
+      description: "Who/what created this question"
+
+    created_at:
+      type: string
+      format: date-time
+      description: "ISO 8601 timestamp of creation"
+
+    status:
+      type: string
+      enum: [open, answered, resolved, obsolete]
+      default: open
+      description: "Current status of the question"
+
+    resolution:
+      type: object
+      properties:
+        resolved_by:
+          type: string
+          description: "Who resolved the question"
+        resolved_at:
+          type: string
+          format: date-time
+          description: "When it was resolved"
+        chosen_option:
+          type: string
+          description: "Which option was chosen"
+        notes:
+          type: string
+          description: "Additional notes about the resolution"
+      description: "Resolution details (when status is resolved)"
+
+file_naming:
+  pattern: "questions/Q-{COMPONENT}-{NUMBER}.yaml"
+  examples:
+    - "questions/Q-TPL-001.yaml"
+    - "questions/Q-BUNDLE-001.yaml"
+    - "questions/Q-SUGGEST-001.yaml"
+
+lifecycle:
+  creation: >
+    Questions are created automatically by flows when they encounter ambiguity.
+    The flow should continue with a conservative/safe default if possible,
+    logging the question for later review.
+
+  review: >
+    Questions can be reviewed via:
+    - cargo xtask questions-list (shows all open questions)
+    - /platform/questions endpoint (JSON list)
+    - Questions section in /platform/status
+
+  resolution: >
+    Questions can be resolved via:
+    - cargo xtask question-resolve <ID> --option <label> (CLI)
+    - POST /platform/questions/{id}/resolve (HTTP)
+    - Manual YAML file editing
+
+  cleanup: >
+    Resolved questions remain in the questions/ directory for audit trail.
+    Questions marked as 'obsolete' can be archived periodically.
+
+integration:
+  status_endpoints:
+    - "cargo xtask status includes questions.open_count and questions.total_count"
+    - "/platform/status includes questions section with counts and recent items"
+
+  governance:
+    - "Questions count toward governance health metrics"
+    - "High number of open questions may indicate specification gaps"
+
+  flows:
+    - "bundle flow: questions about missing ACs or unclear requirements"
+    - "suggest-next: questions about task dependencies or recommended sequences"
+    - "ac-new: questions about duplicate or conflicting AC IDs"
+    - "release-prepare: questions about changelog entries or version conflicts"
+
+examples:
+  - file: "questions/Q-BUNDLE-001.yaml"
+    description: "Bundle flow can't determine which AC to implement"
+  - file: "questions/Q-SUGGEST-002.yaml"
+    description: "Suggest-next finds circular task dependencies"
+  - file: "questions/Q-RELEASE-003.yaml"
+    description: "Release preparation finds uncommitted changes"

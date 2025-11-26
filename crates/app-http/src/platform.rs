@@ -92,6 +92,7 @@ struct GovernanceStatus {
     devex: DevExCounts,
     docs: DocCounts,
     tasks: TaskCounts,
+    questions: QuestionCounts,
     policies: PolicyStatus,
 }
 
@@ -116,6 +117,14 @@ struct DocCounts {
 
 #[derive(Serialize)]
 struct TaskCounts {
+    total: usize,
+}
+
+#[derive(Serialize)]
+struct QuestionCounts {
+    open: usize,
+    answered: usize,
+    resolved: usize,
     total: usize,
 }
 
@@ -236,6 +245,9 @@ async fn get_status(State(state): State<AppState>) -> Json<PlatformStatus> {
 
     let task_counts = TaskCounts { total: tasks_spec.tasks.len() };
 
+    // Load question counts
+    let question_counts = load_question_counts(root);
+
     // Read policy status from last policy-test run
     let policy_path = root.join("target/policy_status.json");
     let policy_status = if let Ok(content) = fs::read_to_string(policy_path) {
@@ -270,10 +282,58 @@ async fn get_status(State(state): State<AppState>) -> Json<PlatformStatus> {
             devex: devex_counts,
             docs: doc_counts,
             tasks: task_counts,
+            questions: question_counts,
             policies: PolicyStatus { status: policy_status },
         },
         config,
     })
+}
+
+/// Load question counts from questions/ directory
+fn load_question_counts(root: &std::path::Path) -> QuestionCounts {
+    use serde::Deserialize;
+
+    #[derive(Deserialize)]
+    struct Question {
+        #[serde(default)]
+        status: String,
+    }
+
+    let questions_dir = root.join("questions");
+    if !questions_dir.exists() {
+        return QuestionCounts { open: 0, answered: 0, resolved: 0, total: 0 };
+    }
+
+    let mut open = 0;
+    let mut answered = 0;
+    let mut resolved = 0;
+    let mut total = 0;
+
+    if let Ok(entries) = fs::read_dir(&questions_dir) {
+        for entry in entries.flatten() {
+            let path = entry.path();
+            if path.extension().and_then(|s| s.to_str()) != Some("yaml") {
+                continue;
+            }
+            if path.file_name().and_then(|s| s.to_str()) == Some("README.yaml") {
+                continue;
+            }
+
+            if let Ok(content) = fs::read_to_string(&path) {
+                if let Ok(question) = serde_yaml::from_str::<Question>(&content) {
+                    total += 1;
+                    match question.status.as_str() {
+                        "open" => open += 1,
+                        "answered" => answered += 1,
+                        "resolved" => resolved += 1,
+                        _ => {}
+                    }
+                }
+            }
+        }
+    }
+
+    QuestionCounts { open, answered, resolved, total }
 }
 
 #[derive(Deserialize)]
