@@ -184,6 +184,48 @@ nix develop
 
 ---
 
+### Q: "warning: unknown setting 'lazy-trees'" appears in Nix output
+
+**Symptom:**
+```bash
+$ nix develop
+warning: unknown setting 'lazy-trees'
+```
+
+**Cause:** The `lazy-trees` setting was an experimental Nix feature that has been removed in Nix 2.30+. It's configured in `/etc/nix/nix.conf` by Determinate Nix installer but is no longer recognized.
+
+**Impact:** Cosmetic only - does not affect functionality. The warning is safe to ignore.
+
+**Diagnostic:**
+```bash
+# Check Nix version
+nix --version
+# Nix 2.30+ will show this warning
+
+# Verify setting location
+grep lazy-trees /etc/nix/nix.conf
+# Shows: lazy-trees = true
+```
+
+**Fix (System-wide - requires sudo):**
+```bash
+# Override in custom config
+echo "# Override deprecated lazy-trees setting from managed config" | sudo tee -a /etc/nix/nix.custom.conf
+echo "lazy-trees = false" | sudo tee -a /etc/nix/nix.custom.conf
+
+# Verify warning is gone
+nix develop
+```
+
+**Note:** If you don't have sudo access or prefer not to modify system config:
+- The warning is harmless and can be ignored
+- It will not affect builds, tests, or any functionality
+- It's listed as a known cosmetic issue in the project's ROADMAP.md
+
+**Prevention:** When Determinate Nix installer is updated, this setting should be removed from their managed configuration.
+
+---
+
 ## Build Failures
 
 ### Q: "failed to remove xtask.exe" (os error 5) on Windows

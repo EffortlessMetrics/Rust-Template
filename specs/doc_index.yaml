@@ -265,6 +265,16 @@ docs:
     acs: [AC-PLT-011, AC-PLT-012, AC-PLT-013]
     adrs: [ADR-0005, ADR-0006]
 
+  # Pre-Fork Checklist
+  - id: GUIDE-TPL-PRE-FORK-001
+    file: docs/how-to/pre-fork-checklist.md
+    title: "Pre-Fork Checklist"
+    doc_type: how-to
+    stories: [US-TPL-PLT-001]
+    requirements: [REQ-PLT-DOC-TEMPLATES]
+    acs: [AC-PLT-008, AC-PLT-011, AC-PLT-012]
+    adrs: [ADR-0005, ADR-0006]
+
   # ADR-0017: Tier-1 Selftest as Required Gate
   - id: ADR-0017
     file: docs/adr/0017-tier1-selftest-gate.md
