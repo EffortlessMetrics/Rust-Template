@@ -68,6 +68,7 @@
     "env-filter",
     "envrc",
     "eprintln",
+    "forkable",
     "frontmatter",
     "Fulcio",
     "git",
