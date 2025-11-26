@@ -102,6 +102,7 @@ struct GovernanceStatus {
     tasks: TaskCounts,
     questions: QuestionCounts,
     friction: FrictionCounts,
+    forks: ForkCounts,
     policies: PolicyStatus,
 }
 
@@ -170,6 +171,13 @@ struct FrictionSummary {
     severity: String,
     summary: String,
     category: String,
+}
+
+#[derive(Serialize)]
+struct ForkCounts {
+    total: usize,
+    #[serde(skip_serializing_if = "Vec::is_empty", default)]
+    ids: Vec<String>,
 }
 
 #[derive(Serialize)]
@@ -295,6 +303,9 @@ async fn get_status(State(state): State<AppState>) -> Json<PlatformStatus> {
     // Load friction counts
     let friction_counts = load_friction_counts(root);
 
+    // Load fork counts
+    let fork_counts = load_fork_counts(root);
+
     // Read policy status from last policy-test run
     let policy_path = root.join("target/policy_status.json");
     let policy_status = if let Ok(content) = fs::read_to_string(policy_path) {
@@ -331,6 +342,7 @@ async fn get_status(State(state): State<AppState>) -> Json<PlatformStatus> {
             tasks: task_counts,
             questions: question_counts,
             friction: friction_counts,
+            forks: fork_counts,
             policies: PolicyStatus { status: policy_status },
         },
         config,
@@ -486,6 +498,37 @@ fn load_friction_counts(root: &std::path::Path) -> FrictionCounts {
         .collect();
 
     FrictionCounts { total, open, by_severity, recent }
+}
+
+/// Load fork counts from forks/fork_registry.yaml
+fn load_fork_counts(root: &std::path::Path) -> ForkCounts {
+    use serde::Deserialize;
+
+    #[derive(Deserialize)]
+    struct ForkRegistry {
+        #[serde(default)]
+        forks: Vec<ForkEntry>,
+    }
+
+    #[derive(Deserialize)]
+    struct ForkEntry {
+        id: String,
+    }
+
+    let registry_path = root.join("forks/fork_registry.yaml");
+    if !registry_path.exists() {
+        return ForkCounts { total: 0, ids: vec![] };
+    }
+
+    if let Ok(content) = fs::read_to_string(&registry_path)
+        && let Ok(registry) = serde_yaml::from_str::<ForkRegistry>(&content)
+    {
+        let ids: Vec<String> = registry.forks.iter().map(|f| f.id.clone()).collect();
+        let total = ids.len();
+        ForkCounts { total, ids }
+    } else {
+        ForkCounts { total: 0, ids: vec![] }
+    }
 }
 
 #[derive(Deserialize)]

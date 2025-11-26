@@ -14,6 +14,8 @@ pub struct Question {
     pub req_ids: Vec<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub ac_ids: Vec<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub refs: Vec<String>,
     pub summary: String,
     pub context: QuestionContext,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -96,6 +98,7 @@ impl Question {
             task_id: None,
             req_ids: Vec::new(),
             ac_ids: Vec::new(),
+            refs: Vec::new(),
             summary,
             context: QuestionContext {
                 flow: flow.to_string(),
@@ -325,6 +328,7 @@ pub fn emit_question(question: Question) -> Result<()> {
 }
 
 /// Create a new question artifact via CLI
+#[allow(clippy::too_many_arguments)]
 pub fn create_question(
     category: &str,
     summary: &str,
@@ -333,6 +337,7 @@ pub fn create_question(
     description: &str,
     created_by: &str,
     task_id: Option<&str>,
+    refs: &[String],
 ) -> Result<()> {
     // Validate category format (uppercase alphanumeric)
     let category_upper = category.to_uppercase();
@@ -371,6 +376,9 @@ pub fn create_question(
     if let Some(tid) = task_id {
         question.task_id = Some(tid.to_string());
     }
+
+    // Add refs if provided
+    question.refs = refs.to_vec();
 
     // Save to file
     let filepath = question.save()?;
@@ -426,5 +434,62 @@ status: open
         assert_eq!(question.id, "Q-TEST-002");
         assert_eq!(question.context.flow, "suggest-next");
         assert_eq!(question.status, "open");
+    }
+
+    #[test]
+    fn artifacts_have_refs() {
+        // Test Question struct has refs field that can hold REQ-*/AC-* references
+        let yaml = r#"
+id: Q-TEST-003
+summary: "Test question with refs"
+context:
+  flow: bundle
+  phase: validation
+  description: "Testing refs field"
+created_by: flow
+created_at: "2025-11-26T00:00:00Z"
+status: open
+refs:
+  - REQ-TPL-GOV-ARTIFACTS
+  - AC-TPL-ARTIFACTS-HAVE-REFS
+"#;
+
+        let question: Question = serde_yaml::from_str(yaml).unwrap();
+        assert_eq!(question.id, "Q-TEST-003");
+        assert_eq!(question.refs.len(), 2);
+        assert_eq!(question.refs[0], "REQ-TPL-GOV-ARTIFACTS");
+        assert_eq!(question.refs[1], "AC-TPL-ARTIFACTS-HAVE-REFS");
+
+        // Test serialization round-trip
+        let serialized = serde_yaml::to_string(&question).unwrap();
+        assert!(serialized.contains("REQ-TPL-GOV-ARTIFACTS"));
+        assert!(serialized.contains("AC-TPL-ARTIFACTS-HAVE-REFS"));
+
+        // Test FrictionEntry struct has refs field (imported from friction module)
+        use crate::commands::friction::FrictionEntry;
+
+        let friction_yaml = r#"
+id: FRICTION-TEST-003
+date: "2025-11-26"
+category: governance
+severity: low
+summary: "Test friction with refs"
+description: "Testing refs field on friction"
+status: open
+refs:
+  - REQ-TPL-GOV-ARTIFACTS
+  - AC-TPL-ARTIFACTS-HAVE-REFS
+"#;
+
+        let friction: FrictionEntry = serde_yaml::from_str(friction_yaml).unwrap();
+        assert_eq!(friction.id, "FRICTION-TEST-003");
+        assert_eq!(friction.refs.len(), 2);
+        assert_eq!(friction.refs[0], "REQ-TPL-GOV-ARTIFACTS");
+        assert_eq!(friction.refs[1], "AC-TPL-ARTIFACTS-HAVE-REFS");
+
+        // Test serialization round-trip
+        let serialized = serde_yaml::to_string(&friction).unwrap();
+        assert!(serialized.contains("REQ-TPL-GOV-ARTIFACTS"));
+        assert!(serialized.contains("AC-TPL-ARTIFACTS-HAVE-REFS"));
     }
 }

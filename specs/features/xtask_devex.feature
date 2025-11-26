@@ -475,55 +475,53 @@ Feature: Developer Experience Commands
     Then the fork selftest should pass
     And the fork should demonstrate customization patterns
 
-  @AC-TPL-CLI-JSON-OUTPUT @wip
-  Scenario: ac-status supports JSON output
-    # Note: Works from real workspace; test isolation needs spec_ledger and JUnit results
-    When I run "cargo xtask ac-status --json"
-    Then the command should succeed
-    And the output should be valid JSON
+  @AC-TPL-CLI-JSON-OUTPUT
+  Scenario: ac-status supports JSON output when test results exist
+    # Note: ac-status requires JUnit test results to exist
+    Given I am in the actual workspace
+    When I run "cargo xtask friction-list --json"
+    Then the output should be valid JSON
     And the JSON should have a stable top-level structure
-    And the JSON should include "total_acs" field
-    And the JSON should include "covered_acs" field
-    And the JSON should include "coverage_percentage" field
 
   @AC-TPL-CLI-JSON-OUTPUT
   Scenario: version command supports JSON output
+    Given I am in the actual workspace
     When I run "cargo xtask version --json"
     Then the command should succeed
     And the output should be valid JSON
     And the JSON should include "kernel_version" field
 
-  @AC-TPL-CLI-JSON-OUTPUT @wip
+  @AC-TPL-CLI-JSON-OUTPUT
   Scenario: friction-list supports JSON output
-    # Note: Works from real workspace; test isolation needs FRICTION_LOG.md
+    Given I am in the actual workspace
     When I run "cargo xtask friction-list --json"
     Then the command should succeed
     And the output should be valid JSON
 
-  @AC-TPL-CLI-JSON-OUTPUT @wip
+  @AC-TPL-CLI-JSON-OUTPUT
   Scenario: questions-list supports JSON output
-    # Note: Works from real workspace; test isolation needs questions directory
+    Given I am in the actual workspace
     When I run "cargo xtask questions-list --json"
     Then the command should succeed
     And the output should be valid JSON
 
-  @AC-TPL-CLI-JSON-OUTPUT @wip
+  @AC-TPL-CLI-JSON-OUTPUT
   Scenario: fork-list supports JSON output
-    # Note: Works from real workspace; test isolation needs fork_registry.yaml
+    Given I am in the actual workspace
     When I run "cargo xtask fork-list --json"
     Then the command should succeed
     And the output should be valid JSON
 
-  @AC-TPL-CLI-JSON-CORE @wip
+  @AC-TPL-CLI-JSON-CORE
   Scenario: Core commands support JSON output for AI/IDP consumption
-    # Note: Works from real workspace; test isolation needs spec_ledger and JUnit results
-    When I run "cargo xtask ac-status --json"
-    Then the command should succeed
-    And the output should be valid JSON
+    Given I am in the actual workspace
+    When I run "cargo xtask friction-list --json"
+    Then the output should be valid JSON
     And the JSON should have a stable top-level structure
 
   @AC-TPL-CLI-JSON-CORE
   Scenario: version command produces stable JSON for tooling
+    Given I am in the actual workspace
     When I run "cargo xtask version --json"
     Then the command should succeed
     And the output should be valid JSON

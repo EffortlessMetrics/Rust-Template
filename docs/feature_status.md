@@ -49,12 +49,15 @@ Auto-generated AC status from acceptance (BDD) and unit tests.
 | AC-TPL-007 | US-TPL-001 | REQ-TPL-METRICS | [PASS] pass | 1 / 1 |
 | AC-TPL-AGENT-HINTS | US-TPL-PLT-001 | REQ-TPL-AGENT-INTERFACE | [PASS] pass | 1 / 1 |
 | AC-TPL-AGENT-SKILLS | US-TPL-PLT-001 | REQ-TPL-AGENT-INTERFACE | [PASS] pass | 1 / 1 |
+| AC-TPL-ARTIFACTS-HAVE-REFS | US-TPL-PLT-001 | REQ-TPL-GOV-ARTIFACTS | [UNKNOWN] unknown | 0 / 1 |
+| AC-TPL-BDD-EXIT-CODES | US-TPL-PLT-001 | REQ-TPL-BDD-HARNESS | [UNKNOWN] unknown | 0 / 1 |
 | AC-TPL-BUNDLE-LAYOUT | US-TPL-PLT-001 | REQ-TPL-BUNDLE-CONTRACT | [UNKNOWN] unknown | 0 / 1 |
 | AC-TPL-CLI-JSON-CORE | US-TPL-PHILOSOPHY-001 | REQ-TPL-AI-IDP-COMPAT | [PASS] pass | 1 / 1 |
 | AC-TPL-CLI-JSON-OUTPUT | US-TPL-PLT-001 | REQ-PLT-DEVEX-CONTRACT | [PASS] pass | 1 / 1 |
 | AC-TPL-CONFIG-VALIDATION | US-TPL-PLT-001 | REQ-TPL-CONFIG-INTEGRITY | [PASS] pass | 2 / 2 |
 | AC-TPL-EXAMPLE-FORK-BUILDS | US-TPL-PLT-001 | REQ-TPL-EXAMPLE-FORK | [UNKNOWN] unknown | 0 / 0 |
 | AC-TPL-FLOW-IDEMPOTENT | US-TPL-PLT-001 | REQ-TPL-FLOW-IDEMPOTENCY | [PASS] pass | 1 / 1 |
+| AC-TPL-FORKS-STATUS-SUMMARY | US-TPL-PLT-001 | REQ-TPL-FORK-VISIBILITY | [PASS] pass | 1 / 1 |
 | AC-TPL-GOV-FORKS | US-TPL-PLT-001 | REQ-TPL-GOV-ARTIFACTS | [UNKNOWN] unknown | 0 / 1 |
 | AC-TPL-GOV-FRICTION | US-TPL-PLT-001 | REQ-TPL-GOV-ARTIFACTS | [UNKNOWN] unknown | 0 / 1 |
 | AC-TPL-GOV-WRITE-TASK-STATUS-200 | US-TPL-PLATFORM-V3 | REQ-TPL-GOV-WRITE-001 | [PASS] pass | 1 / 1 |
@@ -104,6 +107,8 @@ Auto-generated AC status from acceptance (BDD) and unit tests.
 
 ACs with no mapped or executed tests:
 
+- AC-TPL-ARTIFACTS-HAVE-REFS: Questions and friction entries support a 'refs' field for REQ-*/AC-* IDs, allowing governance artifacts to reference the contracts they relate to.
+- AC-TPL-BDD-EXIT-CODES: The acceptance test binary returns exit 0 when all non-@wip scenarios pass (regardless of skipped scenarios), and returns non-zero only if at least one non-@wip scenario fails.
 - AC-TPL-BUNDLE-LAYOUT: `cargo xtask bundle implement_ac` creates `.llm/bundle/<id>/bundle.json` with task_id, requirement_ids, ac_ids, and a list of included files, plus at least one human-readable context file (e.g. `context.md`).
 - AC-TPL-EXAMPLE-FORK-BUILDS: `examples/fork-customization/` builds and passes its own selftest in CI, demonstrating a working fork.
 - AC-TPL-GOV-FORKS: Fork metadata is stored under forks/fork_registry.yaml, can be managed via `cargo xtask fork-register`/`fork-list`, and is exposed via /platform/forks and /platform/forks/{name}.

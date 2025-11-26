@@ -17,6 +17,8 @@ pub struct Question {
     pub req_ids: Vec<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub ac_ids: Vec<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub refs: Vec<String>,
     pub summary: String,
     pub context: QuestionContext,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -252,6 +254,7 @@ mod tests {
             task_id: Some("implement_feature".to_string()),
             req_ids: vec!["REQ-001".to_string()],
             ac_ids: vec!["AC-001".to_string()],
+            refs: vec![],
             summary: "Test question".to_string(),
             context: QuestionContext {
                 flow: "bundle".to_string(),

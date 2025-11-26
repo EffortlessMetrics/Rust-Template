@@ -234,6 +234,13 @@ async fn given_ci_constrained(world: &mut World) {
     world.xtask_context_mut().env.insert("XTASK_LOW_RESOURCES".to_string(), "1".to_string());
 }
 
+#[given("I am in the actual workspace")]
+async fn given_in_actual_workspace(world: &mut World) {
+    // Use the actual workspace root for commands that need specs/flake.nix
+    let actual_root = actual_workspace_root();
+    world.xtask_context_mut().test_repo_path = Some(actual_root);
+}
+
 // Platform detection steps - only compiled for the target platform
 // This ensures platform-specific scenarios are only defined on compatible platforms
 #[given("I am on a Unix platform")]
@@ -2393,5 +2400,110 @@ async fn then_second_run_reports(world: &mut World, expected: String) {
         "Output should contain '{}'\nActual output:\n{}",
         expected,
         output
+    );
+}
+
+// ============================================================================
+// JSON CLI Output Steps (AC-TPL-CLI-JSON-OUTPUT, AC-TPL-CLI-JSON-CORE)
+// ============================================================================
+
+/// Extract JSON from command output that may contain Nix/cargo messages
+fn extract_json_from_output(output: &str) -> Option<String> {
+    // Try to find a complete JSON object (prefer '{' over '[' since cargo messages may have brackets)
+    let mut best_json: Option<String> = None;
+    let mut json_chars = Vec::new();
+    let mut depth = 0;
+    let mut started = false;
+    let mut start_char = ' ';
+
+    for ch in output.chars() {
+        match ch {
+            '{' | '[' => {
+                if depth == 0 {
+                    started = true;
+                    start_char = ch;
+                    json_chars.clear(); // Start fresh from outermost brace
+                }
+                depth += 1;
+                json_chars.push(ch);
+            }
+            '}' | ']' => {
+                json_chars.push(ch);
+                depth -= 1;
+                if depth == 0 && started {
+                    // Found complete JSON
+                    let candidate: String = json_chars.iter().collect();
+                    // Prefer objects over arrays (cargo messages often use brackets)
+                    if start_char == '{' {
+                        return Some(candidate);
+                    }
+                    if best_json.is_none() {
+                        best_json = Some(candidate);
+                    }
+                    started = false;
+                }
+            }
+            _ if started && depth > 0 => {
+                json_chars.push(ch);
+            }
+            _ => {}
+        }
+    }
+
+    best_json
+}
+
+#[then("the output should be valid JSON")]
+async fn then_output_valid_json(world: &mut World) {
+    let ctx = world.xtask_context();
+    let output = ctx.last_command_output.as_ref().expect("No command output");
+
+    // Extract JSON from output (skip Nix/cargo messages)
+    let json_str = extract_json_from_output(output).unwrap_or_else(|| output.trim().to_string());
+
+    // Parse JSON to verify it's valid
+    let parse_result: Result<serde_json::Value, _> = serde_json::from_str(&json_str);
+    assert!(
+        parse_result.is_ok(),
+        "Output should be valid JSON\nExtracted JSON:\n{}\nParse error: {:?}\nFull output:\n{}",
+        json_str,
+        parse_result.err(),
+        output
+    );
+}
+
+#[then(regex = r#"^the JSON should have a stable top-level structure$"#)]
+async fn then_json_stable_structure(world: &mut World) {
+    let ctx = world.xtask_context();
+    let output = ctx.last_command_output.as_ref().expect("No command output");
+
+    // Extract JSON from output
+    let json_str = extract_json_from_output(output).unwrap_or_else(|| output.trim().to_string());
+
+    let json: serde_json::Value =
+        serde_json::from_str(&json_str).expect("Output should be valid JSON");
+
+    // Verify it's an object at the top level
+    assert!(json.is_object(), "JSON should have object at top level\nActual: {:?}", json);
+}
+
+#[then(regex = r#"^the JSON should include "([^"]+)" field$"#)]
+async fn then_json_includes_field(world: &mut World, field_name: String) {
+    let ctx = world.xtask_context();
+    let output = ctx.last_command_output.as_ref().expect("No command output");
+
+    // Extract JSON from output
+    let json_str = extract_json_from_output(output).unwrap_or_else(|| output.trim().to_string());
+
+    let json: serde_json::Value =
+        serde_json::from_str(&json_str).expect("Output should be valid JSON");
+
+    let obj = json.as_object().expect("JSON should be an object");
+
+    assert!(
+        obj.contains_key(&field_name),
+        "JSON should include field '{}'\nActual JSON: {}",
+        field_name,
+        serde_json::to_string_pretty(&json).unwrap()
     );
 }

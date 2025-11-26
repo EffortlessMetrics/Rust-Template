@@ -1,12 +1,12 @@
 ---
-id: GUIDE-TPL-CHANGE-OPINION-001
+id: GUIDE-TPL-OVERRIDE-001
 title: Change Template Opinions in Your Fork
 doc_type: how-to
 status: published
 audience: fork-maintainers, platform-engineers
 tags: [fork, customization, governance, override, opinion]
 stories: [US-TPL-PLT-001]
-requirements: [REQ-PLT-ONBOARDING, REQ-TPL-GOV-ARTIFACTS]
+requirements: [REQ-PLT-ONBOARDING, REQ-PLT-DOC-TEMPLATES]
 acs: [AC-PLT-001, AC-TPL-GOV-FRICTION, AC-TPL-GOV-FORKS]
 adrs: [ADR-0003, ADR-0005]
 last_updated: 2025-11-26
@@ -344,7 +344,152 @@ EOF
 
 ---
 
-### Example 3: Add a New Required Check
+### Example 3: Disable Fork Registry Visibility in Platform Status
+
+**Goal:** Your fork doesn't want fork registry data exposed in `/platform/status` (you use an internal registry instead).
+
+**Changes:**
+
+1. **Mark AC as optional** in `specs/spec_ledger.yaml`:
+   ```yaml
+   - id: AC-TPL-FORKS-STATUS-SUMMARY
+     text: >
+       /platform/status includes governance.forks.total and a forks.ids
+       array when forks/fork_registry.yaml exists, and
+       `cargo xtask fork-list --json` reflects that state.
+     tags: [template]  # Changed from [kernel, governance, idp]
+     must_have_ac: false  # Changed from true
+     note: "We use internal registry. Fork visibility removed from platform status."
+   ```
+
+2. **Update or skip BDD** in `specs/features/platform_schema.feature`:
+   ```gherkin
+   @AC-TPL-FORKS-STATUS-SUMMARY @skip
+   Scenario: Platform status includes fork registry
+     # Skipped in fork - we use internal registry
+   ```
+
+3. **Update implementation** in `crates/platform-http/src/handlers/platform_status.rs`:
+   ```rust
+   // Remove or comment out fork registry inclusion
+   // governance.forks = Some(fork_data);
+   ```
+
+4. **Validate:**
+   ```bash
+   cargo xtask ac-status  # Should show AC-TPL-FORKS-STATUS-SUMMARY as optional
+   cargo xtask test-changed
+   cargo xtask selftest
+   ```
+
+5. **Document:**
+   ```bash
+   cat > docs/adr/ADR-FORK-003.md <<EOF
+   ---
+   id: ADR-FORK-003
+   title: Use Internal Registry for Forks
+   status: accepted
+   ---
+   We disable AC-TPL-FORKS-STATUS-SUMMARY as we use our internal fork registry.
+   Platform status won't expose fork data via /platform/status.
+   EOF
+   ```
+
+---
+
+### Example 4: Relax BDD Harness Exit Code Requirements
+
+**Goal:** Your fork wants @wip scenarios to cause CI failures (stricter than template default).
+
+**Changes:**
+
+1. **Update AC** in `specs/spec_ledger.yaml`:
+   ```yaml
+   - id: AC-TPL-BDD-EXIT-CODES
+     text: >
+       The acceptance test binary returns exit 0 when all scenarios pass
+       (including @wip scenarios must pass), and returns non-zero if any
+       scenario fails.
+     tags: [kernel, testing]
+     must_have_ac: true
+     note: "Fork requires @wip scenarios to pass in CI."
+   ```
+
+2. **Update BDD** in `specs/features/bdd_harness.feature`:
+   ```gherkin
+   @AC-TPL-BDD-EXIT-CODES
+   Scenario: WIP scenarios cause non-zero exit
+     Given I have a feature with @wip scenarios
+     When I run the BDD harness
+     Then the exit code is non-zero
+   ```
+
+3. **Update implementation** in BDD test runner configuration:
+   ```rust
+   // Configure harness to fail on @wip scenarios
+   // (implementation details depend on your BDD framework)
+   ```
+
+4. **Validate:**
+   ```bash
+   cargo xtask test-ac AC-TPL-BDD-EXIT-CODES
+   cargo xtask selftest
+   ```
+
+---
+
+### Example 5: Remove Artifact Refs Requirement
+
+**Goal:** Your fork doesn't need traceability between governance artifacts and REQ/AC IDs (you use Jira for traceability).
+
+**Changes:**
+
+1. **Mark AC as optional** in `specs/spec_ledger.yaml`:
+   ```yaml
+   - id: AC-TPL-ARTIFACTS-HAVE-REFS
+     text: >
+       Questions and friction entries support a 'refs' field for REQ-*/AC-* IDs,
+       allowing governance artifacts to reference the contracts they relate to.
+     tags: [template]  # Changed from [kernel, traceability, governance]
+     must_have_ac: false  # Changed from true
+     note: "We use Jira for traceability. Artifact refs not required."
+   ```
+
+2. **Update schema** (optional) - remove refs validation from YAML schemas:
+   ```yaml
+   # In schemas for questions/friction artifacts
+   # refs: # ← Remove or make optional
+   ```
+
+3. **Update BDD** (if tests exist):
+   ```gherkin
+   @AC-TPL-ARTIFACTS-HAVE-REFS @skip
+   Feature: Artifact References
+     # Skipped - we use Jira for traceability
+   ```
+
+4. **Validate:**
+   ```bash
+   cargo xtask ac-status  # Should show AC-TPL-ARTIFACTS-HAVE-REFS as optional
+   cargo xtask selftest
+   ```
+
+5. **Document:**
+   ```bash
+   cat > docs/adr/ADR-FORK-004.md <<EOF
+   ---
+   id: ADR-FORK-004
+   title: Use Jira for Artifact Traceability
+   status: accepted
+   ---
+   We disable AC-TPL-ARTIFACTS-HAVE-REFS as we use Jira for linking
+   governance artifacts to requirements. The 'refs' field is optional.
+   EOF
+   ```
+
+---
+
+### Example 6: Add a New Required Check
 
 **Goal:** Your organization requires FIPS-compliant cryptography. Add an AC to enforce it.
 

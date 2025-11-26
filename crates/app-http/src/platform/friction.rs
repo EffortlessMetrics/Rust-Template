@@ -28,6 +28,8 @@ pub struct FrictionEntry {
     pub status: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub resolution: Option<Resolution>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub refs: Vec<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub related_items: Option<RelatedItems>,
 }
@@ -209,6 +211,7 @@ mod tests {
             context: None,
             status: "open".to_string(),
             resolution: None,
+            refs: Vec::new(),
             related_items: None,
         };
 

@@ -391,9 +391,8 @@ stories:
               `--json` produces a single valid JSON document on stdout
               with a stable top-level shape, and exit codes follow the
               success/failure of the operation.
-            tags: [template, devex]
-            must_have_ac: false
-            note: "Template feature - JSON output for automation. Commands work; test isolation pending."
+            tags: [kernel, devex, ai, idp]
+            must_have_ac: true
             tests:
               - { type: integration, tag: "@AC-TPL-CLI-JSON-OUTPUT", file: "specs/features/xtask_devex.feature" }
 
@@ -418,6 +417,28 @@ stories:
             must_have_ac: true
             tests:
               - { type: bdd, tag: "@AC-TPL-XTASK-NONINTERACTIVE", file: "specs/features/xtask_devex.feature" }
+
+      - id: REQ-TPL-BDD-HARNESS
+        title: "Deterministic BDD harness semantics"
+        tags: [devex, testing]
+        must_have_ac: true
+        description: >
+          The BDD acceptance test harness MUST have deterministic exit code
+          behavior that distinguishes between test failures and skipped tests,
+          enabling reliable CI/CD integration and agent workflows.
+        acceptance_criteria:
+          - id: AC-TPL-BDD-EXIT-CODES
+            text: >
+              The acceptance test binary returns exit 0 when all non-@wip
+              scenarios pass (regardless of skipped scenarios), and returns
+              non-zero only if at least one non-@wip scenario fails.
+            tags: [kernel, testing]
+            must_have_ac: false
+            note: "Verified by unit test; BDD would test the harness with the harness."
+            tests:
+              - { type: unit, tag: "bdd_exit_code_respects_wip",
+                  module: "tests::bdd_exit_code_respects_wip",
+                  file: "crates/acceptance/tests/acceptance.rs" }
 
       - id: REQ-PLT-STATUS-CLI
         title: "CLI governance status dashboard"
@@ -632,6 +653,37 @@ stories:
             tests:
               - { type: bdd, tag: "@AC-TPL-GOV-FORKS",
                   file: "specs/features/forks.feature" }
+
+          - id: AC-TPL-ARTIFACTS-HAVE-REFS
+            text: >
+              Questions and friction entries support a 'refs' field for REQ-*/AC-* IDs,
+              allowing governance artifacts to reference the contracts they relate to.
+            tags: [kernel, traceability, governance]
+            must_have_ac: false
+            note: "Verified by unit test (struct+serde); BDD tests artifact CLI workflows."
+            tests:
+              - { type: unit, tag: "artifacts_have_refs",
+                  module: "xtask::commands::questions::tests::artifacts_have_refs",
+                  file: "crates/xtask/src/commands/questions.rs" }
+
+      - id: REQ-TPL-FORK-VISIBILITY
+        title: "Forks are visible in governance"
+        tags: [governance, idp]
+        must_have_ac: true
+        description: >
+          Fork registry MUST be visible in platform governance views so
+          agents and IDPs can discover known forks without reading raw YAML.
+        acceptance_criteria:
+          - id: AC-TPL-FORKS-STATUS-SUMMARY
+            text: >
+              /platform/status includes governance.forks.total and a forks.ids
+              array when forks/fork_registry.yaml exists, and
+              `cargo xtask fork-list --json` reflects that state.
+            tags: [kernel, governance, idp]
+            must_have_ac: true
+            tests:
+              - { type: bdd, tag: "@AC-TPL-FORKS-STATUS-SUMMARY",
+                  file: "specs/features/platform_schema.feature" }
 
       - id: REQ-TPL-FLOW-IDEMPOTENCY
         title: "Platform flows are safe to rerun"
@@ -1141,9 +1193,8 @@ stories:
             text: >
               At minimum, cargo xtask ac-status, friction-list, questions-list,
               fork-list, and version accept --json and produce stable JSON output.
-            tags: [template, philosophy, ai]
-            must_have_ac: false
-            note: "CLI JSON output works; test isolation for ac-status --json pending."
+            tags: [kernel, philosophy, ai, idp]
+            must_have_ac: true
             tests:
               - { type: bdd, tag: "@AC-TPL-CLI-JSON-CORE", file: "specs/features/xtask_devex.feature" }
           - id: AC-TPL-PLATFORM-GOVERNANCE-APIS

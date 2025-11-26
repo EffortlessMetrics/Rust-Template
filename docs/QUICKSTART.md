@@ -42,12 +42,24 @@ The template enforces these opinions through contracts in `specs/spec_ledger.yam
    - Questions (`QUESTIONS.yaml`), friction (`FRICTION_LOG.md`), and forks (`FORKS.yaml`) are tracked artifacts
    - Exposed via HTTP APIs (`/platform/questions`, `/platform/friction`, `/platform/forks`)
    - CLI commands with `--json` output for machine consumption
+   - Governance artifacts support `refs` field for REQ-*/AC-* IDs (AC-TPL-ARTIFACTS-HAVE-REFS)
    - **Why:** Governance data is as important as the code—make it queryable
 
-4. **Agent Surfaces: APIs, Bundles, JSON CLI**
+4. **BDD Harness: Exit Codes for Automation (AC-TPL-BDD-EXIT-CODES)**
+   - BDD test harness returns exit 0 when all non-@wip scenarios pass
+   - Skipped scenarios (@skip) don't affect exit code
+   - Returns non-zero only if at least one non-@wip scenario fails
+   - **Why:** CI/CD needs reliable, deterministic test outcomes
+
+5. **Fork Visibility: Platform Status Integration (AC-TPL-FORKS-STATUS-SUMMARY)**
+   - Fork registry visible in `/platform/status` (governance.forks.total, forks.ids)
+   - `cargo xtask fork-list --json` reflects fork registry state
+   - **Why:** IDPs and agents need to discover known forks without reading raw YAML
+
+6. **Agent Surfaces: APIs, Bundles, JSON CLI**
    - Platform introspection via `/platform/*` endpoints (status, graph, docs, hints)
    - Context bundles for LLM workflows (`cargo xtask bundle <task>`)
-   - All xtask commands support `--json` for programmatic use
+   - Core reporting commands support `--json` for programmatic use (version, friction-list, questions-list, fork-list)
    - **Why:** Agents and platform tooling need structured, machine-readable interfaces
 
 ### How to Customize
