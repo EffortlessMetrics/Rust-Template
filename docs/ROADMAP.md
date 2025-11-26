@@ -58,11 +58,41 @@ cargo run -p app-http      # Listening on :8080
 
 ---
 
-## 2. What's Still Needed
+## 2. What's Been Completed (v3.3.3 Polish)
 
-Despite 100% AC coverage, there are gaps between "selftest green" and "production-ready platform cell":
+The following gaps have been addressed:
 
-### 2.1 Enforcement Gaps
+### 2.1 Documentation ✅
+
+| Item | Status | Location |
+|------|--------|----------|
+| **IDP positioning doc** | ✅ Complete | `docs/explanation/idp-positioning.md` |
+| **Brownfield adoption guide** | ✅ Complete | `docs/guides/brownfield-adoption.md` |
+| **Fork feedback workflow** | ✅ Complete | `docs/how-to/report-fork-feedback.md` |
+
+### 2.2 Operational Tooling ✅
+
+| Item | Status | Command/Endpoint |
+|------|--------|------------------|
+| **Questions-as-artifacts** | ✅ Complete | `cargo xtask question-new`, `questions-list` |
+| **Friction log API** | ✅ Complete | `GET /platform/friction`, `/platform/friction/{id}` |
+| **Fork registry** | ✅ Complete | `cargo xtask fork-list`, `fork-register` |
+| **Version command** | ✅ Complete | `cargo xtask version` (with `--json`) |
+| **Friction CLI** | ✅ Complete | `cargo xtask friction-new`, `friction-list` |
+
+### 2.3 Test Isolation ✅
+
+| Item | Status | Notes |
+|------|--------|-------|
+| **BDD test isolation** | ✅ Fixed | Tests no longer pollute tracked files |
+
+---
+
+## 3. What's Still Needed
+
+Despite significant progress, some gaps remain:
+
+### 3.1 Enforcement Gaps
 
 | Gap | Impact | Effort |
 |-----|--------|--------|
@@ -70,23 +100,14 @@ Despite 100% AC coverage, there are gaps between "selftest green" and "productio
 | **No required status checks** | PRs can merge without selftest passing | Low (manual GitHub config) |
 | **Tag signing not enforced** | Release tags can be created without verification | Medium |
 
-### 2.2 Documentation Gaps
-
-| Gap | Impact | Effort |
-|-----|--------|--------|
-| **No IDP positioning doc** | Platform teams don't know how to integrate | Medium |
-| **No brownfield migration guide** | Teams with existing services can't adopt | Medium |
-| **Windows Tier-2 not fully tested** | Windows users may hit undocumented issues | Low-Medium |
-
-### 2.3 Operational Gaps
+### 3.2 Validation Gaps
 
 | Gap | Impact | Effort |
 |-----|--------|--------|
 | **No second service validation** | Template assumptions untested in real use | High (requires consuming service) |
-| **Questions-as-artifacts not implemented** | Agents can't record ambiguity systematically | Medium |
-| **Friction log entries not surfaced** | Systemic issues not visible in governance | Low |
+| **Windows Tier-2 not fully tested** | Windows users may hit undocumented issues | Low-Medium |
 
-### 2.4 Technical Debt
+### 3.3 Technical Debt
 
 | Item | Impact | Effort |
 |------|--------|--------|
@@ -96,7 +117,7 @@ Despite 100% AC coverage, there are gaps between "selftest green" and "productio
 
 ---
 
-## 3. Path Forward Options
+## 4. Path Forward Options
 
 ### Option A: Minimal (Lock and Fork)
 
@@ -179,7 +200,7 @@ Despite 100% AC coverage, there are gaps between "selftest green" and "productio
 
 ---
 
-## 4. Recommended Path
+## 5. Recommended Path
 
 **Option C (Validate) is recommended** for these reasons:
 
@@ -215,7 +236,7 @@ Week 4: Documentation
 
 ---
 
-## 5. Quick Reference
+## 6. Quick Reference
 
 ### Day-0 Commands (New Clone)
 
@@ -234,6 +255,18 @@ cargo xtask test-changed       # Run affected tests
 cargo xtask test-ac AC-XXX     # Test specific AC
 cargo xtask ac-status          # View AC coverage
 cargo xtask selftest           # Full governance check
+cargo xtask version            # Show kernel version
+```
+
+### Governance Artifacts
+
+```bash
+cargo xtask friction-new --category X --severity Y --summary "..."
+cargo xtask friction-list      # List friction entries
+cargo xtask question-new --category X --summary "..." --flow F --phase P --description "..."
+cargo xtask questions-list     # List questions
+cargo xtask fork-register --name "Name" --domain "domain" --kernel-version "v3.3.3" ...
+cargo xtask fork-list          # List registered forks
 ```
 
 ### Agent Workflow
@@ -254,7 +287,7 @@ cargo xtask release-bundle X.Y.Z
 
 ---
 
-## 6. Definition of Done
+## 7. Definition of Done
 
 The kernel is "fully implemented" when:
 
@@ -267,7 +300,7 @@ Until then, it's a stable baseline (v3.3.3) suitable for early adopters who acce
 
 ---
 
-## 7. Summary
+## 8. Summary
 
 **v3.3.3** is a stable, selftest-green kernel. All 65 ACs pass. But "selftest green" and "ready for production" are different bars. The gaps are documented above.
 

@@ -802,16 +802,47 @@ Understanding when to use each artifact type is critical for effective governanc
 - "Bundle command slow on large repos"
 - "Error message doesn't explain which file is invalid"
 
-**Command:**
+**Commands:**
 ```bash
+# List friction entries
 cargo xtask friction-list
 cargo xtask friction-list --status open
 cargo xtask friction-list --severity high
+
+# Create new friction entry
+cargo xtask friction-new --category devex --severity medium --summary "Description of the issue"
 ```
 
 **API:**
 ```bash
+# Get friction summary from status
 curl http://localhost:8080/platform/status | jq '.governance.friction'
+
+# Get all friction entries
+curl http://localhost:8080/platform/friction
+
+# Get specific friction entry
+curl http://localhost:8080/platform/friction/FRICTION-AGENT-001
+```
+
+**Response structure (GET /platform/friction):**
+```json
+{
+  "entries": [
+    {
+      "id": "FRICTION-AGENT-001",
+      "date": "2025-11-20",
+      "category": "api",
+      "severity": "high",
+      "summary": "UI/API inconsistency...",
+      "description": "...",
+      "status": "resolved",
+      "context": { ... },
+      "resolution": { ... }
+    }
+  ],
+  "total": 2
+}
 ```
 
 ### ADR (Architecture Decision Record)
@@ -1155,6 +1186,7 @@ cargo xtask suggest-next --task <id>
 cargo xtask help-flows
 cargo xtask ac-coverage              # Check AC test coverage
 cargo xtask ac-coverage | grep FEATURE-NAME
+cargo xtask version                  # Show kernel version
 
 # Execution
 cargo xtask ac-new <id> "<desc>" --requirement <req>
@@ -1172,12 +1204,21 @@ cargo xtask policy-test
 cargo xtask docs-check
 cargo xtask graph-export --check-invariants
 
+# Governance Artifacts
+cargo xtask friction-new --category X --severity Y --summary "..."
+cargo xtask friction-list
+cargo xtask question-new --category X --summary "..." --flow F --phase P --description "..."
+cargo xtask questions-list
+cargo xtask fork-register --name "Name" --domain "domain" --kernel-version "v3.3.3" ...
+cargo xtask fork-list
+
 # Introspection
 curl http://localhost:8080/platform/status
 curl http://localhost:8080/platform/graph
 curl http://localhost:8080/platform/tasks
 curl http://localhost:8080/platform/tasks/graph              # Task dependency graph (JSON)
 curl 'http://localhost:8080/platform/tasks/graph?format=mermaid'  # Mermaid diagram
+curl http://localhost:8080/platform/friction                 # Friction log entries
 ```
 
 ### Environment Variables
