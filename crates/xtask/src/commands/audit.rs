@@ -117,10 +117,8 @@ mod tests {
         let has_any_tool = has_cargo_audit || has_cargo_deny;
 
         // Just verify the check logic works - we don't require tools to be installed
-        assert!(
-            has_any_tool || !has_any_tool,
-            "Tool availability check should complete without errors"
-        );
+        // The test passes regardless of tool availability
+        let _ = has_any_tool;
     }
 
     #[test]

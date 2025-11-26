@@ -316,6 +316,7 @@ stories:
             text: "`cargo xtask selftest` enforces devex contract (required commands exist)"
             tags: [kernel]
             must_have_ac: true
+            adr: ADR-0017
             tests:
               - { type: integration, tag: "@AC-PLT-015", file: "specs/features/xtask_devex.feature" }
 
@@ -323,6 +324,7 @@ stories:
             text: "`cargo xtask ci-local` orchestrates doctor + selftest + audit + docs-check"
             tags: [kernel]
             must_have_ac: true
+            adr: ADR-0017
             tests:
               - { type: integration, tag: "@AC-PLT-016", file: "specs/features/xtask_devex.feature" }
 
@@ -330,6 +332,7 @@ stories:
             text: "`cargo xtask selftest` displays a condensed summary with clear pass/fail indicators for all 7 steps"
             tags: [kernel]
             must_have_ac: true
+            adr: ADR-0017
             tests:
               - { type: integration, tag: "@AC-PLT-019", file: "specs/features/xtask_devex.feature" }
 
@@ -337,6 +340,7 @@ stories:
             text: "`XTASK_LOW_RESOURCES=1` environment variable skips resource-intensive steps in selftest for CI/constrained environments"
             tags: [kernel]
             must_have_ac: true
+            adr: ADR-0017
             tests:
               - { type: integration, tag: "@AC-PLT-020", file: "specs/features/xtask_devex.feature" }
 

@@ -24,21 +24,11 @@ fn actual_workspace_root() -> PathBuf {
 
 fn run_xtask_command(world: &World, command: &str) -> (String, String, i32) {
     let root = workspace_root(world);
-    let mut cmd = if cfg!(windows) {
-        let mut c = Command::new("cargo");
-        c.arg("run").arg("-p").arg("xtask").arg("--");
-        for part in command.split_whitespace().skip(3) {
-            c.arg(part);
-        }
-        c
-    } else {
-        let mut c = Command::new("cargo");
-        c.arg("run").arg("-p").arg("xtask").arg("--");
-        for part in command.split_whitespace().skip(3) {
-            c.arg(part);
-        }
-        c
-    };
+    let mut cmd = Command::new("cargo");
+    cmd.arg("run").arg("-p").arg("xtask").arg("--");
+    for part in command.split_whitespace().skip(3) {
+        cmd.arg(part);
+    }
 
     cmd.current_dir(&root);
 

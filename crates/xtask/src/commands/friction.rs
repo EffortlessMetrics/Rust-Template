@@ -103,6 +103,7 @@ impl FrictionEntry {
     }
 
     /// Save friction entry to YAML file
+    #[allow(dead_code)]
     pub fn save(&self) -> Result<PathBuf> {
         let friction_dir = Path::new("friction");
         fs::create_dir_all(friction_dir)
@@ -242,10 +243,10 @@ pub fn list_friction_entries(
 
         println!("  {} {} {} - {}", status_badge, severity_badge, entry.id, entry.summary);
         println!("     Date: {} | Category: {}", entry.date, entry.category);
-        if let Some(context) = &entry.context {
-            if let Some(flow) = &context.flow {
-                println!("     Flow: {}", flow);
-            }
+        if let Some(context) = &entry.context
+            && let Some(flow) = &context.flow
+        {
+            println!("     Flow: {}", flow);
         }
         println!();
     }
