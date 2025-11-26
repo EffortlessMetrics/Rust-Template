@@ -424,11 +424,18 @@ async fn then_identical_suggest_next_outputs(world: &mut World) {
         .get("IDEMPOTENCY_SECOND_OUTPUT")
         .expect("Second output not captured");
 
-    // Normalize whitespace and compare
+    // Normalize whitespace and filter out timing and non-deterministic cargo messages
     let normalize = |s: &str| -> String {
         s.lines()
-            .map(|line| line.trim())
-            .filter(|line| !line.is_empty())
+            .map(|line| {
+                // Strip cargo timing like "in 0.14s" to make output deterministic
+                let re = regex::Regex::new(r"\bin \d+\.\d+s\b").unwrap();
+                re.replace_all(line.trim(), "in X.XXs").to_string()
+            })
+            .filter(|line| {
+                // Filter out non-deterministic cargo messages
+                !line.is_empty() && !line.contains("Blocking waiting for file lock")
+            })
             .collect::<Vec<_>>()
             .join("\n")
     };

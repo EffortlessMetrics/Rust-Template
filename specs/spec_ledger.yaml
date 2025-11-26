@@ -3,7 +3,7 @@
 
 metadata:
   schema_version: "1.0"
-  template_version: "3.3.2"
+  template_version: "3.3.1"
   last_updated: "2025-11-26"
   description: "Template core capabilities - v2.4.0 includes health, version, errors, metrics, and supply chain hardening"
   # Template-wide ADRs (not tied to specific stories/requirements)
@@ -239,22 +239,25 @@ stories:
         acceptance_criteria:
           - id: AC-PLT-011
             text: "`cargo xtask release-prepare X.Y.Z` updates spec_ledger, README, CLAUDE, CHANGELOG"
-            tags: [kernel]
-            must_have_ac: true
+            tags: [template, release]
+            must_have_ac: false
+            note: "Template feature - not required for day-0 kernel. Release tooling is advanced workflow."
             tests:
               - { type: integration, tag: "@AC-PLT-011", file: "specs/features/xtask_devex.feature" }
 
           - id: AC-PLT-012
             text: "`cargo xtask release-verify` runs selftest + audit + docs-check + clean tree"
-            tags: [kernel]
-            must_have_ac: true
+            tags: [template, release]
+            must_have_ac: false
+            note: "Template feature - not required for day-0 kernel. Release tooling is advanced workflow."
             tests:
               - { type: integration, tag: "@AC-PLT-012", file: "specs/features/xtask_devex.feature" }
 
           - id: AC-PLT-013
             text: "`cargo xtask release-verify` provides git command sequence on success"
-            tags: [kernel]
-            must_have_ac: true
+            tags: [template, release]
+            must_have_ac: false
+            note: "Template feature - not required for day-0 kernel. Release tooling is advanced workflow."
             tests:
               - { type: integration, tag: "@AC-PLT-013", file: "specs/features/xtask_devex.feature" }
 
@@ -270,15 +273,17 @@ stories:
         acceptance_criteria:
           - id: AC-TPL-REL-EVIDENCE
             text: "`cargo xtask release-bundle X.Y.Z` writes `release_evidence/vX.Y.Z.md` containing: all tasks completed in this version, linked REQs/ACs/ADRs, git log since last tag, selftest summary, policy status, resolved friction entries."
-            tags: [kernel]
-            must_have_ac: true
+            tags: [template, release]
+            must_have_ac: false
+            note: "Template feature - not required for day-0 kernel. Release tooling is advanced workflow."
             tests:
               - { type: integration, tag: "release_bundle_generation", file: "specs/features/xtask_devex.feature" }
 
           - id: AC-TPL-REL-CHANGELOG
             text: "Evidence file includes distinct sections (Tasks, Specs/ACs, ADRs, Git log, Governance signals) adequate for LLM formatting into Keep a Changelog format."
-            tags: [kernel]
-            must_have_ac: true
+            tags: [template, release]
+            must_have_ac: false
+            note: "Template feature - not required for day-0 kernel. Release tooling is advanced workflow."
             tests:
               - { type: integration, tag: "release_bundle_structure", file: "specs/features/xtask_devex.feature" }
 
@@ -322,8 +327,9 @@ stories:
 
           - id: AC-PLT-016
             text: "`cargo xtask ci-local` orchestrates doctor + selftest + audit + docs-check"
-            tags: [kernel]
-            must_have_ac: true
+            tags: [template, orchestration]
+            must_have_ac: false
+            note: "Template feature - not required for day-0 kernel. Advanced orchestration workflow."
             adr: ADR-0017
             tests:
               - { type: integration, tag: "@AC-PLT-016", file: "specs/features/xtask_devex.feature" }
@@ -497,8 +503,9 @@ stories:
               cargo xtask suggest-next --task <ID> prints a structured
               sequence of recommended commands and edits for the given
               task, based on its recommended_flows.
-            tags: [future]
+            tags: [future, recommended]
             must_have_ac: false
+            note: "Optional CLI convenience; not kernel - CLAUDE.md mentions alongside bundles, not in day-0 flows"
             tests:
               - { type: bdd, tag: "@AC-TPL-SUGGEST-NEXT-CLI", file: "specs/features/platform_rounding.feature" }
 
@@ -650,8 +657,9 @@ stories:
             text: >
               cargo xtask tasks-list prints all tasks with their IDs, titles,
               status, and requirement IDs (no filters implemented yet).
-            tags: [future]
+            tags: [future, recommended]
             must_have_ac: false
+            note: "Optional CLI convenience; not kernel - CLAUDE.md says 'if implemented', runbooks/platform-kernel.md: 'not a kernel gate'"
             tests:
               - { type: bdd, tag: "@AC-TPL-TASKS-CLI", file: "specs/features/platform_tasks.feature" }
 
@@ -660,8 +668,9 @@ stories:
               cargo xtask task-create creates a new task in specs/tasks.yaml,
               validates that the requirement and ACs exist in spec_ledger.yaml,
               and rejects duplicate task IDs.
-            tags: [future]
+            tags: [future, recommended]
             must_have_ac: false
+            note: "Optional CLI convenience; not kernel - part of future task management workflow"
             tests:
               - { type: bdd, tag: "@AC-TPL-TASKS-CREATE-CLI", file: "specs/features/platform_tasks.feature" }
 
@@ -670,8 +679,9 @@ stories:
               cargo xtask task-update updates task fields (status, title, owner)
               in specs/tasks.yaml, enforces valid status transitions, and
               persists changes to the task definition.
-            tags: [future]
+            tags: [future, recommended]
             must_have_ac: false
+            note: "Optional CLI convenience; not kernel - part of future task management workflow"
             tests:
               - { type: bdd, tag: "@AC-TPL-TASKS-UPDATE-CLI", file: "specs/features/platform_tasks.feature" }
 

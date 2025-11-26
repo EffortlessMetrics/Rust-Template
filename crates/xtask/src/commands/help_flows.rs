@@ -1,11 +1,12 @@
-use anyhow::Result;
+use anyhow::{Context, Result};
 use colored::Colorize;
 use std::path::PathBuf;
+use std::process::Command;
 
 /// Print a flow-based map of xtask commands loaded from specs/devex_flows.yaml
 pub fn run() -> Result<()> {
-    let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-    let root = manifest_dir.parent().unwrap().parent().unwrap();
+    // Use git to find workspace root - works correctly in worktrees
+    let root = get_workspace_root()?;
 
     let spec_path = root.join("specs/devex_flows.yaml");
     let spec = crate::devex::load_spec(&spec_path)?;
@@ -53,6 +54,20 @@ pub fn run() -> Result<()> {
     println!("  • {}", "CONTRIBUTING.md → Common Workflows".dimmed());
 
     Ok(())
+}
+
+fn get_workspace_root() -> Result<PathBuf> {
+    let output = Command::new("git")
+        .args(["rev-parse", "--show-toplevel"])
+        .output()
+        .context("Failed to run git rev-parse")?;
+
+    if !output.status.success() {
+        anyhow::bail!("Not in a git repository");
+    }
+
+    let root = String::from_utf8(output.stdout)?.trim().to_string();
+    Ok(PathBuf::from(root))
 }
 
 #[cfg(test)]
