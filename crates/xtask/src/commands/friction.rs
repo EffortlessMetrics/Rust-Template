@@ -272,6 +272,144 @@ pub fn list_friction_entries(
     Ok(())
 }
 
+/// Get the category prefix for friction ID generation
+fn get_category_prefix(category: &str) -> &str {
+    match category {
+        "tooling" => "TOOL",
+        "process" => "PROC",
+        "documentation" => "DOCS",
+        "devex" => "DEVEX",
+        "ci_cd" => "CI",
+        "platform" => "PLAT",
+        "api" => "API",
+        "testing" => "TEST",
+        "governance" => "GOV",
+        "other" => "OTHER",
+        _ => "OTHER",
+    }
+}
+
+/// Find the next available friction ID for a given category
+fn find_next_friction_id(category: &str) -> Result<String> {
+    let entries = load_all_friction_entries()?;
+    let prefix = get_category_prefix(category);
+    let pattern = format!("FRICTION-{}-", prefix);
+
+    // Find the highest number for this category
+    let max_number = entries
+        .iter()
+        .filter_map(|e| {
+            if e.id.starts_with(&pattern) {
+                // Extract the number part
+                e.id.strip_prefix(&pattern)?.parse::<u32>().ok()
+            } else {
+                None
+            }
+        })
+        .max()
+        .unwrap_or(0);
+
+    // Next ID is max + 1
+    let next_number = max_number + 1;
+    Ok(format!("FRICTION-{}-{:03}", prefix, next_number))
+}
+
+/// Create a new friction entry
+pub fn create_friction_entry(
+    category: &str,
+    severity: &str,
+    summary: &str,
+    description: Option<&str>,
+    flow: Option<&str>,
+    phase: Option<&str>,
+    discovered_by: Option<&str>,
+) -> Result<()> {
+    // Validate category
+    let valid_categories = [
+        "tooling",
+        "process",
+        "documentation",
+        "devex",
+        "ci_cd",
+        "platform",
+        "api",
+        "testing",
+        "governance",
+        "other",
+    ];
+    if !valid_categories.contains(&category) {
+        anyhow::bail!(
+            "Invalid category '{}'. Must be one of: {}",
+            category,
+            valid_categories.join(", ")
+        );
+    }
+
+    // Validate severity
+    let valid_severities = ["low", "medium", "high", "critical"];
+    if !valid_severities.contains(&severity) {
+        anyhow::bail!(
+            "Invalid severity '{}'. Must be one of: {}",
+            severity,
+            valid_severities.join(", ")
+        );
+    }
+
+    // Generate ID
+    let id = find_next_friction_id(category)?;
+
+    // Get today's date
+    let date = chrono::Local::now().format("%Y-%m-%d").to_string();
+
+    // Build context if any fields provided
+    let context = if flow.is_some() || phase.is_some() || discovered_by.is_some() {
+        Some(FrictionContext {
+            discovered_by: Some(discovered_by.unwrap_or("human").to_string()),
+            flow: flow.map(String::from),
+            phase: phase.map(String::from),
+            files_involved: Vec::new(),
+            commands_involved: Vec::new(),
+        })
+    } else {
+        Some(FrictionContext {
+            discovered_by: Some("human".to_string()),
+            flow: None,
+            phase: None,
+            files_involved: Vec::new(),
+            commands_involved: Vec::new(),
+        })
+    };
+
+    // Create friction entry
+    let entry = FrictionEntry {
+        id: id.clone(),
+        date: date.clone(),
+        category: category.to_string(),
+        severity: severity.to_string(),
+        summary: summary.to_string(),
+        description: description.unwrap_or(summary).to_string(),
+        expected_behavior: None,
+        workaround: None,
+        impact: None,
+        context,
+        status: "open".to_string(),
+        resolution: None,
+        related_items: None,
+    };
+
+    // Save to file
+    let filepath = entry.save()?;
+
+    println!("✅ Created friction entry: {}", id);
+    println!("   File: {}", filepath.display());
+    println!("   Date: {}", date);
+    println!("   Category: {}", category);
+    println!("   Severity: {}", severity);
+    println!("   Status: open");
+
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

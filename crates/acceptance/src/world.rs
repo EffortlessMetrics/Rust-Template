@@ -74,6 +74,35 @@ impl Default for World {
             std::fs::create_dir_all(&temp_config).expect("Failed to create temp config directory");
         }
 
+        // Copy README.md and CLAUDE.md to temp dir for test isolation (AC-PLT-013)
+        let readme_src = workspace_root.join("README.md");
+        let readme_dst = temp_dir.path().join("README.md");
+        if readme_src.exists() {
+            fs::copy(&readme_src, &readme_dst).expect("Failed to copy README.md to temp dir");
+        }
+
+        let claude_src = workspace_root.join("CLAUDE.md");
+        let claude_dst = temp_dir.path().join("CLAUDE.md");
+        if claude_src.exists() {
+            fs::copy(&claude_src, &claude_dst).expect("Failed to copy CLAUDE.md to temp dir");
+        }
+
+        // Copy docs directory for tests that check for documentation files
+        let workspace_docs = workspace_root.join("docs");
+        let temp_docs = temp_dir.path().join("docs");
+        if workspace_docs.exists() {
+            copy_dir_recursive(&workspace_docs, &temp_docs)
+                .expect("Failed to copy workspace docs into temp dir");
+        }
+
+        // Copy docker-compose.yaml for infrastructure tests
+        let docker_compose_src = workspace_root.join("docker-compose.yaml");
+        let docker_compose_dst = temp_dir.path().join("docker-compose.yaml");
+        if docker_compose_src.exists() {
+            fs::copy(&docker_compose_src, &docker_compose_dst)
+                .expect("Failed to copy docker-compose.yaml to temp dir");
+        }
+
         // Make the spec root discoverable for app-http/xtask consumers.
         // SAFETY: Updating process environment here is confined to the test runner setup.
         unsafe {
