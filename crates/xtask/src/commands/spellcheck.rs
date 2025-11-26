@@ -11,6 +11,16 @@ pub fn run(targets: &[&str]) -> Result<()> {
 
     // Prefer a globally available `cspell`; fall back to `npx cspell` if needed.
     let mut cmd = if let Ok(path) = which::which("cspell") {
+        if let Some(path_str) = path.to_str()
+            && path_str.starts_with("/mnt/c/")
+        {
+            println!(
+                "{} Using cspell from {}; prefer the Nix devShell binary for Tier-1 checks",
+                "[WARN]".yellow(),
+                path_str
+            );
+        }
+
         Command::new(path)
     } else {
         if which::which("npx").is_err() {

@@ -151,7 +151,7 @@ We hit an OpenTelemetry constraint:
 - **Metrics:** Full OTLP to Prometheus
 - **Logs:** Still `stdout` (not OTLP export yet)
 
-**Impact:** You'll see traces + metrics in your observability backend, but logs still need a scraper (Fluentbit/Promtail) to aggregate.
+**Impact:** You'll see traces + metrics in your observability backend, but logs still need a scraper (Fluent Bit/Promtail) to aggregate.
 
 **Why:** OTLP log export is less mature; we prioritized traces/metrics.
 
@@ -525,4 +525,3 @@ git commit --no-verify -m "your message"
 | **Team on Windows** | WSL2 + Nix | No platform variance across team |
 | **CI only** | GitHub Actions (Nix devshell) | Canonical validation |
 | **Prototyping, no governance needed** | Nix devshell (simplest) | One command to reproducible env |
-

@@ -178,11 +178,11 @@ fn resolve_base_ref(base: &str) -> String {
         }
     }
 
-    for cand in candidates {
-        if let Ok(output) = Command::new("git").args(["rev-parse", "--verify", &cand]).output()
+    for candidate in candidates {
+        if let Ok(output) = Command::new("git").args(["rev-parse", "--verify", &candidate]).output()
             && output.status.success()
         {
-            return cand;
+            return candidate;
         }
     }
 

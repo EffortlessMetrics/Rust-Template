@@ -175,7 +175,7 @@ metadata:
 
 **Why in comments vs YAML?**
 - Feature files: Comments (Gherkin doesn't support metadata blocks)
-- YAML files: Structured metadata (parseable by tools)
+- YAML files: Structured metadata (machine-readable by tools)
 - OpenAPI: Extension fields (standard practice for custom metadata)
 
 ## Summary

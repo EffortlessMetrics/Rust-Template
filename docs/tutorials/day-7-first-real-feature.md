@@ -185,8 +185,8 @@ Feature: Task Management
     When I POST /tasks with JSON:
       """
       {
-        "title": "Lorem ipsum dolor sit amet consectetur adipiscing elit sed do eiusmod tempor incididunt ut labore et dolore magna aliqua Ut enim ad minim veniam quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat Duis aute irure",
-        "description": "This title is 201 characters"
+        "title": "This title is intentionally long to exceed two hundred characters for validation testing in the Day 7 tutorial. It repeats readable words instead of lorem ipsum so spellcheck stays clean while still failing the API constraints for maximum title length in the sample task payload.",
+        "description": "This title exceeds 200 characters"
       }
       """
     Then I receive a 400 response

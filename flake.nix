@@ -21,6 +21,7 @@
           pkgs.jq
           pkgs.yq-go
           pkgs.nodejs_20
+          pkgs.nodePackages_latest.cspell
           pkgs.python3
           pkgs.gitleaks
           pkgs.conftest

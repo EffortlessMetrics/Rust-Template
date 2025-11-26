@@ -131,7 +131,7 @@ These are the **non-negotiable** elements that must exist in every service built
   - `cargo run -p xtask -- check` – runs all checks
   - `cargo run -p xtask -- bdd` – runs BDD tests
   - `cargo run -p xtask -- ac-status` – shows AC coverage
-  - `cargo run -p xtask -- bundle` – generates LLM contextpacks
+  - `cargo run -p xtask -- bundle` – generates LLM context packs
   - `cargo run -p xtask -- policy-test` – validates policies
   - `cargo run -p xtask -- deploy --env {dev,staging,prod}` – deployment instructions
   - `cargo run -p xtask -- selftest` – full template validation
