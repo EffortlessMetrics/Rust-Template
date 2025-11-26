@@ -29,7 +29,7 @@ pub fn run(args: DesignNewArgs) -> Result<()> {
     }
 
     let today = Utc::now().date_naive().to_string();
-    let reqs_str = if args.requirements.is_empty() {
+    let requirements_str = if args.requirements.is_empty() {
         "[]".to_string()
     } else {
         format!(
@@ -53,7 +53,7 @@ doc_type: design_doc
 id: {id}
 title: "{title}"
 stories: []
-requirements: {reqs}
+requirements: {requirements}
 acs: []
 adrs: {adrs}
 status: draft
@@ -95,7 +95,7 @@ owner: "{owner}"
 "#,
         id = args.id,
         title = args.title,
-        reqs = reqs_str,
+        requirements = requirements_str,
         adrs = adrs_str,
         date = today,
         owner = owner
@@ -112,7 +112,7 @@ owner: "{owner}"
     println!("      file: {}", rel_path.display());
     println!("      doc_type: design_doc");
     println!("      stories: []");
-    println!("      requirements: {}", reqs_str);
+    println!("      requirements: {}", requirements_str);
     println!("      acs: []");
     println!("      adrs: {}", adrs_str);
     println!("  • Fill in the design sections in the new file.");

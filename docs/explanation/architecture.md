@@ -349,7 +349,7 @@ let app = Router::new()
 
 ### Why Structured Logging?
 
-- **Queryable:** `order_id="ORD-123"` is machine-parseable.
+- **Queryable:** `order_id="ORD-123"` is machine-readable.
 - **Contextual:** Spans provide nesting (request -> handler -> domain call).
 - **Standardized:** `tracing` is a Rust ecosystem standard.
 

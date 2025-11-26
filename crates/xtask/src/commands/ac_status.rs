@@ -176,12 +176,12 @@ pub fn run(args: AcStatusArgs) -> Result<()> {
                     json_path.display()
                 );
             }
-            let (scens, results) = parse_cucumber_json_with_scenarios(json_path)?;
+            let (scenario_map, results) = parse_cucumber_json_with_scenarios(json_path)?;
             if !args.verbosity.is_quiet() {
-                println!("  Found {} scenarios", scens.len());
+                println!("  Found {} scenarios", scenario_map.len());
                 println!("  Found results for {} ACs", results.len());
             }
-            (scens, results)
+            (scenario_map, results)
         } else {
             let json_state = json_status.unwrap_or(ReportStatus::Missing);
             anyhow::bail!(
