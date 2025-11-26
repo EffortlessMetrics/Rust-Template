@@ -1,346 +1,312 @@
-# How To: Create a New Service from Template
+# Create a New Service from Template
 
-This guide walks you through creating a new service from the Rust Template in **under 10 minutes**.
+This guide walks you through forking the Rust-as-Spec template to launch a new governed service (e.g., Knowledge Hub, Order Service, Audit Log).
 
 ---
 
 ## Prerequisites
 
-- GitHub account with permissions to create repositories
-- Git installed locally
-- Nix installed (for devShell)
+- **Rust 1.70+** and **Cargo**
+- **Nix** (optional but recommended for full selftest)
+- **Git** and a GitHub account
+- Basic familiarity with **Rust**, **YAML**, and **BDD** (Gherkin/Cucumber)
 
 ---
 
-## Step 1: Create Repository from Template (2 min)
+## Step 1: Fork and Rename
 
-### On GitHub
-
-1. Navigate to the template repository
-2. Click "Use this template" button (top right)
-3. Choose "Create a new repository"
-4. Fill in:
-   - **Repository name:** `your-service-name`
-   - **Description:** Brief service description
-   - **Visibility:** Private (recommended) or Public
-5. Click "Create repository"
-
-### Clone Locally
+### 1.1 Create repo from template
 
 ```bash
-git clone git@github.com:your-org/your-service-name.git
-cd your-service-name
+# On GitHub: Use "Use this template" → Create new repository
+# Or via CLI:
+gh repo create myservice --template your-org/Rust-Template --public
+cd myservice
 ```
 
----
+### 1.2 Update core metadata
 
-## Step 2: Update Ownership & Metadata (3 min)
+Edit these files with your service identity:
 
-### Update CODEOWNERS
-
-Edit `.github/CODEOWNERS`:
-
-```
-# Replace with your team
-* @your-org/your-team
-```
-
-### Update Cargo Workspace
-
-Edit `Cargo.toml`:
-
-```toml
-[workspace.package]
-version = "0.1.0"
-edition = "2024"
-authors = ["Your Team <team@company.com>"]
-repository = "https://github.com/your-org/your-service-name"
-```
-
-### Update Flags Ownership
-
-Edit `flags/registry.yaml`:
+**`service_metadata.yaml`** (create if missing):
 
 ```yaml
-flags:
-  - key: refunds_v2
-    owner: your-team-name  # Change this
-    default: false
-    expires_at: 2026-06-30
+service_id: "knowledge-hub"
+name: "Knowledge Hub"
+description: "Central repository for domain knowledge and entity definitions"
+tags: [platform, knowledge-base, core]
+version: "0.1.0"
+owner_team: "platform"
 ```
 
-### Update Privacy Ownership
+**`README.md`** – Update header and service description:
 
-Edit `specs/privacy.yaml`:
+```markdown
+# Knowledge Hub (v0.1.0)
+
+Central repository for domain knowledge and entity definitions.
+
+A governed Rust service where specs, tests, docs, and infra all agree.
+```
+
+**`CLAUDE.md`** – Update service-specific guidance (optional but recommended):
+
+```markdown
+# Knowledge Hub Development
+
+Service ID: `knowledge-hub`
+Task prefix: `TASK-KH-`
+Requirement prefix: `REQ-KH-`
+AC prefix: `AC-KH-`
+
+Domain routes:
+- `POST /api/entities` – register a new entity type
+- `GET /api/entities/{id}` – retrieve entity definition
+- `GET /health`, `/version`, `/metrics` – platform endpoints (inherited from template)
+
+Entity types: Document, Glossary, Relationship, MediaAsset
+
+See `TEMPLATE-CONTRACTS.md` for inherited patterns.
+```
+
+---
+
+## Step 2: Define Your Domain
+
+### 2.1 Add first user story to `specs/spec_ledger.yaml`
+
+Under `stories:`, add your domain story alongside the inherited template core:
 
 ```yaml
-fields:
-  - path: user.email
-    classification: PII
-    owner: your-team-name  # Change this
-    retention: "365d"
-    purpose: "User authentication"
+  - id: US-KH-001
+    title: "Entity Registration"
+    description: >
+      As a domain expert, I want to register new entity types (Document, Glossary)
+      so the platform can catalog and link them.
+    adr: ADR-0001  # Hexagonal architecture
+    requirements:
+      - id: REQ-KH-ENTITY-REGISTER
+        title: "Entity Type Registration API"
+        tags: [core, api]
+        must_have_ac: true
+        acceptance_criteria:
+          - id: AC-KH-001
+            text: "POST /api/entities registers a new entity type and returns 201 with entity ID"
+            tags: [core]
+            must_have_ac: true
+            tests: [ { type: bdd, tag: "@AC-KH-001", file: "specs/features/entity_registration.feature" } ]
+
+          - id: AC-KH-002
+            text: "POST /api/entities validates schema: name (required), description (optional), tags (array)"
+            tags: [core]
+            must_have_ac: true
+            tests: [ { type: bdd, tag: "@AC-KH-002", file: "specs/features/entity_registration.feature" } ]
+```
+
+**Keep template core stories** (`US-TPL-001`, `US-TPL-PLT-001`) – you inherit those requirements.
+
+### 2.2 Create BDD feature file
+
+Create `specs/features/entity_registration.feature`:
+
+```gherkin
+# Entity Type Registration
+# Schema: spec_ledger.yaml v1.0
+# Last Updated: 2025-11-26
+
+Feature: Entity Registration
+  As a domain expert
+  I want to register new entity types
+  So the platform can catalog and link knowledge artifacts
+
+  @AC-KH-001 @smoke
+  Scenario: Register a new entity type
+    When I POST /api/entities with:
+      | name        | Document      |
+      | description | Knowledge doc |
+      | tags        | knowledge,api |
+    Then I receive 201 with "entityId" and "name" = "Document"
+
+  @AC-KH-002
+  Scenario: Reject entity registration without name
+    When I POST /api/entities with:
+      | description | Missing name |
+    Then I receive 400 with error code "VALIDATION_ERROR"
 ```
 
 ---
 
-## Step 3: Verify Setup Works (3 min)
+## Step 3: Seed Your Tasks
 
-### Enter Nix Shell
+### 3.1 Add initial tasks to `specs/tasks.yaml`
 
-```bash
-nix develop
-```
+```yaml
+tasks:
+  - id: TASK-KH-BOOTSTRAP-001
+    title: "Bootstrap Entity Registration Service"
+    requirement: REQ-KH-ENTITY-REGISTER
+    acs: [AC-KH-001, AC-KH-002]
+    status: open
+    owner: team-platform
+    labels: [core, api, ac_first]
+    summary: "Implement entity registration endpoint with validation"
+    recommended_flows: [ac_first]
+    docs:
+      design: []
+      plan: []
 
-**Expected:** Drops you into a shell with all tools available.
+  - id: TASK-KH-ENTITY-QUERY-001
+    title: "Implement Entity Retrieval"
+    requirement: REQ-KH-ENTITY-QUERY
+    acs: [AC-KH-003]
+    status: open
+    owner: team-platform
+    labels: [core, api]
+    summary: "GET /api/entities/{id} returns entity definition"
+    recommended_flows: [ac_first]
+    depends_on:
+      - TASK-KH-BOOTSTRAP-001
+    docs:
+      design: []
+      plan: []
 
-If Nix isn't available:
-```bash
-# Download installer
-curl -L https://nixos.org/nix/install -o nix_install.sh
-
-# Install (use --daemon on Linux)
-sh nix_install.sh           # macOS
-sh nix_install.sh --daemon  # Linux
-
-# Cleanup
-rm nix_install.sh
-```
-
-### Run All Checks
-
-```bash
-cargo run -p xtask -- check
-```
-
-**Expected output:**
-```
-Running format check...
-Running clippy...
-Running tests...
-✓ All checks passed
-```
-
-If this fails, review the error messages. Common issues:
-- Rust version mismatch
-- Missing dependencies (Nix should handle)
-
-### Run Acceptance Tests
-
-```bash
-cargo run -p xtask -- bdd
-```
-
-**Expected output:**
-```
-Feature: Refunds
-  Scenario: Create a refund
-   ✔  Given an order "ORD-1" totalling 5000 cents
-   ✔  When I POST /refunds with { "orderId": "ORD-1", "amountCents": 5000 }
-   ✔  Then I receive 201 with a "refundId"
-[Summary]
-1 feature
-1 scenario (1 passed)
-3 steps (3 passed)
-✓ Acceptance tests passed
-JUnit output: target/junit/acceptance.xml
-```
-
-### Generate AC Status
-
-```bash
-cargo run -p xtask -- ac-status
-```
-
-**Expected output:**
-```
-✓ Generated /home/user/your-service-name/docs/feature_status.md
-✓ All ACs passed
-```
-
-### Create LLM Bundle
-
-```bash
-cargo run -p xtask -- bundle implement_ac
-```
-
-**Expected output:**
-```
-Building context bundle: implement_ac
-  Max size: 250000 bytes
-  Description: Context for implementing an AC: ledger, specs, features, and core code
-  Files included: 4
-  Bundle size: 986 bytes
-
-Bundle written to: .llm/bundle/implement_ac.md
-✓ Bundle generated: .llm/bundle/implement_ac.md
-```
-
-**If all four commands succeed, your setup is correct!**
-
----
-
-## Step 4: Configure Branch Protection (2 min)
-
-### Choose Your Profile
-
-- **Minimal:** Prototypes, early-stage (recommended for new services)
-- **Standard:** Production services with stable contracts
-- **Strict:** Mission-critical services
-
-See: [Branch Protection Profiles](../reference/branch-protection-profiles.md)
-
-### Apply Minimal Profile (Recommended Start)
-
-1. GitHub → Settings → Branches
-2. Click "Add rule"
-3. Branch name pattern: `main`
-4. Check:
-   - ✅ "Require status checks to pass before merging"
-   - ✅ "Require branches to be up to date before merging"
-5. Search and select these required checks:
-   - `Lints`
-   - `Nix Flake Check`
-   - `MSRV`
-6. Click "Create" or "Save changes"
-
-### Other Settings
-
-Also enable:
-- ✅ "Require a pull request before merging"
-- ✅ "Require approvals" (1)
-- ✅ "Dismiss stale pull request approvals when new commits are pushed"
-
----
-
-## Step 5: Commit Initial Customization
-
-```bash
-git add -A
-git commit -m "Customize template for your-service-name
-
-- Update CODEOWNERS to @your-org/your-team
-- Update Cargo.toml metadata
-- Update ownership in flags and privacy specs
-- Verified: xtask check, bdd, ac_status, and bundler all pass
-"
-git push origin main
+  - id: TASK-KH-PERSISTENCE-001
+    title: "Add Entity Store (SQLite/Postgres)"
+    requirement: REQ-KH-PERSISTENCE
+    acs: [AC-KH-004]
+    status: open
+    owner: team-platform
+    labels: [infrastructure, storage]
+    summary: "Implement persistent storage for entity definitions"
+    recommended_flows: [ac_first]
+    depends_on:
+      - TASK-KH-BOOTSTRAP-001
+    docs:
+      design: []
+      plan: []
 ```
 
 ---
 
-## Step 6: Verify CI Works on GitHub
+## Step 4: Validate the Baseline
 
-1. Create a test branch:
-   ```bash
-   git checkout -b test/ci-verification
-   echo "# Test" >> README.md
-   git add README.md
-   git commit -m "Test CI"
-   git push origin test/ci-verification
-   ```
+### 4.1 Check environment and inherit template ACs
 
-2. Open a Pull Request on GitHub
-
-3. Watch CI checks run (should take 5-10 minutes)
-
-4. Verify these checks appear and pass:
-   - ✅ Lints
-   - ✅ Nix Flake Check
-   - ✅ MSRV
-   - ✅ Template Self-Test
-   - (plus others in advisory mode)
-
-5. Merge or close the PR
-
----
-
-## What You Have Now
-
-✅ A working Rust service template with:
-- Comprehensive CI (22 workflows)
-- AC-driven development (ledger + BDD)
-- Policy enforcement (Rego)
-- LLM context bundling
-- Single `xtask` CLI for all operations
-
-✅ Branch protection configured (Minimal profile)
-
-✅ Verified working: local commands + CI
-
----
-
-## Next Steps
-
-### Customize for Your Domain
-
-1. **Update the example:**
-   - Replace `refund.feature` with your domain (e.g., `user-registration.feature`)
-   - Update ACs in `specs/spec_ledger.yaml`
-   - Implement your domain logic in `crates/core`
-
-2. **Add OpenAPI spec:**
-   - Edit `specs/openapi/openapi.yaml`
-   - Define your API endpoints
-   - CI will catch breaking changes automatically
-
-3. **Add first real AC:**
-   - Follow: [First AC Change Tutorial](../tutorials/first-ac-change.md)
-
-### Upgrade Profile When Ready
-
-- **After 2-4 weeks:** Upgrade to **Standard** profile
-- **When mission-critical:** Consider **Strict** profile
-
-See: [Branch Protection Profiles](../reference/branch-protection-profiles.md)
-
-### Integrate with Your Infra
-
-- **Secrets:** Add to GitHub Settings → Secrets (for Schema Registry, DB, etc.)
-- **Deployment:** Wire up your CD pipeline to trigger on `main` pushes
-- **Monitoring:** Integrate observability tools
-
----
-
-## Common Issues
-
-### "Nix command not found"
-
-**Fix:** Install Nix:
 ```bash
-curl -L https://nixos.org/nix/install -o nix_install.sh
-sh nix_install.sh           # macOS
-sh nix_install.sh --daemon  # Linux
-rm nix_install.sh
+cd myservice
+cargo xtask doctor
 ```
 
-### "xtask not found"
+You should see:
+- Template core ACs listed (health, version, errors, metrics)
+- Your new ACs listed (entity registration, etc.)
 
-**Fix:** Run from workspace root (where `Cargo.toml` is):
+### 4.2 Run selftest to baseline
+
 ```bash
-cargo run -p xtask -- check
+cargo xtask selftest
 ```
 
-### "conftest not found"
+**Expect**: Template core ACs pass (inherited), your ACs fail (not implemented yet). This is OK.
 
-**Fix:** Ensure you're in `nix develop` shell:
-```bash
-nix develop
-conftest --version
-```
+### 4.3 Confirm CI is set up
 
-### CI fails but local works
-
-**Fix:**
-- Check if you need secrets configured in GitHub
-- Verify workflows in `.github/workflows/` match your expectations
-- Look at specific failing step in GitHub Actions logs
+Check `.github/workflows/ci.yml` runs `cargo xtask selftest` on push/PR. Update branch protection to require it passing.
 
 ---
 
-## Help & Support
+## Step 5: Make It Agent-Native
 
-- **Template API:** See [TEMPLATE_API.md](../../TEMPLATE_API.md) for all stable interfaces
-- **AC Development:** See [First AC Change Tutorial](../tutorials/first-ac-change.md)
-- **Branch Protection:** See [Branch Protection Profiles](../reference/branch-protection-profiles.md)
-- **Issues:** Open an issue in the template repository
+### 5.1 Verify CLAUDE.md is discoverable
+
+Ensure `CLAUDE.md` contains:
+- Service ID and task/requirement/AC prefixes
+- Domain routes and key entities
+- Link to inherited template patterns
+
+### 5.2 Test AC bundle generation
+
+```bash
+cargo xtask bundle implement_ac
+```
+
+You should see your BDD features and ACs listed in the bundle.
+
+### 5.3 Test next-step suggestions
+
+```bash
+cargo xtask ac-status
+```
+
+Should show your AC tasks and their status.
+
+---
+
+## Step 6: Implement Your First Vertical Slice
+
+### 6.1 Pick one AC (e.g., AC-KH-001: basic entity registration)
+
+```bash
+# Implement code and tests for entity registration
+cargo xtask test-ac AC-KH-001
+```
+
+### 6.2 Validate locally
+
+```bash
+cargo xtask check
+cargo xtask test-changed
+```
+
+### 6.3 Get to green
+
+```bash
+cargo xtask selftest
+```
+
+Once selftest passes for your AC, you're ready for review.
+
+---
+
+## Step 7: Next Steps
+
+### 7.1 Iterative development
+
+For each new feature:
+1. Add REQ + ACs to `spec_ledger.yaml`
+2. Write BDD scenarios in `specs/features/*.feature`
+3. Add tasks to `specs/tasks.yaml`
+4. Implement code + tests
+5. Run `cargo xtask selftest` to validate
+
+### 7.2 Backport template improvements
+
+Periodically pull in updates from the template repo:
+
+```bash
+git remote add template https://github.com/your-org/Rust-Template.git
+git fetch template main
+git merge template/main --no-ff -m "chore: backport template improvements"
+```
+
+### 7.3 Maintain alignment
+
+- Keep `spec_ledger.yaml` in sync with code and tests
+- Use ADRs for architectural decisions
+- Document tradeoffs in `FRICTION_LOG.md` if guidance is unclear
+
+---
+
+## Checklist: "Ready for Team"
+
+- [ ] Service metadata (ID, name, description) updated
+- [ ] First user story + 2-3 requirements + ACs added to spec ledger
+- [ ] BDD feature file created and scenarios tagged with AC IDs
+- [ ] Tasks created and linked to ACs
+- [ ] `cargo xtask selftest` runs without fatal errors (ACs may be red, that's OK)
+- [ ] CLAUDE.md has service-specific guidance
+- [ ] README updated with service description
+- [ ] CI workflow enforces selftest
+- [ ] First AC implemented and passing (optional but recommended)
+
+You're now ready to share with your team and start iterating!
