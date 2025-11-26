@@ -1,0 +1,56 @@
+# Friction Entry: Port Discovery Requires Manual Lookup
+# Created by agent at 2025-11-20
+# Status: resolved
+
+id: FRICTION-AGENT-002
+date: "2025-11-20"
+category: devex
+severity: low
+summary: "Port discovery requires manual lsof lookup"
+
+description: |
+  When attempting to call GET /platform/agent/hints, initially tried port 8080
+  (common default) but got connection refused. Had to use lsof to discover
+  app-http was running on port 3000. This adds unnecessary friction for agents
+  and developers trying to interact with the platform.
+
+expected_behavior: |
+  Either:
+  1. Agent documentation should specify the default port (8080)
+  2. cargo xtask should have a command to show running service ports
+  3. App should log the URL it's listening on at startup
+
+workaround: |
+  lsof -i | grep app-http
+  # OR
+  ps aux | grep app-http | grep -v grep, then lsof -p <PID>
+
+impact: |
+  - Agents need manual intervention to discover correct port
+  - Documentation doesn't match runtime behavior
+  - Unnecessary time spent troubleshooting connection issues
+
+context:
+  discovered_by: agent
+  flow: "agent_pilot"
+  phase: "discover_work"
+  commands_involved:
+    - "curl http://localhost:8080/platform/agent/hints"
+    - "lsof -i | grep app-http"
+
+status: resolved
+
+resolution:
+  resolved_by: agent
+  resolved_at: "2025-11-21"
+  fix_description: |
+    1. Standardized app-http to listen on port 8080 by default
+    2. Updated docs/AGENT_GUIDE.md - all localhost references now use port 8080
+    3. Updated README.md - Quick Start section specifies port 8080
+    4. cargo run -p xtask -- dev-up next-steps output now shows port 8080
+    5. Added "0. First Run" section to AGENT_GUIDE recommending dev-up as entry point
+  verification: |
+    - app-http now listens on port 8080 by default
+    - All documentation consistently references port 8080
+    - cargo xtask dev-up displays correct port in next steps
+    - Agents can connect without manual port discovery

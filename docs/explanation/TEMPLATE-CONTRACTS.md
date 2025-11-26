@@ -31,6 +31,177 @@ Non-kernel requirements and ACs (with `must_have_ac: false` or `tags: [future]`)
 
 ---
 
+## AC-to-Test Traceability Pattern
+
+The template enforces bidirectional traceability between Acceptance Criteria and their tests.
+
+### Forward Mapping: AC → Tests
+
+Every AC in `specs/spec_ledger.yaml` MUST include a `tests` array that specifies:
+
+```yaml
+acceptance_criteria:
+  - id: AC-TPL-001
+    text: "GET /health returns 200 with status 'ok' when service is healthy"
+    tags: [kernel]
+    must_have_ac: true
+    tests:
+      - type: bdd
+        tag: "@AC-TPL-005"
+        file: "specs/features/template_core.feature"
+      - type: unit
+        tag: "test_health_endpoint"
+        module: "health::tests::test_health_endpoint"
+        file: "crates/app-http/src/routes/health.rs"
+```
+
+**Required Fields:**
+- `type`: Test type (`bdd`, `integration`, `unit`, `manual`)
+- `tag`: Unique test identifier (BDD tag or unit test name)
+- `file`: Path to the test file (enables `cargo xtask ac-tests <AC-ID>` to show locations)
+
+**Optional Fields:**
+- `module`: Rust module path for unit tests (e.g., `health::tests::test_health_endpoint`)
+
+### Reverse Mapping: Test → AC
+
+Test files MUST include AC attribution in their documentation comments:
+
+**For Rust unit tests:**
+```rust
+/// AC-TPL-CONFIG-VALIDATION: Validates that the service rejects invalid
+/// configuration at startup and exits with a clear error message.
+#[test]
+fn config_validation_rejects_invalid() {
+    // Test implementation
+}
+```
+
+**For BDD feature files:**
+```gherkin
+@AC-TPL-001
+Scenario: Health endpoint returns OK when service is healthy
+  Given the service is running
+  When I GET /health
+  Then the response status should be 200
+  And the response body should contain "ok"
+```
+
+### Discovery Commands
+
+**List all tests for an AC:**
+```bash
+cargo xtask ac-tests AC-TPL-001
+```
+
+Output:
+```
+================================================================================
+Acceptance Criterion: AC-TPL-001
+================================================================================
+
+Story: US-TPL-001
+Requirement: REQ-TPL-HEALTH
+Text: GET /health returns 200 with status 'ok' when service is healthy
+
+Mapped Tests:
+--------------------------------------------------------------------------------
+
+[1] Type: bdd
+    Tag: @AC-TPL-005
+    File: specs/features/template_core.feature
+
+Run Tests:
+--------------------------------------------------------------------------------
+
+  BDD/Integration: cargo xtask test-ac AC-TPL-001
+  Direct: CUCUMBER_TAG_EXPRESSION='@AC-TPL-005' cargo test -p acceptance
+```
+
+**Check AC coverage:**
+```bash
+cargo xtask ac-status --summary
+```
+
+### Governance Graph Integration
+
+The governance graph (`/platform/graph` API and `cargo xtask graph-export`) includes:
+
+1. **AC nodes**: Acceptance criteria from `spec_ledger.yaml`
+2. **Test nodes**: Generated from the `tests` array of each AC
+3. **tested_by edges**: AC → Test relationships (forward traceability)
+
+Example graph structure:
+```json
+{
+  "nodes": [
+    {"id": "AC-TPL-001", "label": "Health endpoint", "type": "ac"},
+    {"id": "AC-TPL-001:test:0", "label": "@AC-TPL-005 - specs/features/template_core.feature", "type": "test", "url": "file://specs/features/template_core.feature"}
+  ],
+  "edges": [
+    {"source": "AC-TPL-001", "target": "AC-TPL-001:test:0", "type": "tested_by"}
+  ]
+}
+```
+
+### Validation and Enforcement
+
+**At design time:**
+- `cargo xtask ac-new` prompts for test details when creating an AC
+
+**At commit time:**
+- Pre-commit hooks run `cargo xtask ac-status` (if hooks installed)
+
+**At CI time:**
+- `cargo xtask selftest` step 2 runs all BDD tests
+- `cargo xtask selftest` step 8 validates AC coverage (all kernel ACs must pass)
+
+**At query time:**
+- `cargo xtask ac-tests <AC-ID>` shows all mapped tests
+- `cargo xtask test-ac <AC-ID>` runs tests for a specific AC
+- `/platform/graph` API exposes test relationships
+
+### Adding Tests to Existing ACs
+
+If an AC exists without test mappings, add them:
+
+```yaml
+# Before
+acceptance_criteria:
+  - id: AC-TPL-001
+    text: "Description"
+    tests: []  # Empty!
+
+# After
+acceptance_criteria:
+  - id: AC-TPL-001
+    text: "Description"
+    tests:
+      - type: bdd
+        tag: "@AC-TPL-001"
+        file: "specs/features/my_feature.feature"
+```
+
+Then annotate the test file:
+
+```gherkin
+@AC-TPL-001
+Scenario: Test scenario
+  # Steps
+```
+
+Or for unit tests:
+
+```rust
+/// AC-TPL-001: Description of what this test validates
+#[test]
+fn test_name() {
+    // Test implementation
+}
+```
+
+---
+
 ## Kernel Contracts by Category
 
 ### 1. HTTP Service Core (REQ-TPL-HEALTH, REQ-TPL-VERSION, REQ-TPL-ERROR-HANDLING, REQ-TPL-METRICS)
@@ -338,25 +509,45 @@ Non-kernel requirements and ACs (with `must_have_ac: false` or `tags: [future]`)
 
 ---
 
-#### AC-TPL-AGENT-HINTS: Agent Task Hints
+#### AC-TPL-QUESTIONS-LOGGED: Question Artifacts
 **Contract:**
-- `GET /platform/agent/hints` returns prioritized task suggestions
-- Filters tasks by Todo/InProgress status
-- Each hint includes: `task_id`, `status`, `requirement_ids`, `ac_ids`, `reason`, `recommended_sequence` (array of commands/edits)
+- Ambiguity during automated flows or suggest-next emits a structured question
+- Questions logged as file/PR comment/status entry
+- Can be surfaced to humans or agents without halting progress
 
 **Why:**
-- Provides agents with actionable next steps
-- Reduces agent decision-making overhead
-- Surfaces high-priority work items
+- Enables autonomous agent workflows to continue despite ambiguity
+- Creates audit trail of decision points
+- Supports asynchronous human review
 
-**BDD Test:** `@AC-TPL-AGENT-HINTS`
+**BDD Test:** `@AC-TPL-QUESTIONS-LOGGED` in `specs/features/questions.feature`
 
 **How to Maintain:**
-- Hints generated from `specs/tasks.yaml` and task status
-- Include REQ/AC IDs and recommended command sequences
-- Keep synchronized with task state
+- Emit structured questions when encountering ambiguous input
+- Do not block or fail workflows when questions are logged
+- Include context and options in question artifacts
 
 ---
+
+#### AC-TPL-FLOW-IDEMPOTENT: Flow Idempotency
+**Contract:**
+- Running `cargo xtask selftest` or `cargo xtask suggest-next` multiple times without changes produces stable outputs
+- No duplicate artifacts created on repeated runs
+
+**Why:**
+- Enables safe agent retries and self-healing flows
+- Prevents state corruption from repeated executions
+- Supports reliable automated workflows
+
+**BDD Test:** `@AC-TPL-FLOW-IDEMPOTENT` in `specs/features/flow_idempotency.feature`
+
+**How to Maintain:**
+- Design flows to check existing state before creating artifacts
+- Use idempotent operations (upsert vs insert)
+- Test flows with repeated execution
+
+---
+
 
 #### AC-TPL-SKILLS-GUIDE-001: Skills Documentation
 **Contract:**
@@ -825,7 +1016,29 @@ Non-kernel requirements and ACs (with `must_have_ac: false` or `tags: [future]`)
 
 ---
 
-### 10. Git Hooks (REQ-TPL-GOV-HOOKS)
+### 10. Infrastructure Alignment (REQ-TPL-IAC-ALIGNMENT)
+
+#### AC-TPL-IAC-K8S-ALIGN: Kubernetes Manifest Alignment
+**Contract:**
+- Kubernetes manifests under `infra/k8s` (Deployment/Service) use ports and env vars consistent with `specs/config_schema.yaml` and default environment
+- Sample IaC aligns with application configuration contract
+
+**Why:**
+- Prevents config drift between application and infrastructure
+- Ensures example manifests are trustworthy and deployable
+- Reduces deployment errors from mismatched configuration
+
+**BDD Test:** Unit test `iac_k8s_aligns_with_config` in `crates/spec-runtime/src/k8s_iac.rs`
+
+**How to Maintain:**
+- When adding config keys, update K8s manifests
+- Validate manifest ports/env against config_schema.yaml
+- Keep environment variables synchronized
+- Test manifests in local or staging environment
+
+---
+
+### 11. Git Hooks (REQ-TPL-GOV-HOOKS)
 
 #### AC-TPL-HOOKS-INSTALL: Git Pre-Commit Hooks
 **Contract:**
@@ -843,7 +1056,7 @@ Non-kernel requirements and ACs (with `must_have_ac: false` or `tags: [future]`)
 
 ---
 
-### 11. Governance Write Layer (REQ-TPL-GOV-WRITE-001, REQ-TPL-TASK-LIFECYCLE)
+### 12. Governance Write Layer (REQ-TPL-GOV-WRITE-001, REQ-TPL-TASK-LIFECYCLE)
 
 #### AC-TPL-GOV-WRITE-TASK-STATUS-200: Task Status Persistence
 **Contract:**
@@ -889,6 +1102,82 @@ The `cargo xtask selftest` command validates all kernel contracts through 8 step
 - GitHub Actions runs selftest in Tier-1 job
 - Selftest must pass for PRs to merge
 - Low-resource mode available via `XTASK_LOW_RESOURCES=1`
+
+---
+
+## CI & Tier-1 Requirements
+
+**All changes to `main` MUST pass Tier-1 selftest before merge.**
+
+The template enforces a **Tier-1 selftest gate** as the canonical quality check for merging to the main branch. This decision is documented in **[ADR-0017: Tier-1 Selftest as Required Gate on Main Branch](../adr/0017-tier1-selftest-gate.md)**.
+
+### What is Tier-1?
+
+**Tier-1** is the hermetic, reproducible development environment powered by Nix:
+- **Environment:** Linux (Ubuntu-latest) + Nix devshell
+- **Hermetic:** No system dependency leakage
+- **Pinned versions:** Exact Rust, conftest, cargo-binstall versions from `flake.nix`
+- **Validation:** `nix develop --command cargo xtask selftest`
+- **Result:** All 8 selftest phases must pass
+
+### Why Tier-1 is Canonical
+
+1. **Reproducible:** Same environment on every developer's machine and in CI
+2. **Platform-independent:** Works identically on Linux, macOS, WSL2
+3. **No false positives:** Avoids Windows file locking and other platform-specific issues
+4. **Hermetic:** Nix ensures exact tool versions, eliminating "works on my machine" failures
+5. **Fast feedback:** Developers can run Tier-1 locally before push (~5-10 minutes)
+
+### Branch Protection
+
+GitHub branch protection enforces this requirement:
+- **Required status check:** `tier1-selftest / selftest` must pass ✅
+- **No bypass:** PRs cannot merge with red selftest (unless admin override)
+- **Branches must be up-to-date:** Ensures cumulative validation
+
+### Developer Workflow
+
+**Before creating a PR:**
+```bash
+# Enter Tier-1 environment
+nix develop
+
+# Run selftest
+cargo xtask selftest
+
+# If green, push
+git push origin feature-branch
+```
+
+**For Windows developers:**
+- **Daily iteration:** Use native Windows (Tier-2) for fast feedback
+- **Pre-PR validation:** Use WSL2 + Nix (Tier-1) for canonical check
+- **Merge decision:** Only Tier-1 CI result matters
+
+### Tier-2 (Native Windows) Status
+
+Tier-2 is **informational, not gating**:
+- Fast iteration during development
+- May have platform-specific file locking issues (non-deterministic)
+- Not used as merge gate
+
+### Emergency Escape Hatch
+
+In rare cases where Tier-1 blocks a critical production fix:
+1. **Diagnose:** Is the failure related to the hotfix code?
+2. **Escalate:** Admin-level decision required
+3. **Document:** Add note to CHANGELOG explaining override
+4. **Remediate:** Fix Tier-1 failure in follow-up PR
+
+**Preferred path:** Fix Tier-1 failure first, even if urgent.
+
+### References
+
+- **ADR-0017:** [Tier-1 Selftest as Required Gate on Main Branch](../adr/0017-tier1-selftest-gate.md)
+- **ADR-0002:** [Nix-First Development Environment](../adr/0002-nix-first-dev-env.md)
+- **ADR-0005:** [Selftest as the Single Quality Gate](../adr/0005-xtask-selftest-single-gate.md)
+- **Platform Support:** [Platform Support Reference](../reference/platform-support.md)
+- **CI Workflow:** `.github/workflows/tier1-selftest.yml`
 
 ---
 
@@ -987,17 +1276,46 @@ A: Run `cargo xtask selftest`. If it passes, you haven't broken kernel contracts
 
 ---
 
+## Test Diversity Roadmap
+
+**Current State (v3.3.1):** Most kernel ACs have **single-test coverage** (1 test per AC). This is acceptable for initial implementation but represents a test diversity gap.
+
+**Best Practice:** Kernel ACs should have **2-3 test scenarios** covering:
+- Happy path (primary scenario)
+- Error conditions or edge cases
+- Different input combinations or contexts
+
+**Priority Phases:**
+
+### Phase 1: Critical Security & Release (v3.4.0)
+- AC-PLT-006, AC-PLT-007, AC-PLT-008 (security audit)
+- AC-PLT-011, AC-PLT-012, AC-PLT-013 (release management)
+- Target: Add 1 unit test per BDD scenario for validation logic
+
+### Phase 2: DevEx Foundation (v3.5.0)
+- AC-PLT-001, AC-PLT-002, AC-PLT-003 (doctor, help-flows, check)
+- Target: Add error-case BDD scenarios
+
+### Phase 3: Agent Interface (v3.6.0)
+- AC-TPL-SKILLS-FMT, AC-TPL-SKILLS-LINT, AC-TPL-SKILLS-ALIGN-001
+- Target: Add unit tests for validation logic
+
+**See:** `docs/feature_status_notes.md` for detailed roadmap and rationale.
+
+---
+
 ## Summary
 
 **Kernel Contracts (must preserve):**
 - HTTP service core endpoints and behaviors (AC-TPL-001 through AC-TPL-007)
 - Platform introspection APIs (AC-TPL-PLATFORM-*)
 - Platform UI components (AC-TPL-PLATFORM-UI-*)
-- Agent interface (AC-TPL-AGENT-*, AC-TPL-SKILLS-*)
+- Agent interface (AC-TPL-AGENT-SKILLS, AC-TPL-QUESTIONS-LOGGED, AC-TPL-FLOW-IDEMPOTENT, AC-TPL-SKILLS-*)
 - DevEx xtask commands (AC-PLT-001 through AC-PLT-020)
 - Release evidence generation (AC-TPL-REL-*)
 - Graph invariants (AC-TPL-GRAPH-*)
 - Configuration validation (AC-TPL-CONFIG-*)
+- Infrastructure alignment (AC-TPL-IAC-K8S-ALIGN)
 - Git hooks (AC-TPL-HOOKS-*)
 - Governance write layer (AC-TPL-GOV-WRITE-*, AC-TPL-TASK-*)
 

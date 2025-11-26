@@ -71,6 +71,9 @@ tasks:
     labels: [platform, governance, v3]
     summary: "Implement the write-side governance repository to persist task status changes."
     recommended_flows: ["ac_first"]
+    depends_on:
+      - TASK-TPL-SKILLS-TOOLING-001
+      - TASK-TPL-REL-BUNDLE-3-1-0
     docs:
       design: []
       plan: []
@@ -123,6 +126,8 @@ tasks:
       into pre-commit and selftest/docs-check flows. Replace Python scripts with
       Rust-native commands to eliminate external dependencies and improve integration.
     recommended_flows: ["ac_first"]
+    depends_on:
+      - TASK-TPL-SKILLS-ALIGN-001
     docs:
       design: []
       plan: []

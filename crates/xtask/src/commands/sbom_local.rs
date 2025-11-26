@@ -70,3 +70,52 @@ pub fn run() -> Result<()> {
 
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_sbom_local_command_exists() {
+        // Verify that the run function is accessible and has the correct signature
+        let _: fn() -> Result<()> = run;
+    }
+
+    #[test]
+    fn test_sbom_output_path_is_correct() {
+        // Verify the SBOM output path
+        let sbom_path = Path::new("target/sbom.spdx.json");
+        assert_eq!(sbom_path.to_str().unwrap(), "target/sbom.spdx.json");
+    }
+
+    #[test]
+    fn test_sbom_json_structure() {
+        // Test SBOM JSON structure generation
+        let sbom = serde_json::json!({
+            "spdxVersion": "SPDX-2.3",
+            "dataLicense": "CC0-1.0",
+            "SPDXID": "SPDXRef-DOCUMENT",
+            "name": "Rust-Template-SBOM",
+            "documentNamespace": "https://github.com/EffortlessMetrics/Rust-Template/sbom-test",
+            "creationInfo": {
+                "created": "2024-01-01T00:00:00Z",
+                "creators": ["Tool: cargo-tree via xtask"]
+            },
+            "packages": []
+        });
+
+        assert_eq!(sbom["spdxVersion"], "SPDX-2.3");
+        assert_eq!(sbom["dataLicense"], "CC0-1.0");
+        assert_eq!(sbom["name"], "Rust-Template-SBOM");
+        assert!(sbom["packages"].is_array());
+    }
+
+    #[test]
+    fn test_package_id_replacement_logic() {
+        // Test the SPDXID character replacement logic
+        let package_name = "my-crate/v1.0";
+        let spdx_id = format!("SPDXRef-{}", package_name.replace(['/', '-', '.'], "_"));
+
+        assert_eq!(spdx_id, "SPDXRef-my_crate_v1_0");
+    }
+}

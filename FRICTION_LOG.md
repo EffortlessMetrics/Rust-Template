@@ -1,72 +1,112 @@
 # Friction Log
 
-This log captures friction points discovered during development.
+This log captures friction points discovered during development - process, tooling, and developer experience issues that create unnecessary pain or inefficiency.
 
-## AGENT-001: UI/API Inconsistency - Tasks Not Shown in UI/Hints When tasks_state.yaml Missing
+**Purpose:** Track and resolve workflow friction to continuously improve the development experience.
 
-**Date:** 2025-11-20
-**Reporter:** Agent verification run
-**Root Cause:**  
-- `/platform/tasks` reads directly from `tasks.yaml` using `spec_runtime::load_tasks()` (works)
-- `/ui/tasks` and `/platform/agent/hints` use `TaskService.list_tasks()` which calls `GovernanceRepository.find_all_tasks()`
-- `FsGovernanceRepository.find_all_tasks()` only returned tasks from `tasks_state.yaml`
-- When `tasks_state.yaml` doesn't exist, `get_all_tasks()` returned an empty HashMap
+**Format:** Friction entries are stored as structured YAML files in the `friction/` directory for machine-readable governance integration. This markdown file serves as a human-readable index and summary.
 
-**Expected Behavior:**  
-`FsGovernanceRepository.find_all_tasks()` should merge:
-- Task definitions (id, title) from `tasks.yaml`
-- Task status from `tasks_state.yaml` (or default to status field in tasks.yaml if no state file)
-
-**Impact:**  
-- UI is unusable - shows no tasks
-- Agent hints API returns no work - agent can't discover tasks
-- Data correctness verification incomplete
-
-**Fix Implemented:**  
-- Updated `FsGovernanceRepository.find_all_tasks()` to merge definitions and status correctly.
-- Added tests verifying UI and hints now show tasks regardless of `tasks_state.yaml` presence.
-
-**Verification:**  
-- `/ui/tasks` shows all tasks from `tasks.yaml`
-- `/platform/agent/hints` returns tasks with Todo/InProgress status
-- Both work whether or not `tasks_state.yaml` exists
-
-**Status:** Resolved (2025‑11‑20)num
-
-**Verification:**  
-After fix:
-- `/ui/tasks` should show all tasks from tasks.yaml
-- `/platform/agent/hints` should return tasks with Todo/InProgress status
-- Both should work whether or not tasks_state.yaml exists
+**Schema:** See `specs/friction_schema.yaml` for the complete schema definition.
 
 ---
 
-### AGENT-001: Port discovery
-**Discovered**: 2025-11-20T22:42
-**Severity**: Low
-**Context**: Agent pilot run - Phase 1 (Discover Work)
+## When to Use the Friction Log
 
-**What happened**:
-When attempting to call `GET /platform/agent/hints`, initially tried port 8080 (common default) but got connection refused. Had to use `lsof` to discover app-http was running on port 3000.
+Use the **friction log** for:
+- Process or tooling problems
+- Developer experience pain points
+- Workflow inefficiencies
+- CI/CD issues
+- Flaky tests or intermittent failures
+- Poor error messages or unclear diagnostics
 
-**Expected behavior**:
-Either:
-1. Agent documentation should specify the default port (8080)
-2. `cargo xtask` should have a command to show running service ports
-3. App should log the URL it's listening on at startup
+**Not friction:** Feature work (use GitHub issues), architectural decisions (use ADRs), or ambiguous specs (use questions).
 
-**Workaround**:
+See `specs/friction_schema.yaml` for complete guidance on when to use friction log vs ADR vs issue vs question.
+
+---
+
+## View Friction Entries
+
+**CLI:**
 ```bash
-lsof -i | grep app-http
-# OR
-ps aux | grep app-http | grep -v grep, then lsof -p <PID>
+# List all friction entries
+cargo xtask friction-list
+
+# Filter by status
+cargo xtask friction-list --status open
+
+# Filter by severity
+cargo xtask friction-list --severity high
 ```
 
-**Fix Implemented** (2025-11-21):
-1. Standardized app-http to listen on port 8080 by default
-2. Updated `docs/AGENT_GUIDE.md` - all localhost references now use port 8080
-3. Updated `README.md` - Quick Start section specifies port 8080
-4. `cargo run -p xtask -- dev-up` next-steps output now shows port 8080
-5. Added "0. First Run" section to AGENT_GUIDE recommending dev-up as entry point
+**HTTP API:**
+```bash
+# Get friction counts and recent entries
+curl http://localhost:8080/platform/status
 
-**Status**: Resolved
+# Get all friction entries
+curl http://localhost:8080/platform/friction
+```
+
+---
+
+## Create New Friction Entry
+
+**CLI:**
+```bash
+cargo xtask friction-new \
+  --id FRICTION-XYZ-001 \
+  --category devex \
+  --severity medium \
+  --summary "Brief description of friction"
+```
+
+**Manual:**
+Create a YAML file in `friction/` following the schema in `specs/friction_schema.yaml`.
+
+---
+
+## Active Friction Entries
+
+### Open
+
+None currently.
+
+### Resolved
+
+- **FRICTION-AGENT-001** (2025-11-20) - UI/API inconsistency - tasks not shown in UI/hints when tasks_state.yaml missing
+  - **Category:** api
+  - **Severity:** high
+  - **Status:** Resolved
+  - **Details:** [friction/FRICTION-AGENT-001.yaml](friction/FRICTION-AGENT-001.yaml)
+
+- **FRICTION-AGENT-002** (2025-11-20) - Port discovery requires manual lsof lookup
+  - **Category:** devex
+  - **Severity:** low
+  - **Status:** Resolved
+  - **Details:** [friction/FRICTION-AGENT-002.yaml](friction/FRICTION-AGENT-002.yaml)
+
+---
+
+## Metrics
+
+Run `cargo xtask status` or visit `/platform/status` to see:
+- Total friction entries
+- Open vs resolved counts
+- Breakdown by severity and category
+- Recent friction entries
+- Average time to resolution
+
+---
+
+## Process
+
+1. **Discover:** Encounter friction during development, testing, or agent operations
+2. **Capture:** Create friction entry immediately with full context
+3. **Triage:** Assess severity and prioritize based on impact
+4. **Resolve:** Fix the underlying tool, process, or documentation issue
+5. **Verify:** Confirm the fix eliminates the friction in practice
+6. **Close:** Update entry status to "resolved" with resolution details
+
+Resolved entries remain in the `friction/` directory for historical reference and pattern analysis.

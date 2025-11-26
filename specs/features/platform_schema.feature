@@ -10,6 +10,24 @@ Feature: Platform schema and metadata surfaces
     And the response body should contain "/platform/status"
     And the response body should contain "/platform/tasks"
     And the response body should contain "/platform/agent/hints"
+    And the response body should contain "schemas"
+    And the response body should contain "endpoints"
+    And the response body should contain "spec_ledger"
+    And the response body should contain "tasks"
+    And the response body should contain "questions"
+    And the response body should contain "devex_flows"
+    And the response body should contain "config"
+    And the response body should contain "doc_index"
+
+  @AC-TPL-PLATFORM-SCHEMA
+  Scenario: Platform exposes individual schemas by name
+    When I send a GET request to "/platform/schema/tasks"
+    Then the response status code should be 200
+    And the response body should contain "json_schema"
+    And the response body should contain "source_file"
+    And the response body should contain "specs/tasks.yaml"
+    When I send a GET request to "/platform/schema/nonexistent"
+    Then the response status code should be 404
 
   @AC-TPL-METADATA-COMPLETE
   Scenario: Platform metadata is exposed via status and UI

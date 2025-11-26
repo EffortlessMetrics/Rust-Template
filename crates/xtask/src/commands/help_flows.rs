@@ -54,3 +54,54 @@ pub fn run() -> Result<()> {
 
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::path::PathBuf;
+
+    #[test]
+    fn test_help_flows_command_exists() {
+        // Verify that the run function is accessible and has the correct signature
+        let _: fn() -> Result<()> = run;
+    }
+
+    #[test]
+    fn test_devex_flows_spec_file_exists() {
+        // Verify that the devex_flows.yaml file exists at the expected location
+        let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        let root = manifest_dir.parent().unwrap().parent().unwrap();
+        let spec_path = root.join("specs/devex_flows.yaml");
+
+        assert!(
+            spec_path.exists(),
+            "specs/devex_flows.yaml should exist at {}",
+            spec_path.display()
+        );
+    }
+
+    #[test]
+    fn test_devex_spec_contains_required_categories() {
+        // Verify that the devex spec contains the expected categories
+        let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        let root = manifest_dir.parent().unwrap().parent().unwrap();
+        let spec_path = root.join("specs/devex_flows.yaml");
+
+        if spec_path.exists() {
+            let spec = crate::devex::load_spec(&spec_path).expect("load devex spec");
+
+            // Check that we have commands in expected categories
+            let categories: std::collections::HashSet<_> =
+                spec.commands.values().map(|cmd| cmd.category.as_str()).collect();
+
+            assert!(
+                categories.contains("onboarding"),
+                "devex_flows.yaml should define onboarding category"
+            );
+            assert!(
+                categories.contains("release"),
+                "devex_flows.yaml should define release category"
+            );
+        }
+    }
+}

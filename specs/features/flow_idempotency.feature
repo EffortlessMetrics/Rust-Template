@@ -1,6 +1,10 @@
 # Template Version: v3.3.1
 # Schema: spec_ledger.yaml v1.0
 # Last Updated: 2025-11-26
+#
+# NOTE: Scenarios tagged @ci-only require a pristine git working tree.
+# These are excluded from local development runs to avoid blocking progress on
+# typical dirty working trees. CI runs the full suite including @ci-only scenarios.
 
 Feature: Flow Idempotency
   As a developer or agent
@@ -28,7 +32,7 @@ Feature: Flow Idempotency
     Then no new files should be created by the second run
     And the generated documentation files should be identical
 
-  @AC-TPL-FLOW-IDEMPOTENT @selftest @idempotent
+  @AC-TPL-FLOW-IDEMPOTENT @selftest @idempotent @ci-only
   Scenario: selftest is deterministic with unchanged codebase
     Given the git working tree is clean
     When I run "cargo xtask selftest"
@@ -50,7 +54,7 @@ Feature: Flow Idempotency
     Then no new files should be created by suggest-next
     And no existing files should be modified by suggest-next
 
-  @AC-TPL-FLOW-IDEMPOTENT @suggest-next @idempotent
+  @AC-TPL-FLOW-IDEMPOTENT @suggest-next @idempotent @ci-only
   Scenario: suggest-next is deterministic without side effects
     Given the git working tree is clean
     When I run "cargo xtask suggest-next --task implement_ac"

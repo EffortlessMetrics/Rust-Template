@@ -8,6 +8,7 @@ pub mod graph;
 pub mod k8s_iac;
 pub mod ledger;
 pub mod local_docker;
+pub mod schema;
 pub mod service_metadata;
 pub mod tasks;
 
@@ -16,6 +17,9 @@ pub use devex::{DevExFlows, load_devex_flows};
 pub use docs::{DocEntry, DocIndex, load_doc_index};
 pub use graph::{Edge, Graph, Node, build_graph};
 pub use ledger::{AcceptanceCriterion, Requirement, SpecLedger, Story, load_spec_ledger};
+pub use schema::{
+    EndpointSchema, PlatformSchemas, SchemaInfo, get_all_schemas, get_schema_by_name,
+};
 pub use service_metadata::{ServiceMetadata, load_service_metadata};
 pub use tasks::*;
 

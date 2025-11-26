@@ -52,6 +52,7 @@ pub fn create_task(
         docs: Some(TaskDocs { design: Vec::new(), plan: Vec::new() }),
         summary: title.to_string(),
         recommended_flows: Vec::new(),
+        depends_on: Vec::new(),
     };
 
     tasks_spec.tasks.push(new_task);

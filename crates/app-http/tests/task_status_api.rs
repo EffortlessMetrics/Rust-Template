@@ -33,6 +33,7 @@ fn write_tasks_files(spec_root: &std::path::Path, task_id: &str, status: TaskSta
             docs: Some(TaskDocs { design: vec![], plan: vec![] }),
             summary: "Test task summary".to_string(),
             recommended_flows: vec![],
+            depends_on: vec![],
         }],
     };
 

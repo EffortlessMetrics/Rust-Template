@@ -1,0 +1,58 @@
+# Friction Entry: UI/API Inconsistency - Tasks Not Shown When tasks_state.yaml Missing
+# Created by agent at 2025-11-20
+# Status: resolved
+
+id: FRICTION-AGENT-001
+date: "2025-11-20"
+category: api
+severity: high
+summary: "UI/API inconsistency - tasks not shown in UI/hints when tasks_state.yaml missing"
+
+description: |
+  When tasks_state.yaml doesn't exist, the UI and agent hints API show no tasks,
+  while /platform/tasks correctly shows all tasks from tasks.yaml. This inconsistency
+  makes the UI unusable and prevents agents from discovering work.
+
+  Root cause:
+  - /platform/tasks reads directly from tasks.yaml using spec_runtime::load_tasks() (works)
+  - /ui/tasks and /platform/agent/hints use TaskService.list_tasks() which calls
+    GovernanceRepository.find_all_tasks()
+  - FsGovernanceRepository.find_all_tasks() only returned tasks from tasks_state.yaml
+  - When tasks_state.yaml doesn't exist, get_all_tasks() returned an empty HashMap
+
+expected_behavior: |
+  FsGovernanceRepository.find_all_tasks() should merge:
+  - Task definitions (id, title) from tasks.yaml
+  - Task status from tasks_state.yaml (or default to status field in tasks.yaml if no state file)
+
+  All three endpoints (/platform/tasks, /ui/tasks, /platform/agent/hints) should
+  show consistent data regardless of whether tasks_state.yaml exists.
+
+impact: |
+  - UI is unusable - shows no tasks
+  - Agent hints API returns no work - agent can't discover tasks
+  - Data correctness verification incomplete
+  - Developers see different data depending on which API they use
+
+context:
+  discovered_by: agent
+  phase: "verification"
+  commands_involved:
+    - "curl http://localhost:8080/ui/tasks"
+    - "curl http://localhost:8080/platform/agent/hints"
+    - "curl http://localhost:8080/platform/tasks"
+
+status: resolved
+
+resolution:
+  resolved_by: agent
+  resolved_at: "2025-11-20"
+  fix_description: |
+    Updated FsGovernanceRepository.find_all_tasks() to merge definitions and status correctly.
+    Added tests verifying UI and hints now show tasks regardless of tasks_state.yaml presence.
+  verification: |
+    After fix:
+    - /ui/tasks shows all tasks from tasks.yaml
+    - /platform/agent/hints returns tasks with Todo/InProgress status
+    - Both work whether or not tasks_state.yaml exists
+    - All three endpoints show consistent data

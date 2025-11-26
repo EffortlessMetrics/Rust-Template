@@ -24,16 +24,43 @@ last_updated: 2025-11-26
 
 This document explains how Internal Developer Portals (IDPs) like Backstage, Port, Cortex, or OpsLevel should integrate with Rust-as-Spec platform cells.
 
+---
+
+## Executive Summary
+
+**Platform cells are self-describing services.** Integrate via runtime APIs or static artifacts—no manual catalog maintenance required.
+
+**Runtime APIs:** `/platform/status` (governance health), `/platform/graph` (traceability), `/platform/tasks` (work items), `/platform/agent/hints` (task suggestions), `/platform/schema` (OpenAPI contract), `/platform/devex/flows` (commands), `/platform/docs/index` (doc inventory)
+
+**Evidence Files:** `service_metadata.yaml` (team/tier/links), `feature_status.md` (AC status), `release_evidence/v*.md` (governance bundles)
+
+**Example Widgets:**
+```yaml
+# Governance Health Card
+Service: rust-template | Selftest: ✅ PASS | AC Coverage: 93% (56/60) | Tasks: 2 todo, 1 in_progress
+
+# Compliance Traceability
+SOC2 Access Control → AC-PLT-006 (RBAC) ✅ PASS | AC-PLT-007 (Audit) ✅ PASS
+Evidence: specs/features/platform_security.feature
+```
+
+**Integration Strategy:** API scraping for live state, repository scraping for history. Cache: `/platform/status` (5min), `/platform/graph` (1hr), `/platform/tasks` (1min). Link to `/ui` for exploration.
+
+**See below for:** API schemas, integration patterns (Backstage, Port, OpsLevel), use cases, and best practices.
+
+---
+
 ## Table of Contents
 
-1. [Overview](#overview)
-2. [Platform Cell Contract](#platform-cell-contract)
-3. [Integration Patterns](#integration-patterns)
-4. [Platform API Endpoints](#platform-api-endpoints)
-5. [Metadata and Documentation](#metadata-and-documentation)
-6. [IDP Use Cases](#idp-use-cases)
-7. [Integration Examples](#integration-examples)
-8. [Best Practices](#best-practices)
+1. [Executive Summary](#executive-summary)
+2. [Overview](#overview)
+3. [Platform Cell Contract](#platform-cell-contract)
+4. [Integration Patterns](#integration-patterns)
+5. [Platform API Endpoints](#platform-api-endpoints)
+6. [Metadata and Documentation](#metadata-and-documentation)
+7. [IDP Use Cases](#idp-use-cases)
+8. [Integration Examples](#integration-examples)
+9. [Best Practices](#best-practices)
 
 ---
 

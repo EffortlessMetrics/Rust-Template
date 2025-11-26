@@ -85,6 +85,11 @@ enum Commands {
         /// AC ID to suggest scenarios for (e.g., AC-TPL-001)
         ac_id: String,
     },
+    /// Show all tests mapped to a specific AC
+    AcTests {
+        /// AC ID to show tests for (e.g., AC-TPL-001)
+        ac_id: String,
+    },
     /// Run tests for a specific acceptance criterion
     TestAc {
         /// AC ID to test (e.g., AC-TPL-001)
@@ -190,6 +195,15 @@ enum Commands {
     /// Show governance status dashboard
     #[command(next_help_heading = "Meta")]
     Status,
+    /// List friction log entries
+    FrictionList {
+        /// Filter by status (open, investigating, in_progress, resolved, wont_fix)
+        #[arg(long)]
+        status: Option<String>,
+        /// Filter by severity (low, medium, high, critical)
+        #[arg(long)]
+        severity: Option<String>,
+    },
     /// Generate service descriptor (e.g., Backstage catalog info)
     ServiceDescriptor {
         /// Output format (backstage)
@@ -309,6 +323,7 @@ fn main() -> Result<()> {
         Commands::AcSuggestScenarios { ac_id } => commands::ac_suggest_scenarios::run(
             commands::ac_suggest_scenarios::AcSuggestScenariosArgs { ac_id },
         ),
+        Commands::AcTests { ac_id } => commands::ac_tests::run(&ac_id),
         Commands::TestAc { ac_id } => commands::test_ac::run(&ac_id),
         Commands::AdrCheck => commands::adr_check::run(commands::adr_check::AdrCheckArgs {
             verbosity,
@@ -358,6 +373,9 @@ fn main() -> Result<()> {
         Commands::SuggestNext(args) => commands::suggest_next::run(args),
         Commands::Selftest => commands::selftest::run_with_verbosity(verbosity),
         Commands::Status => commands::status::run(),
+        Commands::FrictionList { status, severity } => {
+            commands::friction::list_friction_entries(status.as_deref(), severity.as_deref())
+        }
         Commands::ServiceDescriptor { format } => commands::service_descriptor::run(&format)
             .map_err(|e| anyhow::anyhow!("service-descriptor failed: {}", e)),
         Commands::ConfigValidate { env } => commands::config_validate::run(&env)

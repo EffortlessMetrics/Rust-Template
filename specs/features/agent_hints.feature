@@ -52,7 +52,7 @@ Feature: Agent Hints API
     And the "hints" array should not contain task "TASK-HINT-023"
 
   @AC-TPL-AGENT-HINTS
-  Scenario: Each hint includes task id, status, requirement, ACs, and reason
+  Scenario: Each hint includes task id, title, status, owner, labels, requirement, ACs, and reason
     Given the following tasks exist in "specs/tasks.yaml":
       | id                | title                     | status      | requirement           |
       | TASK-HINT-030     | Update dependencies       | Todo        | REQ-TPL-001          |
@@ -60,7 +60,10 @@ Feature: Agent Hints API
     Then the response status code should be 200
     And the JSON response should have field "hints"
     And the first hint should have field "task_id"
+    And the first hint should have field "title"
     And the first hint should have field "status"
+    And the first hint should have field "owner"
+    And the first hint should have field "labels"
     And the first hint should have field "requirement_ids"
     And the first hint should have field "ac_ids"
     And the first hint should have field "reason"
@@ -87,4 +90,101 @@ Feature: Agent Hints API
     When I send a GET request to "/platform/agent/hints"
     Then the response status code should be 200
     And the JSON should have an empty hints array
+
+  @AC-TPL-AGENT-HINTS
+  Scenario: Hints include recommended_sequence with more than 2 commands from flows
+    Given the following tasks exist in "specs/tasks.yaml":
+      | id                | title                     | status      | requirement           |
+      | TASK-HINT-060     | Implement new feature     | Todo        | REQ-TPL-001          |
+    When I send a GET request to "/platform/agent/hints"
+    Then the response status code should be 200
+    And the JSON response should have field "hints"
+    And the first hint should have field "recommended_sequence"
+    And the first hint "recommended_sequence" should have more than 2 items
+
+  @AC-TPL-AGENT-HINTS
+  Scenario: Hints include stable metadata (title, owner, labels) from tasks.yaml
+    Given the following tasks exist in "specs/tasks.yaml":
+      | id                | title                     | status      | requirement           | owner         | labels                        |
+      | TASK-HINT-070     | Implement auth module     | InProgress  | REQ-TPL-001          | team-backend  | security,authentication,v3    |
+    When I send a GET request to "/platform/agent/hints"
+    Then the response status code should be 200
+    And the JSON response should have field "hints"
+    And the first hint should have field "title"
+    And the first hint should have field "owner"
+    And the first hint should have field "labels"
+    And the first hint "title" should equal "Implement auth module"
+    And the first hint "owner" should equal "team-backend"
+    And the first hint "labels" array should contain "security"
+    And the first hint "labels" array should contain "authentication"
+    And the first hint "labels" array should contain "v3"
+
+  @AC-TPL-AGENT-HINTS
+  Scenario: Filter hints by owner
+    Given the following tasks exist in "specs/tasks.yaml":
+      | id                | title                     | status      | requirement   | owner     |
+      | TASK-HINT-080     | Implement auth            | Todo        | REQ-TPL-001   | alice     |
+      | TASK-HINT-081     | Write tests               | InProgress  | REQ-TPL-002   | bob       |
+      | TASK-HINT-082     | Update docs               | Todo        | REQ-TPL-003   | alice     |
+    When I send a GET request to "/platform/agent/hints?owner=alice"
+    Then the response status code should be 200
+    And the JSON response should have field "hints"
+    And the "hints" array should contain task "TASK-HINT-080"
+    And the "hints" array should contain task "TASK-HINT-082"
+    And the "hints" array should not contain task "TASK-HINT-081"
+
+  @AC-TPL-AGENT-HINTS
+  Scenario: Filter hints by label
+    Given the following tasks exist in "specs/tasks.yaml":
+      | id                | title                     | status      | requirement   | labels        |
+      | TASK-HINT-090     | Fix security bug          | Todo        | REQ-TPL-001   | security      |
+      | TASK-HINT-091     | Add feature               | InProgress  | REQ-TPL-002   | feature       |
+      | TASK-HINT-092     | Security audit            | Todo        | REQ-TPL-003   | security,audit|
+    When I send a GET request to "/platform/agent/hints?label=security"
+    Then the response status code should be 200
+    And the JSON response should have field "hints"
+    And the "hints" array should contain task "TASK-HINT-090"
+    And the "hints" array should contain task "TASK-HINT-092"
+    And the "hints" array should not contain task "TASK-HINT-091"
+
+  @AC-TPL-AGENT-HINTS
+  Scenario: Filter hints by requirement
+    Given the following tasks exist in "specs/tasks.yaml":
+      | id                | title                     | status      | requirement           |
+      | TASK-HINT-100     | Implement endpoint        | Todo        | REQ-TPL-HEALTH        |
+      | TASK-HINT-101     | Add metrics               | InProgress  | REQ-TPL-METRICS       |
+      | TASK-HINT-102     | Update health check       | Todo        | REQ-TPL-HEALTH        |
+    When I send a GET request to "/platform/agent/hints?requirement=REQ-TPL-HEALTH"
+    Then the response status code should be 200
+    And the JSON response should have field "hints"
+    And the "hints" array should contain task "TASK-HINT-100"
+    And the "hints" array should contain task "TASK-HINT-102"
+    And the "hints" array should not contain task "TASK-HINT-101"
+
+  @AC-TPL-AGENT-HINTS
+  Scenario: Hints sorted by status then ID
+    Given the following tasks exist in "specs/tasks.yaml":
+      | id                | title                     | status      | requirement           |
+      | TASK-HINT-110     | Task A                    | Todo        | REQ-TPL-001          |
+      | TASK-HINT-111     | Task B                    | InProgress  | REQ-TPL-002          |
+      | TASK-HINT-112     | Task C                    | Todo        | REQ-TPL-003          |
+      | TASK-HINT-113     | Task D                    | InProgress  | REQ-TPL-001          |
+    When I send a GET request to "/platform/agent/hints"
+    Then the response status code should be 200
+    And the JSON response should have field "hints"
+    And the hints should be sorted with "InProgress" before "Todo"
+    And within same status hints should be sorted by task_id
+
+  @AC-TPL-AGENT-HINTS
+  Scenario: Hints sorted by priority labels
+    Given the following tasks exist in "specs/tasks.yaml":
+      | id                | title                     | status      | requirement   | labels            |
+      | TASK-HINT-120     | Low priority task         | Todo        | REQ-TPL-001   | priority:low      |
+      | TASK-HINT-121     | High priority task        | Todo        | REQ-TPL-002   | priority:high     |
+      | TASK-HINT-122     | Medium priority task      | Todo        | REQ-TPL-003   | priority:medium   |
+      | TASK-HINT-123     | No priority task          | Todo        | REQ-TPL-001   |                   |
+    When I send a GET request to "/platform/agent/hints"
+    Then the response status code should be 200
+    And the JSON response should have field "hints"
+    And the hints should be sorted by priority: high, medium, low, none
 
