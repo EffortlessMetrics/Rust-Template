@@ -1,6 +1,20 @@
+---
+id: GUIDE-TPL-DOC-INDEX-001
+title: Documentation Index
+doc_type: guide
+status: published
+audience: developers, maintainers
+tags: [navigation, index, documentation, reference]
+stories: [US-TPL-PLT-001]
+requirements: [REQ-PLT-DOCS-CONSISTENCY]
+acs: [AC-PLT-009, AC-PLT-010]
+adrs: [ADR-0005]
+last_updated: 2025-11-26
+---
+
 # Documentation Index
 
-**Navigation hub for the Rust-as-Spec Platform Cell**
+**Navigation hub for the Rust-as-Spec Platform Cell (v3.3.3)**
 
 ---
 
@@ -8,95 +22,96 @@
 
 New to this repository? Start here:
 
-1. **[README.md](../README.md)** - Overview, quick start, key features
-2. **[Why This Template Exists](why-this-exists.md)** - Problem statement and philosophy  
-3. **[Getting Started](#getting-started)** - Step-by-step onboarding
+1. **[QUICKSTART.md](QUICKSTART.md)** - Get productive in under 15 minutes
+2. **[README.md](../README.md)** - Overview, quick start, key features
+3. **[Why This Template Exists](why-this-exists.md)** - Problem statement and philosophy
+4. **[Getting Started](#getting-started)** - Step-by-step onboarding
 
 ---
 
 ## Strategic Documents
 
-### Positioning & Vision
-- **[ROADMAP.md](ROADMAP.md)** - Current state (v2.4.0), pilot plan, future direction
-- **[Rust-as-Spec Technical Overview](explanation/rust-as-spec-overview.md)** - Architecture deep-dive
+### Status & Vision
+- **[ROADMAP.md](ROADMAP.md)** - Current state (v3.3.3), pilot plan, future direction
+- **[KERNEL_SNAPSHOT.md](KERNEL_SNAPSHOT.md)** - v3.3.3 frozen baseline, AC status, capabilities
+- **[BACKLOG.md](BACKLOG.md)** - Future feature ideas and enhancements
+- **[PILOT-PROJECT-PLAN.md](PILOT-PROJECT-PLAN.md)** - Pilot project planning and validation
 
-### For Humans
-- **[CLAUDE.md](../CLAUDE.md)** - Repository constitution and agent oversight
+### Constitution & Governance
+- **[CLAUDE.md](../CLAUDE.md)** - Repository constitution and operating manual for autonomous agents
+- **[CONSTITUTION.md](CONSTITUTION.md)** - Core principles and governance model
 
-### For Agents
+### For Agents (LLMs)
 - **[AGENT_GUIDE.md](AGENT_GUIDE.md)** - Operational guide for LLMs driving workflows
+- **[AGENT_SKILLS.md](AGENT_SKILLS.md)** - Available skills and when to use them
+- **[MISSING_MANUAL.md](MISSING_MANUAL.md)** - Unwritten knowledge and edge cases
 
 ---
 
 ## Getting Started
 
 ### Installation & Setup
-- **[Quick Start (Template)](../README.md#quick-start)** - 30-second tour
-- **[Windows Development Guide](how-to/windows-development.md)** - Complete Windows setup (WSL2 + native)
-- **[Setup Without Nix](how-to/setup-without-nix.md)** - Manual environment setup *(stub)*
-- **[Doctor Command Guide](how-to/using-doctor.md)** - Verifying environment health *(stub)*
+- **[QUICKSTART.md](QUICKSTART.md)** - 15-minute fast path to productivity
+- **[dev-environment.md](dev-environment.md)** - Development environment setup and configuration
+- **[Windows Development Guide](how-to/windows-development.md)** - Complete Windows setup (WSL2 + native, Tier-2 support)
 
 ### First Steps
-- **[First AC Change (Tutorial)](tutorials/first-ac-change.md)** - Implement your first acceptance criterion
-- **[Understanding Selftest](tutorials/understanding-selftest.md)** - What the 7 steps validate *(stub)*
+- **[Getting Started Tutorial](tutorials/getting-started.md)** - Complete walkthrough for new users
+- **[First AC Change](tutorials/first-ac-change.md)** - Implement your first acceptance criterion
+- **[Day 1: First Change](tutorials/day-1-first-change.md)** - Your first day with the template
+- **[Day 7: First Real Feature](tutorials/day-7-first-real-feature.md)** - Building your first complete feature
+- **[First Service](tutorials/first-service.md)** - Creating a new service from scratch
 
 ---
 
 ## How-To Guides
 
-### Adoption Patterns
-- **[Add Governance to Existing Repo](how-to/add-governance-to-existing-repo.md)** - Brownfield adoption
-- **[Create New Service from Template](how-to/new-service-from-template.md)** - Greenfield instantiation *(stub)*
-- **[Update Template from Upstream](how-to/template-updates.md)** - Sync with template evolution *(stub)*
+### Adoption & Setup
+- **[Add Governance to Existing Repo](how-to/add-governance-to-existing-repo.md)** - Brownfield adoption (complete guide)
+- **[Create New Service from Template](how-to/new-service-from-template.md)** - Greenfield instantiation
+- **[Pre-Fork Checklist](how-to/pre-fork-checklist.md)** - Before forking this template
+- **[Report Fork Feedback](how-to/report-fork-feedback.md)** - How to report issues and improvements
+- **[Second Service LLM Sanity Check](how-to/second-service-llm-sanity.md)** - Validating second service with LLM assistance
 
 ### Development Workflows
-- **[AC-First Development](how-to/ac-first-workflow.md)** - Spec → BDD → Code → Selftest *(stub)*
-- **[Creating Design Docs](how-to/creating-design-docs.md)** - Linking docs to requirements *(stub)*
-- **[Writing ADRs](how-to/writing-adrs.md)** - Documenting architecture decisions *(stub)*
-- **[Using LLM Context Bundles](how-to/using-bundles.md)** - Bounded context for AI assistance *(stub)*
+- **[Add Acceptance Criterion](how-to/add-acceptance-criterion.md)** - Creating new ACs in the spec ledger
+- **[Add HTTP Endpoint](how-to/add-http-endpoint.md)** - Adding new API endpoints
+- **[Change OpenAPI Safely](how-to/change-openapi-safely.md)** - Modifying API contracts without breaking changes
+- **[Using LLM Bundles](how-to/use-llm-bundles.md)** - Bounded context for AI assistance
 
-### Governance & Policies
-- **[Understanding Policies](how-to/understanding-policies.md)** - OPA/Rego enforcement *(stub)*
-- **[Fixing Policy Violations](how-to/fixing-policy-violations.md)** - Common failures and fixes *(stub)*
-- **[Graph Invariants Guide](how-to/graph-invariants.md)** - Structural integrity requirements *(stub)*
+### CI/CD & Branch Protection
+- **[Setup Branch Protection](how-to/setup-branch-protection.md)** - Configuring branch protection rules
+- **[Setup Tag Signing](how-to/setup-tag-signing.md)** - GPG signing for releases
 
-### Operations
-- **[Running the Service Locally](how-to/running-locally.md)** - HTTP server, database, observability *(stub)*
-- **[Deployment Guide](how-to/deployment.md)** - Kubernetes, secrets, ingress *(stub)*
-- **[Monitoring & Observability](how-to/observability.md)** - Metrics, traces, logs *(stub)*
+### Operations & Deployment
+- **[Deploy to Dev Environment](how-to/deploy-dev.md)** - Development deployment guide
+- **[Test OTLP Tracing](how-to/test-otlp-tracing.md)** - OpenTelemetry tracing setup and validation
 
 ---
 
 ## Reference Documentation
 
 ### Platform & Environment
-- **[Platform Support Reference](reference/platform-support.md)** - Complete platform support matrix, Tier 1/Tier 2, Windows guidance, troubleshooting
+- **[Platform Support Reference](reference/platform-support.md)** - Complete platform support matrix, Tier 1/Tier 2, Windows guidance
+- **[xtask Command Reference](reference/xtask-commands.md)** - All CLI commands and options
 
-### APIs & Contracts
-- **[Platform API Reference](reference/platform-api.md)** - `/platform/*` HTTP endpoints *(stub)*
-- **[xtask Command Reference](reference/xtask-commands.md)** - All CLI commands and options *(stub)*
-- **[Spec Schemas](reference/spec-schemas.md)** - YAML structures and validation rules *(stub)*
+### CI/CD & Branch Protection
+- **[CI Workflows Reference](reference/ci-workflows.md)** - Comprehensive CI workflow documentation
+- **[CI Coverage](reference/ci-coverage.md)** - CI coverage matrix and validation
+- **[Required Checks](reference/required-checks.md)** - Required CI checks for merge
+- **[Branch Protection Profiles](reference/branch-protection-profiles.md)** - Branch protection configuration options
 
 ### Architecture & Design
 - **[ADR Index](adr/README.md)** - All architecture decision records
-- **[Hexagonal Architecture Guide](explanation/hexagonal-architecture.md)** - Ports & adapters pattern *(stub)*
-- **[Governance Graph Explained](explanation/governance-graph.md)** - Node types, edges, invariants *(stub)*
-
-### Comparisons
-- **[vs. Backstage](explanation/comparisons.md#backstage)** - When to use each *(stub)*
-- **[vs. SpecKit](explanation/comparisons.md#speckit)** - API contracts vs full governance *(stub)*
-- **[vs. Zero to Production](explanation/comparisons.md#zero2prod)** - Production patterns vs governance *(stub)*
-
----
-
-## Tutorials
-
-Step-by-step learning paths:
-
-1. **[First AC Change](tutorials/first-ac-change.md)** - Hello World for this template
-2. **[Adding an Endpoint](tutorials/adding-endpoint.md)** - AC → BDD → Handler → Tests *(stub)*
-3. **[Implementing Auth](tutorials/implementing-auth.md)** - Cross-cutting concerns *(stub)*
-4. **[Release Process](tutorials/release-process.md)** - Changelog → Tag → Deploy *(stub)*
+  - **[ADR-0001: Hexagonal Architecture](adr/0001-hexagonal-architecture.md)** - Ports & adapters pattern
+  - **[ADR-0002: Nix-First Dev Environment](adr/0002-nix-first-dev-env.md)** - Tier-1 reproducible environments
+  - **[ADR-0003: Spec and BDD as Source of Truth](adr/0003-spec-and-bdd-as-source-of-truth.md)** - Spec-driven development
+  - **[ADR-0004: Policy and LLM Governance](adr/0004-policy-and-llm-governance.md)** - OPA policies for governance
+  - **[ADR-0005: xtask selftest Single Gate](adr/0005-xtask-selftest-single-gate.md)** - Unified validation
+  - **[ADR-0006: Supply Chain Hardening](adr/0006-supply-chain-hardening.md)** - Security and dependency management
+  - **[ADR-0007: Dependency Security Health](adr/0007-dependency-security-health.md)** - Dependency monitoring
+  - **[ADR-0017: Tier-1 Selftest Gate](adr/0017-tier1-selftest-gate.md)** - CI enforcement model
+  - **[ADR-0019: Governance Repository and FS Adapter](adr/0019-governance-repository-and-fs-adapter.md)** - Governance data layer
 
 ---
 
@@ -105,33 +120,127 @@ Step-by-step learning paths:
 Deeper understanding of concepts:
 
 ### Core Concepts
-- **[Spec-Driven Development](explanation/spec-driven-development.md)** - Why specs are code *(stub)*
-- **[Self-Healing Systems](explanation/self-healing.md)** - What it means in practice *(stub)*
-- **[Agent-Native Design](explanation/agent-native-design.md)** - Building for LLMs *(stub)*
+- **[Rust-as-Spec Overview](explanation/rust-as-spec-overview.md)** - Complete technical architecture
+- **[Architecture](explanation/architecture.md)** - System architecture overview
+- **[Template Architecture](explanation/template-architecture.md)** - Template-specific architecture
+- **[LLM-Native DevEx](explanation/llm-native-devex.md)** - Building for LLM-driven workflows
+- **[Controls as Code](explanation/controls-as-code.md)** - Governance automation philosophy
+- **[IDP Positioning](explanation/idp-positioning.md)** - Internal Developer Platform positioning
 
-### Patterns
+### Patterns & Design
 - **[Adoption Patterns](explanation/adoption-patterns.md)** - Template vs upstream vs generator
-- **[Governance Patterns](explanation/governance-patterns.md)** - Must-have-AC, required commands *(stub)*
-- **[Testing Patterns](explanation/testing-patterns.md)** - BDD, integration, policy *(stub)*
+- **[Adapters](explanation/adapters.md)** - Adapter pattern in hexagonal architecture
+- **[Infra Modules](explanation/infra-modules.md)** - Infrastructure module design
+- **[Supply Chain Hardening](explanation/supply-chain-hardening.md)** - Security and supply chain
+
+### Template Management
+- **[Template Contracts](explanation/TEMPLATE-CONTRACTS.md)** - Template versioning and contracts
+- **[Template Foundation vs Examples](explanation/template-foundation-vs-examples.md)** - Kernel vs examples
+- **[Template Versioning](explanation/template-versioning.md)** - Version management strategy
 
 ---
 
-## Policy Documentation
+## Tutorials
 
-### Policy Reference
-- **[Policy Overview](../policy/README.md)** - What policies enforce
-- **[Ledger Policy](policy-reference/ledger.md)** - Spec structure validation *(stub)*
-- **[Template Core Policy](policy-reference/template-core.md)** - Governance rules *(stub)*
-- **[Privacy Policy](policy-reference/privacy.md)** - Secrets and PII *(stub)*
-- **[Kubernetes Policy](policy-reference/k8s.md)** - Deployment security *(stub)*
+Step-by-step learning paths:
+
+1. **[Getting Started](tutorials/getting-started.md)** - Complete onboarding tutorial
+2. **[First AC Change](tutorials/first-ac-change.md)** - Hello World for this template
+3. **[Day 1: First Change](tutorials/day-1-first-change.md)** - Your first day with the template
+4. **[Day 7: First Real Feature](tutorials/day-7-first-real-feature.md)** - Building your first complete feature
+5. **[First Service](tutorials/first-service.md)** - Creating a new service from scratch
 
 ---
 
-## Contributing
+## Design Documents
 
-- **[CONTRIBUTING.md](../CONTRIBUTING.md)** - How to contribute to this template
-- **[FRICTION_LOG.md](../FRICTION_LOG.md)** - Report issues during pilot *(will be created)*
-- **[Code of Conduct](../CODE_OF_CONDUCT.md)** - Community standards *(stub)*
+Active design documents for current and future work:
+
+### Platform & Runtime
+- **[Platform DevEx](design/platform-devex.md)** - Developer experience design
+- **[Platform Introspection](design/platform-introspection.md)** - Runtime introspection APIs
+- **[Platform Runtime Contract](design/platform-runtime-contract.md)** - Platform runtime guarantees
+- **[Platform UI](design/platform-ui.md)** - Web UI design
+- **[Local Runtime](design/local-runtime.md)** - Local development runtime
+
+### Governance & Validation
+- **[Governance Hooks](design/governance-hooks.md)** - Pre-commit and CI governance hooks
+- **[Graph Invariants](design/graph-invariants.md)** - Governance graph structural rules
+- **[GOV-WRITE-001](design/gov-write-001.md)** - Write operations in governance
+
+### Developer Experience
+- **[Agent Interface](design/agent-interface.md)** - LLM agent interface design
+- **[Skills Guide](design/skills-guide.md)** - Skills system design
+- **[Skills Tooling](design/skills-tooling.md)** - Skills implementation tooling
+- **[Suggest Next](design/suggest-next.md)** - Task suggestion algorithm
+- **[Status CLI](design/status-cli.md)** - Status command design
+- **[LLMignore Semantics](design/llmignore-semantics.md)** - LLM context filtering
+
+### Endpoints & APIs
+- **[Health Endpoint](design/health-endpoint.md)** - Service health endpoint design
+- **[Version Endpoint](design/version-endpoint.md)** - Version information endpoint
+- **[Error Handling](design/error-handling.md)** - Error handling strategy
+- **[Metrics](design/metrics.md)** - Metrics and observability
+
+### Release & Testing
+- **[Release Bundling](design/release-bundling.md)** - Release artifact generation
+- **[AC Structured Report](design/ac-structured-report.md)** - Acceptance criteria reporting
+- **[Task Lifecycle](design/task-lifecycle.md)** - Task state management
+
+---
+
+## Runbooks & Operational Guides
+
+- **[Platform Kernel Runbook](runbooks/platform-kernel.md)** - Operational guide for platform kernel
+
+---
+
+## Plans & Trackers
+
+Historical and current planning documents:
+
+- **[v2.1.0 Plan](v2.1.0-plan.md)** - Historical release plan
+- **[v2.2.0 Plan](v2.2.0-plan.md)** - Historical release plan
+- **[v2.2.0 Execution Roadmap](v2.2.0-execution-roadmap.md)** - Historical execution plan
+- **[v2.2.0 Tracker](v2.2.0-tracker.md)** - Historical progress tracker
+- **[v2.3.0 Plan](v2.3.0-plan.md)** - Historical release plan
+- **[Health Endpoint v1 Plan](plans/health-endpoint-v1.md)** - Feature-specific plan
+
+---
+
+## Requirements & Specifications
+
+- **[Service Core Requirements](requirements/service-core.md)** - Core service requirements
+
+---
+
+## Release Documentation
+
+- **[RELEASE_PLAYBOOK.md](RELEASE_PLAYBOOK.md)** - Release process and checklist
+- **[RELEASE_v2.5.0.md](RELEASE_v2.5.0.md)** - v2.5.0 release notes
+- **[READY-FOR-PRODUCTION-CHECKLIST.md](READY-FOR-PRODUCTION-CHECKLIST.md)** - Production readiness criteria
+
+---
+
+## Process & Quality
+
+- **[testing-strategy.md](testing-strategy.md)** - Testing philosophy and approach
+- **[SELECTIVE_TESTING.md](SELECTIVE_TESTING.md)** - Selective test execution strategy
+- **[feature_status.md](feature_status.md)** - Auto-generated AC status (generated by `cargo xtask ac-status`)
+- **[feature_status_notes.md](feature_status_notes.md)** - Manual AC status notes
+
+---
+
+## Troubleshooting
+
+- **[TROUBLESHOOTING.md](TROUBLESHOOTING.md)** - Comprehensive troubleshooting guide (FAQ format)
+- **[BRANCH-PROTECTION-SETUP.md](BRANCH-PROTECTION-SETUP.md)** - Branch protection troubleshooting
+
+---
+
+## Guides (Legacy)
+
+- **[Brownfield Adoption Guide](guides/brownfield-adoption.md)** - Legacy brownfield adoption guide
 
 ---
 
@@ -139,10 +248,29 @@ Deeper understanding of concepts:
 
 Scaffolds you can copy:
 
+- **[ADR Template](templates/ADR-TEMPLATE.md)** - Architecture decision record template
+- **[Design Doc Template](templates/DESIGN_DOC.example.md)** - Design document template
+- **[Requirements Doc Template](templates/REQUIREMENTS_DOC.example.md)** - Requirements document template
+- **[Plan Doc Template](templates/PLAN_DOC.example.md)** - Planning document template
 - **[Friction Log Template](templates/FRICTION_LOG.md)** - Track pain points during development
-- **[Service Metadata Template](templates/SERVICE_METADATA.example.yaml)** - Service config
-- **[ADR Template](templates/adr-template.md)** - Architecture decision record *(stub)*
-- **[Design Doc Template](templates/design-doc-template.md)** - Design document *(stub)*
+- **[Release Plan Template](templates/RELEASE_PLAN.md)** - Release planning template
+- **[Runbook Template](templates/RUNBOOK.example.md)** - Operational runbook template
+- **[Pilot Feature Ideas](templates/PILOT_FEATURE_IDEAS.md)** - Feature ideation template
+
+---
+
+## Historical & Meta Documents
+
+- **[implementation-summary-2025-11-15.md](implementation-summary-2025-11-15.md)** - Historical implementation summary
+- **[TECHNICAL-FREEZE-COMPLETE.md](TECHNICAL-FREEZE-COMPLETE.md)** - Technical freeze milestone
+- **[meta_contract_phase1.3.md](meta_contract_phase1.3.md)** - Meta-contract development phase
+- **[ci-examples.md](ci-examples.md)** - CI configuration examples
+
+---
+
+## API Documentation
+
+- **[API Test Documentation](api/test.md)** - API testing documentation
 
 ---
 
@@ -150,15 +278,17 @@ Scaffolds you can copy:
 
 - ✅ **Complete** - Document exists and is comprehensive
 - 🔄 **In Progress** - Document exists but needs expansion
-- 📝 **Stub** - Placeholder with "TODO: tracked in ROADMAP"
+- 📝 **Stub** - Placeholder for future development
 - ❌ **Missing** - Not yet created
+- 🤖 **Auto-generated** - Generated by `cargo xtask` commands
 
-Current status:
-- ✅ ROADMAP.md, Technical Overview, AGENT_GUIDE.md, README.md
-- 🔄 First AC Change Tutorial, Brownfield Guide
-- 📝 Most how-tos, references, and explanations (stubbed for pilot)
-
-**Note:** Stub documents will be filled based on friction log entries from the pilot phase.
+Current status (v3.3.3):
+- ✅ All core documentation (ROADMAP, QUICKSTART, AGENT_GUIDE, platform references, CI workflows)
+- ✅ Complete ADR set (9 ADRs)
+- ✅ All design documents
+- ✅ All how-to guides
+- ✅ All tutorials
+- 🤖 feature_status.md (auto-generated, do not edit)
 
 ---
 
@@ -167,8 +297,9 @@ Current status:
 ### File Naming
 - How-tos: `how-to/{verb}-{noun}.md` (e.g., `how-to/add-governance-to-existing-repo.md`)
 - Tutorials: `tutorials/{task-name}.md` (e.g., `tutorials/first-ac-change.md`)
-- Explanations: `explanation/{concept}.md` (e.g., `explanation/self-healing.md`)
-- Reference: `reference/{topic}.md` (e.g., `reference/platform-api.md`)
+- Explanations: `explanation/{concept}.md` (e.g., `explanation/rust-as-spec-overview.md`)
+- Reference: `reference/{topic}.md` (e.g., `reference/platform-support.md`)
+- Design: `design/{feature-name}.md` (e.g., `design/platform-ui.md`)
 
 ### Front Matter
 All docs should have YAML front-matter:
@@ -193,9 +324,28 @@ related_requirements: [REQ-ID-1, REQ-ID-2]
 
 ## Need Help?
 
-1. **Check this index** for relevant docs
-2. **Search** the docs directory: `grep -r "your topic" docs/`
-3. **Try the CLI:** `cargo xtask help` or `cargo xtask help-flows`
-4. **Open the UI:** `http://localhost:8080/ui` for visual navigation
-5. **Open an issue** if documentation is missing or unclear
+1. **Start with QUICKSTART.md** for a 15-minute introduction
+2. **Check TROUBLESHOOTING.md** for common issues (use Ctrl+F to search)
+3. **Search this index** for relevant docs
+4. **Try the CLI:** `cargo xtask help` or `cargo xtask help-flows`
+5. **Open the UI:** `http://localhost:8080/ui` for visual navigation
+6. **Check platform status:** `curl http://localhost:8080/platform/status`
+7. **Get task suggestions:** `curl http://localhost:8080/platform/agent/hints`
+8. **Open an issue** if documentation is missing or unclear
 
+---
+
+## Documentation Statistics
+
+**Total documents:** 118+ markdown files
+**Categories:**
+- Getting Started: 5 docs
+- How-To Guides: 13 docs
+- Tutorials: 5 docs
+- Reference: 7 docs
+- Explanations: 11 docs
+- Design Docs: 20 docs
+- ADRs: 9 docs
+- Templates: 8 docs
+
+**Last updated:** 2025-11-26 (v3.3.3)

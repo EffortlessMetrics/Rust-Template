@@ -1,3 +1,17 @@
+---
+id: GUIDE-TPL-QUICKSTART-001
+title: Quick Start Guide
+doc_type: guide
+status: published
+audience: developers
+tags: [onboarding, quickstart, setup, tutorial]
+stories: [US-TPL-PLT-001]
+requirements: [REQ-PLT-ONBOARDING, REQ-PLT-DEVEX-CONTRACT]
+acs: [AC-PLT-001, AC-PLT-015, AC-PLT-019]
+adrs: [ADR-0002, ADR-0005]
+last_updated: 2025-11-26
+---
+
 # Quick Start Guide
 
 **Goal:** Get productive in under 15 minutes.

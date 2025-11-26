@@ -5,10 +5,11 @@
 **A governed Rust service template where specs, tests, docs, policies, and infra all agree – and the repo can prove it.**
 
 > **Using this as a template?** Start here:
-> - **[Pre-Fork Checklist](docs/how-to/pre-fork-checklist.md) – Validate before forking** ✓
 > - **[Quick Start Guide](docs/QUICKSTART.md) – Get productive in 15 minutes** ⚡
+> - **[Pre-Fork Checklist](docs/how-to/pre-fork-checklist.md) – Validate before forking** ✓
 > - [Kernel snapshot](docs/KERNEL_SNAPSHOT.md) – what you're inheriting
 > - [New service guide](docs/how-to/new-service-from-template.md) – step-by-step setup
+> - [Troubleshooting Guide](docs/TROUBLESHOOTING.md) – when things go wrong
 > - Run `cargo xtask kernel-smoke` after cloning – it should be green
 
 This cell gives you a **single Rust service** with:
@@ -63,7 +64,12 @@ cargo xtask ac-status          # View AC health
 cargo xtask bundle implement_ac # Generate LLM context for implementation
 ```
 
-See [CLAUDE.md](./CLAUDE.md) for the full agent guide, [docs/how-to/new-service-from-template.md](./docs/how-to/new-service-from-template.md) to fork this template, and [examples/fork-customization](./examples/fork-customization/) for sample customization files.
+See:
+- [QUICKSTART.md](./docs/QUICKSTART.md) for a 15-minute onboarding guide
+- [CLAUDE.md](./CLAUDE.md) for the full agent guide
+- [docs/how-to/new-service-from-template.md](./docs/how-to/new-service-from-template.md) to fork this template
+- [examples/fork-customization](./examples/fork-customization/) for sample customization files
+- [TROUBLESHOOTING.md](./docs/TROUBLESHOOTING.md) if you encounter problems
 
 ---
 
@@ -425,9 +431,10 @@ Agents don’t need synchronous human approval to move forward; the spec ledger,
 
 For details, see:
 
-- `CLAUDE.md` – agent operational prompt
-- `docs/AGENT_GUIDE.md` – deeper guidance for agent-driven work
-- `docs/SELECTIVE_TESTING.md` – validation ladder and change-aware testing
+- [CLAUDE.md](./CLAUDE.md) – agent operational prompt
+- [AGENT_GUIDE.md](./docs/AGENT_GUIDE.md) – deeper guidance for agent-driven work
+- [SELECTIVE_TESTING.md](./docs/SELECTIVE_TESTING.md) – validation ladder and change-aware testing
+- [TROUBLESHOOTING.md](./docs/TROUBLESHOOTING.md) – common problems and solutions
 
 ---
 
@@ -436,13 +443,16 @@ For details, see:
 ### 10.1 Greenfield: new service
 
 - Clone this template into a new repo.
+- Follow the [Pre-Fork Checklist](./docs/how-to/pre-fork-checklist.md) to validate your environment.
+- Use the [QUICKSTART.md](./docs/QUICKSTART.md) guide to get oriented.
+- Follow the [New Service Guide](./docs/how-to/new-service-from-template.md) for step-by-step setup.
 - Adjust `service_metadata.yaml`, ledger entries, and tasks to your domain.
 - Keep the platform kernel as-is; build your business logic in new crates or modules.
 - Use `selftest` as the gate from day one.
 
 ### 10.2 Brownfield: existing repo
 
-See `docs/how-to/add-governance-to-existing-repo.md`.
+See [docs/how-to/add-governance-to-existing-repo.md](./docs/how-to/add-governance-to-existing-repo.md).
 
 High-level flow:
 
@@ -481,13 +491,86 @@ The integration surface is:
 
 See:
 
-- `docs/ROADMAP.md` – current state and path forward options
-- `docs/KERNEL_SNAPSHOT.md` – frozen baseline details
-- `docs/feature_status.md` – AC health dashboard
+- [ROADMAP.md](./docs/ROADMAP.md) – current state and path forward options
+- [KERNEL_SNAPSHOT.md](./docs/KERNEL_SNAPSHOT.md) – frozen baseline details
+- [feature_status.md](./docs/feature_status.md) – AC health dashboard
+- [TROUBLESHOOTING.md](./docs/TROUBLESHOOTING.md) – if things aren't working
 
 ---
 
-## 13. License
+## 13. Documentation Guide
+
+Documentation is organized by audience and purpose:
+
+### 13.1 Getting Started (New Users)
+
+Start here if you're using this template for the first time:
+
+- **[Quick Start Guide](docs/QUICKSTART.md)** – Get productive in 15 minutes
+- **[Pre-Fork Checklist](docs/how-to/pre-fork-checklist.md)** – Validate your environment before forking
+- [New service guide](docs/how-to/new-service-from-template.md) – Step-by-step setup after forking
+- [Kernel snapshot](docs/KERNEL_SNAPSHOT.md) – What you're inheriting from the template
+- **[Troubleshooting Guide](docs/TROUBLESHOOTING.md)** – Solutions for common problems
+
+### 13.2 Daily Development (Contributors)
+
+Use these guides while working in the codebase:
+
+- [CLAUDE.md](./CLAUDE.md) – Agent operational instructions
+- [AGENT_GUIDE.md](docs/AGENT_GUIDE.md) – Deeper guidance for agent-driven work
+- [Selective Testing Guide](docs/SELECTIVE_TESTING.md) – Validation ladder and change-aware testing
+- [Add Acceptance Criterion](docs/how-to/add-acceptance-criterion.md) – How to add new ACs
+- [Add HTTP endpoint](docs/how-to/add-http-endpoint.md) – How to add new endpoints
+- [Change OpenAPI safely](docs/how-to/change-openapi-safely.md) – How to evolve APIs
+- [LLM bundles guide](docs/how-to/use-llm-bundles.md) – How to use context bundles
+- [Windows Development Guide](docs/how-to/windows-development.md) – Platform-specific guidance for Windows
+
+### 13.3 Platform Setup (Maintainers)
+
+Use these guides to configure the production environment:
+
+- **[Branch Protection Setup](docs/BRANCH-PROTECTION-SETUP.md)** – Configure branch protection rules
+- **[Tag Signing Setup](docs/how-to/setup-tag-signing.md)** – Configure GPG/SSH tag signing
+- [Branch Protection Profiles](docs/reference/branch-protection-profiles.md) – Different protection levels explained
+- [Required Checks Reference](docs/reference/required-checks.md) – CI checks that must pass
+- [Platform Support](docs/reference/platform-support.md) – Tier-1 vs Tier-2 platforms
+- [Supply Chain Hardening](docs/explanation/supply-chain-hardening.md) – Security best practices
+
+### 13.4 Understanding the System (Architecture)
+
+Read these to understand how the template works:
+
+- [Why This Exists](docs/why-this-exists.md) – Motivation and philosophy
+- [Architecture Overview](docs/explanation/architecture.md) – System design
+- [Template Architecture](docs/explanation/template-architecture.md) – Template structure
+- [Rust-as-Spec Overview](docs/explanation/rust-as-spec-overview.md) – Core concept
+- [Controls as Code](docs/explanation/controls-as-code.md) – Governance approach
+- [IDP Positioning](docs/explanation/idp-positioning.md) – How this fits with platform tools
+- [Template Contracts](docs/explanation/TEMPLATE-CONTRACTS.md) – What the template guarantees
+
+### 13.5 Process & Planning
+
+Roadmaps, ADRs, and planning documents:
+
+- [ROADMAP.md](docs/ROADMAP.md) – Current state and future plans
+- [BACKLOG.md](docs/BACKLOG.md) – Known gaps and future work
+- [Missing Manual](docs/MISSING_MANUAL.md) – Unwritten docs and known documentation gaps
+- [ADR Index](docs/adr/README.md) – Architecture decision records
+- [Release Playbook](docs/RELEASE_PLAYBOOK.md) – How to cut releases
+
+### 13.6 Reference Material
+
+Technical references and command documentation:
+
+- [xtask Commands](docs/reference/xtask-commands.md) – Complete CLI reference
+- [CI Coverage](docs/reference/ci-coverage.md) – What CI tests
+- [Feature Status](docs/feature_status.md) – Auto-generated AC health dashboard
+- [Testing Strategy](docs/testing-strategy.md) – How testing works
+- [CONSTITUTION.md](docs/CONSTITUTION.md) – Core principles and boundaries
+
+---
+
+## 14. License
 
 This template is dual-licensed:
 

@@ -1,3 +1,17 @@
+---
+id: GUIDE-TPL-NEW-SERVICE-001
+title: Create a New Service from Template
+doc_type: how-to
+status: published
+audience: developers, platform-engineers
+tags: [onboarding, setup, fork, greenfield, customization]
+stories: [US-TPL-PLT-001]
+requirements: [REQ-PLT-ONBOARDING, REQ-PLT-DOC-TEMPLATES]
+acs: [AC-PLT-001, AC-PLT-008]
+adrs: [ADR-0005]
+last_updated: 2025-11-26
+---
+
 # Create a New Service from Template
 
 This guide walks you through forking the Rust-as-Spec template to launch a new governed service (e.g., Knowledge Hub, Order Service, Audit Log).

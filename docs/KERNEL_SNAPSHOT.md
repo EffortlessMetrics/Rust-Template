@@ -26,22 +26,72 @@ This is the frozen kernel baseline (v3.3.3-kernel) for the Rust-as-Spec platform
 **Runtime & APIs:**
 
 - Service health, version, metrics endpoints
-- Platform introspection APIs (/platform/graph, /platform/devex/flows, /platform/docs/index, /platform/schema)
-- Agent hints API (/platform/agent/hints) with task prioritization
-- Friction log API (/platform/friction, /platform/friction/{id})
-- Platform UI dashboard with graph visualization and flows view
+- Platform introspection APIs:
+  - `/platform/graph` - Full governance graph (REQ/AC/test/doc relationships)
+  - `/platform/devex/flows` - Canonical DevEx flows and commands
+  - `/platform/docs/index` - Documentation inventory
+  - `/platform/schema` - OpenAPI contract
+  - `/platform/status` - Governance health metrics (includes policy status)
+- Task management APIs:
+  - `/platform/tasks` - Task listing with filters (status, requirement)
+  - `/platform/tasks/{id}/status` - Update task status via HTTP
+  - `/platform/agent/hints` - Prioritized task suggestions for agents
+- Friction & questions APIs:
+  - `/platform/friction` - Friction log entries with statistics
+  - `/platform/friction/{id}` - Individual friction entry details
+- Platform UI dashboard:
+  - Interactive graph visualization using Mermaid.js
+  - Flows and tasks view
+  - Platform health status
 - Configuration validation and IAC alignment (Docker Compose, Kubernetes, Terraform)
 - Task lifecycle and governance write operations
 
 **DevEx CLI:**
 
-- Development flows: `doctor`, `help-flows`, `check`, `test-changed`, `ac-status`, `ac-coverage`
-- Bundler & agent tools: `bundle`, `suggest-next`
-- Governance: `adr-new`, `ac-new`, `docs-check`, `graph-export`, `selftest`
-- Artifact management: `friction-new`, `friction-list`, `question-new`, `questions-list`
-- Fork tracking: `fork-register`, `fork-list`, `version`
-- Release management: `release-prepare`, `release-bundle`
-- Operational: `audit`, `sbom-local`, `ci-local`, `status`
+- Development flows:
+  - `doctor` - Environment validation (Rust, Nix, conftest, git)
+  - `help-flows` - Flow-based command map from specs/devex_flows.yaml
+  - `check` - Fast dev loop (fmt + clippy + tests)
+  - `test-changed` - Run tests affected by git changes
+  - `ac-status` - AC coverage report
+  - `ac-coverage` - Show which ACs need BDD scenarios
+  - `dev-up` - One-command bootstrap (doctor + install-hooks + check)
+- Bundler & agent tools:
+  - `bundle` - Generate LLM context bundles for tasks
+  - `suggest-next` - Task-aware next-step suggestions
+- Governance:
+  - `adr-new` - Create numbered ADR from template
+  - `ac-new` - Create new acceptance criterion with validation
+  - `docs-check` - Validate version alignment across spec_ledger, README, CLAUDE
+  - `graph-export` - Export dependency graph (Mermaid format)
+  - `selftest` - Full template self-test suite (8 gates)
+  - `kernel-smoke` - Quick validation (docs-check + selftest)
+  - `install-hooks` - Install pre-commit governance hooks
+  - `skills-fmt` - Format Agent Skills (SKILL.md)
+  - `skills-lint` - Lint Agent Skills (SKILL.md)
+- Artifact management:
+  - `friction-new` - Create new friction log entry
+  - `friction-list` - List friction entries (with filters)
+  - `question-new` - Create new question artifact
+  - `questions-list` - List questions from questions/ directory
+- Fork tracking:
+  - `fork-register` - Register a new template fork
+  - `fork-list` - List registered forks
+  - `version` - Show kernel/template version (supports --json)
+- Task management:
+  - `tasks-list` - List tasks from specs/tasks.yaml
+  - `task-create` - Create new task with validation
+  - `task-update` - Update task fields (status, title, owner)
+- Release management:
+  - `release-prepare` - Bump versions, update changelog
+  - `release-bundle` - Generate release evidence with AC deltas
+  - `release-verify` - Full release validation (selftest + audit + docs-check)
+- Operational:
+  - `audit` - Security audit (cargo-audit + cargo-deny)
+  - `sbom-local` - Generate SPDX JSON SBOM
+  - `ci-local` - Full CI simulation (doctor + selftest + audit + docs-check)
+  - `status` - Governance status dashboard
+  - `config-validate` - Validate config schema for an environment
 
 **Governance:**
 
@@ -78,15 +128,35 @@ The template is ready to fork. Services inheriting from v3.3.3-kernel get:
 
 **Known gaps** (documented in ROADMAP.md):
 
-- Branch protection not configured (manual GitHub setting required)
+- Branch protection not configured (manual GitHub setting required - documented in `docs/how-to/setup-branch-protection.md`)
+- Tag signing not configured (manual GPG setup required - documented in `docs/how-to/setup-tag-signing.md`)
 - Template not yet validated by a second service
 
-**Recently completed:**
+**Recently completed (v3.3.3 polish):**
 
+**Documentation:**
 - ✅ IDP positioning documentation (`docs/explanation/idp-positioning.md`)
 - ✅ Brownfield adoption guide (`docs/guides/brownfield-adoption.md`)
 - ✅ Fork feedback workflow (`docs/how-to/report-fork-feedback.md`)
-- ✅ Questions-as-artifacts, friction API, fork registry
+- ✅ Quick start guide (`docs/QUICKSTART.md`)
+- ✅ Troubleshooting guide (`docs/TROUBLESHOOTING.md`)
+- ✅ Windows development guide (`docs/how-to/windows-development.md`)
+- ✅ CI workflows reference (`docs/reference/ci-workflows.md`)
+- ✅ Branch protection setup (`docs/how-to/setup-branch-protection.md`)
+- ✅ Tag signing setup (`docs/how-to/setup-tag-signing.md`)
+
+**Operational Tooling:**
+- ✅ Questions-as-artifacts (`cargo xtask question-new`, `questions-list`)
+- ✅ Friction log API (`GET /platform/friction`, `/platform/friction/{id}`)
+- ✅ Friction CLI (`cargo xtask friction-new`, `friction-list`)
+- ✅ Fork registry (`cargo xtask fork-list`, `fork-register`)
+- ✅ Version command (`cargo xtask version` with `--json` support)
+- ✅ Release AC deltas in `release-bundle`
+- ✅ Branch protection script (`.github/scripts/setup-branch-protection.sh`)
+
+**Fixes:**
+- ✅ BDD test isolation (tests no longer pollute tracked files)
+- ✅ ADR numbering duplicates resolved
 
 The first real fork will likely discover friction. Capture it in `FRICTION_LOG.md` and consider feeding systematic issues back to the kernel.
 

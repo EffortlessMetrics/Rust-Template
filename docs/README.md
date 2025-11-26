@@ -79,17 +79,22 @@ See [Roadmap](#roadmap) for how pilot results inform future releases.
 
 ### Path 1: Quick Start (Recommended)
 
-1. 📘 **[Day 1: First Change](tutorials/day-1-first-change.md)** (30 min) **← START HERE**
+1. 📘 **[Quick Start Guide](QUICKSTART.md)** (15 min) **← START HERE**
+   - Fast-track orientation and environment setup
+   - Essential commands and validation
+   - Get productive immediately
+
+2. 📘 **[Day 1: First Change](tutorials/day-1-first-change.md)** (30 min)
    - Clone, validate, run the service
    - Add trivial AC and see it go green
    - Understand AC-first development loop
 
-2. 📘 **[Day 7: First Real Feature](tutorials/day-7-first-real-feature.md)** (90 min)
+3. 📘 **[Day 7: First Real Feature](tutorials/day-7-first-real-feature.md)** (90 min)
    - Build a complete task management feature
    - Learn multi-layer architecture
    - Master validation, errors, and testing
 
-3. 📕 **[Adoption Patterns](explanation/adoption-patterns.md)** (15 min)
+4. 📕 **[Adoption Patterns](explanation/adoption-patterns.md)** (15 min)
    - Choose Pattern A, B, or C for your organization
    - Plan template update strategy
    - Understand trade-offs
@@ -179,6 +184,7 @@ See [Roadmap](#roadmap) for how pilot results inform future releases.
 | BDD tests fail | Check `specs/features/` syntax and step definitions |
 | Nix issues | See [Getting Started - Troubleshooting](tutorials/getting-started.md#troubleshooting) |
 | CI failures | Check [xtask Commands Reference](reference/xtask-commands.md) |
+| **Any other issues** | **See [Troubleshooting Guide](TROUBLESHOOTING.md)** |
 
 ---
 
@@ -215,10 +221,21 @@ See [Roadmap](#roadmap) for how pilot results inform future releases.
 
 ### How-to Guides (Task-Oriented)
 
+📗 **[Pre-Fork Checklist](how-to/pre-fork-checklist.md)** (10 minutes)
+- Validate environment before forking
+- Platform and tooling prerequisites
+- Common pre-fork issues
+
 📗 **[New Service from Template](how-to/new-service-from-template.md)** (10 minutes)
 - Clone and customize
 - Update ownership
 - Configure CI
+
+📗 **[Windows Development Guide](how-to/windows-development.md)** (variable)
+- Platform-specific guidance for Windows
+- WSL2 setup and best practices
+- Native Windows tier-2 development
+- Common Windows issues
 
 📗 **[Use LLM Bundles](how-to/use-llm-bundles.md)** (variable)
 - When to use LLM assistance
@@ -237,6 +254,16 @@ See [Roadmap](#roadmap) for how pilot results inform future releases.
 - Environment configuration
 - Prerequisite checking
 - Troubleshooting deployment issues
+
+📗 **[Branch Protection Setup](BRANCH-PROTECTION-SETUP.md)** (15 minutes)
+- Configure GitHub branch protection rules
+- Required checks and status checks
+- Protection profiles (Minimal/Standard/Strict)
+
+📗 **[Tag Signing Setup](how-to/setup-tag-signing.md)** (20 minutes)
+- Configure GPG or SSH tag signing
+- Generate and configure signing keys
+- Verify signed tags
 
 ### Reference (Information-Oriented)
 
@@ -348,23 +375,32 @@ Development is now driven by pilot feedback.
 ### For Developers
 
 **Must Read:**
-- [Day 1: First Change](tutorials/day-1-first-change.md) **← Start here**
+- [Quick Start Guide](QUICKSTART.md) **← Start here**
+- [Day 1: First Change](tutorials/day-1-first-change.md)
 - [Day 7: First Real Feature](tutorials/day-7-first-real-feature.md)
 - [Architecture Overview](explanation/architecture.md)
 - [xtask Commands](reference/xtask-commands.md)
 
 **Frequently Used:**
+- [Troubleshooting Guide](TROUBLESHOOTING.md) - When things go wrong
 - [LLM Bundles](how-to/use-llm-bundles.md) - Daily workflow with AI
 - [Add HTTP Endpoint](how-to/add-http-endpoint.md)
 - [Template Foundation vs Examples](explanation/template-foundation-vs-examples.md)
+- [Windows Development Guide](how-to/windows-development.md) - Platform-specific guidance
 
 ### For Tech Leads
 
 **Must Read:**
 - [Adoption Patterns](explanation/adoption-patterns.md) **← Critical decision**
+- [Pre-Fork Checklist](how-to/pre-fork-checklist.md) - Before starting
 - [Architecture Overview](explanation/architecture.md)
 - [Branch Protection Profiles](reference/branch-protection-profiles.md)
 - [New Service from Template](how-to/new-service-from-template.md)
+
+**Setup & Configuration:**
+- [Branch Protection Setup](BRANCH-PROTECTION-SETUP.md) - Configure GitHub protection
+- [Tag Signing Setup](how-to/setup-tag-signing.md) - Configure release signing
+- [Windows Development Guide](how-to/windows-development.md) - For Windows teams
 
 **Reference:**
 - [Template API](../TEMPLATE_API.md)
@@ -374,8 +410,10 @@ Development is now driven by pilot feedback.
 ### For New Hires
 
 **Day 1:**
+- [Quick Start Guide](QUICKSTART.md) - 15-minute orientation
 - [Day 1: First Change](tutorials/day-1-first-change.md) - Hands-on intro
 - [xtask Commands](reference/xtask-commands.md) - Skim for reference
+- [Troubleshooting Guide](TROUBLESHOOTING.md) - Bookmark for later
 
 **Week 1:**
 - [Day 7: First Real Feature](tutorials/day-7-first-real-feature.md) - Build complete feature

@@ -1,3 +1,17 @@
+---
+id: ADR-0019
+title: Governance Repository and FS Adapter
+doc_type: adr
+status: accepted
+audience: developers, architects
+tags: [architecture, persistence, governance, file-system]
+stories: [US-TPL-PLATFORM-V3]
+requirements: [REQ-TPL-GOV-WRITE-001]
+acs: [AC-TPL-GOV-WRITE-TASK-STATUS-200]
+adrs: [ADR-0001]
+last_updated: 2025-11-26
+---
+
 # ADR-0019: Governance Repository and FS Adapter
 
 ## Status
