@@ -1,223 +1,360 @@
 # Agent Guidelines: Rust-as-Spec Platform Cell
 **Template Version:** v3.3.1
 
-**You are a team member working in a self-governing platform cell.**
+**You are a team member working inside a self-governing platform cell.**
+
+Your job is to execute work **within** the governance contracts, not around them.
 
 ---
 
-## Core Directive
+## 1. Core Directive
 
-**Do not guess workflows.** This repository has formal governance contracts that must be followed.
+**Do not invent workflows.**  
+This repo already defines how work should be done.
 
-Your authority comes from:
-1. **Skills** (`.claude/skills/*`) - Defined workflows
-2. **Platform APIs** (`/platform/*`) - System state
-3. **xtask commands** - Validated operations
-4. **Selftest** - Ground truth validation
+Your authority comes from, in this order:
+
+1. **Specs & Schema**  
+   - `specs/spec_ledger.yaml` – stories → REQs → ACs → tests → docs  
+   - `specs/config_schema.yaml` – configuration contract  
+   - `specs/devex_flows.yaml` & `specs/tasks.yaml` – flows and tasks
+
+2. **Skills** – `.claude/skills/*/SKILL.md`  
+   Predefined workflows (feature dev, maintenance, release, governance debug).
+
+3. **Platform APIs** – `/platform/*`  
+   Ground-truth runtime state (status, graph, tasks, docs, hints, schema).
+
+4. **xtask commands**  
+   The only supported way to run checks, mutate specs, and orchestrate flows.
+
+5. **Selftest** – `cargo xtask selftest`  
+   Single source of truth for “is the system governed and healthy?”.
+
+If any of these disagree with each other, **selftest wins**.
 
 ---
 
-## Available Skills
+## 2. Skills you should use
 
-Use skills from `.claude/skills/` to execute governed workflows:
+Skills are your top-level workflows. Do not make up new ones.
 
-### 1. Feature Development
+### 2.1 Governed Feature Development
 **Skill:** `governed-feature-dev`  
-**When:** Adding new features, implementing requirements  
-**Contract:** AC → BDD → Code → Selftest
+**Use when:** implementing or changing behaviour (new endpoints, flows, rules).  
+**Contract:** AC → BDD → Code → Selftest  
 
-### 2. Release Management
+Rough pattern:
+
+1. Confirm or create AC in `spec_ledger.yaml` (via `xtask ac-new`).
+2. Add / update BDD in `specs/features/*.feature`.
+3. Implement code.
+4. Run selective tests, then full selftest.
+
+### 2.2 Governed Release
 **Skill:** `governed-release`  
-**When:** Cutting versions, tagging releases  
-**Contract:** Prepare → Verify → Tag → CI
+**Use when:** cutting versions, preparing releases, generating evidence.  
+**Contract:** Prepare → Verify → Bundle → Tag  
 
-### 3. Maintenance
+Rough pattern:
+
+1. `cargo xtask release-prepare X.Y.Z`
+2. `cargo xtask selftest`
+3. `cargo xtask release-bundle X.Y.Z`
+4. Tag, push, let CI run `selftest`.
+
+### 2.3 Governed Maintenance
 **Skill:** `governed-maintenance`  
-**When:** Fixing environment, updating deps, diagnosing drift  
-**Contract:** Doctor → Audit → Docs → Graph → Selftest
+**Use when:** fixing drift, updating deps, addressing governance failures.  
+**Contract:** Doctor → Audit / Fix → Docs → Graph → Selftest  
+
+Rough pattern:
+
+1. `cargo xtask doctor`
+2. Fix reported issues (deps, config, docs).
+3. `cargo xtask ac-status` + docs updates where needed.
+4. `cargo xtask selftest`.
+
+### 2.4 Governance Debug / Questions
+**Skill:** `governed-governance-debug` (if present)  
+**Use when:** selftest fails, graph invariants break, AC status looks off.  
+
+Pattern:
+
+1. Inspect `docs/feature_status.md`, `/platform/graph`, `/platform/status`.
+2. Use `cargo xtask graph-export`, `ac-coverage`, and `docs-check`.
+3. Fix mismatches, then rerun `selftest`.
 
 ---
 
-## Operational Commands
+## 3. Operational Commands (what you actually run)
 
-### Discovery
+### 3.1 Discovery
+
 ```bash
-# What tasks are available?
-cargo xtask tasks-list
+# What tasks exist?
+cargo xtask tasks-list         # if implemented for this repo
 
-# What should I do next?
-cargo xtask suggest-next --task <id>
+# What should I do next for a given task?
+cargo xtask suggest-next --task <TASK_ID>
 
-# What workflows exist?
+# What flows exist and what commands are valid?
 cargo xtask help-flows
-```
+````
 
-### Platform State
+When in doubt, **start from a task or a flow, not from raw code**.
+
+### 3.2 Platform State
+
 ```bash
-# Check health
+# Governance and runtime status
 curl http://localhost:8080/platform/status
 
-# View governance graph
+# Governance graph (stories/REQs/ACs/docs/commands)
 curl http://localhost:8080/platform/graph
 
-# Browse visually
+# Docs index
+curl http://localhost:8080/platform/docs/index
+
+# Tasks (HTTP view)
+curl http://localhost:8080/platform/tasks
+
+# UI dashboards
 open http://localhost:8080/ui
 ```
 
-### Bounded Context
+Use `/platform/*` as your runtime truth instead of scraping files.
+
+### 3.3 Bounded Context for an AC or Task
+
 ```bash
-# Get relevant context for a task
-cargo xtask bundle <task-id>
-# Output: .llm/bundle/<task-id>.md (max 250KB)
+# Get an LLM-friendly context pack for a task/flow
+cargo xtask bundle implement_ac
+# or
+cargo xtask bundle <TASK_ID>
 ```
 
-### Selective Testing (Fast Iteration)
+Bundles are written under `.llm/bundle/` and are capped in size.
+Treat bundle content as **the AC-level context**; don’t reach beyond it unless necessary.
+
+### 3.4 Selective Testing (fast loop)
+
 ```bash
-# Test only what changed (fast)
+# Test only what changed vs origin/main
 cargo xtask test-changed
 
-# Test specific acceptance criterion
+# Plan-only (see what would run)
+XTASK_TEST_CHANGED_PLAN_ONLY=1 cargo xtask test-changed
+
+# Test a specific AC by ID
 cargo xtask test-ac AC-PLT-001
 
-# Compare against different base
+# Use a different base for change detection
 cargo xtask test-changed --base main
 ```
-Tag expressions: use `@AC-...` (input with or without `@` is normalized for `CUCUMBER_TAG_EXPRESSION`). Default ladder: `test-changed` after edits -> `test-ac <ID>` when focused -> `nix develop && cargo xtask selftest` before merge (Tier-1).
 
-### Validation
+Tag expressions are normalized: input `AC-PLT-001` is treated as `@AC-PLT-001`.
+
+**Default ladder:**
+
+1. After edits: `cargo xtask test-changed`
+2. Focusing on one AC: `cargo xtask test-ac <AC_ID>`
+3. Before merge (Tier-1): `nix develop && cargo xtask selftest`
+
+### 3.5 Validation & Governance
+
 ```bash
-# Quick check (fmt, clippy, unit tests)
+# Quick dev sanity (fmt, clippy, unit tests)
 cargo xtask check
 
-# Check AC test coverage
+# Spellcheck & docs checks (depending on repo config)
+cargo xtask spellcheck
+cargo xtask docs-check
+
+# AC coverage and status
+cargo xtask ac-status
 cargo xtask ac-coverage
 
-# Full governance validation (use Tier-1: Nix+Linux/WSL2)
+# Full governance gate (Tier-1 only)
 cargo xtask selftest
 ```
 
-**Performance Note:**
-- On **native Windows** (Tier-2): Use `test-changed` and `test-ac` for fast iteration. Reserve `selftest` for CI or WSL2.
-- On **Nix+Linux/WSL2** (Tier-1): All commands run efficiently. Use `selftest` as pre-merge gate.
+On **Tier-2/Windows**: prefer `check`, `test-changed`, `test-ac`.
+On **Tier-1 (Nix+Linux/macOS/WSL2)**: use `selftest` as the pre-merge gate.
 
-See `docs/SELECTIVE_TESTING.md` for complete guide.
-
----
-
-## The Golden Rule
-
-**If `cargo xtask selftest` fails, you are not done.**
-
-Selftest is the single source of truth for "is this work acceptable?"
-
-It validates:
-1. Core checks (fmt, clippy, tests)
-2. BDD (behavior matches ACs)
-3. AC mapping (traceability)
-4. LLM bundler (context generation)
-5. Policy tests (compliance)
-6. DevEx contract (commands exist)
-7. Graph invariants (structural integrity)
-
-**Never:**
-- ❌ Bypass selftest
-- ❌ Claim work is complete without running `ac-coverage` (kernel ACs must be green)
-- ❌ Force-merge failing work
-- ❌ Hand-edit YAML specs (use `xtask ac-new`, `adr-new`, etc.)
-- ❌ Guess at workflows (check skills first)
+See `docs/SELECTIVE_TESTING.md` for the complete selective testing guide.
 
 ---
 
-## Decision Boundaries
+## 4. Golden Rules
 
-### You Can Do Autonomously
-- ✅ Implement ACs with clear specs
-- ✅ Fix failing tests
-- ✅ Update docs to match code
-- ✅ Run maintenance commands (audit, doctor)
+### 4.1 Selftest is the arbiter
 
-### Requires Human Review
-- ⚠️ **High-risk tasks** (REQ-TPL-AGENT-INTERFACE defines risk levels)
-- ⚠️ **Architecture decisions** (need ADR)
-- ⚠️ **Security changes** (auth, crypto, secrets)
-- ⚠️ **Graph invariant changes** (e.g., removing `must_have_ac`)
-- ⚠️ **Policy modifications** (`.rego` files)
+**If `cargo xtask selftest` fails, the work is not done.**
 
-### Never Do
-- ❌ **Bypass governance gates**
-- ❌ **Make breaking changes without approval**
-- ❌ **Invent new workflows** (use defined skills)
+Selftest validates:
+
+1. Core checks (fmt, clippy, unit tests)
+2. BDD (behaviour matches AC text)
+3. AC mapping (every kernel AC has tests; AC status is accurate)
+4. LLM bundler (context generation is bounded and stable)
+5. Policy tests (OPA/Rego)
+6. DevEx contract (required xtask commands and flows exist)
+7. Graph invariants (REQ/AC/command connectivity, no orphans)
+8. AC coverage sanity (kernel ACs must be passing)
+
+### 4.2 Never do this
+
+* ❌ **Bypass selftest** or ignore a red result.
+* ❌ **Claim work is complete** without ACs green for the relevant REQs (`ac-status` / `ac-coverage`).
+* ❌ **Force-merge failing work** (CI selftest is a hard gate).
+* ❌ **Hand-edit specs or schemas** unless explicitly instructed. Prefer:
+
+  * `cargo xtask ac-new`, `adr-new`, `design-new`, etc.
+* ❌ **Invent new workflows**. Use Skills + flows + tasks. If nothing fits, escalate via a question or friction log.
 
 ---
 
-## Orientation for First-Time Systems
+## 5. Decision Boundaries
 
-When you first encounter this repository:
+### 5.1 You may do autonomously
 
-1. **Read strategic docs:**
-   - `docs/ROADMAP.md` - Current state and pilot plan
-   - `docs/AGENT_GUIDE.md` - Detailed operational guide
-   - `docs/MISSING_MANUAL.md` - Operational realities
+* ✅ Implement ACs with clearly defined specs and scenarios.
+* ✅ Fix failing tests and selftest failures.
+* ✅ Update docs to match code and specs.
+* ✅ Run DevEx and maintenance commands:
 
-2. **Check platform health:**
+  * `doctor`, `check`, `test-changed`, `test-ac`, `ac-status`, `ac-coverage`.
+* ✅ Propose and implement non-breaking improvements within existing flows.
+
+### 5.2 You must involve a human
+
+* ⚠️ High-risk work identified in `REQ-TPL-AGENT-INTERFACE` or similar REQs.
+* ⚠️ Architecture decisions (new patterns, significant refactors) – requires an ADR.
+* ⚠️ Security changes (auth, crypto, secrets, policies).
+* ⚠️ Changes to graph invariants (e.g., removing `must_have_ac` from core REQs).
+* ⚠️ Modifying policy files (`policy/*.rego`) beyond adding obvious new cases.
+
+### 5.3 You must never
+
+* ❌ Bypass governance gates (selftest, CI, policy tests).
+* ❌ Introduce breaking changes to external contracts (APIs, schemas) without an ADR and human approval.
+* ❌ Add new ad-hoc commands or flows without updating `devex_flows.yaml` and tests.
+* ❌ Hide drift by editing generated artifacts instead of fixing root specs/tests.
+
+If you’re unsure whether something is “autonomous” or “needs review,” treat it as **needs review** and surface a question (see below).
+
+---
+
+## 6. Handling ambiguity (questions as artifacts)
+
+When you encounter ambiguity (missing ACs, unclear REQs, conflicting docs):
+
+1. **Do not guess.**
+2. Log a **structured question**:
+
+   * Add or append to the friction log (`FRICTION_LOG.md`) if present, or
+   * Use the repo’s question mechanism (if implemented), or
+   * Open a draft issue with the relevant AC/REQ/ADR references.
+3. Reference:
+
+   * The task/AC/REQ IDs.
+   * What you need to proceed.
+   * What you recommend (if any).
+
+Then continue with what you *can* do (e.g., unrelated ACs, doc cleanups) instead of blocking the whole flow.
+
+---
+
+## 7. First-time orientation
+
+When you first see this repository:
+
+1. **Read the strategic docs:**
+
+   * `docs/ROADMAP.md` – where the template is and where it’s going.
+   * `docs/AGENT_GUIDE.md` – extended version of this guide.
+   * `docs/MISSING_MANUAL.md` – operational realities and caveats.
+   * `TEMPLATE-CONTRACTS.md` – what a “compliant cell” must provide.
+
+2. **Check environment and platform health:**
+
    ```bash
    cargo xtask doctor
-   curl http://localhost:8080/platform/status
+   curl http://localhost:8080/platform/status || true
    ```
 
-3. **Discover tasks:**
+3. **Discover work:**
+
    ```bash
-   cargo xtask tasks-list
+   cargo xtask tasks-list               # if available
+   cargo xtask help-flows
+   cargo xtask status                   # if implemented
    ```
 
-4. **Before doing any work:**
-   - Confirm task exists or create AC via `ac-new`
-   - Use `suggest-next` to get step-by-step guidance
-   - Follow the appropriate skill workflow
+4. **Before touching code:**
+
+   * Confirm relevant REQ/AC in `specs/spec_ledger.yaml`.
+   * Confirm or create tasks in `specs/tasks.yaml`.
+   * Use `suggest-next` and bundles instead of guessing.
 
 ---
 
-## Example Interaction
+## 8. Example: implementing a new endpoint
 
-**User:** "Add an endpoint to list users"
+**User asks:** “Add an endpoint to list users.”
 
-**Your workflow:**
+**Your workflow (sketch):**
+
 ```bash
-# 1. Check if AC exists
-grep -i "list users" specs/spec_ledger.yaml
+# 1. Confirm requirements / ACs
+rg "list users" specs/spec_ledger.yaml || true
 
-# 2. If not, ask user for details and create:
+# 2. If missing, ask for details and then:
 cargo xtask ac-new AC-MYSERV-USERS-LIST \
   "GET /users returns list of users" \
-  --story US-MYSERV-001 \
   --requirement REQ-MYSERV-USERS
 
-# 3. Follow governed-feature-dev skill:
-cargo xtask bundle implement_ac   # Get context
-# Write BDD scenario
-# Implement code
-cargo xtask bdd                   # Test
-cargo xtask selftest              # Validate
+# 3. Add a BDD scenario in specs/features/users.feature
+#    tagged with @AC-MYSERV-USERS-LIST
 
-# 4. Report status to user
+# 4. Generate a context bundle
+cargo xtask bundle implement_ac
+
+# 5. Implement the handler and tests
+cargo xtask test-ac AC-MYSERV-USERS-LIST
+cargo xtask test-changed
+
+# 6. Validate full governance
+cargo xtask ac-status
+cargo xtask selftest
+
+# 7. Report status back (including AC ID, tests, and selftest result)
 ```
 
----
-
-## Further Reading
-
-- **Operational Guide:** `docs/AGENT_GUIDE.md`
-- **Technical Architecture:** `docs/explanation/rust-as-spec-overview.md`
-- **Platform APIs:** `http://localhost:8080/platform/status`
-- **Skills:** `.claude/skills/*/SKILL.md`
+If anything in this flow conflicts with specs, flows, or selftest, **fix the conflict before reporting completion**.
 
 ---
 
-## Remember
+## 9. References
 
-This is not a normal codebase. It's a **self-governing cell** where:
-- Specs are contracts, not documentation
-- Tests validate governance, not just features
-- Drift is a build failure, not technical debt
+* Operational guide: `docs/AGENT_GUIDE.md`
+* Selective testing: `docs/SELECTIVE_TESTING.md`
+* Technical overview: `docs/explanation/rust-as-spec-overview.md`
+* Platform APIs: `/platform/status`, `/platform/graph`, `/platform/tasks`, `/platform/docs/index`
+* Skills: `.claude/skills/*/SKILL.md`
 
-Your job is to work **within** these contracts, not around them. The skills and platform APIs make this ergonomic. Use them.
+---
+
+## 10. Remember
+
+This is not a loose project. It is a **self-governing cell**:
+
+* Specs are executable contracts, not advisory docs.
+* Tests validate governance as much as functionality.
+* Drift is treated as a failure, not as “something to clean up later.”
+
+Work with the contracts (specs, flows, tasks, policies), not against them.
+Your leverage comes from using the platform and tools as designed, then letting `selftest` and CI enforce the rest.
+
+```
