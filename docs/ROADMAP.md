@@ -69,6 +69,12 @@ The following gaps have been addressed:
 | **IDP positioning doc** | ✅ Complete | `docs/explanation/idp-positioning.md` |
 | **Brownfield adoption guide** | ✅ Complete | `docs/guides/brownfield-adoption.md` |
 | **Fork feedback workflow** | ✅ Complete | `docs/how-to/report-fork-feedback.md` |
+| **Quick start guide** | ✅ Complete | `docs/QUICKSTART.md` |
+| **Troubleshooting guide** | ✅ Complete | `docs/TROUBLESHOOTING.md` |
+| **Windows development guide** | ✅ Complete | `docs/how-to/windows-development.md` |
+| **CI workflows reference** | ✅ Complete | `docs/reference/ci-workflows.md` |
+| **Branch protection setup** | ✅ Complete | `docs/how-to/setup-branch-protection.md` |
+| **Tag signing setup** | ✅ Complete | `docs/how-to/setup-tag-signing.md` |
 
 ### 2.2 Operational Tooling ✅
 
@@ -79,6 +85,8 @@ The following gaps have been addressed:
 | **Fork registry** | ✅ Complete | `cargo xtask fork-list`, `fork-register` |
 | **Version command** | ✅ Complete | `cargo xtask version` (with `--json`) |
 | **Friction CLI** | ✅ Complete | `cargo xtask friction-new`, `friction-list` |
+| **Release AC deltas** | ✅ Complete | `cargo xtask release-bundle` now includes AC changes |
+| **Branch protection script** | ✅ Complete | `.github/scripts/setup-branch-protection.sh` |
 
 ### 2.3 Test Isolation ✅
 
@@ -86,34 +94,37 @@ The following gaps have been addressed:
 |------|--------|-------|
 | **BDD test isolation** | ✅ Fixed | Tests no longer pollute tracked files |
 
+### 2.4 Technical Debt ✅
+
+| Item | Status | Notes |
+|------|--------|-------|
+| **ADR numbering duplicates** | ✅ Fixed | Removed test scaffolds, renumbered 0007→0019 |
+| **Release evidence incomplete** | ✅ Fixed | AC delta tracking added to release-bundle |
+
 ---
 
 ## 3. What's Still Needed
 
-Despite significant progress, some gaps remain:
+Only a few items remain - all now have documentation or are external dependencies:
 
-### 3.1 Enforcement Gaps
+### 3.1 Manual Configuration Required
 
-| Gap | Impact | Effort | Documentation |
-|-----|--------|--------|---------------|
-| **Branch protection not configured** | Anyone can push directly to main, bypassing CI | Low (manual GitHub config) | See `docs/how-to/setup-branch-protection.md` |
-| **No required status checks** | PRs can merge without selftest passing | Low (manual GitHub config) | Automated via `.github/scripts/setup-branch-protection.sh` |
-| **Tag signing not enforced** | Release tags can be created without verification | Medium | See `docs/how-to/setup-tag-signing.md` |
+| Item | Impact | Documentation | Action Required |
+|------|--------|---------------|-----------------|
+| **Branch protection** | CI can be bypassed | `docs/how-to/setup-branch-protection.md` | Run `.github/scripts/setup-branch-protection.sh` |
+| **Tag signing** | Releases not cryptographically verified | `docs/how-to/setup-tag-signing.md` | Set up GPG key and configure Git |
 
-### 3.2 Validation Gaps
+### 3.2 Validation Gap
 
-| Gap | Impact | Effort |
-|-----|--------|--------|
-| **No second service validation** | Template assumptions untested in real use | High (requires consuming service) |
-| **Windows Tier-2 not fully tested** | Windows users may hit undocumented issues | Low-Medium |
+| Gap | Impact | Effort | Notes |
+|-----|--------|--------|-------|
+| **No second service validation** | Template assumptions untested in real use | High | Requires building a real service from the template |
 
-### 3.3 Technical Debt
+### 3.3 External Dependencies
 
-| Item | Impact | Effort |
-|------|--------|--------|
-| **`lazy-trees` Nix warning** | Cosmetic noise in output | External (Nix config) |
-| **ADR numbering duplicates** | ADRs 0007-0016 have duplicates | Low (cleanup) |
-| **Release evidence incomplete** | Missing AC deltas between versions | Medium |
+| Item | Impact | Notes |
+|------|--------|-------|
+| **`lazy-trees` Nix warning** | Cosmetic noise in output | Nix configuration issue, outside repo scope |
 
 ---
 
