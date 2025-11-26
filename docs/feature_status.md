@@ -23,7 +23,7 @@ Auto-generated AC status from acceptance (BDD) and unit tests.
 |-------|-------|-------------|--------|------------------------|
 | AC-PLT-001 | US-TPL-PLT-001 | REQ-PLT-ONBOARDING | [PASS] pass | 1 / 3 |
 | AC-PLT-002 | US-TPL-PLT-001 | REQ-PLT-ONBOARDING | [PASS] pass | 1 / 3 |
-| AC-PLT-003 | US-TPL-PLT-001 | REQ-PLT-ONBOARDING | [FAIL] fail | 1 / 3 |
+| AC-PLT-003 | US-TPL-PLT-001 | REQ-PLT-ONBOARDING | [PASS] pass | 1 / 3 |
 | AC-PLT-004 | US-TPL-PLT-001 | REQ-PLT-DESIGN-SCAFFOLDING | [PASS] pass | 1 / 4 |
 | AC-PLT-005 | US-TPL-PLT-001 | REQ-PLT-DESIGN-SCAFFOLDING | [PASS] pass | 1 / 4 |
 | AC-PLT-006 | US-TPL-PLT-001 | REQ-PLT-SECURITY-GOVERNANCE | [PASS] pass | 1 / 3 |
@@ -41,6 +41,7 @@ Auto-generated AC status from acceptance (BDD) and unit tests.
 | AC-PLT-018 | US-TPL-PLT-001 | REQ-PLT-ONBOARDING | [PASS] pass | 1 / 1 |
 | AC-PLT-019 | US-TPL-PLT-001 | REQ-PLT-DEVEX-CONTRACT | [PASS] pass | 1 / 1 |
 | AC-PLT-020 | US-TPL-PLT-001 | REQ-PLT-DEVEX-CONTRACT | [PASS] pass | 1 / 1 |
+| AC-PLT-021 | US-TPL-PLT-001 | REQ-PLT-ONBOARDING | [PASS] pass | 1 / 1 |
 | AC-TPL-001 | US-TPL-001 | REQ-TPL-HEALTH | [PASS] pass | 1 / 1 |
 | AC-TPL-002 | US-TPL-001 | REQ-TPL-VERSION | [PASS] pass | 1 / 1 |
 | AC-TPL-003 | US-TPL-001 | REQ-TPL-ERROR-HANDLING | [PASS] pass | 1 / 1 |
@@ -48,7 +49,10 @@ Auto-generated AC status from acceptance (BDD) and unit tests.
 | AC-TPL-007 | US-TPL-001 | REQ-TPL-METRICS | [PASS] pass | 1 / 1 |
 | AC-TPL-AGENT-HINTS | US-TPL-PLT-001 | REQ-TPL-AGENT-INTERFACE | [PASS] pass | 1 / 1 |
 | AC-TPL-AGENT-SKILLS | US-TPL-PLT-001 | REQ-TPL-AGENT-INTERFACE | [PASS] pass | 1 / 1 |
+| AC-TPL-BUNDLE-LAYOUT | US-TPL-PLT-001 | REQ-TPL-BUNDLE-CONTRACT | [PASS] pass | 1 / 1 |
+| AC-TPL-CLI-JSON-OUTPUT | US-TPL-PLT-001 | REQ-PLT-DEVEX-CONTRACT | [FAIL] fail | 1 / 1 |
 | AC-TPL-CONFIG-VALIDATION | US-TPL-PLT-001 | REQ-TPL-CONFIG-INTEGRITY | [PASS] pass | 2 / 2 |
+| AC-TPL-EXAMPLE-FORK-BUILDS | US-TPL-PLT-001 | REQ-TPL-EXAMPLE-FORK | [UNKNOWN] unknown | 0 / 0 |
 | AC-TPL-FLOW-IDEMPOTENT | US-TPL-PLT-001 | REQ-TPL-FLOW-IDEMPOTENCY | [PASS] pass | 1 / 1 |
 | AC-TPL-GOV-WRITE-TASK-STATUS-200 | US-TPL-PLATFORM-V3 | REQ-TPL-GOV-WRITE-001 | [PASS] pass | 1 / 1 |
 | AC-TPL-GRAPH-AC-HAS-TEST | US-TPL-PLT-001 | REQ-TPL-GRAPH-INVARIANTS | [PASS] pass | 1 / 1 |
@@ -60,6 +64,7 @@ Auto-generated AC status from acceptance (BDD) and unit tests.
 | AC-TPL-IAC-COMPOSE-ALIGN | US-TPL-PLT-001 | REQ-TPL-IAC-ALIGNMENT | [PASS] pass | 1 / 1 |
 | AC-TPL-IAC-K8S-ALIGN | US-TPL-PLT-001 | REQ-TPL-IAC-ALIGNMENT | [PASS] pass | 1 / 1 |
 | AC-TPL-IAC-TF-ALIGN | US-TPL-PLT-001 | REQ-TPL-IAC-ALIGNMENT | [PASS] pass | 1 / 1 |
+| AC-TPL-KERNEL-CONTRACT-EMITTED | US-TPL-PLT-001 | REQ-TPL-REL-BUNDLE | [UNKNOWN] unknown | 0 / 1 |
 | AC-TPL-LOCAL-DOCKER | US-TPL-PLT-001 | REQ-TPL-LOCAL-RUNTIME | [PASS] pass | 1 / 1 |
 | AC-TPL-LOG-NO-SECRETS | US-TPL-PLT-001 | REQ-TPL-LOG-HYGIENE | [PASS] pass | 2 / 2 |
 | AC-TPL-METADATA-COMPLETE | US-TPL-PLT-001 | REQ-TPL-METADATA-CONSISTENT | [PASS] pass | 1 / 1 |
@@ -86,6 +91,14 @@ Auto-generated AC status from acceptance (BDD) and unit tests.
 | AC-TPL-TASKS-CREATE-CLI | US-TPL-PLT-001 | REQ-TPL-PLATFORM-TASKS | [PASS] pass | 1 / 1 |
 | AC-TPL-TASKS-HTTP | US-TPL-PLT-001 | REQ-TPL-PLATFORM-TASKS | [PASS] pass | 1 / 1 |
 | AC-TPL-TASKS-UPDATE-CLI | US-TPL-PLT-001 | REQ-TPL-PLATFORM-TASKS | [PASS] pass | 1 / 1 |
+| AC-TPL-XTASK-NONINTERACTIVE | US-TPL-PLT-001 | REQ-TPL-AUTOMATION-BEHAVIOUR | [PASS] pass | 1 / 1 |
+
+## Unmapped ACs
+
+ACs with no mapped or executed tests:
+
+- AC-TPL-EXAMPLE-FORK-BUILDS: `examples/fork-customization/` builds and passes its own selftest in CI, demonstrating a working fork.
+- AC-TPL-KERNEL-CONTRACT-EMITTED: `cargo xtask release-bundle X.Y.Z` writes `release_evidence/kernel_contract.vX.Y.Z.json` describing xtask commands, /platform/* endpoints, and governance schemas for that version.
 
 ## Unmapped Scenarios
 

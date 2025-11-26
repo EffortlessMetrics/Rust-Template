@@ -132,6 +132,16 @@ stories:
             tests:
               - { type: integration, tag: "@AC-PLT-018", file: "specs/features/xtask_devex.feature" }
 
+          - id: AC-PLT-021
+            text: >
+              `cargo xtask service-init` updates service_metadata.yaml,
+              README, and CLAUDE.md with a new service ID, name, and
+              description, and `/platform/status` reflects the new identity.
+            tags: [kernel]
+            must_have_ac: true
+            tests:
+              - { type: integration, tag: "@AC-PLT-021", file: "specs/features/xtask_devex.feature" }
+
       - id: REQ-PLT-DESIGN-SCAFFOLDING
         title: "Design decisions and ACs are easy to create correctly"
         tags: [platform, devex]
@@ -287,6 +297,30 @@ stories:
             tests:
               - { type: integration, tag: "release_bundle_structure", file: "specs/features/xtask_devex.feature" }
 
+          - id: AC-TPL-KERNEL-CONTRACT-EMITTED
+            text: "`cargo xtask release-bundle X.Y.Z` writes `release_evidence/kernel_contract.vX.Y.Z.json` describing xtask commands, /platform/* endpoints, and governance schemas for that version."
+            tags: [template, release]
+            must_have_ac: false
+            note: "Template feature - kernel contract emission for versioned platform interfaces."
+            tests:
+              - { type: integration, tag: "@AC-TPL-KERNEL-CONTRACT-EMITTED", file: "specs/features/xtask_devex.feature" }
+
+      - id: REQ-TPL-EXAMPLE-FORK
+        title: "Template fork examples"
+        tags: [template, docs, example]
+        must_have_ac: true
+        description: >
+          The template SHOULD provide working examples of fork customization
+          to demonstrate extensibility and best practices.
+        acceptance_criteria:
+          - id: AC-TPL-EXAMPLE-FORK-BUILDS
+            text: "`examples/fork-customization/` builds and passes its own selftest in CI, demonstrating a working fork."
+            tags: [template, example]
+            must_have_ac: false
+            note: "Template feature - example fork demonstrating template extensibility."
+            tests:
+              - { type: ci, tag: "example_fork_ci" }
+
       - id: REQ-PLT-DEVEX-CONTRACT
         title: "DevEx flows and commands are spec-backed and CI-enforced"
         tags: [platform, devex]
@@ -349,6 +383,40 @@ stories:
             adr: ADR-0017
             tests:
               - { type: integration, tag: "@AC-PLT-020", file: "specs/features/xtask_devex.feature" }
+
+          - id: AC-TPL-CLI-JSON-OUTPUT
+            text: >
+              For core reporting commands (`ac-status`, `version`,
+              `friction-list`, `questions-list`, `fork-list`), passing
+              `--json` produces a single valid JSON document on stdout
+              with a stable top-level shape, and exit codes follow the
+              success/failure of the operation.
+            tags: [kernel]
+            must_have_ac: true
+            tests:
+              - { type: integration, tag: "@AC-TPL-CLI-JSON-OUTPUT", file: "specs/features/xtask_devex.feature" }
+
+      - id: REQ-TPL-AUTOMATION-BEHAVIOUR
+        title: "Automation-safe xtask behaviour"
+        tags: [platform, devex, ci, ai]
+        must_have_ac: true
+        description: >
+          Core xtask commands used by CI and agents MUST be non-interactive
+          in automation mode and return stable exit codes that reflect
+          success or failure.
+        acceptance_criteria:
+          - id: AC-TPL-XTASK-NONINTERACTIVE
+            text: >
+              For commands covered by the DevEx contract (doctor, check,
+              selftest, ac-status, ac-coverage, bundle, version,
+              friction-*, questions-*, fork-*), setting CI=1 or
+              XTASK_NONINTERACTIVE=1 guarantees:
+              - no interactive prompts, and
+              - exit code 0 on success, non-zero on failure.
+            tags: [kernel]
+            must_have_ac: true
+            tests:
+              - { type: bdd, tag: "@AC-TPL-XTASK-NONINTERACTIVE", file: "specs/features/xtask_devex.feature" }
 
       - id: REQ-PLT-STATUS-CLI
         title: "CLI governance status dashboard"
@@ -519,14 +587,14 @@ stories:
             tests:
               - { type: bdd, tag: "@AC-TPL-SUGGEST-NEXT-HTTP", file: "specs/features/platform_rounding.feature" }
 
-      - id: REQ-TPL-QUESTIONS-AS-ARTIFACTS
-        title: "Ambiguity is logged as a question, not a blocker"
-        tags: [platform, ai, devex]
+      - id: REQ-TPL-GOV-ARTIFACTS
+        title: "Governance artifacts are structured and surfaced"
+        tags: [platform, governance, ai, devex]
         must_have_ac: true
         description: >
-          When flows encounter ambiguous or missing input, the system should
-          emit a structured question artifact instead of silently failing or
-          stalling work.
+          Questions, friction entries, and fork metadata MUST be stored as
+          structured artifacts under version control, accessible via CLI
+          and HTTP, and included in governance views.
         acceptance_criteria:
           - id: AC-TPL-QUESTIONS-LOGGED
             text: >
@@ -537,6 +605,29 @@ stories:
             must_have_ac: true
             tests:
               - { type: bdd, tag: "@AC-TPL-QUESTIONS-LOGGED", file: "specs/features/questions.feature" }
+
+          - id: AC-TPL-GOV-FRICTION
+            text: >
+              Friction log entries are stored as structured files under
+              friction/, can be created and listed via `cargo xtask
+              friction-new`/`friction-list`, and are exposed via
+              /platform/friction and /platform/friction/{id}.
+            tags: [kernel]
+            must_have_ac: true
+            tests:
+              - { type: bdd, tag: "@AC-TPL-GOV-FRICTION",
+                  file: "specs/features/friction.feature" }
+
+          - id: AC-TPL-GOV-FORKS
+            text: >
+              Fork metadata is stored under forks/fork_registry.yaml,
+              can be managed via `cargo xtask fork-register`/`fork-list`,
+              and is exposed via /platform/forks and /platform/forks/{name}.
+            tags: [kernel]
+            must_have_ac: true
+            tests:
+              - { type: bdd, tag: "@AC-TPL-GOV-FORKS",
+                  file: "specs/features/forks.feature" }
 
       - id: REQ-TPL-FLOW-IDEMPOTENCY
         title: "Platform flows are safe to rerun"
@@ -908,6 +999,25 @@ stories:
             must_have_ac: true
             tests:
               - { type: integration, tag: "@AC-TPL-SKILLS-LINT", file: "specs/features/xtask_devex.feature" }
+
+      - id: REQ-TPL-BUNDLE-CONTRACT
+        title: "LLM bundle structure"
+        tags: [platform, devex, ai]
+        must_have_ac: true
+        description: >
+          The template MUST provide a predictable minimum structure for
+          context bundles generated for agents.
+        acceptance_criteria:
+          - id: AC-TPL-BUNDLE-LAYOUT
+            text: >
+              `cargo xtask bundle implement_ac` creates
+              `.llm/bundle/<id>/bundle.json` with task_id, requirement_ids,
+              ac_ids, and a list of included files, plus at least one
+              human-readable context file (e.g. `context.md`).
+            tags: [kernel]
+            must_have_ac: true
+            tests:
+              - { type: bdd, tag: "@AC-TPL-BUNDLE-LAYOUT", file: "specs/features/bundles.feature" }
 
   - id: US-TPL-PLATFORM-V3
     title: "The Recursive Platform"
