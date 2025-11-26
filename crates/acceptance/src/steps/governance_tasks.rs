@@ -89,7 +89,8 @@ async fn given_tasks_exist(world: &mut World, file: String, step: &cucumber::ghe
                         }
                         "recommended_flows" => {
                             if !cell.is_empty() {
-                                recommended_flows = cell.split(',').map(|s| s.trim().to_string()).collect();
+                                recommended_flows =
+                                    cell.split(',').map(|s| s.trim().to_string()).collect();
                             }
                         }
                         _ => {} // Ignore other fields
