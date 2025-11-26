@@ -50,6 +50,7 @@ Auto-generated AC status from acceptance (BDD) and unit tests.
 | AC-TPL-AGENT-HINTS | US-TPL-PLT-001 | REQ-TPL-AGENT-INTERFACE | [PASS] pass | 1 / 1 |
 | AC-TPL-AGENT-SKILLS | US-TPL-PLT-001 | REQ-TPL-AGENT-INTERFACE | [PASS] pass | 1 / 1 |
 | AC-TPL-BUNDLE-LAYOUT | US-TPL-PLT-001 | REQ-TPL-BUNDLE-CONTRACT | [FAIL] fail | 1 / 1 |
+| AC-TPL-CLI-JSON-CORE | US-TPL-PHILOSOPHY-001 | REQ-TPL-AI-IDP-COMPAT | [FAIL] fail | 1 / 1 |
 | AC-TPL-CLI-JSON-OUTPUT | US-TPL-PLT-001 | REQ-PLT-DEVEX-CONTRACT | [FAIL] fail | 1 / 1 |
 | AC-TPL-CONFIG-VALIDATION | US-TPL-PLT-001 | REQ-TPL-CONFIG-INTEGRITY | [PASS] pass | 2 / 2 |
 | AC-TPL-EXAMPLE-FORK-BUILDS | US-TPL-PLT-001 | REQ-TPL-EXAMPLE-FORK | [UNKNOWN] unknown | 0 / 0 |
@@ -70,9 +71,13 @@ Auto-generated AC status from acceptance (BDD) and unit tests.
 | AC-TPL-LOCAL-DOCKER | US-TPL-PLT-001 | REQ-TPL-LOCAL-RUNTIME | [PASS] pass | 1 / 1 |
 | AC-TPL-LOG-NO-SECRETS | US-TPL-PLT-001 | REQ-TPL-LOG-HYGIENE | [PASS] pass | 2 / 2 |
 | AC-TPL-METADATA-COMPLETE | US-TPL-PLT-001 | REQ-TPL-METADATA-CONSISTENT | [PASS] pass | 1 / 1 |
+| AC-TPL-OPINIONS-DOCUMENTED | US-TPL-PHILOSOPHY-001 | REQ-TPL-OPINIONATED-DEFAULTS | [UNKNOWN] unknown | 0 / 0 |
+| AC-TPL-OVERRIDE-DOC | US-TPL-PHILOSOPHY-001 | REQ-TPL-OVERRIDE-PATH | [UNKNOWN] unknown | 0 / 0 |
+| AC-TPL-OVERRIDE-TRACEABLE | US-TPL-PHILOSOPHY-001 | REQ-TPL-OVERRIDE-PATH | [UNKNOWN] unknown | 0 / 0 |
 | AC-TPL-PLATFORM-AUTH-BASIC | US-TPL-PLT-001 | REQ-TPL-PLATFORM-AUTH | [PASS] pass | 1 / 1 |
 | AC-TPL-PLATFORM-DEVEX | US-TPL-PLT-001 | REQ-TPL-PLATFORM-INTROSPECTION | [PASS] pass | 1 / 1 |
 | AC-TPL-PLATFORM-DOCS | US-TPL-PLT-001 | REQ-TPL-PLATFORM-INTROSPECTION | [PASS] pass | 1 / 1 |
+| AC-TPL-PLATFORM-GOVERNANCE-APIS | US-TPL-PHILOSOPHY-001 | REQ-TPL-AI-IDP-COMPAT | [PASS] pass | 1 / 1 |
 | AC-TPL-PLATFORM-GRAPH | US-TPL-PLT-001 | REQ-TPL-PLATFORM-INTROSPECTION | [PASS] pass | 1 / 1 |
 | AC-TPL-PLATFORM-SCHEMA | US-TPL-PLT-001 | REQ-TPL-PLATFORM-SCHEMA | [PASS] pass | 1 / 1 |
 | AC-TPL-PLATFORM-UI-DASHBOARD | US-TPL-PLT-001 | REQ-TPL-PLATFORM-UI | [PASS] pass | 1 / 1 |
@@ -100,6 +105,9 @@ Auto-generated AC status from acceptance (BDD) and unit tests.
 ACs with no mapped or executed tests:
 
 - AC-TPL-EXAMPLE-FORK-BUILDS: `examples/fork-customization/` builds and passes its own selftest in CI, demonstrating a working fork.
+- AC-TPL-OPINIONS-DOCUMENTED: docs/QUICKSTART.md and docs/ROADMAP.md include a 'Defaults & Opinions' section listing at least: environment model (Nix-first, Tier-1/Tier-2 split), CI gate (selftest as required), governance artifacts (questions, friction, forks), and agent surfaces (/platform/*, bundles, xtask CLI).
+- AC-TPL-OVERRIDE-DOC: docs/how-to/change-template-opinion.md exists and describes the recommended override path: (1) Identify story/REQ/AC in spec_ledger.yaml, (2) Update AC text/tags/must_have_ac in the fork, (3) Update BDD scenarios, (4) Run selftest + ac-status, (5) Optionally log friction/question if the kernel made this hard.
+- AC-TPL-OVERRIDE-TRACEABLE: specs/doc_index.yaml registers the override doc with tag 'override_path', and /platform/docs/index exposes it under a 'Kernel Overrides' category.
 
 ## Unmapped Scenarios
 

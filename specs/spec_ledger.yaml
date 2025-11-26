@@ -1065,6 +1065,93 @@ stories:
               - { type: unit, tag: "test_allowed_transitions", module: "governance::tests::test_allowed_transitions", file: "crates/business-core/src/lib.rs" }
               - { type: unit, tag: "test_forbidden_transitions", module: "governance::tests::test_forbidden_transitions", file: "crates/business-core/src/lib.rs" }
 
+  - id: US-TPL-PHILOSOPHY-001
+    title: "Template Philosophy and Kernel Contracts"
+    description: >
+      The template MUST make its opinions explicit, provide clear override paths,
+      and support machine-native interfaces for AI and IDP consumption.
+    adr: [ADR-0004, ADR-0005]
+    requirements:
+
+      - id: REQ-TPL-OPINIONATED-DEFAULTS
+        title: "Opinionated defaults are intentional"
+        tags: [kernel, philosophy]
+        must_have_ac: true
+        description: >
+          The kernel MUST define a set of opinionated defaults for workflows,
+          tooling, and platform behaviour, and treat them as first-class
+          contracts, not hidden conventions.
+        acceptance_criteria:
+          - id: AC-TPL-OPINIONS-DOCUMENTED
+            text: >
+              docs/QUICKSTART.md and docs/ROADMAP.md include a 'Defaults &
+              Opinions' section listing at least: environment model (Nix-first,
+              Tier-1/Tier-2 split), CI gate (selftest as required), governance
+              artifacts (questions, friction, forks), and agent surfaces
+              (/platform/*, bundles, xtask CLI).
+            tags: [template, philosophy]
+            must_have_ac: false
+            note: "Documentation AC - verified by content inspection, not BDD."
+            tests:
+              - { type: docs, tag: "@AC-TPL-OPINIONS-DOCUMENTED", file: "docs/QUICKSTART.md" }
+
+      - id: REQ-TPL-OVERRIDE-PATH
+        title: "Forks override via ACs, not hacks"
+        tags: [kernel, philosophy]
+        must_have_ac: true
+        description: >
+          Forks MUST be able to adjust template opinions by changing ACs and
+          specs, rather than patching random code or CI in-place.
+        acceptance_criteria:
+          - id: AC-TPL-OVERRIDE-DOC
+            text: >
+              docs/how-to/change-template-opinion.md exists and describes the
+              recommended override path: (1) Identify story/REQ/AC in spec_ledger.yaml,
+              (2) Update AC text/tags/must_have_ac in the fork, (3) Update BDD scenarios,
+              (4) Run selftest + ac-status, (5) Optionally log friction/question if
+              the kernel made this hard.
+            tags: [template, philosophy]
+            must_have_ac: false
+            note: "Documentation AC - verified by file existence, not BDD."
+            tests:
+              - { type: docs, tag: "@AC-TPL-OVERRIDE-DOC", file: "docs/how-to/change-template-opinion.md" }
+          - id: AC-TPL-OVERRIDE-TRACEABLE
+            text: >
+              specs/doc_index.yaml registers the override doc with tag 'override_path',
+              and /platform/docs/index exposes it under a 'Kernel Overrides' category.
+            tags: [template, philosophy]
+            must_have_ac: false
+            note: "Documentation AC - verified by doc_index inspection, not BDD."
+            tests:
+              - { type: docs, tag: "@AC-TPL-OVERRIDE-TRACEABLE", file: "specs/doc_index.yaml" }
+
+      - id: REQ-TPL-AI-IDP-COMPAT
+        title: "AI/IDP-native machine surfaces"
+        tags: [kernel, philosophy, ai]
+        must_have_ac: true
+        description: >
+          The kernel MUST support machine consumption of governance state via
+          JSON-enabled CLIs and HTTP endpoints, enabling agents and IDPs to
+          integrate without scraping text.
+        acceptance_criteria:
+          - id: AC-TPL-CLI-JSON-CORE
+            text: >
+              At minimum, cargo xtask ac-status, friction-list, questions-list,
+              fork-list, and version accept --json and produce stable JSON output.
+            tags: [template, philosophy, ai]
+            must_have_ac: false
+            note: "CLI JSON output works; test isolation for ac-status --json pending."
+            tests:
+              - { type: bdd, tag: "@AC-TPL-CLI-JSON-CORE", file: "specs/features/xtask_devex.feature" }
+          - id: AC-TPL-PLATFORM-GOVERNANCE-APIS
+            text: >
+              /platform/questions, /platform/friction, and /platform/forks return
+              JSON payloads that match their schemas and are linked from /platform/schema.
+            tags: [kernel]
+            must_have_ac: true
+            tests:
+              - { type: bdd, tag: "@AC-TPL-PLATFORM-GOVERNANCE-APIS", file: "specs/features/platform_introspection.feature" }
+
   # When adding your domain features:
   # - Copy the structure above (story → requirement → AC → tests)
   # - Use @AC-XXX tags in feature files

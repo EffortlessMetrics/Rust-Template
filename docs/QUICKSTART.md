@@ -18,6 +18,58 @@ last_updated: 2025-11-26
 
 ---
 
+## Defaults & Opinions
+
+**This template is opinionated by design.** It's not a generic Rust starter—it encodes specific beliefs about how governed, agent-friendly service development should work.
+
+### Key Opinions (Encoded as Acceptance Criteria)
+
+The template enforces these opinions through contracts in `specs/spec_ledger.yaml`:
+
+1. **Environment: Nix-First (Tier-1)**
+   - Nix with flakes provides the canonical development environment
+   - Native Windows/macOS are supported as Tier-2 (functional but slower)
+   - CI uses Nix to guarantee parity between local and remote validation
+   - **Why:** Eliminates "works on my machine" by making the environment reproducible
+
+2. **CI Gate: `cargo xtask selftest` Required**
+   - All PRs must pass an 8-step governance validation
+   - Includes: code quality, BDD scenarios, policy tests, graph integrity
+   - Selftest passing means "governed and ready to review"
+   - **Why:** Prevents drift between specs, tests, docs, and code
+
+3. **Governance Artifacts: First-Class Citizens**
+   - Questions (`QUESTIONS.yaml`), friction (`FRICTION_LOG.md`), and forks (`FORKS.yaml`) are tracked artifacts
+   - Exposed via HTTP APIs (`/platform/questions`, `/platform/friction`, `/platform/forks`)
+   - CLI commands with `--json` output for machine consumption
+   - **Why:** Governance data is as important as the code—make it queryable
+
+4. **Agent Surfaces: APIs, Bundles, JSON CLI**
+   - Platform introspection via `/platform/*` endpoints (status, graph, docs, hints)
+   - Context bundles for LLM workflows (`cargo xtask bundle <task>`)
+   - All xtask commands support `--json` for programmatic use
+   - **Why:** Agents and platform tooling need structured, machine-readable interfaces
+
+### How to Customize
+
+**Don't edit config files randomly.** Opinions are encoded as Acceptance Criteria (ACs) in `specs/spec_ledger.yaml`.
+
+To change an opinion:
+
+1. Identify the relevant AC(s) in the spec ledger
+2. Modify or remove the AC and its associated BDD scenarios
+3. Update implementation to match your preference
+4. Run `cargo xtask selftest` to verify consistency
+
+For step-by-step guidance, see:
+- **Add your AC**: `docs/how-to/add-acceptance-criterion.md`
+- **Fork for your service**: `docs/how-to/new-service-from-template.md`
+- **Report upstream**: `docs/how-to/report-fork-feedback.md`
+
+**Example:** If you don't want Nix, remove ACs related to `REQ-PLT-NIX-DEVSHELL`, update CI workflows, and document your alternative environment in a new AC.
+
+---
+
 ## Prerequisites
 
 **Required:** [Nix with flakes](https://nixos.org/download.html) (for Tier-1 environment matching CI)

@@ -637,3 +637,14 @@ docs:
       - AC-PLT-019
       - AC-PLT-020
     adrs: [ADR-0002, ADR-0005, ADR-0017]
+
+  # Template Customization How-To Guide
+  - id: GUIDE-TPL-OVERRIDE-001
+    file: docs/how-to/change-template-opinion.md
+    title: "Change Template Opinions and Customization"
+    doc_type: how-to
+    tags: [override_path]
+    stories: [US-TPL-PLT-001]
+    requirements: [REQ-PLT-DOC-TEMPLATES, REQ-PLT-ONBOARDING]
+    acs: [AC-TPL-OVERRIDE-TRACEABLE]
+    adrs: [ADR-0005]

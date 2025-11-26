@@ -82,3 +82,28 @@ Feature: Platform Introspection API
     When I GET "http://localhost:8080/platform/forks/FORK-NONEXISTENT-999"
     Then the response status should be 404
     And the JSON response should have field "error"
+
+  @AC-TPL-PLATFORM-GOVERNANCE-APIS
+  Scenario: Questions endpoint returns valid JSON for AI/IDP consumption
+    When I GET "http://localhost:8080/platform/questions"
+    Then the response status should be 200
+    And the JSON response should have field "questions"
+    And the field "questions" should be of type "array"
+    And the JSON response should have field "total"
+    And the field "total" should be of type "number"
+
+  @AC-TPL-PLATFORM-GOVERNANCE-APIS
+  Scenario: Friction endpoint returns valid JSON for AI/IDP consumption
+    When I GET "http://localhost:8080/platform/friction"
+    Then the response status should be 200
+    And the JSON response should have field "entries"
+    And the field "entries" should be of type "array"
+
+  @AC-TPL-PLATFORM-GOVERNANCE-APIS
+  Scenario: Forks endpoint returns valid JSON for AI/IDP consumption
+    When I GET "http://localhost:8080/platform/forks"
+    Then the response status should be 200
+    And the JSON response should have field "forks"
+    And the field "forks" should be of type "array"
+    And the JSON response should have field "total"
+    And the field "total" should be of type "number"
