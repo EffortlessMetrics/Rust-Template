@@ -1,3 +1,17 @@
+---
+id: GUIDE-TPL-BRANCH-PROTECTION-001
+title: Setup GitHub Branch Protection
+doc_type: how-to
+status: published
+audience: developers, maintainers, platform-engineers
+tags: [security, github, branch-protection, governance, ci]
+stories: [US-TPL-PLT-001]
+requirements: [REQ-PLT-RELEASE-SAFETY, REQ-PLT-SECURITY-GOVERNANCE]
+acs: [AC-PLT-011, AC-PLT-012, AC-PLT-013]
+adrs: [ADR-0005, ADR-0006, ADR-0017]
+last_updated: 2025-11-26
+---
+
 # How-to: Setup GitHub Branch Protection
 
 **Time:** 10 minutes

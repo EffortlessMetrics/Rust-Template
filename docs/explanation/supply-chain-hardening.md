@@ -1,3 +1,17 @@
+---
+id: EXPLANATION-TPL-SUPPLY-CHAIN-001
+title: Supply Chain Hardening
+doc_type: explanation
+status: published
+audience: developers, maintainers, security-engineers
+tags: [security, supply-chain, sbom, slsa, attestation]
+stories: [US-TPL-PLT-001]
+requirements: [REQ-PLT-SECURITY-GOVERNANCE, REQ-PLT-RELEASE-SAFETY]
+acs: [AC-PLT-008, AC-PLT-012]
+adrs: [ADR-0006, ADR-0007]
+last_updated: 2025-11-26
+---
+
 # Supply Chain Hardening
 
 **Version**: v2.4.0

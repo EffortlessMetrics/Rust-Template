@@ -285,6 +285,16 @@ docs:
     acs: [AC-PLT-015, AC-PLT-016, AC-PLT-019, AC-PLT-020]
     adrs: [ADR-0002, ADR-0005]
 
+  # ADR-0019: Governance Repository and FS Adapter
+  - id: ADR-0019
+    file: docs/adr/0019-governance-repository-and-fs-adapter.md
+    title: "Governance Repository and FS Adapter"
+    doc_type: adr
+    stories: [US-TPL-PLATFORM-V3]
+    requirements: [REQ-TPL-GOV-WRITE-001]
+    acs: [AC-TPL-GOV-WRITE-TASK-STATUS-200]
+    adrs: [ADR-0001]
+
   # IDP Positioning Guide
   - id: EXPLANATION-TPL-IDP-POSITIONING-001
     file: docs/explanation/idp-positioning.md
@@ -304,6 +314,86 @@ docs:
       - AC-TPL-METADATA-COMPLETE
       - AC-TPL-REL-EVIDENCE
     adrs: [ADR-0001, ADR-0004, ADR-0005]
+
+  # Quick Start Guide
+  - id: GUIDE-TPL-QUICKSTART-001
+    file: docs/QUICKSTART.md
+    title: "Quick Start Guide"
+    doc_type: guide
+    stories: [US-TPL-PLT-001]
+    requirements: [REQ-PLT-ONBOARDING, REQ-PLT-DEVEX-CONTRACT]
+    acs: [AC-PLT-001, AC-PLT-015, AC-PLT-019]
+    adrs: [ADR-0002, ADR-0005]
+
+  # Troubleshooting Guide
+  - id: GUIDE-TPL-TROUBLESHOOT-001
+    file: docs/TROUBLESHOOTING.md
+    title: "Troubleshooting Guide"
+    doc_type: guide
+    stories: [US-TPL-PLT-001]
+    requirements: [REQ-PLT-ONBOARDING, REQ-PLT-DEVEX-CONTRACT]
+    acs: [AC-PLT-015, AC-PLT-016, AC-PLT-019, AC-PLT-020]
+    adrs: [ADR-0002, ADR-0005, ADR-0017]
+
+  # Branch Protection Setup Guide
+  - id: GUIDE-TPL-BRANCH-PROTECTION-001
+    file: docs/how-to/setup-branch-protection.md
+    title: "Setup GitHub Branch Protection"
+    doc_type: how-to
+    stories: [US-TPL-PLT-001]
+    requirements: [REQ-PLT-RELEASE-SAFETY, REQ-PLT-SECURITY-GOVERNANCE]
+    acs: [AC-PLT-011, AC-PLT-012, AC-PLT-013]
+    adrs: [ADR-0005, ADR-0006, ADR-0017]
+
+  # Brownfield Adoption Guide
+  - id: GUIDE-TPL-BROWNFIELD-001
+    file: docs/guides/brownfield-adoption.md
+    title: "Brownfield Adoption Guide"
+    doc_type: guide
+    stories: [US-TPL-PLT-001]
+    requirements: [REQ-PLT-ONBOARDING, REQ-PLT-DOC-TEMPLATES]
+    acs: [AC-PLT-001, AC-PLT-008]
+    adrs: [ADR-0003, ADR-0005]
+
+  # Documentation Index
+  - id: GUIDE-TPL-DOC-INDEX-001
+    file: docs/INDEX.md
+    title: "Documentation Index"
+    doc_type: guide
+    stories: [US-TPL-PLT-001]
+    requirements: [REQ-PLT-DOCS-CONSISTENCY]
+    acs: [AC-PLT-009, AC-PLT-010]
+    adrs: [ADR-0005]
+
+  # Roadmap
+  - id: GUIDE-TPL-ROADMAP-001
+    file: docs/ROADMAP.md
+    title: "Rust-as-Spec Platform Cell Roadmap"
+    doc_type: guide
+    stories: [US-TPL-PLT-001]
+    requirements: [REQ-PLT-DOCS-CONSISTENCY]
+    acs: [AC-PLT-009, AC-PLT-010]
+    adrs: [ADR-0005]
+
+  # Supply Chain Hardening Explanation
+  - id: EXPLANATION-TPL-SUPPLY-CHAIN-001
+    file: docs/explanation/supply-chain-hardening.md
+    title: "Supply Chain Hardening"
+    doc_type: explanation
+    stories: [US-TPL-PLT-001]
+    requirements: [REQ-PLT-SECURITY-GOVERNANCE, REQ-PLT-RELEASE-SAFETY]
+    acs: [AC-PLT-008, AC-PLT-012]
+    adrs: [ADR-0006, ADR-0007]
+
+  # New Service from Template Guide
+  - id: GUIDE-TPL-NEW-SERVICE-001
+    file: docs/how-to/new-service-from-template.md
+    title: "Create a New Service from Template"
+    doc_type: how-to
+    stories: [US-TPL-PLT-001]
+    requirements: [REQ-PLT-ONBOARDING, REQ-PLT-DOC-TEMPLATES]
+    acs: [AC-PLT-001, AC-PLT-008]
+    adrs: [ADR-0005]
 
   # CI Workflows - Tier 1 Governance
   - id: CI-TIER1-SELFTEST

@@ -1,3 +1,17 @@
+---
+id: GUIDE-TPL-ROADMAP-001
+title: Rust-as-Spec Platform Cell Roadmap
+doc_type: guide
+status: published
+audience: developers, maintainers, platform-engineers
+tags: [roadmap, planning, status, milestones]
+stories: [US-TPL-PLT-001]
+requirements: [REQ-PLT-DOCS-CONSISTENCY]
+acs: [AC-PLT-009, AC-PLT-010]
+adrs: [ADR-0005]
+last_updated: 2025-11-26
+---
+
 # Roadmap: Rust-as-Spec Platform Cell (v3.3.3)
 
 This document describes the current state of the **v3.3.3 kernel** and what remains to be done.

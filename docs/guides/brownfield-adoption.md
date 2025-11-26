@@ -1,3 +1,17 @@
+---
+id: GUIDE-TPL-BROWNFIELD-001
+title: Brownfield Adoption Guide
+doc_type: guide
+status: published
+audience: developers, platform-engineers, team-leads
+tags: [adoption, brownfield, migration, governance, onboarding]
+stories: [US-TPL-PLT-001]
+requirements: [REQ-PLT-ONBOARDING, REQ-PLT-DOC-TEMPLATES]
+acs: [AC-PLT-001, AC-PLT-008]
+adrs: [ADR-0003, ADR-0005]
+last_updated: 2025-11-26
+---
+
 # Brownfield Adoption Guide
 
 **You have an existing Rust service. You want governance without rewriting.**
