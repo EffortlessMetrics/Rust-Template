@@ -1,0 +1,37 @@
+# Fork Registry - Known Template Forks
+#
+# This file serves as a human-readable index of known forks of this template.
+# Individual fork details are stored in separate YAML files (forks/FORK-*.yaml)
+# for machine-readable querying and governance integration.
+#
+# See forks/fork_schema.yaml for the complete schema definition.
+
+schema_version: "1.0"
+template_version: "v3.3.3"
+
+summary:
+  total_forks: 0
+  active_forks: 0
+  archived_forks: 0
+  experimental_forks: 0
+
+# Example fork entries (remove these and add real forks as they are registered)
+# Each fork should have a corresponding YAML file in forks/ directory
+#
+# Example:
+# forks:
+#   - id: FORK-KHUB-001
+#     name: "Knowledge Hub"
+#     domain: "ml-documentation"
+#     status: active
+#     kernel_version: v3.3.3
+#     file: forks/FORK-KHUB-001.yaml
+
+forks: []
+
+notes: >
+  This registry tracks known forks of the Rust-as-Spec template kernel.
+  Forks are registered using 'cargo xtask fork-register' and stored as
+  individual YAML files for machine-readable processing.
+
+  See KERNEL_MAINTENANCE.md for how fork feedback influences kernel development.

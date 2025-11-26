@@ -23,7 +23,7 @@ Auto-generated AC status from acceptance (BDD) and unit tests.
 |-------|-------|-------------|--------|------------------------|
 | AC-PLT-001 | US-TPL-PLT-001 | REQ-PLT-ONBOARDING | [PASS] pass | 1 / 3 |
 | AC-PLT-002 | US-TPL-PLT-001 | REQ-PLT-ONBOARDING | [PASS] pass | 1 / 3 |
-| AC-PLT-003 | US-TPL-PLT-001 | REQ-PLT-ONBOARDING | [PASS] pass | 1 / 3 |
+| AC-PLT-003 | US-TPL-PLT-001 | REQ-PLT-ONBOARDING | [FAIL] fail | 1 / 3 |
 | AC-PLT-004 | US-TPL-PLT-001 | REQ-PLT-DESIGN-SCAFFOLDING | [PASS] pass | 1 / 4 |
 | AC-PLT-005 | US-TPL-PLT-001 | REQ-PLT-DESIGN-SCAFFOLDING | [PASS] pass | 1 / 4 |
 | AC-PLT-006 | US-TPL-PLT-001 | REQ-PLT-SECURITY-GOVERNANCE | [PASS] pass | 1 / 3 |
