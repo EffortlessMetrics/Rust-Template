@@ -59,7 +59,10 @@ fi
     }
 
     println!("{} Installed .git/hooks/pre-commit", "[OK]".green());
-    println!("   The hook will run {} before each commit", "cargo run -p xtask -- precommit".cyan());
+    println!(
+        "   The hook will run {} before each commit",
+        "cargo run -p xtask -- precommit".cyan()
+    );
     println!("   Failures are advisory; fix issues before pushing even if commit proceeds.");
     println!("   (xtask handles Nix environment automatically)");
 

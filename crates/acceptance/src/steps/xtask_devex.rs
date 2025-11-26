@@ -791,10 +791,7 @@ async fn then_hook_warns_only(world: &mut World) {
         output
     );
     let status = ctx.last_command_status.unwrap_or_default();
-    assert_eq!(
-        status, 0,
-        "Advisory hooks should not block commits even when checks fail"
-    );
+    assert_eq!(status, 0, "Advisory hooks should not block commits even when checks fail");
 }
 
 #[then("commits should proceed without governance checks")]
@@ -1618,8 +1615,9 @@ async fn execute_command(world: &mut World, command: &str, env_vars: &[(&str, &s
             }
             content.push_str("cargo run -p xtask -- precommit\n");
             let _ = fs::write(&hook_path, content);
-            world.xtask_context_mut().last_command_output =
-                Some("Installed .git/hooks/pre-commit\ncargo run -p xtask -- precommit".to_string());
+            world.xtask_context_mut().last_command_output = Some(
+                "Installed .git/hooks/pre-commit\ncargo run -p xtask -- precommit".to_string(),
+            );
             world.xtask_context_mut().last_command_status = Some(0);
             return;
         }

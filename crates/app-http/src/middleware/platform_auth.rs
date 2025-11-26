@@ -86,10 +86,7 @@ mod tests {
 
     fn guarded_router(state: AppState) -> Router {
         Router::new()
-            .route(
-                "/platform/protected",
-                get(protected_handler).post(protected_handler),
-            )
+            .route("/platform/protected", get(protected_handler).post(protected_handler))
             .layer(axum::middleware::from_fn_with_state(state.clone(), platform_auth_guard))
             .with_state(state)
     }

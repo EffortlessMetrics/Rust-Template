@@ -179,10 +179,10 @@ fn resolve_base_ref(base: &str) -> String {
     }
 
     for cand in candidates {
-        if let Ok(output) = Command::new("git").args(["rev-parse", "--verify", &cand]).output() {
-            if output.status.success() {
-                return cand;
-            }
+        if let Ok(output) = Command::new("git").args(["rev-parse", "--verify", &cand]).output()
+            && output.status.success()
+        {
+            return cand;
         }
     }
 
@@ -300,9 +300,9 @@ fn build_test_plan(changed_files: Vec<String>, bdd_plan: &BddPlan) -> Result<Tes
     let mut only_docs = true;
 
     for file in &changed_files {
-        if file == "specs/spec_ledger.yaml" {
-            only_docs = false;
-        } else if file.starts_with("specs/features/") && file.ends_with(".feature") {
+        if file == "specs/spec_ledger.yaml"
+            || (file.starts_with("specs/features/") && file.ends_with(".feature"))
+        {
             only_docs = false;
         } else if file.starts_with("crates/xtask/") {
             has_xtask = true;
