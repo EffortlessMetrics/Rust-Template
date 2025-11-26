@@ -2307,20 +2307,20 @@ async fn when_run_service_init(world: &mut World, id: String, name: String, desc
     }
 
     // Run the command
-    run_xtask_command(
-        world,
-        &["service-init", "--id", &id, "--name", &name, "--description", &description],
-    )
-    .await;
+    let command = format!(
+        "cargo xtask service-init --id {} --name \"{}\" --description \"{}\"",
+        id, name, description
+    );
+    execute_command(world, &command, &[]).await;
 }
 
 #[when(regex = r#"^I run service-init with an invalid service ID "([^"]+)"$"#)]
 async fn when_run_service_init_invalid_id(world: &mut World, id: String) {
-    run_xtask_command(
-        world,
-        &["service-init", "--id", &id, "--name", "Test Service", "--description", "A test service"],
-    )
-    .await;
+    let command = format!(
+        "cargo xtask service-init --id {} --name \"Test Service\" --description \"A test service\"",
+        id
+    );
+    execute_command(world, &command, &[]).await;
 }
 
 #[given("service metadata has been initialized")]
