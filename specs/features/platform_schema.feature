@@ -40,3 +40,10 @@ Feature: Platform schema and metadata surfaces
     And the response body should contain "docs/runbooks/platform-kernel.md"
     And the response body should contain "docs/AGENT_GUIDE.md"
     And the response body should contain "docs/feature_status.md"
+
+  @AC-TPL-FORKS-STATUS-SUMMARY
+  Scenario: Status endpoint includes fork visibility
+    When I send a GET request to "/platform/status"
+    Then the response status code should be 200
+    And the response body should contain "governance"
+    And the response body should contain "forks"

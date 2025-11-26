@@ -235,6 +235,9 @@ enum Commands {
         /// Who discovered this friction (optional, defaults to "human")
         #[arg(long)]
         discovered_by: Option<String>,
+        /// REQ-*/AC-* IDs this friction entry is about (repeatable)
+        #[arg(long = "refs")]
+        refs: Vec<String>,
     },
     /// List registered template forks
     ForkList {
@@ -381,6 +384,9 @@ enum Commands {
         /// Related task ID (optional)
         #[arg(long)]
         task_id: Option<String>,
+        /// REQ-*/AC-* IDs this question is about (repeatable)
+        #[arg(long = "refs")]
+        refs: Vec<String>,
     },
     /// Install git hooks for pre-commit governance
     #[command(next_help_heading = "Onboarding")]
@@ -517,6 +523,7 @@ fn main() -> Result<()> {
             flow,
             phase,
             discovered_by,
+            refs,
         } => commands::friction::create_friction_entry(
             &category,
             &severity,
@@ -525,6 +532,7 @@ fn main() -> Result<()> {
             flow.as_deref(),
             phase.as_deref(),
             discovered_by.as_deref(),
+            &refs,
         ),
         Commands::ForkList { status, domain, json } => {
             commands::fork::list_fork_entries(status.as_deref(), domain.as_deref(), json)
@@ -559,6 +567,7 @@ fn main() -> Result<()> {
             description,
             created_by,
             task_id,
+            refs,
         } => commands::questions::create_question(
             &category,
             &summary,
@@ -567,6 +576,7 @@ fn main() -> Result<()> {
             &description,
             &created_by,
             task_id.as_deref(),
+            &refs,
         ),
         Commands::ServiceDescriptor { format } => commands::service_descriptor::run(&format)
             .map_err(|e| anyhow::anyhow!("service-descriptor failed: {}", e)),

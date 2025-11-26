@@ -43,6 +43,13 @@ question_schema:
         type: string
       description: "Related AC IDs from spec_ledger.yaml"
 
+    refs:
+      type: array
+      items:
+        type: string
+        pattern: "^(REQ|AC)-[A-Z0-9-]+$"
+      description: "List of REQ-*/AC-* IDs this question is about"
+
     summary:
       type: string
       description: "Brief summary of the question or ambiguity"

@@ -14,10 +14,27 @@ This is the frozen kernel baseline (v3.3.3-kernel) for the Rust-as-Spec platform
 
 | Category | Count | Status |
 |----------|-------|--------|
-| **Total ACs** | 65 | All passing |
-| **Kernel ACs** | 48 | All passing |
-| **Non-kernel ACs** | 17 | All passing |
+| **Total ACs** | 81 | All passing |
+| **Kernel ACs** | 52 | All passing |
+| **Non-kernel ACs** | 29 | All passing |
 | **Selftest Gates** | 8 | All passing |
+
+### Key Kernel Contracts (v3.3.3)
+
+**Philosophy & Governance:**
+- AC-TPL-BDD-EXIT-CODES: BDD harness exit codes distinguish test failures from skipped tests
+- AC-TPL-FORKS-STATUS-SUMMARY: Fork registry visible in /platform/status
+- AC-TPL-ARTIFACTS-HAVE-REFS: Governance artifacts support refs field for REQ/AC traceability
+
+**Environment & Testing:**
+- AC-PLT-001: `cargo xtask doctor` validates Rust, Nix, conftest, git
+- AC-PLT-020: BDD test execution and reporting (`cargo xtask bdd`)
+- AC-PLT-NIX-DEVSHELL: Nix devshell provides reproducible environment
+
+**Platform APIs:**
+- AC-PLT-015: Platform introspection endpoints (/platform/status, /graph, /docs/index)
+- AC-PLT-019: Task management via HTTP (GET /tasks, PATCH /tasks/{id}/status)
+- AC-PLT-PLATFORM-GOVERNANCE-APIS: Governance APIs (/friction, /questions, /forks)
 
 ---
 
@@ -113,7 +130,7 @@ This is the frozen kernel baseline (v3.3.3-kernel) for the Rust-as-Spec platform
 ```bash
 cargo xtask doctor       # Environment validated
 cargo xtask selftest     # 8/8 gates pass
-cargo xtask ac-status    # 65/65 PASS, 0 FAIL, 0 UNKNOWN
+cargo xtask ac-status    # 81/81 PASS, 0 FAIL, 0 UNKNOWN
 cargo run -p app-http    # Listening on :8080
 ```
 

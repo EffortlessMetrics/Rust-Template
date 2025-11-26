@@ -24,6 +24,8 @@ pub struct FrictionEntry {
     pub status: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub resolution: Option<Resolution>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub refs: Vec<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub related_items: Option<RelatedItems>,
 }
@@ -386,6 +388,7 @@ fn find_next_friction_id(category: &str) -> Result<String> {
 }
 
 /// Create a new friction entry
+#[allow(clippy::too_many_arguments)]
 pub fn create_friction_entry(
     category: &str,
     severity: &str,
@@ -394,6 +397,7 @@ pub fn create_friction_entry(
     flow: Option<&str>,
     phase: Option<&str>,
     discovered_by: Option<&str>,
+    refs: &[String],
 ) -> Result<()> {
     // Validate category
     let valid_categories = [
@@ -465,6 +469,7 @@ pub fn create_friction_entry(
         context,
         status: "open".to_string(),
         resolution: None,
+        refs: refs.to_vec(),
         related_items: None,
     };
 
@@ -500,6 +505,7 @@ mod tests {
             context: None,
             status: "open".to_string(),
             resolution: None,
+            refs: Vec::new(),
             related_items: None,
         };
 

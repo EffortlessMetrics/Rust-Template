@@ -129,6 +129,13 @@ friction_entry_schema:
           description: "How the fix was verified"
       description: "Resolution details (when status is resolved)"
 
+    refs:
+      type: array
+      items:
+        type: string
+        pattern: "^(REQ|AC)-[A-Z0-9-]+$"
+      description: "List of REQ-*/AC-* IDs this friction entry is about"
+
     related_items:
       type: object
       properties:
