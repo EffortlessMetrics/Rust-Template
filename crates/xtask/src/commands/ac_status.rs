@@ -395,7 +395,6 @@ fn update_ac_statuses(
         }
 
         let mut failed = false;
-        let mut missing = false;
 
         for test in &ac.tests {
             if !is_automated_test(test) {
@@ -424,9 +423,7 @@ fn update_ac_statuses(
                     ac.tests_executed += 1;
                     failed = true;
                 }
-                TestOutcome::Missing => {
-                    missing = true;
-                }
+                TestOutcome::Missing => {}
             }
         }
 
@@ -434,8 +431,6 @@ fn update_ac_statuses(
             AcStatus::Fail
         } else if ac.tests_executed == ac.tests_total {
             AcStatus::Pass
-        } else if missing {
-            AcStatus::Unknown
         } else {
             AcStatus::Unknown
         };
@@ -649,13 +644,14 @@ fn generate_status_md(
 
     for ac in sorted_acs {
         output.push_str(&format!(
-            "| {} | {} | {} | {} {} | {} |\n",
+            "| {} | {} | {} | {} {} | {} / {} |\n",
             ac.id,
             ac.story_id,
             ac.req_id,
             ac.status.icon(),
             ac.status.name(),
-            format!("{} / {}", ac.tests_executed, ac.tests_total)
+            ac.tests_executed,
+            ac.tests_total
         ));
     }
 

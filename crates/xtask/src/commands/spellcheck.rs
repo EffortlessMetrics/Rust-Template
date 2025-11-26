@@ -11,8 +11,7 @@ pub fn run(targets: &[&str]) -> Result<()> {
 
     // Prefer a globally available `cspell`; fall back to `npx cspell` if needed.
     let mut cmd = if let Ok(path) = which::which("cspell") {
-        let mut c = Command::new(path);
-        c
+        Command::new(path)
     } else {
         if which::which("npx").is_err() {
             println!(
@@ -27,13 +26,7 @@ pub fn run(targets: &[&str]) -> Result<()> {
         c
     };
 
-    cmd.args([
-        "--no-progress",
-        "--config",
-        "cspell.json",
-        "--relative",
-        "--gitignore",
-    ]);
+    cmd.args(["--no-progress", "--config", "cspell.json", "--relative", "--gitignore"]);
     cmd.args(targets);
 
     crate::run_cmd(&mut cmd)

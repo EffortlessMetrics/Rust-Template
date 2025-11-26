@@ -110,10 +110,8 @@ mod tests {
 
     #[test]
     fn accepts_correct_token_in_basic_mode() {
-        let config = PlatformAuthConfig {
-            mode: PlatformAuthMode::Basic,
-            token: Some("secret".into()),
-        };
+        let config =
+            PlatformAuthConfig { mode: PlatformAuthMode::Basic, token: Some("secret".into()) };
 
         assert!(!config.warn_if_misconfigured());
         assert!(config.requires_auth());

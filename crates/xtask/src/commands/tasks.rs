@@ -48,7 +48,7 @@ pub fn create_task(
         acs: acs.to_vec(),
         status: format_status(&desired_status),
         owner,
-        labels: labels.iter().cloned().collect(),
+        labels: labels.to_vec(),
         docs: Some(TaskDocs { design: Vec::new(), plan: Vec::new() }),
         summary: title.to_string(),
         recommended_flows: Vec::new(),
