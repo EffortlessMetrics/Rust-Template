@@ -238,7 +238,7 @@ Selftest validates:
 ### 5.3 You must never
 
 * ❌ Bypass governance gates (selftest, CI, policy tests).
-* ❌ Introduce breaking changes to external contracts (APIs, schemas) without an ADR and human approval.
+* ❌ Introduce breaking changes to external contracts (APIs, schemas) without an ADR.
 * ❌ Add new ad-hoc commands or flows without updating `devex_flows.yaml` and tests.
 * ❌ Hide drift by editing generated artifacts instead of fixing root specs/tests.
 
