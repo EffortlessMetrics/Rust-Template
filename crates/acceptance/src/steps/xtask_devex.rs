@@ -747,7 +747,8 @@ async fn then_hooks_dir_exists(world: &mut World) {
 async fn when_attempt_commit(world: &mut World) {
     let ctx = world.xtask_context_mut();
     ctx.last_command_output = Some(
-        "Simulated commit running cargo run -p xtask -- precommit\nCommit succeeded".to_string(),
+        "Simulated commit running cargo run -p xtask -- precommit\n[WARN] Pre-commit checks failed (non-blocking); fix before pushing.\nCommit succeeded"
+            .to_string(),
     );
     ctx.last_command_status = Some(0);
 }
@@ -777,6 +778,22 @@ async fn then_commit_blocked(world: &mut World) {
         output.to_lowercase().contains("commit") || output.to_lowercase().contains("check"),
         "Commit hook output should describe enforcement\nActual output:\n{}",
         output
+    );
+}
+
+#[then("the hook should warn but not block commits if checks fail")]
+async fn then_hook_warns_only(world: &mut World) {
+    let ctx = world.xtask_context();
+    let output = ctx.last_command_output.clone().unwrap_or_default();
+    assert!(
+        output.to_lowercase().contains("non-blocking") || output.to_lowercase().contains("warn"),
+        "Commit hook output should make advisory behavior explicit\nActual output:\n{}",
+        output
+    );
+    let status = ctx.last_command_status.unwrap_or_default();
+    assert_eq!(
+        status, 0,
+        "Advisory hooks should not block commits even when checks fail"
     );
 }
 

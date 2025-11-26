@@ -116,7 +116,19 @@
     "htmx",
     "integration-db",
     "contextpack",
-    "workspace"
+    "workspace",
+    "Humanitec",
+    "behaviours",
+    "tlsv",
+    "binstall",
+    "MYPROJ",
+    "MYSERV",
+    "Runbooks",
+    "runbook",
+    "testdata",
+    "adrs",
+    "Luca",
+    "Palmieri"
   ],
     "flagWords": [],
   "ignorePaths": [

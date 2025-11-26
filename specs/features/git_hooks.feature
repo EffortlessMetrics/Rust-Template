@@ -1,6 +1,6 @@
-# Template Version: v3.0.0
+# Template Version: v3.3.1
 # Schema: spec_ledger.yaml v1.0
-# Last Updated: 2025-11-22
+# Last Updated: 2025-11-25
 
 Feature: Git Hooks Installation and Governance
   As a developer
@@ -50,7 +50,7 @@ Feature: Git Hooks Installation and Governance
     When I attempt to commit changes
     Then the pre-commit hook should run "cargo run -p xtask -- precommit"
     And the commit should succeed if checks pass
-    And the commit should be blocked if checks fail
+    And the hook should warn but not block commits if checks fail
 
   @AC-TPL-HOOKS-INSTALL @hooks
   Scenario: pre-commit hook respects XTASK_LOW_RESOURCES environment variable

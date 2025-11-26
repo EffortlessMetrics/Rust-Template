@@ -668,7 +668,8 @@ fn generate_status_md(
         output.push_str("\n## Unmapped ACs\n\n");
         output.push_str("ACs with no mapped or executed tests:\n\n");
         for ac in unmapped_acs {
-            output.push_str(&format!("- {}: {}\n", ac.id, ac.text));
+            let text = ac.text.trim();
+            output.push_str(&format!("- {}: {}\n", ac.id, text));
         }
     }
 
