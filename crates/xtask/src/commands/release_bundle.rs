@@ -58,6 +58,19 @@ fn load_task_status_overrides(root: &Path) -> Result<HashMap<String, TaskStatus>
     Ok(overrides)
 }
 
+/// Generate a release evidence bundle for the specified version.
+///
+/// This command collects comprehensive evidence for a release, including:
+/// - Completed tasks from specs/tasks.yaml
+/// - Linked requirements and acceptance criteria
+/// - AC deltas (added/modified/removed) since the last tagged release
+/// - Architecture decision records (ADRs)
+/// - Git changelog since the last tag
+/// - Governance status (selftest and policy results)
+/// - Resolved friction log entries
+///
+/// The evidence bundle is written to `release_evidence/vX.Y.Z.md` and can be
+/// fed to an LLM or used manually to generate CHANGELOG.md entries.
 pub fn run(version: &str) -> Result<()> {
     println!(
         "{}",
@@ -85,6 +98,7 @@ pub fn run(version: &str) -> Result<()> {
     // Collect all evidence sections
     let tasks_section = collect_tasks_section(root, version)?;
     let acs_section = collect_acs_section(root, &tasks_section.0)?;
+    let ac_delta_section = collect_ac_delta_section(root)?;
     let adrs_section = collect_adrs_section(root)?;
     let git_section = collect_git_changelog(root)?;
     let governance_section = collect_governance_status(root)?;
@@ -105,6 +119,10 @@ pub fn run(version: &str) -> Result<()> {
 
     content.push_str("## Acceptance Criteria & Requirements\n\n");
     content.push_str(&acs_section);
+    content.push_str("\n---\n\n");
+
+    content.push_str("## AC Changes Since Last Release\n\n");
+    content.push_str(&ac_delta_section);
     content.push_str("\n---\n\n");
 
     content.push_str("## Architecture Decisions\n\n");
@@ -409,6 +427,197 @@ fn collect_friction_entries(root: &Path) -> Result<String> {
         let mut final_content = format!("**Total resolved entries:** {}\n\n", resolved_count);
         final_content.push_str(&content);
         content = final_content;
+    }
+
+    Ok(content)
+}
+
+/// Represents the delta between two versions' ACs
+#[derive(Debug)]
+struct AcDelta {
+    added: Vec<AcInfo>,
+    modified: Vec<(AcInfo, AcInfo)>, // (old, new)
+    removed: Vec<AcInfo>,
+}
+
+#[derive(Debug, Clone)]
+struct AcInfo {
+    id: String,
+    text: String,
+    requirement_id: String,
+}
+
+/// Load spec_ledger from a specific git tag
+fn load_spec_ledger_from_tag(root: &Path, tag: &str) -> Result<Option<spec_runtime::SpecLedger>> {
+    // Try to extract spec_ledger.yaml from the git tag
+    let output = Command::new("git")
+        .args(["show", &format!("{}:specs/spec_ledger.yaml", tag)])
+        .current_dir(root)
+        .output()
+        .context("Failed to run git show")?;
+
+    if !output.status.success() {
+        // Tag doesn't have spec_ledger.yaml, return None
+        return Ok(None);
+    }
+
+    // Parse the ledger directly from the output
+    let content =
+        String::from_utf8(output.stdout).context("Failed to decode spec_ledger.yaml from git")?;
+
+    let ledger: spec_runtime::SpecLedger =
+        serde_yaml::from_str(&content).context("Failed to parse spec_ledger.yaml from tag")?;
+
+    Ok(Some(ledger))
+}
+
+/// Extract all ACs from a spec ledger
+fn extract_acs_from_ledger(ledger: &spec_runtime::SpecLedger) -> HashMap<String, AcInfo> {
+    let mut acs = HashMap::new();
+
+    for story in &ledger.stories {
+        for req in &story.requirements {
+            for ac in &req.acceptance_criteria {
+                acs.insert(
+                    ac.id.clone(),
+                    AcInfo {
+                        id: ac.id.clone(),
+                        text: ac.text.clone(),
+                        requirement_id: req.id.clone(),
+                    },
+                );
+            }
+        }
+    }
+
+    acs
+}
+
+/// Calculate AC deltas between current version and previous tag
+fn calculate_ac_delta(root: &Path) -> Result<Option<AcDelta>> {
+    // Get last tag
+    let last_tag_output =
+        Command::new("git").args(["describe", "--tags", "--abbrev=0"]).current_dir(root).output();
+
+    let last_tag = match last_tag_output {
+        Ok(output) if output.status.success() => {
+            String::from_utf8_lossy(&output.stdout).trim().to_string()
+        }
+        _ => {
+            // No previous tag found
+            return Ok(None);
+        }
+    };
+
+    // Load current spec_ledger
+    let current_ledger = spec_runtime::load_spec_ledger(&root.join("specs/spec_ledger.yaml"))
+        .context("Failed to load current spec_ledger.yaml")?;
+
+    // Load previous spec_ledger from tag
+    let previous_ledger = match load_spec_ledger_from_tag(root, &last_tag)? {
+        Some(ledger) => ledger,
+        None => {
+            // Previous tag doesn't have spec_ledger.yaml
+            return Ok(None);
+        }
+    };
+
+    // Extract ACs from both versions
+    let current_acs = extract_acs_from_ledger(&current_ledger);
+    let previous_acs = extract_acs_from_ledger(&previous_ledger);
+
+    // Calculate deltas
+    let mut added = Vec::new();
+    let mut modified = Vec::new();
+    let mut removed = Vec::new();
+
+    // Find added and modified ACs
+    for (id, current_ac) in &current_acs {
+        if let Some(previous_ac) = previous_acs.get(id) {
+            // AC exists in both versions - check if modified
+            if current_ac.text != previous_ac.text {
+                modified.push((previous_ac.clone(), current_ac.clone()));
+            }
+        } else {
+            // AC only exists in current version - it's new
+            added.push(current_ac.clone());
+        }
+    }
+
+    // Find removed ACs
+    for (id, previous_ac) in &previous_acs {
+        if !current_acs.contains_key(id) {
+            removed.push(previous_ac.clone());
+        }
+    }
+
+    // Sort by ID for consistent output
+    added.sort_by(|a, b| a.id.cmp(&b.id));
+    modified.sort_by(|a, b| a.0.id.cmp(&b.0.id));
+    removed.sort_by(|a, b| a.id.cmp(&b.id));
+
+    Ok(Some(AcDelta { added, modified, removed }))
+}
+
+/// Collect AC delta information since last release
+fn collect_ac_delta_section(root: &Path) -> Result<String> {
+    let mut content = String::new();
+
+    match calculate_ac_delta(root)? {
+        None => {
+            content.push_str("*No previous release found for comparison.*\n");
+        }
+        Some(delta) => {
+            let total_changes = delta.added.len() + delta.modified.len() + delta.removed.len();
+
+            if total_changes == 0 {
+                content.push_str("*No AC changes since last release.*\n");
+            } else {
+                // Summary counts
+                content.push_str(&format!(
+                    "**Total changes:** {} (Added: {}, Modified: {}, Removed: {})\n\n",
+                    total_changes,
+                    delta.added.len(),
+                    delta.modified.len(),
+                    delta.removed.len()
+                ));
+
+                // Added ACs
+                if !delta.added.is_empty() {
+                    content.push_str("### Added ACs\n\n");
+                    for ac in &delta.added {
+                        content.push_str(&format!(
+                            "- **{}** ({}): {}\n",
+                            ac.id, ac.requirement_id, ac.text
+                        ));
+                    }
+                    content.push('\n');
+                }
+
+                // Modified ACs
+                if !delta.modified.is_empty() {
+                    content.push_str("### Modified ACs\n\n");
+                    for (old, new) in &delta.modified {
+                        content.push_str(&format!("- **{}** ({}):\n", new.id, new.requirement_id));
+                        content.push_str(&format!("  - **Before:** {}\n", old.text));
+                        content.push_str(&format!("  - **After:** {}\n", new.text));
+                    }
+                    content.push('\n');
+                }
+
+                // Removed ACs
+                if !delta.removed.is_empty() {
+                    content.push_str("### Removed ACs\n\n");
+                    for ac in &delta.removed {
+                        content.push_str(&format!(
+                            "- **{}** ({}): {}\n",
+                            ac.id, ac.requirement_id, ac.text
+                        ));
+                    }
+                    content.push('\n');
+                }
+            }
+        }
     }
 
     Ok(content)
