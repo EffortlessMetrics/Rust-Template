@@ -689,7 +689,7 @@ See `docs/SELECTIVE_TESTING.md` for complete guide.
 
 ### The Selftest Contract
 
-`cargo xtask selftest` is the **supreme arbiter** of correctness. It runs 7 steps:
+`cargo xtask selftest` is the **supreme arbiter** of correctness. It runs 8 steps:
 
 1. **Core checks** (fmt, clippy, tests) - Code quality
 2. **BDD** - Behavior matches specs
@@ -698,12 +698,13 @@ See `docs/SELECTIVE_TESTING.md` for complete guide.
 5. **Policy tests** - Compliance (OPA/Rego)
 6. **DevEx contract** - Required commands exist
 7. **Graph invariants** - Structural integrity (no orphans, missing ACs)
+8. **AC coverage** - All kernel and non-kernel ACs are passing
 
 **What failure means:**
 - Step 1-2: Code doesn't work
 - Step 3: Metadata is broken
 - Step 4: Agent infrastructure is broken
-- Step 5-7: **Governance is violated** (cannot merge)
+- Step 5-8: **Governance is violated** (cannot merge)
 
 **Agent Decision Tree:**
 ```
