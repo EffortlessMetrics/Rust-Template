@@ -5,6 +5,7 @@ pub mod config;
 pub mod devex;
 pub mod docs;
 pub mod graph;
+pub mod k8s_iac;
 pub mod ledger;
 pub mod local_docker;
 pub mod service_metadata;

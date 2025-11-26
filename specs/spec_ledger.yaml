@@ -3,7 +3,7 @@
 
 metadata:
   schema_version: "1.0"
-  template_version: "3.3.1"
+  template_version: "3.3.0"
   last_updated: "2025-11-25"
   description: "Template core capabilities - v2.4.0 includes health, version, errors, metrics, and supply chain hardening"
   # Template-wide ADRs (not tied to specific stories/requirements)
@@ -93,7 +93,10 @@ stories:
         description: >
           New developers on any machine can validate their environment,
           discover workflows, and reach first green check within 15 minutes.
-        adr: ADR-0002
+        adr: [ADR-0002, ADR-0017]
+        ci_workflows:
+          - CI-NIX
+          - CI-TIER1-SELFTEST
         acceptance_criteria:
           - id: AC-PLT-001
             text: "`cargo xtask doctor` validates Rust, Nix, conftest, git and provides next-steps guidance"
@@ -154,6 +157,10 @@ stories:
           Security auditing is not an afterthought but a required step in
           dependency changes and releases, with clear recovery guidance.
         adr: ADR-0007
+        ci_workflows:
+          - CI-SECURITY
+          - CI-POLICY-VERIFY
+          - CI-MAINTENANCE-PIN-ACTIONS
         acceptance_criteria:
           - id: AC-PLT-006
             text: "`cargo xtask audit` runs cargo-audit + cargo-deny with repo policy (deny.toml)"
@@ -184,6 +191,8 @@ stories:
           Version drift between spec_ledger, README, CLAUDE is caught by CI,
           not discovered months later.
         adr: ADR-0005
+        ci_workflows:
+          - CI-DOCS
         acceptance_criteria:
           - id: AC-PLT-009
             text: "`cargo xtask docs-check` validates version alignment across spec_ledger, README, CLAUDE"
@@ -207,6 +216,9 @@ stories:
           Release process is a single command sequence with automated validation,
           making "forgot to run audit" or "dirty tree" impossible.
         adr: ADR-0005
+        ci_workflows:
+          - CI-SUPPLY-CHAIN
+          - CI-RELEASE-SBOM-SIGN
         acceptance_criteria:
           - id: AC-PLT-011
             text: "`cargo xtask release-prepare X.Y.Z` updates spec_ledger, README, CLAUDE, CHANGELOG"
@@ -260,7 +272,21 @@ stories:
         description: >
           The template defines its own workflows in machine-readable spec,
           tests that required commands exist, and fails CI if docs/code drift from spec.
-        adr: ADR-0005
+        adr: [ADR-0005, ADR-0017]
+        ci_workflows:
+          - CI-TIER1-SELFTEST
+          - CI-TEMPLATE-SELFTEST
+          - CI-GOVERNANCE
+          - CI-GHERKIN
+          - CI-AC
+          - CI-COVERAGE
+          - CI-FEATURES
+          - CI-LINTS
+          - CI-MSRV
+          - CI-FLAGS
+          - CI-FLAGS-WARN
+          - CI-DOCS
+          - CI-SCOPE-GUARD
         acceptance_criteria:
           - id: AC-PLT-014
             text: "Canonical flows and commands are defined in specs/devex_flows.yaml"
@@ -361,6 +387,8 @@ stories:
           Platform APIs MUST expose a machine-readable schema so IDP dashboards,
           agents, and platform tooling can consume endpoints without scraping examples.
         adr: [ADR-0001]
+        ci_workflows:
+          - CI-OPENAPI
         acceptance_criteria:
           - id: AC-TPL-PLATFORM-SCHEMA
             text: >
@@ -417,6 +445,8 @@ stories:
         description: >
           Platform status, UI output, and selftest summaries MUST avoid leaking
           secret values or PII; only redacted markers or key names may appear.
+        ci_workflows:
+          - CI-PRIVACY
         acceptance_criteria:
           - id: AC-TPL-LOG-NO-SECRETS
             text: >
@@ -475,10 +505,10 @@ stories:
               Ambiguity during automated flows or suggest-next emits a
               structured question (file/PR comment/status entry) that can be
               surfaced to humans or agents without halting progress.
-            tags: [future]
-            must_have_ac: false
+            tags: [kernel]
+            must_have_ac: true
             tests:
-              - { type: bdd, tag: "@AC-TPL-QUESTIONS-LOGGED" }
+              - { type: bdd, tag: "@AC-TPL-QUESTIONS-LOGGED", file: "specs/features/questions.feature" }
 
       - id: REQ-TPL-FLOW-IDEMPOTENCY
         title: "Platform flows are safe to rerun"
@@ -493,10 +523,10 @@ stories:
               Running cargo xtask selftest or cargo xtask suggest-next multiple
               times without changes produces stable outputs and no duplicate
               artifacts.
-            tags: [future]
-            must_have_ac: false
+            tags: [kernel]
+            must_have_ac: true
             tests:
-              - { type: bdd, tag: "@AC-TPL-FLOW-IDEMPOTENT" }
+              - { type: bdd, tag: "@AC-TPL-FLOW-IDEMPOTENT", file: "specs/features/flow_idempotency.feature" }
 
       - id: REQ-TPL-GRAPH-INVARIANTS
         title: "Governance Graph Invariants"
@@ -700,10 +730,10 @@ stories:
               Kubernetes manifests under infra/k8s (Deployment/Service) use
               ports and env vars consistent with config_schema.yaml and the
               default environment.
-            tags: [future]
-            must_have_ac: false
+            tags: [kernel]
+            must_have_ac: true
             tests:
-              - { type: unit, tag: "iac_k8s_aligns_with_config" }
+              - { type: unit, tag: "iac_k8s_aligns_with_config", module: "k8s_iac::tests::iac_k8s_aligns_with_config", file: "crates/spec-runtime/src/k8s_iac.rs" }
 
           - id: AC-TPL-IAC-TF-ALIGN
             text: >
@@ -712,7 +742,7 @@ stories:
             tags: [future]
             must_have_ac: false
             tests:
-              - { type: unit, tag: "iac_tf_aligns_with_config" }
+              - { type: unit, tag: "iac_tf_aligns_with_config", module: "local_docker::tests::iac_tf_aligns_with_config", file: "crates/spec-runtime/src/local_docker.rs" }
 
       - id: REQ-TPL-LOCAL-RUNTIME
         title: "Local Runtime Sovereignty"

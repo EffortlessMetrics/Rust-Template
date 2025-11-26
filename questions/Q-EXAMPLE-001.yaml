@@ -1,0 +1,58 @@
+# Example Question: Bundle Flow Ambiguity
+#
+# This is an example question artifact demonstrating the schema.
+# Real questions will be emitted by flows when they encounter ambiguity.
+
+id: Q-EXAMPLE-001
+task_id: implement_ac
+req_ids:
+  - REQ-TPL-SUGGEST-NEXT
+ac_ids:
+  - AC-TPL-SUGGEST-NEXT-CLI
+
+summary: "Bundle flow found multiple ACs for the same requirement - unclear which to prioritize"
+
+context:
+  flow: bundle
+  phase: ac_selection
+  description: >
+    The bundle flow was asked to generate context for implementing an AC,
+    but the requirement has 3 ACs (AC-001, AC-002, AC-003) and no task
+    exists to clarify priority. The flow needs guidance on which AC to
+    bundle first.
+  files_involved:
+    - specs/spec_ledger.yaml
+    - specs/tasks.yaml
+
+options:
+  - label: "Implement AC-001 first (foundational)"
+    description: >
+      AC-001 appears to be the foundational AC that others depend on.
+      Implementing it first would unblock downstream work.
+    risk: low
+    reversible: true
+
+  - label: "Implement all ACs together"
+    description: >
+      Generate a bundle that includes all three ACs since they're tightly coupled.
+      This might be a larger scope but ensures consistency.
+    risk: medium
+    reversible: true
+
+  - label: "Ask user to create task with priority"
+    description: >
+      Stop and ask the user to create a task in tasks.yaml that explicitly
+      lists the AC order. This ensures clarity but requires human input.
+    risk: low
+    reversible: true
+
+recommendation:
+  option_label: "Implement AC-001 first (foundational)"
+  rationale: >
+    AC-001 has no dependencies on other ACs in this requirement, making it
+    the safest starting point. Other ACs can be implemented incrementally.
+  confidence: medium
+
+created_by: flow
+created_at: "2025-11-26T00:00:00Z"
+status: open

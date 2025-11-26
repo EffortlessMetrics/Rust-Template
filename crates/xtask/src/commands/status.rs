@@ -7,6 +7,8 @@ use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
 
+use super::questions;
+
 // Regex pattern for parsing feature_status.md AC lines
 static AC_STATUS_PATTERN: Lazy<Regex> = Lazy::new(|| {
     Regex::new(r"^\|\s*AC-[A-Z0-9-]+\s*\|.*\|\s*(✅|❌|❓)\s*(pass|fail|unknown)\s*\|").unwrap()
@@ -95,6 +97,10 @@ pub fn run() -> Result<()> {
     // Parse AC coverage
     let ac_coverage = parse_ac_coverage(feature_status_path);
 
+    // Load questions
+    let questions = questions::load_all_questions().unwrap_or_default();
+    let question_stats = questions::calculate_stats(&questions);
+
     // Display status
     print_status_dashboard(
         &ledger.metadata.template_version,
@@ -103,6 +109,7 @@ pub fn run() -> Result<()> {
         ac_count,
         &task_counts,
         &ac_coverage,
+        &question_stats,
     );
 
     Ok(())
@@ -189,6 +196,7 @@ fn print_status_dashboard(
     ac_count: usize,
     task_counts: &HashMap<String, usize>,
     ac_coverage: &Option<AcCoverage>,
+    question_stats: &questions::QuestionStats,
 ) {
     println!();
     println!("{}", "======================================".blue());
@@ -247,6 +255,22 @@ fn print_status_dashboard(
             };
             println!("  {}", status_display);
         }
+        println!();
+    }
+
+    // Question metrics
+    if question_stats.total_count > 0 {
+        println!("{}", "Questions:".bold());
+        let open_display = if question_stats.open_count > 0 {
+            format!("  Open:        {}", question_stats.open_count).yellow().to_string()
+        } else {
+            format!("  Open:        {}", question_stats.open_count)
+        };
+        println!("{}", open_display);
+        println!("  Answered:    {}", question_stats.answered_count);
+        println!("  Resolved:    {}", question_stats.resolved_count);
+        println!("  Total:       {}", question_stats.total_count);
+        println!("  See: {}", "questions/ directory".blue());
         println!();
     }
 

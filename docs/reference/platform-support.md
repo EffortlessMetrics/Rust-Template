@@ -1,12 +1,16 @@
 ---
+id: GUIDE-TPL-PLATFORM-SUPPORT-001
 title: Platform Support Reference
-type: reference
+doc_type: reference
 status: published
 audience: developers, platform-teams
 tags: [platform, windows, linux, macos, wsl2, nix, troubleshooting]
-related_requirements:
-  - REQ-TPL-DEV-ENVIRONMENT
-  - REQ-TPL-CROSS-PLATFORM
+stories: [US-TPL-PLT-001]
+requirements:
+  - REQ-PLT-DEVEX-CONTRACT
+  - REQ-PLT-ONBOARDING
+acs: [AC-PLT-015, AC-PLT-016, AC-PLT-019, AC-PLT-020]
+adrs: [ADR-0002, ADR-0005, ADR-0017]
 last_updated: 2025-11-25
 ---
 

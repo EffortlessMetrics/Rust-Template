@@ -26,6 +26,7 @@ pub mod migrate;
 pub mod pin_actions;
 pub mod policy_test;
 pub mod precommit;
+pub mod questions;
 pub mod quickstart;
 pub mod release_bundle;
 pub mod release_prepare;
