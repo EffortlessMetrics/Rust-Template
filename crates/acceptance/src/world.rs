@@ -103,6 +103,30 @@ impl Default for World {
                 .expect("Failed to copy docker-compose.yaml to temp dir");
         }
 
+        // Copy questions directory for platform questions API tests
+        let workspace_questions = workspace_root.join("questions");
+        let temp_questions = temp_dir.path().join("questions");
+        if workspace_questions.exists() {
+            copy_dir_recursive(&workspace_questions, &temp_questions)
+                .expect("Failed to copy workspace questions into temp dir");
+        }
+
+        // Copy friction directory for platform friction API tests
+        let workspace_friction = workspace_root.join("friction");
+        let temp_friction = temp_dir.path().join("friction");
+        if workspace_friction.exists() {
+            copy_dir_recursive(&workspace_friction, &temp_friction)
+                .expect("Failed to copy workspace friction into temp dir");
+        }
+
+        // Copy forks directory for platform forks API tests
+        let workspace_forks = workspace_root.join("forks");
+        let temp_forks = temp_dir.path().join("forks");
+        if workspace_forks.exists() {
+            copy_dir_recursive(&workspace_forks, &temp_forks)
+                .expect("Failed to copy workspace forks into temp dir");
+        }
+
         // Make the spec root discoverable for app-http/xtask consumers.
         // SAFETY: Updating process environment here is confined to the test runner setup.
         unsafe {
