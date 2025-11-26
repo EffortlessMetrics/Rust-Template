@@ -204,7 +204,7 @@
       "properties": {
         "status": {
           "type": "string",
-          "enum": ["passed", "failed", "skipped", "pending", "undefined"],
+          "enum": ["passed", "failed", "skipped", "pending", "undefined", "ambiguous"],
           "description": "Step execution status"
         },
         "duration": {

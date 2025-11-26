@@ -62,25 +62,23 @@ See [CLAUDE.md](./CLAUDE.md) for the full agent guide and [docs/how-to/new-servi
 
 ## 3. What you actually get
 
-### 2.1 Specs and governance as code
+### 3.1 Specs and governance as code
 
 - `specs/spec_ledger.yaml` – stories → requirements → acceptance criteria (ACs) → tests → docs.
 - `specs/config_schema.yaml` – configuration schema for the service.
 - `specs/devex_flows.yaml` – developer workflows (flows + commands).
 - `specs/tasks.yaml` – work items the platform can surface via CLI and HTTP.
 
-### 2.2 Verification
+### 3.2 Verification
 
 - **BDD (Cucumber + Rust)** for platform and DevEx behaviour.
 - **Unit tests** for spec runtime, graph invariants, config validation, etc.
 - `cargo xtask ac-status` – computes AC → test → status mapping and writes:
-
   - `docs/feature_status.md` – **AC health dashboard**, auto-generated.
 
-### 2.3 Enforcement
+### 3.3 Enforcement
 
 - `cargo xtask selftest` – the **single mandatory CI gate**:
-
   1. Core checks (fmt, clippy, unit tests)
   2. BDD acceptance tests
   3. AC status + ADR mapping
@@ -92,7 +90,7 @@ See [CLAUDE.md](./CLAUDE.md) for the full agent guide and [docs/how-to/new-servi
 
 If selftest is red, the service is **not** in a governed state.
 
-### 2.4 Introspection surfaces
+### 3.4 Introspection surfaces
 
 - **HTTP APIs (`/platform/*`):**
   - `/platform/status` – governance health, policy status, auth mode, metadata.
@@ -123,7 +121,7 @@ Specs (YAML) ──> Loader (Rust) ──> Selftest (CI) ──> Introspection (
    config_schema    graph model
    devex_flows
    tasks, docs
-````
+```
 
 Under the hood:
 
@@ -157,8 +155,8 @@ Under the hood:
 
 For **Tier-1** parity (same environment as CI):
 
-* Linux, macOS, or **WSL2** on Windows.
-* [Nix](https://nixos.org/) with flakes enabled.
+- Linux, macOS, or **WSL2** on Windows.
+- [Nix](https://nixos.org/) with flakes enabled.
 
 This repo is Nix-first. You *can* run it without Nix, but you lose exact CI parity.
 
@@ -214,11 +212,11 @@ See `docs/reference/platform-support.md` for details and recommended commands pe
 
 `specs/spec_ledger.yaml` is the core artifact:
 
-* **Stories** (`US-*`) – user-facing goals.
-* **Requirements** (`REQ-*`) – what must be true.
-* **Acceptance criteria** (`AC-*`) – concrete behaviour.
-* **Tests** – how each AC is verified (BDD tags, unit tests).
-* **Docs** – which design/runbook/tutorial covers it.
+- **Stories** (`US-*`) – user-facing goals.
+- **Requirements** (`REQ-*`) – what must be true.
+- **Acceptance criteria** (`AC-*`) – concrete behaviour.
+- **Tests** – how each AC is verified (BDD tags, unit tests).
+- **Docs** – which design/runbook/tutorial covers it.
 
 Example fragment:
 
@@ -259,19 +257,16 @@ Kernel ACs must be `[PASS]`. Non-kernel or template-only ACs may be `[UNKNOWN]` 
 
 Auth is applied once at the `/platform/*` router:
 
-* `PLATFORM_AUTH_MODE=none` (default)
+- `PLATFORM_AUTH_MODE=none` (default)
+  - All `/platform/*` routes are open.
+  - Intended for local/dev use.
 
-  * All `/platform/*` routes are open.
-  * Intended for local/dev use.
-
-* `PLATFORM_AUTH_MODE=basic`
-
-  * All **non-GET** `/platform/*` routes require a shared token.
-  * Read endpoints (GET) remain open or can share the same guard.
-  * If `basic` is enabled without a token, the service:
-
-    * Logs a startup warning.
-    * Surfaces `token_present: false` in `/platform/status`.
+- `PLATFORM_AUTH_MODE=basic`
+  - All **non-GET** `/platform/*` routes require a shared token.
+  - Read endpoints (GET) remain open or can share the same guard.
+  - If `basic` is enabled without a token, the service:
+    - Logs a startup warning.
+    - Surfaces `token_present: false` in `/platform/status`.
 
 Typical production setup:
 
@@ -381,55 +376,51 @@ cargo xtask release-bundle 3.3.1
 
 This repo is designed so that an agent can act as a **real teammate**, not a glorified autocomplete:
 
-* **Specs & schemas** give a precise brief (`spec_ledger.yaml`, `config_schema.yaml`, `devex_flows.yaml`, `tasks.yaml`).
-* **Bundles** give a bounded context:
-
-  * `cargo xtask bundle implement_ac` produces a curated context pack for a feature or AC.
-* **Flows & Skills** provide the patterns:
-
-  * `.claude/skills/*/SKILL.md` describe governed-feature-dev, governed-maintenance, governed-release, and governance-debug flows.
-* **Platform APIs** provide live telemetry:
-
-  * `/platform/status`, `/platform/graph`, `/platform/tasks`, `/platform/agent/hints`, `/platform/docs/index`, `/platform/schema`.
+- **Specs & schemas** give a precise brief (`spec_ledger.yaml`, `config_schema.yaml`, `devex_flows.yaml`, `tasks.yaml`).
+- **Bundles** give a bounded context:
+  - `cargo xtask bundle implement_ac` produces a curated context pack for a feature or AC.
+- **Flows & Skills** provide the patterns:
+  - `.claude/skills/*/SKILL.md` describe governed-feature-dev, governed-maintenance, governed-release, and governance-debug flows.
+- **Platform APIs** provide live telemetry:
+  - `/platform/status`, `/platform/graph`, `/platform/tasks`, `/platform/agent/hints`, `/platform/docs/index`, `/platform/schema`.
 
 The expected agent loop looks like:
 
 1. **Orient**
 
-   * Run `cargo xtask doctor`, `cargo xtask ac-status`, `cargo xtask help-flows`.
-   * Call `/platform/status` and `/platform/graph` to understand the current state.
+   - Run `cargo xtask doctor`, `cargo xtask ac-status`, `cargo xtask help-flows`.
+   - Call `/platform/status` and `/platform/graph` to understand the current state.
 
 2. **Pick work**
 
-   * Use `cargo xtask tasks-list` and `/platform/agent/hints` to identify a task.
-   * Read the relevant REQ/AC entries in `spec_ledger.yaml`.
+   - Use `cargo xtask tasks-list` and `/platform/agent/hints` to identify a task.
+   - Read the relevant REQ/AC entries in `spec_ledger.yaml`.
 
 3. **Plan with a bundle**
 
-   * Generate a bundle with `cargo xtask bundle implement_ac` or a task-specific bundle.
-   * Use only what’s in the bundle plus linked specs/docs unless you have a good reason to widen scope.
+   - Generate a bundle with `cargo xtask bundle implement_ac` or a task-specific bundle.
+   - Use only what's in the bundle plus linked specs/docs unless you have a good reason to widen scope.
 
 4. **Execute via xtask and code**
 
-   * Follow the appropriate Skill (feature dev, maintenance, release).
-   * Use `test-changed` and `test-ac` while iterating.
+   - Follow the appropriate Skill (feature dev, maintenance, release).
+   - Use `test-changed` and `test-ac` while iterating.
 
 5. **Validate and capture decisions**
 
-   * End with `cargo xtask selftest` in Tier-1.
-   * If you had to make non-obvious choices, record them:
-
-     * draft ADRs,
-     * GitHub issues,
-     * friction log entries.
+   - End with `cargo xtask selftest` in Tier-1.
+   - If you had to make non-obvious choices, record them:
+     - draft ADRs,
+     - GitHub issues,
+     - friction log entries.
 
 Agents don’t need synchronous human approval to move forward; the spec ledger, flows, xtask commands, `/platform/*` APIs, and selftest provide the guardrails. Humans review the artifacts and CI results asynchronously.
 
 For details, see:
 
-* `CLAUDE.md` – agent operational prompt
-* `docs/AGENT_GUIDE.md` – deeper guidance for agent-driven work
-* `docs/SELECTIVE_TESTING.md` – validation ladder and change-aware testing
+- `CLAUDE.md` – agent operational prompt
+- `docs/AGENT_GUIDE.md` – deeper guidance for agent-driven work
+- `docs/SELECTIVE_TESTING.md` – validation ladder and change-aware testing
 
 ---
 
@@ -437,10 +428,10 @@ For details, see:
 
 ### 10.1 Greenfield: new service
 
-* Clone this template into a new repo.
-* Adjust `service_metadata.yaml`, ledger entries, and tasks to your domain.
-* Keep the platform kernel as-is; build your business logic in new crates or modules.
-* Use `selftest` as the gate from day one.
+- Clone this template into a new repo.
+- Adjust `service_metadata.yaml`, ledger entries, and tasks to your domain.
+- Keep the platform kernel as-is; build your business logic in new crates or modules.
+- Use `selftest` as the gate from day one.
 
 ### 10.2 Brownfield: existing repo
 
@@ -448,10 +439,10 @@ See `docs/how-to/add-governance-to-existing-repo.md`.
 
 High-level flow:
 
-* Add a `governance/` subtree (specs, policy, docs) to your existing repo.
-* Add `spec-runtime` + `xtask` crates to your workspace.
-* Configure your CI to run `cargo xtask selftest` as a gate.
-* Gradually map your existing tests/docs into the spec ledger.
+- Add a `governance/` subtree (specs, policy, docs) to your existing repo.
+- Add `spec-runtime` + `xtask` crates to your workspace.
+- Configure your CI to run `cargo xtask selftest` as a gate.
+- Gradually map your existing tests/docs into the spec ledger.
 
 ---
 
@@ -459,35 +450,33 @@ High-level flow:
 
 This template is **not** a portal. It is the **per-service kernel** that a portal/IDP can rely on.
 
-* If you use Backstage/Port/OpsLevel/etc.:
+- If you use Backstage/Port/OpsLevel/etc.:
+  - They provide catalogs, scorecards, golden paths.
+  - This template defines what a "good Rust service" is in concrete, enforceable terms.
 
-  * They provide catalogs, scorecards, golden paths.
-  * This template defines what a “good Rust service” is in concrete, enforceable terms.
-
-* If you use a platform orchestrator (Humanitec, Argo CD, etc.):
-
-  * They standardize deployments and environments.
-  * This template standardizes the **service contract**: specs, policies, AC coverage, `/platform/*` introspection.
+- If you use a platform orchestrator (Humanitec, Argo CD, etc.):
+  - They standardize deployments and environments.
+  - This template standardizes the **service contract**: specs, policies, AC coverage, `/platform/*` introspection.
 
 The integration surface is:
 
-* `/platform/*` APIs
-* `release_evidence/vX.Y.Z.md` bundles
-* `docs/feature_status.md` and `service_metadata.yaml`
+- `/platform/*` APIs
+- `release_evidence/vX.Y.Z.md` bundles
+- `docs/feature_status.md` and `service_metadata.yaml`
 
 ---
 
 ## 12. Current status & roadmap
 
-* **Template version:** v3.3.1
-* **Kernel status:** “Governing Kernel” is implemented; Tier-1 selftest is green.
-* **Non-kernel ACs:** Some advanced features (flow idempotency, question artifacts, K8s/TF IaC alignment) are tracked as ACs with `[UNKNOWN]` status and explicitly documented as template/future work.
+- **Template version:** v3.3.2
+- **Kernel status:** "Governing Kernel" is implemented; Tier-1 selftest is green.
+- **Non-kernel ACs:** Some advanced features (flow idempotency, question artifacts, K8s/TF IaC alignment) are tracked as ACs with `[UNKNOWN]` status and explicitly documented as template/future work.
 
 See:
 
-* `docs/ROADMAP.md` – where the template is headed.
-* `docs/feature_status.md` – current AC health.
-* `docs/feature_status_notes.md` – explanations for template/future ACs.
+- `docs/ROADMAP.md` – where the template is headed.
+- `docs/feature_status.md` – current AC health.
+- `docs/feature_status_notes.md` – explanations for template/future ACs.
 
 ---
 
@@ -495,11 +484,7 @@ See:
 
 This template is dual-licensed:
 
-* MIT – see `LICENSE-MIT`
-* Apache 2.0 – see `LICENSE-APACHE`
+- MIT – see `LICENSE-MIT`
+- Apache 2.0 – see `LICENSE-APACHE`
 
 You may use it under either license.
-
-```
-
-::contentReference[oaicite:0]{index=0}
