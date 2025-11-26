@@ -192,6 +192,8 @@ enum Commands {
     Quickstart,
     /// Run full template self-test suite (check + bdd + ac-status + bundler + policies)
     Selftest,
+    /// Quick kernel smoke test (docs-check + selftest)
+    KernelSmoke,
     /// Show governance status dashboard
     #[command(next_help_heading = "Meta")]
     Status,
@@ -372,6 +374,7 @@ fn main() -> Result<()> {
         Commands::SbomLocal => commands::sbom_local::run(),
         Commands::SuggestNext(args) => commands::suggest_next::run(args),
         Commands::Selftest => commands::selftest::run_with_verbosity(verbosity),
+        Commands::KernelSmoke => commands::kernel_smoke::run(),
         Commands::Status => commands::status::run(),
         Commands::FrictionList { status, severity } => {
             commands::friction::list_friction_entries(status.as_deref(), severity.as_deref())

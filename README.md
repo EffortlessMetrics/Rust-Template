@@ -1,7 +1,6 @@
-# Rust-as-Spec Platform Cell (v3.3.1)
-**Current Template Version:** v3.3.0
-**Current Template Version:** v3.3.2
-**Kernel Baseline:** [v3.3.2-kernel](./docs/KERNEL_SNAPSHOT.md)
+# Rust-as-Spec Platform Cell (v3.3.3)
+**Current Template Version:** v3.3.3
+**Kernel Baseline:** [v3.3.3-kernel](./docs/KERNEL_SNAPSHOT.md)
 
 **A governed Rust service template where specs, tests, docs, policies, and infra all agree – and the repo can prove it.**
 
@@ -9,7 +8,7 @@ This cell gives you a **single Rust service** with:
 
 - **Schema-driven specs** (`specs/spec_ledger.yaml`, `specs/config_schema.yaml`)
 - **BDD-backed acceptance criteria** (Cucumber + Rust)
-- **A 7-step selftest gate** (`cargo xtask selftest`)
+- **An 8-step selftest gate** (`cargo xtask selftest`)
 - **Introspection APIs** under `/platform/*`
 - **A Web UI** at `/ui` that shows the same governance state CI enforces
 
