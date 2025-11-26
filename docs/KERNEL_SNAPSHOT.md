@@ -28,6 +28,7 @@ This is the frozen kernel baseline (v3.3.3-kernel) for the Rust-as-Spec platform
 - Service health, version, metrics endpoints
 - Platform introspection APIs (/platform/graph, /platform/devex/flows, /platform/docs/index, /platform/schema)
 - Agent hints API (/platform/agent/hints) with task prioritization
+- Friction log API (/platform/friction, /platform/friction/{id})
 - Platform UI dashboard with graph visualization and flows view
 - Configuration validation and IAC alignment (Docker Compose, Kubernetes, Terraform)
 - Task lifecycle and governance write operations
@@ -37,6 +38,8 @@ This is the frozen kernel baseline (v3.3.3-kernel) for the Rust-as-Spec platform
 - Development flows: `doctor`, `help-flows`, `check`, `test-changed`, `ac-status`, `ac-coverage`
 - Bundler & agent tools: `bundle`, `suggest-next`
 - Governance: `adr-new`, `ac-new`, `docs-check`, `graph-export`, `selftest`
+- Artifact management: `friction-new`, `friction-list`, `question-new`, `questions-list`
+- Fork tracking: `fork-register`, `fork-list`, `version`
 - Release management: `release-prepare`, `release-bundle`
 - Operational: `audit`, `sbom-local`, `ci-local`, `status`
 
@@ -76,9 +79,14 @@ The template is ready to fork. Services inheriting from v3.3.3-kernel get:
 **Known gaps** (documented in ROADMAP.md):
 
 - Branch protection not configured (manual GitHub setting required)
-- No IDP positioning documentation
-- No brownfield migration guide
 - Template not yet validated by a second service
+
+**Recently completed:**
+
+- ✅ IDP positioning documentation (`docs/explanation/idp-positioning.md`)
+- ✅ Brownfield adoption guide (`docs/guides/brownfield-adoption.md`)
+- ✅ Fork feedback workflow (`docs/how-to/report-fork-feedback.md`)
+- ✅ Questions-as-artifacts, friction API, fork registry
 
 The first real fork will likely discover friction. Capture it in `FRICTION_LOG.md` and consider feeding systematic issues back to the kernel.
 
