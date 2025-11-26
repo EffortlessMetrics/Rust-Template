@@ -1,4 +1,5 @@
-# Rust-as-Spec Platform Cell (v3.3.2)
+# Rust-as-Spec Platform Cell (v3.3.1)
+**Current Template Version:** v3.3.0
 **Current Template Version:** v3.3.2
 **Kernel Baseline:** [v3.3.2-kernel](./docs/KERNEL_SNAPSHOT.md)
 

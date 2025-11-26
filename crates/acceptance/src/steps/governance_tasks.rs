@@ -68,6 +68,7 @@ async fn given_tasks_exist(world: &mut World, file: String, step: &cucumber::ghe
             let mut requirement = String::from("REQ-TBD");
             let mut owner: Option<String> = None;
             let mut labels: Vec<String> = Vec::new();
+            let mut recommended_flows: Vec<String> = Vec::new();
 
             for (i, cell) in row.iter().enumerate() {
                 if let Some(&header) = headers.get(i) {
@@ -86,6 +87,11 @@ async fn given_tasks_exist(world: &mut World, file: String, step: &cucumber::ghe
                                 labels = cell.split(',').map(|s| s.trim().to_string()).collect();
                             }
                         }
+                        "recommended_flows" => {
+                            if !cell.is_empty() {
+                                recommended_flows = cell.split(',').map(|s| s.trim().to_string()).collect();
+                            }
+                        }
                         _ => {} // Ignore other fields
                     }
                 }
@@ -95,6 +101,13 @@ async fn given_tasks_exist(world: &mut World, file: String, step: &cucumber::ghe
                 let (status, status_label) = parse_status(&status_text);
                 tasks_state::update_task_status(&state_path, TaskId(task_id.clone()), status)
                     .expect("Failed to update task status");
+
+                // Default to ac_first flow if no recommended_flows specified
+                let flows = if recommended_flows.is_empty() {
+                    vec!["ac_first".to_string()]
+                } else {
+                    recommended_flows.clone()
+                };
 
                 tasks.push(Task {
                     id: task_id.clone(),
@@ -106,7 +119,7 @@ async fn given_tasks_exist(world: &mut World, file: String, step: &cucumber::ghe
                     labels: labels.clone(),
                     docs: Some(empty_task_docs()),
                     summary: title.clone(),
-                    recommended_flows: Vec::new(),
+                    recommended_flows: flows,
                     depends_on: Vec::new(),
                 });
             }
