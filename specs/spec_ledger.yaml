@@ -780,8 +780,10 @@ stories:
             text: >
               GET /platform/agent/hints returns prioritized task suggestions
               for agents, filtering tasks by Todo/InProgress status.
-            tags: [future]
-            must_have_ac: false
+              Each hint includes: task_id, status, requirement_ids, ac_ids,
+              reason, and recommended_sequence (array of commands/edits).
+            tags: []
+            must_have_ac: true
             tests:
               - { type: bdd, tag: "@AC-TPL-AGENT-HINTS" }
 

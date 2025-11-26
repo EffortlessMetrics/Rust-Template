@@ -466,7 +466,12 @@ async fn then_array_contains_task(world: &mut World, field: String, task_id: Str
         .unwrap_or_else(|| panic!("field '{}' should be an array", field));
 
     let found = array.iter().any(|item| {
-        item.get("id").and_then(|id| id.as_str()).map(|id| id == task_id).unwrap_or(false)
+        // Support both "id" (old) and "task_id" (new) for backward compatibility
+        item.get("task_id")
+            .or_else(|| item.get("id"))
+            .and_then(|id| id.as_str())
+            .map(|id| id == task_id)
+            .unwrap_or(false)
     });
 
     assert!(
@@ -486,7 +491,12 @@ async fn then_array_not_contains_task(world: &mut World, field: String, task_id:
         .unwrap_or_else(|| panic!("field '{}' should be an array", field));
 
     let found = array.iter().any(|item| {
-        item.get("id").and_then(|id| id.as_str()).map(|id| id == task_id).unwrap_or(false)
+        // Support both "id" (old) and "task_id" (new) for backward compatibility
+        item.get("task_id")
+            .or_else(|| item.get("id"))
+            .and_then(|id| id.as_str())
+            .map(|id| id == task_id)
+            .unwrap_or(false)
     });
 
     assert!(
@@ -501,11 +511,12 @@ async fn then_first_hint_has_field(world: &mut World, field: String) {
     let response = world.last_response.as_ref().expect("response should exist");
     let hints = response
         .body
-        .get("next_tasks")
+        .get("hints")
+        .or_else(|| response.body.get("next_tasks")) // Backward compatibility
         .and_then(|v| v.as_array())
-        .expect("next_tasks should be an array");
+        .expect("hints (or next_tasks) should be an array");
 
-    assert!(!hints.is_empty(), "Expected at least one hint, but next_tasks array is empty");
+    assert!(!hints.is_empty(), "Expected at least one hint, but hints array is empty");
 
     let first_hint = &hints[0];
     assert!(
@@ -521,11 +532,12 @@ async fn then_first_hint_field_equals(world: &mut World, field: String, expected
     let response = world.last_response.as_ref().expect("response should exist");
     let hints = response
         .body
-        .get("next_tasks")
+        .get("hints")
+        .or_else(|| response.body.get("next_tasks")) // Backward compatibility
         .and_then(|v| v.as_array())
-        .expect("next_tasks should be an array");
+        .expect("hints (or next_tasks) should be an array");
 
-    assert!(!hints.is_empty(), "Expected at least one hint, but next_tasks array is empty");
+    assert!(!hints.is_empty(), "Expected at least one hint, but hints array is empty");
 
     let first_hint = &hints[0];
     let actual = first_hint.get(&field).and_then(|v| v.as_str()).unwrap_or("");
@@ -542,11 +554,12 @@ async fn then_first_hint_field_contains(world: &mut World, field: String, needle
     let response = world.last_response.as_ref().expect("response should exist");
     let hints = response
         .body
-        .get("next_tasks")
+        .get("hints")
+        .or_else(|| response.body.get("next_tasks")) // Backward compatibility
         .and_then(|v| v.as_array())
-        .expect("next_tasks should be an array");
+        .expect("hints (or next_tasks) should be an array");
 
-    assert!(!hints.is_empty(), "Expected at least one hint, but next_tasks array is empty");
+    assert!(!hints.is_empty(), "Expected at least one hint, but hints array is empty");
 
     let first_hint = &hints[0];
     let actual = first_hint.get(&field).and_then(|v| v.as_str()).unwrap_or("");
@@ -560,20 +573,17 @@ async fn then_first_hint_field_contains(world: &mut World, field: String, needle
     );
 }
 
-#[then(regex = r#"^the JSON should have an empty next_tasks array$"#)]
-async fn then_empty_next_tasks_array(world: &mut World) {
+#[then(regex = r#"^the JSON should have an empty hints array$"#)]
+async fn then_empty_hints_array(world: &mut World) {
     let response = world.last_response.as_ref().expect("response should exist");
     let hints = response
         .body
-        .get("next_tasks")
+        .get("hints")
+        .or_else(|| response.body.get("next_tasks")) // Backward compatibility
         .and_then(|v| v.as_array())
-        .expect("next_tasks should be an array");
+        .expect("hints (or next_tasks) should be an array");
 
-    assert!(
-        hints.is_empty(),
-        "Expected next_tasks array to be empty, but got {} items",
-        hints.len()
-    );
+    assert!(hints.is_empty(), "Expected hints array to be empty, but got {} items", hints.len());
 }
 
 // ============================================================================
