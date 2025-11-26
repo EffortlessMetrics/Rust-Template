@@ -155,6 +155,55 @@ curl -X POST http://localhost:8080/platform/tasks/TASK-001/status \
 # Invalid transition: 500 with error message containing "Invalid status transition"
 ```
 
+**Visualize Task Dependencies:**
+```bash
+# Get task dependency graph as JSON
+curl http://localhost:8080/platform/tasks/graph
+
+# Response includes:
+# {
+#   "nodes": [
+#     {
+#       "id": "TASK-001",
+#       "title": "Task title",
+#       "status": "InProgress",
+#       "requirement": "REQ-001",
+#       "owner": "agent",
+#       "labels": ["platform"]
+#     }
+#   ],
+#   "edges": [
+#     {
+#       "from": "TASK-002",    // Task that depends
+#       "to": "TASK-001",      // Task being depended on
+#       "edge_type": "depends_on"
+#     }
+#   ],
+#   "blocking_relationships": [
+#     {
+#       "blocked_task": "TASK-002",
+#       "blocking_tasks": ["TASK-001"],
+#       "reason": "Task 'TASK-002' is blocked by 1 incomplete dependencies"
+#     }
+#   ]
+# }
+
+# Get Mermaid diagram (for visualization)
+curl 'http://localhost:8080/platform/tasks/graph?format=mermaid'
+
+# Response includes:
+# {
+#   "mermaid": "graph TD\n  TASK-001[Task title]:::inprogress\n  ..."
+# }
+```
+
+**Use cases for task graph:**
+- Identify which tasks are blocked by incomplete dependencies
+- Visualize the task dependency tree using Mermaid.js
+- Understand the critical path for completing a feature
+- Find which tasks can be worked on in parallel
+- Detect tasks that are blocking multiple other tasks (high priority)
+
 **Simple Agent Loop Example:**
 ```bash
 # 1. Get prioritized hints
@@ -217,7 +266,10 @@ curl http://localhost:8080/platform/agent/hints
   "hints": [
     {
       "task_id": "TASK-TPL-STATUS-CLI-001",
+      "title": "Implement CLI governance status dashboard",
       "status": "InProgress",
+      "owner": "agent",
+      "labels": ["platform", "devex", "observability"],
       "requirement_ids": ["REQ-PLT-STATUS-CLI"],
       "ac_ids": ["AC-PLT-017"],
       "reason": "Task 'Implement CLI governance status dashboard' is ready for work",
@@ -236,9 +288,53 @@ curl http://localhost:8080/platform/agent/hints
 }
 ```
 
+**Fields explained:**
+- `task_id`: Unique identifier for the task
+- `title`: Human-readable task title from tasks.yaml
+- `status`: Current task status (Todo, InProgress, Review, Done)
+- `owner`: Task owner/assignee (individual or team name)
+- `labels`: Tags for filtering and categorization (e.g., platform, security, v3)
+- `requirement_ids`: List of requirement IDs this task implements
+- `ac_ids`: List of acceptance criteria IDs this task satisfies
+- `reason`: Short explanation of why this task is ready for work
+- `recommended_sequence`: Ordered list of commands to execute for this task
+
+**Filtering and Prioritization:**
+
+The hints endpoint supports query parameters for filtering and automatically sorts results:
+
+```bash
+# Filter by owner
+curl "http://localhost:8080/platform/agent/hints?owner=alice"
+
+# Filter by label
+curl "http://localhost:8080/platform/agent/hints?label=security"
+
+# Filter by requirement
+curl "http://localhost:8080/platform/agent/hints?requirement=REQ-TPL-HEALTH"
+
+# Combine filters
+curl "http://localhost:8080/platform/agent/hints?owner=alice&label=security"
+```
+
+**Sorting behavior:**
+1. **Primary**: Status (InProgress tasks appear before Todo tasks)
+2. **Secondary**: Priority label (priority:high > priority:medium > priority:low > no priority)
+3. **Tertiary**: Task ID (alphabetical)
+
+This ensures you always see:
+- Tasks already in progress first
+- Within each status group, high-priority tasks first
+- Predictable ordering by ID for stability
+
 **Use cases:**
 - Start a new session and discover what's already in progress or ready to start
 - Filter for `Todo` and `InProgress` tasks automatically
+- Find tasks assigned to a specific owner or team
+- Identify high-priority work using labels
+- Focus on tasks related to a specific requirement
+- Use `labels` to identify task category (e.g., security, platform, docs)
+- Check `owner` to understand who's responsible for the task
 - Get direct links to requirements and ACs for context
 - Follow `recommended_sequence` for standard workflow steps
 
@@ -306,6 +402,165 @@ curl http://localhost:8080/platform/devex/flows
 - Understand recommended workflow for a task
 - Find which commands are part of which flow
 - Discover step-by-step guidance
+
+### Query Platform Schemas
+
+The `/platform/schema` endpoint provides comprehensive JSON Schema definitions for all YAML configuration files in the platform, enabling validation, code generation, and machine-readable documentation.
+
+**Get All Schemas:**
+```bash
+# Get comprehensive schema information
+curl http://localhost:8080/platform/schema
+```
+
+**Response structure:**
+```json
+{
+  "schemas": [
+    {
+      "name": "spec_ledger",
+      "version": "1.0",
+      "description": "Story → Requirement → Acceptance Criterion traceability ledger",
+      "source_file": "specs/spec_ledger.yaml",
+      "json_schema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        ...
+      }
+    },
+    {
+      "name": "tasks",
+      "version": "1.0",
+      "description": "Work item tracking and task management",
+      "source_file": "specs/tasks.yaml",
+      "json_schema": { ... }
+    },
+    ...
+  ],
+  "endpoints": [
+    {
+      "path": "/platform/status",
+      "method": "GET",
+      "description": "Get platform governance and service status",
+      "request_type": null,
+      "response_type": "PlatformStatus"
+    },
+    ...
+  ]
+}
+```
+
+**Get Individual Schema by Name:**
+```bash
+# Get schema for tasks.yaml
+curl http://localhost:8080/platform/schema/tasks
+
+# Get schema for questions
+curl http://localhost:8080/platform/schema/questions
+
+# Get schema for config
+curl http://localhost:8080/platform/schema/config
+```
+
+**Available schemas:**
+- `spec_ledger` - Story/Requirement/AC traceability ledger (specs/spec_ledger.yaml)
+- `tasks` - Work item tracking and task management (specs/tasks.yaml)
+- `questions` - Structured ambiguity artifacts (specs/questions_schema.yaml)
+- `devex_flows` - Developer experience workflows and commands (specs/devex_flows.yaml)
+- `config` - Service configuration schema (specs/config_schema.yaml)
+- `doc_index` - Documentation inventory (specs/doc_index.yaml)
+- `service_metadata` - Service identity and metadata (specs/service_metadata.yaml)
+
+**Use cases:**
+- **Validation**: Validate YAML files against their JSON Schema before committing
+- **Code Generation**: Generate types/structs from JSON Schema for external tooling
+- **Documentation**: Auto-generate documentation from schema definitions
+- **IDE Integration**: Use JSON Schema for autocomplete and validation in editors
+- **Contract Verification**: Ensure YAML files conform to expected structure
+- **Tooling Development**: Build external tools that interact with platform specs
+
+**Validation workflow example:**
+```bash
+# 1. Get the schema
+curl http://localhost:8080/platform/schema/tasks > /tmp/tasks.schema.json
+
+# 2. Validate a YAML file using a JSON Schema validator
+# (Example using ajv-cli - install with: npm install -g ajv-cli)
+yq eval -o=json specs/tasks.yaml | \
+  ajv validate -s /tmp/tasks.schema.json -d -
+
+# 3. If valid, proceed with changes
+# If invalid, fix the YAML to conform to the schema
+```
+
+**Integration with platform flows:**
+- Schemas are auto-generated from the same runtime types used by xtask commands
+- Changes to spec structure are reflected immediately in `/platform/schema`
+- All platform endpoints are documented in the `endpoints` array
+- JSON Schema format enables cross-language tooling and validation
+
+### Check Open Questions
+
+Questions are structured artifacts created when flows or agents encounter ambiguity that requires human decision-making. They prevent work from stalling while capturing the context and options for later resolution.
+
+**CLI - View Questions:**
+```bash
+# View all questions with counts
+cargo xtask status
+
+# Output shows:
+# Questions:
+#   Open:        2
+#   Answered:    1
+#   Resolved:    1
+#   Total:       4
+#
+#   ⚠️  Q-BUNDLE-001
+#     Bundle flow found multiple ACs - unclear which to prioritize
+#   ⚠️  Q-SUGGEST-002
+#     Task has circular dependency in workflow
+```
+
+**API - Query Questions:**
+```bash
+# Get question counts and top open questions
+curl http://localhost:8080/platform/status
+
+# Response includes:
+# {
+#   "governance": {
+#     "questions": {
+#       "open": 2,
+#       "answered": 1,
+#       "resolved": 1,
+#       "total": 4,
+#       "top_open": [
+#         {
+#           "id": "Q-BUNDLE-001",
+#           "summary": "Bundle flow found multiple ACs - unclear which to prioritize",
+#           "flow": "bundle"
+#         }
+#       ]
+#     }
+#   }
+# }
+```
+
+**Acting on Questions:**
+1. Check for open questions in `cargo xtask status` or `/platform/status`
+2. Review question files in `questions/` directory for full context
+3. Questions include:
+   - `options`: Available choices with risk assessment
+   - `recommendation`: Agent's suggested option with rationale
+   - `context`: Flow/phase where ambiguity occurred, files involved
+4. Resolve questions by updating the `status` field to `"answered"` or `"resolved"` after human input
+5. Document resolution in the `resolution` section with `chosen_option` and `notes`
+
+**Question States:**
+- `open`: Needs human decision
+- `answered`: Human provided input but implementation pending
+- `resolved`: Fully resolved and implemented
+- `obsolete`: No longer relevant (e.g., requirement changed)
 
 ---
 
@@ -521,6 +776,116 @@ cargo xtask ac-coverage | grep AC-PLT-XXX
 - All kernel ACs (marked with `kernel: true` in spec_ledger.yaml) **MUST** show ✅ in `ac-coverage`
 - If any kernel AC shows ❌, the work is not complete
 - Use `ac-suggest-scenarios` to generate BDD stubs rather than guessing scenario structure
+
+---
+
+## 4.5. When to Use: Friction Log vs ADR vs Issue vs Question
+
+Understanding when to use each artifact type is critical for effective governance.
+
+### Friction Log
+
+**Use the friction log for:**
+- Process or tooling problems
+- Developer experience pain points
+- Workflow inefficiencies
+- CI/CD issues
+- Flaky tests or intermittent failures
+- Poor error messages or unclear diagnostics
+- Missing or unclear documentation
+
+**Examples:**
+- "Port discovery requires manual lsof lookup"
+- "Selftest takes 2+ hours on Windows"
+- "Pre-commit hook intermittently fails with file locking"
+- "Bundle command slow on large repos"
+- "Error message doesn't explain which file is invalid"
+
+**Command:**
+```bash
+cargo xtask friction-list
+cargo xtask friction-list --status open
+cargo xtask friction-list --severity high
+```
+
+**API:**
+```bash
+curl http://localhost:8080/platform/status | jq '.governance.friction'
+```
+
+### ADR (Architecture Decision Record)
+
+**Use ADRs for:**
+- Architectural decisions
+- Technology choices
+- Design patterns
+- System boundaries
+- Trade-offs between technical alternatives
+
+**Examples:**
+- "Why we use Axum instead of Actix"
+- "How we structure the governance graph"
+- "Why BDD tags must match AC IDs"
+- "Decision to use YAML for specs instead of JSON"
+
+**Command:**
+```bash
+cargo xtask adr-new "Title of architectural decision"
+```
+
+### GitHub Issue
+
+**Use GitHub issues for:**
+- Feature requests
+- Bug reports (functional bugs, not process friction)
+- Work items requiring tracking
+- Public discussion needed
+- External stakeholder visibility
+
+**Examples:**
+- "Add support for GraphQL API"
+- "Task filtering returns wrong results"
+- "Implement multi-tenancy"
+- "Agent should support multiple simultaneous tasks"
+
+### Question
+
+**Use questions for:**
+- Ambiguity in specs or requirements
+- Unclear choices during flow execution
+- Missing information needed to proceed
+- Multiple valid interpretations of a requirement
+
+**Examples:**
+- "Bundle flow finds multiple ACs - which to prioritize?"
+- "Task has circular dependency in workflow"
+- "AC description ambiguous - multiple interpretations"
+
+**Command:**
+```bash
+cargo xtask status  # Shows open questions
+```
+
+**API:**
+```bash
+curl http://localhost:8080/platform/status | jq '.governance.questions'
+```
+
+### Quick Reference Table
+
+| Artifact Type | Purpose | Visibility | Lifecycle |
+|--------------|---------|------------|-----------|
+| **Friction Log** | Process/tooling pain | Internal (repo) | Open → Resolved |
+| **ADR** | Architectural decisions | Internal (repo) | Permanent record |
+| **GitHub Issue** | Feature work, bugs | Public (GitHub) | Open → Closed |
+| **Question** | Spec ambiguity | Internal (repo) | Open → Answered → Resolved |
+
+### Decision Flow
+
+1. **Is it about the development process or tools?** → Use **Friction Log**
+2. **Is it an architectural or design decision?** → Use **ADR**
+3. **Is it unclear what the spec means or requires?** → Use **Question**
+4. **Is it a feature request or functional bug?** → Use **GitHub Issue**
 
 ---
 
@@ -810,6 +1175,8 @@ cargo xtask graph-export --check-invariants
 curl http://localhost:8080/platform/status
 curl http://localhost:8080/platform/graph
 curl http://localhost:8080/platform/tasks
+curl http://localhost:8080/platform/tasks/graph              # Task dependency graph (JSON)
+curl 'http://localhost:8080/platform/tasks/graph?format=mermaid'  # Mermaid diagram
 ```
 
 ### Environment Variables

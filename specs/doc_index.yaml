@@ -245,6 +245,16 @@ docs:
     acs: [AC-PLT-015, AC-PLT-016, AC-PLT-019, AC-PLT-020]
     adrs: [ADR-0002, ADR-0005, ADR-0017]
 
+  # ADR-0017: Tier-1 Selftest as Required Gate
+  - id: ADR-0017
+    file: docs/adr/0017-tier1-selftest-gate.md
+    title: "Tier-1 Selftest as Required Gate on Main Branch"
+    doc_type: adr
+    stories: [US-TPL-PLT-001]
+    requirements: [REQ-PLT-ONBOARDING, REQ-PLT-DEVEX-CONTRACT]
+    acs: [AC-PLT-015, AC-PLT-016, AC-PLT-019, AC-PLT-020]
+    adrs: [ADR-0002, ADR-0005]
+
   # IDP Positioning Guide
   - id: EXPLANATION-TPL-IDP-POSITIONING-001
     file: docs/explanation/idp-positioning.md

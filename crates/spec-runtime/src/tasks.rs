@@ -1,5 +1,6 @@
 use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use std::path::Path;
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -21,6 +22,8 @@ pub struct Task {
     pub docs: Option<TaskDocs>,
     pub summary: String,                // Added for suggest_next
     pub recommended_flows: Vec<String>, // Added for suggest_next
+    #[serde(default)]
+    pub depends_on: Vec<String>, // Task IDs this task depends on
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -247,6 +250,7 @@ mod tests {
                 docs: None,
                 summary: "Ensure SBOM exists".to_string(),
                 recommended_flows: vec!["release".to_string()],
+                depends_on: vec![],
             }],
         };
 
@@ -310,4 +314,153 @@ mod tests {
 
         assert_eq!(*sbom_step_status, StepStatus::Satisfied);
     }
+}
+
+/// Task graph structures for dependency visualization
+#[derive(Debug, Serialize, Deserialize)]
+pub struct TaskGraph {
+    pub nodes: Vec<TaskNode>,
+    pub edges: Vec<TaskEdge>,
+    pub blocking_relationships: Vec<BlockingRelationship>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct TaskNode {
+    pub id: String,
+    pub title: String,
+    pub status: String,
+    pub requirement: String,
+    pub owner: Option<String>,
+    pub labels: Vec<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct TaskEdge {
+    pub from: String,      // Task that depends
+    pub to: String,        // Task being depended on
+    pub edge_type: String, // "depends_on"
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct BlockingRelationship {
+    pub blocked_task: String,
+    pub blocking_tasks: Vec<String>,
+    pub reason: String,
+}
+
+/// Build a task dependency graph from tasks spec
+pub fn build_task_graph(tasks_spec: &TasksSpec) -> TaskGraph {
+    let mut nodes = Vec::new();
+    let mut edges = Vec::new();
+    let mut blocking = Vec::new();
+
+    // Build nodes
+    for task in &tasks_spec.tasks {
+        nodes.push(TaskNode {
+            id: task.id.clone(),
+            title: task.title.clone(),
+            status: task.status.clone(),
+            requirement: task.requirement.clone(),
+            owner: task.owner.clone(),
+            labels: task.labels.clone(),
+        });
+    }
+
+    // Build edges and identify blocking relationships
+    let task_status_map: HashMap<String, String> =
+        tasks_spec.tasks.iter().map(|t| (t.id.clone(), t.status.clone())).collect();
+
+    for task in &tasks_spec.tasks {
+        let mut incomplete_dependencies = Vec::new();
+
+        for dep_id in &task.depends_on {
+            edges.push(TaskEdge {
+                from: task.id.clone(),
+                to: dep_id.clone(),
+                edge_type: "depends_on".to_string(),
+            });
+
+            // Check if dependency is blocking (not Done)
+            if let Some(dep_status) = task_status_map.get(dep_id) {
+                let normalized_status = normalize_status_for_blocking(dep_status);
+                if normalized_status != "Done" {
+                    incomplete_dependencies.push(dep_id.clone());
+                }
+            } else {
+                // Dependency task doesn't exist - that's a problem
+                incomplete_dependencies.push(dep_id.clone());
+            }
+        }
+
+        // If this task has incomplete dependencies, record blocking relationship
+        if !incomplete_dependencies.is_empty() && task.status != "done" && task.status != "Done" {
+            blocking.push(BlockingRelationship {
+                blocked_task: task.id.clone(),
+                blocking_tasks: incomplete_dependencies.clone(),
+                reason: format!(
+                    "Task '{}' is blocked by {} incomplete dependencies",
+                    task.id,
+                    incomplete_dependencies.len()
+                ),
+            });
+        }
+    }
+
+    TaskGraph { nodes, edges, blocking_relationships: blocking }
+}
+
+/// Generate Mermaid diagram for task graph
+pub fn generate_mermaid_diagram(graph: &TaskGraph) -> String {
+    let mut output = String::new();
+    output.push_str("graph TD\n");
+
+    // Add nodes with status coloring
+    for node in &graph.nodes {
+        let label = format!("{}[{}]", node.id, escape_mermaid_label(&node.title));
+        output.push_str(&format!("  {}:::{}\n", label, status_to_class(&node.status)));
+    }
+
+    // Add edges
+    for edge in &graph.edges {
+        output.push_str(&format!("  {} -->|depends on| {}\n", edge.from, edge.to));
+    }
+
+    // Add style classes
+    output.push_str("\n  classDef done fill:#90EE90,stroke:#333,stroke-width:2px\n");
+    output.push_str("  classDef inprogress fill:#FFD700,stroke:#333,stroke-width:2px\n");
+    output.push_str("  classDef review fill:#87CEEB,stroke:#333,stroke-width:2px\n");
+    output.push_str("  classDef todo fill:#FFB6C1,stroke:#333,stroke-width:2px\n");
+
+    output
+}
+
+fn normalize_status_for_blocking(status: &str) -> String {
+    let key = status.trim().to_ascii_lowercase().replace([' ', '-'], "_");
+    match key.as_str() {
+        "todo" | "open" => "Todo".to_string(),
+        "inprogress" | "in_progress" => "InProgress".to_string(),
+        "review" => "Review".to_string(),
+        "done" | "closed" => "Done".to_string(),
+        _ => "Todo".to_string(),
+    }
+}
+
+fn status_to_class(status: &str) -> String {
+    match normalize_status_for_blocking(status).as_str() {
+        "Done" => "done",
+        "InProgress" => "inprogress",
+        "Review" => "review",
+        _ => "todo",
+    }
+    .to_string()
+}
+
+fn escape_mermaid_label(label: &str) -> String {
+    label
+        .replace('"', "'")
+        .replace('[', "(")
+        .replace(']', ")")
+        .chars()
+        .take(50) // Limit label length
+        .collect()
 }

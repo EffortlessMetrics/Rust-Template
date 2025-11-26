@@ -1,3 +1,16 @@
+---
+doc_type: adr
+id: ADR-0017
+title: "Tier-1 Selftest as Required Gate on Main Branch"
+status: Accepted
+date: 2025-11-26
+authors: Steven Zimmerman
+stories: [US-TPL-PLT-001]
+requirements: [REQ-PLT-ONBOARDING, REQ-PLT-DEVEX-CONTRACT]
+acs: [AC-PLT-015, AC-PLT-016, AC-PLT-019, AC-PLT-020]
+adrs: [ADR-0002, ADR-0005]
+---
+
 # ADR-0017: Tier-1 Selftest as Required Gate on Main Branch
 
 **Status**: Accepted

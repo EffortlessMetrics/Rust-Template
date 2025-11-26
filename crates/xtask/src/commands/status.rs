@@ -7,7 +7,7 @@ use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
 
-use super::questions;
+use super::{friction, questions};
 
 // Regex pattern for parsing feature_status.md AC lines
 static AC_STATUS_PATTERN: Lazy<Regex> = Lazy::new(|| {
@@ -101,6 +101,10 @@ pub fn run() -> Result<()> {
     let questions = questions::load_all_questions().unwrap_or_default();
     let question_stats = questions::calculate_stats(&questions);
 
+    // Load friction
+    let friction_entries = friction::load_all_friction_entries().unwrap_or_default();
+    let friction_stats = friction::calculate_stats(&friction_entries);
+
     // Display status
     print_status_dashboard(
         &ledger.metadata.template_version,
@@ -110,6 +114,9 @@ pub fn run() -> Result<()> {
         &task_counts,
         &ac_coverage,
         &question_stats,
+        &questions,
+        &friction_stats,
+        &friction_entries,
     );
 
     Ok(())
@@ -189,6 +196,7 @@ fn parse_ac_coverage(feature_status_path: &Path) -> Option<AcCoverage> {
     if coverage.total() > 0 { Some(coverage) } else { None }
 }
 
+#[allow(clippy::too_many_arguments)]
 fn print_status_dashboard(
     version: &str,
     story_count: usize,
@@ -197,6 +205,9 @@ fn print_status_dashboard(
     task_counts: &HashMap<String, usize>,
     ac_coverage: &Option<AcCoverage>,
     question_stats: &questions::QuestionStats,
+    all_questions: &[questions::Question],
+    friction_stats: &friction::FrictionStats,
+    all_friction: &[friction::FrictionEntry],
 ) {
     println!();
     println!("{}", "======================================".blue());
@@ -270,7 +281,76 @@ fn print_status_dashboard(
         println!("  Answered:    {}", question_stats.answered_count);
         println!("  Resolved:    {}", question_stats.resolved_count);
         println!("  Total:       {}", question_stats.total_count);
+
+        // Show top 1-3 open questions
+        let open_questions: Vec<&questions::Question> =
+            all_questions.iter().filter(|q| q.status == "open").take(3).collect();
+
+        if !open_questions.is_empty() {
+            println!();
+            for q in open_questions {
+                println!("  {} {}", "⚠️".yellow(), q.id);
+                println!("    {}", q.summary.dimmed());
+            }
+        }
+
         println!("  See: {}", "questions/ directory".blue());
+        println!();
+    }
+
+    // Friction metrics
+    if friction_stats.total_count > 0 {
+        println!("{}", "Friction:".bold());
+        let open_display = if friction_stats.open_count > 0 {
+            format!("  Open:        {}", friction_stats.open_count).yellow().to_string()
+        } else {
+            format!("  Open:        {}", friction_stats.open_count)
+        };
+        println!("{}", open_display);
+        println!("  Resolved:    {}", friction_stats.resolved_count);
+        println!("  Total:       {}", friction_stats.total_count);
+
+        // Show severity breakdown
+        let has_critical = friction_stats.by_severity.critical > 0;
+        let has_high = friction_stats.by_severity.high > 0;
+        if has_critical || has_high {
+            println!();
+            if has_critical {
+                println!(
+                    "  {} Critical: {}",
+                    "🔥".red(),
+                    friction_stats.by_severity.critical.to_string().red()
+                );
+            }
+            if has_high {
+                println!(
+                    "  {} High:     {}",
+                    "❗".yellow(),
+                    friction_stats.by_severity.high.to_string().yellow()
+                );
+            }
+        }
+
+        // Show top 1-3 open friction entries
+        let open_friction: Vec<&friction::FrictionEntry> =
+            all_friction.iter().filter(|f| f.status == "open").take(3).collect();
+
+        if !open_friction.is_empty() {
+            println!();
+            for f in open_friction {
+                let severity_icon = match f.severity.as_str() {
+                    "critical" => "🔥",
+                    "high" => "❗",
+                    "medium" => "⚠️",
+                    "low" => "ℹ️",
+                    _ => "•",
+                };
+                println!("  {} {}", severity_icon.yellow(), f.id);
+                println!("    {}", f.summary.dimmed());
+            }
+        }
+
+        println!("  See: {}", "FRICTION_LOG.md and friction/ directory".blue());
         println!();
     }
 

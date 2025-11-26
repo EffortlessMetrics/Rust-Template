@@ -81,6 +81,7 @@ pub struct QuestionStats {
 
 impl Question {
     /// Create a new question with current timestamp
+    #[allow(dead_code)]
     pub fn new(
         id: String,
         flow: &str,
@@ -112,6 +113,7 @@ impl Question {
     }
 
     /// Save question to YAML file in questions/ directory
+    #[allow(dead_code)]
     pub fn save(&self) -> Result<PathBuf> {
         let questions_dir = Path::new("questions");
         fs::create_dir_all(questions_dir)
@@ -201,6 +203,7 @@ pub fn calculate_stats(questions: &[Question]) -> QuestionStats {
 }
 
 /// List questions filtered by status
+#[allow(dead_code)]
 pub fn list_questions(status_filter: Option<&str>) -> Result<()> {
     let questions = load_all_questions()?;
 
@@ -250,6 +253,7 @@ pub fn list_questions(status_filter: Option<&str>) -> Result<()> {
 }
 
 /// Get next question ID for a given flow category
+#[allow(dead_code)]
 pub fn get_next_question_id(category: &str) -> Result<usize> {
     let questions = load_all_questions()?;
 
@@ -258,10 +262,7 @@ pub fn get_next_question_id(category: &str) -> Result<usize> {
     let max_id = questions
         .iter()
         .filter(|q| q.id.starts_with(&prefix))
-        .filter_map(|q| {
-            q.id.strip_prefix(&prefix)
-                .and_then(|s| s.parse::<usize>().ok())
-        })
+        .filter_map(|q| q.id.strip_prefix(&prefix).and_then(|s| s.parse::<usize>().ok()))
         .max()
         .unwrap_or(0);
 
@@ -269,6 +270,7 @@ pub fn get_next_question_id(category: &str) -> Result<usize> {
 }
 
 /// Emit a question artifact from a flow
+#[allow(dead_code)]
 pub fn emit_question(question: Question) -> Result<()> {
     let filepath = question.save()?;
     eprintln!("⚠️  Question {} created: {}", question.id, question.summary);

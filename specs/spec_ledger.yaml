@@ -28,7 +28,7 @@ stories:
             text: "GET /health returns 200 with status 'ok' when service is healthy"
             tags: [kernel]
             must_have_ac: true
-            tests: [ { type: bdd, tag: "@AC-TPL-005" } ]
+            tests: [ { type: bdd, tag: "@AC-TPL-005", file: "specs/features/template_core.feature" } ]
             adr: ADR-0005  # Selftest as single gate
       - id: REQ-TPL-VERSION
         title: "Version Information Endpoint"
@@ -40,7 +40,7 @@ stories:
             text: "GET /version returns build information including version and git SHA"
             tags: [kernel]
             must_have_ac: true
-            tests: [ { type: bdd, tag: "@AC-TPL-002" } ]
+            tests: [ { type: bdd, tag: "@AC-TPL-002", file: "specs/features/template_core.feature" } ]
             adr: ADR-0005  # Selftest as single gate
       - id: REQ-TPL-ERROR-HANDLING
         title: "Error Response Envelope"
@@ -52,13 +52,13 @@ stories:
             text: "All 4xx/5xx responses include an error code, message, and request ID"
             tags: [kernel]
             must_have_ac: true
-            tests: [ { type: bdd, tag: "@AC-TPL-003" } ]
+            tests: [ { type: bdd, tag: "@AC-TPL-003", file: "specs/features/template_core.feature" } ]
             adr: ADR-0005  # Selftest as single gate
           - id: AC-TPL-004
             text: "Handlers propagate or generate X-Request-ID and expose it in responses"
             tags: [kernel]
             must_have_ac: true
-            tests: [ { type: bdd, tag: "@AC-TPL-004" } ]
+            tests: [ { type: bdd, tag: "@AC-TPL-004", file: "specs/features/template_core.feature" } ]
             adr: ADR-0005  # Selftest as single gate
       - id: REQ-TPL-METRICS
         title: "Prometheus Metrics Endpoint"
@@ -70,7 +70,7 @@ stories:
             text: "GET /metrics returns Prometheus-formatted metrics including http_requests_total"
             tags: [kernel]
             must_have_ac: true
-            tests: [ { type: bdd, tag: "@AC-TPL-007" } ]
+            tests: [ { type: bdd, tag: "@AC-TPL-007", file: "specs/features/metrics.feature" } ]
             adr: ADR-0005  # Selftest as single gate
 
   - id: US-TPL-PLT-001
@@ -104,6 +104,8 @@ stories:
             must_have_ac: true
             tests:
               - { type: integration, tag: "@AC-PLT-001", file: "specs/features/xtask_devex.feature" }
+              - { type: unit, tag: "test_check_rust_version_accepts_valid_versions", module: "commands::doctor::tests", file: "crates/xtask/src/commands/doctor.rs" }
+              - { type: unit, tag: "test_doctor_command_exists", module: "commands::doctor::tests", file: "crates/xtask/src/commands/doctor.rs" }
           
           - id: AC-PLT-002
             text: "`cargo xtask help-flows` renders categorized command map from specs/devex_flows.yaml"
@@ -111,6 +113,8 @@ stories:
             must_have_ac: true
             tests:
               - { type: integration, tag: "@AC-PLT-002", file: "specs/features/xtask_devex.feature" }
+              - { type: unit, tag: "test_help_flows_command_exists", module: "commands::help_flows::tests", file: "crates/xtask/src/commands/help_flows.rs" }
+              - { type: unit, tag: "test_devex_spec_contains_required_categories", module: "commands::help_flows::tests", file: "crates/xtask/src/commands/help_flows.rs" }
 
           - id: AC-PLT-003
             text: "`cargo xtask check` runs fmt + clippy + tests as fast dev loop"
@@ -118,6 +122,8 @@ stories:
             must_have_ac: true
             tests:
               - { type: integration, tag: "@AC-PLT-003", file: "specs/features/xtask_devex.feature" }
+              - { type: unit, tag: "test_check_command_exists", module: "commands::check::tests", file: "crates/xtask/src/commands/check.rs" }
+              - { type: unit, tag: "test_check_options_low_resource_mode", module: "commands::check::tests", file: "crates/xtask/src/commands/check.rs" }
 
           - id: AC-PLT-018
             text: "`cargo xtask dev-up` runs doctor + install-hooks + check and displays next steps"
@@ -141,6 +147,9 @@ stories:
             must_have_ac: true
             tests:
               - { type: integration, tag: "@AC-PLT-004", file: "specs/features/xtask_devex.feature" }
+              - { type: unit, tag: "test_adr_new_command_exists", module: "commands::adr_new::tests", file: "crates/xtask/src/commands/adr_new.rs" }
+              - { type: unit, tag: "test_slug_generation_from_title", module: "commands::adr_new::tests", file: "crates/xtask/src/commands/adr_new.rs" }
+              - { type: unit, tag: "test_adr_id_formatting", module: "commands::adr_new::tests", file: "crates/xtask/src/commands/adr_new.rs" }
 
           - id: AC-PLT-005
             text: "`cargo xtask ac-new <ID> <desc>` rejects duplicate IDs and generates YAML snippet"
@@ -148,6 +157,9 @@ stories:
             must_have_ac: true
             tests:
               - { type: integration, tag: "@AC-PLT-005", file: "specs/features/xtask_devex.feature" }
+              - { type: unit, tag: "test_ac_new_command_exists", module: "commands::ac_new::tests", file: "crates/xtask/src/commands/ac_new.rs" }
+              - { type: unit, tag: "test_ac_id_validation_requires_prefix", module: "commands::ac_new::tests", file: "crates/xtask/src/commands/ac_new.rs" }
+              - { type: unit, tag: "test_ac_entry_generation", module: "commands::ac_new::tests", file: "crates/xtask/src/commands/ac_new.rs" }
 
       - id: REQ-PLT-SECURITY-GOVERNANCE
         title: "Security and dependency health are first-class gates"
@@ -168,6 +180,8 @@ stories:
             must_have_ac: true
             tests:
               - { type: integration, tag: "@AC-PLT-006", file: "specs/features/xtask_devex.feature" }
+              - { type: unit, tag: "test_audit_command_exists", module: "commands::audit::tests", file: "crates/xtask/src/commands/audit.rs" }
+              - { type: unit, tag: "test_audit_checks_for_tools", module: "commands::audit::tests", file: "crates/xtask/src/commands/audit.rs" }
 
           - id: AC-PLT-007
             text: "`cargo xtask audit` provides 4-step recovery guidance on failure"
@@ -182,6 +196,9 @@ stories:
             must_have_ac: true
             tests:
               - { type: integration, tag: "@AC-PLT-008", file: "specs/features/xtask_devex.feature" }
+              - { type: unit, tag: "test_sbom_local_command_exists", module: "commands::sbom_local::tests", file: "crates/xtask/src/commands/sbom_local.rs" }
+              - { type: unit, tag: "test_sbom_json_structure", module: "commands::sbom_local::tests", file: "crates/xtask/src/commands/sbom_local.rs" }
+              - { type: unit, tag: "test_package_id_replacement_logic", module: "commands::sbom_local::tests", file: "crates/xtask/src/commands/sbom_local.rs" }
 
       - id: REQ-PLT-DOCS-CONSISTENCY
         title: "Documentation alignment is automatically validated"
@@ -256,14 +273,14 @@ stories:
             tags: [kernel]
             must_have_ac: true
             tests:
-              - { type: integration, tag: "release_bundle_generation" }
+              - { type: integration, tag: "release_bundle_generation", file: "specs/features/xtask_devex.feature" }
 
           - id: AC-TPL-REL-CHANGELOG
             text: "Evidence file includes distinct sections (Tasks, Specs/ACs, ADRs, Git log, Governance signals) adequate for LLM formatting into Keep a Changelog format."
             tags: [kernel]
             must_have_ac: true
             tests:
-              - { type: integration, tag: "release_bundle_structure" }
+              - { type: integration, tag: "release_bundle_structure", file: "specs/features/xtask_devex.feature" }
 
       - id: REQ-PLT-DEVEX-CONTRACT
         title: "DevEx flows and commands are spec-backed and CI-enforced"
@@ -356,19 +373,19 @@ stories:
             tags: [kernel]
             must_have_ac: true
             tests:
-              - { type: bdd, tag: "@AC-TPL-PLATFORM-GRAPH" }
+              - { type: bdd, tag: "@AC-TPL-PLATFORM-GRAPH", file: "specs/features/platform_introspection.feature" }
           - id: AC-TPL-PLATFORM-DEVEX
             text: "GET /platform/devex/flows returns the canonical flows definition."
             tags: [kernel]
             must_have_ac: true
             tests:
-              - { type: bdd, tag: "@AC-TPL-PLATFORM-DEVEX" }
+              - { type: bdd, tag: "@AC-TPL-PLATFORM-DEVEX", file: "specs/features/platform_introspection.feature" }
           - id: AC-TPL-PLATFORM-DOCS
             text: "GET /platform/docs/index returns the documentation index."
             tags: [kernel]
             must_have_ac: true
             tests:
-              - { type: bdd, tag: "@AC-TPL-PLATFORM-DOCS" }
+              - { type: bdd, tag: "@AC-TPL-PLATFORM-DOCS", file: "specs/features/platform_introspection.feature" }
           - id: AC-TPL-POLICY-STATUS-OVERVIEW
             text: >
               GET /platform/status includes governance.policies.status field
@@ -398,7 +415,7 @@ stories:
             tags: [kernel]
             must_have_ac: true
             tests:
-              - { type: bdd, tag: "@AC-TPL-PLATFORM-SCHEMA" }
+              - { type: bdd, tag: "@AC-TPL-PLATFORM-SCHEMA", file: "specs/features/platform_schema.feature" }
 
       - id: REQ-TPL-METADATA-CONSISTENT
         title: "Platform metadata is coherent and exposed"
@@ -417,7 +434,7 @@ stories:
             tags: [kernel]
             must_have_ac: true
             tests:
-              - { type: bdd, tag: "@AC-TPL-METADATA-COMPLETE" }
+              - { type: bdd, tag: "@AC-TPL-METADATA-COMPLETE", file: "specs/features/platform_schema.feature" }
 
       - id: REQ-TPL-PLATFORM-AUTH
         title: "Platform introspection supports authenticated mode"
@@ -479,7 +496,7 @@ stories:
             tags: [future]
             must_have_ac: false
             tests:
-              - { type: bdd, tag: "@AC-TPL-SUGGEST-NEXT-CLI" }
+              - { type: bdd, tag: "@AC-TPL-SUGGEST-NEXT-CLI", file: "specs/features/platform_rounding.feature" }
 
           - id: AC-TPL-SUGGEST-NEXT-HTTP
             text: >
@@ -489,7 +506,7 @@ stories:
             tags: [future]
             must_have_ac: false
             tests:
-              - { type: bdd, tag: "@AC-TPL-SUGGEST-NEXT-HTTP" }
+              - { type: bdd, tag: "@AC-TPL-SUGGEST-NEXT-HTTP", file: "specs/features/platform_rounding.feature" }
 
       - id: REQ-TPL-QUESTIONS-AS-ARTIFACTS
         title: "Ambiguity is logged as a question, not a blocker"
@@ -595,7 +612,7 @@ stories:
             tags: [kernel]
             must_have_ac: true
             tests:
-              - { type: bdd, tag: "@AC-TPL-PLATFORM-UI-DASHBOARD" }
+              - { type: bdd, tag: "@AC-TPL-PLATFORM-UI-DASHBOARD", file: "specs/features/platform_ui.feature" }
 
           - id: AC-TPL-PLATFORM-UI-GRAPH
             text: >
@@ -604,7 +621,7 @@ stories:
             tags: [kernel]
             must_have_ac: true
             tests:
-              - { type: bdd, tag: "@AC-TPL-PLATFORM-UI-GRAPH" }
+              - { type: bdd, tag: "@AC-TPL-PLATFORM-UI-GRAPH", file: "specs/features/platform_ui.feature" }
 
           - id: AC-TPL-PLATFORM-UI-FLOWS
             text: >
@@ -613,7 +630,7 @@ stories:
             tags: [kernel]
             must_have_ac: true
             tests:
-              - { type: bdd, tag: "@AC-TPL-PLATFORM-UI-FLOWS" }
+              - { type: bdd, tag: "@AC-TPL-PLATFORM-UI-FLOWS", file: "specs/features/platform_ui.feature" }
 
       - id: REQ-TPL-PLATFORM-TASKS
         title: "Platform Tasks Surfacing"
@@ -703,7 +720,7 @@ stories:
             tags: [kernel]
             must_have_ac: true
             tests:
-              - { type: bdd, tag: "@AC-TPL-CONFIG-VALIDATION" }
+              - { type: bdd, tag: "@AC-TPL-CONFIG-VALIDATION", file: "specs/features/config_validation.feature" }
               - { type: unit, tag: "config_validation_rejects_invalid", module: "config::tests::config_validation_rejects_invalid", file: "crates/spec-runtime/src/config.rs" }
 
       - id: REQ-TPL-IAC-ALIGNMENT

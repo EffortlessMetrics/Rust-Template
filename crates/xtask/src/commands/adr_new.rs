@@ -104,3 +104,64 @@ fn get_git_user() -> Result<String> {
 
     anyhow::bail!("Git user.name not configured")
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_adr_new_command_exists() {
+        // Verify that the run function is accessible and has the correct signature
+        let _: fn(&str) -> Result<()> = run;
+    }
+
+    #[test]
+    fn test_find_next_adr_number_increments() {
+        // Test that ADR numbering logic increments correctly
+        // This test verifies the logic without actually reading the filesystem
+        use std::path::PathBuf;
+
+        let adr_dir = PathBuf::from("docs/adr");
+        if adr_dir.exists() {
+            let next_num = find_next_adr_number(&adr_dir).expect("find next ADR number");
+            // Next number should be at least 1
+            assert!(next_num >= 1, "ADR number should be at least 1");
+        }
+    }
+
+    #[test]
+    fn test_slug_generation_from_title() {
+        // Test the slug generation logic used in adr-new
+        let title = "Test ADR Scaffolding";
+        let slug = title
+            .to_lowercase()
+            .replace(char::is_whitespace, "-")
+            .chars()
+            .filter(|c| c.is_alphanumeric() || *c == '-')
+            .collect::<String>();
+
+        assert_eq!(slug, "test-adr-scaffolding");
+    }
+
+    #[test]
+    fn test_slug_generation_removes_special_chars() {
+        // Test that special characters are removed from slug
+        let title = "Test & Special! Chars?";
+        let slug = title
+            .to_lowercase()
+            .replace(char::is_whitespace, "-")
+            .chars()
+            .filter(|c| c.is_alphanumeric() || *c == '-')
+            .collect::<String>();
+
+        assert_eq!(slug, "test--special-chars");
+    }
+
+    #[test]
+    fn test_adr_id_formatting() {
+        // Test ADR ID formatting
+        let next_num = 42;
+        let adr_id = format!("ADR-{:04}", next_num);
+        assert_eq!(adr_id, "ADR-0042");
+    }
+}

@@ -20,12 +20,14 @@ pub fn router(state: AppState) -> Router<AppState> {
         // API routes
         .route("/graph", get(get_graph))
         .route("/schema", get(get_schema))
+        .route("/schema/{name}", get(get_schema_by_name_handler))
         .route("/devex/flows", get(get_devex_flows))
         .route("/docs/index", get(get_docs_index))
         .route("/status", get(get_status))
         .route("/coverage", get(get_coverage))
         .route("/tasks", get(get_tasks))
         .route("/tasks/suggest-next", get(get_suggest_next))
+        .route("/tasks/graph", get(get_task_graph))
         .with_state(state)
 }
 
@@ -93,6 +95,7 @@ struct GovernanceStatus {
     docs: DocCounts,
     tasks: TaskCounts,
     questions: QuestionCounts,
+    friction: FrictionCounts,
     policies: PolicyStatus,
 }
 
@@ -126,6 +129,41 @@ struct QuestionCounts {
     answered: usize,
     resolved: usize,
     total: usize,
+    #[serde(skip_serializing_if = "Vec::is_empty", default)]
+    top_open: Vec<QuestionSummary>,
+}
+
+#[derive(Serialize)]
+struct QuestionSummary {
+    id: String,
+    summary: String,
+    flow: String,
+}
+
+#[derive(Serialize)]
+struct FrictionCounts {
+    total: usize,
+    open: usize,
+    by_severity: SeverityCounts,
+    #[serde(skip_serializing_if = "Vec::is_empty", default)]
+    recent: Vec<FrictionSummary>,
+}
+
+#[derive(Serialize)]
+struct SeverityCounts {
+    low: usize,
+    medium: usize,
+    high: usize,
+    critical: usize,
+}
+
+#[derive(Serialize)]
+struct FrictionSummary {
+    id: String,
+    date: String,
+    severity: String,
+    summary: String,
+    category: String,
 }
 
 #[derive(Serialize)]
@@ -248,6 +286,9 @@ async fn get_status(State(state): State<AppState>) -> Json<PlatformStatus> {
     // Load question counts
     let question_counts = load_question_counts(root);
 
+    // Load friction counts
+    let friction_counts = load_friction_counts(root);
+
     // Read policy status from last policy-test run
     let policy_path = root.join("target/policy_status.json");
     let policy_status = if let Ok(content) = fs::read_to_string(policy_path) {
@@ -283,6 +324,7 @@ async fn get_status(State(state): State<AppState>) -> Json<PlatformStatus> {
             docs: doc_counts,
             tasks: task_counts,
             questions: question_counts,
+            friction: friction_counts,
             policies: PolicyStatus { status: policy_status },
         },
         config,
@@ -295,19 +337,29 @@ fn load_question_counts(root: &std::path::Path) -> QuestionCounts {
 
     #[derive(Deserialize)]
     struct Question {
+        id: String,
+        #[serde(default)]
+        summary: String,
         #[serde(default)]
         status: String,
+        context: QuestionContext,
+    }
+
+    #[derive(Deserialize)]
+    struct QuestionContext {
+        flow: String,
     }
 
     let questions_dir = root.join("questions");
     if !questions_dir.exists() {
-        return QuestionCounts { open: 0, answered: 0, resolved: 0, total: 0 };
+        return QuestionCounts { open: 0, answered: 0, resolved: 0, total: 0, top_open: vec![] };
     }
 
     let mut open = 0;
     let mut answered = 0;
     let mut resolved = 0;
     let mut total = 0;
+    let mut open_questions = Vec::new();
 
     if let Ok(entries) = fs::read_dir(&questions_dir) {
         for entry in entries.flatten() {
@@ -319,21 +371,115 @@ fn load_question_counts(root: &std::path::Path) -> QuestionCounts {
                 continue;
             }
 
-            if let Ok(content) = fs::read_to_string(&path) {
-                if let Ok(question) = serde_yaml::from_str::<Question>(&content) {
-                    total += 1;
-                    match question.status.as_str() {
-                        "open" => open += 1,
-                        "answered" => answered += 1,
-                        "resolved" => resolved += 1,
-                        _ => {}
+            if let Ok(content) = fs::read_to_string(&path)
+                && let Ok(question) = serde_yaml::from_str::<Question>(&content)
+            {
+                total += 1;
+                match question.status.as_str() {
+                    "open" => {
+                        open += 1;
+                        open_questions.push(QuestionSummary {
+                            id: question.id,
+                            summary: question.summary,
+                            flow: question.context.flow,
+                        });
                     }
+                    "answered" => answered += 1,
+                    "resolved" => resolved += 1,
+                    _ => {}
                 }
             }
         }
     }
 
-    QuestionCounts { open, answered, resolved, total }
+    // Take top 3 open questions
+    open_questions.truncate(3);
+
+    QuestionCounts { open, answered, resolved, total, top_open: open_questions }
+}
+
+/// Load friction counts from friction/ directory
+fn load_friction_counts(root: &std::path::Path) -> FrictionCounts {
+    use serde::Deserialize;
+
+    #[derive(Deserialize)]
+    struct FrictionEntry {
+        id: String,
+        date: String,
+        #[serde(default)]
+        severity: String,
+        #[serde(default)]
+        summary: String,
+        #[serde(default)]
+        category: String,
+        #[serde(default)]
+        status: String,
+    }
+
+    let friction_dir = root.join("friction");
+    if !friction_dir.exists() {
+        return FrictionCounts {
+            total: 0,
+            open: 0,
+            by_severity: SeverityCounts { low: 0, medium: 0, high: 0, critical: 0 },
+            recent: vec![],
+        };
+    }
+
+    let mut total = 0;
+    let mut open = 0;
+    let mut by_severity = SeverityCounts { low: 0, medium: 0, high: 0, critical: 0 };
+    let mut all_entries = Vec::new();
+
+    if let Ok(entries) = fs::read_dir(&friction_dir) {
+        for entry in entries.flatten() {
+            let path = entry.path();
+            if path.extension().and_then(|s| s.to_str()) != Some("yaml") {
+                continue;
+            }
+            if path.file_name().and_then(|s| s.to_str()) == Some("README.yaml") {
+                continue;
+            }
+
+            if let Ok(content) = fs::read_to_string(&path)
+                && let Ok(friction) = serde_yaml::from_str::<FrictionEntry>(&content)
+            {
+                total += 1;
+
+                // Count open friction
+                if friction.status == "open" || friction.status.is_empty() {
+                    open += 1;
+                }
+
+                // Count by severity
+                match friction.severity.as_str() {
+                    "low" => by_severity.low += 1,
+                    "medium" => by_severity.medium += 1,
+                    "high" => by_severity.high += 1,
+                    "critical" => by_severity.critical += 1,
+                    _ => {}
+                }
+
+                all_entries.push(friction);
+            }
+        }
+    }
+
+    // Sort by date (most recent first) and take top 5
+    all_entries.sort_by(|a, b| b.date.cmp(&a.date));
+    let recent: Vec<FrictionSummary> = all_entries
+        .into_iter()
+        .take(5)
+        .map(|e| FrictionSummary {
+            id: e.id,
+            date: e.date,
+            severity: e.severity,
+            summary: e.summary,
+            category: e.category,
+        })
+        .collect();
+
+    FrictionCounts { total, open, by_severity, recent }
 }
 
 #[derive(Deserialize)]
@@ -471,19 +617,6 @@ pub struct CoverageDetail {
 pub struct CoverageResponse {
     pub summary: CoverageSummary,
     pub details: Vec<CoverageDetail>,
-}
-
-#[derive(Serialize)]
-struct PlatformEndpointSchema {
-    path: String,
-    method: String,
-    request_type: Option<String>,
-    response_type: String,
-}
-
-#[derive(Serialize)]
-struct PlatformSchema {
-    endpoints: Vec<PlatformEndpointSchema>,
 }
 
 // Cucumber JSON format structures for parsing BDD output
@@ -633,31 +766,16 @@ async fn get_coverage(State(state): State<AppState>) -> Json<CoverageResponse> {
     })
 }
 
-async fn get_schema() -> Json<PlatformSchema> {
-    fn ep(
-        path: &str,
-        method: &str,
-        request: Option<&str>,
-        response: &str,
-    ) -> PlatformEndpointSchema {
-        PlatformEndpointSchema {
-            path: path.to_string(),
-            method: method.to_string(),
-            request_type: request.map(|s| s.to_string()),
-            response_type: response.to_string(),
-        }
-    }
+async fn get_schema() -> Json<spec_runtime::PlatformSchemas> {
+    Json(spec_runtime::get_all_schemas())
+}
 
-    Json(PlatformSchema {
-        endpoints: vec![
-            ep("/platform/status", "GET", None, "PlatformStatus"),
-            ep("/platform/graph", "GET", None, "PlatformGraph"),
-            ep("/platform/devex/flows", "GET", None, "PlatformDevExFlows"),
-            ep("/platform/docs/index", "GET", None, "PlatformDocsIndex"),
-            ep("/platform/tasks", "GET", None, "TasksResponse"),
-            ep("/platform/agent/hints", "GET", None, "AgentHints"),
-        ],
-    })
+async fn get_schema_by_name_handler(
+    axum::extract::Path(name): axum::extract::Path<String>,
+) -> Result<Json<spec_runtime::SchemaInfo>, AppError> {
+    spec_runtime::get_schema_by_name(&name)
+        .map(Json)
+        .ok_or_else(|| AppError::not_found(format!("Schema '{}' not found", name)))
 }
 
 fn task_status_to_string(status: TaskStatus) -> String {
@@ -714,4 +832,42 @@ mod tests {
         assert_eq!(normalize_status("blocked"), "Todo");
         assert_eq!(normalize_status(""), "Todo");
     }
+}
+
+#[derive(Deserialize)]
+struct TaskGraphQuery {
+    format: Option<String>,
+}
+
+#[derive(Serialize)]
+#[serde(untagged)]
+enum TaskGraphResponse {
+    Json(spec_runtime::tasks::TaskGraph),
+    Mermaid { mermaid: String },
+}
+
+async fn get_task_graph(
+    State(state): State<AppState>,
+    Query(query): Query<TaskGraphQuery>,
+) -> Result<Json<TaskGraphResponse>, AppError> {
+    let root = &state.workspace_root;
+    let tasks_spec = spec_runtime::load_tasks(&root.join("specs/tasks.yaml")).map_err(|err| {
+        AppError::new(
+            StatusCode::INTERNAL_SERVER_ERROR,
+            ErrorCode::InternalError,
+            format!("Failed to load specs/tasks.yaml: {}", err),
+        )
+    })?;
+
+    let graph = spec_runtime::tasks::build_task_graph(&tasks_spec);
+
+    let response = match query.format.as_deref() {
+        Some("mermaid") => {
+            let mermaid = spec_runtime::tasks::generate_mermaid_diagram(&graph);
+            TaskGraphResponse::Mermaid { mermaid }
+        }
+        _ => TaskGraphResponse::Json(graph),
+    };
+
+    Ok(Json(response))
 }

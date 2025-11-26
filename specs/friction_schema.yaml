@@ -1,0 +1,286 @@
+# Friction Log Schema - Structured Process and Tooling Issues
+#
+# The friction log captures process, tooling, and developer experience issues
+# that create friction during development. Unlike ADRs (architectural decisions)
+# and GitHub issues (feature work), friction entries document pain points that
+# need to be addressed to improve the development workflow.
+
+schema_version: "1.0"
+template_version: "v3.3.1"
+
+description: >
+  Friction log entries capture process, tooling, and developer experience issues
+  that create friction during development. These are distinct from architectural
+  decisions (ADRs) or feature work (GitHub issues) - they document problems with
+  the development workflow itself that need to be addressed.
+
+friction_entry_schema:
+  type: object
+  required:
+    - id
+    - date
+    - category
+    - severity
+    - summary
+    - description
+    - status
+  properties:
+    id:
+      type: string
+      pattern: "^FRICTION-[A-Z0-9]+-\\d{3}$"
+      description: "Unique friction log identifier (e.g., FRICTION-AGENT-001, FRICTION-CLI-002)"
+
+    date:
+      type: string
+      format: date
+      description: "Date when friction was discovered (YYYY-MM-DD)"
+
+    category:
+      type: string
+      enum:
+        - tooling
+        - process
+        - documentation
+        - devex
+        - ci_cd
+        - platform
+        - api
+        - testing
+        - governance
+        - other
+      description: "Category of friction point"
+
+    severity:
+      type: string
+      enum: [low, medium, high, critical]
+      description: "Impact level on developer productivity"
+
+    summary:
+      type: string
+      description: "Brief summary of the friction point"
+      maxLength: 200
+
+    description:
+      type: string
+      description: "Detailed description of what happened and why it's a problem"
+
+    expected_behavior:
+      type: string
+      description: "What should have happened or what the ideal workflow would be"
+
+    workaround:
+      type: string
+      description: "Temporary workaround or mitigation if available"
+
+    impact:
+      type: string
+      description: "Impact on development velocity, agent operations, or team productivity"
+
+    context:
+      type: object
+      properties:
+        discovered_by:
+          type: string
+          enum: [agent, human, ci, flow]
+          description: "Who/what discovered this friction"
+        flow:
+          type: string
+          description: "Flow or operation where friction occurred (if applicable)"
+        phase:
+          type: string
+          description: "Phase within flow where friction occurred (if applicable)"
+        files_involved:
+          type: array
+          items:
+            type: string
+          description: "Files involved when friction was encountered"
+        commands_involved:
+          type: array
+          items:
+            type: string
+          description: "Commands that were being run when friction occurred"
+
+    status:
+      type: string
+      enum: [open, investigating, in_progress, resolved, wont_fix]
+      default: open
+      description: "Current status of the friction issue"
+
+    resolution:
+      type: object
+      properties:
+        resolved_by:
+          type: string
+          description: "Who resolved the friction"
+        resolved_at:
+          type: string
+          format: date
+          description: "When it was resolved (YYYY-MM-DD)"
+        fix_description:
+          type: string
+          description: "Description of the fix or improvement"
+        pr_links:
+          type: array
+          items:
+            type: string
+          description: "Pull request URLs that address this friction"
+        verification:
+          type: string
+          description: "How the fix was verified"
+      description: "Resolution details (when status is resolved)"
+
+    related_items:
+      type: object
+      properties:
+        issues:
+          type: array
+          items:
+            type: string
+          description: "Related GitHub issue numbers or URLs"
+        adrs:
+          type: array
+          items:
+            type: string
+          description: "Related ADR IDs if architectural decisions are involved"
+        tasks:
+          type: array
+          items:
+            type: string
+          description: "Related task IDs from tasks.yaml"
+
+file_storage:
+  format: "yaml"
+  pattern: "friction/{ID}.yaml"
+  examples:
+    - "friction/FRICTION-AGENT-001.yaml"
+    - "friction/FRICTION-CLI-002.yaml"
+    - "friction/FRICTION-DEVEX-003.yaml"
+
+  legacy_support:
+    markdown_file: "FRICTION_LOG.md"
+    migration_note: >
+      The FRICTION_LOG.md file serves as a human-readable summary/index.
+      Detailed friction entries should be stored as YAML files in the friction/
+      directory for machine-readable querying and governance integration.
+
+lifecycle:
+  discovery: >
+    Friction is discovered during development, testing, CI runs, or agent operations.
+    When friction is encountered, create a friction entry immediately to capture
+    the context while it's fresh.
+
+  reporting: >
+    Friction entries can be reported via:
+    - cargo xtask friction-list (shows all entries with filtering)
+    - cargo xtask friction-new (creates new friction entry)
+    - /platform/status endpoint (shows friction counts)
+    - /platform/friction endpoint (returns all friction entries as JSON)
+
+  resolution: >
+    Friction entries are resolved by:
+    - Fixing the underlying tool, process, or documentation issue
+    - Updating the entry status to "resolved" with resolution details
+    - Verifying the fix eliminates the friction in practice
+
+  cleanup: >
+    Resolved friction entries remain in the friction/ directory for historical reference.
+    They contribute to understanding long-term patterns and improvement velocity.
+
+integration:
+  platform_status:
+    description: "Platform status endpoint includes friction metrics"
+    fields:
+      - "friction.total: Total friction entries"
+      - "friction.open: Open friction entries"
+      - "friction.by_severity: Breakdown by severity level"
+      - "friction.recent: Last 5 friction entries (chronological)"
+
+  governance:
+    description: "Friction metrics contribute to governance health"
+    policies:
+      - "High severity friction should be addressed promptly"
+      - "Critical friction blocks development and must be resolved immediately"
+      - "Friction trends are monitored - increasing friction indicates process debt"
+
+  flows:
+    description: "Flows can emit friction entries when they encounter issues"
+    examples:
+      - "bundle flow: slow performance or missing files"
+      - "test flow: flaky tests or long execution times"
+      - "ci flow: intermittent failures or environment issues"
+      - "suggest-next: unclear recommendations or missing metadata"
+
+when_to_use:
+  friction_log:
+    use_for:
+      - "Process or tooling problems"
+      - "Developer experience pain points"
+      - "Workflow inefficiencies"
+      - "CI/CD issues"
+      - "Flaky tests or intermittent failures"
+      - "Poor error messages or unclear diagnostics"
+      - "Missing or unclear documentation"
+    examples:
+      - "Port discovery requires manual lsof lookup"
+      - "Selftest takes 2+ hours on Windows"
+      - "Pre-commit hook intermittently fails with file locking"
+      - "Bundle command slow on large repos"
+
+  adr:
+    use_for:
+      - "Architectural decisions"
+      - "Technology choices"
+      - "Design patterns"
+      - "System boundaries"
+    examples:
+      - "Why we use Axum instead of Actix"
+      - "How we structure the governance graph"
+      - "Why BDD tags must match AC IDs"
+
+  github_issue:
+    use_for:
+      - "Feature requests"
+      - "Bug reports (functional bugs)"
+      - "Work items requiring tracking"
+      - "Public discussion needed"
+    examples:
+      - "Add support for GraphQL API"
+      - "Task filtering returns wrong results"
+      - "Implement multi-tenancy"
+
+  question:
+    use_for:
+      - "Ambiguity in specs or requirements"
+      - "Unclear choices during flow execution"
+      - "Missing information needed to proceed"
+    examples:
+      - "Bundle flow finds multiple ACs - which to prioritize?"
+      - "Task has circular dependency in workflow"
+      - "AC description ambiguous - multiple interpretations"
+
+examples:
+  - file: "friction/FRICTION-AGENT-001.yaml"
+    description: "Agent can't discover port without manual lsof"
+
+  - file: "friction/FRICTION-CLI-002.yaml"
+    description: "Selftest takes 2+ hours on native Windows"
+
+  - file: "friction/FRICTION-DEVEX-003.yaml"
+    description: "Pre-commit hook fails intermittently with file locking"
+
+  - file: "friction/FRICTION-BDD-004.yaml"
+    description: "Cucumber output doesn't show which scenarios failed"
+
+metrics:
+  tracking:
+    - "Total friction entries over time"
+    - "Open vs resolved friction"
+    - "Average time to resolution"
+    - "Friction by category and severity"
+    - "Friction discovery rate (new entries per week)"
+
+  health_indicators:
+    - "Critical friction count (should always be 0)"
+    - "High severity friction age (should be < 2 weeks)"
+    - "Total open friction trend (should be decreasing over time)"
+    - "Resolution velocity (friction resolved per sprint)"

@@ -155,10 +155,7 @@ async fn when_run_and_capture(world: &mut World, command: String) {
     world.xtask_context_mut().last_command_status = Some(status);
 
     // Store first output
-    world.xtask_context_mut().env.insert(
-        "IDEMPOTENCY_FIRST_OUTPUT".to_string(),
-        output,
-    );
+    world.xtask_context_mut().env.insert("IDEMPOTENCY_FIRST_OUTPUT".to_string(), output);
 }
 
 #[when(regex = r#"^I run "([^"]+)" again and capture the output$"#)]
@@ -170,10 +167,7 @@ async fn when_run_again_and_capture(world: &mut World, command: String) {
     world.xtask_context_mut().last_command_status = Some(status);
 
     // Store second output
-    world.xtask_context_mut().env.insert(
-        "IDEMPOTENCY_SECOND_OUTPUT".to_string(),
-        output,
-    );
+    world.xtask_context_mut().env.insert("IDEMPOTENCY_SECOND_OUTPUT".to_string(), output);
 }
 
 #[when(regex = r#"^I run "([^"]+)" with "([^"]+)" and capture the output$"#)]
@@ -190,10 +184,7 @@ async fn when_run_with_env_and_capture(world: &mut World, command: String, env_v
     world.xtask_context_mut().last_command_status = Some(status);
 
     // Store first output
-    world.xtask_context_mut().env.insert(
-        "IDEMPOTENCY_FIRST_OUTPUT".to_string(),
-        output,
-    );
+    world.xtask_context_mut().env.insert("IDEMPOTENCY_FIRST_OUTPUT".to_string(), output);
 }
 
 #[when(regex = r#"^I run "([^"]+)" with "([^"]+)" again and capture the output$"#)]
@@ -210,10 +201,7 @@ async fn when_run_with_env_again_and_capture(world: &mut World, command: String,
     world.xtask_context_mut().last_command_status = Some(status);
 
     // Store second output
-    world.xtask_context_mut().env.insert(
-        "IDEMPOTENCY_SECOND_OUTPUT".to_string(),
-        output,
-    );
+    world.xtask_context_mut().env.insert("IDEMPOTENCY_SECOND_OUTPUT".to_string(), output);
 }
 
 #[when(regex = r#"^I run "([^"]+)"$"#)]
