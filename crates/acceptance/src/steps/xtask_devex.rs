@@ -1406,10 +1406,12 @@ fn ensure_claude_version(root: &Path, version: &str) {
 }
 
 fn workspace_root(world: &World) -> std::path::PathBuf {
+    // Always use temp dir for test isolation (AC-PLT-013)
+    // This prevents tests from writing to tracked source files
     if let Some(path) = world.xtask_context().test_repo_path.clone() {
         return path;
     }
-    actual_workspace_root()
+    world._temp_dir.path().to_path_buf()
 }
 
 fn actual_workspace_root() -> std::path::PathBuf {

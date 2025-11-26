@@ -10,22 +10,26 @@ use std::process::Command;
 // ============================================================================
 
 fn workspace_root(world: &World) -> PathBuf {
+    // Always use temp dir for test isolation (AC-PLT-013)
+    // This prevents tests from writing to tracked source files
     if let Some(ref path) = world.xtask_context().test_repo_path {
         path.clone()
     } else {
-        actual_workspace_root()
+        world._temp_dir.path().to_path_buf()
     }
-}
-
-fn actual_workspace_root() -> PathBuf {
-    let manifest_dir = env!("CARGO_MANIFEST_DIR");
-    std::path::Path::new(manifest_dir).parent().unwrap().parent().unwrap().to_path_buf()
 }
 
 fn run_xtask_command(world: &World, command: &str) -> (String, String, i32) {
     let root = workspace_root(world);
+
+    // Build xtask from the actual workspace manifest to ensure it's available
+    let actual_root =
+        PathBuf::from(env!("CARGO_MANIFEST_DIR")).parent().unwrap().parent().unwrap().to_path_buf();
+    let manifest = actual_root.join("Cargo.toml");
+
     let mut cmd = Command::new("cargo");
-    cmd.arg("run").arg("-p").arg("xtask").arg("--");
+    cmd.arg("run").arg("--manifest-path").arg(manifest).arg("-p").arg("xtask").arg("--");
+
     for part in command.split_whitespace().skip(3) {
         cmd.arg(part);
     }
@@ -35,6 +39,11 @@ fn run_xtask_command(world: &World, command: &str) -> (String, String, i32) {
     // Apply environment variables
     for (k, v) in &world.xtask_context().env {
         cmd.env(k, v);
+    }
+
+    // Default to low-resource mode for test isolation
+    if !world.xtask_context().env.contains_key("XTASK_LOW_RESOURCES") {
+        cmd.env("XTASK_LOW_RESOURCES", "1");
     }
 
     let output = cmd.output().expect("Failed to execute command");

@@ -206,6 +206,30 @@ enum Commands {
         #[arg(long)]
         severity: Option<String>,
     },
+    /// Create a new friction log entry
+    FrictionNew {
+        /// Category (tooling, process, documentation, devex, ci_cd, platform, api, testing, governance, other)
+        #[arg(long)]
+        category: String,
+        /// Severity level (low, medium, high, critical)
+        #[arg(long)]
+        severity: String,
+        /// Brief summary of the friction point
+        #[arg(long)]
+        summary: String,
+        /// Detailed description (optional, defaults to summary)
+        #[arg(long)]
+        description: Option<String>,
+        /// Flow where friction occurred (optional)
+        #[arg(long)]
+        flow: Option<String>,
+        /// Phase within flow where friction occurred (optional)
+        #[arg(long)]
+        phase: Option<String>,
+        /// Who discovered this friction (optional, defaults to "human")
+        #[arg(long)]
+        discovered_by: Option<String>,
+    },
     /// Generate service descriptor (e.g., Backstage catalog info)
     ServiceDescriptor {
         /// Output format (backstage)
@@ -379,6 +403,23 @@ fn main() -> Result<()> {
         Commands::FrictionList { status, severity } => {
             commands::friction::list_friction_entries(status.as_deref(), severity.as_deref())
         }
+        Commands::FrictionNew {
+            category,
+            severity,
+            summary,
+            description,
+            flow,
+            phase,
+            discovered_by,
+        } => commands::friction::create_friction_entry(
+            &category,
+            &severity,
+            &summary,
+            description.as_deref(),
+            flow.as_deref(),
+            phase.as_deref(),
+            discovered_by.as_deref(),
+        ),
         Commands::ServiceDescriptor { format } => commands::service_descriptor::run(&format)
             .map_err(|e| anyhow::anyhow!("service-descriptor failed: {}", e)),
         Commands::ConfigValidate { env } => commands::config_validate::run(&env)
@@ -506,6 +547,8 @@ pub fn all_command_names() -> Vec<&'static str> {
         "spellcheck",
         "dev-up",
         "fmt-all",
+        "friction-list",
+        "friction-new",
         "graph-export",
         "hakari",
         "install-hooks",
