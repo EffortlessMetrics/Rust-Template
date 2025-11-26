@@ -1,4 +1,3 @@
-````markdown
 # Rust-as-Spec Platform Cell (v3.3.1)
 
 **A governed Rust service template where specs, tests, docs, policies, and infra all agree – and the repo can prove it.**
@@ -441,4 +440,3 @@ You may use it under either license.
 
 ```
 ::contentReference[oaicite:0]{index=0}
-```
