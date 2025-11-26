@@ -1,5 +1,6 @@
-# CLAUDE.md – Rust-as-Spec Platform Cell (v3.3.1)
-**Template Version:** v3.3.0
+# CLAUDE.md – Rust-as-Spec Platform Cell (v3.3.2)
+
+**Template Version:** v3.3.2
 
 You are an autonomous engineer working **inside** a Rust-as-Spec platform cell.
 
@@ -38,12 +39,14 @@ You can make decisions locally. When something is unclear, you:
 When you need to know “what is correct?”, look in this order:
 
 1. **Spec ledger & schemas**
+
    - `specs/spec_ledger.yaml` – stories → REQs → ACs → tests → docs.
    - `specs/config_schema.yaml` – configuration contract.
    - `specs/devex_flows.yaml` – developer workflows.
    - `specs/tasks.yaml` – work items and their relationships.
 
 2. **Skills (high-level workflows)**
+
    - `.claude/skills/*/SKILL.md`, e.g.:
      - `governed-feature-dev` – feature/AC work
      - `governed-maintenance` – fixing drift and health
@@ -51,6 +54,7 @@ When you need to know “what is correct?”, look in this order:
      - `governed-governance-debug` – when selftest or graph is unhappy
 
 3. **Platform APIs**
+
    - `/platform/status` – governance + runtime view.
    - `/platform/graph` – full governance graph.
    - `/platform/tasks` – surfaced tasks.
@@ -60,10 +64,12 @@ When you need to know “what is correct?”, look in this order:
    - `/platform/agent/hints` – suggestions for where to work next.
 
 4. **xtask CLI**
+
    - `cargo xtask doctor`, `check`, `test-changed`, `test-ac`,
      `ac-status`, `ac-coverage`, `selftest`, `release-*`, etc.
 
 5. **Selftest & CI**
+
    - `cargo xtask selftest` – full governance check.
    - CI Tier-1 job running selftest – final say on what is acceptable.
 
@@ -82,7 +88,7 @@ cargo xtask doctor
 cargo xtask help-flows
 cargo xtask ac-status
 cargo xtask tasks-list         # if implemented
-````
+```
 
 Then look at the platform:
 
@@ -104,34 +110,33 @@ This gives you a complete picture: health, contracts, tasks, docs, and recommend
 
 Use this shape whenever you implement or change behaviour.
 
-**1. Start from REQ + AC**
+#### 1. Start from REQ + AC
 
-* Find the relevant REQ/AC in `specs/spec_ledger.yaml`.
-* If the AC doesn’t exist and the REQ is clear:
+- Find the relevant REQ/AC in `specs/spec_ledger.yaml`.
+- If the AC doesn't exist and the REQ is clear:
+  - Propose it via `cargo xtask ac-new` (if available) or editing the ledger as per conventions.
+  - Keep it small and precise.
 
-  * Propose it via `cargo xtask ac-new` (if available) or editing the ledger as per conventions.
-  * Keep it small and precise.
+#### 2. Add or update BDD
 
-**2. Add or update BDD**
+- Edit `specs/features/*.feature`.
+- Tag scenarios with the AC ID, e.g. `@AC-MYSERV-001`.
 
-* Edit `specs/features/*.feature`.
-* Tag scenarios with the AC ID, e.g. `@AC-MYSERV-001`.
-
-**3. Generate a bundle**
+#### 3. Generate a bundle
 
 ```bash
 cargo xtask bundle implement_ac
 ```
 
-* Use the bundle as your working context.
-* Prefer staying within the bundle instead of scanning the entire repo.
+- Use the bundle as your working context.
+- Prefer staying within the bundle instead of scanning the entire repo.
 
-**4. Implement code + tests**
+#### 4. Implement code + tests
 
-* Keep changes scoped to what the AC needs.
-* Maintain alignment with the spec and existing patterns.
+- Keep changes scoped to what the AC needs.
+- Maintain alignment with the spec and existing patterns.
 
-**5. Validate with the ladder**
+#### 5. Validate with the ladder
 
 ```bash
 cargo xtask check
@@ -141,8 +146,8 @@ cargo xtask ac-status
 cargo xtask selftest
 ```
 
-* Aim to finish with selftest green.
-* If selftest is red for reasons you can’t safely resolve, capture why (see §5).
+- Aim to finish with selftest green.
+- If selftest is red for reasons you can't safely resolve, capture why (see §5).
 
 ---
 
@@ -150,7 +155,7 @@ cargo xtask selftest
 
 Use this when you’re fixing drift, updating dependencies, or handling tool feedback.
 
-**1. Run health checks**
+#### 1. Run health checks
 
 ```bash
 cargo xtask doctor
@@ -159,21 +164,20 @@ cargo xtask test-changed
 cargo xtask ac-status
 ```
 
-**2. Apply clear fixes**
+#### 2. Apply clear fixes
 
-* Align config with `config_schema.yaml`.
-* Fix tests and specs where behaviour is clearly wrong.
-* Update docs when they no longer match code or ACs.
+- Align config with `config_schema.yaml`.
+- Fix tests and specs where behaviour is clearly wrong.
+- Update docs when they no longer match code or ACs.
 
-**3. Capture non-trivial findings**
+#### 3. Capture non-trivial findings
 
-* If you discover deeper design questions or tradeoffs:
+- If you discover deeper design questions or tradeoffs:
+  - Create or update an ADR (`docs/adr/ADR-*.md`).
+  - File a GitHub issue summarizing the situation and linking REQ/AC IDs.
+  - Append to `FRICTION_LOG.md` when that's more appropriate.
 
-  * Create or update an ADR (`docs/adr/ADR-*.md`).
-  * File a GitHub issue summarizing the situation and linking REQ/AC IDs.
-  * Append to `FRICTION_LOG.md` when that’s more appropriate.
-
-**4. Re-validate**
+#### 4. Re-validate
 
 ```bash
 cargo xtask test-changed
@@ -186,30 +190,30 @@ cargo xtask selftest
 
 Use this when preparing a new version.
 
-**1. Prepare the release**
+#### 1. Prepare the release
 
 ```bash
 cargo xtask release-prepare X.Y.Z
 ```
 
-**2. Validate everything**
+#### 2. Validate everything
 
 ```bash
 cargo xtask selftest
 ```
 
-**3. Generate release evidence**
+#### 3. Generate release evidence
 
 ```bash
 cargo xtask release-bundle X.Y.Z
 # release_evidence/vX.Y.Z.md
 ```
 
-**4. Tag + push**
+#### 4. Tag + push
 
-* Tag the commit,
-* Push branches and tags,
-* Let CI run Tier-1 selftest.
+- Tag the commit,
+- Push branches and tags,
+- Let CI run Tier-1 selftest.
 
 ---
 
@@ -258,31 +262,29 @@ When you find unclear or conflicting information (REQs, ACs, docs):
 
 1. **Analyse using existing contracts**
 
-   * Look at `spec_ledger.yaml` and any relevant ADRs.
-   * Prefer consistency with existing patterns.
+   - Look at `spec_ledger.yaml` and any relevant ADRs.
+   - Prefer consistency with existing patterns.
 
 2. **Choose a conservative, reversible option**
 
-   * Prefer small, easily revertible changes over big bets.
-   * Avoid breaking public contracts unless the ACs clearly demand it.
+   - Prefer small, easily revertible changes over big bets.
+   - Avoid breaking public contracts unless the ACs clearly demand it.
 
 3. **Capture the decision and questions**
 
-   * Draft or extend an ADR (can be marked as “DRAFT”).
-   * Open a GitHub issue with:
-
-     * REQ/AC IDs,
-     * your understanding of the options,
-     * the direction you took and why.
-   * Optionally log in `FRICTION_LOG.md` for process / tooling issues.
+   - Draft or extend an ADR (can be marked as "DRAFT").
+   - Open a GitHub issue with:
+     - REQ/AC IDs,
+     - your understanding of the options,
+     - the direction you took and why.
+   - Optionally log in `FRICTION_LOG.md` for process / tooling issues.
 
 4. **Align with selftest**
 
-   * Aim for selftest green after your changes.
-   * If you must leave selftest red (e.g. mid-refactor), ensure:
-
-     * The failure is clearly attributable to a known gap.
-     * The gap is documented in ADR/issue/friction log.
+   - Aim for selftest green after your changes.
+   - If you must leave selftest red (e.g. mid-refactor), ensure:
+     - The failure is clearly attributable to a known gap.
+     - The gap is documented in ADR/issue/friction log.
 
 This lets humans review your work asynchronously with full context, without you blocking.
 
@@ -294,11 +296,11 @@ When you are first invoked on this repo:
 
 1. **Read the high-level docs**
 
-   * `docs/why-this-exists.md`
-   * `docs/ROADMAP.md`
-   * `docs/AGENT_GUIDE.md`
-   * `docs/MISSING_MANUAL.md`
-   * `TEMPLATE-CONTRACTS.md`
+   - `docs/why-this-exists.md`
+   - `docs/ROADMAP.md`
+   - `docs/AGENT_GUIDE.md`
+   - `docs/MISSING_MANUAL.md`
+   - `TEMPLATE-CONTRACTS.md`
 
 2. **Check baseline health**
 
@@ -316,8 +318,8 @@ When you are first invoked on this repo:
 
 4. **Pick a task and a Skill**
 
-   * Identify the relevant Skill (feature, maintenance, release, governance debug).
-   * Use bundles and suggest-next instead of scanning the whole repo.
+   - Identify the relevant Skill (feature, maintenance, release, governance debug).
+   - Use bundles and suggest-next instead of scanning the whole repo.
 
 ---
 
@@ -325,18 +327,15 @@ When you are first invoked on this repo:
 
 This cell is designed for you to work **confidently and autonomously**:
 
-* Specs and schemas tell you what the system is.
-* BDD and tests verify that behaviour.
-* xtask flows guide how work is done.
-* Platform APIs and `/ui` reveal the same state that CI enforces.
-* Selftest + CI are the guardrails that keep everything honest.
+- Specs and schemas tell you what the system is.
+- BDD and tests verify that behaviour.
+- xtask flows guide how work is done.
+- Platform APIs and `/ui` reveal the same state that CI enforces.
+- Selftest + CI are the guardrails that keep everything honest.
 
 Your job is to:
 
-* Use these contracts actively,
-* Make reasonable, reversible decisions,
-* Capture your reasoning and questions as artifacts,
-* And finish work in a state where `cargo xtask selftest` can tell everyone “this is governed and ready to review.”
-
-```
-::contentReference[oaicite:0]{index=0}
+- Use these contracts actively,
+- Make reasonable, reversible decisions,
+- Capture your reasoning and questions as artifacts,
+- And finish work in a state where `cargo xtask selftest` can tell everyone "this is governed and ready to review."
