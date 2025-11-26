@@ -92,10 +92,6 @@ Auto-generated AC status from acceptance (BDD) and unit tests.
 ACs with no mapped or executed tests:
 
 - AC-TPL-FLOW-IDEMPOTENT: Running cargo xtask selftest or cargo xtask suggest-next multiple times without changes produces stable outputs and no duplicate artifacts.
-
 - AC-TPL-IAC-K8S-ALIGN: Kubernetes manifests under infra/k8s (Deployment/Service) use ports and env vars consistent with config_schema.yaml and the default environment.
-
 - AC-TPL-IAC-TF-ALIGN: Terraform examples (when present) reference the same variables and defaults as config_schema.yaml for services and dependencies.
-
 - AC-TPL-QUESTIONS-LOGGED: Ambiguity during automated flows or suggest-next emits a structured question (file/PR comment/status entry) that can be surfaced to humans or agents without halting progress.
-

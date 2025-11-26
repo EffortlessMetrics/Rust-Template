@@ -1,4 +1,4 @@
-# Template Version: v3.0.0
+# Template Version: v3.3.1
 # Schema: spec_ledger.yaml v1.0
 # Last Updated: 2025-11-22
 

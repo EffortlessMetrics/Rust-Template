@@ -29,6 +29,7 @@ This roadmap is the shortest path to “fully implemented”: kernel ACs green o
 **Objective:** Know exactly what is red on Tier-1 today.
 
 Commands:
+
 ```bash
 cargo xtask selftest || true
 cargo xtask ac-status > target/ac-status-baseline.txt
@@ -45,20 +46,26 @@ Exit: Checklist of named ACs to fix is recorded.
 **Goal:** Tier-1 selftest green; kernel ACs all ✅; no surprises in `docs/feature_status.md`.
 
 ### 1.1 DevEx ACs (doctor / check / dev-up / sbom-local)
+
 - Run:
+
   ```bash
   CUCUMBER_TAG_EXPRESSION="@AC-PLT-001 or @AC-PLT-003 or @AC-PLT-008 or @AC-PLT-018" \
     cargo test -p acceptance --test acceptance -- --format=pretty
   ```
+
 - For each failure, pick one layer to fix: AC text (`specs/spec_ledger.yaml`), feature (`specs/xtask_devex.feature`), or steps (`crates/acceptance/src/steps/xtask_devex.rs`); align implementation as needed.
 - Re-run until clean, then:
+
   ```bash
   cargo xtask selftest
   cargo xtask ac-status
   ```
+
 Exit: `AC-PLT-001/003/008/018` all ✅; dev-up output, check messaging, and SBOM path match docs.
 
 ### 1.2 Graph invariants in AC ledger
+
 - For each `AC-TPL-GRAPH-*`, identify enforcing unit test(s) in `spec-runtime`.
 - In `specs/spec_ledger.yaml`, add `tests:` entries of `type: unit` pointing to those tests.
 - Extend AC status logic to handle `type: unit` (fail beats pass; no results = ❓).
@@ -75,24 +82,30 @@ Exit: All `AC-TPL-GRAPH-*` ACs ✅ (or explicitly non-kernel); none left ❓.
 **Goal:** Agent-facing surfaces are trustworthy: “agents do the work, kernel keeps it safe.”
 
 ### 2.1 `/platform/agent/hints`
+
 - Clarify contract in `specs/spec_ledger.yaml` (inputs, response fields, ordering/determinism).
 - Align HTTP handler + runtime logic with that contract.
 - Add/fix BDD for hints; run:
+
   ```bash
   CUCUMBER_TAG_EXPRESSION="@AC-TPL-AGENT-HINTS" \
     cargo test -p acceptance --test acceptance -- --format=pretty
   ```
+
 - Update `docs/AGENT_GUIDE.md` with a JSON example and consumption guidance.
 Exit: `AC-TPL-AGENT-HINTS` ✅; endpoint is documented and stable.
 
 ### 2.2 Task CLI/HTTP semantics
+
 - Target ACs: `AC-TPL-TASKS-CLI`, `AC-TPL-TASKS-CREATE-CLI`, `AC-TPL-TASKS-UPDATE-CLI`, `AC-TPL-TASKS-HTTP`.
 - Decide exact UX (CLI flags/exit codes/output; HTTP status/JSON shape). Adjust `xtask` and `/platform/tasks` to match; add unit tests as needed.
 - Update BDDs to assert on stable substrings/fields; run:
+
   ```bash
   CUCUMBER_TAG_EXPRESSION="@AC-TPL-TASKS-CLI or @AC-TPL-TASKS-CREATE-CLI or @AC-TPL-TASKS-UPDATE-CLI or @AC-TPL-TASKS-HTTP" \
     cargo test -p acceptance --test acceptance -- --format=pretty
   ```
+
 - Refresh `AGENT_GUIDE.md` examples (mark done via CLI/HTTP).
 Exit: All task ACs ✅; agent docs reflect real UX.
 
@@ -103,18 +116,22 @@ Exit: All task ACs ✅; agent docs reflect real UX.
 **Goal:** `check` / `test-changed` / `test-ac` + Tier-2 behaviour are boringly predictable.
 
 ### 3.1 Selective testing as contract
+
 - Treat the selective-testing scenario as canonical; ensure git worktree setup/teardown is robust and tag expression stable.
 - Add a scenario where only specs change (no `.feature`) to prove `test-changed` finds ACs via the ledger; plan-only mode should emit correct tags.
 - Ensure `docs/SELECTIVE_TESTING.md` + `AGENT_GUIDE.md` match behaviour (validation ladder: `test-changed` → `test-ac` → `selftest`).
 Exit: Selective-testing BDDs ✅; docs read like reference, not aspiration.
 
 ### 3.2 Tier-2 (Windows) path
+
 - On native Windows:
+
   ```powershell
   $env:XTASK_LOW_RESOURCES = "1"
   cargo xtask check
   cargo xtask test-changed
   ```
+
 - Confirm no panics/permission crashes; logs state skipped steps; plan-only works with `XTASK_TEST_CHANGED_PLAN_ONLY=1`.
 - Update `docs/reference/platform-support.md` and `MISSING_MANUAL.md` with the single recommended Windows flow (local low-resource; full selftest via WSL2/Nix/CI).
 Exit: Tier-2 docs match reality; one clear Windows happy path.

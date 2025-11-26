@@ -1,7 +1,7 @@
 # Rust-as-Spec Platform Cell (v3.3.1) 🎉
 **Current Template Version:** v3.3.0
-**Current Template Version:** v3.3.1
 
+**Current Template Version:** v3.3.1
 
 [![CI](https://github.com/EffortlessMetrics/Rust-Template/actions/workflows/ci-template-selftest.yml/badge.svg)](https://github.com/EffortlessMetrics/Rust-Template/actions/workflows/ci-template-selftest.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE-MIT)
@@ -25,17 +25,20 @@ Optimized for LLM-native teams: the boilerplate that slows humans down gives age
 > The platform successfully used its own governance contracts to build itself. All 7 selftest steps pass. Next phase: real-world service pilot.
 
 Unlike conventional templates that drift over time, this repository:
+
 - **Self-heals**: Specs, docs, and policies are validated as rigorously as code
 - **Self-explains**: Platform APIs (`/platform/*`) and Web UI (`/ui`) expose governance state in real-time
 - **Self-guides**: Context-aware `suggest-next` tells humans and agents exactly what to do
 
 **Use this when:**
+
 - ✅ You need **governed starting point** for Rust services (health/version/metrics, policies, selftest)
 - ✅ You're building in a **regulated/multi-team environment** (FinTech, HealthTech, Platform Engineering)
 - ✅ You're using **LLMs/agents as contributors** and need trust-but-verify guardrails
 - ✅ You want **specs → code → docs** linkage enforced by CI, not manual reviews
 
 **Don't use this if:**
+
 - ❌ You just want "hello world in Axum" (too heavy)
 - ❌ You're prototyping without governance requirements (overkill)
 - ❌ You don't need AC traceability between specs, ACs, and code (simpler templates exist)
@@ -47,7 +50,8 @@ Unlike conventional templates that drift over time, this repository:
 ## What Makes This Different
 
 ### Conventional Template
-```
+
+```text
 README.md says:          specs are in docs/specs/
 Reality 6 months later:  specs were moved to Notion
                          README outdated
@@ -55,7 +59,8 @@ Reality 6 months later:  specs were moved to Notion
 ```
 
 ### Rust-as-Spec Platform Cell
-```
+
+```text
 specs/spec_ledger.yaml:  Stories → Requirements → ACs
     ↓ (loaded by)
 spec-runtime (Rust):     Type-checked structs
@@ -69,6 +74,7 @@ cargo xtask selftest:    7-step validation (CI gate)
 **Result:** If specs drift from code, CI fails. If code doesn't match specs, CI fails. There is no third state.
 
 **Read more:**
+
 - [ROADMAP.md](docs/ROADMAP.md) - Strategic direction and pilot plan
 - [Technical Overview](docs/explanation/rust-as-spec-overview.md) - Deep dive into the architecture
 - [Why This Template Exists](docs/why-this-exists.md) - Problem statement and philosophy
@@ -149,6 +155,7 @@ This template supports multiple platforms with different validation guarantees:
 | Windows | 2 | Native PowerShell/Bash | ⚠️ With caveats | Native Windows workflows |
 
 **Tier Definitions:**
+
 - **Tier 1** (Fully Validated): Exact CI parity, all governance gates strictly enforced, canonical environments
 - **Tier 2** (Supported): Core functionality validated, known platform limitations (e.g., file locking on Windows)
 
@@ -220,7 +227,7 @@ open http://localhost:8080/ui/flows
 
 `cargo xtask selftest` is the **single mandatory gate** for all changes:
 
-```
+```text
 [1/7] Running core checks (fmt, clippy, tests)...
       ✓ Code quality baseline
 
@@ -244,6 +251,7 @@ open http://localhost:8080/ui/flows
 ```
 
 **What this prevents:**
+
 - Requirements with `must_have_ac: true` but no ACs → `REQ_HAS_NO_AC` violation
 - Required commands not part of any flow → `COMMAND_UNREACHABLE` violation
 - Docs referenced but missing from disk → `DOC_ORPHANED` violation
@@ -335,7 +343,7 @@ cargo xtask selftest
 
 ### 2. Understand the Structure
 
-```
+```text
 specs/
   spec_ledger.yaml   # Stories → Requirements → ACs
   devex_flows.yaml   # Developer workflows (flows + commands)
@@ -448,7 +456,7 @@ cargo xtask help-flows
 
 Every aspect of governance flows through:
 
-```
+```text
 Spec (YAML) → Loader (Rust) → Enforce (CI) → Introspect (API/UI)
 ```
 
@@ -461,7 +469,7 @@ Spec (YAML) → Loader (Rust) → Enforce (CI) → Introspect (API/UI)
 
 ### Hexagonal Architecture
 
-```
+```text
 ┌─────────────────────────────────────┐
 │  Adapters (HTTP, gRPC)              │
 │  ├─ app-http (Axum)                 │
@@ -499,6 +507,7 @@ Spec (YAML) → Loader (Rust) → Enforce (CI) → Introspect (API/UI)
 - ✅ Agent skills (`.claude/skills/*`)
 
 **Validated:**
+
 - All 7 selftest steps pass
 - 22/22 policy tests pass
 - Platform used itself to build final features

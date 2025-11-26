@@ -747,7 +747,8 @@ stories:
           - id: AC-TPL-HOOKS-INSTALL
             text: >
               The 'cargo xtask install-hooks' command creates a pre-commit hook
-              that runs 'cargo xtask check' within the Nix environment when available.
+              that runs 'cargo run -p xtask -- precommit' inside the Nix devshell
+              when available; failures are advisory and do not block commits.
             tags: [kernel]
             must_have_ac: true
             tests:
