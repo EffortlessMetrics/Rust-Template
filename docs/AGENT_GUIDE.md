@@ -71,21 +71,56 @@ cargo run -p xtask -- dev-up
 
 ### Query Available Tasks
 
+**CLI - List Tasks:**
 ```bash
-# List all tasks
+# List all tasks with details (ID, status, requirement, ACs, owner, title)
 cargo xtask tasks-list
 
-# Get JSON output for programmatic use
-cargo xtask tasks-list --json
-
-# Create or update tasks (validated against spec_ledger.yaml)
-cargo xtask task-create --id TASK-NEW-001 --title "New task title" --req REQ-TPL-HEALTH
-cargo xtask task-update --id TASK-NEW-001 --status InProgress --owner agent
+# Example output:
+# Tasks (from specs/tasks.yaml)
+# ID                             Status       Requirement          ACs                            Owner        Title
+# ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+# TASK-TPL-STATUS-CLI-001        InProgress   REQ-PLT-STATUS-CLI   AC-PLT-017                     agent        Implement CLI governance status dashboard
+# TASK-TPL-FIX-AUDIT-001         Todo         REQ-PLT-SECURITY     AC-PLT-006, AC-PLT-007         team         Fix cargo-audit findings
 ```
 
-**HTTP API:**
+**CLI - Create Task:**
 ```bash
+# Create a new task (validates requirement and ACs exist in spec_ledger.yaml)
+cargo xtask task-create \
+  --id TASK-NEW-001 \
+  --title "Implement new feature" \
+  --req REQ-TPL-HEALTH \
+  --ac AC-TPL-001 \
+  --owner agent \
+  --status Todo
+
+# Task is written to specs/tasks.yaml with validated linkage
+```
+
+**CLI - Update Task:**
+```bash
+# Update task status (enforces valid transitions via business-core)
+cargo xtask task-update \
+  --id TASK-NEW-001 \
+  --status InProgress \
+  --owner agent \
+  --title "Updated task title"
+
+# Valid transitions: Todo → InProgress → Review → Done
+# Invalid transitions (e.g., Done → Todo) are rejected with clear error
+```
+
+**HTTP API - GET Tasks:**
+```bash
+# List all tasks
 curl http://localhost:8080/platform/tasks
+
+# Filter by status
+curl "http://localhost:8080/platform/tasks?status=InProgress"
+
+# Filter by requirement
+curl "http://localhost:8080/platform/tasks?req=REQ-TPL-HEALTH"
 ```
 
 **Response structure:**
@@ -93,16 +128,56 @@ curl http://localhost:8080/platform/tasks
 {
   "tasks": [
     {
-      "id": "implement_ac",
-      "kind": "human",
-      "category": "devex",
-      "title": "Implement Acceptance Criterion",
-      "summary": "...",
-      "requirement": "REQ-TPL-AC-WORKFLOW",
-      "recommended_flows": ["ac_first"]
+      "id": "TASK-TPL-STATUS-CLI-001",
+      "title": "Implement CLI governance status dashboard",
+      "requirement": "REQ-PLT-STATUS-CLI",
+      "acs": ["AC-PLT-017"],
+      "status": "InProgress",
+      "owner": "agent",
+      "labels": ["platform", "devex", "observability"],
+      "docs": {
+        "design": [],
+        "plan": []
+      }
     }
   ]
 }
+```
+
+**HTTP API - Update Task Status:**
+```bash
+# Transition task to next status
+curl -X POST http://localhost:8080/platform/tasks/TASK-001/status \
+  -H "Content-Type: application/json" \
+  -d '{"status": "InProgress"}'
+
+# Success: 204 No Content
+# Invalid transition: 500 with error message containing "Invalid status transition"
+```
+
+**Simple Agent Loop Example:**
+```bash
+# 1. Get prioritized hints
+curl http://localhost:8080/platform/agent/hints | jq '.hints[0]'
+# → { "task_id": "TASK-001", "status": "Todo", "reason": "...", "recommended_sequence": [...] }
+
+# 2. Get detailed steps for the task
+curl "http://localhost:8080/platform/tasks/suggest-next?task=TASK-001"
+# → { "task": {...}, "recommended_sequence": [{kind: "command", value: "cargo xtask bundle ..."}] }
+
+# 3. Update status to InProgress
+curl -X POST http://localhost:8080/platform/tasks/TASK-001/status \
+  -H "Content-Type: application/json" \
+  -d '{"status": "InProgress"}'
+
+# 4. Execute recommended commands
+cargo xtask bundle TASK-001
+cargo xtask test-ac AC-TPL-001
+
+# 5. Mark as Review or Done
+curl -X POST http://localhost:8080/platform/tasks/TASK-001/status \
+  -H "Content-Type: application/json" \
+  -d '{"status": "Review"}'
 ```
 
 ### Get Context-Aware Guidance
