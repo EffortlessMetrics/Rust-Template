@@ -38,6 +38,7 @@ pub mod release_verify;
 pub mod sbom_local;
 pub mod selftest;
 pub mod service_descriptor;
+pub mod service_init;
 pub mod skills;
 pub mod spellcheck;
 pub mod status;

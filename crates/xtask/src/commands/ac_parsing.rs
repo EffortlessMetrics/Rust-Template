@@ -33,7 +33,8 @@ pub(crate) static TESTCASE_SUFFIX_PATTERN: Lazy<Regex> =
 // Public Types
 // ============================================================================
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, serde::Serialize)]
+#[serde(rename_all = "lowercase")]
 pub enum AcStatus {
     Pass,
     Fail,

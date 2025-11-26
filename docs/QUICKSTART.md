@@ -21,7 +21,7 @@ last_updated: 2025-11-26
 ## Prerequisites
 
 **Required:** [Nix with flakes](https://nixos.org/download.html) (for Tier-1 environment matching CI)
-**Optional:** Docker, WSL2 (if on Windows)
+**Optional:** Docker, WSL2 (if on Windows), VS Code (recommended editor)
 
 **Note:** You can develop without Nix (Tier-2), but policy tests and exact CI parity require it. See [Platform Support](reference/platform-support.md).
 
@@ -72,6 +72,39 @@ cargo xtask selftest        # 8-step governance validation (10-20 min)
 
 **Validation ladder:** `check` → `test-changed` → `test-ac` → `selftest`
 See [SELECTIVE_TESTING.md](SELECTIVE_TESTING.md) for details.
+
+---
+
+## Editor Setup (VS Code)
+
+VS Code integration is pre-configured in `.vscode/`:
+
+**Recommended extensions** (auto-suggested on open):
+- rust-analyzer (Rust language support)
+- Even Better TOML (TOML syntax)
+- crates (Cargo.toml dependency management)
+- Docker (container support)
+- Code Spell Checker (with repo dictionary)
+- YAML (for spec files)
+
+**Built-in tasks** (Ctrl+Shift+B / Cmd+Shift+B):
+- `kernel: smoke` (default build) - Quick validation
+- `dev: check` - Fast code quality check
+- `dev: test-changed` - Test affected code
+- `kernel: selftest` - Full governance validation
+
+**Debug configurations** (F5):
+- `Run app-http` - Launch the service with debugger
+- `Debug unit tests` - Debug all tests
+- `Debug current test` - Debug selected test
+
+**Settings configured**:
+- Format on save for Rust
+- Clippy on save
+- Spell checker with repo dictionary
+- Search exclusions (target/, .llm/)
+
+Open the command palette (Ctrl+Shift+P / Cmd+Shift+P) and type "Tasks: Run Task" to see all available tasks.
 
 ---
 

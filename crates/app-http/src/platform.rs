@@ -12,7 +12,9 @@ use spec_runtime::{ValidatedConfig, load_all_specs, load_service_metadata};
 use std::collections::HashMap;
 use std::fs;
 
+mod forks;
 mod friction;
+mod questions;
 mod ui;
 
 /// Platform API routes (mounted at /platform)
@@ -30,6 +32,8 @@ pub fn router(state: AppState) -> Router<AppState> {
         .route("/tasks/suggest-next", get(get_suggest_next))
         .route("/tasks/graph", get(get_task_graph))
         .merge(friction::router())
+        .merge(questions::router())
+        .merge(forks::router())
         .with_state(state)
 }
 

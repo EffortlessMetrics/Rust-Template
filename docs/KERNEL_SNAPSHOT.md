@@ -39,6 +39,11 @@ This is the frozen kernel baseline (v3.3.3-kernel) for the Rust-as-Spec platform
 - Friction & questions APIs:
   - `/platform/friction` - Friction log entries with statistics
   - `/platform/friction/{id}` - Individual friction entry details
+  - `/platform/questions` - Question artifacts with status filtering
+  - `/platform/questions/{id}` - Individual question details
+- Fork tracking APIs:
+  - `/platform/forks` - Fork registry with all registered forks
+  - `/platform/forks/{name}` - Individual fork entry details
 - Platform UI dashboard:
   - Interactive graph visualization using Mermaid.js
   - Flows and tasks view
@@ -53,7 +58,7 @@ This is the frozen kernel baseline (v3.3.3-kernel) for the Rust-as-Spec platform
   - `help-flows` - Flow-based command map from specs/devex_flows.yaml
   - `check` - Fast dev loop (fmt + clippy + tests)
   - `test-changed` - Run tests affected by git changes
-  - `ac-status` - AC coverage report
+  - `ac-status` - AC coverage report (supports --json)
   - `ac-coverage` - Show which ACs need BDD scenarios
   - `dev-up` - One-command bootstrap (doctor + install-hooks + check)
 - Bundler & agent tools:
@@ -71,12 +76,12 @@ This is the frozen kernel baseline (v3.3.3-kernel) for the Rust-as-Spec platform
   - `skills-lint` - Lint Agent Skills (SKILL.md)
 - Artifact management:
   - `friction-new` - Create new friction log entry
-  - `friction-list` - List friction entries (with filters)
+  - `friction-list` - List friction entries (with filters, supports --json)
   - `question-new` - Create new question artifact
-  - `questions-list` - List questions from questions/ directory
+  - `questions-list` - List questions from questions/ directory (supports --json)
 - Fork tracking:
   - `fork-register` - Register a new template fork
-  - `fork-list` - List registered forks
+  - `fork-list` - List registered forks (supports --json)
   - `version` - Show kernel/template version (supports --json)
 - Task management:
   - `tasks-list` - List tasks from specs/tasks.yaml

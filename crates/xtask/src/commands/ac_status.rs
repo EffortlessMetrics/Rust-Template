@@ -3,7 +3,7 @@ use colored::Colorize;
 use quick_xml::Reader;
 use quick_xml::events::Event;
 use regex::Regex;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use spec_runtime::ledger::TestMapping;
 use std::collections::{HashMap, HashSet};
 use std::fs;
@@ -26,6 +26,7 @@ pub struct AcStatusArgs {
     pub output: PathBuf,
     pub verbosity: crate::Verbosity,
     pub summary: bool,
+    pub json: bool,
 }
 
 impl Default for AcStatusArgs {
@@ -38,11 +39,12 @@ impl Default for AcStatusArgs {
             output: PathBuf::from("docs/feature_status.md"),
             verbosity: crate::Verbosity::Normal,
             summary: false,
+            json: false,
         }
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
 struct Ac {
     id: String,
     story_id: String,
@@ -88,6 +90,37 @@ enum TestOutcome {
     Pass,
     Fail,
     Missing,
+}
+
+/// JSON output structure for ac-status
+#[derive(Debug, Serialize)]
+struct AcStatusJson {
+    timestamp: String,
+    kernel_acs: AcCategoryStats,
+    template_acs: AcCategoryStats,
+    coverage_percent: f64,
+    acs: Vec<AcJson>,
+}
+
+#[derive(Debug, Serialize)]
+struct AcCategoryStats {
+    total: usize,
+    passing: usize,
+    failing: usize,
+    unknown: usize,
+}
+
+#[derive(Debug, Serialize)]
+struct AcJson {
+    id: String,
+    story_id: String,
+    req_id: String,
+    text: String,
+    status: AcStatus,
+    scenarios: Vec<String>,
+    tests: Vec<TestMapping>,
+    tests_total: usize,
+    tests_executed: usize,
 }
 
 impl AcStatus {
@@ -210,7 +243,10 @@ pub fn run(args: AcStatusArgs) -> Result<()> {
     // Combine BDD + unit results into a final AC status
     update_ac_statuses(&mut acs, &bdd_results, &unit_results);
 
-    if args.summary {
+    if args.json {
+        // Output structured JSON
+        print_json_output(&acs)?;
+    } else if args.summary {
         // Print concise summary instead of generating markdown file
         print_summary(&acs)?;
     } else {
@@ -604,6 +640,70 @@ fn print_summary(acs: &HashMap<String, Ac>) -> Result<()> {
     println!("  {} {} unknown (no mapped tests)", AcStatus::Unknown.icon(), unknown);
 
     if failing > 0 {
+        anyhow::bail!("One or more ACs failed");
+    }
+
+    Ok(())
+}
+
+fn print_json_output(acs: &HashMap<String, Ac>) -> Result<()> {
+    // Separate kernel ACs (AC-KERN-*) from template ACs (AC-TPL-*)
+    let kernel_acs: Vec<_> = acs.values().filter(|ac| ac.id.starts_with("AC-KERN-")).collect();
+    let template_acs: Vec<_> = acs.values().filter(|ac| ac.id.starts_with("AC-TPL-")).collect();
+
+    let kernel_stats = AcCategoryStats {
+        total: kernel_acs.len(),
+        passing: kernel_acs.iter().filter(|ac| ac.status == AcStatus::Pass).count(),
+        failing: kernel_acs.iter().filter(|ac| ac.status == AcStatus::Fail).count(),
+        unknown: kernel_acs.iter().filter(|ac| ac.status == AcStatus::Unknown).count(),
+    };
+
+    let template_stats = AcCategoryStats {
+        total: template_acs.len(),
+        passing: template_acs.iter().filter(|ac| ac.status == AcStatus::Pass).count(),
+        failing: template_acs.iter().filter(|ac| ac.status == AcStatus::Fail).count(),
+        unknown: template_acs.iter().filter(|ac| ac.status == AcStatus::Unknown).count(),
+    };
+
+    let total_passing = kernel_stats.passing + template_stats.passing;
+    let total_acs = kernel_stats.total + template_stats.total;
+    let coverage_percent =
+        if total_acs > 0 { (total_passing as f64 / total_acs as f64) * 100.0 } else { 0.0 };
+
+    // Convert ACs to JSON format
+    let mut acs_vec: Vec<_> = acs.values().collect();
+    acs_vec.sort_by(|a, b| a.id.cmp(&b.id));
+
+    let acs_json: Vec<AcJson> = acs_vec
+        .into_iter()
+        .map(|ac| AcJson {
+            id: ac.id.clone(),
+            story_id: ac.story_id.clone(),
+            req_id: ac.req_id.clone(),
+            text: ac.text.clone(),
+            status: ac.status.clone(),
+            scenarios: ac.scenarios.clone(),
+            tests: ac.tests.clone(),
+            tests_total: ac.tests_total,
+            tests_executed: ac.tests_executed,
+        })
+        .collect();
+
+    let output = AcStatusJson {
+        timestamp: chrono::Utc::now().to_rfc3339(),
+        kernel_acs: kernel_stats,
+        template_acs: template_stats,
+        coverage_percent,
+        acs: acs_json,
+    };
+
+    let json_output =
+        serde_json::to_string_pretty(&output).context("Failed to serialize AC status to JSON")?;
+
+    println!("{}", json_output);
+
+    // Check for failures (still need to fail the command if tests failed)
+    if output.kernel_acs.failing > 0 || output.template_acs.failing > 0 {
         anyhow::bail!("One or more ACs failed");
     }
 
