@@ -101,6 +101,19 @@ The following gaps have been addressed:
 | **Friction CLI** | ✅ Complete | `cargo xtask friction-new`, `friction-list` |
 | **Release AC deltas** | ✅ Complete | `cargo xtask release-bundle` now includes AC changes |
 | **Branch protection script** | ✅ Complete | `.github/scripts/setup-branch-protection.sh` |
+| **Service-init command** | ✅ Complete | `cargo xtask service-init` - single command fork branding |
+| **JSON CLI outputs** | ✅ Complete | `--json` flag on `ac-status`, `friction-list`, `questions-list`, `fork-list` |
+| **Questions HTTP API** | ✅ Complete | `GET /platform/questions`, `/platform/questions/{id}` |
+| **Forks HTTP API** | ✅ Complete | `GET /platform/forks`, `/platform/forks/{name}` |
+
+### 2.5 Editor Integration ✅
+
+| Item | Status | Location |
+|------|--------|----------|
+| **VS Code extensions** | ✅ Complete | `.vscode/extensions.json` |
+| **VS Code tasks** | ✅ Complete | `.vscode/tasks.json` |
+| **VS Code launch configs** | ✅ Complete | `.vscode/launch.json` |
+| **VS Code settings** | ✅ Complete | `.vscode/settings.json` |
 
 ### 2.3 Test Isolation ✅
 
@@ -274,26 +287,35 @@ cargo xtask kernel-smoke       # Quick validation
 cargo run -p app-http          # Start service
 ```
 
+### Fork Initialization
+
+```bash
+cargo xtask service-init \
+  --id my-service \
+  --name "My Service" \
+  --description "My service description"
+```
+
 ### Development Commands
 
 ```bash
 cargo xtask check              # Fast local checks
 cargo xtask test-changed       # Run affected tests
 cargo xtask test-ac AC-XXX     # Test specific AC
-cargo xtask ac-status          # View AC coverage
+cargo xtask ac-status          # View AC coverage (--json for machine output)
 cargo xtask selftest           # Full governance check
-cargo xtask version            # Show kernel version
+cargo xtask version            # Show kernel version (--json for machine output)
 ```
 
 ### Governance Artifacts
 
 ```bash
 cargo xtask friction-new --category X --severity Y --summary "..."
-cargo xtask friction-list      # List friction entries
+cargo xtask friction-list      # List friction entries (--json available)
 cargo xtask question-new --category X --summary "..." --flow F --phase P --description "..."
-cargo xtask questions-list     # List questions
+cargo xtask questions-list     # List questions (--json available)
 cargo xtask fork-register --name "Name" --domain "domain" --kernel-version "v3.3.3" ...
-cargo xtask fork-list          # List registered forks
+cargo xtask fork-list          # List registered forks (--json available)
 ```
 
 ### Agent Workflow
@@ -301,7 +323,11 @@ cargo xtask fork-list          # List registered forks
 ```bash
 cargo xtask bundle implement_ac    # Get context bundle
 cargo xtask suggest-next           # Get task suggestions
-curl localhost:8080/platform/agent/hints  # API-based hints
+# Platform APIs for agents
+curl localhost:8080/platform/agent/hints   # Prioritized task hints
+curl localhost:8080/platform/questions     # Question artifacts
+curl localhost:8080/platform/forks         # Fork registry
+curl localhost:8080/platform/friction      # Friction log
 ```
 
 ### Release Commands
