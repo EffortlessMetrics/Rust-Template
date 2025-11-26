@@ -1,607 +1,444 @@
-# Rust-as-Spec Platform Cell (v3.3.1) 🎉
-**Current Template Version:** v3.3.0
+````markdown
+# Rust-as-Spec Platform Cell (v3.3.1)
 
-**Current Template Version:** v3.3.1
+**A governed Rust service template where specs, tests, docs, policies, and infra all agree – and the repo can prove it.**
 
-[![CI](https://github.com/EffortlessMetrics/Rust-Template/actions/workflows/ci-template-selftest.yml/badge.svg)](https://github.com/EffortlessMetrics/Rust-Template/actions/workflows/ci-template-selftest.yml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE-MIT)
-[![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE-APACHE)
+This cell gives you a **single Rust service** with:
 
-**A self-healing platform cell where governance enforces itself and agents can move fast safely.**
+- **Schema-driven specs** (`specs/spec_ledger.yaml`, `config_schema.yaml`)
+- **BDD-backed acceptance criteria** (Cucumber + Rust)
+- **A 7-step selftest gate** (`cargo xtask selftest`)
+- **Introspection APIs** under `/platform/*`
+- **A Web UI** at `/ui` that shows the same governance state CI enforces
 
-LLM-native, governance-bounded: agents do the mechanical work inside named flows; deterministic gates (`cargo xtask selftest`, policy tests, graph invariants) and human merge keep it safe.
-
-Optimized for LLM-native teams: the boilerplate that slows humans down gives agents the structure they need to work safely.
-
-> **What is this?**
->
-> A **governed Rust service cell for LLM-native development**:
-> specs, code, docs, and policies are enforced by CI (`cargo xtask selftest`),
-> validated by policy tests and graph invariants, and exposed via `/platform/*`
-> so agents can do the mechanical work and humans can approve with evidence.
-
-> **Status: Kernel Frozen** (v2.5.0)
->
-> The platform successfully used its own governance contracts to build itself. All 7 selftest steps pass. Next phase: real-world service pilot.
-
-Unlike conventional templates that drift over time, this repository:
-
-- **Self-heals**: Specs, docs, and policies are validated as rigorously as code
-- **Self-explains**: Platform APIs (`/platform/*`) and Web UI (`/ui`) expose governance state in real-time
-- **Self-guides**: Context-aware `suggest-next` tells humans and agents exactly what to do
-
-**Use this when:**
-
-- ✅ You need **governed starting point** for Rust services (health/version/metrics, policies, selftest)
-- ✅ You're building in a **regulated/multi-team environment** (FinTech, HealthTech, Platform Engineering)
-- ✅ You're using **LLMs/agents as contributors** and need trust-but-verify guardrails
-- ✅ You want **specs → code → docs** linkage enforced by CI, not manual reviews
-
-**Don't use this if:**
-
-- ❌ You just want "hello world in Axum" (too heavy)
-- ❌ You're prototyping without governance requirements (overkill)
-- ❌ You don't need AC traceability between specs, ACs, and code (simpler templates exist)
-
-**Read more:** [Why This Template Exists](docs/why-this-exists.md) | [ROADMAP.md](docs/ROADMAP.md) | [Technical Overview](docs/explanation/rust-as-spec-overview.md)
+Use it when you want a Rust service that **explains itself**, is **safe for LLMs/agents to work inside**, and **stays governed over time**.
 
 ---
 
-## What Makes This Different
+## 1. Who this is for
 
-### Conventional Template
+Use this template if:
+
+- You ship Rust services in **regulated or multi-team environments** (FinTech, health, platform engineering).
+- You want **spec-as-code and doc-as-code** with real teeth: CI fails if specs/tests/docs drift.
+- You plan to use **LLMs/agents as contributors** and need hard guardrails.
+- You want a **repeatable service cell** to plug into a portal/IDP (Backstage/Port/Humanitec/etc.).
+
+Don’t use this if:
+
+- You just want “hello world in Axum”.
+- You don’t care about AC traceability or policy tests yet.
+- You’re experimenting and don’t want any governance overhead.
+
+---
+
+## 2. What you actually get
+
+### 2.1 Specs and governance as code
+
+- `specs/spec_ledger.yaml` – stories → requirements → acceptance criteria (ACs) → tests → docs.
+- `specs/config_schema.yaml` – configuration schema for the service.
+- `specs/devex_flows.yaml` – developer workflows (flows + commands).
+- `specs/tasks.yaml` – work items the platform can surface via CLI and HTTP.
+
+### 2.2 Verification
+
+- **BDD (Cucumber + Rust)** for platform and DevEx behaviour.
+- **Unit tests** for spec runtime, graph invariants, config validation, etc.
+- `cargo xtask ac-status` – computes AC → test → status mapping and writes:
+
+  - `docs/feature_status.md` – **AC health dashboard**, auto-generated.
+
+### 2.3 Enforcement
+
+- `cargo xtask selftest` – the **single mandatory CI gate**:
+
+  1. Core checks (fmt, clippy, unit tests)
+  2. BDD acceptance tests
+  3. AC status + ADR mapping
+  4. LLM context bundler checks
+  5. Policy tests (OPA/Conftest)
+  6. DevEx contract (required xtask commands, flows)
+  7. Governance graph invariants (REQ/AC/command connectivity)
+  8. AC coverage sanity
+
+If selftest is red, the service is **not** in a governed state.
+
+### 2.4 Introspection surfaces
+
+- **HTTP APIs (`/platform/*`):**
+  - `/platform/status` – governance health, policy status, auth mode, metadata.
+  - `/platform/graph` – full governance graph as JSON.
+  - `/platform/tasks` – tasks from `tasks.yaml` (list + status updates).
+  - `/platform/devex/flows` – developer flows and commands.
+  - `/platform/docs/index` – documentation inventory.
+  - `/platform/schema` – machine-readable schema/OpenAPI for the platform.
+  - `/platform/agent/hints` – task suggestions for agents.
+
+- **Web UI (`/ui`):**
+  - Dashboard view for status and governance metrics.
+  - Graph visualization (Mermaid) of stories/REQs/ACs/docs/commands.
+  - Flows and tasks views for day-to-day work.
+
+The UI has **no separate database**: it calls the same loaders `selftest` uses.  
+If the UI shows it, CI enforces it.
+
+---
+
+## 3. High-level architecture
+
+The pipeline is simple:
 
 ```text
-README.md says:          specs are in docs/specs/
-Reality 6 months later:  specs were moved to Notion
-                         README outdated
-                         No one knows what's governed
-```
+Specs (YAML) ──> Loader (Rust) ──> Selftest (CI) ──> Introspection (HTTP/UI)
+   spec_ledger      spec-runtime        xtask selftest      /platform/*, /ui
+   config_schema    graph model
+   devex_flows
+   tasks, docs
+````
 
-### Rust-as-Spec Platform Cell
-
-```text
-specs/spec_ledger.yaml:  Stories → Requirements → ACs
-    ↓ (loaded by)
-spec-runtime (Rust):     Type-checked structs
-    ↓ (enforced by)
-cargo xtask selftest:    7-step validation (CI gate)
-    ↓ (exposed by)
-/platform/status (API):  Real-time governance metrics
-/ui (Web UI):            Visual governance console
-```
-
-**Result:** If specs drift from code, CI fails. If code doesn't match specs, CI fails. There is no third state.
-
-**Read more:**
-
-- [ROADMAP.md](docs/ROADMAP.md) - Strategic direction and pilot plan
-- [Technical Overview](docs/explanation/rust-as-spec-overview.md) - Deep dive into the architecture
-- [Why This Template Exists](docs/why-this-exists.md) - Problem statement and philosophy
-
----
-
-## Positioning in the IDP Landscape
-
-This repo is a **governed Rust cell**: one service per repo with specs, policies, graph invariants, `/platform/*` introspection, and agent-safe bundles (`xtask bundle`, `suggest-next`). It is not a portal (no fleet view) and not an orchestrator (no opinions about K8s wiring); it is the per-service kernel those tools can rely on.
-
-If you already run a portal like Backstage/Port/OpsLevel, they give you catalogs, scorecards, and golden paths but assume each repo enforces its own discipline. This template is the missing Rust golden path: specs, ACs, docs, and policies are wired together and enforced by `xtask selftest`, with `/platform/status` and `/ui` exposing the same state portals can display.
-
-If you use a platform orchestrator (Humanitec or similar), it standardizes environments and deployments. Pair it with this template to standardize what each Rust service **is**: self-describing contracts, governance health (`ac-status`, policy tests), and predictable APIs (`/platform/*`) the orchestrator can call.
-
-Compared to generic Rust templates, this goes deeper than "hello world + CI." It ships a governed service: specs -> ACs -> tests -> docs -> policies, graph invariants to prevent nonsense, and agent ergonomics by default. The single contract remains `cargo xtask selftest`.
-
----
-
-## Quick Start
-
-### Prerequisites
-
-Editor recommendation: Visual Studio Code with the `rust-analyzer` extension (`rust-lang.rust-analyzer`). This repository includes a `.vscode/extensions.json` workspace recommendation.
-
-This template is **Nix-first**. Development environments should be declarative, reproducible, and match CI exactly.
-
-**Platform Recommendation:** For the best experience, use a **Tier 1** platform (Linux, macOS, or WSL2 on Windows) with Nix devshell for exact CI parity and strict governance validation. See [Platform Support at a Glance](#platform-support-at-a-glance) below for tier details.
-
-```bash
-# Install Nix (one-time setup)
-curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | \
-  sh -s -- install --determinate
-
-# Enter development shell
-nix develop
-
-# Verify environment
-cargo xtask doctor
-```
-
-**Without Nix?** See [manual setup](docs/how-to/setup-without-nix.md) (requires Rust 1.91+, conftest, cargo-binstall). Native Windows users should review [Platform Support Reference](docs/reference/platform-support.md) for known limitations.
-
-### 30-Second Tour
-
-```bash
-# 1. One-command bootstrap
-cargo run -p xtask -- dev-up
-# → Installs pre-commit hooks
-# → Checks Docker
-# → Runs governance check (low-resource mode)
-
-# 2. Start the service
-cargo run -p app-http
-# → Open http://localhost:8080/ui (governance dashboard)
-# → Open http://localhost:8080/platform/status (JSON API)
-
-# 3. Get guidance on next steps
-cargo xtask suggest-next --task implement_ac
-# → Shows what to do and what's already done (context-aware)
-
-# 4. Implement a feature (AC-first workflow)
-cargo xtask ac-new AC-EXAMPLE-001 "Health endpoint returns 200" --requirement REQ-TPL-HEALTH
-cargo xtask bundle implement_ac
-cargo xtask selftest
-```
-
----
-
-## Platform Support at a Glance
-
-This template supports multiple platforms with different validation guarantees:
-
-| Platform | Tier | Environment | Supports selftest | Best For |
-|----------|------|-------------|------------------|----------|
-| Linux | 1 | Nix devshell | ✅ Strict gates | Server development, CI/CD |
-| macOS | 1 | Nix devshell | ✅ Strict gates | Cross-platform development |
-| WSL2 | 1 | Nix on WSL2 | ✅ Strict gates | Windows users needing Unix |
-| Windows | 2 | Native PowerShell/Bash | ⚠️ With caveats | Native Windows workflows |
-
-**Tier Definitions:**
-
-- **Tier 1** (Fully Validated): Exact CI parity, all governance gates strictly enforced, canonical environments
-- **Tier 2** (Supported): Core functionality validated, known platform limitations (e.g., file locking on Windows)
-
-**📖 Full details:** See [Platform Support Reference](docs/reference/platform-support.md) for detailed setup instructions, known issues, and troubleshooting.
-
----
-
-## Platform Support Details
-
-All **Tier 1** platforms (Linux, macOS, WSL2 with Nix devshell) run `cargo xtask selftest` with strict, hard gates on all kernel ACs and provide exact CI parity.
-
-**Tier 2** (Native Windows 10/11 with PowerShell/Git Bash) is fully supported with known caveats: selftest passes in normal conditions but may intermittently encounter file locking errors (`os error 5`) if antivirus or other processes lock binaries during rebuild.
-
-**Quick fixes for Windows file locking:**
-1. Close any running xtask or cargo processes
-2. Exclude `target/` from real-time antivirus scanning
-3. Re-run `cargo xtask selftest`, or use WSL2 for canonical validation
-
-**Fmt gate policy:** Tier 1 (Nix devshell/CI) runs `cargo fmt --all -- --check` as a hard gate. Tier 2 (native Windows) and any run with `XTASK_LOW_RESOURCES=1` skip fmt and emit a warning to avoid rustfmt recursion. Use a Tier 1 shell before merging to ensure formatting is enforced.
-
-**For complete platform details, setup instructions, and troubleshooting:** See [Platform Support Reference](docs/reference/platform-support.md)
-
----
-
-## Platform Introspection
-
-The same specs that power CI are exposed at runtime:
-
-### HTTP APIs (`/platform/*`)
-
-```bash
-# Governance health
-curl http://localhost:8080/platform/status
-
-# Full governance graph (JSON)
-curl http://localhost:8080/platform/graph
-
-# Available tasks
-curl http://localhost:8080/platform/tasks
-
-# Context-aware guidance
-curl "http://localhost:8080/platform/tasks/suggest-next?task=implement_ac"
-
-# Developer workflows
-curl http://localhost:8080/platform/devex/flows
-
-# Documentation inventory
-curl http://localhost:8080/platform/docs/index
-```
-
-### Web UI (`/ui`)
-
-```bash
-# Dashboard: Platform health + governance contracts
-open http://localhost:8080/ui
-
-# Graph: Interactive Mermaid visualization
-open http://localhost:8080/ui/graph
-
-# Flows: DevEx workflows + task guidance
-open http://localhost:8080/ui/flows
-```
-
-**Key Property:** UI has no database. Every page load calls the same `load_spec_ledger()` / `load_devex_flows()` functions that `selftest` uses. **If the UI shows it, CI enforces it.**
-
----
-
-## The 7-Step Selftest Contract
-
-`cargo xtask selftest` is the **single mandatory gate** for all changes:
+Under the hood:
 
 ```text
-[1/7] Running core checks (fmt, clippy, tests)...
-      ✓ Code quality baseline
-
-[2/7] Running BDD acceptance tests...
-      ✓ Behavior matches AC text
-
-[3/7] Running AC status mapping & ADR references...
-      ✓ Traceability (every AC has tests, every ADR exists)
-
-[4/7] Testing LLM context bundler...
-      ✓ Agent safety (bounded context generation)
-
-[5/7] Running policy tests...
-      ✓ Compliance (OPA/Rego policies pass)
-
-[6/7] Checking DevEx contract...
-      ✓ Usability (required commands exist and are reachable)
-
-[7/7] Checking governance graph invariants...
-      ✓ Structural integrity (no orphans, missing ACs, unreachable commands)
+┌─────────────────────────────────────┐
+│ Adapters (HTTP, gRPC)              │
+│  ├─ app-http (Axum)                │
+│  └─ adapters-grpc (Tonic)          │
+└────────────┬────────────────────────┘
+             │
+┌────────────▼────────────────────────┐
+│ Business Core                       │
+│  ├─ business-core (domain)         │
+│  ├─ governance (specs + policies)  │
+│  └─ telemetry (metrics + tracing)  │
+└────────────┬────────────────────────┘
+             │
+┌────────────▼────────────────────────┐
+│ Infrastructure                      │
+│  ├─ spec-runtime (loaders + graph) │
+│  ├─ model (shared types)           │
+│  └─ proto (gRPC definitions)       │
+└─────────────────────────────────────┘
 ```
-
-**What this prevents:**
-
-- Requirements with `must_have_ac: true` but no ACs → `REQ_HAS_NO_AC` violation
-- Required commands not part of any flow → `COMMAND_UNREACHABLE` violation
-- Docs referenced but missing from disk → `DOC_ORPHANED` violation
-- ACs without BDD scenario tags → Policy violation
 
 ---
 
-## Governance Health & Coverage
+## 4. Quick start
 
-The template includes commands for real-time traceability from requirements → ACs → tests → code:
+### 4.1 Tier-1 prerequisites (recommended)
 
-### Check Governance Status
+For **Tier-1** parity (same environment as CI):
 
-```bash
-# Overall governance health dashboard
-cargo xtask status
+* Linux, macOS, or **WSL2** on Windows.
+* [Nix](https://nixos.org/) with flakes enabled.
 
-# Detailed AC coverage report (shows which ACs have tests)
-cargo xtask ac-coverage
+This repo is Nix-first. You *can* run it without Nix, but you lose exact CI parity.
 
-# Export governance graph for visualization
-cargo xtask graph-export
-```
-
-### Validation Loop
-
-```bash
-# Fast dev loop (fmt, clippy, unit tests only)
-cargo xtask check
-
-# Selective testing: Test only what changed (RECOMMENDED for iteration)
-cargo xtask test-changed
-
-# Test a specific acceptance criterion
-cargo xtask test-ac AC-PLT-001
-
-# Full governance validation (7-step contract - use Tier-1 environment)
-cargo xtask selftest
-```
-
-**📖 Performance Guide:** On native Windows (Tier-2), `selftest` can take 2+ hours due to file locking. Use `test-changed` for fast iteration (seconds to minutes) and reserve `selftest` for WSL2/Linux validation. See [Selective Testing Guide](docs/SELECTIVE_TESTING.md) for details.
-
-### Extend Governance
-
-```bash
-# Generate BDD scenario stubs for an AC
-cargo xtask ac-suggest-scenarios AC-PLT-XXX
-
-# Create new AC
-cargo xtask ac-new AC-MYPROJ-001 "Description" --requirement REQ-MYPROJ-FEATURE
-
-# Create new Architecture Decision Record
-cargo xtask adr-new "My Architecture Decision"
-```
-
-**Key Property:** Every kernel AC has passing BDD or unit coverage. Run `cargo xtask ac-coverage` anytime to see real-time traceability.
-
----
-
-## How to Use This Project
-
-| Your  Situation | Recommended Path | Documentation |
-|---------------|------------------|-----------------|
-| **Starting a new service** | Clone this template | [Getting Started](#getting-started) |
-| **Adding governance to existing repo** | Use the library | [Brownfield Guide](docs/how-to/add-governance-to-existing-repo.md) |
-| **Multiple services, want updates** | Template as upstream | [Adoption Patterns](docs/explanation/adoption-patterns.md#pattern-b-template-as-upstream) |
-| **Platform team (10+ services)** | Generator-based | [Adoption Patterns](docs/explanation/adoption-patterns.md#pattern-c-generator-based-platform-team) |
-
----
-
-## Getting Started
-
-### 1. Clone and Initialize
+### 4.2 Getting up and running
 
 ```bash
 # Clone the template
 git clone https://github.com/EffortlessMetrics/Rust-Template.git my-service
 cd my-service
 
-# Initialize your service
-./scripts/init-service.sh my-service "My Service Description"
-
-# Enter Nix shell
+# Enter the Nix dev shell (Tier-1)
 nix develop
 
-# Verify everything works
+# Check your environment
+cargo xtask doctor
+
+# Install hooks (optional but recommended)
+cargo xtask install-hooks
+
+# Run the full selftest gate
 cargo xtask selftest
 ```
 
-### 2. Understand the Structure
-
-```text
-specs/
-  spec_ledger.yaml   # Stories → Requirements → ACs
-  devex_flows.yaml   # Developer workflows (flows + commands)
-  doc_index.yaml     # Documentation inventory
-  tasks.yaml         # Work units with recommended sequences
-  features/          # BDD scenarios (Cucumber/Gherkin)
-
-docs/
-  adr/               # Architecture Decision Records
-  design/            # Design docs (linked to requirements)
-  how-to/            # Runbooks and guides
-  tutorials/         # Step-by-step tutorials
-
-policy/
-  *.rego             # OPA/Rego compliance policies
-  testdata/          # Policy test fixtures
-
-crates/
-  app-http/          # HTTP service (Axum)
-  business-core/     # Business logic
-  spec-runtime/      # Spec loaders + graph logic
-  xtask/             # CLI orchestration
-  ...
-```
-
-### 3. Implement Your First Feature (AC-First Workflow)
+Start the service:
 
 ```bash
-# 1. Create a new AC
+cargo run -p app-http
+# UI:   http://localhost:8080/ui
+# APIs: http://localhost:8080/platform/status
+```
+
+---
+
+## 5. Platform support
+
+| Platform | Tier | Environment  | Selftest | Notes                         |
+| -------- | ---- | ------------ | -------- | ----------------------------- |
+| Linux    | 1    | Nix devshell | ✅        | Canonical dev + CI            |
+| macOS    | 1    | Nix devshell | ✅        | Cross-platform development    |
+| WSL2     | 1    | Nix in WSL2  | ✅        | Recommended for Windows users |
+| Windows  | 2    | Native       | ⚠️       | fmt/policy may be skipped     |
+
+**Tier-1**: full `selftest` including fmt, policy tests, and all gates.
+**Tier-2**: core functionality works, but file locking and toolchain differences mean some steps may be skipped or run with `XTASK_LOW_RESOURCES=1`.
+
+See `docs/reference/platform-support.md` for details and recommended commands per tier.
+
+---
+
+## 6. Governance model in practice
+
+### 6.1 Spec ledger
+
+`specs/spec_ledger.yaml` is the core artifact:
+
+* **Stories** (`US-*`) – user-facing goals.
+* **Requirements** (`REQ-*`) – what must be true.
+* **Acceptance criteria** (`AC-*`) – concrete behaviour.
+* **Tests** – how each AC is verified (BDD tags, unit tests).
+* **Docs** – which design/runbook/tutorial covers it.
+
+Example fragment:
+
+```yaml
+- id: REQ-TPL-PLATFORM-AUTH
+  title: "Platform introspection supports authenticated mode"
+  must_have_ac: true
+  acceptance_criteria:
+    - id: AC-TPL-PLATFORM-AUTH-BASIC
+      text: >
+        When PLATFORM_AUTH_MODE=basic, write endpoints under /platform/*
+        reject unauthenticated requests with 401/403 and accept requests
+        with the configured credential header; read endpoints may remain
+        open or use the same guard.
+      tests:
+        - { type: bdd, tag: "@AC-TPL-PLATFORM-AUTH-BASIC", file: "specs/features/platform_security.feature" }
+```
+
+### 6.2 AC status and coverage
+
+To see current coverage:
+
+```bash
+# Recompute AC statuses from tests
+cargo xtask ac-status
+
+# Open the generated dashboard
+less docs/feature_status.md
+```
+
+Kernel ACs must be `[PASS]`. Non-kernel or template-only ACs may be `[UNKNOWN]` and are documented as such.
+
+---
+
+## 7. Platform APIs and auth
+
+### 7.1 Auth modes
+
+Auth is applied once at the `/platform/*` router:
+
+* `PLATFORM_AUTH_MODE=none` (default)
+
+  * All `/platform/*` routes are open.
+  * Intended for local/dev use.
+
+* `PLATFORM_AUTH_MODE=basic`
+
+  * All **non-GET** `/platform/*` routes require a shared token.
+  * Read endpoints (GET) remain open or can share the same guard.
+  * If `basic` is enabled without a token, the service:
+
+    * Logs a startup warning.
+    * Surfaces `token_present: false` in `/platform/status`.
+
+Typical production setup:
+
+```bash
+export PLATFORM_AUTH_MODE=basic
+export PLATFORM_AUTH_TOKEN="some-long-random-secret"
+```
+
+### 7.2 Key endpoints
+
+```bash
+# Governance health + metadata
+curl http://localhost:8080/platform/status
+
+# Full governance graph (stories/REQs/ACs/docs/commands)
+curl http://localhost:8080/platform/graph
+
+# Tasks from specs/tasks.yaml
+curl http://localhost:8080/platform/tasks
+
+# DevEx flows
+curl http://localhost:8080/platform/devex/flows
+
+# Docs index
+curl http://localhost:8080/platform/docs/index
+
+# Schema/OpenAPI for the platform
+curl http://localhost:8080/platform/schema
+```
+
+---
+
+## 8. Developer workflows (xtask)
+
+Everything runs through the `xtask` binary.
+
+### 8.1 Onboarding & sanity
+
+```bash
+# Environment sanity check
+cargo xtask doctor
+
+# Quick code quality check (fmt, clippy, unit tests)
+cargo xtask check
+
+# Full governance gate
+cargo xtask selftest
+```
+
+### 8.2 AC-first feature development
+
+```bash
+# 1. Define a new AC
 cargo xtask ac-new AC-MYSERV-001 "Users can list todos" --requirement REQ-MYSERV-TODOS
 
-# 2. Edit the spec ledger to add context
-#    (specs/spec_ledger.yaml is updated by step 1)
+# 2. Add or adjust BDD scenarios in specs/features/*.feature
 
-# 3. Create a BDD scenario
-#    Edit specs/features/todos.feature
-
-# 4. Generate LLM context bundle
+# 3. Generate an LLM context bundle for the AC
 cargo xtask bundle implement_ac
 
-# 5. Implement the feature
-#    (Use the bundle with your LLM or write code manually)
+# 4. Implement the feature (by hand or with an LLM using the bundle)
 
-# 6. Run tests
+# 5. Run just the relevant BDD tests
 cargo xtask bdd
 
-# 7. Verify governance
-cargo xtask selftest
-```
-
-**For LLM-native development:** See [CLAUDE.md](CLAUDE.md) for standard prompts and workflows.
-
----
-
-## Key Workflows
-
-### Developer Workflows
-
-```bash
-# Onboarding (first time)
-cargo xtask doctor
-cargo xtask check
-cargo xtask selftest
-
-# AC-first feature development
-cargo xtask ac-new AC-ID "Description" --requirement REQ-ID
-cargo xtask bundle implement_ac
-cargo xtask bdd
-cargo xtask selftest
-
-# Design decision
-cargo xtask adr-new "Use PostgreSQL for persistence"
-cargo xtask design-new REQ-ID "Database Schema Design"
-
-# Dependency management
-cargo xtask audit
-cargo xtask outdated
-cargo xtask upgrade-deps
-
-# Release preparation
-cargo xtask changelog
-cargo xtask sbom-local
-cargo xtask release-prep
-```
-
-### Platform Workflows
-
-```bash
-# Governance checks
-cargo xtask graph-export --format mermaid
+# 6. Update AC status and validate everything
 cargo xtask ac-status
-cargo xtask policy-test
-cargo xtask docs-check
-
-# Maintenance
-cargo xtask clean
-cargo xtask fmt-all
-cargo xtask hakari
-
-# Help
-cargo xtask help
-cargo xtask help-flows
+cargo xtask selftest
 ```
 
----
-
-## Architecture
-
-### The Four-Phase Pipeline
-
-Every aspect of governance flows through:
-
-```text
-Spec (YAML) → Loader (Rust) → Enforce (CI) → Introspect (API/UI)
-```
-
-1. **Spec**: Structured YAML files in `specs/`
-2. **Loader**: Type-safe deserialization via `spec-runtime` (serde)
-3. **Enforce**: 7-step `selftest` validates specs ↔ code ↔ docs ↔ policies
-4. **Introspect**: `/platform/*` APIs and `/ui` expose governance state
-
-**Key Property:** If specs are invalid, they fail to load. If they load, they're valid. No ambiguity.
-
-### Hexagonal Architecture
-
-```text
-┌─────────────────────────────────────┐
-│  Adapters (HTTP, gRPC)              │
-│  ├─ app-http (Axum)                 │
-│  └─ adapters-grpc (Tonic)           │
-└────────────┬────────────────────────┘
-             │
-┌────────────▼────────────────────────┐
-│  Business Core                      │
-│  ├─ business-core (domain models)   │
-│  ├─ governance (policies + specs)   │
-│  └─ telemetry (metrics + tracing)   │
-└────────────┬────────────────────────┘
-             │
-┌────────────▼────────────────────────┐
-│  Infrastructure                     │
-│  ├─ spec-runtime (loaders + graph)  │
-│  ├─ model (shared types)            │
-│  └─ proto (gRPC definitions)        │
-└─────────────────────────────────────┘
-```
-
----
-
-## Current Status: v2.5.0 – "The Governing Kernel" (Frozen) 🎉
-
-**Phase 4 Complete** (All 4 Epics):
-- ✅ **Epic 1**: Graph invariants as mandatory CI gate
-- ✅ **Epic 2**: Context-aware `suggest-next` (tracks satisfied vs pending steps)
-- ✅ **Epic 3**: Real-time policy status via `/platform/status`
-- ✅ **Epic 4**: Rust-native Web UI (maud + htmx, zero build step)
-
-**Pilot Complete** (Agent-Ready):
-- ✅ Local runtime (`docker-compose.yaml` with Postgres + Jaeger)
-- ✅ Governance hooks (`cargo xtask install-hooks`)
-- ✅ Agent skills (`.claude/skills/*`)
-
-**Validated:**
-
-- All 7 selftest steps pass
-- 22/22 policy tests pass
-- Platform used itself to build final features
-
-**Status: Kernel Frozen**  
-No new platform features until validated by real-world service pilot.
-
-**Next:** Real-world service pilot → friction log → v2.5.x hardening
-
-**See:** [ROADMAP.md](docs/ROADMAP.md) for full details on current state, pilot plan, and future direction.
-
----
-
-## Documentation
-
-### Getting Started
-- [Quick Start (this README)](#quick-start)
-- [First AC Change (Tutorial)](docs/tutorials/first-ac-change.md)
-- [Setup Without Nix](docs/how-to/setup-without-nix.md)
-
-### Core Concepts
-- [Why This Template Exists](docs/why-this-exists.md)
-- [Rust-as-Spec Technical Overview](docs/explanation/rust-as-spec-overview.md)
-- [ROADMAP.md](docs/ROADMAP.md)
-
-### How-To Guides
-- [Add Governance to Existing Repo](docs/how-to/add-governance-to-existing-repo.md)
-- [Create a New Service from Template](docs/how-to/new-service-from-template.md)
-- [Update Templates from Upstream](docs/how-to/template-updates.md)
-
-### Reference
-- [Platform Support Reference](docs/reference/platform-support.md)
-- [ADR Index](docs/adr/README.md)
-- [Policy Reference](policy/README.md)
-- [xtask Command Reference](docs/reference/xtask-commands.md)
-
-### For LLMs/Agents
-- [CLAUDE.md](CLAUDE.md) - System prompt and standard workflows
-- [Agent Skills Guide](docs/AGENT_SKILLS.md) - How to author Skills for this repo
-- [Agent Guide](docs/AGENT_GUIDE.md) - Operational procedures for agents
-- [Platform API Reference](docs/reference/platform-api.md)
-
----
-
-## Contributing
-
-This template is in **Pilot Phase**. We're validating the governance model with 2-3 real services before wider adoption.
-
-**How to contribute:**
-1. **Use it:** Clone and build a service
-2. **Log friction:** Maintain a `FRICTION_LOG.md` as you work
-3. **Share feedback:** Open issues for blockers or nice-to-haves
-4. **Propose changes:** PRs welcome, but discuss large changes first
-
-**See:** [CONTRIBUTING.md](CONTRIBUTING.md) for full guidelines.
-
----
-
-## License
-
-Dual-licensed under:
-- MIT License ([LICENSE-MIT](LICENSE-MIT))
-- Apache License 2.0 ([LICENSE-APACHE](LICENSE-APACHE))
-
-Choose whichever works best for your use case.
-
----
-
-## Acknowledgments
-
-Built with:
-- Rust + Cargo workspaces
-- Axum (HTTP), Tonic (gRPC)
-- Cucumber-rs (BDD)
-- OPA/Conftest (policies)
-- Maud (type-safe HTML)
-- HTMX + Mermaid.js (UI)
-- Nix (dev environment)
-
-Inspired by:
-- [Zero to Production in Rust](https://www.zero2prod.com/) (Luca Palmieri)
-- [Backstage](https://backstage.io/) (Spotify's service catalog)
-- [SpecKit](https://speckit.io/) (API contract testing)
-- Platform Engineering community
-
----
-
-**Ready to start?**
+### 8.3 Selective testing
 
 ```bash
-nix develop
-cargo xtask doctor
-cargo run -p app-http
-# Open http://localhost:8080/ui
+# Test only what changed vs origin/main (fast loop)
+cargo xtask test-changed
+
+# Plan-only mode (see what would be run)
+XTASK_TEST_CHANGED_PLAN_ONLY=1 cargo xtask test-changed
 ```
 
-**Questions?** See [docs/](docs/) or open an issue.
+### 8.4 Releases
+
+```bash
+# Build a local SBOM
+cargo xtask sbom-local
+
+# Prepare a release (version bump + docs)
+cargo xtask release-prepare 3.3.1
+
+# Generate release evidence bundle
+cargo xtask release-bundle 3.3.1
+# -> release_evidence/v3.3.1.md
+```
+
+---
+
+## 9. LLM / agent ergonomics
+
+This repo is designed for agents to do the mechanical work safely, and humans to review.
+
+Key pieces:
+
+* **Specs are structured** (ledger, flows, tasks).
+
+* **Bundles are explicit** (`cargo xtask bundle implement_ac`).
+
+* **Suggest-next is task-aware**:
+
+  ```bash
+  cargo xtask suggest-next --task IMPLEMENT_AC
+  ```
+
+* **Platform hints**:
+
+  * `/platform/agent/hints` exposes high-priority tasks and recommended sequences.
+
+LLMs should:
+
+1. Use `/platform/status`, `/platform/graph`, `/platform/tasks`, `/platform/agent/hints` to understand the work.
+2. Use `xtask` commands to make changes and run checks.
+3. Let `selftest` be the final arbiter.
+
+See:
+
+* `CLAUDE.md` – system prompt and recommended workflows.
+* `docs/AGENT_GUIDE.md` – how agents should operate in this repo.
+* `docs/AGENT_SKILLS.md` – Skills and their mapping to flows.
+
+---
+
+## 10. Adoption patterns
+
+### 10.1 Greenfield: new service
+
+* Clone this template into a new repo.
+* Adjust `service_metadata.yaml`, ledger entries, tasks to your domain.
+* Keep the platform kernel as-is; build your business logic in new crates or modules.
+* Use `selftest` as the gate from day one.
+
+### 10.2 Brownfield: existing repo
+
+See `docs/how-to/add-governance-to-existing-repo.md`.
+
+At a high level:
+
+* Add `governance/` subtree (specs, policy, docs) to your existing repo.
+* Add `spec-runtime` + `xtask` crates to your workspace.
+* Configure your CI to run `cargo xtask selftest` as a gate.
+* Gradually map your existing tests/docs into the spec ledger.
+
+---
+
+## 11. Relationship to portals/IDPs
+
+This template is **not** a portal. It is the **per-service kernel** that a portal/IDP can trust.
+
+* If you use Backstage/Port/OpsLevel/etc.:
+
+  * They provide catalogs, scorecards, golden paths.
+  * This template defines what a “good Rust service” is in concrete, enforceable terms.
+
+* If you use a platform orchestrator (Humanitec, Argo CD, etc.):
+
+  * They standardize deployments and environments.
+  * This template standardizes the **service contract**: specs, policies, AC coverage, `/platform/*` introspection.
+
+The integration surface is `/platform/*` and the evidence bundles under `release_evidence/`.
+
+---
+
+## 12. Current status & roadmap
+
+* **Template version:** v3.3.1
+* **Kernel status:** “Governing Kernel” is frozen – the core contract is in place and validated via selftest.
+* **Known non-kernel ACs:** Some advanced features (idempotent flows, question artifacts, K8s/TF IaC alignment) are tracked as ACs with `[UNKNOWN]` status and explicitly documented as such.
+
+See:
+
+* `docs/ROADMAP.md` – where the template is headed.
+* `docs/feature_status.md` – current AC health.
+* `docs/feature_status_notes.md` – explanations for template/future ACs.
+
+---
+
+## 13. License
+
+This template is dual-licensed:
+
+* MIT – see `LICENSE-MIT`
+* Apache 2.0 – see `LICENSE-APACHE`
+
+You may use it under either license.
+
+---
+
+```
+::contentReference[oaicite:0]{index=0}
+```
