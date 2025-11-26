@@ -2,6 +2,8 @@
 
 This guide walks you through forking the Rust-as-Spec template to launch a new governed service (e.g., Knowledge Hub, Order Service, Audit Log).
 
+> **Quick Reference:** See [examples/fork-customization](../../examples/fork-customization/) for sample files showing what to customize.
+
 ---
 
 ## Prerequisites

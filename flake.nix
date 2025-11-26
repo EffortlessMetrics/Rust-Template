@@ -1,5 +1,8 @@
 {
   description = "Rust spec-as-code template (Nix devShell)";
+  # Note: If you see "warning: unknown setting 'lazy-trees'", this is a known cosmetic issue
+  # caused by deprecated Nix 2.30+ setting in Determinate Nix installer's managed config.
+  # See docs/TROUBLESHOOTING.md for details and fix instructions. Safe to ignore.
   inputs = { nixpkgs.url = "github:NixOS/nixpkgs/nixos-24.05"; fenix.url = "github:nix-community/fenix"; };
   outputs = { self, nixpkgs, fenix, ... }:
   let

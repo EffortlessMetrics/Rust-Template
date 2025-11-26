@@ -7,7 +7,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-(empty)
+### Added
+
+**Documentation:**
+
+- **QUICKSTART.md** - Fast-path guide for new users (setup, first BDD change, selftest validation)
+- **TROUBLESHOOTING.md** - Comprehensive guide for common issues (dev environment, tests, BDD, CI, governance)
+- **Windows Development Guide** (`docs/windows-dev-guide.md`) - Complete Windows-as-Tier-2 setup and workflows
+- **CI Workflows Reference** (`docs/reference/ci-workflows.md`) - Detailed explanation of all GitHub Actions workflows with ownership and troubleshooting
+- **Branch Protection Setup** (`docs/how-to/setup-branch-protection.md`) - Step-by-step guide for configuring GitHub branch protection rules
+- **Tag Signing Setup** (`docs/how-to/setup-tag-signing.md`) - Complete guide for GPG-signed tags with GitHub verification
+
+**Platform APIs:**
+
+- **`/platform/friction` endpoint** - Exposes friction log entries with metadata (type, title, description, timestamp)
+- **`/platform/version` endpoint** - Returns current platform version from `spec_ledger.yaml`
+
+**xtask Commands:**
+
+- **`cargo xtask friction-new`** - Interactive command to capture friction log entries (pain point, feature idea, or question)
+- **`cargo xtask question-new`** - Interactive command to create question entries in friction log
+- **`cargo xtask version`** - Display current platform version from spec ledger
+
+**Release Tooling:**
+
+- **AC delta reporting in `release-bundle`** - Shows which ACs are new, modified, or unchanged since last release
+- **Fork registry** (`docs/FORK_REGISTRY.md`) - Template for tracking downstream forks with metadata and health checks
+
+### Changed
+
+- **BDD test isolation** - All acceptance tests now use dedicated test database instances to prevent cross-test contamination
+- **ADR numbering** - Standardized ADR filenames with 4-digit padding (0001-0019) for consistent sorting and referencing
+- **Friction log structure** - Formalized sections (Pain Points, Feature Ideas, Questions, Process Observations) with metadata and timestamps
+
+### Fixed
+
+- **BDD version alignment** - Updated template_core.feature to expect v3.3.3 instead of v3.3.2
+- **Spec ledger version consistency** - Aligned all spec files to v3.3.3
+- **ADR cross-references** - Updated all ADR links in spec ledger and documentation to use 4-digit numbering
 
 ## [3.2.0] - 2025-11-22
 

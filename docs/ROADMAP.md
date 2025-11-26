@@ -124,7 +124,7 @@ Only a few items remain - all now have documentation or are external dependencie
 
 | Item | Impact | Notes |
 |------|--------|-------|
-| **`lazy-trees` Nix warning** | Cosmetic noise in output | Nix configuration issue, outside repo scope |
+| **`lazy-trees` Nix warning** | Cosmetic noise in output | Deprecated Nix 2.30+ setting in Determinate installer config. Documented in TROUBLESHOOTING.md with fix instructions. Safe to ignore. |
 
 ---
 

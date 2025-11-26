@@ -5,6 +5,7 @@
 **A governed Rust service template where specs, tests, docs, policies, and infra all agree – and the repo can prove it.**
 
 > **Using this as a template?** Start here:
+> - **[Pre-Fork Checklist](docs/how-to/pre-fork-checklist.md) – Validate before forking** ✓
 > - **[Quick Start Guide](docs/QUICKSTART.md) – Get productive in 15 minutes** ⚡
 > - [Kernel snapshot](docs/KERNEL_SNAPSHOT.md) – what you're inheriting
 > - [New service guide](docs/how-to/new-service-from-template.md) – step-by-step setup
@@ -62,7 +63,7 @@ cargo xtask ac-status          # View AC health
 cargo xtask bundle implement_ac # Generate LLM context for implementation
 ```
 
-See [CLAUDE.md](./CLAUDE.md) for the full agent guide and [docs/how-to/new-service-from-template.md](./docs/how-to/new-service-from-template.md) to fork this template.
+See [CLAUDE.md](./CLAUDE.md) for the full agent guide, [docs/how-to/new-service-from-template.md](./docs/how-to/new-service-from-template.md) to fork this template, and [examples/fork-customization](./examples/fork-customization/) for sample customization files.
 
 ---
 

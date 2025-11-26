@@ -1,0 +1,161 @@
+# Sample Spec Additions for Fork Customization
+#
+# This file shows how to add domain-specific stories, requirements, and ACs
+# to specs/spec_ledger.yaml when you fork this template.
+#
+# Usage:
+# 1. Copy the relevant sections below
+# 2. Paste them into your specs/spec_ledger.yaml under the `stories:` key
+# 3. Update IDs, titles, and descriptions to match your domain
+# 4. Create corresponding BDD feature files
+#
+# NOTE: Keep the template core stories (US-TPL-001, US-TPL-PLT-001) - you inherit those!
+
+stories:
+  # Example Domain Story 1: Product Catalog Core
+  - id: US-PROD-001
+    title: "Product Catalog Core Capabilities"
+    description: >
+      As a product manager, I want to create and manage product definitions
+      so customers can browse and purchase items from the catalog.
+    adr: ADR-0001  # Hexagonal architecture (inherited from template)
+    requirements:
+      - id: REQ-PROD-CREATE
+        title: "Product Creation API"
+        tags: [core, api, product]
+        must_have_ac: true
+        description: >
+          The service MUST provide an endpoint to create new products with
+          validation for required fields and business rules.
+        acceptance_criteria:
+          - id: AC-PROD-001
+            text: "POST /api/products creates a product with name, description, price and returns 201 with product ID"
+            tags: [core, api]
+            must_have_ac: true
+            tests:
+              - { type: bdd, tag: "@AC-PROD-001", file: "specs/features/product_catalog.feature" }
+
+          - id: AC-PROD-002
+            text: "POST /api/products validates required fields (name, price) and returns 400 with error details on failure"
+            tags: [core, validation]
+            must_have_ac: true
+            tests:
+              - { type: bdd, tag: "@AC-PROD-002", file: "specs/features/product_catalog.feature" }
+
+          - id: AC-PROD-003
+            text: "POST /api/products rejects negative prices and returns 400 with error code INVALID_PRICE"
+            tags: [core, validation, business-rule]
+            must_have_ac: true
+            tests:
+              - { type: bdd, tag: "@AC-PROD-003", file: "specs/features/product_catalog.feature" }
+              - { type: unit, tag: "test_price_validation", module: "product::validation::tests", file: "crates/business-core/src/product/validation.rs" }
+
+      - id: REQ-PROD-RETRIEVE
+        title: "Product Retrieval API"
+        tags: [core, api, product]
+        must_have_ac: true
+        description: >
+          The service MUST provide an endpoint to retrieve product details
+          by ID with consistent error responses for missing products.
+        acceptance_criteria:
+          - id: AC-PROD-004
+            text: "GET /api/products/{id} returns 200 with product details (id, name, description, price, createdAt)"
+            tags: [core, api]
+            must_have_ac: true
+            tests:
+              - { type: bdd, tag: "@AC-PROD-004", file: "specs/features/product_catalog.feature" }
+
+          - id: AC-PROD-005
+            text: "GET /api/products/{id} returns 404 with error code PRODUCT_NOT_FOUND when ID does not exist"
+            tags: [core, error-handling]
+            must_have_ac: true
+            tests:
+              - { type: bdd, tag: "@AC-PROD-005", file: "specs/features/product_catalog.feature" }
+
+  # Example Domain Story 2: Category Management
+  - id: US-PROD-002
+    title: "Product Category Management"
+    description: >
+      As a catalog administrator, I want to organize products into categories
+      so customers can filter and browse by product type.
+    adr: ADR-0001  # Hexagonal architecture
+    requirements:
+      - id: REQ-PROD-CATEGORY
+        title: "Category Assignment API"
+        tags: [core, api, category]
+        must_have_ac: true
+        description: >
+          The service MUST allow assigning products to categories and
+          enforce category constraints (e.g., max products per category).
+        acceptance_criteria:
+          - id: AC-PROD-006
+            text: "POST /api/products/{id}/category assigns a product to a category and returns 200"
+            tags: [core, api]
+            must_have_ac: true
+            tests:
+              - { type: bdd, tag: "@AC-PROD-006", file: "specs/features/product_categories.feature" }
+
+          - id: AC-PROD-007
+            text: "POST /api/categories creates a new category with name and optional description"
+            tags: [core, api]
+            must_have_ac: true
+            tests:
+              - { type: bdd, tag: "@AC-PROD-007", file: "specs/features/product_categories.feature" }
+
+  # Example Domain Story 3: Product Search
+  - id: US-PROD-003
+    title: "Product Search and Filtering"
+    description: >
+      As a customer, I want to search products by name and filter by category
+      so I can quickly find items I'm interested in.
+    adr: ADR-0001  # Hexagonal architecture
+    requirements:
+      - id: REQ-PROD-SEARCH
+        title: "Product Search API"
+        tags: [core, api, search]
+        must_have_ac: true
+        description: >
+          The service MUST provide a search endpoint with filtering and
+          pagination support.
+        acceptance_criteria:
+          - id: AC-PROD-008
+            text: "GET /api/products?q=<query> returns products matching the query with pagination (limit, offset)"
+            tags: [core, api, search]
+            must_have_ac: true
+            tests:
+              - { type: bdd, tag: "@AC-PROD-008", file: "specs/features/product_search.feature" }
+
+          - id: AC-PROD-009
+            text: "GET /api/products?category=<id> filters products by category ID"
+            tags: [core, api, filtering]
+            must_have_ac: true
+            tests:
+              - { type: bdd, tag: "@AC-PROD-009", file: "specs/features/product_search.feature" }
+
+# Notes:
+#
+# 1. Story IDs: Use your domain prefix (e.g., US-PROD-, US-ORDER-, US-AUDIT-)
+#    The template uses US-TPL- for template core stories.
+#
+# 2. Requirement IDs: Use your domain prefix (REQ-PROD-, REQ-ORDER-, etc.)
+#    The template uses REQ-TPL- and REQ-PLT- for platform requirements.
+#
+# 3. AC IDs: Use your domain prefix (AC-PROD-, AC-ORDER-, etc.)
+#    The template uses AC-TPL- and AC-PLT- for platform ACs.
+#
+# 4. Tags: Use meaningful tags for filtering and discovery:
+#    - core, optional, future, security, performance, etc.
+#    - Domain tags: product, order, payment, audit, etc.
+#
+# 5. Tests: Link each AC to BDD scenarios and/or unit tests
+#    - BDD: tag scenarios with @AC-PROD-XXX in feature files
+#    - Unit: reference test function names and file paths
+#
+# 6. ADRs: Reference architectural decisions (inherited or new)
+#    - Use ADR-0001 (hexagonal arch) for most domain features
+#    - Create new ADRs for domain-specific design decisions
+#
+# 7. Integration with template:
+#    - Your stories sit alongside template core stories
+#    - cargo xtask ac-status shows both template and domain ACs
+#    - cargo xtask selftest validates all ACs together

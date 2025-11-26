@@ -1,0 +1,108 @@
+# Sample Service Metadata
+#
+# This file shows what to put in service_metadata.yaml when you fork the template.
+# This metadata is surfaced via /platform/status and the web UI.
+#
+# Usage:
+# 1. Create service_metadata.yaml in your repo root (if it doesn't exist)
+# 2. Copy and customize the structure below
+# 3. Verify with: cargo run -p app-http, then curl http://localhost:8080/platform/status
+
+service_id: "product-catalog"
+name: "Product Catalog Service"
+description: "Manages product definitions, categories, pricing, and inventory for the e-commerce platform"
+
+# Tags help categorize your service in platform dashboards
+tags:
+  - ecommerce
+  - catalog
+  - core
+  - api
+
+# Service version (semver)
+version: "0.1.0"
+
+# Owning team (for on-call, incident management, etc.)
+owner_team: "ecommerce-platform"
+
+# Template version you forked from (helps with template upgrades)
+template_version: "3.3.3"
+
+# Optional: Service URLs (runbook, roadmap, docs)
+# These appear in the web UI and /platform/status
+urls:
+  runbook: "https://wiki.example.com/runbooks/product-catalog"
+  roadmap: "https://wiki.example.com/roadmaps/product-catalog"
+  repository: "https://github.com/your-org/product-catalog"
+  docs: "https://docs.example.com/services/product-catalog"
+  oncall: "https://oncall.example.com/services/product-catalog"
+
+# Optional: Service tier (for SLA/SLO classification)
+tier: "tier-1"  # tier-1 (critical), tier-2 (important), tier-3 (best-effort)
+
+# Optional: Dependencies (other services this service calls)
+dependencies:
+  - service_id: "pricing-engine"
+    type: "http"
+    required: true
+  - service_id: "inventory-service"
+    type: "grpc"
+    required: true
+  - service_id: "postgres"
+    type: "database"
+    required: true
+  - service_id: "redis"
+    type: "cache"
+    required: false
+
+# Optional: Domain-specific metadata
+# Add any custom fields your organization needs
+custom:
+  domain: "commerce"
+  subdomain: "catalog"
+  compliance:
+    - "PCI-DSS"
+    - "SOC2"
+  sla:
+    availability: "99.9%"
+    response_time_p99: "200ms"
+
+# Notes:
+#
+# 1. service_id: Must be unique across your platform
+#    - Use kebab-case
+#    - Match your repo name if possible
+#
+# 2. name: Human-readable service name for UIs
+#
+# 3. description: 1-2 sentences explaining the service's purpose
+#
+# 4. tags: For filtering and discovery in platform dashboards
+#    - Use consistent tags across services (e.g., "api", "data", "core")
+#
+# 5. version: Semver version, updated with each release
+#    - cargo xtask release-prepare X.Y.Z updates this automatically
+#
+# 6. owner_team: Team responsible for this service
+#    - Used for on-call routing, incident management
+#
+# 7. template_version: Version of Rust-as-Spec template you forked
+#    - Helps identify which template features you inherit
+#    - Update when you backport template improvements
+#
+# 8. urls: Links to operational docs, runbooks, roadmaps
+#    - Surfaced in the web UI for quick access
+#
+# 9. tier: Service criticality (optional but recommended)
+#    - tier-1: Production-critical, high availability
+#    - tier-2: Important but has graceful degradation
+#    - tier-3: Best-effort, can tolerate downtime
+#
+# 10. dependencies: Other services/systems this service depends on
+#     - Helps with dependency mapping in platform tools
+#     - type: http, grpc, database, cache, queue, etc.
+#     - required: true/false (for degraded mode planning)
+#
+# 11. custom: Any org-specific fields
+#     - Add compliance requirements, SLA targets, etc.
+#     - Platform tools can consume this via /platform/status
