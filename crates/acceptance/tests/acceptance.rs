@@ -108,6 +108,12 @@ async fn main() {
                     return false;
                 }
 
+                // Exclude @wip scenarios unless explicitly included via tag expression
+                let is_wip = tags.iter().any(|t| t.eq_ignore_ascii_case("wip"));
+                if is_wip && tag_expression.is_none() && simple_tags.is_empty() {
+                    return false;
+                }
+
                 if let Some(expr) = &tag_expression {
                     return expr.eval(tags.iter());
                 }

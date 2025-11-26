@@ -18,6 +18,31 @@ This document describes the current state of the **v3.3.3 kernel** and what rema
 
 ---
 
+## Philosophy: Opinionated Defaults
+
+This template is **not** a generic Rust starter. It encodes specific opinions about governed, agent-friendly development—enforced through Acceptance Criteria in `specs/spec_ledger.yaml`.
+
+### Core Opinions
+
+The template takes strong positions on:
+
+1. **Environment**: Nix-first (Tier-1) with native OS as Tier-2. Reproducibility over convenience.
+2. **CI Gate**: `cargo xtask selftest` must pass. Governance validation is non-negotiable.
+3. **Governance Artifacts**: Questions, friction, and forks are first-class, queryable data exposed via APIs.
+4. **Agent Surfaces**: `/platform/*` endpoints, context bundles, and `--json` CLI outputs for LLM workflows.
+
+### Why Opinions Matter
+
+Opinions encoded as ACs mean:
+
+- **Fork customization is explicit**: Change the AC, not random config files
+- **Upstream feedback is structured**: Report what opinions didn't fit your domain via `docs/how-to/report-fork-feedback.md`
+- **Template evolution is evidence-driven**: Friction from real forks drives AC changes
+
+**To customize:** Identify the AC, modify it, update implementation, verify with selftest. See `docs/QUICKSTART.md` "Defaults & Opinions" section for details.
+
+---
+
 ## 1. Current State (v3.3.3)
 
 The kernel has reached a stable, forkable baseline. All acceptance criteria pass, all selftest gates pass.
