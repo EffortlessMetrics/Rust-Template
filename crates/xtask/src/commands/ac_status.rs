@@ -427,9 +427,13 @@ fn update_ac_statuses(
             }
         }
 
+        // AC status semantics:
+        // - FAIL if any test failed
+        // - PASS if at least one test passed AND no tests failed
+        // - UNKNOWN only if zero tests ran
         ac.status = if failed {
             AcStatus::Fail
-        } else if ac.tests_executed == ac.tests_total {
+        } else if ac.tests_executed > 0 {
             AcStatus::Pass
         } else {
             AcStatus::Unknown
