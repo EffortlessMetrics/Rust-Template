@@ -34,7 +34,7 @@ Auto-generated AC status from acceptance (BDD) and unit tests.
 | AC-PLT-011 | US-TPL-PLT-001 | REQ-PLT-RELEASE-SAFETY | [FAIL] fail | 1 / 1 |
 | AC-PLT-012 | US-TPL-PLT-001 | REQ-PLT-RELEASE-SAFETY | [FAIL] fail | 1 / 1 |
 | AC-PLT-013 | US-TPL-PLT-001 | REQ-PLT-RELEASE-SAFETY | [FAIL] fail | 1 / 1 |
-| AC-PLT-014 | US-TPL-PLT-001 | REQ-PLT-DEVEX-CONTRACT | [UNKNOWN] unknown | 0 / 1 |
+| AC-PLT-014 | US-TPL-PLT-001 | REQ-PLT-DEVEX-CONTRACT | [PASS] pass | 1 / 1 |
 | AC-PLT-015 | US-TPL-PLT-001 | REQ-PLT-DEVEX-CONTRACT | [FAIL] fail | 1 / 1 |
 | AC-PLT-016 | US-TPL-PLT-001 | REQ-PLT-DEVEX-CONTRACT | [FAIL] fail | 1 / 1 |
 | AC-PLT-017 | US-TPL-PLT-001 | REQ-PLT-STATUS-CLI | [FAIL] fail | 1 / 1 |
@@ -48,20 +48,20 @@ Auto-generated AC status from acceptance (BDD) and unit tests.
 | AC-TPL-007 | US-TPL-001 | REQ-TPL-METRICS | [PASS] pass | 1 / 1 |
 | AC-TPL-AGENT-HINTS | US-TPL-PLT-001 | REQ-TPL-AGENT-INTERFACE | [FAIL] fail | 1 / 1 |
 | AC-TPL-AGENT-SKILLS | US-TPL-PLT-001 | REQ-TPL-AGENT-INTERFACE | [PASS] pass | 1 / 1 |
-| AC-TPL-CONFIG-VALIDATION | US-TPL-PLT-001 | REQ-TPL-CONFIG-INTEGRITY | [UNKNOWN] unknown | 1 / 2 |
+| AC-TPL-CONFIG-VALIDATION | US-TPL-PLT-001 | REQ-TPL-CONFIG-INTEGRITY | [PASS] pass | 2 / 2 |
 | AC-TPL-FLOW-IDEMPOTENT | US-TPL-PLT-001 | REQ-TPL-FLOW-IDEMPOTENCY | [FAIL] fail | 1 / 1 |
 | AC-TPL-GOV-WRITE-TASK-STATUS-200 | US-TPL-PLATFORM-V3 | REQ-TPL-GOV-WRITE-001 | [PASS] pass | 1 / 1 |
-| AC-TPL-GRAPH-AC-HAS-TEST | US-TPL-PLT-001 | REQ-TPL-GRAPH-INVARIANTS | [UNKNOWN] unknown | 0 / 1 |
-| AC-TPL-GRAPH-COMMAND-REACHABLE | US-TPL-PLT-001 | REQ-TPL-GRAPH-INVARIANTS | [UNKNOWN] unknown | 0 / 1 |
-| AC-TPL-GRAPH-MERMAID | US-TPL-PLT-001 | REQ-TPL-GRAPH-VISUALIZATION | [FAIL] fail | 1 / 2 |
-| AC-TPL-GRAPH-REQ-HAS-AC | US-TPL-PLT-001 | REQ-TPL-GRAPH-INVARIANTS | [UNKNOWN] unknown | 0 / 1 |
+| AC-TPL-GRAPH-AC-HAS-TEST | US-TPL-PLT-001 | REQ-TPL-GRAPH-INVARIANTS | [PASS] pass | 1 / 1 |
+| AC-TPL-GRAPH-COMMAND-REACHABLE | US-TPL-PLT-001 | REQ-TPL-GRAPH-INVARIANTS | [PASS] pass | 1 / 1 |
+| AC-TPL-GRAPH-MERMAID | US-TPL-PLT-001 | REQ-TPL-GRAPH-VISUALIZATION | [FAIL] fail | 2 / 2 |
+| AC-TPL-GRAPH-REQ-HAS-AC | US-TPL-PLT-001 | REQ-TPL-GRAPH-INVARIANTS | [PASS] pass | 1 / 1 |
 | AC-TPL-GRAPH-SELFTEST | US-TPL-PLT-001 | REQ-TPL-GRAPH-INVARIANTS | [FAIL] fail | 1 / 1 |
 | AC-TPL-HOOKS-INSTALL | US-TPL-PLT-001 | REQ-TPL-GOV-HOOKS | [FAIL] fail | 1 / 1 |
-| AC-TPL-IAC-COMPOSE-ALIGN | US-TPL-PLT-001 | REQ-TPL-IAC-ALIGNMENT | [UNKNOWN] unknown | 0 / 1 |
-| AC-TPL-IAC-K8S-ALIGN | US-TPL-PLT-001 | REQ-TPL-IAC-ALIGNMENT | [UNKNOWN] unknown | 0 / 1 |
-| AC-TPL-IAC-TF-ALIGN | US-TPL-PLT-001 | REQ-TPL-IAC-ALIGNMENT | [UNKNOWN] unknown | 0 / 1 |
-| AC-TPL-LOCAL-DOCKER | US-TPL-PLT-001 | REQ-TPL-LOCAL-RUNTIME | [UNKNOWN] unknown | 0 / 1 |
-| AC-TPL-LOG-NO-SECRETS | US-TPL-PLT-001 | REQ-TPL-LOG-HYGIENE | [UNKNOWN] unknown | 1 / 2 |
+| AC-TPL-IAC-COMPOSE-ALIGN | US-TPL-PLT-001 | REQ-TPL-IAC-ALIGNMENT | [PASS] pass | 1 / 1 |
+| AC-TPL-IAC-K8S-ALIGN | US-TPL-PLT-001 | REQ-TPL-IAC-ALIGNMENT | [PASS] pass | 1 / 1 |
+| AC-TPL-IAC-TF-ALIGN | US-TPL-PLT-001 | REQ-TPL-IAC-ALIGNMENT | [PASS] pass | 1 / 1 |
+| AC-TPL-LOCAL-DOCKER | US-TPL-PLT-001 | REQ-TPL-LOCAL-RUNTIME | [PASS] pass | 1 / 1 |
+| AC-TPL-LOG-NO-SECRETS | US-TPL-PLT-001 | REQ-TPL-LOG-HYGIENE | [PASS] pass | 2 / 2 |
 | AC-TPL-METADATA-COMPLETE | US-TPL-PLT-001 | REQ-TPL-METADATA-CONSISTENT | [PASS] pass | 1 / 1 |
 | AC-TPL-PLATFORM-AUTH-BASIC | US-TPL-PLT-001 | REQ-TPL-PLATFORM-AUTH | [PASS] pass | 1 / 1 |
 | AC-TPL-PLATFORM-DEVEX | US-TPL-PLT-001 | REQ-TPL-PLATFORM-INTROSPECTION | [PASS] pass | 1 / 1 |
@@ -81,22 +81,8 @@ Auto-generated AC status from acceptance (BDD) and unit tests.
 | AC-TPL-SKILLS-LINT | US-TPL-PLT-001 | REQ-TPL-SKILLS-TOOLING | [FAIL] fail | 1 / 1 |
 | AC-TPL-SUGGEST-NEXT-CLI | US-TPL-PLT-001 | REQ-TPL-SUGGEST-NEXT | [FAIL] fail | 1 / 1 |
 | AC-TPL-SUGGEST-NEXT-HTTP | US-TPL-PLT-001 | REQ-TPL-SUGGEST-NEXT | [PASS] pass | 1 / 1 |
-| AC-TPL-TASK-TRANSITIONS | US-TPL-PLATFORM-V3 | REQ-TPL-TASK-LIFECYCLE | [UNKNOWN] unknown | 0 / 2 |
+| AC-TPL-TASK-TRANSITIONS | US-TPL-PLATFORM-V3 | REQ-TPL-TASK-LIFECYCLE | [PASS] pass | 2 / 2 |
 | AC-TPL-TASKS-CLI | US-TPL-PLT-001 | REQ-TPL-PLATFORM-TASKS | [FAIL] fail | 1 / 1 |
 | AC-TPL-TASKS-CREATE-CLI | US-TPL-PLT-001 | REQ-TPL-PLATFORM-TASKS | [FAIL] fail | 1 / 1 |
 | AC-TPL-TASKS-HTTP | US-TPL-PLT-001 | REQ-TPL-PLATFORM-TASKS | [PASS] pass | 1 / 1 |
 | AC-TPL-TASKS-UPDATE-CLI | US-TPL-PLT-001 | REQ-TPL-PLATFORM-TASKS | [FAIL] fail | 1 / 1 |
-
-## Unmapped ACs
-
-ACs with no mapped or executed tests:
-
-- AC-PLT-014: Canonical flows and commands are defined in specs/devex_flows.yaml
-- AC-TPL-GRAPH-AC-HAS-TEST: Every AC with a tests mapping in spec_ledger.yaml has at least one test node linked in the graph.
-- AC-TPL-GRAPH-COMMAND-REACHABLE: Every command declared in specs/devex_flows.yaml is either referenced by a flow or explicitly marked internal; no orphan commands exist.
-- AC-TPL-GRAPH-REQ-HAS-AC: Every requirement with tags including platform, structural, security, devex, docs, or release has at least one AC node in the graph.
-- AC-TPL-IAC-COMPOSE-ALIGN: docker-compose.yaml services (database, tracing, app) use the ports and env vars defined for the local environment in config_schema.yaml and envs.yaml.
-- AC-TPL-IAC-K8S-ALIGN: Kubernetes manifests under infra/k8s (Deployment/Service) use ports and env vars consistent with config_schema.yaml and the default environment.
-- AC-TPL-IAC-TF-ALIGN: Terraform examples (when present) reference the same variables and defaults as config_schema.yaml for services and dependencies.
-- AC-TPL-LOCAL-DOCKER: Optional local Docker compose (Postgres + Jaeger) aligns with the application's default local config; convenience only, not a gating kernel requirement.
-- AC-TPL-TASK-TRANSITIONS: Task status transitions are validated against the domain model.

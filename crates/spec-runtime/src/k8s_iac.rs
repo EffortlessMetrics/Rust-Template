@@ -94,19 +94,19 @@ mod tests {
         for container in containers {
             if let Some(ports) = container.get("ports").and_then(Value::as_sequence) {
                 for port in ports {
-                    if let Some(name) = port.get("name").and_then(Value::as_str) {
-                        if name == "http" {
-                            let container_port = port
-                                .get("containerPort")
-                                .and_then(Value::as_u64)
-                                .expect("http port should have containerPort");
-                            assert_eq!(
-                                container_port, expected_http_port as u64,
-                                "Deployment containerPort should match config_schema.yaml http.port ({})",
-                                expected_http_port
-                            );
-                            found_http_port = true;
-                        }
+                    if let Some(name) = port.get("name").and_then(Value::as_str)
+                        && name == "http"
+                    {
+                        let container_port = port
+                            .get("containerPort")
+                            .and_then(Value::as_u64)
+                            .expect("http port should have containerPort");
+                        assert_eq!(
+                            container_port, expected_http_port as u64,
+                            "Deployment containerPort should match config_schema.yaml http.port ({})",
+                            expected_http_port
+                        );
+                        found_http_port = true;
                     }
                 }
             }
@@ -206,7 +206,7 @@ mod tests {
         );
 
         let port_value = data
-            .get(&Value::String("PORT".to_string()))
+            .get(Value::String("PORT".to_string()))
             .and_then(Value::as_str)
             .expect("PORT should be a string");
 
