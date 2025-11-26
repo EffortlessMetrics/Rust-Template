@@ -278,6 +278,69 @@ pub fn emit_question(question: Question) -> Result<()> {
     Ok(())
 }
 
+/// Create a new question artifact via CLI
+pub fn create_question(
+    category: &str,
+    summary: &str,
+    flow: &str,
+    phase: &str,
+    description: &str,
+    created_by: &str,
+    task_id: Option<&str>,
+) -> Result<()> {
+    // Validate category format (uppercase alphanumeric)
+    let category_upper = category.to_uppercase();
+    if !category_upper.chars().all(|c| c.is_ascii_alphanumeric()) {
+        anyhow::bail!(
+            "Invalid category '{}'. Category must be alphanumeric (e.g., TPL, BUNDLE, SUGGEST)",
+            category
+        );
+    }
+
+    // Validate created_by
+    let valid_created_by = ["agent", "human", "flow"];
+    if !valid_created_by.contains(&created_by) {
+        anyhow::bail!(
+            "Invalid created_by '{}'. Must be one of: {}",
+            created_by,
+            valid_created_by.join(", ")
+        );
+    }
+
+    // Generate next question ID
+    let next_id = get_next_question_id(&category_upper)?;
+    let id = format!("Q-{}-{:03}", category_upper, next_id);
+
+    // Create question
+    let mut question = Question::new(
+        id.clone(),
+        flow,
+        phase,
+        summary.to_string(),
+        description.to_string(),
+        created_by,
+    );
+
+    // Add task_id if provided
+    if let Some(tid) = task_id {
+        question.task_id = Some(tid.to_string());
+    }
+
+    // Save to file
+    let filepath = question.save()?;
+
+    println!("✅ Created question: {}", id);
+    println!("   File: {}", filepath.display());
+    println!("   Flow: {} / {}", flow, phase);
+    println!("   Created by: {}", created_by);
+    if let Some(tid) = task_id {
+        println!("   Task: {}", tid);
+    }
+    println!("   Status: open");
+
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

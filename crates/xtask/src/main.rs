@@ -230,6 +230,42 @@ enum Commands {
         #[arg(long)]
         discovered_by: Option<String>,
     },
+    /// List registered template forks
+    ForkList {
+        /// Filter by status (active, archived, experimental)
+        #[arg(long)]
+        status: Option<String>,
+        /// Filter by domain substring
+        #[arg(long)]
+        domain: Option<String>,
+    },
+    /// Register a new template fork
+    ForkRegister {
+        /// Fork name
+        #[arg(long)]
+        name: String,
+        /// Knowledge domain (e.g., rust-sdk, python-ml, knowledge-hub)
+        #[arg(long)]
+        domain: String,
+        /// Kernel version fork is based on (e.g., v3.3.3)
+        #[arg(long)]
+        kernel_version: String,
+        /// Repository URL (optional)
+        #[arg(long)]
+        url: Option<String>,
+        /// Maintainer name (optional)
+        #[arg(long)]
+        maintainer_name: Option<String>,
+        /// Maintainer contact (optional)
+        #[arg(long)]
+        maintainer_contact: Option<String>,
+        /// Fork status (active, archived, experimental)
+        #[arg(long)]
+        status: Option<String>,
+        /// Free-form notes (optional)
+        #[arg(long)]
+        notes: Option<String>,
+    },
     /// Generate service descriptor (e.g., Backstage catalog info)
     ServiceDescriptor {
         /// Output format (backstage)
@@ -284,6 +320,38 @@ enum Commands {
         #[arg(long)]
         status: Option<String>,
     },
+    /// List questions from questions/ directory
+    #[command(next_help_heading = "Governance")]
+    QuestionsList {
+        /// Filter by status (open, answered, resolved, obsolete)
+        #[arg(long)]
+        status: Option<String>,
+    },
+    /// Create a new question artifact
+    #[command(next_help_heading = "Governance")]
+    QuestionNew {
+        /// Question category/component (e.g., TPL, BUNDLE, SUGGEST)
+        #[arg(long)]
+        category: String,
+        /// Brief summary of the question
+        #[arg(long)]
+        summary: String,
+        /// Flow that generated this question
+        #[arg(long)]
+        flow: String,
+        /// Phase within the flow
+        #[arg(long)]
+        phase: String,
+        /// Detailed description of the ambiguity
+        #[arg(long)]
+        description: String,
+        /// Who created this question (agent, human, flow)
+        #[arg(long, default_value = "human")]
+        created_by: String,
+        /// Related task ID (optional)
+        #[arg(long)]
+        task_id: Option<String>,
+    },
     /// Install git hooks for pre-commit governance
     #[command(next_help_heading = "Onboarding")]
     InstallHooks,
@@ -302,6 +370,13 @@ enum Commands {
         /// Plan-only mode: compute test plan without executing it (env: XTASK_TEST_CHANGED_PLAN_ONLY)
         #[arg(long, action = clap::ArgAction::SetTrue)]
         plan_only: bool,
+    },
+    /// Show kernel/template version
+    #[command(next_help_heading = "Meta")]
+    Version {
+        /// Output in JSON format
+        #[arg(long)]
+        json: bool,
     },
 }
 
@@ -420,6 +495,48 @@ fn main() -> Result<()> {
             phase.as_deref(),
             discovered_by.as_deref(),
         ),
+        Commands::ForkList { status, domain } => {
+            commands::fork::list_fork_entries(status.as_deref(), domain.as_deref())
+        }
+        Commands::ForkRegister {
+            name,
+            domain,
+            kernel_version,
+            url,
+            maintainer_name,
+            maintainer_contact,
+            status,
+            notes,
+        } => commands::fork::create_fork_entry(commands::fork::CreateForkArgs {
+            name: &name,
+            domain: &domain,
+            kernel_version: &kernel_version,
+            url: url.as_deref(),
+            maintainer_name: maintainer_name.as_deref(),
+            maintainer_contact: maintainer_contact.as_deref(),
+            status: status.as_deref(),
+            notes: notes.as_deref(),
+        }),
+        Commands::QuestionsList { status } => {
+            commands::questions::list_questions(status.as_deref())
+        }
+        Commands::QuestionNew {
+            category,
+            summary,
+            flow,
+            phase,
+            description,
+            created_by,
+            task_id,
+        } => commands::questions::create_question(
+            &category,
+            &summary,
+            &flow,
+            &phase,
+            &description,
+            &created_by,
+            task_id.as_deref(),
+        ),
         Commands::ServiceDescriptor { format } => commands::service_descriptor::run(&format)
             .map_err(|e| anyhow::anyhow!("service-descriptor failed: {}", e)),
         Commands::ConfigValidate { env } => commands::config_validate::run(&env)
@@ -431,6 +548,9 @@ fn main() -> Result<()> {
         Commands::SkillsLint => commands::skills::run_lint(),
         Commands::TestChanged { base, plan_only } => {
             commands::test_changed::run(commands::test_changed::TestChangedArgs { base, plan_only })
+        }
+        Commands::Version { json } => {
+            commands::version::run(commands::version::VersionArgs { json })
         }
     }
 }
@@ -547,9 +667,13 @@ pub fn all_command_names() -> Vec<&'static str> {
         "spellcheck",
         "dev-up",
         "fmt-all",
+        "fork-list",
+        "fork-register",
         "friction-list",
         "friction-new",
         "graph-export",
+        "questions-list",
+        "questions-new",
         "hakari",
         "install-hooks",
         "migrate",
@@ -571,6 +695,7 @@ pub fn all_command_names() -> Vec<&'static str> {
         "service-descriptor",
         "config-validate",
         "help-flows",
+        "version",
     ]
 }
 

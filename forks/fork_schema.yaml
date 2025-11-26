@@ -1,0 +1,223 @@
+# Fork Registry Schema - Tracking Known Template Forks
+#
+# The fork registry tracks known instances of this template that have been
+# forked for different knowledge domains. This helps the kernel maintainers
+# understand how the template is being used and identify patterns that should
+# be backported to the kernel.
+
+schema_version: "1.0"
+template_version: "v3.3.3"
+
+description: >
+  Fork registry entries track known forks of this template, including their
+  purpose, domain, and relationship to the kernel. This registry helps:
+  - Understand how the template is being used across different domains
+  - Identify common pain points that should be addressed in the kernel
+  - Track which kernel versions forks are based on for maintenance planning
+  - Connect fork maintainers for knowledge sharing and collaboration
+
+fork_entry_schema:
+  type: object
+  required:
+    - id
+    - name
+    - domain
+    - kernel_version
+    - status
+  properties:
+    id:
+      type: string
+      pattern: "^FORK-[A-Z0-9]+-\\d{3}$"
+      description: "Unique fork identifier (e.g., FORK-SDK-001, FORK-ML-001)"
+
+    name:
+      type: string
+      description: "Human-readable fork name"
+      maxLength: 100
+
+    url:
+      type: string
+      description: "Repository URL (optional, may be private)"
+
+    domain:
+      type: string
+      description: "Knowledge domain or purpose of this fork"
+      examples:
+        - "rust-sdk"
+        - "python-ml"
+        - "typescript-web"
+        - "golang-cli"
+        - "knowledge-hub"
+        - "devops-platform"
+
+    maintainer:
+      type: object
+      properties:
+        name:
+          type: string
+          description: "Maintainer name or team"
+        contact:
+          type: string
+          description: "Contact method (email, GitHub handle, etc.)"
+      description: "Maintainer contact information"
+
+    kernel_version:
+      type: string
+      pattern: "^v\\d+\\.\\d+\\.\\d+$"
+      description: "Which kernel/template version this fork is based on (e.g., v3.3.3)"
+
+    forked_at:
+      type: string
+      format: date
+      description: "Date when fork was created (YYYY-MM-DD)"
+
+    last_synced:
+      type: string
+      format: date
+      description: "Last date fork synchronized with kernel (YYYY-MM-DD, optional)"
+
+    status:
+      type: string
+      enum: [active, archived, experimental]
+      description: "Fork lifecycle status"
+
+    features:
+      type: array
+      items:
+        type: string
+      description: "Key features or capabilities added beyond the kernel"
+      examples:
+        - "GraphQL API integration"
+        - "Domain-specific acceptance criteria library"
+        - "Custom validation rules for compliance"
+        - "Extended platform endpoints for ML workflows"
+
+    pain_points:
+      type: array
+      items:
+        type: string
+      description: "Known pain points or friction areas (links to friction entries or issues)"
+      examples:
+        - "FRICTION-BUNDLE-001"
+        - "https://github.com/org/repo/issues/123"
+
+    notes:
+      type: string
+      description: "Free-form notes about the fork's purpose, learnings, etc."
+
+    related_items:
+      type: object
+      properties:
+        issues:
+          type: array
+          items:
+            type: string
+          description: "Kernel GitHub issues related to this fork"
+        adrs:
+          type: array
+          items:
+            type: string
+          description: "Kernel ADRs that influenced or were influenced by this fork"
+        friction:
+          type: array
+          items:
+            type: string
+          description: "Friction entries discovered in this fork"
+
+file_storage:
+  format: "yaml"
+  pattern: "forks/{ID}.yaml"
+  examples:
+    - "forks/FORK-SDK-001.yaml"
+    - "forks/FORK-ML-001.yaml"
+    - "forks/KHUB-001.yaml"
+
+  registry_index:
+    file: "forks/fork_registry.yaml"
+    description: >
+      Optional human-readable index/summary of all forks. Individual fork
+      entries are stored as separate YAML files for machine-readable querying.
+
+lifecycle:
+  registration: >
+    Forks are registered when:
+    - A new fork is created and maintainer wants to track it
+    - An existing fork maintainer reaches out for support
+    - Kernel maintainers discover a fork through GitHub network
+
+  maintenance: >
+    Fork entries are updated when:
+    - Fork syncs with new kernel version (update last_synced, kernel_version)
+    - Fork status changes (active → archived, experimental → active)
+    - New pain points or features are discovered
+    - Maintainer contact information changes
+
+  archival: >
+    Forks are marked as archived when:
+    - Development ceases
+    - Project is sunset or migrated to different approach
+    - Maintainer explicitly archives the fork
+    Archived entries remain for historical reference and pattern analysis.
+
+integration:
+  platform_endpoints:
+    description: "Fork registry can be exposed via platform API"
+    potential_endpoints:
+      - "/platform/forks (list all forks)"
+      - "/platform/forks/{id} (get fork details)"
+      - "/platform/forks/active (active forks only)"
+
+  kernel_maintenance:
+    description: "Fork registry informs kernel maintenance decisions"
+    usage:
+      - "Identify common pain points across multiple forks"
+      - "Prioritize kernel improvements based on fork needs"
+      - "Coordinate breaking changes with active fork maintainers"
+      - "Share learnings and patterns between forks"
+    reference: "See KERNEL_MAINTENANCE.md for governance process"
+
+  xtask_commands:
+    description: "xtask commands for fork registry management"
+    commands:
+      - "cargo xtask fork-list: List all registered forks with filtering"
+      - "cargo xtask fork-register: Register a new fork"
+      - "cargo xtask fork-update: Update existing fork entry"
+      - "cargo xtask fork-sync: Record a fork sync with kernel version"
+
+when_to_use:
+  fork_registry:
+    use_for:
+      - "Tracking known forks of the template"
+      - "Recording which kernel versions forks are based on"
+      - "Connecting fork maintainers for collaboration"
+      - "Identifying patterns for kernel backports"
+    examples:
+      - "Knowledge Hub fork for ML documentation platform"
+      - "SDK template fork for Rust client libraries"
+      - "Compliance fork for regulated industries"
+
+  not_for:
+    - "Tracking features within this repo (use spec_ledger.yaml)"
+    - "Recording process friction (use friction/ directory)"
+    - "Architecture decisions (use docs/adr/)"
+
+examples:
+  - file: "forks/FORK-KHUB-001.yaml"
+    description: "Knowledge Hub: ML documentation and API reference platform"
+
+  - file: "forks/FORK-SDK-001.yaml"
+    description: "Rust SDK template: Client library governance pattern"
+
+metrics:
+  tracking:
+    - "Total forks registered"
+    - "Active vs archived forks"
+    - "Kernel version distribution across forks"
+    - "Common pain points reported by multiple forks"
+    - "Fork creation rate over time"
+
+  health_indicators:
+    - "Number of active forks (indicates template utility)"
+    - "Sync frequency (how often forks update from kernel)"
+    - "Pain point overlap (indicates kernel gaps)"
+    - "Feature diversity (indicates template flexibility)"
