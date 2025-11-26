@@ -1,4 +1,5 @@
 # Rust-as-Spec Platform Cell (v3.3.1)
+**Current Template Version:** v3.3.0
 **Current Template Version:** v3.3.1
 
 **A governed Rust service template where specs, tests, docs, policies, and infra all agree – and the repo can prove it.**

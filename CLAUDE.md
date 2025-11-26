@@ -91,9 +91,12 @@ curl http://localhost:8080/platform/status
 curl http://localhost:8080/platform/graph
 curl http://localhost:8080/platform/docs/index
 curl http://localhost:8080/platform/tasks
+curl http://localhost:8080/platform/agent/hints  # Prioritized task suggestions
 ```
 
-This gives you a complete picture: health, contracts, tasks, and docs.
+This gives you a complete picture: health, contracts, tasks, docs, and recommended next work.
+
+**Tip:** `/platform/agent/hints` filters for Todo/InProgress tasks and includes REQ/AC IDs + recommended command sequences. See `docs/AGENT_GUIDE.md` for full usage.
 
 ---
 

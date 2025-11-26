@@ -127,6 +127,50 @@ curl "http://localhost:8080/platform/tasks/suggest-next?task=implement_ac"
 
 **Key Insight:** The `status` field tells you **what's already done**. Don't repeat satisfied steps.
 
+### Get Prioritized Hints for Next Work
+
+The `/platform/agent/hints` endpoint provides high-level guidance about what work is ready and prioritized:
+
+```bash
+# Get hints about what tasks are ready for work
+curl http://localhost:8080/platform/agent/hints
+```
+
+**Response structure:**
+```json
+{
+  "hints": [
+    {
+      "task_id": "TASK-TPL-STATUS-CLI-001",
+      "status": "InProgress",
+      "requirement_ids": ["REQ-PLT-STATUS-CLI"],
+      "ac_ids": ["AC-PLT-017"],
+      "reason": "Task 'Implement CLI governance status dashboard' is ready for work",
+      "recommended_sequence": [
+        {
+          "kind": "command",
+          "value": "cargo xtask bundle TASK-TPL-STATUS-CLI-001"
+        },
+        {
+          "kind": "command",
+          "value": "cargo xtask test-ac AC-PLT-017"
+        }
+      ]
+    }
+  ]
+}
+```
+
+**Use cases:**
+- Start a new session and discover what's already in progress or ready to start
+- Filter for `Todo` and `InProgress` tasks automatically
+- Get direct links to requirements and ACs for context
+- Follow `recommended_sequence` for standard workflow steps
+
+**Difference from `/platform/tasks/suggest-next`:**
+- **Hints** = "What tasks are ready for me to work on?" (filters + prioritizes)
+- **Suggest-next** = "For this specific task, what's the detailed step-by-step sequence?" (deep workflow)
+
 ---
 
 ## 2. Understanding the System State
