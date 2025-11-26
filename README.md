@@ -1,8 +1,13 @@
 # Rust-as-Spec Platform Cell (v3.3.3)
-**Current Template Version:** v3.3.3
-**Kernel Baseline:** [v3.3.3-kernel](./docs/KERNEL_SNAPSHOT.md)
+
+**Template Version:** v3.3.3 | **Kernel Baseline:** [v3.3.3-kernel](./docs/KERNEL_SNAPSHOT.md)
 
 **A governed Rust service template where specs, tests, docs, policies, and infra all agree – and the repo can prove it.**
+
+> **Using this as a template?** Start here:
+> - [Kernel snapshot](docs/KERNEL_SNAPSHOT.md) – what you're inheriting
+> - [New service guide](docs/how-to/new-service-from-template.md) – step-by-step setup
+> - Run `cargo xtask kernel-smoke` after cloning – it should be green
 
 This cell gives you a **single Rust service** with:
 
@@ -468,15 +473,15 @@ The integration surface is:
 
 ## 12. Current status & roadmap
 
-- **Template version:** v3.3.2
-- **Kernel status:** "Governing Kernel" is implemented; Tier-1 selftest is green.
-- **Non-kernel ACs:** Some advanced features (flow idempotency, question artifacts, K8s/TF IaC alignment) are tracked as ACs with `[UNKNOWN]` status and explicitly documented as template/future work.
+- **Template version:** v3.3.3
+- **Kernel status:** All 65 ACs pass. All 8 selftest gates pass.
+- **Known gaps:** Branch protection, IDP docs, second service validation (see ROADMAP.md)
 
 See:
 
-- `docs/ROADMAP.md` – where the template is headed.
-- `docs/feature_status.md` – current AC health.
-- `docs/feature_status_notes.md` – explanations for template/future ACs.
+- `docs/ROADMAP.md` – current state and path forward options
+- `docs/KERNEL_SNAPSHOT.md` – frozen baseline details
+- `docs/feature_status.md` – AC health dashboard
 
 ---
 
