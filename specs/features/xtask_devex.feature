@@ -438,3 +438,150 @@ Feature: Developer Experience Commands
     When I run service-init with an invalid service ID "MyService"
     Then the command should fail
     And the output should contain "kebab-case"
+
+  @AC-PLT-021
+  Scenario: service-init updates metadata and README for new service identity
+    Given a clean git working directory
+    When I run service-init with id "my-new-service" name "My New Service" and description "A new test service"
+    Then the command should succeed
+    And "specs/service_metadata.yaml" should contain "service_id: my-new-service"
+    And "specs/service_metadata.yaml" should contain "display_name: \"My New Service\""
+    And "specs/service_metadata.yaml" should contain "description: A new test service"
+    And "README.md" should contain "# My New Service"
+    And "README.md" should contain "A new test service"
+
+  @AC-PLT-021
+  Scenario: platform status reflects service identity after service-init
+    Given service-init has been run with custom identity
+    When I query "/platform/status"
+    Then the response should include the custom service_id
+    And the response should include the custom display_name
+    And the response should include the custom description
+
+  @AC-TPL-KERNEL-CONTRACT-EMITTED
+  Scenario: release-bundle emits kernel contract JSON
+    When I run "cargo xtask release-bundle 3.2.0"
+    Then the command should succeed
+    And a file "release_evidence/kernel_contract.v3.2.0.json" should be created
+    And the kernel contract should describe xtask commands
+    And the kernel contract should describe platform endpoints
+    And the kernel contract should describe governance schemas
+
+  @example_fork_ci @AC-TPL-EXAMPLE-FORK-BUILDS
+  Scenario: example fork builds and passes selftest
+    Given the example fork exists at "examples/fork-customization/"
+    When the example fork selftest runs in CI
+    Then the fork selftest should pass
+    And the fork should demonstrate customization patterns
+
+  @AC-TPL-CLI-JSON-OUTPUT
+  Scenario: ac-status supports JSON output
+    When I run "cargo xtask ac-status --json"
+    Then the command should succeed
+    And the output should be valid JSON
+    And the JSON should have a stable top-level structure
+    And the JSON should include "total_acs" field
+    And the JSON should include "covered_acs" field
+    And the JSON should include "coverage_percentage" field
+
+  @AC-TPL-CLI-JSON-OUTPUT
+  Scenario: version command supports JSON output
+    When I run "cargo xtask version --json"
+    Then the command should succeed
+    And the output should be valid JSON
+    And the JSON should include "version" field
+    And the JSON should include "git_sha" field
+    And the JSON should include "build_timestamp" field
+
+  @AC-TPL-CLI-JSON-OUTPUT
+  Scenario: friction-list supports JSON output
+    Given friction entries exist in FRICTION_LOG.md
+    When I run "cargo xtask friction-list --json"
+    Then the command should succeed
+    And the output should be valid JSON
+    And the JSON should be an array of friction entries
+    And each entry should include "id" and "description" fields
+
+  @AC-TPL-CLI-JSON-OUTPUT
+  Scenario: questions-list supports JSON output
+    Given question entries exist in specs/questions.yaml
+    When I run "cargo xtask questions-list --json"
+    Then the command should succeed
+    And the output should be valid JSON
+    And the JSON should be an array of question entries
+    And each entry should include "id" and "question" fields
+
+  @AC-TPL-CLI-JSON-OUTPUT
+  Scenario: fork-list supports JSON output
+    Given fork entries exist in specs/forks.yaml
+    When I run "cargo xtask fork-list --json"
+    Then the command should succeed
+    And the output should be valid JSON
+    And the JSON should be an array of fork entries
+    And each entry should include "id" and "description" fields
+
+  @AC-TPL-CLI-JSON-OUTPUT
+  Scenario: JSON output commands have stable exit codes
+    When I run "cargo xtask ac-status --json"
+    Then the command should exit with code 0 if successful
+    And the command should exit with non-zero code on failure
+
+  @AC-TPL-XTASK-NONINTERACTIVE
+  Scenario: doctor runs non-interactively with CI=1
+    Given the environment variable "CI" is set to "1"
+    When I run "cargo xtask doctor"
+    Then the command should succeed
+    And the command should not prompt for input
+    And the exit code should be 0 on success
+
+  @AC-TPL-XTASK-NONINTERACTIVE
+  Scenario: selftest runs non-interactively with XTASK_NONINTERACTIVE=1
+    Given the environment variable "XTASK_NONINTERACTIVE" is set to "1"
+    When I run "cargo xtask selftest"
+    Then the command should succeed
+    And the command should not prompt for input
+    And the exit code should be 0 on success
+
+  @AC-TPL-XTASK-NONINTERACTIVE
+  Scenario: check runs non-interactively in CI mode
+    Given the environment variable "CI" is set to "1"
+    When I run "cargo xtask check"
+    Then the command should not prompt for input
+    And the exit code should reflect success or failure
+
+  @AC-TPL-XTASK-NONINTERACTIVE
+  Scenario: ac-status runs non-interactively in automation mode
+    Given the environment variable "XTASK_NONINTERACTIVE" is set to "1"
+    When I run "cargo xtask ac-status"
+    Then the command should succeed
+    And the command should not prompt for input
+    And the exit code should be 0
+
+  @AC-TPL-XTASK-NONINTERACTIVE
+  Scenario: bundle command runs non-interactively with CI=1
+    Given the environment variable "CI" is set to "1"
+    When I run "cargo xtask bundle implement_ac"
+    Then the command should not prompt for input
+    And the exit code should reflect command success or failure
+
+  @AC-TPL-XTASK-NONINTERACTIVE
+  Scenario: version command runs non-interactively
+    Given the environment variable "XTASK_NONINTERACTIVE" is set to "1"
+    When I run "cargo xtask version"
+    Then the command should succeed
+    And the exit code should be 0
+
+  @AC-TPL-XTASK-NONINTERACTIVE
+  Scenario: friction-list runs non-interactively in CI mode
+    Given the environment variable "CI" is set to "1"
+    When I run "cargo xtask friction-list"
+    Then the command should not prompt for input
+    And the exit code should be 0 on success
+
+  @AC-TPL-XTASK-NONINTERACTIVE
+  Scenario: exit codes reflect operation success in automation mode
+    Given automation mode is enabled
+    When commands succeed in non-interactive mode
+    Then they should exit with code 0
+    And when commands fail in non-interactive mode
+    Then they should exit with non-zero codes
