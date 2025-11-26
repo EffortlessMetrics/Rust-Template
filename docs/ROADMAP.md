@@ -94,11 +94,11 @@ Despite significant progress, some gaps remain:
 
 ### 3.1 Enforcement Gaps
 
-| Gap | Impact | Effort |
-|-----|--------|--------|
-| **Branch protection not configured** | Anyone can push directly to main, bypassing CI | Low (manual GitHub config) |
-| **No required status checks** | PRs can merge without selftest passing | Low (manual GitHub config) |
-| **Tag signing not enforced** | Release tags can be created without verification | Medium |
+| Gap | Impact | Effort | Documentation |
+|-----|--------|--------|---------------|
+| **Branch protection not configured** | Anyone can push directly to main, bypassing CI | Low (manual GitHub config) | See `docs/how-to/setup-branch-protection.md` |
+| **No required status checks** | PRs can merge without selftest passing | Low (manual GitHub config) | Automated via `.github/scripts/setup-branch-protection.sh` |
+| **Tag signing not enforced** | Release tags can be created without verification | Medium | See `docs/how-to/setup-tag-signing.md` |
 
 ### 3.2 Validation Gaps
 
@@ -126,6 +126,8 @@ Despite significant progress, some gaps remain:
 **Actions:**
 
 1. Configure GitHub branch protection (require selftest, no direct pushes)
+   - **Run:** `.github/scripts/setup-branch-protection.sh`
+   - **Docs:** `docs/how-to/setup-branch-protection.md`
 2. Tag `v3.3.3` as the stable baseline
 3. Fork for Knowledge Hub or other service
 4. Capture friction in `FRICTION_LOG.md`
@@ -151,11 +153,11 @@ Despite significant progress, some gaps remain:
 
 **Actions:**
 
-1. Write `docs/explanation/idp-positioning.md`
-2. Write `docs/how-to/brownfield-adoption.md`
+1. Write `docs/explanation/idp-positioning.md` ✅
+2. Write `docs/how-to/brownfield-adoption.md` ✅
 3. Test and document Windows Tier-2 flow
 4. Clean up ADR numbering duplicates
-5. Configure branch protection
+5. Configure branch protection (see `docs/how-to/setup-branch-protection.md`) ✅
 6. Then fork
 
 **Timeline:** 1-2 sessions

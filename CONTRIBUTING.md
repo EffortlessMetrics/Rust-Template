@@ -120,9 +120,11 @@ cargo xtask release-prepare X.Y.Z    # bump versions & seed changelog
 cargo xtask release-verify           # selftest + audit + docs-check
 
 git commit -am "Release vX.Y.Z"
-git tag -a vX.Y.Z -m "Release vX.Y.Z"
+git tag -s vX.Y.Z -m "Release vX.Y.Z"  # -s flag for GPG signing (recommended)
 git push origin main --follow-tags
 ```
+
+**Recommended:** Configure GPG signing for tags to ensure release authenticity. See [`docs/how-to/setup-tag-signing.md`](docs/how-to/setup-tag-signing.md) for setup instructions.
 
 ### All flows
 

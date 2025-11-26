@@ -32,6 +32,7 @@ New to this repository? Start here:
 
 ### Installation & Setup
 - **[Quick Start (Template)](../README.md#quick-start)** - 30-second tour
+- **[Windows Development Guide](how-to/windows-development.md)** - Complete Windows setup (WSL2 + native)
 - **[Setup Without Nix](how-to/setup-without-nix.md)** - Manual environment setup *(stub)*
 - **[Doctor Command Guide](how-to/using-doctor.md)** - Verifying environment health *(stub)*
 

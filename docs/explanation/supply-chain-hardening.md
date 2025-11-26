@@ -652,6 +652,13 @@ gpg --detach-sign rust-template-v2.4.0.tar.gz
 
 **When to use provenance**: Build integrity is the primary concern (e.g., supply chain attacks)
 
+**Best practice**: Use **both** together:
+- **GPG-sign git tags** to prove releases are authorized by maintainers
+- **Provenance attestation** to prove artifacts match source
+- Result: Two-layer trust chain (authorized release → verified build)
+
+See [`docs/how-to/setup-tag-signing.md`](../how-to/setup-tag-signing.md) for GPG tag signing setup
+
 ---
 
 ### vs. Reproducible Builds

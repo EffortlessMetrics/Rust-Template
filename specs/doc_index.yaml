@@ -245,6 +245,26 @@ docs:
     acs: [AC-PLT-015, AC-PLT-016, AC-PLT-019, AC-PLT-020]
     adrs: [ADR-0002, ADR-0005, ADR-0017]
 
+  # Windows Development Guide
+  - id: GUIDE-TPL-WINDOWS-DEV-001
+    file: docs/how-to/windows-development.md
+    title: "Windows Development Guide"
+    doc_type: how-to
+    stories: [US-TPL-PLT-001]
+    requirements: [REQ-PLT-ONBOARDING, REQ-PLT-DEVEX-CONTRACT]
+    acs: [AC-PLT-015, AC-PLT-016, AC-PLT-019, AC-PLT-020]
+    adrs: [ADR-0002, ADR-0017]
+
+  # Tag Signing Setup Guide
+  - id: GUIDE-TPL-TAG-SIGNING-001
+    file: docs/how-to/setup-tag-signing.md
+    title: "Setup GPG Tag Signing"
+    doc_type: how-to
+    stories: [US-TPL-PLT-001]
+    requirements: [REQ-PLT-RELEASE-SAFETY]
+    acs: [AC-PLT-011, AC-PLT-012, AC-PLT-013]
+    adrs: [ADR-0005, ADR-0006]
+
   # ADR-0017: Tier-1 Selftest as Required Gate
   - id: ADR-0017
     file: docs/adr/0017-tier1-selftest-gate.md
@@ -497,3 +517,23 @@ docs:
     requirements: [REQ-PLT-RELEASE-SAFETY]
     acs: [AC-PLT-008]
     adrs: [ADR-0006]
+
+  # CI Workflows Reference Documentation
+  - id: REF-CI-WORKFLOWS-001
+    file: docs/reference/ci-workflows.md
+    title: "CI Workflows Reference Guide"
+    doc_type: reference
+    stories: [US-TPL-PLT-001]
+    requirements:
+      - REQ-PLT-DEVEX-CONTRACT
+      - REQ-PLT-ONBOARDING
+      - REQ-PLT-SECURITY-GOVERNANCE
+      - REQ-PLT-RELEASE-SAFETY
+      - REQ-PLT-DOCS-CONSISTENCY
+    acs:
+      - AC-PLT-014
+      - AC-PLT-015
+      - AC-PLT-016
+      - AC-PLT-019
+      - AC-PLT-020
+    adrs: [ADR-0002, ADR-0005, ADR-0017]

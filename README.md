@@ -5,6 +5,7 @@
 **A governed Rust service template where specs, tests, docs, policies, and infra all agree – and the repo can prove it.**
 
 > **Using this as a template?** Start here:
+> - **[Quick Start Guide](docs/QUICKSTART.md) – Get productive in 15 minutes** ⚡
 > - [Kernel snapshot](docs/KERNEL_SNAPSHOT.md) – what you're inheriting
 > - [New service guide](docs/how-to/new-service-from-template.md) – step-by-step setup
 > - Run `cargo xtask kernel-smoke` after cloning – it should be green
