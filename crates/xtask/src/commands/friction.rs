@@ -196,10 +196,38 @@ pub fn calculate_stats(entries: &[FrictionEntry]) -> FrictionStats {
     stats
 }
 
+/// JSON output structure for friction-list
+#[derive(Debug, Serialize)]
+struct FrictionListJson {
+    timestamp: String,
+    total_count: usize,
+    stats: FrictionStatsJson,
+    entries: Vec<FrictionEntry>,
+}
+
+#[derive(Debug, Serialize)]
+struct FrictionStatsJson {
+    open: usize,
+    investigating: usize,
+    in_progress: usize,
+    resolved: usize,
+    wont_fix: usize,
+    severity: FrictionSeverityStatsJson,
+}
+
+#[derive(Debug, Serialize)]
+struct FrictionSeverityStatsJson {
+    low: usize,
+    medium: usize,
+    high: usize,
+    critical: usize,
+}
+
 /// List friction entries filtered by status or severity
 pub fn list_friction_entries(
     status_filter: Option<&str>,
     severity_filter: Option<&str>,
+    json: bool,
 ) -> Result<()> {
     let entries = load_all_friction_entries()?;
 
@@ -214,60 +242,103 @@ pub fn list_friction_entries(
         .collect();
 
     if filtered.is_empty() {
-        println!("No friction entries found.");
+        if json {
+            // Empty JSON output
+            let output = FrictionListJson {
+                timestamp: chrono::Utc::now().to_rfc3339(),
+                total_count: 0,
+                stats: FrictionStatsJson {
+                    open: 0,
+                    investigating: 0,
+                    in_progress: 0,
+                    resolved: 0,
+                    wont_fix: 0,
+                    severity: FrictionSeverityStatsJson { low: 0, medium: 0, high: 0, critical: 0 },
+                },
+                entries: Vec::new(),
+            };
+            println!("{}", serde_json::to_string_pretty(&output)?);
+        } else {
+            println!("No friction entries found.");
+        }
         return Ok(());
     }
 
-    println!(
-        "\n{} Friction Entries:\n",
-        if status_filter.is_some() || severity_filter.is_some() { "Filtered" } else { "All" }
-    );
-
-    for entry in filtered {
-        let status_badge = match entry.status.as_str() {
-            "open" => "🔴 OPEN",
-            "investigating" => "🔍 INVESTIGATING",
-            "in_progress" => "🔧 IN PROGRESS",
-            "resolved" => "✅ RESOLVED",
-            "wont_fix" => "⛔ WONT FIX",
-            _ => "❓ UNKNOWN",
-        };
-
-        let severity_badge = match entry.severity.as_str() {
-            "critical" => "🔥 CRITICAL",
-            "high" => "❗ HIGH",
-            "medium" => "⚠️  MEDIUM",
-            "low" => "ℹ️  LOW",
-            _ => "",
-        };
-
-        println!("  {} {} {} - {}", status_badge, severity_badge, entry.id, entry.summary);
-        println!("     Date: {} | Category: {}", entry.date, entry.category);
-        if let Some(context) = &entry.context
-            && let Some(flow) = &context.flow
-        {
-            println!("     Flow: {}", flow);
-        }
-        println!();
-    }
-
     let stats = calculate_stats(&entries);
-    println!("Total: {} entries", stats.total_count);
-    println!(
-        "Status: open: {}, investigating: {}, in_progress: {}, resolved: {}, wont_fix: {}",
-        stats.open_count,
-        stats.investigating_count,
-        stats.in_progress_count,
-        stats.resolved_count,
-        stats.wont_fix_count
-    );
-    println!(
-        "Severity: critical: {}, high: {}, medium: {}, low: {}\n",
-        stats.by_severity.critical,
-        stats.by_severity.high,
-        stats.by_severity.medium,
-        stats.by_severity.low
-    );
+
+    if json {
+        // JSON output
+        let output = FrictionListJson {
+            timestamp: chrono::Utc::now().to_rfc3339(),
+            total_count: filtered.len(),
+            stats: FrictionStatsJson {
+                open: stats.open_count,
+                investigating: stats.investigating_count,
+                in_progress: stats.in_progress_count,
+                resolved: stats.resolved_count,
+                wont_fix: stats.wont_fix_count,
+                severity: FrictionSeverityStatsJson {
+                    low: stats.by_severity.low,
+                    medium: stats.by_severity.medium,
+                    high: stats.by_severity.high,
+                    critical: stats.by_severity.critical,
+                },
+            },
+            entries: filtered.into_iter().cloned().collect(),
+        };
+        println!("{}", serde_json::to_string_pretty(&output)?);
+    } else {
+        // Human-readable output
+        println!(
+            "\n{} Friction Entries:\n",
+            if status_filter.is_some() || severity_filter.is_some() { "Filtered" } else { "All" }
+        );
+
+        for entry in filtered {
+            let status_badge = match entry.status.as_str() {
+                "open" => "🔴 OPEN",
+                "investigating" => "🔍 INVESTIGATING",
+                "in_progress" => "🔧 IN PROGRESS",
+                "resolved" => "✅ RESOLVED",
+                "wont_fix" => "⛔ WONT FIX",
+                _ => "❓ UNKNOWN",
+            };
+
+            let severity_badge = match entry.severity.as_str() {
+                "critical" => "🔥 CRITICAL",
+                "high" => "❗ HIGH",
+                "medium" => "⚠️  MEDIUM",
+                "low" => "ℹ️  LOW",
+                _ => "",
+            };
+
+            println!("  {} {} {} - {}", status_badge, severity_badge, entry.id, entry.summary);
+            println!("     Date: {} | Category: {}", entry.date, entry.category);
+            if let Some(context) = &entry.context
+                && let Some(flow) = &context.flow
+            {
+                println!("     Flow: {}", flow);
+            }
+            println!();
+        }
+
+        println!("Total: {} entries", stats.total_count);
+        println!(
+            "Status: open: {}, investigating: {}, in_progress: {}, resolved: {}, wont_fix: {}",
+            stats.open_count,
+            stats.investigating_count,
+            stats.in_progress_count,
+            stats.resolved_count,
+            stats.wont_fix_count
+        );
+        println!(
+            "Severity: critical: {}, high: {}, medium: {}, low: {}\n",
+            stats.by_severity.critical,
+            stats.by_severity.high,
+            stats.by_severity.medium,
+            stats.by_severity.low
+        );
+    }
 
     Ok(())
 }

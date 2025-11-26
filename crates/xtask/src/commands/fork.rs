@@ -155,8 +155,29 @@ pub fn calculate_stats(entries: &[ForkEntry]) -> ForkStats {
     stats
 }
 
+/// JSON output structure for fork-list
+#[derive(Debug, Serialize)]
+struct ForkListJson {
+    timestamp: String,
+    total_count: usize,
+    stats: ForkStatsJson,
+    forks: Vec<ForkEntry>,
+}
+
+#[derive(Debug, Serialize)]
+struct ForkStatsJson {
+    active: usize,
+    archived: usize,
+    experimental: usize,
+    by_kernel_version: std::collections::HashMap<String, usize>,
+}
+
 /// List fork entries filtered by status or domain
-pub fn list_fork_entries(status_filter: Option<&str>, domain_filter: Option<&str>) -> Result<()> {
+pub fn list_fork_entries(
+    status_filter: Option<&str>,
+    domain_filter: Option<&str>,
+    json: bool,
+) -> Result<()> {
     let entries = load_all_fork_entries()?;
 
     let filtered: Vec<&ForkEntry> = entries
@@ -169,66 +190,100 @@ pub fn list_fork_entries(status_filter: Option<&str>, domain_filter: Option<&str
         .collect();
 
     if filtered.is_empty() {
-        println!("No fork entries found.");
+        if json {
+            // Empty JSON output
+            let output = ForkListJson {
+                timestamp: chrono::Utc::now().to_rfc3339(),
+                total_count: 0,
+                stats: ForkStatsJson {
+                    active: 0,
+                    archived: 0,
+                    experimental: 0,
+                    by_kernel_version: std::collections::HashMap::new(),
+                },
+                forks: Vec::new(),
+            };
+            println!("{}", serde_json::to_string_pretty(&output)?);
+        } else {
+            println!("No fork entries found.");
+        }
         return Ok(());
     }
 
-    println!(
-        "\n{} Fork Entries:\n",
-        if status_filter.is_some() || domain_filter.is_some() { "Filtered" } else { "All" }
-    );
+    let stats = calculate_stats(&entries);
 
-    for entry in filtered {
-        let status_badge = match entry.status.as_str() {
-            "active" => "[ACTIVE]",
-            "archived" => "[ARCHIVED]",
-            "experimental" => "[EXPERIMENTAL]",
-            _ => "[UNKNOWN]",
+    if json {
+        // JSON output
+        let output = ForkListJson {
+            timestamp: chrono::Utc::now().to_rfc3339(),
+            total_count: filtered.len(),
+            stats: ForkStatsJson {
+                active: stats.active_count,
+                archived: stats.archived_count,
+                experimental: stats.experimental_count,
+                by_kernel_version: stats.by_kernel_version.clone(),
+            },
+            forks: filtered.into_iter().cloned().collect(),
         };
+        println!("{}", serde_json::to_string_pretty(&output)?);
+    } else {
+        // Human-readable output
+        println!(
+            "\n{} Fork Entries:\n",
+            if status_filter.is_some() || domain_filter.is_some() { "Filtered" } else { "All" }
+        );
 
-        println!("  {} {} - {}", status_badge, entry.id, entry.name);
-        println!("     Domain: {} | Kernel: {}", entry.domain, entry.kernel_version);
+        for entry in filtered {
+            let status_badge = match entry.status.as_str() {
+                "active" => "[ACTIVE]",
+                "archived" => "[ARCHIVED]",
+                "experimental" => "[EXPERIMENTAL]",
+                _ => "[UNKNOWN]",
+            };
 
-        if let Some(url) = &entry.url {
-            println!("     URL: {}", url);
-        }
+            println!("  {} {} - {}", status_badge, entry.id, entry.name);
+            println!("     Domain: {} | Kernel: {}", entry.domain, entry.kernel_version);
 
-        if let Some(maintainer) = &entry.maintainer {
-            print!("     Maintainer: {}", maintainer.name);
-            if let Some(contact) = &maintainer.contact {
-                print!(" ({})", contact);
+            if let Some(url) = &entry.url {
+                println!("     URL: {}", url);
             }
+
+            if let Some(maintainer) = &entry.maintainer {
+                print!("     Maintainer: {}", maintainer.name);
+                if let Some(contact) = &maintainer.contact {
+                    print!(" ({})", contact);
+                }
+                println!();
+            }
+
+            if !entry.features.is_empty() {
+                println!("     Features: {}", entry.features.join(", "));
+            }
+
+            if !entry.pain_points.is_empty() {
+                println!("     Pain Points: {}", entry.pain_points.join(", "));
+            }
+
             println!();
         }
 
-        if !entry.features.is_empty() {
-            println!("     Features: {}", entry.features.join(", "));
-        }
+        println!("Total: {} forks", stats.total_count);
+        println!(
+            "Status: active: {}, experimental: {}, archived: {}",
+            stats.active_count, stats.experimental_count, stats.archived_count
+        );
 
-        if !entry.pain_points.is_empty() {
-            println!("     Pain Points: {}", entry.pain_points.join(", "));
+        if !stats.by_kernel_version.is_empty() {
+            print!("Kernel Versions: ");
+            let mut versions: Vec<_> = stats.by_kernel_version.iter().collect();
+            versions.sort_by(|a, b| b.0.cmp(a.0)); // Sort by version descending
+            let version_strs: Vec<String> =
+                versions.iter().map(|(v, c)| format!("{} ({})", v, c)).collect();
+            println!("{}", version_strs.join(", "));
         }
 
         println!();
     }
-
-    let stats = calculate_stats(&entries);
-    println!("Total: {} forks", stats.total_count);
-    println!(
-        "Status: active: {}, experimental: {}, archived: {}",
-        stats.active_count, stats.experimental_count, stats.archived_count
-    );
-
-    if !stats.by_kernel_version.is_empty() {
-        print!("Kernel Versions: ");
-        let mut versions: Vec<_> = stats.by_kernel_version.iter().collect();
-        versions.sort_by(|a, b| b.0.cmp(a.0)); // Sort by version descending
-        let version_strs: Vec<String> =
-            versions.iter().map(|(v, c)| format!("{} ({})", v, c)).collect();
-        println!("{}", version_strs.join(", "));
-    }
-
-    println!();
 
     Ok(())
 }

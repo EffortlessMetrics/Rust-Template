@@ -64,6 +64,9 @@ enum Commands {
         /// Print concise summary instead of generating full markdown file
         #[arg(long)]
         summary: bool,
+        /// Output in JSON format
+        #[arg(long)]
+        json: bool,
     },
     /// Create new acceptance criterion
     AcNew {
@@ -205,6 +208,9 @@ enum Commands {
         /// Filter by severity (low, medium, high, critical)
         #[arg(long)]
         severity: Option<String>,
+        /// Output in JSON format
+        #[arg(long)]
+        json: bool,
     },
     /// Create a new friction log entry
     FrictionNew {
@@ -238,6 +244,9 @@ enum Commands {
         /// Filter by domain substring
         #[arg(long)]
         domain: Option<String>,
+        /// Output in JSON format
+        #[arg(long)]
+        json: bool,
     },
     /// Register a new template fork
     ForkRegister {
@@ -271,6 +280,24 @@ enum Commands {
         /// Output format (backstage)
         #[arg(long, default_value = "backstage")]
         format: String,
+    },
+    /// Initialize service branding (ID, name, description)
+    ServiceInit {
+        /// Service ID (kebab-case, e.g., agile-hr)
+        #[arg(long)]
+        id: String,
+        /// Display name (e.g., "Agile HR Hub")
+        #[arg(long)]
+        name: String,
+        /// Service description
+        #[arg(long)]
+        description: String,
+        /// Tags (repeatable, e.g., --tags hr --tags payroll)
+        #[arg(long)]
+        tags: Vec<String>,
+        /// Register this fork in fork_registry.yaml
+        #[arg(long)]
+        register_fork: bool,
     },
     /// Validate config schema for an environment
     ConfigValidate {
@@ -326,6 +353,9 @@ enum Commands {
         /// Filter by status (open, answered, resolved, obsolete)
         #[arg(long)]
         status: Option<String>,
+        /// Output in JSON format
+        #[arg(long)]
+        json: bool,
     },
     /// Create a new question artifact
     #[command(next_help_heading = "Governance")]
@@ -408,10 +438,11 @@ fn main() -> Result<()> {
     };
 
     match cli.command {
-        Commands::AcStatus { summary } => {
+        Commands::AcStatus { summary, json } => {
             commands::ac_status::run(commands::ac_status::AcStatusArgs {
                 verbosity,
                 summary,
+                json,
                 ..Default::default()
             })
         }
@@ -475,8 +506,8 @@ fn main() -> Result<()> {
         Commands::Selftest => commands::selftest::run_with_verbosity(verbosity),
         Commands::KernelSmoke => commands::kernel_smoke::run(),
         Commands::Status => commands::status::run(),
-        Commands::FrictionList { status, severity } => {
-            commands::friction::list_friction_entries(status.as_deref(), severity.as_deref())
+        Commands::FrictionList { status, severity, json } => {
+            commands::friction::list_friction_entries(status.as_deref(), severity.as_deref(), json)
         }
         Commands::FrictionNew {
             category,
@@ -495,8 +526,8 @@ fn main() -> Result<()> {
             phase.as_deref(),
             discovered_by.as_deref(),
         ),
-        Commands::ForkList { status, domain } => {
-            commands::fork::list_fork_entries(status.as_deref(), domain.as_deref())
+        Commands::ForkList { status, domain, json } => {
+            commands::fork::list_fork_entries(status.as_deref(), domain.as_deref(), json)
         }
         Commands::ForkRegister {
             name,
@@ -517,8 +548,8 @@ fn main() -> Result<()> {
             status: status.as_deref(),
             notes: notes.as_deref(),
         }),
-        Commands::QuestionsList { status } => {
-            commands::questions::list_questions(status.as_deref())
+        Commands::QuestionsList { status, json } => {
+            commands::questions::list_questions(status.as_deref(), json)
         }
         Commands::QuestionNew {
             category,
@@ -539,6 +570,15 @@ fn main() -> Result<()> {
         ),
         Commands::ServiceDescriptor { format } => commands::service_descriptor::run(&format)
             .map_err(|e| anyhow::anyhow!("service-descriptor failed: {}", e)),
+        Commands::ServiceInit { id, name, description, tags, register_fork } => {
+            commands::service_init::run(commands::service_init::ServiceInitArgs {
+                id,
+                name,
+                description,
+                tags: if tags.is_empty() { None } else { Some(tags) },
+                register_fork,
+            })
+        }
         Commands::ConfigValidate { env } => commands::config_validate::run(&env)
             .map_err(|e| anyhow::anyhow!("config-validate failed: {}", e)),
         Commands::HelpFlows => commands::help_flows::run(),
@@ -693,6 +733,7 @@ pub fn all_command_names() -> Vec<&'static str> {
         "test-ac",
         "test-changed",
         "service-descriptor",
+        "service-init",
         "config-validate",
         "help-flows",
         "version",

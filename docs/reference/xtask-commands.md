@@ -2,6 +2,13 @@
 
 Complete reference for all `xtask` CLI commands.
 
+**JSON Output Support:** The following commands support `--json` flag for agent/portal integration:
+- `ac-status --json` - AC coverage report as structured JSON
+- `friction-list --json` - Friction entries with statistics
+- `questions-list --json` - Questions with statistics
+- `fork-list --json` - Fork registry with kernel version breakdown
+- `version --json` - Kernel and template version information
+
 **Quick Index:**
 - [dev-up](#xtask-dev-up) - One-command environment setup
 - [status](#xtask-status) - Governance status dashboard
@@ -338,6 +345,9 @@ Generate AC status report from acceptance test results.
 ```bash
 cargo run -p xtask -- ac-status
 
+# Output as JSON for agent/portal integration
+cargo run -p xtask -- ac-status --json
+
 # Or in Nix shell
 nix develop -c cargo run -p xtask -- ac-status
 ```
@@ -358,6 +368,42 @@ nix develop -c cargo run -p xtask -- ac-status
 
 **Note:** The JSON report path is the recommended approach. The JUnit+feature fallback is for backward compatibility and may be removed in a future major version.
 
+### JSON Output
+
+When `--json` is specified, outputs structured JSON instead of generating the markdown file:
+
+```json
+{
+  "timestamp": "2025-11-26T12:00:00Z",
+  "kernel_acs": {
+    "total": 48,
+    "passing": 48,
+    "failing": 0,
+    "unknown": 0
+  },
+  "template_acs": {
+    "total": 17,
+    "passing": 17,
+    "failing": 0,
+    "unknown": 0
+  },
+  "coverage_percent": 100.0,
+  "acs": [
+    {
+      "id": "AC-TPL-001",
+      "story_id": "US-TPL-001",
+      "req_id": "REQ-TPL-HEALTH",
+      "text": "Doctor command validates environment",
+      "status": "pass",
+      "scenarios": ["Doctor detects missing tools"],
+      "tests": [...],
+      "tests_total": 1,
+      "tests_executed": 1
+    }
+  ]
+}
+```
+
 ### Exit Codes
 
 - `0`: All ACs passed or unknown
@@ -365,7 +411,7 @@ nix develop -c cargo run -p xtask -- ac-status
 
 ### Output Artifacts
 
-- `docs/feature_status.md` - AC status table with pass/fail/unknown indicators
+- `docs/feature_status.md` - AC status table with pass/fail/unknown indicators (not generated when --json is used)
 
 ### When to Use
 

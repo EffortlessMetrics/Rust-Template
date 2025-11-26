@@ -2270,3 +2270,128 @@ async fn then_file_not_empty(world: &mut World, file_path: String) {
         metadata.len()
     );
 }
+
+// ============================================================================
+// AC-TPL-SERVICE-INIT: Service Initialization Steps
+// ============================================================================
+
+#[given("a clean git working directory")]
+async fn given_clean_git_directory(world: &mut World) {
+    let root = workspace_root(world);
+
+    // Stash any uncommitted changes to ensure a clean state
+    let _ = Command::new("git")
+        .current_dir(&root)
+        .args(["stash", "push", "-u", "-m", "BDD test: service-init cleanup"])
+        .output();
+}
+
+#[when(
+    regex = r#"^I run service-init with id "([^"]+)" name "([^"]+)" and description "([^"]+)"$"#
+)]
+async fn when_run_service_init(world: &mut World, id: String, name: String, description: String) {
+    let root = workspace_root(world);
+
+    // Backup current files
+    let metadata_path = root.join("specs/service_metadata.yaml");
+    let readme_path = root.join("README.md");
+
+    if metadata_path.exists() {
+        let backup = metadata_path.with_extension("yaml.bak");
+        let _ = fs::copy(&metadata_path, &backup);
+    }
+
+    if readme_path.exists() {
+        let backup = readme_path.with_extension("md.bak");
+        let _ = fs::copy(&readme_path, &backup);
+    }
+
+    // Run the command
+    run_xtask_command(
+        world,
+        &["service-init", "--id", &id, "--name", &name, "--description", &description],
+    )
+    .await;
+}
+
+#[when(regex = r#"^I run service-init with an invalid service ID "([^"]+)"$"#)]
+async fn when_run_service_init_invalid_id(world: &mut World, id: String) {
+    run_xtask_command(
+        world,
+        &["service-init", "--id", &id, "--name", "Test Service", "--description", "A test service"],
+    )
+    .await;
+}
+
+#[given("service metadata has been initialized")]
+async fn given_metadata_initialized(world: &mut World) {
+    // Run service-init once to set up the initial state
+    when_run_service_init(
+        world,
+        "test-service".to_string(),
+        "Test Service".to_string(),
+        "A test service".to_string(),
+    )
+    .await;
+
+    // Clear the output so we can check the second run
+    world.xtask_context_mut().last_command_output = None;
+    world.xtask_context_mut().last_command_status = None;
+}
+
+#[when("I run service-init with the same parameters twice")]
+async fn when_run_service_init_twice(world: &mut World) {
+    // First run
+    when_run_service_init(
+        world,
+        "test-service".to_string(),
+        "Test Service".to_string(),
+        "A test service".to_string(),
+    )
+    .await;
+
+    let first_success = world.xtask_context().last_command_status.unwrap_or(-1) == 0;
+
+    // Second run
+    when_run_service_init(
+        world,
+        "test-service".to_string(),
+        "Test Service".to_string(),
+        "A test service".to_string(),
+    )
+    .await;
+
+    // Store both results for validation
+    world
+        .xtask_context_mut()
+        .env
+        .insert("FIRST_RUN_SUCCESS".to_string(), first_success.to_string());
+}
+
+#[then("both runs should succeed")]
+async fn then_both_runs_succeed(world: &mut World) {
+    let first_success = world
+        .xtask_context()
+        .env
+        .get("FIRST_RUN_SUCCESS")
+        .and_then(|s| s.parse::<bool>().ok())
+        .unwrap_or(false);
+
+    let second_success = world.xtask_context().last_command_status.unwrap_or(-1) == 0;
+
+    assert!(first_success, "First run should succeed");
+    assert!(second_success, "Second run should succeed");
+}
+
+#[then(regex = r#"^the second run should report "([^"]+)"$"#)]
+async fn then_second_run_reports(world: &mut World, expected: String) {
+    let ctx = world.xtask_context();
+    let output = ctx.last_command_output.as_ref().expect("No command output");
+
+    assert!(
+        output.contains(&expected),
+        "Output should contain '{}'\nActual output:\n{}",
+        expected,
+        output
+    );
+}

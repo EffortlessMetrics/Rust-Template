@@ -900,7 +900,141 @@ cargo xtask status  # Shows open questions
 
 **API:**
 ```bash
+# Get question summary from status
 curl http://localhost:8080/platform/status | jq '.governance.questions'
+
+# Get all questions
+curl http://localhost:8080/platform/questions
+
+# Filter questions by status
+curl "http://localhost:8080/platform/questions?status=open"
+
+# Get specific question
+curl http://localhost:8080/platform/questions/Q-EXAMPLE-001
+```
+
+**Response structure (GET /platform/questions):**
+```json
+{
+  "questions": [
+    {
+      "id": "Q-EXAMPLE-001",
+      "summary": "Bundle flow found multiple ACs for the same requirement - unclear which to prioritize",
+      "status": "open",
+      "flow": "bundle",
+      "phase": "ac_selection",
+      "created_at": "2025-11-26T00:00:00Z"
+    }
+  ],
+  "total": 1
+}
+```
+
+**Response structure (GET /platform/questions/{id}):**
+```json
+{
+  "id": "Q-EXAMPLE-001",
+  "task_id": "implement_ac",
+  "req_ids": ["REQ-TPL-SUGGEST-NEXT"],
+  "ac_ids": ["AC-TPL-SUGGEST-NEXT-CLI"],
+  "summary": "Bundle flow found multiple ACs...",
+  "context": {
+    "flow": "bundle",
+    "phase": "ac_selection",
+    "description": "...",
+    "files_involved": ["specs/spec_ledger.yaml", "specs/tasks.yaml"]
+  },
+  "options": [
+    {
+      "label": "Implement AC-001 first (foundational)",
+      "description": "...",
+      "risk": "low",
+      "reversible": true
+    }
+  ],
+  "recommendation": {
+    "option_label": "Implement AC-001 first (foundational)",
+    "rationale": "...",
+    "confidence": "medium"
+  },
+  "created_by": "flow",
+  "created_at": "2025-11-26T00:00:00Z",
+  "status": "open"
+}
+```
+
+### Fork Registry
+
+**Use fork registry for:**
+- Tracking known forks of this template
+- Recording which kernel versions forks are based on
+- Connecting fork maintainers for collaboration
+- Identifying patterns for kernel backports
+
+**Examples:**
+- "Knowledge Hub fork for ML documentation platform"
+- "SDK template fork for Rust client libraries"
+- "Compliance fork for regulated industries"
+
+**Command:**
+```bash
+cargo xtask fork-list  # List all registered forks
+```
+
+**API:**
+```bash
+# Get all forks
+curl http://localhost:8080/platform/forks
+
+# Get specific fork
+curl http://localhost:8080/platform/forks/FORK-KHUB-001
+```
+
+**Response structure (GET /platform/forks):**
+```json
+{
+  "forks": [
+    {
+      "id": "FORK-KHUB-001",
+      "name": "Knowledge Hub",
+      "domain": "ml-documentation",
+      "status": "active",
+      "kernel_version": "v3.3.3"
+    }
+  ],
+  "total": 1
+}
+```
+
+**Response structure (GET /platform/forks/{name}):**
+```json
+{
+  "id": "FORK-KHUB-001",
+  "name": "Knowledge Hub",
+  "domain": "ml-documentation",
+  "kernel_version": "v3.3.3",
+  "status": "active",
+  "url": "https://github.com/org/knowledge-hub",
+  "maintainer": {
+    "name": "ML Team",
+    "contact": "ml-team@example.com"
+  },
+  "forked_at": "2025-11-01",
+  "last_synced": "2025-11-20",
+  "features": [
+    "GraphQL API integration",
+    "Extended platform endpoints for ML workflows"
+  ],
+  "pain_points": [
+    "FRICTION-BUNDLE-001"
+  ],
+  "notes": "Production ML documentation platform...",
+  "related_items": {
+    "issues": ["#123"],
+    "adrs": ["ADR-012"],
+    "friction": ["FRICTION-BUNDLE-001"]
+  }
+}
 ```
 
 ### Quick Reference Table
@@ -911,6 +1045,7 @@ curl http://localhost:8080/platform/status | jq '.governance.questions'
 | **ADR** | Architectural decisions | Internal (repo) | Permanent record |
 | **GitHub Issue** | Feature work, bugs | Public (GitHub) | Open → Closed |
 | **Question** | Spec ambiguity | Internal (repo) | Open → Answered → Resolved |
+| **Fork Registry** | Template fork tracking | Internal (repo) | Active → Archived |
 
 ### Decision Flow
 
@@ -1219,6 +1354,9 @@ curl http://localhost:8080/platform/tasks
 curl http://localhost:8080/platform/tasks/graph              # Task dependency graph (JSON)
 curl 'http://localhost:8080/platform/tasks/graph?format=mermaid'  # Mermaid diagram
 curl http://localhost:8080/platform/friction                 # Friction log entries
+curl http://localhost:8080/platform/questions                # Question artifacts
+curl "http://localhost:8080/platform/questions?status=open"  # Filter by status
+curl http://localhost:8080/platform/forks                    # Fork registry
 ```
 
 ### Environment Variables

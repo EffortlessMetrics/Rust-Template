@@ -202,9 +202,26 @@ pub fn calculate_stats(questions: &[Question]) -> QuestionStats {
     stats
 }
 
+/// JSON output structure for questions-list
+#[derive(Debug, Serialize)]
+struct QuestionsListJson {
+    timestamp: String,
+    total_count: usize,
+    stats: QuestionStatsJson,
+    questions: Vec<Question>,
+}
+
+#[derive(Debug, Serialize)]
+struct QuestionStatsJson {
+    open: usize,
+    answered: usize,
+    resolved: usize,
+    obsolete: usize,
+}
+
 /// List questions filtered by status
 #[allow(dead_code)]
-pub fn list_questions(status_filter: Option<&str>) -> Result<()> {
+pub fn list_questions(status_filter: Option<&str>, json: bool) -> Result<()> {
     let questions = load_all_questions()?;
 
     let filtered: Vec<&Question> = match status_filter {
@@ -213,41 +230,70 @@ pub fn list_questions(status_filter: Option<&str>) -> Result<()> {
     };
 
     if filtered.is_empty() {
-        println!("No questions found.");
+        if json {
+            // Empty JSON output
+            let output = QuestionsListJson {
+                timestamp: chrono::Utc::now().to_rfc3339(),
+                total_count: 0,
+                stats: QuestionStatsJson { open: 0, answered: 0, resolved: 0, obsolete: 0 },
+                questions: Vec::new(),
+            };
+            println!("{}", serde_json::to_string_pretty(&output)?);
+        } else {
+            println!("No questions found.");
+        }
         return Ok(());
     }
 
-    println!("\n{} Questions:\n", if status_filter.is_some() { "Filtered" } else { "All" });
-
-    for question in filtered {
-        let status_badge = match question.status.as_str() {
-            "open" => "⚠️  OPEN",
-            "answered" => "💬 ANSWERED",
-            "resolved" => "✅ RESOLVED",
-            "obsolete" => "🗑️  OBSOLETE",
-            _ => "❓ UNKNOWN",
-        };
-
-        println!("  {} {} - {}", status_badge, question.id, question.summary);
-        println!("     Flow: {} / {}", question.context.flow, question.context.phase);
-        if let Some(task_id) = &question.task_id {
-            println!("     Task: {}", task_id);
-        }
-        if !question.ac_ids.is_empty() {
-            println!("     ACs: {}", question.ac_ids.join(", "));
-        }
-        println!();
-    }
-
     let stats = calculate_stats(&questions);
-    println!(
-        "Total: {} (open: {}, answered: {}, resolved: {}, obsolete: {})\n",
-        stats.total_count,
-        stats.open_count,
-        stats.answered_count,
-        stats.resolved_count,
-        stats.obsolete_count
-    );
+
+    if json {
+        // JSON output
+        let output = QuestionsListJson {
+            timestamp: chrono::Utc::now().to_rfc3339(),
+            total_count: filtered.len(),
+            stats: QuestionStatsJson {
+                open: stats.open_count,
+                answered: stats.answered_count,
+                resolved: stats.resolved_count,
+                obsolete: stats.obsolete_count,
+            },
+            questions: filtered.into_iter().cloned().collect(),
+        };
+        println!("{}", serde_json::to_string_pretty(&output)?);
+    } else {
+        // Human-readable output
+        println!("\n{} Questions:\n", if status_filter.is_some() { "Filtered" } else { "All" });
+
+        for question in filtered {
+            let status_badge = match question.status.as_str() {
+                "open" => "⚠️  OPEN",
+                "answered" => "💬 ANSWERED",
+                "resolved" => "✅ RESOLVED",
+                "obsolete" => "🗑️  OBSOLETE",
+                _ => "❓ UNKNOWN",
+            };
+
+            println!("  {} {} - {}", status_badge, question.id, question.summary);
+            println!("     Flow: {} / {}", question.context.flow, question.context.phase);
+            if let Some(task_id) = &question.task_id {
+                println!("     Task: {}", task_id);
+            }
+            if !question.ac_ids.is_empty() {
+                println!("     ACs: {}", question.ac_ids.join(", "));
+            }
+            println!();
+        }
+
+        println!(
+            "Total: {} (open: {}, answered: {}, resolved: {}, obsolete: {})\n",
+            stats.total_count,
+            stats.open_count,
+            stats.answered_count,
+            stats.resolved_count,
+            stats.obsolete_count
+        );
+    }
 
     Ok(())
 }

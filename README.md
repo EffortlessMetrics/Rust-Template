@@ -170,6 +170,7 @@ For **Tier-1** parity (same environment as CI):
 
 - Linux, macOS, or **WSL2** on Windows.
 - [Nix](https://nixos.org/) with flakes enabled.
+- **VS Code** (optional but recommended) - pre-configured with tasks, debug configs, and extensions.
 
 This repo is Nix-first. You *can* run it without Nix, but you lose exact CI parity.
 
@@ -200,6 +201,8 @@ cargo run -p app-http
 # UI:   http://localhost:8080/ui
 # APIs: http://localhost:8080/platform/status
 ```
+
+**VS Code users:** Press `F5` to run with debugger, or `Ctrl+Shift+B` to run `kernel: smoke` (default build task). See [QUICKSTART.md](./docs/QUICKSTART.md#editor-setup-vs-code) for full editor setup.
 
 ---
 
