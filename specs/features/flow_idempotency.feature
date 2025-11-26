@@ -10,16 +10,18 @@ Feature: Flow Idempotency
   Background:
     Given I have a clean workspace with no uncommitted changes
 
-  @AC-TPL-FLOW-IDEMPOTENT @selftest @idempotent
+  @AC-TPL-FLOW-IDEMPOTENT @selftest @idempotent @ci-only
   Scenario: selftest produces stable output when run twice
+    # Note: Marked @ci-only to avoid recursive selftest within selftest BDD step
     When I run "cargo xtask selftest" and capture the output
     And I run "cargo xtask selftest" again and capture the output
     Then both selftest outputs should have the same pass/fail status
     And both selftest outputs should report the same number of checks
     And both selftest outputs should have identical summary sections
 
-  @AC-TPL-FLOW-IDEMPOTENT @selftest @idempotent
+  @AC-TPL-FLOW-IDEMPOTENT @selftest @idempotent @ci-only
   Scenario: selftest does not create duplicate artifacts
+    # Note: Marked @ci-only to avoid recursive selftest within selftest BDD step
     Given I record the workspace state before selftest
     When I run "cargo xtask selftest"
     And I record the workspace state after first selftest
@@ -43,8 +45,9 @@ Feature: Flow Idempotency
     Then no new files should be created by suggest-next
     And no existing files should be modified by suggest-next
 
-  @AC-TPL-FLOW-IDEMPOTENT @selftest @low-resources
+  @AC-TPL-FLOW-IDEMPOTENT @selftest @low-resources @ci-only
   Scenario: selftest idempotency works in low-resource mode
+    # Note: Marked @ci-only to avoid recursive selftest within selftest BDD step
     When I run "cargo xtask selftest" with "XTASK_LOW_RESOURCES=1" and capture the output
     And I run "cargo xtask selftest" with "XTASK_LOW_RESOURCES=1" again and capture the output
     Then both selftest outputs should have the same pass/fail status

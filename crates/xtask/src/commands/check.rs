@@ -111,10 +111,15 @@ fn run_change_aware_bdd(base_ref: &str, changed_files: &[String], plan: BddPlan)
                     println!("  - {}", file);
                 }
             }
-            crate::run_cmd(&mut crate::cargo_cmd(
-                "test",
-                &["-p", "acceptance", "--test", "acceptance"],
-            ))?;
+            let mut cmd = crate::cargo_cmd("test", &["-p", "acceptance", "--test", "acceptance"]);
+            // Exclude @ci-only scenarios unless in CI to avoid recursive selftest
+            let is_ci = std::env::var("CI").is_ok()
+                || std::env::var("GITHUB_ACTIONS").is_ok()
+                || std::env::var("GITLAB_CI").is_ok();
+            if !is_ci {
+                cmd.env("CUCUMBER_TAG_EXPRESSION", "not @ci-only");
+            }
+            crate::run_cmd(&mut cmd)?;
             println!("acceptance tests were run");
             Ok(())
         }
@@ -134,7 +139,13 @@ fn run_change_aware_bdd(base_ref: &str, changed_files: &[String], plan: BddPlan)
             }
 
             let mut cmd = crate::cargo_cmd("test", &["-p", "acceptance", "--test", "acceptance"]);
-            cmd.env("CUCUMBER_TAG_EXPRESSION", &expr);
+            // Exclude @ci-only scenarios unless in CI to avoid recursive selftest
+            let is_ci = std::env::var("CI").is_ok()
+                || std::env::var("GITHUB_ACTIONS").is_ok()
+                || std::env::var("GITLAB_CI").is_ok();
+            let final_expr =
+                if is_ci { expr.clone() } else { format!("({}) and not @ci-only", expr) };
+            cmd.env("CUCUMBER_TAG_EXPRESSION", &final_expr);
             crate::run_cmd(&mut cmd)?;
             println!("acceptance tests were run for: {}", expr);
             Ok(())
