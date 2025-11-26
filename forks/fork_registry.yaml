@@ -10,24 +10,19 @@ schema_version: "1.0"
 template_version: "v3.3.3"
 
 summary:
-  total_forks: 0
-  active_forks: 0
+  total_forks: 1
+  active_forks: 1
   archived_forks: 0
   experimental_forks: 0
 
-# Example fork entries (remove these and add real forks as they are registered)
-# Each fork should have a corresponding YAML file in forks/ directory
-#
-# Example:
-# forks:
-#   - id: FORK-KHUB-001
-#     name: "Knowledge Hub"
-#     domain: "ml-documentation"
-#     status: active
-#     kernel_version: v3.3.3
-#     file: forks/FORK-KHUB-001.yaml
-
-forks: []
+# Seed fork entry representing the template itself
+forks:
+  - id: FORK-TPL-SELF-001
+    name: "Rust-as-Spec Template"
+    domain: "platform-template"
+    status: active
+    kernel_version: v3.3.3
+    file: forks/FORK-TPL-SELF-001.yaml
 
 notes: >
   This registry tracks known forks of the Rust-as-Spec template kernel.

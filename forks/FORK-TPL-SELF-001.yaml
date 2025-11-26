@@ -1,0 +1,38 @@
+# Fork Entry: Rust-as-Spec Template (Seed Entry)
+#
+# This is a seed fork entry representing the template itself.
+# It demonstrates the fork registry schema and ensures that
+# /platform/forks and fork-list are non-empty by default.
+
+id: FORK-TPL-SELF-001
+name: "Rust-as-Spec Template"
+domain: "platform-template"
+kernel_version: v3.3.3
+status: active
+
+maintainer:
+  name: "Template Maintainers"
+  contact: "See repository MAINTAINERS file"
+
+forked_at: "2025-01-01"
+last_synced: "2025-01-01"
+
+features:
+  - "Full governance kernel (specs, schemas, BDD, platform APIs)"
+  - "xtask-driven developer workflows"
+  - "Selftest-enforced governance contracts"
+  - "Fork registry system for tracking template usage"
+  - "Multi-tier CI (Tier-1 selftest on Nix, Tier-2 on native Windows)"
+
+notes: >
+  This is the canonical Rust-as-Spec template kernel. It serves as:
+  - The reference implementation of the governance system
+  - A seed entry demonstrating the fork registry schema
+  - A baseline for comparing fork evolution and backport patterns
+
+  All other forks are derived from this template and track their
+  kernel_version relative to this repo's releases.
+
+related_items:
+  adrs:
+    - "ADR-008-forks"

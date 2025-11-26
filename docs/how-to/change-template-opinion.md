@@ -250,6 +250,99 @@ EOF
 
 ---
 
+## Worked Examples
+
+This section shows **complete, real-world override patterns** with clear motivations. These examples demonstrate when and why a fork would make specific changes.
+
+---
+
+### Worked Example A: Turn Off JSON CLI Core
+
+**When to use this:** Your fork doesn't need AI/IDP integration hooks yet. You're building a traditional service and don't want the `/platform/*` endpoints to expose JSON CLI data for agent consumption.
+
+**Why a fork would do this:**
+- The service is human-operated only (no AI agents or internal developer portals)
+- You want to reduce surface area and complexity
+- You're using the template for a simpler use case that doesn't need the AI-first features
+
+**The change:**
+
+```yaml
+# In your fork's specs/spec_ledger.yaml
+- id: AC-TPL-CLI-JSON-CORE
+  text: >
+    All xtask commands that provide structured output implement --json,
+    surfaced via /platform/devex/flows and used by AI agents and IDPs
+    for programmatic access.
+  tags: [template, ai, idp]  # Keep as template, not kernel
+  must_have_ac: false  # Changed from true - this is now optional in our fork
+  note: "JSON CLI disabled in this service; portal uses /platform/status only for runtime metrics."
+  tests:
+    - { type: integration, tag: "@AC-TPL-CLI-JSON-CORE", file: "specs/features/xtask_json.feature" }
+```
+
+**What this achieves:**
+- The AC remains in the ledger (for template sync), but is **not enforced**
+- Your fork can skip implementing `--json` flags for xtask commands
+- `/platform/devex/flows` can be simplified or removed
+- Selftest won't fail if JSON CLI features are missing
+
+**Follow-up steps:**
+1. Mark BDD scenarios as `@skip` in `specs/features/xtask_json.feature`
+2. Optionally remove JSON serialization code from xtask commands
+3. Update `/platform/devex/flows` handler to return a minimal response or 404
+4. Run `cargo xtask selftest` to confirm the change is clean
+
+**When NOT to do this:**
+- If you're building an IDP or agent-first platform (keep it `must_have_ac: true`)
+- If you want to preserve the option for future AI integration (keep the AC, just don't prioritize it)
+
+---
+
+### Worked Example B: Harden Friction to Kernel
+
+**When to use this:** Your fork treats **process friction** as a first-class governance gate. You want to **require** friction logging, not just recommend it.
+
+**Why a fork would do this:**
+- You're building a high-governance environment (finance, healthcare, infrastructure)
+- You want mandatory process improvement tracking, not optional
+- You need to prove to auditors that process issues are captured and reviewed
+
+**The change:**
+
+```yaml
+# In your fork's specs/spec_ledger.yaml
+- id: AC-TPL-GOV-FRICTION
+  text: >
+    Friction log entries are stored as structured files under friction/,
+    validated by cargo xtask friction-validate, and surfaced via
+    /platform/friction for review by maintainers and automation.
+  tags: [kernel, governance]  # Changed from [template] to [kernel] - now part of core contracts
+  must_have_ac: true  # Already true in template, but emphasized here
+  note: "This service treats friction logging as a first-class gate. All process issues must be logged."
+  tests:
+    - { type: integration, tag: "@AC-TPL-GOV-FRICTION", file: "specs/features/friction.feature" }
+```
+
+**What this achieves:**
+- Friction logging is now **kernel behavior** (can't be turned off in downstream forks)
+- CI can fail if friction entries are malformed or missing required fields
+- `/platform/friction` becomes a mandatory API endpoint
+- Selftest validates that friction validation is working
+
+**Follow-up steps:**
+1. Update CI to enforce `cargo xtask friction-validate` in Tier-1 gate
+2. Add linting rules to require friction entries for certain types of PRs (e.g., "if PR touches >5 files, must include friction log or exemption note")
+3. Integrate `/platform/friction` with your incident review process
+4. Run `cargo xtask selftest` to confirm enforcement is active
+
+**When NOT to do this:**
+- If your team is small and process tracking is informal (keep it `[template]`)
+- If you use external tools like Jira for process feedback (see Example 2 in the guide)
+- If you're not ready to enforce this level of governance rigor
+
+---
+
 ## Examples
 
 ### Example 1: Relax the Nix Requirement
