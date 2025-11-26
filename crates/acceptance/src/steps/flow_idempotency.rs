@@ -194,12 +194,7 @@ async fn when_run_with_env_again_and_capture(world: &mut World, command: String,
     world.xtask_context_mut().env.insert("IDEMPOTENCY_SECOND_OUTPUT".to_string(), output);
 }
 
-#[when(regex = r#"^I run "([^"]+)"$"#)]
-async fn when_run_idempotent_command(world: &mut World, command: String) {
-    let (stdout, stderr, status) = run_xtask_command(world, &command);
-    world.xtask_context_mut().last_command_output = Some(format!("{}\n{}", stdout, stderr));
-    world.xtask_context_mut().last_command_status = Some(status);
-}
+// Removed duplicate step definition - now using shared step from xtask_devex.rs
 
 #[when("I record the workspace state after first selftest")]
 async fn when_record_after_first_selftest(world: &mut World) {
