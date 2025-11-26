@@ -23,7 +23,7 @@ Auto-generated AC status from acceptance (BDD) and unit tests.
 |-------|-------|-------------|--------|------------------------|
 | AC-PLT-001 | US-TPL-PLT-001 | REQ-PLT-ONBOARDING | [PASS] pass | 1 / 3 |
 | AC-PLT-002 | US-TPL-PLT-001 | REQ-PLT-ONBOARDING | [PASS] pass | 1 / 3 |
-| AC-PLT-003 | US-TPL-PLT-001 | REQ-PLT-ONBOARDING | [PASS] pass | 1 / 3 |
+| AC-PLT-003 | US-TPL-PLT-001 | REQ-PLT-ONBOARDING | [FAIL] fail | 1 / 3 |
 | AC-PLT-004 | US-TPL-PLT-001 | REQ-PLT-DESIGN-SCAFFOLDING | [PASS] pass | 1 / 4 |
 | AC-PLT-005 | US-TPL-PLT-001 | REQ-PLT-DESIGN-SCAFFOLDING | [PASS] pass | 1 / 4 |
 | AC-PLT-006 | US-TPL-PLT-001 | REQ-PLT-SECURITY-GOVERNANCE | [PASS] pass | 1 / 3 |
@@ -86,3 +86,17 @@ Auto-generated AC status from acceptance (BDD) and unit tests.
 | AC-TPL-TASKS-CREATE-CLI | US-TPL-PLT-001 | REQ-TPL-PLATFORM-TASKS | [PASS] pass | 1 / 1 |
 | AC-TPL-TASKS-HTTP | US-TPL-PLT-001 | REQ-TPL-PLATFORM-TASKS | [PASS] pass | 1 / 1 |
 | AC-TPL-TASKS-UPDATE-CLI | US-TPL-PLT-001 | REQ-TPL-PLATFORM-TASKS | [PASS] pass | 1 / 1 |
+
+## Unmapped Scenarios
+
+Scenarios referencing non-existent ACs:
+
+- Scenario 'Fork by name endpoint returns 404 for unknown fork' references AC-TPL-PLATFORM-FORKS (in features/platform_introspection.feature)
+- Scenario 'Forks endpoint returns all registered forks' references AC-TPL-PLATFORM-FORKS (in features/platform_introspection.feature)
+- Scenario 'Question by ID endpoint returns 404 for unknown question' references AC-TPL-PLATFORM-QUESTIONS (in features/platform_introspection.feature)
+- Scenario 'Question by ID endpoint returns specific question' references AC-TPL-PLATFORM-QUESTIONS (in features/platform_introspection.feature)
+- Scenario 'Questions endpoint returns all questions' references AC-TPL-PLATFORM-QUESTIONS (in features/platform_introspection.feature)
+- Scenario 'Questions endpoint supports status filtering' references AC-TPL-PLATFORM-QUESTIONS (in features/platform_introspection.feature)
+- Scenario 'service-init is idempotent' references AC-TPL-SERVICE-INIT (in features/xtask_devex.feature)
+- Scenario 'service-init updates service branding' references AC-TPL-SERVICE-INIT (in features/xtask_devex.feature)
+- Scenario 'service-init validates service ID format' references AC-TPL-SERVICE-INIT (in features/xtask_devex.feature)

@@ -149,10 +149,11 @@ fn load_all_forks(workspace_root: &std::path::Path) -> Result<Vec<ForkEntry>, Ap
         }
 
         // Only load files matching FORK-*.yaml pattern
-        if let Some(filename) = path.file_name().and_then(|s| s.to_str())
-            && !filename.starts_with("FORK-")
-        {
-            continue;
+        #[allow(clippy::collapsible_if)]
+        if let Some(filename) = path.file_name().and_then(|s| s.to_str()) {
+            if !filename.starts_with("FORK-") {
+                continue;
+            }
         }
 
         match load_fork_entry(&path) {

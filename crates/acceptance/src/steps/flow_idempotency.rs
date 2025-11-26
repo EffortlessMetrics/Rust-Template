@@ -19,7 +19,7 @@ fn workspace_root(world: &World) -> PathBuf {
     }
 }
 
-fn run_xtask_command(world: &World, command: &str) -> (String, String, i32) {
+pub(crate) fn run_xtask_command(world: &World, command: &str) -> (String, String, i32) {
     let root = workspace_root(world);
 
     // Build xtask from the actual workspace manifest to ensure it's available
