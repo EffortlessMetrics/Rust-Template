@@ -1,0 +1,35 @@
+name: Skills Governance Lint
+
+on:
+  pull_request:
+    paths:
+      - '.claude/skills/**'
+      - 'docs/SKILLS_*.md'
+      - 'docs/adr/0020-*.md'
+      - 'specs/spec_ledger.yaml'
+      - 'crates/xtask/src/commands/skills.rs'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  skills-lint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions: { contents: read }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: Swatinem/rust-cache@v2
+      - uses: cachix/install-nix-action@v27
+      - name: Enable sccache
+        run: |
+          echo "RUSTC_WRAPPER=$(nix develop -c which sccache)" >> $GITHUB_ENV
+          echo "SCCACHE_GHA_ENABLED=1" >> $GITHUB_ENV
+          echo "CARGO_INCREMENTAL=0" >> $GITHUB_ENV
+          nix develop -c sccache --start-server || true
+      - name: Run Skills governance lint
+        run: nix develop -c cargo run -p xtask -- skills-lint
+      - name: Show sccache stats
+        if: always()
+        run: nix develop -c sccache --show-stats || true

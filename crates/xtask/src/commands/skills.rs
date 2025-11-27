@@ -147,18 +147,35 @@ pub fn run_lint() -> Result<()> {
         let path = entry.path();
         let slug = path.parent().unwrap().file_name().unwrap().to_string_lossy().to_string();
 
-        let errors = lint_skill(&slug, path, &name_re)?;
+        let (errors, warnings) = lint_skill(&slug, path, &name_re)?;
+        let rel_path = path.strip_prefix(&root).unwrap_or(path);
+
+        // Always print errors (they block Skill use)
         if !errors.is_empty() {
             any_errors = true;
-            let rel_path = path.strip_prefix(&root).unwrap_or(path);
-            println!("[SKILL LINT] {}:", rel_path.display());
-            for err in errors {
-                println!("  - {}", err.red());
+            println!("[SKILL LINT] {} - ERRORS:", rel_path.display());
+            for err in &errors {
+                println!("  {} {}", "✗".red(), err);
             }
             println!();
         }
+
+        // Always print warnings (they improve quality but don't block)
+        if !warnings.is_empty() {
+            println!("[SKILL LINT] {} - WARNINGS:", rel_path.display());
+            for warn in &warnings {
+                println!("  {} {}", "⚠".yellow(), warn);
+            }
+            println!();
+        }
+
+        // Print success message if no errors or warnings
+        if errors.is_empty() && warnings.is_empty() {
+            println!("[SKILL LINT] {} ✓", rel_path.display());
+        }
     }
 
+    // Only fail on errors, not warnings
     if any_errors {
         std::process::exit(1);
     }
@@ -166,11 +183,15 @@ pub fn run_lint() -> Result<()> {
     Ok(())
 }
 
-fn lint_skill(slug: &str, path: &Path, name_re: &Regex) -> Result<Vec<String>> {
+/// Lint a single Skill: (errors, warnings)
+/// - Errors: Hard failures that block Skill use (invalid YAML, missing required fields, etc.)
+/// - Warnings: Guidance that improves Skill quality but doesn't block (could be more specific, etc.)
+fn lint_skill(slug: &str, path: &Path, name_re: &Regex) -> Result<(Vec<String>, Vec<String>)> {
     let mut errors = Vec::new();
+    let mut warnings = Vec::new();
     let content = fs::read_to_string(path)?;
 
-    // Check for tabs in first few lines
+    // Check for tabs in first few lines (ERROR)
     if content.lines().take(20).any(|l| l.contains('\t')) {
         errors.push("Tabs found in SKILL.md (YAML must use spaces).".to_string());
     }
@@ -179,7 +200,7 @@ fn lint_skill(slug: &str, path: &Path, name_re: &Regex) -> Result<Vec<String>> {
         Some((f, b)) => (f, b),
         None => {
             errors.push("Missing frontmatter '---' at line 1".to_string());
-            return Ok(errors);
+            return Ok((errors, warnings));
         }
     };
 
@@ -187,11 +208,11 @@ fn lint_skill(slug: &str, path: &Path, name_re: &Regex) -> Result<Vec<String>> {
         Ok(v) => v,
         Err(e) => {
             errors.push(format!("YAML parse error: {}", e));
-            return Ok(errors);
+            return Ok((errors, warnings));
         }
     };
 
-    // Validate name
+    // Validate name (ERROR)
     match fm.get("name") {
         Some(serde_yaml::Value::String(name)) => {
             if !name_re.is_match(name) {
@@ -211,31 +232,58 @@ fn lint_skill(slug: &str, path: &Path, name_re: &Regex) -> Result<Vec<String>> {
         _ => errors.push("frontmatter 'name' must be a string.".to_string()),
     }
 
-    // Validate description
+    // Validate description (ERROR if missing/too long, WARNING if vague)
     match fm.get("description") {
         Some(serde_yaml::Value::String(desc)) => {
             if desc.trim().is_empty() {
                 errors.push("frontmatter 'description' must be a non-empty string.".to_string());
             } else if desc.len() > 1024 {
                 errors.push("frontmatter 'description' must be ≤1024 characters.".to_string());
+            } else {
+                // Soft check: description should include both "what" and "when"
+                let desc_lower = desc.to_lowercase();
+                let has_when = desc_lower.contains("when")
+                    || desc_lower.contains("use when")
+                    || desc_lower.contains("trigger")
+                    || desc_lower.contains("if ");
+                if !has_when {
+                    warnings.push(
+                        "description could be more specific: try including 'when to use' or trigger phrases."
+                            .to_string(),
+                    );
+                }
             }
         }
         _ => errors.push("frontmatter 'description' must be a non-empty string.".to_string()),
     }
 
-    // Validate allowed-tools
-    if let Some(tools) = fm.get("allowed-tools")
-        && !tools.is_sequence()
-    {
-        errors.push("frontmatter 'allowed-tools' must be a YAML list if present.".to_string());
+    // Validate allowed-tools: accept both YAML list and scalar string (ERROR for invalid)
+    if let Some(tools) = fm.get("allowed-tools") {
+        match tools {
+            serde_yaml::Value::Sequence(_) => {
+                // Valid: list of tools
+            }
+            serde_yaml::Value::String(s) => {
+                // Also acceptable: comma-separated string (e.g., "Read, Grep, Glob")
+                if s.trim().is_empty() {
+                    errors.push("frontmatter 'allowed-tools' must not be empty.".to_string());
+                }
+            }
+            _ => {
+                errors.push(
+                    "frontmatter 'allowed-tools' must be a YAML list or comma-separated string."
+                        .to_string(),
+                );
+            }
+        }
     }
 
-    // Validate body
+    // Validate body (WARNING if no headings)
     if !body.contains('#') {
-        errors.push("Markdown body should contain at least one heading (# …).".to_string());
+        warnings.push("Markdown body should contain at least one heading (# …).".to_string());
     }
 
-    Ok(errors)
+    Ok((errors, warnings))
 }
 
 fn split_frontmatter(content: &str) -> Option<(&str, &str)> {

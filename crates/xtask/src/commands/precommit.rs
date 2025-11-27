@@ -8,6 +8,9 @@ pub fn run() -> Result<()> {
     // Run core checks (fmt, clippy, tests)
     crate::commands::check::run()?;
 
+    // Run Skills format and lint if relevant files changed
+    run_skills_lint_if_changed()?;
+
     // Run AC status and auto-stage feature_status.md if it changed
     run_ac_status_with_autostage()?;
 
@@ -51,6 +54,68 @@ pub fn run() -> Result<()> {
     }
 
     println!("{}", "Pre-commit checks completed".green().bold());
+    Ok(())
+}
+
+fn run_skills_lint_if_changed() -> Result<()> {
+    // Check if any Skills-related files have changed (both staged and unstaged)
+    let paths_to_check = [
+        ".claude/skills/**",
+        "docs/SKILLS_*.md",
+        "specs/spec_ledger.yaml",
+        "crates/xtask/src/commands/skills.rs",
+    ];
+
+    let mut has_changes = false;
+
+    for pattern in &paths_to_check {
+        // Check staged changes
+        let staged_output = Command::new("git")
+            .args(["diff", "--cached", "--name-only", "--", pattern])
+            .output()?;
+
+        let staged_str = String::from_utf8_lossy(&staged_output.stdout);
+        if !staged_str.trim().is_empty() {
+            has_changes = true;
+            break;
+        }
+
+        // Check unstaged changes
+        let unstaged_output =
+            Command::new("git").args(["diff", "--name-only", "--", pattern]).output()?;
+
+        let unstaged_str = String::from_utf8_lossy(&unstaged_output.stdout);
+        if !unstaged_str.trim().is_empty() {
+            has_changes = true;
+            break;
+        }
+    }
+
+    if !has_changes {
+        println!("{} No Skills changes detected, skipping skills-lint", "⊘".cyan());
+        return Ok(());
+    }
+
+    // Run Skills format first
+    match crate::commands::skills::run_fmt() {
+        Ok(_) => {}
+        Err(_) => {
+            // Skills fmt exits with code 1 if files were modified, which is expected
+            println!("{} Skills format applied (files were modified)", "✓".green());
+        }
+    }
+
+    // Then run lint (with errors causing failure)
+    match crate::commands::skills::run_lint() {
+        Ok(_) => {
+            println!("{} Skills governance check passed", "✓".green());
+        }
+        Err(e) => {
+            println!("{} Skills governance check failed: {}", "✗".red(), e);
+            return Err(e);
+        }
+    }
+
     Ok(())
 }
 
