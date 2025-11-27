@@ -54,6 +54,23 @@ This table clarifies which ACs are **enforced kernel contracts** (must stay `mus
 
 **Override path:** See [docs/how-to/change-template-opinion.md](./how-to/change-template-opinion.md) for detailed instructions on promoting or demoting ACs in your fork
 
+### Philosophy Contracts (Summary)
+
+These REQs encode the template's opinionated stance. They define *how* the platform cell behaves, not just *what* it does:
+
+| REQ ID | What It Enforces | Default ACs |
+|--------|------------------|-------------|
+| REQ-TPL-OPINIONATED-DEFAULTS | Opinions live as testable ACs, not tribal knowledge | AC-TPL-OPINIONS-DOCUMENTED |
+| REQ-TPL-OVERRIDE-PATH | Forks change ACs/tests, not CI hacks | AC-TPL-OVERRIDE-DOC, AC-TPL-OVERRIDE-TRACEABLE |
+| REQ-TPL-AI-IDP-COMPAT | AI/IDP surfaces are first-class, not afterthoughts | AC-TPL-CLI-JSON-CORE, AC-TPL-PLATFORM-GOVERNANCE-APIS |
+| REQ-TPL-BDD-HARNESS | Deterministic exit codes for CI and agents | AC-TPL-BDD-EXIT-CODES |
+| REQ-TPL-FLOW-IDEMPOTENCY | Platform flows are safe to rerun | AC-TPL-FLOW-IDEMPOTENT |
+| REQ-TPL-GRAPH-INVARIANTS | Every REQ has an AC, every AC has a test | AC-TPL-GRAPH-REQ-HAS-AC, AC-TPL-GRAPH-AC-HAS-TEST |
+
+**Why this matters:** When you fork, these philosophy contracts carry over. If you want different behavior (e.g., no JSON CLI requirement), you explicitly demote the AC in your fork's `spec_ledger.yaml`. This keeps "what we enforce" visible in spec, not buried in CI config.
+
+**Cross-reference:** [`docs/how-to/pre-fork-checklist.md`](./how-to/pre-fork-checklist.md) → Phase 5: Choose Your Opinionation Level
+
 ---
 
 ## Key Capabilities
