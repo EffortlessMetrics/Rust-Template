@@ -117,8 +117,38 @@ pub fn run_with_verbosity(verbosity: crate::Verbosity) -> Result<()> {
     results.push("Skills governance", skills_ok, Some("Run `cargo run -p xtask -- skills-lint`"));
     println!();
 
-    // Step 3: BDD acceptance tests
-    println!("{}", "[3/9] Running BDD acceptance tests...".blue());
+    // Step 3: Agents governance lint
+    println!("{}", "[3/10] Checking Agents governance...".blue());
+    let step_start = Instant::now();
+    let agents_ok = if Path::new(".claude/agents").exists() {
+        match crate::commands::agents::run_lint() {
+            Ok(_) => {
+                let elapsed = step_start.elapsed();
+                if verbosity.is_verbose() {
+                    println!(
+                        "  {} Agents governance check passed ({:.2}s)",
+                        "✓".green(),
+                        elapsed.as_secs_f64()
+                    );
+                } else {
+                    println!("  {} Agents governance check passed", "✓".green());
+                }
+                true
+            }
+            Err(e) => {
+                eprintln!("  {} Agents governance check failed: {}", "✗".red(), e);
+                false
+            }
+        }
+    } else {
+        println!("  {} No Agents directory found (skipping)", "⚠".yellow());
+        true
+    };
+    results.push("Agents governance", agents_ok, Some("Run `cargo run -p xtask -- agents-lint`"));
+    println!();
+
+    // Step 4: BDD acceptance tests
+    println!("{}", "[4/10] Running BDD acceptance tests...".blue());
     let bdd_ok = if skip_bdd {
         println!(
             "  {} Skipping BDD tests because XTASK_SKIP_BDD=1 (avoid recursion in harness)",
@@ -155,8 +185,8 @@ pub fn run_with_verbosity(verbosity: crate::Verbosity) -> Result<()> {
     results.push("BDD acceptance tests", bdd_ok, Some("Run `cargo run -p xtask -- bdd`"));
     println!();
 
-    // Step 4: AC status mapping & ADR references
-    println!("{}", "[4/9] Running AC status mapping & ADR references...".blue());
+    // Step 5: AC status mapping & ADR references
+    println!("{}", "[5/10] Running AC status mapping & ADR references...".blue());
     let step_start = Instant::now();
 
     let mut mapping_ok = true;
@@ -198,8 +228,8 @@ pub fn run_with_verbosity(verbosity: crate::Verbosity) -> Result<()> {
     results.push("AC/ADR mapping", mapping_ok, Some("Run `cargo run -p xtask -- adr-check`"));
     println!();
 
-    // Step 5: LLM context bundler
-    println!("{}", "[5/9] Testing LLM context bundler...".blue());
+    // Step 6: LLM context bundler
+    println!("{}", "[6/10] Testing LLM context bundler...".blue());
     let step_start = Instant::now();
     let bundler_ok = match crate::commands::bundle::run("implement_ac") {
         Ok(_) => {
@@ -226,8 +256,8 @@ pub fn run_with_verbosity(verbosity: crate::Verbosity) -> Result<()> {
     );
     println!();
 
-    // Step 6: Policy tests (if conftest available)
-    println!("{}", "[6/9] Running policy tests...".blue());
+    // Step 7: Policy tests (if conftest available)
+    println!("{}", "[7/10] Running policy tests...".blue());
     let step_start = Instant::now();
     let policy_ok = if low_resource_mode {
         // Skip policy tests in low-resource mode as they can be resource-intensive
@@ -302,8 +332,8 @@ pub fn run_with_verbosity(verbosity: crate::Verbosity) -> Result<()> {
         Some("Run `cargo run -p xtask -- policy-test` or use `nix develop`"),
     );
     println!();
-    // Step 7: DevEx contract
-    println!("{}", "[7/9] Checking DevEx contract...".blue());
+    // Step 8: DevEx contract
+    println!("{}", "[8/10] Checking DevEx contract...".blue());
     let step_start = Instant::now();
     let devex_ok = match run_devex_contract(verbosity) {
         Ok(_) => {
@@ -331,8 +361,8 @@ pub fn run_with_verbosity(verbosity: crate::Verbosity) -> Result<()> {
     );
     println!();
 
-    // Step 8: Graph invariants
-    println!("{}", "[8/9] Checking governance graph invariants...".blue());
+    // Step 9: Graph invariants
+    println!("{}", "[9/10] Checking governance graph invariants...".blue());
     let step_start = Instant::now();
     let graph_ok = match crate::commands::graph_export::run_graph_invariants(verbosity.as_u8()) {
         Ok(_) => {
@@ -359,8 +389,8 @@ pub fn run_with_verbosity(verbosity: crate::Verbosity) -> Result<()> {
     results.push("Graph invariants", graph_ok, Some("Check governance graph for violations"));
     println!();
 
-    // Step 9: AC coverage
-    println!("{}", "[9/9] Checking AC coverage for v3.0 kernel...".blue());
+    // Step 10: AC coverage
+    println!("{}", "[10/10] Checking AC coverage for v3.0 kernel...".blue());
     let step_start = Instant::now();
     let coverage_ok = match run_ac_coverage_check(verbosity) {
         Ok(_) => {
@@ -888,14 +918,15 @@ mod tests {
         assert!(result.required_count > 0, "Should have at least some required commands");
     }
 
-    /// AC-PLT-019: selftest displays condensed summary with 9 steps
+    /// AC-PLT-019: selftest displays condensed summary with 10 steps
     /// This test verifies the step structure and naming.
     #[test]
-    fn selftest_summary_has_nine_steps() {
-        // The selftest runs 9 steps - verify the structure
+    fn selftest_summary_has_ten_steps() {
+        // The selftest runs 10 steps - verify the structure
         let expected_steps = [
             "Core checks",
             "Skills governance",
+            "Agents governance",
             "BDD scenarios",
             "AC/ADR mapping",
             "LLM bundler",
@@ -905,13 +936,17 @@ mod tests {
             "AC coverage",
         ];
 
-        // Verify we have exactly 9 steps
-        assert_eq!(expected_steps.len(), 9, "Selftest should have exactly 9 steps");
+        // Verify we have exactly 10 steps
+        assert_eq!(expected_steps.len(), 10, "Selftest should have exactly 10 steps");
 
         // Verify key governance steps are present
         assert!(
             expected_steps.contains(&"Skills governance"),
             "Skills governance step should be present"
+        );
+        assert!(
+            expected_steps.contains(&"Agents governance"),
+            "Agents governance step should be present"
         );
         assert!(
             expected_steps.contains(&"DevEx contract"),
