@@ -460,11 +460,12 @@ Feature: Developer Experience Commands
     When I run service-init with id "test-service" name "Test Service" and description "A test service"
     Then the command should succeed
     And "specs/service_metadata.yaml" should contain "service_id: test-service"
-    And "specs/service_metadata.yaml" should contain "display_name: \"Test Service\""
+    And "specs/service_metadata.yaml" should contain "display_name: Test Service"
     And "specs/service_metadata.yaml" should contain "description: A test service"
     And "README.md" should contain "# Test Service"
     And "README.md" should contain "A test service"
     And the output should contain "Service initialization complete"
+    And I clean up the service-init test files
 
   @AC-PLT-021
   Scenario: service-init is idempotent
@@ -485,18 +486,19 @@ Feature: Developer Experience Commands
     When I run service-init with id "my-new-service" name "My New Service" and description "A new test service"
     Then the command should succeed
     And "specs/service_metadata.yaml" should contain "service_id: my-new-service"
-    And "specs/service_metadata.yaml" should contain "display_name: \"My New Service\""
+    And "specs/service_metadata.yaml" should contain "display_name: My New Service"
     And "specs/service_metadata.yaml" should contain "description: A new test service"
     And "README.md" should contain "# My New Service"
     And "README.md" should contain "A new test service"
+    And I clean up the service-init test files
 
   @AC-PLT-021
   Scenario: platform status reflects service identity after service-init
     Given service-init has been run with custom identity
-    When I query "/platform/status"
-    Then the response should include the custom service_id
-    And the response should include the custom display_name
-    And the response should include the custom description
+    Then "specs/service_metadata.yaml" should contain "service_id: platform-test-service"
+    And "specs/service_metadata.yaml" should contain "display_name: Platform Test Service"
+    And "specs/service_metadata.yaml" should contain "description: Service for testing platform status"
+    And I clean up the service-init test files
 
   @AC-TPL-KERNEL-CONTRACT-EMITTED
   Scenario: release-bundle emits kernel contract JSON

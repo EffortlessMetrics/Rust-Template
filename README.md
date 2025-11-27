@@ -1,4 +1,4 @@
-# Rust-as-Spec Platform Cell (v3.3.3)
+# Test Service (v3.3.3)
 
 **Template Version:** v3.3.3 | **Kernel Baseline:** [v3.3.3-kernel](./docs/KERNEL_SNAPSHOT.md)
 
@@ -12,7 +12,7 @@
 > - [Troubleshooting Guide](docs/TROUBLESHOOTING.md) – when things go wrong
 > - Run `cargo xtask kernel-smoke` after cloning – it should be green
 
-This cell gives you a **single Rust service** with:
+A test service
 
 - **Schema-driven specs** (`specs/spec_ledger.yaml`, `specs/config_schema.yaml`)
 - **BDD-backed acceptance criteria** (Cucumber + Rust)

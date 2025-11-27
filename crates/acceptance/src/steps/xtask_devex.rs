@@ -752,9 +752,23 @@ async fn then_file_path_exists(world: &mut World, file_path: String) {
     );
 }
 
-#[then(regex = r#"^"([^"]+)" should contain "([^"]+)"$"#)]
+#[then(regex = r#"^"([^"]+)" should contain "(.+)"$"#)]
 async fn then_file_path_contains(world: &mut World, file_path: String, expected: String) {
-    let full_path = workspace_root(world).join(&file_path);
+    // Unescape the expected string if it came from feature file with escaped quotes
+    let expected = expected.replace(r#"\""#, "\"");
+    // For service-init tests, check the actual workspace root where the command ran
+    let root = if let Some(test_path) = &world.xtask_context().test_repo_path {
+        if test_path == &actual_workspace_root() {
+            // This is a service-init scenario running on the actual workspace
+            actual_workspace_root()
+        } else {
+            workspace_root(world)
+        }
+    } else {
+        workspace_root(world)
+    };
+
+    let full_path = root.join(&file_path);
     let content = fs::read_to_string(&full_path).unwrap_or_default();
     assert!(
         content.contains(&expected),
@@ -2350,21 +2364,44 @@ async fn given_clean_git_directory(world: &mut World) {
     regex = r#"^I run service-init with id "([^"]+)" name "([^"]+)" and description "([^"]+)"$"#
 )]
 async fn when_run_service_init(world: &mut World, id: String, name: String, description: String) {
-    let root = workspace_root(world);
+    let root = actual_workspace_root();
 
-    // Backup current files
+    // Backup current files for restoration after test
     let metadata_path = root.join("specs/service_metadata.yaml");
     let readme_path = root.join("README.md");
+    let metadata_backup_path = root.join("specs/.service_metadata.yaml.bak");
+    let readme_backup_path = root.join(".README.md.bak");
 
-    if metadata_path.exists() {
-        let backup = metadata_path.with_extension("yaml.bak");
-        let _ = fs::copy(&metadata_path, &backup);
+    let had_metadata = metadata_path.exists();
+    let had_readme = readme_path.exists();
+
+    if had_metadata {
+        let _ = fs::copy(&metadata_path, &metadata_backup_path);
+    }
+    if had_readme {
+        let _ = fs::copy(&readme_path, &readme_backup_path);
     }
 
-    if readme_path.exists() {
-        let backup = readme_path.with_extension("md.bak");
-        let _ = fs::copy(&readme_path, &backup);
-    }
+    // Store backup paths in world state for cleanup during teardown
+    world.xtask_context_mut().env.insert(
+        "SERVICE_INIT_METADATA_BACKUP".to_string(),
+        metadata_backup_path.display().to_string(),
+    );
+    world
+        .xtask_context_mut()
+        .env
+        .insert("SERVICE_INIT_README_BACKUP".to_string(), readme_backup_path.display().to_string());
+    world
+        .xtask_context_mut()
+        .env
+        .insert("SERVICE_INIT_HAD_METADATA".to_string(), had_metadata.to_string());
+    world
+        .xtask_context_mut()
+        .env
+        .insert("SERVICE_INIT_HAD_README".to_string(), had_readme.to_string());
+
+    // Set test_repo_path to actual workspace root so command runs there
+    world.xtask_context_mut().test_repo_path = Some(root.clone());
 
     // Run the command
     let command = format!(
@@ -2376,6 +2413,11 @@ async fn when_run_service_init(world: &mut World, id: String, name: String, desc
 
 #[when(regex = r#"^I run service-init with an invalid service ID "([^"]+)"$"#)]
 async fn when_run_service_init_invalid_id(world: &mut World, id: String) {
+    let root = actual_workspace_root();
+
+    // Set test_repo_path to actual workspace root so command runs there
+    world.xtask_context_mut().test_repo_path = Some(root);
+
     let command = format!(
         "cargo xtask service-init --id {} --name \"Test Service\" --description \"A test service\"",
         id
@@ -2453,6 +2495,181 @@ async fn then_second_run_reports(world: &mut World, expected: String) {
         "Output should contain '{}'\nActual output:\n{}",
         expected,
         output
+    );
+}
+
+#[then("I clean up the service-init test files")]
+async fn then_cleanup_service_init(world: &mut World) {
+    let ctx = world.xtask_context();
+
+    // Restore backed-up files if they exist
+    if let (Some(metadata_backup), Some(readme_backup)) =
+        (ctx.env.get("SERVICE_INIT_METADATA_BACKUP"), ctx.env.get("SERVICE_INIT_README_BACKUP"))
+    {
+        let metadata_backup_path = std::path::Path::new(metadata_backup);
+        let readme_backup_path = std::path::Path::new(readme_backup);
+
+        if let Some(had_metadata) = ctx.env.get("SERVICE_INIT_HAD_METADATA")
+            && had_metadata == "true"
+            && metadata_backup_path.exists()
+        {
+            let target = metadata_backup_path.parent().unwrap().join("service_metadata.yaml");
+            let _ = fs::rename(metadata_backup_path, &target);
+        }
+
+        if let Some(had_readme) = ctx.env.get("SERVICE_INIT_HAD_README")
+            && had_readme == "true"
+            && readme_backup_path.exists()
+        {
+            let target = readme_backup_path.parent().unwrap().join("README.md");
+            let _ = fs::rename(readme_backup_path, &target);
+        }
+    }
+
+    // Note: We rely on backup/restore above rather than git stash to avoid
+    // cross-test interference when multiple scenarios push/pop stashes.
+}
+
+// ============================================================================
+// Platform Status Steps (AC-PLT-021 - service identity reflection)
+// ============================================================================
+
+#[given("service-init has been run with custom identity")]
+async fn given_service_init_custom_identity(world: &mut World) {
+    let root = actual_workspace_root();
+    let ctx = world.xtask_context_mut();
+
+    // Service parameters
+    let service_id = "platform-test-service";
+    let display_name = "Platform Test Service";
+    let description = "Service for testing platform status";
+
+    // Backup current files for restoration after test
+    let metadata_path = root.join("specs/service_metadata.yaml");
+    let readme_path = root.join("README.md");
+    let metadata_backup_path = root.join("specs/.service_metadata.yaml.bak");
+    let readme_backup_path = root.join(".README.md.bak");
+
+    let had_metadata = metadata_path.exists();
+    let had_readme = readme_path.exists();
+
+    if had_metadata {
+        let _ = fs::copy(&metadata_path, &metadata_backup_path);
+    }
+    if had_readme {
+        let _ = fs::copy(&readme_path, &readme_backup_path);
+    }
+
+    // Store backup paths and flags for cleanup
+    ctx.env.insert(
+        "SERVICE_INIT_METADATA_BACKUP".to_string(),
+        metadata_backup_path.display().to_string(),
+    );
+    ctx.env
+        .insert("SERVICE_INIT_README_BACKUP".to_string(), readme_backup_path.display().to_string());
+    ctx.env.insert("SERVICE_INIT_HAD_METADATA".to_string(), had_metadata.to_string());
+    ctx.env.insert("SERVICE_INIT_HAD_README".to_string(), had_readme.to_string());
+
+    // Set test_repo_path to actual workspace root so later steps check the right location
+    ctx.test_repo_path = Some(root.clone());
+
+    // Run service-init with custom values
+    let output = Command::new("cargo")
+        .current_dir(root)
+        .args([
+            "run",
+            "-p",
+            "xtask",
+            "--",
+            "service-init",
+            "--id",
+            service_id,
+            "--name",
+            display_name,
+            "--description",
+            description,
+        ])
+        .output()
+        .expect("Failed to run service-init");
+
+    assert!(output.status.success(), "service-init should succeed");
+
+    // Store the values for later assertion
+    ctx.env.insert("TEST_SERVICE_ID".to_string(), service_id.to_string());
+    ctx.env.insert("TEST_DISPLAY_NAME".to_string(), display_name.to_string());
+    ctx.env.insert("TEST_DESCRIPTION".to_string(), description.to_string());
+}
+
+#[when("I query \"/platform/status\"")]
+async fn when_query_platform_status(world: &mut World) {
+    use axum::body::Body;
+    use axum::http::Request;
+    use http_body_util::BodyExt;
+    use tower::ServiceExt;
+
+    let request = Request::builder()
+        .method("GET")
+        .uri("/platform/status")
+        .body(Body::empty())
+        .expect("Failed to build request");
+
+    let response =
+        world.app.clone().oneshot(request).await.expect("Failed to query /platform/status");
+
+    let status = response.status().as_u16();
+    let headers = response.headers().clone();
+    let body_bytes = response.into_body().collect().await.map(|c| c.to_bytes()).unwrap_or_default();
+    let raw_body = String::from_utf8_lossy(&body_bytes).to_string();
+    let body: serde_json::Value = serde_json::from_slice(&body_bytes).unwrap_or_default();
+
+    world.last_response = Some(crate::world::Response { status, body, headers, raw_body });
+}
+
+#[then("the response should include the custom service_id")]
+async fn then_response_includes_service_id(world: &mut World) {
+    let ctx = world.xtask_context();
+    let service_id = ctx.env.get("TEST_SERVICE_ID").expect("TEST_SERVICE_ID not set");
+
+    let response = world.last_response.as_ref().expect("No response stored");
+    let body_str = &response.raw_body;
+
+    assert!(
+        body_str.contains(service_id),
+        "Response should contain service_id '{}'\nActual response:\n{}",
+        service_id,
+        body_str
+    );
+}
+
+#[then("the response should include the custom display_name")]
+async fn then_response_includes_display_name(world: &mut World) {
+    let ctx = world.xtask_context();
+    let display_name = ctx.env.get("TEST_DISPLAY_NAME").expect("TEST_DISPLAY_NAME not set");
+
+    let response = world.last_response.as_ref().expect("No response stored");
+    let body_str = &response.raw_body;
+
+    assert!(
+        body_str.contains(display_name),
+        "Response should contain display_name '{}'\nActual response:\n{}",
+        display_name,
+        body_str
+    );
+}
+
+#[then("the response should include the custom description")]
+async fn then_response_includes_description(world: &mut World) {
+    let ctx = world.xtask_context();
+    let description = ctx.env.get("TEST_DESCRIPTION").expect("TEST_DESCRIPTION not set");
+
+    let response = world.last_response.as_ref().expect("No response stored");
+    let body_str = &response.raw_body;
+
+    assert!(
+        body_str.contains(description),
+        "Response should contain description '{}'\nActual response:\n{}",
+        description,
+        body_str
     );
 }
 
