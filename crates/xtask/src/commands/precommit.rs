@@ -11,6 +11,9 @@ pub fn run() -> Result<()> {
     // Run Skills format and lint if relevant files changed
     run_skills_lint_if_changed()?;
 
+    // Run Agents lint if relevant files changed
+    run_agents_lint_if_changed()?;
+
     // Run AC status and auto-stage feature_status.md if it changed
     run_ac_status_with_autostage()?;
 
@@ -112,6 +115,59 @@ fn run_skills_lint_if_changed() -> Result<()> {
         }
         Err(e) => {
             println!("{} Skills governance check failed: {}", "✗".red(), e);
+            return Err(e);
+        }
+    }
+
+    Ok(())
+}
+
+fn run_agents_lint_if_changed() -> Result<()> {
+    // Check if any Agents-related files have changed (both staged and unstaged)
+    let paths_to_check = [
+        ".claude/agents/**",
+        "docs/AGENTS_*.md",
+        "specs/spec_ledger.yaml",
+        "crates/xtask/src/commands/agents.rs",
+    ];
+
+    let mut has_changes = false;
+
+    for pattern in &paths_to_check {
+        // Check staged changes
+        let staged_output = Command::new("git")
+            .args(["diff", "--cached", "--name-only", "--", pattern])
+            .output()?;
+
+        let staged_str = String::from_utf8_lossy(&staged_output.stdout);
+        if !staged_str.trim().is_empty() {
+            has_changes = true;
+            break;
+        }
+
+        // Check unstaged changes
+        let unstaged_output =
+            Command::new("git").args(["diff", "--name-only", "--", pattern]).output()?;
+
+        let unstaged_str = String::from_utf8_lossy(&unstaged_output.stdout);
+        if !unstaged_str.trim().is_empty() {
+            has_changes = true;
+            break;
+        }
+    }
+
+    if !has_changes {
+        println!("{} No Agents changes detected, skipping agents-lint", "⊘".cyan());
+        return Ok(());
+    }
+
+    // Run agents lint (with errors causing failure)
+    match crate::commands::agents::run_lint() {
+        Ok(_) => {
+            println!("{} Agents governance check passed", "✓".green());
+        }
+        Err(e) => {
+            println!("{} Agents governance check failed: {}", "✗".red(), e);
             return Err(e);
         }
     }

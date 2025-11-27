@@ -6,6 +6,7 @@ pub mod ac_suggest_scenarios;
 pub mod ac_tests;
 pub mod adr_check;
 pub mod adr_new;
+pub mod agents;
 pub mod audit;
 pub mod bdd;
 pub mod bundle;

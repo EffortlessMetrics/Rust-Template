@@ -347,6 +347,10 @@ enum Commands {
     #[command(next_help_heading = "🏛️ Governance Artifacts")]
     SkillsLint,
 
+    /// Lint Claude Code agents (.claude/agents/*.md)
+    #[command(next_help_heading = "🏛️ Governance Artifacts")]
+    AgentsLint,
+
     // ============================================================================
     // TASKS & HINTS (Work tracking & agent guidance)
     // ============================================================================
@@ -727,6 +731,7 @@ fn main() -> Result<()> {
         Commands::DevUp => commands::dev_up::run(),
         Commands::SkillsFmt => commands::skills::run_fmt(),
         Commands::SkillsLint => commands::skills::run_lint(),
+        Commands::AgentsLint => commands::agents::run_lint(),
         Commands::TestChanged { base, plan_only } => {
             commands::test_changed::run(commands::test_changed::TestChangedArgs { base, plan_only })
         }
@@ -868,6 +873,7 @@ pub fn all_command_names() -> Vec<&'static str> {
         "selftest",
         "skills-fmt",
         "skills-lint",
+        "agents-lint",
         "status",
         "suggest-next",
         "tasks-list",

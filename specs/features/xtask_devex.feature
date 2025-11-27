@@ -323,6 +323,37 @@ Feature: Developer Experience Commands
     When I run "cargo xtask skills-lint"
     Then the command should succeed
 
+  @AC-TPL-AGENTS-GOVERNANCE-001
+  Scenario: agents-lint validates all agent files when valid
+    Given Claude Code agents exist in .claude/agents/
+    When I run "cargo xtask agents-lint"
+    Then the command should succeed
+    And the output should contain "Agents governance check passed" or no agents found
+
+  @AC-TPL-AGENTS-GOVERNANCE-001
+  Scenario: agents-lint reports errors for invalid agent names
+    Given an agent file with invalid name "My-Invalid-Agent.md"
+    When I run "cargo xtask agents-lint"
+    Then the command should fail
+    And the output should contain "ERRORS"
+    And the output should contain "must match"
+
+  @AC-TPL-AGENTS-GOVERNANCE-002
+  Scenario: agents-lint validates agent requirement alignment
+    Given agents are defined in .claude/agents/
+    When I check the spec_ledger for agent REQs
+    Then each agent should have a corresponding REQ-*-AGENTS-* requirement
+    And each REQ should have at least one AC
+
+  @AC-TPL-AGENTS-TEMPLATE-DOC
+  Scenario: AGENTS_TEMPLATE.md exists and provides authoring guidance
+    Given I check the docs directory
+    When I look for AGENTS_TEMPLATE.md
+    Then the file should exist
+    And the file should contain frontmatter examples
+    And the file should contain step-by-step creation workflow
+    And the file should contain governance checklist
+
   @AC-TPL-AGENT-SKILLS
   Scenario: Skills directory contains required skill definitions
     Given Agent Skills exist in .claude/skills/
