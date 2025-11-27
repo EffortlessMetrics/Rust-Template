@@ -22,19 +22,37 @@ This is the frozen kernel baseline (v3.3.3-kernel) for the Rust-as-Spec platform
 ### Key Kernel Contracts (v3.3.3)
 
 **Philosophy & Governance:**
+
 - AC-TPL-BDD-EXIT-CODES: BDD harness exit codes distinguish test failures from skipped tests
 - AC-TPL-FORKS-STATUS-SUMMARY: Fork registry visible in /platform/status
 - AC-TPL-ARTIFACTS-HAVE-REFS: Governance artifacts support refs field for REQ/AC traceability
+- AC-TPL-CLI-JSON-CORE: version and ac-status support --json for AI/IDP integration
 
 **Environment & Testing:**
+
 - AC-PLT-001: `cargo xtask doctor` validates Rust, Nix, conftest, git
 - AC-PLT-020: BDD test execution and reporting (`cargo xtask bdd`)
 - AC-PLT-NIX-DEVSHELL: Nix devshell provides reproducible environment
 
 **Platform APIs:**
+
 - AC-PLT-015: Platform introspection endpoints (/platform/status, /graph, /docs/index)
 - AC-PLT-019: Task management via HTTP (GET /tasks, PATCH /tasks/{id}/status)
-- AC-PLT-PLATFORM-GOVERNANCE-APIS: Governance APIs (/friction, /questions, /forks)
+- AC-TPL-PLATFORM-GOVERNANCE-APIS: Governance APIs (/friction, /questions, /forks)
+
+### Kernel vs Template Defaults
+
+This table clarifies which ACs are **enforced kernel contracts** (must stay `must_have_ac: true`) vs **template defaults** (enabled here but forks can demote via `must_have_ac: false`):
+
+| Category | Kernel ACs (Enforced) | Template Defaults (Can Demote) |
+|----------|----------------------|-------------------------------|
+| JSON CLI | AC-TPL-CLI-JSON-CORE | AC-TPL-CLI-JSON-OUTPUT |
+| Artifacts & refs | AC-TPL-ARTIFACTS-HAVE-REFS | – |
+| Fork visibility | AC-TPL-FORKS-STATUS-SUMMARY | – |
+| Governance artifacts | – | AC-TPL-GOV-FRICTION, AC-TPL-GOV-FORKS |
+| BDD harness | AC-TPL-BDD-EXIT-CODES | – |
+
+**Override path:** See [docs/how-to/change-template-opinion.md](./how-to/change-template-opinion.md) for detailed instructions on promoting or demoting ACs in your fork
 
 ---
 

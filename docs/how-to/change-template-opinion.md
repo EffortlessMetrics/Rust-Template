@@ -44,6 +44,7 @@ Follow these steps to change any template opinion:
 Find the relevant REQ and AC in `specs/spec_ledger.yaml`.
 
 **Common opinion locations:**
+
 - **Nix requirement:** `REQ-PLT-ONBOARDING` → `AC-PLT-001`
 - **Governance artifacts (friction, forks, questions):** `REQ-TPL-GOV-ARTIFACTS` → `AC-TPL-GOV-FRICTION`, `AC-TPL-GOV-FORKS`
 - **Supply chain checks:** `REQ-PLT-SUPPLY-CHAIN` → `AC-PLT-007`, `AC-PLT-008`
@@ -168,6 +169,7 @@ cargo xtask selftest
 ```
 
 **Expected outcome:** Selftest should be **green** after your changes. If it's red, either:
+
 - You missed updating a test or implementation
 - The AC is referenced by other parts of the system (check dependencies)
 - You found a legitimate issue (see Step 6)
@@ -261,6 +263,7 @@ This section shows **complete, real-world override patterns** with clear motivat
 **When to use this:** Your fork doesn't need AI/IDP integration hooks yet. You're building a traditional service and don't want the `/platform/*` endpoints to expose JSON CLI data for agent consumption.
 
 **Why a fork would do this:**
+
 - The service is human-operated only (no AI agents or internal developer portals)
 - You want to reduce surface area and complexity
 - You're using the template for a simpler use case that doesn't need the AI-first features
@@ -282,18 +285,21 @@ This section shows **complete, real-world override patterns** with clear motivat
 ```
 
 **What this achieves:**
+
 - The AC remains in the ledger (for template sync), but is **not enforced**
 - Your fork can skip implementing `--json` flags for xtask commands
 - `/platform/devex/flows` can be simplified or removed
 - Selftest won't fail if JSON CLI features are missing
 
 **Follow-up steps:**
+
 1. Mark BDD scenarios as `@skip` in `specs/features/xtask_json.feature`
 2. Optionally remove JSON serialization code from xtask commands
 3. Update `/platform/devex/flows` handler to return a minimal response or 404
 4. Run `cargo xtask selftest` to confirm the change is clean
 
 **When NOT to do this:**
+
 - If you're building an IDP or agent-first platform (keep it `must_have_ac: true`)
 - If you want to preserve the option for future AI integration (keep the AC, just don't prioritize it)
 
@@ -304,6 +310,7 @@ This section shows **complete, real-world override patterns** with clear motivat
 **When to use this:** Your fork treats **process friction** as a first-class governance gate. You want to **require** friction logging, not just recommend it.
 
 **Why a fork would do this:**
+
 - You're building a high-governance environment (finance, healthcare, infrastructure)
 - You want mandatory process improvement tracking, not optional
 - You need to prove to auditors that process issues are captured and reviewed
@@ -325,18 +332,21 @@ This section shows **complete, real-world override patterns** with clear motivat
 ```
 
 **What this achieves:**
+
 - Friction logging is now **kernel behavior** (can't be turned off in downstream forks)
 - CI can fail if friction entries are malformed or missing required fields
 - `/platform/friction` becomes a mandatory API endpoint
 - Selftest validates that friction validation is working
 
 **Follow-up steps:**
+
 1. Update CI to enforce `cargo xtask friction-validate` in Tier-1 gate
 2. Add linting rules to require friction entries for certain types of PRs (e.g., "if PR touches >5 files, must include friction log or exemption note")
 3. Integrate `/platform/friction` with your incident review process
 4. Run `cargo xtask selftest` to confirm enforcement is active
 
 **When NOT to do this:**
+
 - If your team is small and process tracking is informal (keep it `[template]`)
 - If you use external tools like Jira for process feedback (see Example 2 in the guide)
 - If you're not ready to enforce this level of governance rigor
@@ -352,6 +362,7 @@ This section shows **complete, real-world override patterns** with clear motivat
 **Changes:**
 
 1. **Update AC-PLT-001** in `specs/spec_ledger.yaml`:
+
    ```yaml
    - id: AC-PLT-001
      text: "`cargo xtask doctor` validates Rust and git, optionally checks Nix and conftest"
@@ -361,6 +372,7 @@ This section shows **complete, real-world override patterns** with clear motivat
    ```
 
 2. **Update BDD** in `specs/features/xtask_devex.feature`:
+
    ```gherkin
    @AC-PLT-001
    Scenario: Doctor validates core tools (Nix optional)
@@ -371,11 +383,13 @@ This section shows **complete, real-world override patterns** with clear motivat
    ```
 
 3. **Update implementation** in `crates/xtask/src/commands/doctor.rs`:
+
    ```rust
    // Change Nix check from hard requirement to soft warning
    ```
 
 4. **Validate:**
+
    ```bash
    cargo xtask check
    cargo xtask test-ac AC-PLT-001
@@ -383,6 +397,7 @@ This section shows **complete, real-world override patterns** with clear motivat
    ```
 
 5. **Document:**
+
    ```bash
    echo "## Fork Differences\n- Nix is optional (AC-PLT-001 relaxed)" >> README.md
    ```
@@ -396,6 +411,7 @@ This section shows **complete, real-world override patterns** with clear motivat
 **Changes:**
 
 1. **Mark AC as optional** in `specs/spec_ledger.yaml`:
+
    ```yaml
    - id: AC-TPL-GOV-FRICTION
      text: "Friction log entries are stored as structured files under friction/, ..."
@@ -405,6 +421,7 @@ This section shows **complete, real-world override patterns** with clear motivat
    ```
 
 2. **Skip BDD** in `specs/features/friction.feature`:
+
    ```gherkin
    @AC-TPL-GOV-FRICTION @skip
    Feature: Friction Log Management
@@ -412,6 +429,7 @@ This section shows **complete, real-world override patterns** with clear motivat
    ```
 
 3. **Remove from platform API** (optional):
+
    ```rust
    // In crates/platform-http/src/routes.rs
    // Comment out or remove:
@@ -419,12 +437,14 @@ This section shows **complete, real-world override patterns** with clear motivat
    ```
 
 4. **Validate:**
+
    ```bash
    cargo xtask ac-status  # Should show AC-TPL-GOV-FRICTION as optional
    cargo xtask selftest
    ```
 
 5. **Document:**
+
    ```bash
    cat > docs/adr/ADR-FORK-002.md <<EOF
    ---
@@ -444,6 +464,7 @@ This section shows **complete, real-world override patterns** with clear motivat
 **Changes:**
 
 1. **Mark AC as optional** in `specs/spec_ledger.yaml`:
+
    ```yaml
    - id: AC-TPL-FORKS-STATUS-SUMMARY
      text: >
@@ -456,6 +477,7 @@ This section shows **complete, real-world override patterns** with clear motivat
    ```
 
 2. **Update or skip BDD** in `specs/features/platform_schema.feature`:
+
    ```gherkin
    @AC-TPL-FORKS-STATUS-SUMMARY @skip
    Scenario: Platform status includes fork registry
@@ -463,12 +485,14 @@ This section shows **complete, real-world override patterns** with clear motivat
    ```
 
 3. **Update implementation** in `crates/platform-http/src/handlers/platform_status.rs`:
+
    ```rust
    // Remove or comment out fork registry inclusion
    // governance.forks = Some(fork_data);
    ```
 
 4. **Validate:**
+
    ```bash
    cargo xtask ac-status  # Should show AC-TPL-FORKS-STATUS-SUMMARY as optional
    cargo xtask test-changed
@@ -476,6 +500,7 @@ This section shows **complete, real-world override patterns** with clear motivat
    ```
 
 5. **Document:**
+
    ```bash
    cat > docs/adr/ADR-FORK-003.md <<EOF
    ---
@@ -497,6 +522,7 @@ This section shows **complete, real-world override patterns** with clear motivat
 **Changes:**
 
 1. **Update AC** in `specs/spec_ledger.yaml`:
+
    ```yaml
    - id: AC-TPL-BDD-EXIT-CODES
      text: >
@@ -509,6 +535,7 @@ This section shows **complete, real-world override patterns** with clear motivat
    ```
 
 2. **Update BDD** in `specs/features/bdd_harness.feature`:
+
    ```gherkin
    @AC-TPL-BDD-EXIT-CODES
    Scenario: WIP scenarios cause non-zero exit
@@ -518,12 +545,14 @@ This section shows **complete, real-world override patterns** with clear motivat
    ```
 
 3. **Update implementation** in BDD test runner configuration:
+
    ```rust
    // Configure harness to fail on @wip scenarios
    // (implementation details depend on your BDD framework)
    ```
 
 4. **Validate:**
+
    ```bash
    cargo xtask test-ac AC-TPL-BDD-EXIT-CODES
    cargo xtask selftest
@@ -538,6 +567,7 @@ This section shows **complete, real-world override patterns** with clear motivat
 **Changes:**
 
 1. **Mark AC as optional** in `specs/spec_ledger.yaml`:
+
    ```yaml
    - id: AC-TPL-ARTIFACTS-HAVE-REFS
      text: >
@@ -549,12 +579,14 @@ This section shows **complete, real-world override patterns** with clear motivat
    ```
 
 2. **Update schema** (optional) - remove refs validation from YAML schemas:
+
    ```yaml
    # In schemas for questions/friction artifacts
    # refs: # ← Remove or make optional
    ```
 
 3. **Update BDD** (if tests exist):
+
    ```gherkin
    @AC-TPL-ARTIFACTS-HAVE-REFS @skip
    Feature: Artifact References
@@ -562,12 +594,14 @@ This section shows **complete, real-world override patterns** with clear motivat
    ```
 
 4. **Validate:**
+
    ```bash
    cargo xtask ac-status  # Should show AC-TPL-ARTIFACTS-HAVE-REFS as optional
    cargo xtask selftest
    ```
 
 5. **Document:**
+
    ```bash
    cat > docs/adr/ADR-FORK-004.md <<EOF
    ---
@@ -589,6 +623,7 @@ This section shows **complete, real-world override patterns** with clear motivat
 **Changes:**
 
 1. **Add AC** under an existing or new REQ in `specs/spec_ledger.yaml`:
+
    ```yaml
    - id: REQ-FORK-SECURITY
      title: "FIPS Compliance"
@@ -604,6 +639,7 @@ This section shows **complete, real-world override patterns** with clear motivat
    ```
 
 2. **Add BDD** in `specs/features/security.feature` (create if needed):
+
    ```gherkin
    @AC-FORK-SEC-001
    Scenario: Audit rejects non-FIPS crypto
@@ -614,17 +650,20 @@ This section shows **complete, real-world override patterns** with clear motivat
    ```
 
 3. **Implement** in `crates/xtask/src/commands/audit.rs`:
+
    ```rust
    // Add FIPS crypto check to audit command
    ```
 
 4. **Validate:**
+
    ```bash
    cargo xtask test-ac AC-FORK-SEC-001
    cargo xtask selftest
    ```
 
 5. **Update CI:**
+
    ```yaml
    # In .github/workflows/tier1-selftest.yml
    # Ensure `cargo xtask audit` is part of the Tier-1 gate
@@ -639,6 +678,7 @@ These are **anti-patterns** that break governance:
 ### ❌ Don't Patch CI to Skip Checks
 
 **Bad:**
+
 ```yaml
 # .github/workflows/tier1-selftest.yml
 - name: Run selftest
@@ -653,11 +693,13 @@ Change the spec (`AC-PLT-001`) and let `selftest` reflect your new rule.
 ### ❌ Don't Delete Feature Files Without Updating the Ledger
 
 **Bad:**
+
 ```bash
 rm specs/features/friction.feature  # NO! This creates orphaned ACs
 ```
 
 **Good:**
+
 1. Mark ACs as `must_have_ac: false` in `spec_ledger.yaml`
 2. Then update or remove feature files
 3. Run `cargo xtask ac-status` to verify no orphans
@@ -667,12 +709,14 @@ rm specs/features/friction.feature  # NO! This creates orphaned ACs
 ### ❌ Don't Add .env Hacks to Bypass Validation
 
 **Bad:**
+
 ```bash
 # .env
 SKIP_SELFTEST=true  # NO! This makes governance optional
 ```
 
 **Good:**
+
 Change the ACs so your desired behavior is the **governed behavior**.
 
 ---
@@ -680,12 +724,14 @@ Change the ACs so your desired behavior is the **governed behavior**.
 ### ❌ Don't Silently Change Behavior Without Updating Specs
 
 **Bad:**
+
 ```rust
 // In doctor.rs - just remove Nix check without updating spec
 // fn check_nix() { /* deleted */ }
 ```
 
 **Good:**
+
 1. Update `AC-PLT-001` text
 2. Update BDD scenario
 3. Update implementation
