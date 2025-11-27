@@ -164,15 +164,13 @@ Under the hood:
 
 ## 4. Quick start
 
-### 4.1 Tier-1 prerequisites (recommended)
+### 4.1 Prerequisites
 
-For **Tier-1** parity (same environment as CI):
+**Required:** [Nix with flakes](https://nixos.org/download.html) (Tier-1, recommended for exact CI parity)
 
-- Linux, macOS, or **WSL2** on Windows.
-- [Nix](https://nixos.org/) with flakes enabled.
-- **VS Code** (optional but recommended) - pre-configured with tasks, debug configs, and extensions.
+**Optional:** Docker, WSL2 (if on Windows), VS Code (recommended editor)
 
-This repo is Nix-first. You *can* run it without Nix, but you lose exact CI parity.
+**Note:** You can develop without Nix (Tier-2), but policy tests and exact CI parity require it. See [docs/reference/environment.md](docs/reference/environment.md) for detailed setup by platform and tier.
 
 ### 4.2 Getting up and running (5 minutes)
 
@@ -217,17 +215,17 @@ cargo run -p app-http
 
 ## 5. Platform support
 
-| Platform | Tier | Environment  | Selftest | Notes                         |
-| -------- | ---- | ------------ | -------- | ----------------------------- |
-| Linux    | 1    | Nix devshell | ✅        | Canonical dev + CI            |
-| macOS    | 1    | Nix devshell | ✅        | Cross-platform development    |
-| WSL2     | 1    | Nix in WSL2  | ✅        | Recommended for Windows users |
-| Windows  | 2    | Native       | ⚠️       | fmt/policy may be skipped     |
+| Platform | Tier | Environment  | Selftest | Notes                                      |
+| -------- | ---- | ------------ | -------- | ------------------------------------------ |
+| Linux    | 1    | Nix devshell | ✅        | Canonical dev + CI environment             |
+| macOS    | 1    | Nix devshell | ✅        | Intel and Apple Silicon supported          |
+| WSL2     | 1    | Nix in WSL2  | ✅        | Recommended for Windows; use Tier-1 setup  |
+| Windows  | 2    | Native       | ⚠️       | Core features work; some tools skipped     |
 
-**Tier-1**: full `selftest` including fmt, policy tests, and all gates.
-**Tier-2**: core functionality works, but file locking and toolchain differences mean some steps may be skipped or run with `XTASK_LOW_RESOURCES=1`.
+**Tier-1**: Full `selftest` with all gates (fmt, policy, clippy). Same environment as CI.
+**Tier-2**: Core functionality works. Some tools skipped. Use `XTASK_LOW_RESOURCES=1` if needed.
 
-See `docs/reference/platform-support.md` for details and recommended commands per tier.
+For detailed setup by platform and troubleshooting, see **[docs/reference/environment.md](docs/reference/environment.md)**.
 
 ---
 

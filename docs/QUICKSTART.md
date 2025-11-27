@@ -90,10 +90,10 @@ For step-by-step guidance, see:
 
 ## Prerequisites
 
-**Required:** [Nix with flakes](https://nixos.org/download.html) (for Tier-1 environment matching CI)
+**Required:** [Nix with flakes](https://nixos.org/download.html) (Tier-1 recommended for exact CI parity)
 **Optional:** Docker, WSL2 (if on Windows), VS Code (recommended editor)
 
-**Note:** You can develop without Nix (Tier-2), but policy tests and exact CI parity require it. See [Platform Support](reference/platform-support.md).
+For detailed setup by platform, troubleshooting, and Tier-2 guidance, see **[docs/reference/environment.md](reference/environment.md)**.
 
 ---
 
