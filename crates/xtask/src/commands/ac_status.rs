@@ -55,6 +55,8 @@ struct Ac {
     tests: Vec<TestMapping>,
     tests_total: usize,
     tests_executed: usize,
+    tags: Vec<String>,
+    must_have_ac: bool,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -166,6 +168,10 @@ struct Requirement {
 struct AcceptanceCriteria {
     id: String,
     text: String,
+    #[serde(default)]
+    tags: Vec<String>,
+    #[serde(default)]
+    must_have_ac: bool,
     #[serde(default)]
     tests: Vec<TestMapping>,
 }
@@ -321,6 +327,8 @@ fn parse_ledger(ledger_path: &Path) -> Result<HashMap<String, Ac>> {
                         tests: ac.tests,
                         tests_total,
                         tests_executed: 0,
+                        tags: ac.tags,
+                        must_have_ac: ac.must_have_ac,
                     },
                 );
             }
@@ -336,6 +344,13 @@ fn has_unit_tests(acs: &HashMap<String, Ac>) -> bool {
 
 fn is_automated_test(test: &TestMapping) -> bool {
     matches!(test.test_type.to_lowercase().as_str(), "unit" | "integration" | "bdd")
+}
+
+fn is_meta_ac(ac: &Ac) -> bool {
+    // Meta ACs are those with tags indicating they're test harness or example-level,
+    // not service-level contracts
+    ac.tags.iter().any(|t| matches!(t.as_str(), "harness" | "example" | "ci-only"))
+        || ac.tests.iter().any(|t| t.test_type.eq_ignore_ascii_case("ci"))
 }
 
 fn collect_unit_test_results(
@@ -768,6 +783,12 @@ fn generate_status_md(
     output.push_str("Auto-generated AC status from acceptance (BDD) and unit tests.\n\n");
 
     output.push_str("## AC Status Summary\n\n");
+    output.push_str("> **How to read this**\n");
+    output.push_str("> - `[PASS]` = at least one test (BDD or unit) ran and passed.\n");
+    output.push_str("> - `[FAIL]` = at least one test ran and failed.\n");
+    output
+        .push_str("> - `[UNKNOWN]` = no local test ran. In this repo, `[UNKNOWN]` is only used\n");
+    output.push_str(">   for meta / CI-only ACs (see sections at the end).\n\n");
     output.push_str("| AC ID | Story | Requirement | Status | Tests (executed/total) |\n");
     output.push_str("|-------|-------|-------------|--------|------------------------|\n");
 
@@ -788,17 +809,38 @@ fn generate_status_md(
         ));
     }
 
-    // Unmapped ACs
-    let mut unmapped_acs: Vec<_> =
+    // Unmapped ACs: Split into service-level and meta ACs
+    let unmapped: Vec<_> =
         acs.values().filter(|ac| ac.tests_total == 0 || ac.tests_executed == 0).collect();
-    unmapped_acs.sort_by_key(|ac| &ac.id);
 
-    if !unmapped_acs.is_empty() {
-        output.push_str("\n## Unmapped ACs\n\n");
-        output.push_str("ACs with no mapped or executed tests:\n\n");
-        for ac in unmapped_acs {
+    let service_unmapped: Vec<_> = unmapped.iter().filter(|ac| !is_meta_ac(ac)).copied().collect();
+    let meta_unmapped: Vec<_> = unmapped.iter().filter(|ac| is_meta_ac(ac)).copied().collect();
+
+    // Service-level unmapped ACs (should ideally be empty)
+    output.push_str("\n## Unmapped ACs (Service Behaviour)\n\n");
+    output.push_str(
+        "*(This list SHOULD be empty in this repo. If anything appears here, it's a bug.)*\n\n",
+    );
+    if service_unmapped.is_empty() {
+        output.push_str("- *(none)*\n");
+    } else {
+        for ac in service_unmapped {
             let text = ac.text.trim();
             output.push_str(&format!("- {}: {}\n", ac.id, text));
+        }
+    }
+
+    // Meta / CI-only ACs (intentionally not tested locally)
+    if !meta_unmapped.is_empty() {
+        output.push_str("\n## Meta / CI-only ACs (Not Executed Locally)\n\n");
+        output
+            .push_str("These ACs describe test harness or example workspace behaviour. They are\n");
+        output.push_str("validated in CI, not by local selftest:\n\n");
+        let mut sorted_meta: Vec<_> = meta_unmapped;
+        sorted_meta.sort_by_key(|ac| &ac.id);
+        for ac in sorted_meta {
+            let text = ac.text.trim();
+            output.push_str(&format!("- {} – {}\n", ac.id, text));
         }
     }
 
@@ -863,6 +905,8 @@ mod tests {
                 scenarios: Vec::new(),
                 tests_total: 1,
                 tests_executed: 0,
+                tags: vec!["kernel".to_string()],
+                must_have_ac: true,
                 tests: vec![TestMapping {
                     test_type: "unit".to_string(),
                     tag: "graph_invariants_req_has_ac".to_string(),
@@ -883,6 +927,8 @@ mod tests {
                 scenarios: vec!["Scenario A".to_string()],
                 tests_total: 1,
                 tests_executed: 0,
+                tags: vec!["kernel".to_string()],
+                must_have_ac: true,
                 tests: vec![TestMapping {
                     test_type: "integration".to_string(),
                     tag: "@AC-BDD".to_string(),
@@ -917,6 +963,8 @@ mod tests {
                 scenarios: Vec::new(),
                 tests_total: 1,
                 tests_executed: 0,
+                tags: vec!["kernel".to_string()],
+                must_have_ac: true,
                 tests: vec![TestMapping {
                     test_type: "unit".to_string(),
                     tag: "nonexistent_test".to_string(),
@@ -1055,7 +1103,7 @@ mod tests {
         // This test documents the stable JSON contract for AI/IDP consumers
         // Changes to this test indicate a breaking change to the --json output
         let output = AcStatusJson {
-            timestamp: "2025-11-26T00:00:00Z".to_string(),
+            timestamp: "2025-11-27T00:00:00Z".to_string(),
             kernel_acs: AcCategoryStats { total: 10, passing: 8, failing: 1, unknown: 1 },
             template_acs: AcCategoryStats { total: 5, passing: 4, failing: 0, unknown: 1 },
             coverage_percent: 80.0,

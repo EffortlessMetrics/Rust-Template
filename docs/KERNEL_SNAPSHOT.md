@@ -54,6 +54,8 @@ This table clarifies which ACs are **enforced kernel contracts** (must stay `mus
 
 **Override path:** See [docs/how-to/change-template-opinion.md](./how-to/change-template-opinion.md) for detailed instructions on promoting or demoting ACs in your fork
 
+**For full AC type classification (Kernel/Template/Meta) and detailed guidance:** See [`docs/feature_status_notes.md`](./feature_status_notes.md) §5.
+
 ### Philosophy Contracts (Summary)
 
 These REQs encode the template's opinionated stance. They define *how* the platform cell behaves, not just *what* it does:

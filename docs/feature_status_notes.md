@@ -141,20 +141,130 @@ Most ACs have good coverage:
 
 ---
 
-## 5. Distinction: Kernel vs Template vs Meta
+## 5. AC Type Classification
 
-| Type | Enforcement | Example |
-|------|-------------|---------|
-| **Kernel** | `must_have_ac: true` - Selftest fails if not passing | AC-PLT-001 (doctor) |
-| **Template** | `must_have_ac: false` - Documented but not enforced | AC-TPL-GOV-FRICTION |
-| **Meta/CI-only** | Not tested locally, validated in CI | AC-TPL-BDD-EXIT-CODES |
+This section provides the canonical reference for understanding the three types of acceptance criteria and how to work with them.
+
+### Classification Overview
+
+| Type | `must_have_ac` | Enforcement | Testing | Example | Fork Behavior |
+|------|---|---|---|---|---|
+| **Kernel** | `true` | Selftest fails if not passing | Tested locally via BDD/unit | AC-PLT-001 (doctor) | Cannot be demoted without breaking compatibility |
+| **Template** | `false` | Documented but not enforced | Tested locally when enabled | AC-TPL-GOV-FRICTION | Can be demoted/customized freely |
+| **Meta/CI-only** | `false` | Not tested locally, validated in CI | CI-only scenarios or harness-level tests | AC-TPL-BDD-EXIT-CODES | Test infrastructure, not service behavior |
+
+### Detailed Type Descriptions
+
+#### Kernel ACs (`must_have_ac: true`)
+
+Kernel ACs are **service-level contracts** that every fork must maintain. They define the minimum viable governance layer, DevEx commands, and platform guarantees.
+
+**Characteristics:**
+- Enforced by `cargo xtask selftest` – the step-8 AC coverage gate fails if any kernel AC is failing
+- Tested in local development (both BDD and unit tests)
+- Cannot be demoted in forks without breaking forward compatibility
+- Include: commands (doctor, check, selftest, ci-local), platform APIs (/status, /graph), and governance guarantees
+
+**Examples:**
+- AC-PLT-001: `cargo xtask doctor` validates environment
+- AC-PLT-015: Selftest enforces devex contract (required commands exist)
+- AC-TPL-CONFIG-VALIDATION: Configuration schema validation
+- AC-TPL-GRAPH-SELFTEST: Graph invariants enforcement
+
+#### Template ACs (`must_have_ac: false`)
+
+Template ACs are **customization points** or **optional features** that the template provides but forks can customize or disable. They're not enforced by selftest.
+
+**Characteristics:**
+- Documented in `spec_ledger.yaml` but **not enforced by selftest**
+- Tested locally when tests are present
+- Can be demoted (changed to `must_have_ac: false` per AC) without breaking the template
+- Include: governance artifacts (friction logging, fork registry), advanced platform features, and example workflows
+
+**Examples:**
+- AC-TPL-GOV-FRICTION: Friction logging infrastructure
+- AC-TPL-FORKS-STATUS-SUMMARY: Fork registry and visibility
+- AC-TPL-PLATFORM-AUTH-BASIC: Basic auth mode for platform APIs
+- AC-TPL-OVERRIDE-DOC: Documentation for customizing kernel ACs
+
+**Note:** Many template ACs are currently showing as UNKNOWN because they're **future work** – they're documented as goals but not yet implemented with tests. This is not a bug; it's the natural state of a roadmap.
+
+#### Meta / CI-only ACs (`must_have_ac: false`, tagged `[harness]` or `[example]`)
+
+Meta ACs describe **test harness behaviour** or **example workspace validation**, not service-level contracts. They're intentionally not tested in local selftest.
+
+**Characteristics:**
+- Not tested in local `cargo xtask selftest` (excluded via `@ci-only` tag in BDD)
+- Validated only in CI environments
+- No entry in the "Unmapped ACs (Service Behaviour)" section (appears in "Meta / CI-only ACs" section instead)
+- Include: test harness semantics, example fork builds, and recursive selftest validation
+
+**Examples:**
+- AC-TPL-BDD-EXIT-CODES: Harness returns exit 0 when tests pass (validated by CI harness)
+- AC-TPL-EXAMPLE-FORK-BUILDS: Example workspace builds and passes selftest in CI
 
 ### How to Identify
 
-1. Check `specs/spec_ledger.yaml` for the AC
-2. Look at `must_have_ac` field (true = kernel, false = template/meta)
-3. Check `tags` array (kernel, template, harness, example, ci-only)
-4. Check `tests:` section for `type: ci` entries
+To determine an AC's type, check `specs/spec_ledger.yaml`:
+
+1. **Look at `must_have_ac` field:**
+   - `true` → Kernel AC
+   - `false` → Template or Meta AC
+
+2. **Check the `tags` array:**
+   - `[kernel]` → Kernel AC (always kernel)
+   - `[template]` → Template AC (unless also has `[harness]` or `[example]`)
+   - `[template, harness]` → Meta AC (harness-level)
+   - `[template, example]` → Meta AC (example workspace)
+
+3. **Check the `tests` section:**
+   - `type: ci` → Meta AC (CI-only test)
+   - `type: bdd` or `type: unit` → Kernel or Template AC
+
+### Working with Each Type
+
+#### Kernel AC: Add/Change
+
+To add or modify a kernel AC:
+
+```bash
+# 1. Edit spec_ledger.yaml, add AC with must_have_ac: true, tags: [kernel, ...]
+# 2. Add BDD scenario in specs/features/*.feature with @AC-XXX tag
+# 3. Optionally add unit tests in crates/*/src/ or crates/*/tests/
+# 4. Run the validation ladder:
+cargo xtask check
+cargo xtask test-changed
+cargo xtask test-ac AC-XXX
+cargo xtask selftest  # Must pass
+```
+
+#### Template AC: Add/Change
+
+To add or modify a template AC:
+
+```bash
+# 1. Edit spec_ledger.yaml, add AC with must_have_ac: false, tags: [template, ...]
+# 2. Add BDD scenario and/or unit tests
+# 3. Run local tests:
+cargo xtask check
+cargo xtask test-changed
+# Selftest is not a gate for template ACs, but selftest should still pass overall
+cargo xtask selftest
+```
+
+#### Meta/CI-only AC: Add
+
+To add a meta AC (rare):
+
+```bash
+# 1. Edit spec_ledger.yaml, add AC with:
+#    must_have_ac: false
+#    tags: [template, harness] or [template, example]
+#    tests: [{ type: ci, ... }]
+# 2. Add @ci-only scenarios in BDD, or describe the CI-level validation
+# 3. Document why it's meta in the AC text
+# 4. Local selftest will skip it (correct); CI will validate it
+```
 
 ---
 
