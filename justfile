@@ -10,6 +10,12 @@ bdd:
 selftest:
 	cargo xtask selftest
 
+skills-lint:
+	cargo xtask skills-lint
+
+skills-fmt:
+	cargo xtask skills-fmt
+
 policy-test:
 	cargo xtask policy-test
 

@@ -54,15 +54,20 @@ cp ../../docs/SKILLS_TEMPLATE.md SKILL.md
 ### 4. Validate Locally
 
 ```bash
-# Format
+# Format (auto-fixes YAML structure and formatting)
 cargo xtask skills-fmt
 
-# Lint
+# Lint (checks for governance violations)
 cargo xtask skills-lint
 
-# Full governance check
+# Full governance check (includes skills-lint as Step 2/9)
 cargo xtask selftest
 ```
+
+**Note**: `skills-lint` is automatically run:
+- **Locally**: During `cargo xtask precommit` (change-aware: only if Skills files changed)
+- **CI**: On every PR that touches `.claude/skills/**` or related files (ci-skills.yml)
+- **Selftest**: As Step 2/9 in the full validation suite
 
 ### 5. Create PR
 
@@ -315,7 +320,7 @@ cargo xtask skills-lint
 cargo xtask check
 cargo xtask selftest
 
-# Expected: Step 4 "Skills governance validation" passes
+# Expected: Step 2/9 "Skills governance" passes
 ```
 
 ### Step 5: Create PR
@@ -375,7 +380,7 @@ Use this checklist to ensure your Skill passes governance:
 - [ ] `cargo xtask skills-fmt` runs without errors
 - [ ] `cargo xtask skills-lint` shows ✓ all checks pass
 - [ ] `cargo xtask check` passes
-- [ ] `cargo xtask selftest` passes (all 7 steps, especially step 4)
+- [ ] `cargo xtask selftest` passes (all 9 steps, especially step 2/9 "Skills governance")
 
 ### Git
 
