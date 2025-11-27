@@ -1,6 +1,6 @@
 use anyhow::{Context, Result};
 use colored::Colorize;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -145,13 +145,20 @@ pub fn run(version: &str) -> Result<()> {
     fs::write(&output_path, &content)
         .with_context(|| format!("Failed to write evidence file: {}", output_path.display()))?;
 
+    // Generate kernel contract JSON (AC-TPL-KERNEL-CONTRACT-EMITTED)
+    println!("📝 Generating kernel contract...");
+    let kernel_contract = collect_kernel_contract(root, version)?;
+    let contract_path = write_kernel_contract(&evidence_dir, version, &kernel_contract)?;
+
     println!();
     println!("{} Evidence bundle written to: {}", "✓".green(), output_path.display());
+    println!("{} Kernel contract written to: {}", "✓".green(), contract_path.display());
     println!();
     println!("{}", "Next steps:".bold());
     println!("  1. Review evidence: {}", format!("cat {}", output_path.display()).cyan());
-    println!("  2. Feed to LLM for changelog generation");
-    println!("  3. Update CHANGELOG.md with generated content");
+    println!("  2. Review kernel contract: {}", format!("cat {}", contract_path.display()).cyan());
+    println!("  3. Feed to LLM for changelog generation");
+    println!("  4. Update CHANGELOG.md with generated content");
 
     Ok(())
 }
@@ -440,6 +447,41 @@ struct AcDelta {
     removed: Vec<AcInfo>,
 }
 
+/// Kernel contract JSON structure for versioned platform interfaces
+/// AC-TPL-KERNEL-CONTRACT-EMITTED
+#[derive(Debug, Serialize)]
+struct KernelContract {
+    kernel_version: String,
+    generated_at: String,
+    commands: Vec<KernelCommand>,
+    platform_endpoints: Vec<KernelEndpoint>,
+    governance_schemas: Vec<KernelSchema>,
+}
+
+#[derive(Debug, Serialize)]
+struct KernelCommand {
+    name: String,
+    summary: String,
+    category: String,
+    required: bool,
+}
+
+#[derive(Debug, Serialize)]
+struct KernelEndpoint {
+    path: String,
+    method: String,
+    description: String,
+    response_type: String,
+}
+
+#[derive(Debug, Serialize)]
+struct KernelSchema {
+    name: String,
+    version: String,
+    description: String,
+    source_file: String,
+}
+
 #[derive(Debug, Clone)]
 struct AcInfo {
     id: String,
@@ -621,6 +663,79 @@ fn collect_ac_delta_section(root: &Path) -> Result<String> {
     }
 
     Ok(content)
+}
+
+/// Collect kernel contract data for versioned platform interface documentation
+/// AC-TPL-KERNEL-CONTRACT-EMITTED
+fn collect_kernel_contract(root: &Path, version: &str) -> Result<KernelContract> {
+    // Load devex_flows to get commands
+    let devex = spec_runtime::load_devex_flows(&root.join("specs/devex_flows.yaml"))
+        .context("Failed to load devex_flows.yaml for kernel contract")?;
+
+    // Collect commands from devex flows
+    let mut commands: Vec<KernelCommand> = devex
+        .commands
+        .iter()
+        .map(|(name, spec)| KernelCommand {
+            name: name.clone(),
+            summary: spec.summary.clone(),
+            category: spec.category.clone(),
+            required: spec.required,
+        })
+        .collect();
+
+    // Sort commands by name for consistent output
+    commands.sort_by(|a, b| a.name.cmp(&b.name));
+
+    // Get platform schemas and endpoints
+    let platform_schemas = spec_runtime::schema::get_all_schemas();
+
+    // Convert endpoints
+    let platform_endpoints: Vec<KernelEndpoint> = platform_schemas
+        .endpoints
+        .into_iter()
+        .map(|e| KernelEndpoint {
+            path: e.path,
+            method: e.method,
+            description: e.description,
+            response_type: e.response_type,
+        })
+        .collect();
+
+    // Convert schemas (without the full JSON schema to keep it readable)
+    let governance_schemas: Vec<KernelSchema> = platform_schemas
+        .schemas
+        .into_iter()
+        .map(|s| KernelSchema {
+            name: s.name,
+            version: s.version,
+            description: s.description,
+            source_file: s.source_file,
+        })
+        .collect();
+
+    Ok(KernelContract {
+        kernel_version: version.to_string(),
+        generated_at: chrono::Utc::now().to_rfc3339(),
+        commands,
+        platform_endpoints,
+        governance_schemas,
+    })
+}
+
+/// Write the kernel contract JSON file
+/// AC-TPL-KERNEL-CONTRACT-EMITTED
+fn write_kernel_contract(
+    evidence_dir: &Path,
+    version: &str,
+    contract: &KernelContract,
+) -> Result<PathBuf> {
+    let contract_path = evidence_dir.join(format!("kernel_contract.v{}.json", version));
+    let json = serde_json::to_string_pretty(contract)
+        .context("Failed to serialize kernel contract to JSON")?;
+    fs::write(&contract_path, &json)
+        .with_context(|| format!("Failed to write kernel contract: {}", contract_path.display()))?;
+    Ok(contract_path)
 }
 
 #[cfg(test)]

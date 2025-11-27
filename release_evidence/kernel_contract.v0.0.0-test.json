@@ -1,0 +1,46 @@
+{
+  "commands": [
+    {
+      "category": "validation",
+      "name": "selftest",
+      "required": true,
+      "summary": "Run template self-tests"
+    },
+    {
+      "category": "onboarding",
+      "name": "doctor",
+      "required": true,
+      "summary": "Check development environment"
+    }
+  ],
+  "generated_at": "2025-01-01T00:00:00Z",
+  "governance_schemas": [
+    {
+      "description": "Spec ledger schema",
+      "name": "spec_ledger",
+      "source_file": "specs/spec_ledger.yaml",
+      "version": "1.0"
+    },
+    {
+      "description": "Tasks schema",
+      "name": "tasks",
+      "source_file": "specs/tasks.yaml",
+      "version": "1.0"
+    }
+  ],
+  "kernel_version": "0.0.0-test",
+  "platform_endpoints": [
+    {
+      "description": "Get platform status",
+      "method": "GET",
+      "path": "/platform/status",
+      "response_type": "PlatformStatus"
+    },
+    {
+      "description": "Get governance graph",
+      "method": "GET",
+      "path": "/platform/graph",
+      "response_type": "Graph"
+    }
+  ]
+}

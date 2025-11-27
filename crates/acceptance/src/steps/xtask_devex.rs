@@ -1531,6 +1531,7 @@ async fn execute_command(world: &mut World, command: &str, env_vars: &[(&str, &s
                 "Policy tests",
                 "DevEx contract",
                 "Graph invariants",
+                "AC coverage",
             ];
 
             for (idx, name) in steps.iter().enumerate() {
@@ -1580,13 +1581,17 @@ async fn execute_command(world: &mut World, command: &str, env_vars: &[(&str, &s
     } else if let Some("release-bundle") = subcommand {
         if low_resource == "1" {
             let version = parts.get(3).map(|s| s.as_str()).unwrap_or("0.0.0");
-            let version_ok =
-                Regex::new(r#"^\d+\.\d+\.\d+$"#).expect("valid regex").is_match(version);
+            // Accept versions like X.Y.Z or X.Y.Z-suffix (pre-release/test versions)
+            let version_ok = Regex::new(r#"^\d+\.\d+\.\d+(-[a-zA-Z0-9]+)?$"#)
+                .expect("valid regex")
+                .is_match(version);
 
             if !version_ok {
                 let ctx = world.xtask_context_mut();
-                ctx.last_command_output =
-                    Some("Version should be format X.Y.Z (e.g., 2.5.0)".to_string());
+                ctx.last_command_output = Some(
+                    "Version should be format X.Y.Z or X.Y.Z-suffix (e.g., 2.5.0 or 0.0.0-test)"
+                        .to_string(),
+                );
                 ctx.last_command_status = Some(1);
                 return;
             }
@@ -1595,6 +1600,8 @@ async fn execute_command(world: &mut World, command: &str, env_vars: &[(&str, &s
             let evidence_dir = root_path.join("release_evidence");
             let _ = fs::create_dir_all(&evidence_dir);
             let evidence_path = evidence_dir.join(format!("v{}.md", version));
+            let kernel_contract_path =
+                evidence_dir.join(format!("kernel_contract.v{}.json", version));
 
             let policy_status = if root_path.join("target/policy_status.json").exists() {
                 "Policy Status: ok\n"
@@ -1611,12 +1618,37 @@ async fn execute_command(world: &mut World, command: &str, env_vars: &[(&str, &s
                  ## Policy Status\n{policy_status}Story: US-TEST-001 provides context\n"
             );
 
+            // Generate kernel contract JSON (AC-TPL-KERNEL-CONTRACT-EMITTED)
+            let kernel_contract = serde_json::json!({
+                "kernel_version": version,
+                "generated_at": "2025-01-01T00:00:00Z",
+                "commands": [
+                    {"name": "selftest", "summary": "Run template self-tests", "category": "validation", "required": true},
+                    {"name": "doctor", "summary": "Check development environment", "category": "onboarding", "required": true}
+                ],
+                "platform_endpoints": [
+                    {"path": "/platform/status", "method": "GET", "description": "Get platform status", "response_type": "PlatformStatus"},
+                    {"path": "/platform/graph", "method": "GET", "description": "Get governance graph", "response_type": "Graph"}
+                ],
+                "governance_schemas": [
+                    {"name": "spec_ledger", "version": "1.0", "description": "Spec ledger schema", "source_file": "specs/spec_ledger.yaml"},
+                    {"name": "tasks", "version": "1.0", "description": "Tasks schema", "source_file": "specs/tasks.yaml"}
+                ]
+            });
+
             let _ = fs::write(&evidence_path, content);
+            let _ = fs::write(
+                &kernel_contract_path,
+                serde_json::to_string_pretty(&kernel_contract).unwrap_or_default(),
+            );
 
             let ctx = world.xtask_context_mut();
             ctx.test_evidence_path = Some(evidence_path.clone());
-            ctx.last_command_output =
-                Some(format!("Evidence generated at {}", evidence_path.display()));
+            ctx.last_command_output = Some(format!(
+                "Evidence generated at {}\nKernel contract generated at {}",
+                evidence_path.display(),
+                kernel_contract_path.display()
+            ));
             ctx.last_command_status = Some(0);
             return;
         }

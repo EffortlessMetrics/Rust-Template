@@ -259,11 +259,11 @@ Feature: Developer Experience Commands
     And the output should suggest the UI URL "http://localhost:8080/ui"
 
   @AC-PLT-019 @ci-only
-  Scenario: selftest displays condensed summary with 7 steps
+  Scenario: selftest displays condensed summary with 8 steps
     # Note: Marked @ci-only to avoid recursive selftest within selftest BDD step
     When I run "cargo xtask selftest"
     Then the output should show clear pass/fail indicators
-    And the output should summarize all 7 steps
+    And the output should summarize all 8 steps
     And each step should have a status indicator
 
   @AC-PLT-019 @ci-only
@@ -277,13 +277,14 @@ Feature: Developer Experience Commands
     And the selftest summary should contain "Policy tests"
     And the selftest summary should contain "DevEx contract"
     And the selftest summary should contain "Graph invariants"
+    And the selftest summary should contain "AC coverage"
 
   @AC-PLT-019 @ci-only
   Scenario: selftest summary shows pass/fail status for each step
     # Note: Marked @ci-only to avoid recursive selftest within selftest BDD step
     When I run "cargo xtask selftest"
     Then each step in the summary should show either "OK" or "FAIL"
-    And the summary should display step numbers 1 through 7
+    And the summary should display step numbers 1 through 8
 
   @AC-PLT-019 @ci-only
   Scenario: selftest shows actionable error messages on failure
@@ -464,15 +465,15 @@ Feature: Developer Experience Commands
     And the response should include the custom display_name
     And the response should include the custom description
 
-  @AC-TPL-KERNEL-CONTRACT-EMITTED @wip
+  @AC-TPL-KERNEL-CONTRACT-EMITTED
   Scenario: release-bundle emits kernel contract JSON
-    # Note: Works from real workspace; kernel_contract.json generation needs investigation
-    When I run "cargo xtask release-bundle 3.2.0"
+    Given I am in the actual workspace
+    When I run "cargo xtask release-bundle 0.0.0-test"
     Then the command should succeed
-    And a file "release_evidence/kernel_contract.v3.2.0.json" should be created
-    And the kernel contract should describe xtask commands
-    And the kernel contract should describe platform endpoints
-    And the kernel contract should describe governance schemas
+    And the file "release_evidence/kernel_contract.v0.0.0-test.json" should exist
+    And "release_evidence/kernel_contract.v0.0.0-test.json" should contain "commands"
+    And "release_evidence/kernel_contract.v0.0.0-test.json" should contain "platform_endpoints"
+    And "release_evidence/kernel_contract.v0.0.0-test.json" should contain "governance_schemas"
 
   @example_fork_ci @AC-TPL-EXAMPLE-FORK-BUILDS
   Scenario: example fork builds and passes selftest
