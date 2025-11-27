@@ -43,11 +43,30 @@ Opinions encoded as ACs mean:
 
 ---
 
-## 1. Current State (v3.3.3)
+## 1. Kernel v3.3.3 Closure
+
+**Status:** Frozen as of 2025-11-27.
+
+The v3.3.3 kernel is **closed**. No new features land here. All work now targets:
+
+- **Forks**: Build services on v3.3.3 baseline; capture friction
+- **v3.4.0**: Kernel improvements driven by real fork feedback
+
+This closure is enforced:
+
+- Git tag: `v3.3.3-kernel` marks the frozen baseline
+- `ROADMAP.md` updated to reflect closure
+- `docs/reference/environment.md` added for clear setup guidance
+
+To fork from v3.3.3, start with `docs/how-to/FIRST_FORK.md`.
+
+---
+
+## 2. Current State (v3.3.3)
 
 The kernel has reached a stable, forkable baseline. All acceptance criteria pass, all selftest gates pass.
 
-### 1.1 Governance Status
+### 2.1 Governance Status
 
 | Metric | Value |
 |--------|-------|
@@ -57,7 +76,7 @@ The kernel has reached a stable, forkable baseline. All acceptance criteria pass
 | **Policy Tests** | 22/22 passing |
 | **BDD Scenarios** | 110+ passing |
 
-### 1.2 What's Working
+### 2.2 What's Working
 
 **Runtime & APIs:**
 
@@ -85,7 +104,7 @@ The kernel has reached a stable, forkable baseline. All acceptance criteria pass
 - Pre-commit hooks with auto-staging
 - AC/ADR bidirectional mapping
 
-### 1.3 Verification
+### 2.3 Verification
 
 ```bash
 nix develop
@@ -97,11 +116,11 @@ cargo run -p app-http      # Listening on :8080
 
 ---
 
-## 2. What's Been Completed (v3.3.3 Polish)
+## 3. What's Been Completed (v3.3.3 Polish)
 
 The following gaps have been addressed:
 
-### 2.1 Documentation ✅
+### 3.1 Documentation ✅
 
 | Item | Status | Location |
 |------|--------|----------|
@@ -114,8 +133,9 @@ The following gaps have been addressed:
 | **CI workflows reference** | ✅ Complete | `docs/reference/ci-workflows.md` |
 | **Branch protection setup** | ✅ Complete | `docs/how-to/setup-branch-protection.md` |
 | **Tag signing setup** | ✅ Complete | `docs/how-to/setup-tag-signing.md` |
+| **Environment setup guide** | ✅ Complete | `docs/reference/environment.md` |
 
-### 2.2 Operational Tooling ✅
+### 3.2 Operational Tooling ✅
 
 | Item | Status | Command/Endpoint |
 |------|--------|------------------|
@@ -131,7 +151,7 @@ The following gaps have been addressed:
 | **Questions HTTP API** | ✅ Complete | `GET /platform/questions`, `/platform/questions/{id}` |
 | **Forks HTTP API** | ✅ Complete | `GET /platform/forks`, `/platform/forks/{name}` |
 
-### 2.5 Editor Integration ✅
+### 3.3 Editor Integration ✅
 
 | Item | Status | Location |
 |------|--------|----------|
@@ -140,13 +160,13 @@ The following gaps have been addressed:
 | **VS Code launch configs** | ✅ Complete | `.vscode/launch.json` |
 | **VS Code settings** | ✅ Complete | `.vscode/settings.json` |
 
-### 2.3 Test Isolation ✅
+### 3.4 Test Isolation ✅
 
 | Item | Status | Notes |
 |------|--------|-------|
 | **BDD test isolation** | ✅ Fixed | Tests no longer pollute tracked files |
 
-### 2.4 Technical Debt ✅
+### 3.5 Technical Debt ✅
 
 | Item | Status | Notes |
 |------|--------|-------|
@@ -155,24 +175,24 @@ The following gaps have been addressed:
 
 ---
 
-## 3. What's Still Needed
+## 4. What's Still Needed
 
 Only a few items remain - all now have documentation or are external dependencies:
 
-### 3.1 Manual Configuration Required
+### 4.1 Manual Configuration Required
 
 | Item | Impact | Documentation | Action Required |
 |------|--------|---------------|-----------------|
 | **Branch protection** | CI can be bypassed | `docs/how-to/setup-branch-protection.md` | Run `.github/scripts/setup-branch-protection.sh` |
 | **Tag signing** | Releases not cryptographically verified | `docs/how-to/setup-tag-signing.md` | Set up GPG key and configure Git |
 
-### 3.2 Validation Gap
+### 4.2 Validation Gap
 
 | Gap | Impact | Effort | Notes |
 |-----|--------|--------|-------|
 | **No second service validation** | Template assumptions untested in real use | High | Requires building a real service from the template |
 
-### 3.3 External Dependencies
+### 4.3 External Dependencies
 
 | Item | Impact | Notes |
 |------|--------|-------|
@@ -180,9 +200,9 @@ Only a few items remain - all now have documentation or are external dependencie
 
 ---
 
-## 4. Path Forward Options
+## 5. Path Forward Options
 
-### Option A: Minimal (Lock and Fork)
+### 5.1 Option A: Minimal (Lock and Fork)
 
 **Goal:** Freeze the kernel as-is, use it for services, let friction drive improvements.
 
@@ -210,7 +230,7 @@ Only a few items remain - all now have documentation or are external dependencie
 - Documentation incomplete
 - May hit issues in first fork
 
-### Option B: Consolidate (Fill Documentation Gaps)
+### 5.2 Option B: Consolidate (Fill Documentation Gaps)
 
 **Goal:** Complete documentation before first fork.
 
@@ -237,7 +257,7 @@ Only a few items remain - all now have documentation or are external dependencie
 - Documentation may not match reality
 - Speculative improvements
 
-### Option C: Validate (Second Service First)
+### 5.3 Option C: Validate (Second Service First)
 
 **Goal:** Prove the template works before declaring it ready.
 
@@ -265,7 +285,7 @@ Only a few items remain - all now have documentation or are external dependencie
 
 ---
 
-## 5. Recommended Path
+## 6. Recommended Path
 
 **Option C (Validate) is recommended** for these reasons:
 
@@ -301,9 +321,9 @@ Week 4: Documentation
 
 ---
 
-## 6. Quick Reference
+## 7. Quick Reference
 
-### Day-0 Commands (New Clone)
+### 7.1 Day-0 Commands (New Clone)
 
 ```bash
 nix develop                    # Enter devshell
@@ -312,7 +332,7 @@ cargo xtask kernel-smoke       # Quick validation
 cargo run -p app-http          # Start service
 ```
 
-### Fork Initialization
+### 7.2 Fork Initialization
 
 ```bash
 cargo xtask service-init \
@@ -321,7 +341,7 @@ cargo xtask service-init \
   --description "My service description"
 ```
 
-### Development Commands
+### 7.3 Development Commands
 
 ```bash
 cargo xtask check              # Fast local checks
@@ -332,7 +352,7 @@ cargo xtask selftest           # Full governance check
 cargo xtask version            # Show kernel version (--json for machine output)
 ```
 
-### Governance Artifacts
+### 7.4 Governance Artifacts
 
 ```bash
 cargo xtask friction-new --category X --severity Y --summary "..."
@@ -343,7 +363,7 @@ cargo xtask fork-register --name "Name" --domain "domain" --kernel-version "v3.3
 cargo xtask fork-list          # List registered forks (--json available)
 ```
 
-### Agent Workflow
+### 7.5 Agent Workflow
 
 ```bash
 cargo xtask bundle implement_ac    # Get context bundle
@@ -355,7 +375,7 @@ curl localhost:8080/platform/forks         # Fork registry
 curl localhost:8080/platform/friction      # Friction log
 ```
 
-### Release Commands
+### 7.6 Release Commands
 
 ```bash
 cargo xtask release-prepare X.Y.Z
@@ -365,7 +385,7 @@ cargo xtask release-bundle X.Y.Z
 
 ---
 
-## 7. Definition of Done
+## 8. Definition of Done
 
 The kernel is "fully implemented" when:
 
@@ -378,7 +398,7 @@ Until then, it's a stable baseline (v3.3.3) suitable for early adopters who acce
 
 ---
 
-## 8. Summary
+## 9. Summary
 
 **v3.3.3** is a stable, selftest-green kernel. All 65 ACs pass. But "selftest green" and "ready for production" are different bars. The gaps are documented above.
 
