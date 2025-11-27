@@ -137,6 +137,7 @@ stories:
               `cargo xtask service-init` updates service_metadata.yaml,
               README, and CLAUDE.md with a new service ID, name, and
               description, and `/platform/status` reflects the new identity.
+            adr: ADR-0022
             tags: [kernel]
             must_have_ac: true
             tests:
@@ -563,6 +564,7 @@ stories:
               URLs, and tags; /platform/status returns the same identifiers;
               the UI links to runbook, roadmap, agent guide, feature status,
               and platform support docs.
+            adr: ADR-0022
             tags: [kernel]
             must_have_ac: true
             tests:
