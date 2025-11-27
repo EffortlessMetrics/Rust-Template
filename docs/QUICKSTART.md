@@ -76,10 +76,11 @@ To change an opinion:
 For step-by-step guidance, see:
 
 - **Change an opinion**: `docs/how-to/change-template-opinion.md` – the recommended override path
+- **Choose your opinionation level**: `docs/how-to/pre-fork-checklist.md` → Phase 5 – decide what's kernel vs optional *before* customizing
 - **Add your AC**: `docs/how-to/add-acceptance-criterion.md`
 - **Fork for your service**: `docs/how-to/new-service-from-template.md`
 - **Report upstream**: `docs/how-to/report-fork-feedback.md`
-- **Kernel vs defaults**: `docs/KERNEL_SNAPSHOT.md` – table of enforced vs optional ACs
+- **Kernel vs defaults**: `docs/KERNEL_SNAPSHOT.md` – table of enforced vs optional ACs + philosophy contracts
 
 **Example:** If you don't want Nix, remove ACs related to `REQ-PLT-NIX-DEVSHELL`, update CI workflows, and document your alternative environment in a new AC.
 

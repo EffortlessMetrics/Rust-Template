@@ -256,9 +256,95 @@ Before customizing, confirm the kernel is green:
 
 ---
 
-## Phase 5: Customization Readiness
+## Phase 5: Choose Your Opinionation Level
 
-### 5.1 Update Service Metadata
+Before customizing, decide which template behaviors your fork will **enforce as kernel** vs treat as **optional defaults**.
+
+### 5.1 Understand Kernel vs Template ACs
+
+The template distinguishes two AC categories:
+
+| Category | `must_have_ac` | What It Means |
+|----------|---------------|---------------|
+| **Kernel** | `true` | Non-negotiable. Selftest fails if missing or broken. |
+| **Template Default** | `false` | Enabled and green here, but forks can demote or remove. |
+
+**Read first:** [`docs/KERNEL_SNAPSHOT.md`](../KERNEL_SNAPSHOT.md) → "Kernel vs Template Defaults" table
+
+### 5.2 Common Opinionation Choices
+
+For each category below, decide if you want it **enforced** (keep/promote to kernel) or **optional** (leave as template default or remove):
+
+**AI/IDP Integration:**
+
+```yaml
+# Keep these kernel if you want AI agents and IDPs to have stable contracts:
+- AC-TPL-CLI-JSON-CORE         # version --json, ac-status --json
+- AC-TPL-PLATFORM-GOVERNANCE-APIS  # /platform/status includes forks, friction
+```
+
+**Governance Artifacts:**
+
+```yaml
+# Promote these to kernel if your team relies on them:
+- AC-TPL-GOV-FRICTION          # friction-new/list CLI + /platform/friction API
+- AC-TPL-QUESTIONS-LOGGED      # question-new/list CLI + /platform/questions API
+- AC-TPL-GOV-FORKS             # fork-register/list CLI + /platform/forks API
+```
+
+**Traceability:**
+
+```yaml
+# Keep kernel if you want governance artifacts linked to REQ/AC IDs:
+- AC-TPL-ARTIFACTS-HAVE-REFS   # refs field on questions/friction
+```
+
+### 5.3 Apply Your Decisions
+
+**To promote a template default to kernel** (make it mandatory):
+
+```bash
+# Edit specs/spec_ledger.yaml
+# Change: must_have_ac: false
+# To:     must_have_ac: true
+
+# Then verify selftest still passes:
+cargo xtask selftest
+```
+
+**To demote a kernel AC** (make it optional or remove):
+
+```bash
+# Edit specs/spec_ledger.yaml
+# Change: must_have_ac: true
+# To:     must_have_ac: false
+
+# Or remove the AC entirely if you don't want the behavior
+
+# Document why in an ADR:
+cargo xtask adr-new "demote-friction-to-optional"
+```
+
+**Detailed guide:** [`docs/how-to/change-template-opinion.md`](./change-template-opinion.md)
+
+### 5.4 Record Your Baseline
+
+After making opinionation decisions:
+
+```bash
+# Capture your fork's kernel contract
+- [ ] cargo xtask selftest          # Must pass
+- [ ] cargo xtask ac-status         # Review what's enforced
+- [ ] git commit -m "chore: establish fork kernel baseline"
+```
+
+This commit becomes your fork's "what we enforce" reference point.
+
+---
+
+## Phase 6: Customization Readiness
+
+### 6.1 Update Service Metadata
 
 Edit these files to reflect your service:
 
@@ -269,7 +355,7 @@ Edit these files to reflect your service:
 - [ ] specs/spec_ledger.yaml (add first user story)
 ```
 
-### 5.2 Seed Your First AC
+### 6.2 Seed Your First AC
 
 Add your domain's first requirement and AC:
 
@@ -280,7 +366,7 @@ Add your domain's first requirement and AC:
 - [ ] cargo xtask ac-status (verify AC appears)
 ```
 
-### 5.3 Validate Customization
+### 6.3 Validate Customization
 
 ```bash
 - [ ] cargo xtask check
@@ -290,7 +376,7 @@ Add your domain's first requirement and AC:
 
 **Expected:** Template ACs still pass. Your new AC may be red (not implemented yet) - that's OK.
 
-### 5.4 Create First PR
+### 6.4 Create First PR
 
 Test branch protection:
 
@@ -309,9 +395,9 @@ Test branch protection:
 
 ---
 
-## Phase 6: Team Onboarding Prep
+## Phase 7: Team Onboarding Prep
 
-### 6.1 Documentation Review
+### 7.1 Documentation Review
 
 ```bash
 - [ ] Read docs/QUICKSTART.md
@@ -320,7 +406,7 @@ Test branch protection:
 - [ ] Read docs/how-to/new-service-from-template.md
 ```
 
-### 6.2 Share Fork Context
+### 7.2 Share Fork Context
 
 Prepare for team handoff:
 
@@ -332,7 +418,7 @@ Prepare for team handoff:
 - [ ] Schedule kickoff session (optional)
 ```
 
-### 6.3 Verify Platform APIs
+### 7.3 Verify Platform APIs
 
 ```bash
 - [ ] cargo run -p app-http
