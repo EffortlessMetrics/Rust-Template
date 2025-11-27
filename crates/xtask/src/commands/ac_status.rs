@@ -350,6 +350,10 @@ fn collect_unit_test_results(
         println!("Running unit tests for AC mappings...");
     }
 
+    let mut results = HashMap::new();
+    let test_line = Regex::new(r"^test\s+([^\s]+)\s+\.\.\.\s+(ok|FAILED)$").unwrap();
+
+    // Run workspace tests excluding acceptance and xtask
     let mut cmd = Command::new("cargo");
     cmd.args(["test", "--workspace", "--exclude", "acceptance", "--exclude", "xtask"]);
     // Avoid clobbering the active xtask binary on Windows by using a throwaway target dir
@@ -358,8 +362,6 @@ fn collect_unit_test_results(
     let output = cmd.output().context("Failed to run cargo test for unit AC mappings")?;
     let succeeded = output.status.success();
 
-    let mut results = HashMap::new();
-    let test_line = Regex::new(r"^test\s+([^\s]+)\s+\.\.\.\s+(ok|FAILED)$").unwrap();
     for line in String::from_utf8_lossy(&output.stdout).lines() {
         if let Some(caps) = test_line.captures(line.trim()) {
             let name = caps[1].to_string();
@@ -368,18 +370,45 @@ fn collect_unit_test_results(
         }
     }
 
-    if !verbosity.is_quiet() {
-        println!("  Captured results for {} unit tests", results.len());
-    }
-
     if !succeeded {
         let stderr = String::from_utf8_lossy(&output.stderr);
         eprintln!(
-            "{} unit test run reported failures (status {:?})\nstderr:\n{}",
+            "{} workspace unit test run reported failures (status {:?})\nstderr:\n{}",
             "[WARN]".yellow(),
             output.status.code(),
             stderr
         );
+    }
+
+    // Run xtask tests separately with a different target dir to avoid binary conflicts
+    let mut xtask_cmd = Command::new("cargo");
+    xtask_cmd.args(["test", "-p", "xtask"]);
+    xtask_cmd.env("CARGO_TARGET_DIR", "target/ac-status-xtask");
+
+    let xtask_output =
+        xtask_cmd.output().context("Failed to run cargo test for xtask AC mappings")?;
+    let xtask_succeeded = xtask_output.status.success();
+
+    for line in String::from_utf8_lossy(&xtask_output.stdout).lines() {
+        if let Some(caps) = test_line.captures(line.trim()) {
+            let name = caps[1].to_string();
+            let status = &caps[2] == "ok";
+            results.insert(name, status);
+        }
+    }
+
+    if !xtask_succeeded {
+        let stderr = String::from_utf8_lossy(&xtask_output.stderr);
+        eprintln!(
+            "{} xtask unit test run reported failures (status {:?})\nstderr:\n{}",
+            "[WARN]".yellow(),
+            xtask_output.status.code(),
+            stderr
+        );
+    }
+
+    if !verbosity.is_quiet() {
+        println!("  Captured results for {} unit tests", results.len());
     }
 
     Ok(results)

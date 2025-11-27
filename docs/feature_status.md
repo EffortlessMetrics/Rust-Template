@@ -35,11 +35,11 @@ Auto-generated AC status from acceptance (BDD) and unit tests.
 | AC-PLT-012 | US-TPL-PLT-001 | REQ-PLT-RELEASE-SAFETY | [PASS] pass | 1 / 1 |
 | AC-PLT-013 | US-TPL-PLT-001 | REQ-PLT-RELEASE-SAFETY | [PASS] pass | 1 / 1 |
 | AC-PLT-014 | US-TPL-PLT-001 | REQ-PLT-DEVEX-CONTRACT | [PASS] pass | 1 / 1 |
-| AC-PLT-015 | US-TPL-PLT-001 | REQ-PLT-DEVEX-CONTRACT | [UNKNOWN] unknown | 0 / 1 |
+| AC-PLT-015 | US-TPL-PLT-001 | REQ-PLT-DEVEX-CONTRACT | [PASS] pass | 3 / 4 |
 | AC-PLT-016 | US-TPL-PLT-001 | REQ-PLT-DEVEX-CONTRACT | [PASS] pass | 1 / 1 |
 | AC-PLT-017 | US-TPL-PLT-001 | REQ-PLT-STATUS-CLI | [PASS] pass | 1 / 1 |
 | AC-PLT-018 | US-TPL-PLT-001 | REQ-PLT-ONBOARDING | [PASS] pass | 1 / 1 |
-| AC-PLT-019 | US-TPL-PLT-001 | REQ-PLT-DEVEX-CONTRACT | [UNKNOWN] unknown | 0 / 1 |
+| AC-PLT-019 | US-TPL-PLT-001 | REQ-PLT-DEVEX-CONTRACT | [PASS] pass | 2 / 3 |
 | AC-PLT-020 | US-TPL-PLT-001 | REQ-PLT-DEVEX-CONTRACT | [PASS] pass | 1 / 1 |
 | AC-PLT-021 | US-TPL-PLT-001 | REQ-PLT-ONBOARDING | [PASS] pass | 1 / 1 |
 | AC-TPL-001 | US-TPL-001 | REQ-TPL-HEALTH | [PASS] pass | 1 / 1 |
@@ -49,10 +49,10 @@ Auto-generated AC status from acceptance (BDD) and unit tests.
 | AC-TPL-007 | US-TPL-001 | REQ-TPL-METRICS | [PASS] pass | 1 / 1 |
 | AC-TPL-AGENT-HINTS | US-TPL-PLT-001 | REQ-TPL-AGENT-INTERFACE | [PASS] pass | 1 / 1 |
 | AC-TPL-AGENT-SKILLS | US-TPL-PLT-001 | REQ-TPL-AGENT-INTERFACE | [PASS] pass | 1 / 1 |
-| AC-TPL-ARTIFACTS-HAVE-REFS | US-TPL-PLT-001 | REQ-TPL-GOV-ARTIFACTS | [PASS] pass | 1 / 2 |
-| AC-TPL-BDD-EXIT-CODES | US-TPL-PLT-001 | REQ-TPL-BDD-HARNESS | [UNKNOWN] unknown | 0 / 1 |
+| AC-TPL-ARTIFACTS-HAVE-REFS | US-TPL-PLT-001 | REQ-TPL-GOV-ARTIFACTS | [PASS] pass | 2 / 2 |
+| AC-TPL-BDD-EXIT-CODES | US-TPL-PLT-001 | REQ-TPL-BDD-HARNESS | [UNKNOWN] unknown | 0 / 0 |
 | AC-TPL-BUNDLE-LAYOUT | US-TPL-PLT-001 | REQ-TPL-BUNDLE-CONTRACT | [PASS] pass | 1 / 1 |
-| AC-TPL-CLI-JSON-CORE | US-TPL-PHILOSOPHY-001 | REQ-TPL-AI-IDP-COMPAT | [PASS] pass | 1 / 3 |
+| AC-TPL-CLI-JSON-CORE | US-TPL-PHILOSOPHY-001 | REQ-TPL-AI-IDP-COMPAT | [PASS] pass | 3 / 3 |
 | AC-TPL-CLI-JSON-OUTPUT | US-TPL-PLT-001 | REQ-PLT-DEVEX-CONTRACT | [PASS] pass | 1 / 1 |
 | AC-TPL-CONFIG-VALIDATION | US-TPL-PLT-001 | REQ-TPL-CONFIG-INTEGRITY | [PASS] pass | 2 / 2 |
 | AC-TPL-EXAMPLE-FORK-BUILDS | US-TPL-PLT-001 | REQ-TPL-EXAMPLE-FORK | [UNKNOWN] unknown | 0 / 0 |
@@ -65,7 +65,7 @@ Auto-generated AC status from acceptance (BDD) and unit tests.
 | AC-TPL-GRAPH-COMMAND-REACHABLE | US-TPL-PLT-001 | REQ-TPL-GRAPH-INVARIANTS | [PASS] pass | 1 / 1 |
 | AC-TPL-GRAPH-MERMAID | US-TPL-PLT-001 | REQ-TPL-GRAPH-VISUALIZATION | [PASS] pass | 2 / 2 |
 | AC-TPL-GRAPH-REQ-HAS-AC | US-TPL-PLT-001 | REQ-TPL-GRAPH-INVARIANTS | [PASS] pass | 1 / 1 |
-| AC-TPL-GRAPH-SELFTEST | US-TPL-PLT-001 | REQ-TPL-GRAPH-INVARIANTS | [UNKNOWN] unknown | 0 / 1 |
+| AC-TPL-GRAPH-SELFTEST | US-TPL-PLT-001 | REQ-TPL-GRAPH-INVARIANTS | [PASS] pass | 3 / 4 |
 | AC-TPL-HOOKS-INSTALL | US-TPL-PLT-001 | REQ-TPL-GOV-HOOKS | [PASS] pass | 1 / 1 |
 | AC-TPL-IAC-COMPOSE-ALIGN | US-TPL-PLT-001 | REQ-TPL-IAC-ALIGNMENT | [PASS] pass | 1 / 1 |
 | AC-TPL-IAC-K8S-ALIGN | US-TPL-PLT-001 | REQ-TPL-IAC-ALIGNMENT | [PASS] pass | 1 / 1 |
@@ -107,8 +107,5 @@ Auto-generated AC status from acceptance (BDD) and unit tests.
 
 ACs with no mapped or executed tests:
 
-- AC-PLT-015: `cargo xtask selftest` enforces devex contract (required commands exist)
-- AC-PLT-019: `cargo xtask selftest` displays a condensed summary with clear pass/fail indicators for all 8 steps
 - AC-TPL-BDD-EXIT-CODES: The acceptance test binary returns exit 0 when all non-@wip scenarios pass (regardless of skipped scenarios), and returns non-zero only if at least one non-@wip scenario fails.
 - AC-TPL-EXAMPLE-FORK-BUILDS: `examples/fork-customization/` builds and passes its own selftest in CI, demonstrating a working fork.
-- AC-TPL-GRAPH-SELFTEST: cargo xtask selftest validates graph invariants and outputs 'Graph invariants satisfied' when all checks pass.
