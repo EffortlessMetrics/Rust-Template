@@ -136,13 +136,80 @@ Shows a categorized map of all available commands organized by workflow.
 
 ---
 
-## 3. Making Changes
+## 3. Pre-commit, Selftest, and CI
+
+This template treats governance as code. That shows up in three places:
+
+- **Pre-commit hooks**
+- **Local selftest**
+- **CI workflows**
+
+### 3.1 What runs on commit
+
+If you've installed the hooks via:
+
+```bash
+cargo xtask install-hooks
+```
+
+then `git commit` will run:
+
+```text
+.git/hooks/pre-commit
+  → cargo run -p xtask -- precommit
+      → cargo xtask selftest (plus docs+spell checks)
+```
+
+Behaviour:
+
+* The hook runs inside the Nix devshell when available.
+* It runs the full 8-step selftest, **excluding** `@ci-only` BDD scenarios.
+* If anything fails, the commit is blocked with a clear summary of which gate failed.
+
+You should treat a red pre-commit as "something is actually wrong", not "test harness flaked".
+
+### 3.2 What runs in CI
+
+The CI configuration mirrors and extends the local gates:
+
+* **Tier 1:** `cargo xtask selftest` (required on main)
+* **Policy checks:** OPA/Rego tests under `policy/*.rego`
+* **Coverage/graph:** AC coverage and graph invariants
+* **Meta tests (CI-only):**
+
+  * `AC-TPL-BDD-EXIT-CODES` – harness exit semantics
+  * `AC-TPL-EXAMPLE-FORK-BUILDS` – example fork builds and passes its own selftest
+
+CI runs **all** BDD scenarios, including those tagged `@ci-only`:
+
+```bash
+CUCUMBER_TAG_EXPRESSION="" cargo test -p acceptance --test acceptance
+```
+
+Local runs default to `not @ci-only` to avoid recursive selftest and git-worktree flakiness.
+
+### 3.3 Expectations for contributors
+
+Before opening a PR:
+
+```bash
+nix develop
+cargo xtask kernel-smoke
+cargo xtask check
+cargo xtask selftest
+```
+
+If `selftest` is red:
+
+1. Look at which gate failed (Core checks, BDD, Policy tests, etc.).
+2. Use `cargo xtask ac-status` to see which ACs are `[FAIL]`.
+3. Fix the root cause or adjust the AC/tests in `specs/spec_ledger.yaml` if you're intentionally changing the contract.
 
 ---
 
-## 2. How to work on changes
+## 4. How to work on changes
 
-### 2.1 Branching
+### 4.1 Branching
 
 Use topic branches:
 
@@ -156,7 +223,7 @@ Example:
 * `fix/policy-k8s-envfrom`
 * `docs/llm-workflow-clarifications`
 
-### 2.2 Commit messages
+### 4.2 Commit messages
 
 Short, imperative subject:
 
@@ -173,9 +240,9 @@ Fixes #123
 
 ---
 
-## 3. What "done" means here
+## 5. What "done" means here
 
-### 3.1 Always run `selftest`
+### 5.1 Always run `selftest`
 
 Before opening a PR:
 
@@ -194,7 +261,7 @@ That runs:
 
 If you *must* skip some work locally (e.g., no Nix), make sure CI is green.
 
-### 3.2 Supply chain workflows
+### 5.2 Supply chain workflows
 
 CI includes supply-chain hardening workflows (SBOM and provenance generation):
 
@@ -203,7 +270,7 @@ CI includes supply-chain hardening workflows (SBOM and provenance generation):
   - Generates an SBOM (`sbom.spdx.json`) and build provenance for a source tarball
   - If this workflow fails on a release tag, fix it before publishing the GitHub Release
 
-### 3.3 Keep the hexagonal architecture intact
+### 5.3 Keep the hexagonal architecture intact
 
 * Domain logic stays in `business-core` and `model`.
 * Adapters (HTTP, gRPC, DB) live in their crates and depend inward.
@@ -211,7 +278,7 @@ CI includes supply-chain hardening workflows (SBOM and provenance generation):
 
 If you're unsure: check `docs/explanation/hexagonal-architecture.md`.
 
-### 3.4 Respect the governance model
+### 5.4 Respect the governance model
 
 When you add or change behavior:
 
@@ -228,7 +295,7 @@ When you add or change behavior:
 
 ---
 
-## 4. Making changes: step-by-step
+## 6. Making changes: step-by-step
 
 A typical feature flow:
 
@@ -256,7 +323,7 @@ A typical feature flow:
 
 ---
 
-## 5. Tests
+## 7. Tests
 
 Useful commands:
 
@@ -286,7 +353,7 @@ Those tests include comments explaining how to run them explicitly.
 
 ---
 
-## 6. Style and tooling
+## 8. Style and tooling
 
 * Rust code: `rustfmt` + `clippy -D warnings`
 * Rego: keep rules small and name things for intent, not implementation.
@@ -295,7 +362,7 @@ Those tests include comments explaining how to run them explicitly.
 
 ---
 
-## 7. Questions / Discussions
+## 9. Questions / Discussions
 
 If you're unsure whether a change fits:
 

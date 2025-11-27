@@ -2,25 +2,16 @@ use anyhow::{Context, Result};
 
 /// Run BDD acceptance tests
 pub fn run() -> Result<()> {
-    println!("Running acceptance tests...");
-
-    // Exclude @ci-only scenarios from local runs unless CI environment is detected
-    // or CUCUMBER_TAG_EXPRESSION is explicitly set
     let mut cmd = crate::cargo_cmd("test", &["-p", "acceptance", "--test", "acceptance"]);
 
-    // Only apply the default filter if no tag expression is already set
-    if std::env::var("CUCUMBER_TAG_EXPRESSION").is_err() {
-        // Check if running in CI (common CI env vars)
-        let is_ci = std::env::var("CI").is_ok()
-            || std::env::var("GITHUB_ACTIONS").is_ok()
-            || std::env::var("GITLAB_CI").is_ok();
+    let in_ci = std::env::var("CI").is_ok()
+        || std::env::var("GITHUB_ACTIONS").is_ok()
+        || std::env::var("GITLAB_CI").is_ok();
 
-        if !is_ci {
-            // Exclude @ci-only scenarios from local development runs
-            cmd.env("CUCUMBER_TAG_EXPRESSION", "not @ci-only");
-            println!("ℹ Excluding @ci-only scenarios from local run");
-            println!("  (Set CUCUMBER_TAG_EXPRESSION to override)");
-        }
+    // Local runs: exclude @ci-only scenarios by default
+    if std::env::var("CUCUMBER_TAG_EXPRESSION").is_err() && !in_ci {
+        cmd.env("CUCUMBER_TAG_EXPRESSION", "not @ci-only");
+        println!("ℹ Excluding @ci-only scenarios from local run");
     }
 
     // Run with output capture to detect [BDD-PASS] marker
@@ -43,13 +34,13 @@ pub fn run() -> Result<()> {
     if bdd_pass {
         println!("✓ Acceptance tests passed");
         println!("JUnit output: target/junit/acceptance.xml");
-        Ok(())
-    } else {
-        // Print output for debugging
-        eprintln!("BDD output:\n{}", stdout);
-        if !stderr.is_empty() {
-            eprintln!("stderr:\n{}", stderr);
-        }
-        anyhow::bail!("Acceptance tests failed with exit code {:?}", output.status.code())
+        return Ok(());
     }
+
+    eprintln!("BDD output:\n{}", stdout);
+    if !stderr.is_empty() {
+        eprintln!("stderr:\n{}", stderr);
+    }
+
+    anyhow::bail!("Acceptance tests failed with exit code {:?}", output.status.code())
 }
