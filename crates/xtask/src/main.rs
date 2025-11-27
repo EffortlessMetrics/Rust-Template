@@ -59,7 +59,64 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
+    // ============================================================================
+    // ONBOARDING (Getting started & environment setup)
+    // ============================================================================
+    /// Diagnose development environment setup
+    #[command(next_help_heading = "🚀 Onboarding")]
+    Doctor,
+
+    /// One-command developer bootstrap (nix setup + hooks + first checks)
+    #[command(next_help_heading = "🚀 Onboarding")]
+    DevUp,
+
+    /// Install git hooks for pre-commit governance
+    #[command(next_help_heading = "🚀 Onboarding")]
+    InstallHooks,
+
+    /// Run CI checks locally (doctor + selftest + audit + docs-check)
+    #[command(next_help_heading = "🚀 Onboarding")]
+    CiLocal,
+
+    // ============================================================================
+    // VALIDATION GATES (Selftest, check, smoke tests)
+    // ============================================================================
+    /// Quick kernel smoke test – validate template baseline (docs + core tests)
+    #[command(next_help_heading = "✅ Validation Gates")]
+    KernelSmoke,
+
+    /// Run full template self-test suite (8-step governance validation – run before PR)
+    #[command(next_help_heading = "✅ Validation Gates")]
+    Selftest,
+
+    /// Quick validation of template functionality (abbreviated selftest for smoke tests)
+    #[command(next_help_heading = "✅ Validation Gates")]
+    Quickstart,
+
+    /// Run all checks: fmt, clippy, unit tests (fast, local feedback)
+    #[command(next_help_heading = "✅ Validation Gates")]
+    Check,
+
+    /// Run pre-commit guardrail checks (fmt/clippy/tests/docs/spellcheck)
+    #[command(next_help_heading = "✅ Validation Gates")]
+    Precommit,
+
+    /// Run tests affected by git changes (selective testing for faster iteration)
+    #[command(next_help_heading = "✅ Validation Gates")]
+    TestChanged {
+        /// Git ref to compare against (default: origin/main)
+        #[arg(long, default_value = "origin/main")]
+        base: String,
+        /// Plan-only mode: compute test plan without executing it (env: XTASK_TEST_CHANGED_PLAN_ONLY)
+        #[arg(long, action = clap::ArgAction::SetTrue)]
+        plan_only: bool,
+    },
+
+    // ============================================================================
+    // ACCEPTANCE CRITERIA (AC management & testing)
+    // ============================================================================
     /// Generate AC status report from acceptance tests
+    #[command(next_help_heading = "📋 Acceptance Criteria")]
     AcStatus {
         /// Print concise summary instead of generating full markdown file
         #[arg(long)]
@@ -68,7 +125,9 @@ enum Commands {
         #[arg(long)]
         json: bool,
     },
+
     /// Create new acceptance criterion
+    #[command(next_help_heading = "📋 Acceptance Criteria")]
     AcNew {
         /// AC ID (e.g., AC-TPL-001)
         ac_id: String,
@@ -81,55 +140,52 @@ enum Commands {
         #[arg(long)]
         requirement: String,
     },
+
     /// Show AC coverage grouped by requirement (which ACs need BDD scenarios)
+    #[command(next_help_heading = "📋 Acceptance Criteria")]
     AcCoverage,
+
     /// Suggest BDD scenarios for a given AC
+    #[command(next_help_heading = "📋 Acceptance Criteria")]
     AcSuggestScenarios {
         /// AC ID to suggest scenarios for (e.g., AC-TPL-001)
         ac_id: String,
     },
+
     /// Show all tests mapped to a specific AC
+    #[command(next_help_heading = "📋 Acceptance Criteria")]
     AcTests {
         /// AC ID to show tests for (e.g., AC-TPL-001)
         ac_id: String,
     },
+
     /// Run tests for a specific acceptance criterion
+    #[command(next_help_heading = "📋 Acceptance Criteria")]
     TestAc {
         /// AC ID to test (e.g., AC-TPL-001)
         ac_id: String,
     },
-    /// Validate ADR references in spec ledger
-    AdrCheck,
+
+    /// Run BDD acceptance tests
+    #[command(next_help_heading = "📋 Acceptance Criteria")]
+    Bdd,
+
+    // ============================================================================
+    // DESIGN & DOCUMENTATION (Docs, ADRs, design docs)
+    // ============================================================================
     /// Create new architecture decision record
+    #[command(next_help_heading = "📚 Design & Documentation")]
     AdrNew {
         /// ADR title
         title: String,
     },
-    /// Run all checks: fmt, clippy, tests
-    Check,
-    /// Run pre-commit guardrail checks (fmt/clippy/tests/docs/spellcheck)
-    Precommit,
-    /// Run BDD acceptance tests
-    Bdd,
-    /// Generate LLM context bundle for a task
-    Bundle {
-        /// Task name from .llm/contextpack.yaml
-        task: String,
-    },
-    /// Clean workspace (remove target/, generated docs, etc.)
-    #[command(next_help_heading = "Infrastructure")]
-    Clean,
-    /// Run CI checks locally (doctor + selftest + audit + docs-check)
-    #[command(next_help_heading = "Onboarding")]
-    CiLocal,
-    /// Deploy application to specified environment (dev, staging, prod)
-    Deploy {
-        /// Target environment: dev, staging, or prod
-        #[arg(short, long, default_value = "dev")]
-        env: String,
-    },
+
+    /// Validate ADR references in spec ledger
+    #[command(next_help_heading = "📚 Design & Documentation")]
+    AdrCheck,
+
     /// Create new design document with front-matter
-    #[command(next_help_heading = "Design & Acceptance Criteria")]
+    #[command(next_help_heading = "📚 Design & Documentation")]
     DesignNew {
         /// Document ID (e.g., DESIGN-TPL-HEALTH-001)
         id: String,
@@ -145,62 +201,20 @@ enum Commands {
         #[arg(long)]
         owner: Option<String>,
     },
-    /// Run security and dependency audit
-    Audit,
-    /// Diagnose development environment setup
-    Doctor,
+
     /// Verify documentation consistency
+    #[command(next_help_heading = "📚 Design & Documentation")]
     DocsCheck,
+
     /// Run spellcheck across docs/specs
+    #[command(next_help_heading = "📚 Design & Documentation")]
     Spellcheck,
-    /// One-command developer bootstrap
-    DevUp,
-    /// Export dependency graph
-    GraphExport {
-        #[arg(long, value_enum, default_value = "json")]
-        format: commands::graph_export::OutputFormat,
-        /// Validate graph invariants instead of emitting graph output
-        #[arg(long)]
-        check: bool,
-    },
-    /// List tasks from specs/tasks.yaml
-    TasksList,
-    /// Format all code (Rust, YAML validation, etc.)
-    FmtAll,
-    /// Manage workspace dependencies with hakari
-    Hakari,
-    /// Run database migrations
-    Migrate,
-    /// Pin GitHub Actions to commit SHAs
-    PinActions,
-    /// Test Rego policies with conftest
-    PolicyTest,
-    /// Prepare release (bump versions, update changelog)
-    ReleasePrepare {
-        /// Version to release (e.g., 2.5.0)
-        version: String,
-    },
-    /// Generate release evidence bundle
-    ReleaseBundle {
-        /// Version to generate evidence for (e.g., 3.1.0)
-        version: String,
-    },
-    /// Verify release readiness (selftest + audit + docs-check)
-    ReleaseVerify,
-    /// Generate local SBOM
-    SbomLocal,
-    /// Suggest next steps for a task
-    SuggestNext(commands::suggest_next::SuggestNextArgs),
-    /// Quick validation of template functionality
-    Quickstart,
-    /// Run full template self-test suite (check + bdd + ac-status + bundler + policies)
-    Selftest,
-    /// Quick kernel smoke test (docs-check + selftest)
-    KernelSmoke,
-    /// Show governance status dashboard
-    #[command(next_help_heading = "Meta")]
-    Status,
-    /// List friction log entries
+
+    // ============================================================================
+    // GOVERNANCE ARTIFACTS (Friction log, questions, forks, skills)
+    // ============================================================================
+    /// List friction log entries (track process/tooling issues)
+    #[command(next_help_heading = "🏛️ Governance Artifacts")]
     FrictionList {
         /// Filter by status (open, investigating, in_progress, resolved, wont_fix)
         #[arg(long)]
@@ -212,7 +226,9 @@ enum Commands {
         #[arg(long)]
         json: bool,
     },
+
     /// Create a new friction log entry
+    #[command(next_help_heading = "🏛️ Governance Artifacts")]
     FrictionNew {
         /// Category (tooling, process, documentation, devex, ci_cd, platform, api, testing, governance, other)
         #[arg(long)]
@@ -239,119 +255,9 @@ enum Commands {
         #[arg(long = "refs")]
         refs: Vec<String>,
     },
-    /// List registered template forks
-    ForkList {
-        /// Filter by status (active, archived, experimental)
-        #[arg(long)]
-        status: Option<String>,
-        /// Filter by domain substring
-        #[arg(long)]
-        domain: Option<String>,
-        /// Output in JSON format
-        #[arg(long)]
-        json: bool,
-    },
-    /// Register a new template fork
-    ForkRegister {
-        /// Fork name
-        #[arg(long)]
-        name: String,
-        /// Knowledge domain (e.g., rust-sdk, python-ml, knowledge-hub)
-        #[arg(long)]
-        domain: String,
-        /// Kernel version fork is based on (e.g., v3.3.3)
-        #[arg(long)]
-        kernel_version: String,
-        /// Repository URL (optional)
-        #[arg(long)]
-        url: Option<String>,
-        /// Maintainer name (optional)
-        #[arg(long)]
-        maintainer_name: Option<String>,
-        /// Maintainer contact (optional)
-        #[arg(long)]
-        maintainer_contact: Option<String>,
-        /// Fork status (active, archived, experimental)
-        #[arg(long)]
-        status: Option<String>,
-        /// Free-form notes (optional)
-        #[arg(long)]
-        notes: Option<String>,
-    },
-    /// Generate service descriptor (e.g., Backstage catalog info)
-    ServiceDescriptor {
-        /// Output format (backstage)
-        #[arg(long, default_value = "backstage")]
-        format: String,
-    },
-    /// Initialize service branding (ID, name, description)
-    ServiceInit {
-        /// Service ID (kebab-case, e.g., agile-hr)
-        #[arg(long)]
-        id: String,
-        /// Display name (e.g., "Agile HR Hub")
-        #[arg(long)]
-        name: String,
-        /// Service description
-        #[arg(long)]
-        description: String,
-        /// Tags (repeatable, e.g., --tags hr --tags payroll)
-        #[arg(long)]
-        tags: Vec<String>,
-        /// Register this fork in fork_registry.yaml
-        #[arg(long)]
-        register_fork: bool,
-    },
-    /// Validate config schema for an environment
-    ConfigValidate {
-        /// Target environment: dev, staging, prod
-        #[arg(short, long, default_value = "dev")]
-        env: String,
-    },
-    /// Show flow-based command map
-    #[command(next_help_heading = "Meta")]
-    HelpFlows,
-    /// Create a new task in specs/tasks.yaml
-    TaskCreate {
-        /// Task ID (e.g., TASK-123)
-        #[arg(long)]
-        id: String,
-        /// Task title
-        #[arg(long)]
-        title: String,
-        /// Requirement ID the task belongs to
-        #[arg(long = "req")]
-        requirement: String,
-        /// Acceptance criteria linked to the task (repeatable)
-        #[arg(long = "ac")]
-        acs: Vec<String>,
-        /// Optional owner label
-        #[arg(long)]
-        owner: Option<String>,
-        /// Task status (Todo, InProgress, Review, Done)
-        #[arg(long)]
-        status: Option<String>,
-        /// Labels to attach to the task
-        #[arg(long)]
-        labels: Vec<String>,
-    },
-    /// Update an existing task in specs/tasks.yaml
-    TaskUpdate {
-        /// Task ID to update
-        #[arg(long)]
-        id: String,
-        /// New title (optional)
-        #[arg(long)]
-        title: Option<String>,
-        /// New owner (optional)
-        #[arg(long)]
-        owner: Option<String>,
-        /// New status (Todo, InProgress, Review, Done)
-        #[arg(long)]
-        status: Option<String>,
-    },
+
     /// List questions from questions/ directory
-    #[command(next_help_heading = "Governance")]
+    #[command(next_help_heading = "🏛️ Governance Artifacts")]
     QuestionsList {
         /// Filter by status (open, answered, resolved, obsolete)
         #[arg(long)]
@@ -360,8 +266,9 @@ enum Commands {
         #[arg(long)]
         json: bool,
     },
-    /// Create a new question artifact
-    #[command(next_help_heading = "Governance")]
+
+    /// Create a new question artifact (capture ambiguity during flows)
+    #[command(next_help_heading = "🏛️ Governance Artifacts")]
     QuestionNew {
         /// Question category/component (e.g., TPL, BUNDLE, SUGGEST)
         #[arg(long)]
@@ -388,27 +295,251 @@ enum Commands {
         #[arg(long = "refs")]
         refs: Vec<String>,
     },
-    /// Install git hooks for pre-commit governance
-    #[command(next_help_heading = "Onboarding")]
-    InstallHooks,
-    /// Format Agent Skills (SKILL.md)
-    #[command(next_help_heading = "Governance")]
-    SkillsFmt,
-    /// Lint Agent Skills (SKILL.md)
-    #[command(next_help_heading = "Governance")]
-    SkillsLint,
-    /// Run tests affected by git changes
-    #[command(next_help_heading = "Development")]
-    TestChanged {
-        /// Git ref to compare against (default: origin/main)
-        #[arg(long, default_value = "origin/main")]
-        base: String,
-        /// Plan-only mode: compute test plan without executing it (env: XTASK_TEST_CHANGED_PLAN_ONLY)
-        #[arg(long, action = clap::ArgAction::SetTrue)]
-        plan_only: bool,
+
+    /// List registered template forks
+    #[command(next_help_heading = "🏛️ Governance Artifacts")]
+    ForkList {
+        /// Filter by status (active, archived, experimental)
+        #[arg(long)]
+        status: Option<String>,
+        /// Filter by domain substring
+        #[arg(long)]
+        domain: Option<String>,
+        /// Output in JSON format
+        #[arg(long)]
+        json: bool,
     },
+
+    /// Register a new template fork
+    #[command(next_help_heading = "🏛️ Governance Artifacts")]
+    ForkRegister {
+        /// Fork name
+        #[arg(long)]
+        name: String,
+        /// Knowledge domain (e.g., rust-sdk, python-ml, knowledge-hub)
+        #[arg(long)]
+        domain: String,
+        /// Kernel version fork is based on (e.g., v3.3.3)
+        #[arg(long)]
+        kernel_version: String,
+        /// Repository URL (optional)
+        #[arg(long)]
+        url: Option<String>,
+        /// Maintainer name (optional)
+        #[arg(long)]
+        maintainer_name: Option<String>,
+        /// Maintainer contact (optional)
+        #[arg(long)]
+        maintainer_contact: Option<String>,
+        /// Fork status (active, archived, experimental)
+        #[arg(long)]
+        status: Option<String>,
+        /// Free-form notes (optional)
+        #[arg(long)]
+        notes: Option<String>,
+    },
+
+    /// Format Agent Skills (SKILL.md)
+    #[command(next_help_heading = "🏛️ Governance Artifacts")]
+    SkillsFmt,
+
+    /// Lint Agent Skills (SKILL.md)
+    #[command(next_help_heading = "🏛️ Governance Artifacts")]
+    SkillsLint,
+
+    // ============================================================================
+    // TASKS & HINTS (Work tracking & agent guidance)
+    // ============================================================================
+    /// List tasks from specs/tasks.yaml
+    #[command(next_help_heading = "📌 Tasks & Hints")]
+    TasksList,
+
+    /// Create a new task in specs/tasks.yaml
+    #[command(next_help_heading = "📌 Tasks & Hints")]
+    TaskCreate {
+        /// Task ID (e.g., TASK-123)
+        #[arg(long)]
+        id: String,
+        /// Task title
+        #[arg(long)]
+        title: String,
+        /// Requirement ID the task belongs to
+        #[arg(long = "req")]
+        requirement: String,
+        /// Acceptance criteria linked to the task (repeatable)
+        #[arg(long = "ac")]
+        acs: Vec<String>,
+        /// Optional owner label
+        #[arg(long)]
+        owner: Option<String>,
+        /// Task status (Todo, InProgress, Review, Done)
+        #[arg(long)]
+        status: Option<String>,
+        /// Labels to attach to the task
+        #[arg(long)]
+        labels: Vec<String>,
+    },
+
+    /// Update an existing task in specs/tasks.yaml
+    #[command(next_help_heading = "📌 Tasks & Hints")]
+    TaskUpdate {
+        /// Task ID to update
+        #[arg(long)]
+        id: String,
+        /// New title (optional)
+        #[arg(long)]
+        title: Option<String>,
+        /// New owner (optional)
+        #[arg(long)]
+        owner: Option<String>,
+        /// New status (Todo, InProgress, Review, Done)
+        #[arg(long)]
+        status: Option<String>,
+    },
+
+    /// Suggest next steps for a task (agent guidance)
+    #[command(next_help_heading = "📌 Tasks & Hints")]
+    SuggestNext(commands::suggest_next::SuggestNextArgs),
+
+    // ============================================================================
+    // RELEASES (Version management & release process)
+    // ============================================================================
+    /// Prepare release (bump versions, update changelog)
+    #[command(next_help_heading = "🚢 Releases")]
+    ReleasePrepare {
+        /// Version to release (e.g., 2.5.0)
+        version: String,
+    },
+
+    /// Generate release evidence bundle
+    #[command(next_help_heading = "🚢 Releases")]
+    ReleaseBundle {
+        /// Version to generate evidence for (e.g., 3.1.0)
+        version: String,
+    },
+
+    /// Verify release readiness (selftest + audit + docs-check)
+    #[command(next_help_heading = "🚢 Releases")]
+    ReleaseVerify,
+
+    /// Generate local SBOM (software bill of materials)
+    #[command(next_help_heading = "🚢 Releases")]
+    SbomLocal,
+
+    // ============================================================================
+    // SERVICE SETUP (Initialization & configuration)
+    // ============================================================================
+    /// Initialize service branding (ID, name, description)
+    #[command(next_help_heading = "⚙️ Service Setup")]
+    ServiceInit {
+        /// Service ID (kebab-case, e.g., agile-hr)
+        #[arg(long)]
+        id: String,
+        /// Display name (e.g., "Agile HR Hub")
+        #[arg(long)]
+        name: String,
+        /// Service description
+        #[arg(long)]
+        description: String,
+        /// Tags (repeatable, e.g., --tags hr --tags payroll)
+        #[arg(long)]
+        tags: Vec<String>,
+        /// Register this fork in fork_registry.yaml
+        #[arg(long)]
+        register_fork: bool,
+    },
+
+    /// Generate service descriptor (e.g., Backstage catalog info)
+    #[command(next_help_heading = "⚙️ Service Setup")]
+    ServiceDescriptor {
+        /// Output format (backstage)
+        #[arg(long, default_value = "backstage")]
+        format: String,
+    },
+
+    /// Validate config schema for an environment
+    #[command(next_help_heading = "⚙️ Service Setup")]
+    ConfigValidate {
+        /// Target environment: dev, staging, prod
+        #[arg(short, long, default_value = "dev")]
+        env: String,
+    },
+
+    // ============================================================================
+    // SECURITY & POLICY (Audits, policies, supply chain)
+    // ============================================================================
+    /// Run security and dependency audit (cargo audit + cargo deny)
+    #[command(next_help_heading = "🔐 Security & Policy")]
+    Audit,
+
+    /// Test Rego policies with conftest (OPA policy verification)
+    #[command(next_help_heading = "🔐 Security & Policy")]
+    PolicyTest,
+
+    // ============================================================================
+    // LLM/AGENT SUPPORT (Bundles, hints, workflows)
+    // ============================================================================
+    /// Generate LLM context bundle for a task (AI-native development)
+    #[command(next_help_heading = "🤖 LLM/Agent Support")]
+    Bundle {
+        /// Task name from .llm/contextpack.yaml
+        task: String,
+    },
+
+    /// Show flow-based command map (available workflows for agents/humans)
+    #[command(next_help_heading = "🤖 LLM/Agent Support")]
+    HelpFlows,
+
+    // ============================================================================
+    // INFRASTRUCTURE & UTILITIES (Build, cleanup, migrations)
+    // ============================================================================
+    /// Format all code (Rust, YAML validation, etc.)
+    #[command(next_help_heading = "🔧 Infrastructure & Utilities")]
+    FmtAll,
+
+    /// Clean workspace (remove target/, generated docs, etc.)
+    #[command(next_help_heading = "🔧 Infrastructure & Utilities")]
+    Clean,
+
+    /// Export dependency graph
+    #[command(next_help_heading = "🔧 Infrastructure & Utilities")]
+    GraphExport {
+        #[arg(long, value_enum, default_value = "json")]
+        format: commands::graph_export::OutputFormat,
+        /// Validate graph invariants instead of emitting graph output
+        #[arg(long)]
+        check: bool,
+    },
+
+    /// Manage workspace dependencies with hakari
+    #[command(next_help_heading = "🔧 Infrastructure & Utilities")]
+    Hakari,
+
+    /// Run database migrations
+    #[command(next_help_heading = "🔧 Infrastructure & Utilities")]
+    Migrate,
+
+    /// Pin GitHub Actions to commit SHAs
+    #[command(next_help_heading = "🔧 Infrastructure & Utilities")]
+    PinActions,
+
+    /// Deploy application to specified environment (dev, staging, prod)
+    #[command(next_help_heading = "🔧 Infrastructure & Utilities")]
+    Deploy {
+        /// Target environment: dev, staging, or prod
+        #[arg(short, long, default_value = "dev")]
+        env: String,
+    },
+
+    // ============================================================================
+    // STATUS & METADATA (Service status, version, help)
+    // ============================================================================
+    /// Show governance status dashboard (health check)
+    #[command(next_help_heading = "ℹ️ Status & Metadata")]
+    Status,
+
     /// Show kernel/template version
-    #[command(next_help_heading = "Meta")]
+    #[command(next_help_heading = "ℹ️ Status & Metadata")]
     Version {
         /// Output in JSON format
         #[arg(long)]

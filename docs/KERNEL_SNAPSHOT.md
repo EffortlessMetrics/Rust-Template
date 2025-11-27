@@ -233,4 +233,50 @@ The first real fork will likely discover friction. Capture it in `FRICTION_LOG.m
 
 ---
 
+## Kernel v3.3.3 Closure
+
+**Status:** Frozen baseline. Feature-complete for 1.0.
+
+This version represents the **first fully selftest-green, opinionated LLM-native Rust cell** ready for production forks.
+
+### What This Means
+
+✅ **Kernel is closed** – The core governance infrastructure (specs, BDD, policies, platform APIs) is stable and tested.
+
+✅ **Ready for forks** – New services can clone this template and inherit a governed, production-ready skeleton in ~20 minutes.
+
+✅ **AI-native workflows enabled** – Agents and IDPs have first-class contracts: `/platform/*` APIs, CLI JSON output, task hints, flow guidance.
+
+### What's NOT in v3.3.3
+
+**Intentionally out of scope:**
+
+- Zero-UNKNOWN AC mode: The meta/CI ACs remain `UNKNOWN` by design (they test the testing infrastructure, not domain behavior). This is honest and transparent.
+- Renumbering AC IDs: Kernel IDs are frozen to avoid breaking downstream forks.
+- Portal vendor lock-in: `/platform/*` contracts are generic. Let portals adapt.
+
+**Known gaps (documented, not blockers):**
+
+- [ROADMAP.md](./ROADMAP.md) and [BACKLOG.md](./BACKLOG.md) catalog what's next
+- Second-service validation pending (first fork will inform this)
+- Branch protection rules are template scripts, not enforced by CI
+
+### Next: Version 3.4.0
+
+Further kernel evolution will be driven by:
+
+1. **Real fork experience** – The Knowledge Hub fork and other real-world uses will surface friction
+2. **IDP integration patterns** – Lessons learned from Backstage/Port integrations
+3. **Supply chain hardening** – Dependency health, SBOM evolution, policy refinements
+
+File issues with `refs: AC-XXX` tags to feed findings back. See [`ROADMAP.md`](./ROADMAP.md) for the forward plan.
+
+### Using v3.3.3
+
+- **If you're forking:** Start here. Follow [`docs/how-to/FIRST_FORK.md`](./how-to/FIRST_FORK.md).
+- **If you're contributing to kernel:** Code is frozen. New features go to v3.4.0 planning track.
+- **If you're running this as-is:** Perfect for reference implementations and policy validation.
+
+---
+
 ## End of Kernel Snapshot

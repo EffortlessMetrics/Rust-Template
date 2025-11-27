@@ -75,7 +75,9 @@ To change an opinion:
 
 For step-by-step guidance, see:
 
+- **First fork**: `docs/how-to/FIRST_FORK.md` – one-page runbook for getting from zero to forked in 20 minutes
 - **Change an opinion**: `docs/how-to/change-template-opinion.md` – the recommended override path
+- **Modify an AC**: `docs/how-to/change-acceptance-criterion.md` – day-2 contract changes (update, demote, remove ACs)
 - **Choose your opinionation level**: `docs/how-to/pre-fork-checklist.md` → Phase 5 – decide what's kernel vs optional *before* customizing
 - **Add your AC**: `docs/how-to/add-acceptance-criterion.md`
 - **Fork for your service**: `docs/how-to/new-service-from-template.md`
@@ -299,6 +301,7 @@ cargo xtask help-flows                # Available flows
 - Add feature: [governed-feature-dev skill](.claude/skills/governed-feature-dev/SKILL.md)
 - Fix drift: [governed-maintenance skill](.claude/skills/governed-maintenance/SKILL.md)
 - Release: [governed-release skill](.claude/skills/governed-release/SKILL.md)
+- Integrate with IDP/portal: [Integrate with IDP or Agent](./how-to/integrate-idp-or-agent.md)
 
 ---
 
