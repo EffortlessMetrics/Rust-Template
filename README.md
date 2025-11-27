@@ -573,7 +573,20 @@ Technical references and command documentation:
 
 ---
 
-## 14. License
+## 14. Current Status & Roadmap
+
+**Kernel Version:** v3.3.3 (see [KERNEL_SNAPSHOT.md](docs/KERNEL_SNAPSHOT.md) for what you inherit)
+
+**AC Health:** See:
+
+- [Feature Status](docs/feature_status.md) – Acceptance criteria health (auto-generated)
+- [Feature Status Notes](docs/feature_status_notes.md) – How to read the AC table (Kernel/Template/Meta)
+
+**Strategy:** See [ROADMAP.md](docs/ROADMAP.md) for current direction and [BACKLOG.md](docs/BACKLOG.md) for known gaps.
+
+---
+
+## 15. License
 
 This template is dual-licensed:
 

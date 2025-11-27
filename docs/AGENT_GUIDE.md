@@ -718,6 +718,66 @@ Run cargo xtask selftest
   └─ Graph fail → Fix spec_ledger.yaml (add missing ACs, etc.)
 ```
 
+### Selftest and AC Status (for Agents)
+
+Agents should treat `cargo xtask selftest` and the AC status as the **truth** about the workspace.
+
+**Key commands:**
+
+```bash
+cargo xtask selftest          # 8 governance gates
+cargo xtask ac-status         # Human-readable AC table
+cargo xtask ac-status --json  # Machine-readable AC table
+```
+
+**How to interpret selftest:**
+
+* If `selftest` is **green**:
+
+  * All kernel ACs (`must_have_ac: true`) are passing.
+  * Template ACs are either passing or explicitly marked as template/meta.
+  * Agents can assume the platform APIs (`/platform/*`) and DevEx commands behave as documented.
+
+* If `selftest` is **red**:
+
+  * The failure will be associated with one of the 8 gates:
+
+    * Core checks, BDD, AC/ADR mapping, Bundler, Policy tests,
+      DevEx contract, Graph invariants, AC coverage.
+  * Agents should:
+
+    1. Call `GET /platform/status` and inspect the `governance` section.
+    2. Call `GET /platform/graph` to see which ACs/REQs/tests are failing.
+    3. Prefer **fixing** the underlying issue (or filing a question/friction artifact)
+       rather than working around it.
+
+**How to interpret AC status JSON:**
+
+The JSON from:
+
+```bash
+cargo xtask ac-status --json
+```
+
+has, for each AC:
+
+* `status`: `"pass" | "fail" | "unknown"`
+* `tags`: classification (`kernel`, `template`, `philosophy`, `governance`, `harness`, etc.)
+* `must_have_ac`: `true` for kernel ACs
+* `tests_total` / `tests_executed`: how much coverage exists
+
+Recommended agent behaviour:
+
+* Treat `status == "pass" && must_have_ac == true` as "safe to rely on".
+* Treat `status == "fail"` as "do not trust this behaviour" and either:
+
+  * avoid using it, or
+  * surface a question via `question-new` / `/platform/questions`.
+* Treat `status == "unknown"` as:
+
+  * OK if tags include `harness` or `example` (meta/CI-only),
+  * otherwise: suspect, worth surfacing as a question.
+
 ### Incremental Validation
 
 For faster feedback during development:

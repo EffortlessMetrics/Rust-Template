@@ -96,6 +96,34 @@ Each ignored test has a comment explaining:
 
 ---
 
+## 2.4. How to Read AC Status
+
+> **How to read AC status**
+>
+> - `[PASS]` = at least one test (BDD or unit) ran and passed.
+> - `[FAIL]` = at least one test ran and failed.
+> - `[UNKNOWN]` = no local test ran. In this repo, `[UNKNOWN]` is only used
+>   for meta / CI-only ACs (see `docs/feature_status_notes.md` for details).
+
+When you run `cargo xtask ac-coverage`, you'll see output like:
+
+```
+Feature: Platform Status
+  ✅ AC-PLT-001: Status endpoint returns JSON
+  ❌ AC-PLT-002: Graph endpoint includes all nodes
+  ⚠️  AC-PLT-003: Cached status updates [UNKNOWN]
+```
+
+**What this means:**
+
+- ✅ = AC has tests wired and they pass
+- ❌ = AC has tests but they're failing (fix needed)
+- ⚠️ = AC has no local tests (typical for meta/CI-only ACs)
+
+**Important:** All kernel ACs (marked `must_have_ac: true` in `spec_ledger.yaml`) **must** show ✅ before work is considered complete.
+
+---
+
 ## 2.5. Debugging Test Failures
 
 When selftest fails, use this quick reference to debug each step:
