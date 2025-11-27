@@ -661,9 +661,10 @@ stories:
               Questions and friction entries support a 'refs' field for REQ-*/AC-* IDs,
               allowing governance artifacts to reference the contracts they relate to.
             tags: [kernel, traceability, governance]
-            must_have_ac: false
-            note: "Kernel contract verified by unit test (not BDD). Exempt from BDD coverage gate per design - unit tests validate struct schema."
+            must_have_ac: true
+            note: "Kernel contract verified by unit + light BDD. Forks may demote via must_have_ac: false if not using refs."
             tests:
+              - { type: bdd, tag: "@AC-TPL-ARTIFACTS-HAVE-REFS", file: "specs/features/questions.feature" }
               - { type: unit, tag: "artifacts_have_refs",
                   module: "xtask::commands::questions::tests::artifacts_have_refs",
                   file: "crates/xtask/src/commands/questions.rs" }
@@ -1200,6 +1201,12 @@ stories:
             must_have_ac: true
             tests:
               - { type: bdd, tag: "@AC-TPL-CLI-JSON-CORE", file: "specs/features/xtask_devex.feature" }
+              - { type: unit, tag: "version_json_shape_is_stable",
+                  module: "xtask::commands::version::tests::version_json_shape_is_stable",
+                  file: "crates/xtask/src/commands/version.rs" }
+              - { type: unit, tag: "ac_status_json_shape_is_stable",
+                  module: "xtask::commands::ac_status::tests::ac_status_json_shape_is_stable",
+                  file: "crates/xtask/src/commands/ac_status.rs" }
           - id: AC-TPL-PLATFORM-GOVERNANCE-APIS
             text: >
               /platform/questions, /platform/friction, and /platform/forks return

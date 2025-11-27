@@ -74,9 +74,12 @@ To change an opinion:
 4. Run `cargo xtask selftest` to verify consistency
 
 For step-by-step guidance, see:
+
+- **Change an opinion**: `docs/how-to/change-template-opinion.md` – the recommended override path
 - **Add your AC**: `docs/how-to/add-acceptance-criterion.md`
 - **Fork for your service**: `docs/how-to/new-service-from-template.md`
 - **Report upstream**: `docs/how-to/report-fork-feedback.md`
+- **Kernel vs defaults**: `docs/KERNEL_SNAPSHOT.md` – table of enforced vs optional ACs
 
 **Example:** If you don't want Nix, remove ACs related to `REQ-PLT-NIX-DEVSHELL`, update CI workflows, and document your alternative environment in a new AC.
 

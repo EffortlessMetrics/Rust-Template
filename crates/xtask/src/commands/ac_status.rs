@@ -1020,4 +1020,71 @@ mod tests {
         let scenario = &scenarios["Parameterized scenario"];
         assert_eq!(scenario.ac_id, "AC-TEST-005");
     }
+
+    #[test]
+    fn ac_status_json_shape_is_stable() {
+        // This test documents the stable JSON contract for AI/IDP consumers
+        // Changes to this test indicate a breaking change to the --json output
+        let output = AcStatusJson {
+            timestamp: "2025-11-26T00:00:00Z".to_string(),
+            kernel_acs: AcCategoryStats { total: 10, passing: 8, failing: 1, unknown: 1 },
+            template_acs: AcCategoryStats { total: 5, passing: 4, failing: 0, unknown: 1 },
+            coverage_percent: 80.0,
+            acs: vec![AcJson {
+                id: "AC-TEST-001".to_string(),
+                story_id: "US-TEST-001".to_string(),
+                req_id: "REQ-TEST-001".to_string(),
+                text: "Test AC".to_string(),
+                status: AcStatus::Pass,
+                scenarios: vec!["Test scenario".to_string()],
+                tests: vec![],
+                tests_total: 1,
+                tests_executed: 1,
+            }],
+        };
+
+        let json_str = serde_json::to_string_pretty(&output).unwrap();
+        let parsed: serde_json::Value = serde_json::from_str(&json_str).unwrap();
+
+        // Required top-level fields
+        let required_fields =
+            ["timestamp", "kernel_acs", "template_acs", "coverage_percent", "acs"];
+        for field in &required_fields {
+            assert!(
+                parsed.get(*field).is_some(),
+                "Missing required field '{}' in ac-status --json output",
+                field
+            );
+        }
+
+        // Verify acs is an array
+        assert!(parsed["acs"].is_array(), "acs must be an array");
+
+        // Verify AC object shape
+        let first_ac = &parsed["acs"][0];
+        let ac_fields =
+            ["id", "story_id", "req_id", "text", "status", "tests_total", "tests_executed"];
+        for field in &ac_fields {
+            assert!(
+                first_ac.get(*field).is_some(),
+                "Missing required field '{}' in AC object",
+                field
+            );
+        }
+
+        // Verify category stats shape
+        let stats_fields = ["total", "passing", "failing", "unknown"];
+        for field in &stats_fields {
+            assert!(
+                parsed["kernel_acs"].get(*field).is_some(),
+                "Missing required field '{}' in kernel_acs",
+                field
+            );
+            assert!(
+                parsed["template_acs"].get(*field).is_some(),
+                "Missing required field '{}' in template_acs",
+                field
+            );
+        }
+    }
 }
