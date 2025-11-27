@@ -1072,6 +1072,104 @@ stories:
             tests:
               - { type: integration, tag: "@AC-TPL-SKILLS-LINT", file: "specs/features/xtask_devex.feature" }
 
+      - id: REQ-TPL-SKILLS-GOVERNANCE
+        title: "Agent Skills are governed artifacts with REQ/AC traceability"
+        tags: [platform, agent, governance, devex]
+        must_have_ac: true
+        description: >
+          Agent Skills are not ad-hoc documentation but governed artifacts with
+          explicit requirements, acceptance criteria, and lifecycle management.
+          Each Skill MUST map to a flow in devex_flows.yaml and have REQ/AC
+          in spec_ledger.yaml, preventing Skill explosion and ensuring discovery.
+        adr: [ADR-0020, ADR-0003, ADR-0005]
+        docs: [DESIGN-TPL-SKILLS-GOVERNANCE-001]
+        acceptance_criteria:
+          - id: AC-TPL-SKILLS-GOVERNANCE-001
+            text: >
+              docs/SKILLS_GOVERNANCE.md exists and documents the governance spec,
+              lifecycle (create/maintain/retire), validation rules, and ADR-0020
+              principles for this repo.
+            tags: [kernel]
+            must_have_ac: true
+            tests:
+              - { type: docs, tag: "skills_governance_doc_exists" }
+              - { type: bdd, tag: "@AC-TPL-SKILLS-GOVERNANCE-001", file: "specs/features/xtask_devex.feature" }
+
+          - id: AC-TPL-SKILLS-GOVERNANCE-002
+            text: >
+              Each Skill in .claude/skills/* has a corresponding REQ in spec_ledger.yaml
+              and at least one AC defining its SKILL.md structure requirements.
+            tags: [kernel]
+            must_have_ac: true
+            tests:
+              - { type: manual, tag: "skills_req_ac_alignment" }
+              - { type: bdd, tag: "@AC-TPL-SKILLS-GOVERNANCE-002", file: "specs/features/xtask_devex.feature" }
+
+          - id: AC-TPL-SKILLS-GOVERNANCE-003
+            text: >
+              docs/SKILLS_TEMPLATE.md exists and provides a copy-paste template
+              for creating new Skills with checklist for name format, description
+              quality (what + when), allowed-tools safety, and references.
+            tags: [template]
+            must_have_ac: true
+            tests:
+              - { type: docs, tag: "skills_template_doc_exists" }
+              - { type: bdd, tag: "@AC-TPL-SKILLS-GOVERNANCE-003", file: "specs/features/xtask_devex.feature" }
+
+          - id: AC-TPL-SKILLS-NAME-FORMAT
+            text: >
+              Skill names MUST be kebab-case, contain only lowercase letters/digits/hyphens,
+              max 64 characters, and be unique within the project. skills-lint enforces this.
+            tags: [kernel, governance]
+            must_have_ac: true
+            tests:
+              - { type: unit, tag: "test_skill_name_validation_kebab_case", module: "xtask::commands::skills_lint::tests", file: "crates/xtask/src/commands/skills_lint.rs" }
+              - { type: unit, tag: "test_skill_name_validation_max_length", module: "xtask::commands::skills_lint::tests", file: "crates/xtask/src/commands/skills_lint.rs" }
+
+          - id: AC-TPL-SKILLS-DESCRIPTION-QUALITY
+            text: >
+              Skill descriptions MUST include both WHAT (capability) and WHEN (triggers/context),
+              use third-person voice, and max 1024 characters.
+              skills-lint must warn if description omits "when to use" triggers.
+            tags: [kernel, governance]
+            must_have_ac: true
+            tests:
+              - { type: unit, tag: "test_skill_description_includes_what_when", module: "xtask::commands::skills_lint::tests", file: "crates/xtask/src/commands/skills_lint.rs" }
+              - { type: unit, tag: "test_skill_description_third_person", module: "xtask::commands::skills_lint::tests", file: "crates/xtask/src/commands/skills_lint.rs" }
+
+          - id: AC-TPL-SKILLS-ALLOWED-TOOLS-SAFETY
+            text: >
+              Skill allowed-tools MUST follow least-privilege principle. skills-lint must warn if
+              read-only Skill includes Write/Edit, or if unscoped Bash is used without justification.
+              No hardcoded secrets in SKILL.md or supporting files.
+            tags: [kernel, governance, security]
+            must_have_ac: true
+            tests:
+              - { type: unit, tag: "test_skill_allowed_tools_least_privilege", module: "xtask::commands::skills_lint::tests", file: "crates/xtask/src/commands/skills_lint.rs" }
+              - { type: unit, tag: "test_skill_no_hardcoded_secrets", module: "xtask::commands::skills_lint::tests", file: "crates/xtask/src/commands/skills_lint.rs" }
+
+          - id: AC-TPL-SKILLS-FLOW-MAPPING
+            text: >
+              Skill descriptions MUST reference at least one devex_flows entry or xtask command.
+              Anti-pattern detection: warn if Skill name suggests it wraps single command (e.g., skill-check)
+              instead of workflow. Lint rule: description must mention workflow scope.
+            tags: [kernel, governance]
+            must_have_ac: true
+            tests:
+              - { type: unit, tag: "test_skill_references_flow_or_xtask", module: "xtask::commands::skills_lint::tests", file: "crates/xtask/src/commands/skills_lint.rs" }
+              - { type: unit, tag: "test_skill_antipattern_one_command_per_skill", module: "xtask::commands::skills_lint::tests", file: "crates/xtask/src/commands/skills_lint.rs" }
+
+          - id: AC-TPL-SKILLS-LIFECYCLE-DOCS
+            text: >
+              docs/SKILLS_GOVERNANCE.md documents the full lifecycle: how to create a Skill
+              (REQ + AC → Task → implement), maintain (keep devex_flows.yaml in sync), and retire
+              (mark REQ deprecated, archive SKILL.md).
+            tags: [template, governance]
+            must_have_ac: false
+            note: "Documentation AC - part of governance guide."
+            tests:
+              - { type: docs, tag: "skills_lifecycle_documented" }
+
       - id: REQ-TPL-BUNDLE-CONTRACT
         title: "LLM bundle structure"
         tags: [platform, devex, ai]
