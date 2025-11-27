@@ -260,6 +260,8 @@ Before customizing, confirm the kernel is green:
 
 Before customizing, decide which template behaviors your fork will **enforce as kernel** vs treat as **optional defaults**.
 
+**If you do nothing:** You inherit the template's opinionated defaults—AI-native surfaces on, governance artifacts wired, traceability via refs. That's a strong, tested baseline for most services.
+
 ### 5.1 Understand Kernel vs Template ACs
 
 The template distinguishes two AC categories:
@@ -275,7 +277,7 @@ The template distinguishes two AC categories:
 
 For each category below, decide if you want it **enforced** (keep/promote to kernel) or **optional** (leave as template default or remove):
 
-**AI/IDP Integration:**
+**AI/IDP Integration:** *(Recommended: keep kernel for AI-native services)*
 
 ```yaml
 # Keep these kernel if you want AI agents and IDPs to have stable contracts:
@@ -283,7 +285,7 @@ For each category below, decide if you want it **enforced** (keep/promote to ker
 - AC-TPL-PLATFORM-GOVERNANCE-APIS  # /platform/status includes forks, friction
 ```
 
-**Governance Artifacts:**
+**Governance Artifacts:** *(Recommended: promote to kernel for regulated/process-heavy environments)*
 
 ```yaml
 # Promote these to kernel if your team relies on them:
@@ -292,7 +294,7 @@ For each category below, decide if you want it **enforced** (keep/promote to ker
 - AC-TPL-GOV-FORKS             # fork-register/list CLI + /platform/forks API
 ```
 
-**Traceability:**
+**Traceability:** *(Recommended: keep kernel for audit trails and governance clarity)*
 
 ```yaml
 # Keep kernel if you want governance artifacts linked to REQ/AC IDs:
