@@ -121,14 +121,14 @@ Auto-generated AC status from acceptance (BDD) and unit tests.
 
 *(This list SHOULD be empty in this repo. If anything appears here, it's a bug.)*
 
-- AC-TPL-SKILLS-DESCRIPTION-QUALITY: Skill descriptions MUST include both WHAT (capability) and WHEN (triggers/context), use third-person voice, and max 1024 characters. skills-lint must warn if description omits "when to use" triggers.
-- AC-TPL-SKILLS-GOVERNANCE-001: docs/SKILLS_GOVERNANCE.md exists and documents the governance spec, lifecycle (create/maintain/retire), validation rules, and ADR-0020 principles for this repo.
-- AC-TPL-SKILLS-ALLOWED-TOOLS-SAFETY: Skill allowed-tools MUST follow least-privilege principle. skills-lint must warn if read-only Skill includes Write/Edit, or if unscoped Bash is used without justification. No hardcoded secrets in SKILL.md or supporting files.
-- AC-TPL-SKILLS-LIFECYCLE-DOCS: docs/SKILLS_GOVERNANCE.md documents the full lifecycle: how to create a Skill (REQ + AC → Task → implement), maintain (keep devex_flows.yaml in sync), and retire (mark REQ deprecated, archive SKILL.md).
-- AC-TPL-SKILLS-GOVERNANCE-003: docs/SKILLS_TEMPLATE.md exists and provides a copy-paste template for creating new Skills with checklist for name format, description quality (what + when), allowed-tools safety, and references.
-- AC-TPL-SKILLS-GOVERNANCE-002: Each Skill in .claude/skills/* has a corresponding REQ in spec_ledger.yaml and at least one AC defining its SKILL.md structure requirements.
 - AC-TPL-SKILLS-NAME-FORMAT: Skill names MUST be kebab-case, contain only lowercase letters/digits/hyphens, max 64 characters, and be unique within the project. skills-lint enforces this.
+- AC-TPL-SKILLS-GOVERNANCE-003: docs/SKILLS_TEMPLATE.md exists and provides a copy-paste template for creating new Skills with checklist for name format, description quality (what + when), allowed-tools safety, and references.
+- AC-TPL-SKILLS-GOVERNANCE-001: docs/SKILLS_GOVERNANCE.md exists and documents the governance spec, lifecycle (create/maintain/retire), validation rules, and ADR-0020 principles for this repo.
+- AC-TPL-SKILLS-LIFECYCLE-DOCS: docs/SKILLS_GOVERNANCE.md documents the full lifecycle: how to create a Skill (REQ + AC → Task → implement), maintain (keep devex_flows.yaml in sync), and retire (mark REQ deprecated, archive SKILL.md).
+- AC-TPL-SKILLS-DESCRIPTION-QUALITY: Skill descriptions MUST include both WHAT (capability) and WHEN (triggers/context), use third-person voice, and max 1024 characters. skills-lint must warn if description omits "when to use" triggers.
+- AC-TPL-SKILLS-GOVERNANCE-002: Each Skill in .claude/skills/* has a corresponding REQ in spec_ledger.yaml and at least one AC defining its SKILL.md structure requirements.
 - AC-TPL-SKILLS-FLOW-MAPPING: Skill descriptions MUST reference at least one devex_flows entry or xtask command. Anti-pattern detection: warn if Skill name suggests it wraps single command (e.g., skill-check) instead of workflow. Lint rule: description must mention workflow scope.
+- AC-TPL-SKILLS-ALLOWED-TOOLS-SAFETY: Skill allowed-tools MUST follow least-privilege principle. skills-lint must warn if read-only Skill includes Write/Edit, or if unscoped Bash is used without justification. No hardcoded secrets in SKILL.md or supporting files.
 
 ## Meta / CI-only ACs (Not Executed Locally)
 
