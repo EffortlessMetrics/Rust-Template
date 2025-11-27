@@ -11,6 +11,7 @@ Feature: Question Artifacts for Ambiguity Handling
     Given I am in the actual workspace
     When I run "cargo xtask question-new --category TEST --summary 'Ref test' --flow bundle --phase selection --description 'Test description' --refs REQ-TPL-HEALTH"
     Then the command should succeed
+    And I clean up created question test artifacts
 
   @AC-TPL-QUESTIONS-LOGGED @wip
   Scenario: Questions list command works

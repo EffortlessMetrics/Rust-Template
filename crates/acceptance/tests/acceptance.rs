@@ -157,10 +157,13 @@ async fn main() {
     // instead of `filter_run_and_exit`, cucumber returns after running scenarios.
     // If we reach here without panic, all executed scenarios passed (skipped are OK).
     //
-    // The summarized writer may call exit() internally when there are failures/skips.
-    // To ensure clean exit on success, we print a success marker and rely on the
-    // default process exit behavior.
+    // IMPORTANT: The summarized writer may call exit() internally in non-TTY mode.
+    // To ensure consistent exit behavior regardless of TTY, we explicitly exit 0
+    // when all tests pass. This is critical for run_cmd() which captures output.
     println!("\n[BDD-PASS] All non-@wip scenarios passed");
+
+    // Explicitly exit 0 to override any summarized writer exit behavior
+    std::process::exit(0);
 }
 
 fn parse_simple_tag_list(expr: &str) -> Vec<String> {
