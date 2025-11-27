@@ -361,6 +361,27 @@ async fn then_cleanup_test_worktree(world: &mut World) {
     }
 }
 
+#[then("I clean up created question test artifacts")]
+async fn then_cleanup_question_test_artifacts(_world: &mut World) {
+    // Remove Q-TEST-*.yaml files created by BDD scenarios
+    let workspace_root = actual_workspace_root();
+    let questions_dir = workspace_root.join("questions");
+
+    let Ok(entries) = fs::read_dir(&questions_dir) else {
+        return;
+    };
+
+    for entry in entries.filter_map(Result::ok) {
+        let path = entry.path();
+        if let Some(name) = path.file_name().and_then(|n| n.to_str()) {
+            // Only clean up test artifacts (Q-TEST-*.yaml)
+            if name.starts_with("Q-TEST-") && name.ends_with(".yaml") {
+                let _ = fs::remove_file(&path);
+            }
+        }
+    }
+}
+
 #[then(regex = r#"^the output (?:should )?contain(?:s)? "((?:\\.|[^"])*)"$"#)]
 async fn then_output_contains(world: &mut World, expected: String) {
     let ctx = world.xtask_context();
