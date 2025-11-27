@@ -354,10 +354,13 @@ stories:
           - id: AC-PLT-015
             text: "`cargo xtask selftest` enforces devex contract (required commands exist)"
             tags: [kernel]
-            must_have_ac: false
-            note: "BDD scenario marked @ci-only to avoid recursive selftest. Tested in CI."
+            must_have_ac: true
+            note: "Unit tests verify contract enforcement logic; BDD @ci-only to avoid recursive selftest."
             adr: ADR-0017
             tests:
+              - { type: unit, tag: "devex_contract_enforced_missing_commands", module: "commands::selftest::tests::devex_contract_enforced_missing_commands", file: "crates/xtask/src/commands/selftest.rs" }
+              - { type: unit, tag: "devex_contract_enforced_all_present", module: "commands::selftest::tests::devex_contract_enforced_all_present", file: "crates/xtask/src/commands/selftest.rs" }
+              - { type: unit, tag: "devex_contract_real_spec_satisfied", module: "commands::selftest::tests::devex_contract_real_spec_satisfied", file: "crates/xtask/src/commands/selftest.rs" }
               - { type: integration, tag: "@AC-PLT-015", file: "specs/features/xtask_devex.feature" }
 
           - id: AC-PLT-016
@@ -372,10 +375,12 @@ stories:
           - id: AC-PLT-019
             text: "`cargo xtask selftest` displays a condensed summary with clear pass/fail indicators for all 8 steps"
             tags: [kernel]
-            must_have_ac: false
-            note: "BDD scenarios marked @ci-only to avoid recursive selftest. Tested in CI."
+            must_have_ac: true
+            note: "Unit tests verify summary structure and status tracking; BDD @ci-only to avoid recursive selftest."
             adr: ADR-0017
             tests:
+              - { type: unit, tag: "selftest_summary_has_eight_steps", module: "commands::selftest::tests::selftest_summary_has_eight_steps", file: "crates/xtask/src/commands/selftest.rs" }
+              - { type: unit, tag: "selftest_results_track_status", module: "commands::selftest::tests::selftest_results_track_status", file: "crates/xtask/src/commands/selftest.rs" }
               - { type: integration, tag: "@AC-PLT-019", file: "specs/features/xtask_devex.feature" }
 
           - id: AC-PLT-020
@@ -434,13 +439,15 @@ stories:
               The acceptance test binary returns exit 0 when all non-@wip
               scenarios pass (regardless of skipped scenarios), and returns
               non-zero only if at least one non-@wip scenario fails.
-            tags: [kernel, testing]
+            tags: [template, testing, harness]
             must_have_ac: false
-            note: "Verified by unit test; BDD would test the harness with the harness."
+            note: "Meta-harness contract: verified by CI and selftest [BDD-PASS] output. Cannot test harness with harness."
             tests:
-              - { type: unit, tag: "bdd_exit_code_respects_wip",
-                  module: "tests::bdd_exit_code_respects_wip",
-                  file: "crates/acceptance/tests/acceptance.rs" }
+              # The harness behavior is documented in the acceptance crate:
+              # crates/acceptance/tests/acceptance.rs::bdd_exit_code_respects_wip
+              # This is intentionally NOT mapped as a unit test since ac-status
+              # excludes the acceptance crate to avoid test harness recursion.
+              - { type: ci, tag: "bdd_exit_code_ci", note: "CI validates [BDD-PASS] output" }
 
       - id: REQ-PLT-STATUS-CLI
         title: "CLI governance status dashboard"
@@ -751,9 +758,14 @@ stories:
               cargo xtask selftest validates graph invariants and outputs
               'Graph invariants satisfied' when all checks pass.
             tags: [kernel]
-            must_have_ac: false
-            note: "BDD scenario marked @ci-only to avoid recursive selftest. Tested in CI."
+            must_have_ac: true
+            note: "Graph invariants validated by unit tests in spec-runtime. BDD @ci-only for full selftest integration."
             tests:
+              # Unit tests for each invariant that selftest validates
+              - { type: unit, tag: "graph_invariants_req_has_ac", module: "graph::tests::graph_invariants_req_has_ac", file: "crates/spec-runtime/src/graph.rs" }
+              - { type: unit, tag: "ac_with_tests_produces_graph_node_and_edge", module: "graph::tests::ac_with_tests_produces_graph_node_and_edge", file: "crates/spec-runtime/src/graph.rs" }
+              - { type: unit, tag: "graph_invariants_command_reachable", module: "graph::tests::graph_invariants_command_reachable", file: "crates/spec-runtime/src/graph.rs" }
+              # BDD for full selftest integration (CI-only)
               - { type: bdd, tag: "@AC-TPL-GRAPH-SELFTEST", file: "specs/features/graph_invariants.feature" }
 
       - id: REQ-TPL-PLATFORM-UI
