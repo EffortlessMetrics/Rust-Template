@@ -174,7 +174,7 @@ For **Tier-1** parity (same environment as CI):
 
 This repo is Nix-first. You *can* run it without Nix, but you lose exact CI parity.
 
-### 4.2 Getting up and running
+### 4.2 Getting up and running (5 minutes)
 
 ```bash
 # Clone the template
@@ -187,10 +187,19 @@ nix develop
 # Check your environment
 cargo xtask doctor
 
+# Quick smoke test (validates template baseline – do this first!)
+cargo xtask kernel-smoke
+```
+
+**Expected:** All checks green. If any fail, troubleshoot before proceeding.
+
+Then:
+
+```bash
 # Install hooks (optional but recommended)
 cargo xtask install-hooks
 
-# Run the full selftest gate
+# Run the full selftest gate (before submitting PR)
 cargo xtask selftest
 ```
 
@@ -509,6 +518,7 @@ Documentation is organized by audience and purpose:
 
 Start here if you're using this template for the first time:
 
+- **[First Fork Runbook](docs/how-to/FIRST_FORK.md)** – One-page quick start for forking (do this first!)
 - **[Quick Start Guide](docs/QUICKSTART.md)** – Get productive in 15 minutes
 - **[Pre-Fork Checklist](docs/how-to/pre-fork-checklist.md)** – Validate your environment before forking
 - [New service guide](docs/how-to/new-service-from-template.md) – Step-by-step setup after forking
@@ -522,6 +532,7 @@ Use these guides while working in the codebase:
 - [CLAUDE.md](./CLAUDE.md) – Agent operational instructions
 - [AGENT_GUIDE.md](docs/AGENT_GUIDE.md) – Deeper guidance for agent-driven work
 - [Selective Testing Guide](docs/SELECTIVE_TESTING.md) – Validation ladder and change-aware testing
+- [Change Acceptance Criterion](docs/how-to/change-acceptance-criterion.md) – How to modify ACs (day-2 contracts)
 - [Add Acceptance Criterion](docs/how-to/add-acceptance-criterion.md) – How to add new ACs
 - [Add HTTP endpoint](docs/how-to/add-http-endpoint.md) – How to add new endpoints
 - [Change OpenAPI safely](docs/how-to/change-openapi-safely.md) – How to evolve APIs
@@ -538,6 +549,7 @@ Use these guides to configure the production environment:
 - [Required Checks Reference](docs/reference/required-checks.md) – CI checks that must pass
 - [Platform Support](docs/reference/platform-support.md) – Tier-1 vs Tier-2 platforms
 - [Supply Chain Hardening](docs/explanation/supply-chain-hardening.md) – Security best practices
+- [Integrate with IDP or Agent](docs/how-to/integrate-idp-or-agent.md) – Use `/platform/*` APIs with Backstage, Port.io, or LLM agents
 
 ### 13.4 Understanding the System (Architecture)
 
