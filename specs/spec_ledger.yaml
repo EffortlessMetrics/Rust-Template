@@ -317,7 +317,7 @@ stories:
             text: "`examples/fork-customization/` builds and passes its own selftest in CI, demonstrating a working fork."
             tags: [template, example]
             must_have_ac: false
-            note: "Template feature - example fork demonstrating template extensibility."
+            note: "CI-only: tests cross-workspace behavior. Example fork must build independently in CI."
             tests:
               - { type: ci, tag: "example_fork_ci" }
 
@@ -370,7 +370,7 @@ stories:
               - { type: integration, tag: "@AC-PLT-016", file: "specs/features/xtask_devex.feature" }
 
           - id: AC-PLT-019
-            text: "`cargo xtask selftest` displays a condensed summary with clear pass/fail indicators for all 7 steps"
+            text: "`cargo xtask selftest` displays a condensed summary with clear pass/fail indicators for all 8 steps"
             tags: [kernel]
             must_have_ac: false
             note: "BDD scenarios marked @ci-only to avoid recursive selftest. Tested in CI."
