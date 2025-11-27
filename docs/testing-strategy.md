@@ -1,7 +1,7 @@
 # Testing Strategy
 
-**Version**: v3.3.1
-**Last Updated**: 2025-11-25
+**Version**: v3.3.3
+**Last Updated**: 2025-11-27
 
 This repo ships with a layered test strategy:
 
@@ -146,6 +146,40 @@ When you add or change behavior:
 2. Add/update a scenario in `specs/features/*.feature`.
 3. Implement the change in Rust.
 4. Run `xtask bdd` (or full `selftest`).
+
+### The @ci-only Tag
+
+Some BDD scenarios are tagged `@ci-only` to exclude them from local development runs. This is used for:
+
+* **Recursive scenarios** - Tests that run `selftest` from within selftest
+* **Git worktree scenarios** - Tests that create temporary worktrees (can flake with VS Code Git extension or other tools accessing `.git`)
+* **Heavy integration tests** - Tests that spawn processes or access external resources
+
+**How it works:**
+
+When running locally (not in CI), `cargo xtask bdd` automatically sets:
+```
+CUCUMBER_TAG_EXPRESSION="not @ci-only"
+```
+
+This excludes @ci-only scenarios from local runs while CI still executes them.
+
+**When to use @ci-only:**
+
+Tag a scenario `@ci-only` when:
+* It runs `cargo xtask selftest` from within BDD (recursive execution)
+* It creates git worktrees or modifies `.git` state
+* It depends on CI-specific environment (clean checkout, no VS Code)
+* It's inherently slow or resource-intensive
+
+**Important:** Always ensure the AC has unit test coverage or stable BDD scenarios for local validation. @ci-only should supplement, not replace, local testing.
+
+**Override:** Set `CUCUMBER_TAG_EXPRESSION` explicitly to run all scenarios:
+```bash
+CUCUMBER_TAG_EXPRESSION="" cargo xtask bdd
+```
+
+See `docs/feature_status_notes.md` for the full list of @ci-only scenarios and the rationale.
 
 ---
 

@@ -1,6 +1,6 @@
-# Template Version: v3.3.1
+# Template Version: v3.3.3
 # Schema: spec_ledger.yaml v1.0
-# Last Updated: 2025-11-22
+# Last Updated: 2025-11-27
 
 Feature: Developer Experience Commands
   As a developer
@@ -83,8 +83,10 @@ Feature: Developer Experience Commands
     And the output should contain "clippy"
     And the output should contain "tests"
 
-  @AC-PLT-003 @selective_testing
+  @AC-PLT-003 @selective_testing @ci-only
   Scenario: test-changed builds tag expression for changed features
+    # Note: Marked @ci-only because git worktree operations can flake
+    # when VS Code Git extension or other tools access .git concurrently
     Given a temporary git worktree for test-changed
     And I add a selective test-changed feature file
     When I run "cargo xtask test-changed" in plan-only mode
