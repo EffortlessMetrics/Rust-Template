@@ -167,9 +167,16 @@ These REQs encode the template's opinionated stance. They define *how* the platf
 ```bash
 cargo xtask doctor       # Environment validated
 cargo xtask selftest     # 8/8 gates pass
-cargo xtask ac-status    # 81/81 PASS, 0 FAIL, 0 UNKNOWN
+cargo xtask ac-status    # 79/81 PASS, 0 FAIL, 2 UNKNOWN (meta/CI-only)
 cargo run -p app-http    # Listening on :8080
 ```
+
+**Note:** The 2 UNKNOWN ACs are intentionally meta/CI-only contracts:
+
+- `AC-TPL-BDD-EXIT-CODES` - Harness contract, validated at CI level
+- `AC-TPL-EXAMPLE-FORK-BUILDS` - Example fork, validated by CI job
+
+See `docs/feature_status_notes.md` for details on the @ci-only testing pattern.
 
 **Detailed AC statuses:** `docs/feature_status.md`
 
