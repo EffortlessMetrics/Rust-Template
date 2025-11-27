@@ -71,6 +71,8 @@ These REQs encode the template's opinionated stance. They define *how* the platf
 
 **Cross-reference:** [`docs/how-to/pre-fork-checklist.md`](./how-to/pre-fork-checklist.md) → Phase 5: Choose Your Opinionation Level
 
+**Note on ID prefixes:** IDs with `TPL` prefixes are part of the template family. Kernel vs template default is controlled by `must_have_ac`, not the ID prefix. An AC like `AC-TPL-ARTIFACTS-HAVE-REFS` with `must_have_ac: true` is kernel; one with `must_have_ac: false` is a template default.
+
 ---
 
 ## Key Capabilities
@@ -192,6 +194,7 @@ The template is ready to fork. Services inheriting from v3.3.3-kernel get:
 **Recently completed (v3.3.3 polish):**
 
 **Documentation:**
+
 - ✅ IDP positioning documentation (`docs/explanation/idp-positioning.md`)
 - ✅ Brownfield adoption guide (`docs/guides/brownfield-adoption.md`)
 - ✅ Fork feedback workflow (`docs/how-to/report-fork-feedback.md`)
@@ -203,6 +206,7 @@ The template is ready to fork. Services inheriting from v3.3.3-kernel get:
 - ✅ Tag signing setup (`docs/how-to/setup-tag-signing.md`)
 
 **Operational Tooling:**
+
 - ✅ Questions-as-artifacts (`cargo xtask question-new`, `questions-list`)
 - ✅ Friction log API (`GET /platform/friction`, `/platform/friction/{id}`)
 - ✅ Friction CLI (`cargo xtask friction-new`, `friction-list`)
@@ -212,6 +216,7 @@ The template is ready to fork. Services inheriting from v3.3.3-kernel get:
 - ✅ Branch protection script (`.github/scripts/setup-branch-protection.sh`)
 
 **Fixes:**
+
 - ✅ BDD test isolation (tests no longer pollute tracked files)
 - ✅ ADR numbering duplicates resolved
 
