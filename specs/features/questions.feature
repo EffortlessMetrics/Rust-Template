@@ -13,17 +13,15 @@ Feature: Question Artifacts for Ambiguity Handling
     Then the command should succeed
     And I clean up created question test artifacts
 
-  @AC-TPL-QUESTIONS-LOGGED @wip
+  @AC-TPL-QUESTIONS-LOGGED
   Scenario: Questions list command works
-    # Note: Works from real workspace; test isolation needs questions directory
-    Given a clean development environment
+    Given I am in the actual workspace
     When I run "cargo xtask questions-list"
     Then the command should succeed
 
-  @AC-TPL-QUESTIONS-LOGGED @wip
+  @AC-TPL-QUESTIONS-LOGGED
   Scenario: Questions list supports JSON output
-    # Note: Works from real workspace; test isolation needs questions directory
-    Given a clean development environment
+    Given I am in the actual workspace
     When I run "cargo xtask questions-list --json"
     Then the command should succeed
     And the output should be valid JSON

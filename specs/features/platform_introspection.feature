@@ -36,7 +36,7 @@ Feature: Platform Introspection API
     And the JSON response should have field "docs"
     And the field "docs" should be of type "array"
 
-  @AC-TPL-PLATFORM-QUESTIONS
+  @AC-TPL-PLATFORM-GOVERNANCE-APIS
   Scenario: Questions endpoint returns all questions
     When I GET "http://localhost:8080/platform/questions"
     Then the response status should be 200
@@ -45,14 +45,14 @@ Feature: Platform Introspection API
     And the JSON response should have field "total"
     And the field "total" should be of type "number"
 
-  @AC-TPL-PLATFORM-QUESTIONS
+  @AC-TPL-PLATFORM-GOVERNANCE-APIS
   Scenario: Questions endpoint supports status filtering
     When I GET "http://localhost:8080/platform/questions?status=open"
     Then the response status should be 200
     And the JSON response should have field "questions"
     And the field "questions" should be of type "array"
 
-  @AC-TPL-PLATFORM-QUESTIONS
+  @AC-TPL-PLATFORM-GOVERNANCE-APIS
   Scenario: Question by ID endpoint returns specific question
     When I GET "http://localhost:8080/platform/questions/Q-EXAMPLE-001"
     Then the response status should be 200
@@ -62,13 +62,13 @@ Feature: Platform Introspection API
     And the JSON response should have field "context"
     And the field "context" should be of type "object"
 
-  @AC-TPL-PLATFORM-QUESTIONS
+  @AC-TPL-PLATFORM-GOVERNANCE-APIS
   Scenario: Question by ID endpoint returns 404 for unknown question
     When I GET "http://localhost:8080/platform/questions/Q-NONEXISTENT-999"
     Then the response status should be 404
     And the JSON response should have field "error"
 
-  @AC-TPL-PLATFORM-FORKS
+  @AC-TPL-PLATFORM-GOVERNANCE-APIS
   Scenario: Forks endpoint returns all registered forks
     When I GET "http://localhost:8080/platform/forks"
     Then the response status should be 200
@@ -77,7 +77,7 @@ Feature: Platform Introspection API
     And the JSON response should have field "total"
     And the field "total" should be of type "number"
 
-  @AC-TPL-PLATFORM-FORKS
+  @AC-TPL-PLATFORM-GOVERNANCE-APIS
   Scenario: Fork by name endpoint returns 404 for unknown fork
     When I GET "http://localhost:8080/platform/forks/FORK-NONEXISTENT-999"
     Then the response status should be 404

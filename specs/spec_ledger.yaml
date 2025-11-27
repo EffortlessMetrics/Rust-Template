@@ -627,7 +627,7 @@ stories:
               surfaced to humans or agents without halting progress.
             tags: [template, governance]
             must_have_ac: false
-            note: "Template feature - question artifacts. Commands work; test isolation pending."
+            note: "Template feature - question artifacts. Verified via BDD in actual workspace."
             tests:
               - { type: bdd, tag: "@AC-TPL-QUESTIONS-LOGGED", file: "specs/features/questions.feature" }
 
@@ -639,7 +639,7 @@ stories:
               /platform/friction and /platform/friction/{id}.
             tags: [template, governance]
             must_have_ac: false
-            note: "Template feature - friction log. Commands work; test isolation pending."
+            note: "Template feature - friction log. Verified via BDD in actual workspace."
             tests:
               - { type: bdd, tag: "@AC-TPL-GOV-FRICTION",
                   file: "specs/features/friction.feature" }
@@ -651,7 +651,7 @@ stories:
               and is exposed via /platform/forks and /platform/forks/{name}.
             tags: [template, governance]
             must_have_ac: false
-            note: "Template feature - fork registry. Commands work; test isolation pending."
+            note: "Template feature - fork registry. Verified via BDD in actual workspace."
             tests:
               - { type: bdd, tag: "@AC-TPL-GOV-FORKS",
                   file: "specs/features/forks.feature" }
@@ -1076,7 +1076,7 @@ stories:
               human-readable context file (e.g. `context.md`).
             tags: [template, devex]
             must_have_ac: false
-            note: "Template feature - bundle structure for agents. Commands work; test isolation pending."
+            note: "Template feature - bundle structure for agents. Verified via BDD in actual workspace."
             tests:
               - { type: bdd, tag: "@AC-TPL-BUNDLE-LAYOUT", file: "specs/features/bundles.feature" }
 
@@ -1150,9 +1150,9 @@ stories:
               (/platform/*, bundles, xtask CLI).
             tags: [template, philosophy]
             must_have_ac: false
-            note: "Documentation AC - verified by content inspection, not BDD."
+            note: "Documentation AC - verified by BDD content inspection."
             tests:
-              - { type: docs, tag: "@AC-TPL-OPINIONS-DOCUMENTED", file: "docs/QUICKSTART.md" }
+              - { type: bdd, tag: "@AC-TPL-OPINIONS-DOCUMENTED", file: "specs/features/philosophy_docs.feature" }
 
       - id: REQ-TPL-OVERRIDE-PATH
         title: "Forks override via ACs, not hacks"
@@ -1171,18 +1171,18 @@ stories:
               the kernel made this hard.
             tags: [template, philosophy]
             must_have_ac: false
-            note: "Documentation AC - verified by file existence, not BDD."
+            note: "Documentation AC - verified by BDD content inspection."
             tests:
-              - { type: docs, tag: "@AC-TPL-OVERRIDE-DOC", file: "docs/how-to/change-template-opinion.md" }
+              - { type: bdd, tag: "@AC-TPL-OVERRIDE-DOC", file: "specs/features/philosophy_docs.feature" }
           - id: AC-TPL-OVERRIDE-TRACEABLE
             text: >
               specs/doc_index.yaml registers the override doc with tag 'override_path',
               and /platform/docs/index exposes it under a 'Kernel Overrides' category.
             tags: [template, philosophy]
             must_have_ac: false
-            note: "Documentation AC - verified by doc_index inspection, not BDD."
+            note: "Documentation AC - verified by BDD content inspection."
             tests:
-              - { type: docs, tag: "@AC-TPL-OVERRIDE-TRACEABLE", file: "specs/doc_index.yaml" }
+              - { type: bdd, tag: "@AC-TPL-OVERRIDE-TRACEABLE", file: "specs/features/philosophy_docs.feature" }
 
       - id: REQ-TPL-AI-IDP-COMPAT
         title: "AI/IDP-native machine surfaces"

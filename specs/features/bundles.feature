@@ -4,10 +4,9 @@ Feature: LLM Bundle Structure
   I want to generate context bundles with a predictable structure
   So that I can provide consistent, reliable context for LLM-assisted development
 
-  @AC-TPL-BUNDLE-LAYOUT @wip
+  @AC-TPL-BUNDLE-LAYOUT
   Scenario: Bundle implement_ac creates expected structure
-    # Note: Works from real workspace; test isolation needs contextpack.yaml
-    Given a clean development environment
+    Given I am in the actual workspace
     When I run "cargo xtask bundle implement_ac"
     Then the command should succeed
     And the output should contain "bundle"

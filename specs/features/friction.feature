@@ -4,17 +4,15 @@ Feature: Friction Log Artifacts
   I want to capture and track friction encountered during development
   So that process improvements can be identified and prioritized
 
-  @AC-TPL-GOV-FRICTION @wip
+  @AC-TPL-GOV-FRICTION
   Scenario: List friction entries via CLI
-    # Note: Works from real workspace; test isolation needs friction log
-    Given a clean development environment
+    Given I am in the actual workspace
     When I run "cargo xtask friction-list"
     Then the command should succeed
 
-  @AC-TPL-GOV-FRICTION @wip
+  @AC-TPL-GOV-FRICTION
   Scenario: List friction entries with JSON output
-    # Note: Works from real workspace; test isolation needs friction log
-    Given a clean development environment
+    Given I am in the actual workspace
     When I run "cargo xtask friction-list --json"
     Then the command should succeed
     And the output should be valid JSON

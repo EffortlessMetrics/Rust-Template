@@ -420,7 +420,7 @@ Feature: Developer Experience Commands
     When I run "cargo xtask skills-lint"
     Then the command should succeed
 
-  @AC-TPL-SERVICE-INIT
+  @AC-PLT-021
   Scenario: service-init updates service branding
     Given a clean git working directory
     When I run service-init with id "test-service" name "Test Service" and description "A test service"
@@ -432,14 +432,14 @@ Feature: Developer Experience Commands
     And "README.md" should contain "A test service"
     And the output should contain "Service initialization complete"
 
-  @AC-TPL-SERVICE-INIT
+  @AC-PLT-021
   Scenario: service-init is idempotent
     Given service metadata has been initialized
     When I run service-init with the same parameters twice
     Then both runs should succeed
     And the second run should report "No changes needed"
 
-  @AC-TPL-SERVICE-INIT
+  @AC-PLT-021
   Scenario: service-init validates service ID format
     When I run service-init with an invalid service ID "MyService"
     Then the command should fail
