@@ -239,6 +239,8 @@ The first real fork will likely discover friction. Capture it in `FRICTION_LOG.m
 
 This version represents the **first fully selftest-green, opinionated LLM-native Rust cell** ready for production forks.
 
+See `docs/reference/doc-sources.md` for how generated and hand-authored docs are kept aligned.
+
 ### What This Means
 
 ✅ **Kernel is closed** – The core governance infrastructure (specs, BDD, policies, platform APIs) is stable and tested.
@@ -254,6 +256,20 @@ This version represents the **first fully selftest-green, opinionated LLM-native
 - Zero-UNKNOWN AC mode: The meta/CI ACs remain `UNKNOWN` by design (they test the testing infrastructure, not domain behavior). This is honest and transparent.
 - Renumbering AC IDs: Kernel IDs are frozen to avoid breaking downstream forks.
 - Portal vendor lock-in: `/platform/*` contracts are generic. Let portals adapt.
+
+#### Higher-layer responsibilities (out of scope)
+
+These concerns are intentionally left to the platform that embeds this cell:
+
+- **Authentication & authorization** – This template assumes you terminate auth at a gateway or
+  platform layer. It does not ship multi-tenant auth, RBAC, or token validation.
+- **SLOs and performance targets** – The kernel validates correctness and governance. Latency,
+  throughput, and SLOs are defined and enforced by the consuming platform.
+- **Full observability stack** – Basic logging is present. Metrics, tracing pipelines, and
+  dashboards live in the platform. Forks may add REQs/ACs to tighten this where needed.
+
+Forks can introduce domain-specific REQs/ACs for these areas, but the **kernel contract** remains
+platform-agnostic.
 
 **Known gaps (documented, not blockers):**
 

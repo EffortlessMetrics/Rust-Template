@@ -268,7 +268,33 @@ To add a meta AC (rare):
 
 ---
 
-## 6. References
+## 6. Changing AC classification (kernel / template / meta)
+
+Changing an AC's type is a **kernel contract change**, not just a test tweak.
+
+**Rules:**
+
+- Any change to `must_have_ac` must be treated as a kernel version change.
+- Demoting a kernel AC (`must_have_ac: true` → `false`) requires:
+  - An ADR explaining the decision and impact
+  - A kernel minor version bump
+  - Updates to `docs/KERNEL_SNAPSHOT.md` and `docs/feature_status.md` explaining the change
+- Promoting a template AC to kernel (`false` → `true`) requires:
+  - Confirmed test coverage (unit and/or BDD)
+  - Inclusion in the kernel contract JSON emitted by `cargo xtask release-bundle`
+- Meta/CI-only ACs (e.g. tagged `["template", "harness"]` or validated via `type: ci` tests)
+  should not be promoted to kernel; they verify the harness, not service behaviour.
+
+**Anti-patterns:**
+
+- Flipping `must_have_ac` just to get CI green, without ADRs and versioning.
+- Hiding fragile behaviour behind `template`/`meta` tags instead of fixing it.
+
+For the step-by-step workflow, see `docs/how-to/change-acceptance-criterion.md`.
+
+---
+
+## 7. References
 
 - **Spec Ledger:** `specs/spec_ledger.yaml` (source of truth for all ACs)
 - **Feature Status:** `docs/feature_status.md` (auto-generated AC test status)
@@ -281,6 +307,10 @@ To add a meta AC (rare):
 
 ## Changelog
 
+- **2025-11-27:** Track B + C refinement
+  - Added section 6: AC classification governance rules
+  - Documented rules for changing `must_have_ac` and versioning implications
+  - Added anti-patterns section
 - **2025-11-27:** Updated for v3.3.3 final state
   - All kernel and template ACs passing
   - Documented @ci-only testing pattern

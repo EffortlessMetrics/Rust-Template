@@ -575,6 +575,7 @@ Roadmaps, ADRs, and planning documents:
 
 Technical references and command documentation:
 
+- [Documentation Sources](docs/reference/doc-sources.md) – What to trust when docs disagree
 - [xtask Commands](docs/reference/xtask-commands.md) – Complete CLI reference
 - [CI Coverage](docs/reference/ci-coverage.md) – What CI tests
 - [Feature Status](docs/feature_status.md) – Auto-generated AC health dashboard

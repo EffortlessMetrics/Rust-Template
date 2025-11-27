@@ -171,6 +171,29 @@ stories:
               - { type: unit, tag: "test_ac_id_validation_requires_prefix", module: "commands::ac_new::tests", file: "crates/xtask/src/commands/ac_new.rs" }
               - { type: unit, tag: "test_ac_entry_generation", module: "commands::ac_new::tests", file: "crates/xtask/src/commands/ac_new.rs" }
 
+      - id: REQ-PLT-AC-GOVERNANCE
+        title: "AC classification is governed and versioned"
+        tags: [platform, governance]
+        must_have_ac: false
+        description: >
+          Changes to acceptance criterion classification (must_have_ac field) are treated
+          as kernel contract changes. The rules, process, and rationale are documented
+          and enforced.
+        adr: ADR-0005
+        docs:
+          - docs/feature_status_notes.md
+          - docs/how-to/change-acceptance-criterion.md
+        acceptance_criteria:
+          - id: AC-PLT-AC-DEMOTION-GOVERNED
+            text: >
+              Changes to must_have_ac for any acceptance criterion are treated as kernel
+              contract changes and are documented with an ADR and kernel version update.
+            tags: [template, governance]
+            must_have_ac: false
+            tests:
+              - { type: docs, tag: "ac_classification_rules_documented" }
+              - { type: docs, tag: "ac_change_howto_documented" }
+
       - id: REQ-PLT-SECURITY-GOVERNANCE
         title: "Security and dependency health are first-class gates"
         tags: [platform, security]
