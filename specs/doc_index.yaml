@@ -648,3 +648,63 @@ docs:
     requirements: [REQ-PLT-DOC-TEMPLATES, REQ-PLT-ONBOARDING]
     acs: [AC-TPL-OVERRIDE-TRACEABLE]
     adrs: [ADR-0005]
+
+  # AC Governance Framework
+  - id: DESIGN-PLT-AC-GOVERNANCE-001
+    file: docs/design/ac-governance.md
+    title: "AC Governance Framework"
+    doc_type: design_doc
+    stories: [US-TPL-PLT-001]
+    requirements: [REQ-PLT-AC-GOVERNANCE]
+    acs: [AC-PLT-002, AC-PLT-004]
+    adrs: [ADR-0001, ADR-0020, ADR-0021]
+
+  # Automation and Workflow Behaviour
+  - id: DESIGN-TPL-AUTOMATION-BEHAVIOUR-001
+    file: docs/design/automation-behaviour.md
+    title: "Automation and Workflow Behaviour"
+    doc_type: design_doc
+    stories: [US-TPL-PLT-001]
+    requirements: [REQ-TPL-AUTOMATION-BEHAVIOUR]
+    acs: [AC-TPL-XTASK-NONINTERACTIVE, AC-TPL-FLOW-IDEMPOTENT]
+    adrs: [ADR-0005, ADR-0017]
+
+  # Governance Artifacts and Decision Capture
+  - id: DESIGN-TPL-GOV-ARTIFACTS-001
+    file: docs/design/governance-artifacts.md
+    title: "Governance Artifacts and Decision Capture"
+    doc_type: design_doc
+    stories: [US-TPL-PLT-001]
+    requirements: [REQ-TPL-GOV-ARTIFACTS]
+    acs: [AC-TPL-QUESTIONS-LOGGED, AC-TPL-ADR-STRUCTURE]
+    adrs: [ADR-0005, ADR-0020, ADR-0021, ADR-0022]
+
+  # Skills Governance Framework
+  - id: DESIGN-TPL-SKILLS-GOVERNANCE-001
+    file: docs/design/skills-governance.md
+    title: "Skills Governance Framework"
+    doc_type: design_doc
+    stories: [US-TPL-PLT-001]
+    requirements: [REQ-TPL-SKILLS-GOVERNANCE]
+    acs: [AC-TPL-SKILLS-LINT, AC-TPL-SKILLS-FRONTMATTER]
+    adrs: [ADR-0004, ADR-0020, ADR-0021]
+
+  # Agents Governance Framework
+  - id: DESIGN-TPL-AGENTS-GOVERNANCE-001
+    file: docs/design/agents-governance.md
+    title: "Agents Governance Framework"
+    doc_type: design_doc
+    stories: [US-TPL-PLT-001]
+    requirements: [REQ-TPL-AGENTS-GOVERNANCE]
+    acs: [AC-TPL-AGENTS-LINT, AC-TPL-AGENTS-FRONTMATTER]
+    adrs: [ADR-0004, ADR-0020, ADR-0021]
+
+  # Bundle Contract and Scoped Work Context
+  - id: DESIGN-TPL-BUNDLE-CONTRACT-001
+    file: docs/design/bundle-contract.md
+    title: "Bundle Contract and Scoped Work Context"
+    doc_type: design_doc
+    stories: [US-TPL-PLT-001]
+    requirements: [REQ-TPL-BUNDLE-CONTRACT]
+    acs: [AC-TPL-BUNDLE-LAYOUT, AC-TPL-BUNDLE-CONTENT]
+    adrs: [ADR-0001, ADR-0005]
