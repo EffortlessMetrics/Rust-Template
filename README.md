@@ -16,7 +16,7 @@ A test service
 
 - **Schema-driven specs** (`specs/spec_ledger.yaml`, `specs/config_schema.yaml`)
 - **BDD-backed acceptance criteria** (Cucumber + Rust)
-- **An 8-step selftest gate** (`cargo xtask selftest`)
+- **A 10-step selftest gate** (`cargo xtask selftest`)
 - **Introspection APIs** under `/platform/*`
 - **A Web UI** at `/ui` that shows the same governance state CI enforces
 
@@ -61,7 +61,7 @@ Visit http://localhost:8080/ui to see the governance dashboard.
 ```bash
 cargo xtask help-flows         # Discover available flows and commands
 cargo xtask ac-status          # View AC health
-cargo xtask bundle implement_ac # Generate LLM context for implementation
+cargo xtask bundle implement_ac # Generate LLM context (task from .llm/contextpack.yaml)
 ```
 
 See:
@@ -91,15 +91,17 @@ See:
 
 ### 3.3 Enforcement
 
-- `cargo xtask selftest` – the **single mandatory CI gate**:
+- `cargo xtask selftest` – the **single mandatory CI gate** (10 steps):
   1. Core checks (fmt, clippy, unit tests)
-  2. BDD acceptance tests
-  3. AC status + ADR mapping
-  4. LLM context bundler checks
-  5. Policy tests (OPA/Conftest)
-  6. DevEx contract (required xtask commands, flows)
-  7. Governance graph invariants (REQ/AC/command connectivity)
-  8. AC coverage sanity
+  2. Skills governance lint
+  3. Agents governance lint
+  4. BDD acceptance tests
+  5. AC status + ADR mapping
+  6. LLM context bundler checks
+  7. Policy tests (OPA/Conftest)
+  8. DevEx contract (required xtask commands, flows)
+  9. Governance graph invariants (REQ/AC/command connectivity)
+  10. AC coverage sanity
 
 If selftest is red, the service is **not** in a governed state.
 
@@ -162,9 +164,9 @@ Under the hood:
 
 ---
 
-## 4. Quick start
+## 5. Detailed Setup Guide
 
-### 4.1 Prerequisites
+### 5.1 Prerequisites
 
 **Required:** [Nix with flakes](https://nixos.org/download.html) (Tier-1, recommended for exact CI parity)
 
@@ -172,7 +174,7 @@ Under the hood:
 
 **Note:** You can develop without Nix (Tier-2), but policy tests and exact CI parity require it. See [docs/reference/environment.md](docs/reference/environment.md) for detailed setup by platform and tier.
 
-### 4.2 Getting up and running (5 minutes)
+### 5.2 Getting up and running (5 minutes)
 
 ```bash
 # Clone the template
@@ -182,6 +184,15 @@ cd my-service
 # Enter the Nix dev shell (Tier-1)
 nix develop
 
+# One-command environment setup and validation (recommended)
+cargo xtask dev-up
+# OR: Use the Claude Code skill directly
+# /bootstrap-dev-env (requires Claude Code integration)
+```
+
+Alternatively, if you prefer manual setup:
+
+```bash
 # Check your environment
 cargo xtask doctor
 
@@ -213,7 +224,7 @@ cargo run -p app-http
 
 ---
 
-## 5. Platform support
+## 6. Platform support
 
 | Platform | Tier | Environment  | Selftest | Notes                                      |
 | -------- | ---- | ------------ | -------- | ------------------------------------------ |
@@ -229,9 +240,9 @@ For detailed setup by platform and troubleshooting, see **[docs/reference/enviro
 
 ---
 
-## 6. Governance model in practice
+## 7. Governance model in practice
 
-### 6.1 Spec ledger
+### 7.1 Spec ledger
 
 `specs/spec_ledger.yaml` is the core artifact:
 
@@ -258,7 +269,7 @@ Example fragment:
         - { type: bdd, tag: "@AC-TPL-PLATFORM-AUTH-BASIC", file: "specs/features/platform_security.feature" }
 ```
 
-### 6.2 AC status and coverage
+### 7.2 AC status and coverage
 
 To see current coverage:
 
@@ -274,9 +285,9 @@ Kernel ACs must be `[PASS]`. Non-kernel or template-only ACs may be `[UNKNOWN]` 
 
 ---
 
-## 7. Platform APIs and auth
+## 8. Platform APIs and auth
 
-### 7.1 Auth modes
+### 8.1 Auth modes
 
 Auth is applied once at the `/platform/*` router:
 
@@ -298,7 +309,9 @@ export PLATFORM_AUTH_MODE=basic
 export PLATFORM_AUTH_TOKEN="some-long-random-secret"
 ```
 
-### 7.2 Key endpoints
+### 8.2 Key endpoints
+
+**Core governance and discovery:**
 
 ```bash
 # Governance health + metadata
@@ -307,26 +320,65 @@ curl http://localhost:8080/platform/status
 # Full governance graph (stories/REQs/ACs/docs/commands)
 curl http://localhost:8080/platform/graph
 
-# Tasks from specs/tasks.yaml
-curl http://localhost:8080/platform/tasks
-
-# DevEx flows
-curl http://localhost:8080/platform/devex/flows
+# Schema/OpenAPI for the platform
+curl http://localhost:8080/platform/schema
 
 # Docs index
 curl http://localhost:8080/platform/docs/index
 
-# Schema/OpenAPI for the platform
-curl http://localhost:8080/platform/schema
+# AC coverage summary
+curl http://localhost:8080/platform/coverage
+```
+
+**Work and task management:**
+
+```bash
+# Tasks from specs/tasks.yaml
+curl http://localhost:8080/platform/tasks
+
+# Suggested next work (for agents)
+curl http://localhost:8080/platform/tasks/suggest-next
+
+# Task graph (task dependencies)
+curl http://localhost:8080/platform/tasks/graph
+
+# Update task status
+curl -X POST http://localhost:8080/platform/tasks/{id}/status \
+  -H "Content-Type: application/json" \
+  -d '{"status": "InProgress"}'
+```
+
+**Developer and agent workflows:**
+
+```bash
+# Available developer flows and xtask commands
+curl http://localhost:8080/platform/devex/flows
+
+# Agent hints (prioritized work suggestions for Todo/InProgress tasks)
+# Returns: task ID, title, owner, labels, REQ/AC IDs, and recommended commands
+curl http://localhost:8080/platform/agent/hints
+```
+
+**Metadata and issues:**
+
+```bash
+# Development friction log (DevEx issues)
+curl http://localhost:8080/platform/friction
+
+# Design questions and ambiguities
+curl http://localhost:8080/platform/questions
+
+# Fork/branch information
+curl http://localhost:8080/platform/forks
 ```
 
 ---
 
-## 8. Developer workflows (xtask)
+## 9. Developer workflows (xtask)
 
-Everything runs through the `xtask` binary. It’s designed to be friendly for humans and agents.
+Everything runs through the `xtask` binary. It's designed to be friendly for humans and agents.
 
-### 8.1 Onboarding & sanity
+### 9.1 Onboarding & sanity
 
 ```bash
 # Environment sanity check
@@ -339,11 +391,13 @@ cargo xtask check
 cargo xtask selftest
 ```
 
-### 8.2 AC-first feature development
+### 9.2 AC-first feature development
 
 ```bash
-# 1. Create a new AC
-cargo xtask ac-new AC-MYSERV-001 "Users can list todos" --requirement REQ-MYSERV-TODOS
+# 1. Create a new AC (requires both --story and --requirement)
+cargo xtask ac-new AC-MYSERV-001 "Users can list todos" \
+  --story US-MYSERV-001 \
+  --requirement REQ-MYSERV-TODOS
 
 # 2. Edit the spec ledger to add context
 #    (specs/spec_ledger.yaml is updated by step 1)
@@ -351,7 +405,7 @@ cargo xtask ac-new AC-MYSERV-001 "Users can list todos" --requirement REQ-MYSERV
 # 3. Create a BDD scenario
 #    Edit specs/features/todos.feature and tag with @AC-MYSERV-001
 
-# 4. Generate an LLM context bundle
+# 4. Generate an LLM context bundle (task name from .llm/contextpack.yaml)
 cargo xtask bundle implement_ac
 
 # 5. Implement the feature
@@ -366,7 +420,7 @@ cargo xtask ac-status
 cargo xtask selftest
 ```
 
-### 8.3 Selective testing
+### 9.3 Selective testing
 
 ```bash
 # Test only what changed vs origin/main (fast loop)
@@ -379,7 +433,7 @@ XTASK_TEST_CHANGED_PLAN_ONLY=1 cargo xtask test-changed
 cargo xtask test-ac AC-PLT-001
 ```
 
-### 8.4 Releases
+### 9.4 Releases
 
 ```bash
 # Build a local SBOM
@@ -395,13 +449,13 @@ cargo xtask release-bundle 3.3.1
 
 ---
 
-## 9. LLM / agent ergonomics
+## 10. LLM / agent ergonomics
 
 This repo is designed so that an agent can act as a **real teammate**, not a glorified autocomplete:
 
 - **Specs & schemas** give a precise brief (`spec_ledger.yaml`, `config_schema.yaml`, `devex_flows.yaml`, `tasks.yaml`).
 - **Bundles** give a bounded context:
-  - `cargo xtask bundle implement_ac` produces a curated context pack for a feature or AC.
+  - `cargo xtask bundle <TASK>` produces curated context packs (e.g., `implement_ac` is a registered task).
 - **Flows & Skills** provide the patterns:
   - `.claude/skills/*/SKILL.md` describe governed-feature-dev, governed-maintenance, governed-release, and governance-debug flows.
 - **Platform APIs** provide live telemetry:
@@ -421,7 +475,7 @@ The expected agent loop looks like:
 
 3. **Plan with a bundle**
 
-   - Generate a bundle with `cargo xtask bundle implement_ac` or a task-specific bundle.
+   - Generate a bundle with `cargo xtask bundle implement_ac` or another task name from `.llm/contextpack.yaml`.
    - Use only what's in the bundle plus linked specs/docs unless you have a good reason to widen scope.
 
 4. **Execute via xtask and code**
@@ -448,9 +502,9 @@ For details, see:
 
 ---
 
-## 10. Adoption patterns
+## 11. Adoption patterns
 
-### 10.1 Greenfield: new service
+### 11.1 Greenfield: new service
 
 - Clone this template into a new repo.
 - Follow the [Pre-Fork Checklist](./docs/how-to/pre-fork-checklist.md) to validate your environment.
@@ -460,7 +514,7 @@ For details, see:
 - Keep the platform kernel as-is; build your business logic in new crates or modules.
 - Use `selftest` as the gate from day one.
 
-### 10.2 Brownfield: existing repo
+### 11.2 Brownfield: existing repo
 
 See [docs/how-to/add-governance-to-existing-repo.md](./docs/how-to/add-governance-to-existing-repo.md).
 
@@ -473,7 +527,7 @@ High-level flow:
 
 ---
 
-## 11. Relationship to portals/IDPs
+## 12. Relationship to portals/IDPs
 
 This template is **not** a portal. It is the **per-service kernel** that a portal/IDP can rely on.
 
@@ -490,21 +544,6 @@ The integration surface is:
 - `/platform/*` APIs
 - `release_evidence/vX.Y.Z.md` bundles
 - `docs/feature_status.md` and `service_metadata.yaml`
-
----
-
-## 12. Current status & roadmap
-
-- **Template version:** v3.3.3
-- **Kernel status:** All 65 ACs pass. All 8 selftest gates pass.
-- **Known gaps:** Branch protection, IDP docs, second service validation (see ROADMAP.md)
-
-See:
-
-- [ROADMAP.md](./docs/ROADMAP.md) – current state and path forward options
-- [KERNEL_SNAPSHOT.md](./docs/KERNEL_SNAPSHOT.md) – frozen baseline details
-- [feature_status.md](./docs/feature_status.md) – AC health dashboard
-- [TROUBLESHOOTING.md](./docs/TROUBLESHOOTING.md) – if things aren't working
 
 ---
 
