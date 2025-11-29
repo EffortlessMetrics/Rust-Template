@@ -1,4 +1,4 @@
-# Test Service (v3.3.3)
+# Rust-as-Spec Platform Cell (v3.3.3)
 
 **Template Version:** v3.3.3 | **Kernel Baseline:** [v3.3.3-kernel](./docs/KERNEL_SNAPSHOT.md)
 
