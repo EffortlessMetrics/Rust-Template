@@ -277,7 +277,89 @@ fn lint_agent(
         warnings.push("Markdown body should contain at least one heading (# …).".to_string());
     }
 
+    // Validate no hardcoded secrets (ERROR)
+    validate_no_secrets(&content, &mut errors);
+
     Ok((errors, warnings))
+}
+
+/// Check for patterns that suggest hardcoded secrets
+fn validate_no_secrets(content: &str, errors: &mut Vec<String>) {
+    // Patterns that suggest hardcoded secrets (case-insensitive)
+    // These must be preceded by word boundaries or special characters to avoid false positives
+    let secret_patterns = [
+        "credentials.json",
+        "secrets.yaml",
+        "secrets.yml",
+        "api_key",
+        "api-key",
+        "password",
+        "apikey",
+        "token",
+        "secret",
+        "passwd",
+        ".env",
+    ];
+
+    for (line_num, line) in content.lines().enumerate() {
+        let line_lower = line.to_lowercase();
+
+        // Check if line looks like it contains a secret assignment
+        let has_assignment = line_lower.contains("=") || line_lower.contains(":");
+        if !has_assignment {
+            continue;
+        }
+
+        for pattern in &secret_patterns {
+            if is_secret_pattern_match(&line_lower, pattern) {
+                errors.push(format!(
+                    "Hardcoded secret detected at line {}: contains pattern '{}'",
+                    line_num + 1,
+                    pattern
+                ));
+                break;
+            }
+        }
+
+        // Special handling for sk- pattern: only match if it looks like an actual secret key
+        if is_secret_pattern_match(&line_lower, "sk-") {
+            errors.push(format!(
+                "Hardcoded secret detected at line {}: contains pattern 'sk-'",
+                line_num + 1
+            ));
+        }
+    }
+}
+
+/// Check if a pattern match is actually a secret pattern
+/// Avoids false positives by checking word boundaries
+fn is_secret_pattern_match(line: &str, pattern: &str) -> bool {
+    if !line.contains(pattern) {
+        return false;
+    }
+
+    // For short patterns, require word boundaries to avoid false positives like "task-" containing "sk-"
+    if pattern.len() <= 4 {
+        // Check each occurrence
+        let mut search_pos = 0;
+        while let Some(pos) = line[search_pos..].find(pattern) {
+            let actual_pos = search_pos + pos;
+            // Check character before pattern
+            let before_ok = actual_pos == 0
+                || matches!(line.chars().nth(actual_pos - 1), Some(c) if !c.is_alphanumeric());
+            // Check character after pattern
+            let after_ok = actual_pos + pattern.len() >= line.len()
+                || matches!(line.chars().nth(actual_pos + pattern.len()), Some(c) if !c.is_alphanumeric());
+
+            if before_ok && after_ok {
+                return true;
+            }
+            search_pos = actual_pos + 1;
+        }
+        false
+    } else {
+        true
+    }
 }
 
 fn split_frontmatter(content: &str) -> Option<(&str, &str)> {
@@ -357,5 +439,45 @@ mod tests {
         // This is a basic check - in real scenario would use full lint_agent
         assert!(existing_skills.contains("test-skill"));
         assert!(!existing_skills.contains("nonexistent-skill"));
+    }
+
+    #[test]
+    fn test_validate_no_secrets_detects_api_key() {
+        let mut errors = Vec::new();
+        validate_no_secrets("api_key = sk-abc123", &mut errors);
+        assert!(!errors.is_empty());
+        assert!(errors[0].contains("api_key"));
+    }
+
+    #[test]
+    fn test_validate_no_secrets_detects_password() {
+        let mut errors = Vec::new();
+        validate_no_secrets("password: \"secret-password\"", &mut errors);
+        assert!(!errors.is_empty());
+        assert!(errors[0].contains("password"));
+    }
+
+    #[test]
+    fn test_validate_no_secrets_detects_token() {
+        let mut errors = Vec::new();
+        validate_no_secrets("token = abc123def456", &mut errors);
+        assert!(!errors.is_empty());
+        assert!(errors[0].contains("token"));
+    }
+
+    #[test]
+    fn test_validate_no_secrets_allows_mention_without_assignment() {
+        let mut errors = Vec::new();
+        // Mentioning "token" in documentation without assignment should be okay
+        validate_no_secrets("This agent uses the token from environment variables", &mut errors);
+        assert!(errors.is_empty());
+    }
+
+    #[test]
+    fn test_validate_no_secrets_detects_credentials_file() {
+        let mut errors = Vec::new();
+        validate_no_secrets("credentials.json: /path/to/creds", &mut errors);
+        assert!(!errors.is_empty());
+        assert!(errors[0].contains("credentials.json"));
     }
 }
