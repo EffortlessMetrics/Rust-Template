@@ -48,6 +48,7 @@ When you need to know “what is correct?”, look in this order:
 2. **Skills (high-level workflows)**
 
    - `.claude/skills/*/SKILL.md`, e.g.:
+     - `bootstrap-dev-env` – one-command environment setup and validation
      - `governed-feature-dev` – feature/AC work
      - `governed-maintenance` – fixing drift and health
      - `governed-release` – preparing and validating releases
@@ -57,11 +58,17 @@ When you need to know “what is correct?”, look in this order:
 
    - `/platform/status` – governance + runtime view.
    - `/platform/graph` – full governance graph.
+   - `/platform/coverage` – AC coverage summary.
    - `/platform/tasks` – surfaced tasks.
+   - `/platform/tasks/suggest-next` – suggested next work (for agents).
+   - `/platform/tasks/graph` – task dependencies.
    - `/platform/devex/flows` – flows and commands.
    - `/platform/docs/index` – docs inventory.
    - `/platform/schema` – machine-readable contract.
    - `/platform/agent/hints` – suggestions for where to work next.
+   - `/platform/friction` – development friction log (DevEx issues).
+   - `/platform/questions` – design questions and ambiguities.
+   - `/platform/forks` – fork/branch information.
 
 4. **xtask CLI**
 
@@ -87,7 +94,7 @@ On first contact, or when resuming work:
 cargo xtask doctor
 cargo xtask help-flows
 cargo xtask ac-status
-cargo xtask tasks-list         # if implemented
+cargo xtask tasks-list         # List tasks from specs/tasks.yaml
 ```
 
 Then look at the platform:
@@ -114,7 +121,9 @@ Use this shape whenever you implement or change behaviour.
 
 - Find the relevant REQ/AC in `specs/spec_ledger.yaml`.
 - If the AC doesn't exist and the REQ is clear:
-  - Propose it via `cargo xtask ac-new` (if available) or editing the ledger as per conventions.
+  - Propose it via `cargo xtask ac-new <AC_ID> <DESCRIPTION> --story <STORY> --requirement <REQUIREMENT>`
+    (e.g., `ac-new AC-MYSERV-001 "Users can list todos" --story US-MYSERV-001 --requirement REQ-MYSERV-TODOS`)
+  - Or edit the ledger directly following existing conventions.
   - Keep it small and precise.
 
 #### 2. Add or update BDD
@@ -126,10 +135,12 @@ Use this shape whenever you implement or change behaviour.
 
 ```bash
 cargo xtask bundle implement_ac
+# Task name from .llm/contextpack.yaml; other tasks available for different contexts
 ```
 
 - Use the bundle as your working context.
 - Prefer staying within the bundle instead of scanning the entire repo.
+- See `.llm/contextpack.yaml` for available bundle tasks.
 
 #### 4. Implement code + tests
 
@@ -147,7 +158,7 @@ cargo xtask selftest
 ```
 
 - Aim to finish with selftest green.
-- If selftest is red for reasons you can't safely resolve, capture why (see §5).
+- If selftest is red for reasons you can't safely resolve, capture why (see Section 5: Handling ambiguity and decisions).
 
 ---
 
@@ -300,7 +311,7 @@ When you are first invoked on this repo:
    - `docs/ROADMAP.md`
    - `docs/AGENT_GUIDE.md`
    - `docs/MISSING_MANUAL.md`
-   - `TEMPLATE-CONTRACTS.md`
+   - `docs/explanation/TEMPLATE-CONTRACTS.md`
 
 2. **Check baseline health**
 
@@ -313,13 +324,14 @@ When you are first invoked on this repo:
 
    ```bash
    cargo xtask help-flows
-   cargo xtask tasks-list         # if present
+   cargo xtask tasks-list         # List available tasks
    ```
 
 4. **Pick a task and a Skill**
 
-   - Identify the relevant Skill (feature, maintenance, release, governance debug).
-   - Use bundles and suggest-next instead of scanning the whole repo.
+   - **For first-time setup:** Use the `bootstrap-dev-env` skill.
+   - **For regular work:** Identify the relevant Skill (feature-dev, maintenance, release, governance-debug).
+   - Use bundles and `/platform/agent/hints` instead of scanning the whole repo.
 
 ---
 
