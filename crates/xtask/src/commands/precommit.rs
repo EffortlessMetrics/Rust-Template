@@ -1,11 +1,14 @@
-use anyhow::Result;
+use anyhow::{Context, Result};
 use colored::Colorize;
 use std::process::Command;
 
 pub fn run() -> Result<()> {
     println!("{}", "Running pre-commit checks...".blue().bold());
 
-    // Run core checks (fmt, clippy, tests)
+    // 0. Auto-fix fmt first, then let check run on clean tree
+    run_fmt_with_autostage()?;
+
+    // 1. Core checks (fmt --check, clippy, tests)
     crate::commands::check::run()?;
 
     // Run Skills format and lint if relevant files changed
@@ -60,6 +63,27 @@ pub fn run() -> Result<()> {
     Ok(())
 }
 
+fn stage_skill_docs_if_modified() -> Result<()> {
+    let out = Command::new("git")
+        .args(["diff", "--name-only", "--", ".claude/skills"])
+        .output()
+        .context("failed to run git diff for skills")?;
+
+    let changed = String::from_utf8_lossy(&out.stdout);
+    let files: Vec<&str> = changed.lines().map(str::trim).filter(|p| !p.is_empty()).collect();
+
+    if files.is_empty() {
+        return Ok(());
+    }
+
+    println!("{} Staging formatted Skills:", "✓".green());
+    for f in &files {
+        println!("  - {}", f);
+        Command::new("git").args(["add", f]).status()?;
+    }
+    Ok(())
+}
+
 fn run_skills_lint_if_changed() -> Result<()> {
     // Check if any Skills-related files have changed (both staged and unstaged)
     let paths_to_check = [
@@ -107,6 +131,9 @@ fn run_skills_lint_if_changed() -> Result<()> {
             println!("{} Skills format applied (files were modified)", "✓".green());
         }
     }
+
+    // Auto-stage any formatted SKILL.md files
+    stage_skill_docs_if_modified()?;
 
     // Then run lint (with errors causing failure)
     match crate::commands::skills::run_lint() {
@@ -203,6 +230,42 @@ fn run_ac_status_with_autostage() -> Result<()> {
         Command::new("git").args(["add", "docs/feature_status.md"]).status()?;
 
         println!("{} Updated docs/feature_status.md via ac-status (auto-staged)", "✓".green());
+    }
+
+    Ok(())
+}
+
+fn run_fmt_with_autostage() -> Result<()> {
+    println!("{}", "Running cargo fmt (auto-fix)…".blue());
+
+    let status = Command::new("cargo")
+        .args(["fmt", "--all"])
+        .status()
+        .context("failed to run `cargo fmt --all`")?;
+
+    if !status.success() {
+        // fmt failure is almost always a syntax error, so we block
+        println!("{} `cargo fmt` failed – fix syntax errors before committing", "[FAIL]".red());
+        anyhow::bail!("`cargo fmt` failed");
+    }
+
+    // Stage any Rust files that changed due to formatting
+    let diff = Command::new("git")
+        .args(["diff", "--name-only", "--", "*.rs", "*.rs.in"])
+        .output()
+        .context("failed to run `git diff` for fmt")?;
+
+    let changed = String::from_utf8_lossy(&diff.stdout);
+    let files: Vec<&str> = changed.lines().map(str::trim).filter(|p| !p.is_empty()).collect();
+
+    if files.is_empty() {
+        println!("{} No Rust formatting changes", "⊘".cyan());
+    } else {
+        println!("{} Staging formatted Rust files:", "✓".green());
+        for f in &files {
+            println!("  - {}", f);
+            Command::new("git").args(["add", f]).status()?;
+        }
     }
 
     Ok(())

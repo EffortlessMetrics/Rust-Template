@@ -22,6 +22,14 @@ pub struct World {
     pub config_validation_error: Option<String>,
     /// XTask command execution context
     xtask_context: XtaskContext,
+    /// CLI command exit code
+    pub cli_exit_code: Option<i32>,
+    /// CLI command stdout
+    pub cli_stdout: String,
+    /// CLI command stderr
+    pub cli_stderr: String,
+    /// Parsed JSON output from CLI command
+    pub cli_json_output: Option<serde_json::Value>,
 }
 
 /// Context for xtask command execution
@@ -145,6 +153,10 @@ impl Default for World {
             config_validation_ok: None,
             config_validation_error: None,
             xtask_context: XtaskContext::default(),
+            cli_exit_code: None,
+            cli_stdout: String::new(),
+            cli_stderr: String::new(),
+            cli_json_output: None,
         }
     }
 }

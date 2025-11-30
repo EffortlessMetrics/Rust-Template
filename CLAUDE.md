@@ -235,12 +235,24 @@ cargo xtask selftest           # Full governance gate (before PR)
 
 **About git pre-commit:**
 
-The repository installs a git pre-commit hook (`.git/hooks/pre-commit`) that automatically:
+The repository installs a git pre-commit hook (`.git/hooks/pre-commit`) that:
 
-1. Runs `cargo fmt --all` and stages any formatted Rust files
-2. Calls `cargo xtask precommit` (the same gate as CI)
+1. Ensures you are inside `nix develop` (so rustc, sccache, and libs are correct).
+2. Calls `cargo xtask precommit`, which automatically:
+   - Runs `cargo fmt --all` and **auto-stages** any formatted Rust files
+   - Runs **Skills format** and **auto-stages** formatted SKILL.md files
+   - Runs **clippy + tests** (the same verification gate as CI)
+   - Runs **Skills + Agents governance checks** (hard gates; these block if violated)
+   - Regenerates and **auto-stages** `docs/feature_status.md` (soft; warns if ACs are failing)
+   - Runs **docs-check** and **spellcheck** (soft by default; only hard if `XTASK_STRICT_PRECOMMIT=1`)
 
-This means formatting issues are auto-fixed and never block commits — only real governance failures (tests, lint violations, policy breaches) prevent a commit. You do **not** need to modify the hook or run `pre-commit` tool directly; just commit normally. If it fails, run `cargo xtask precommit` to see what broke, fix it, and commit again.
+This means:
+- **Mechanical issues are silently auto-fixed and staged** (formatting, SKILL.md tidiness, AC status report).
+- **Only real governance failures block the commit** (test failures, clippy violations, Skills/Agents policy breaches).
+
+You do **not** need to modify the hook or run the `pre-commit` tool directly; just `git commit` normally. If it fails, run `cargo xtask precommit` to see what broke, fix it, and commit again.
+
+**In CI**, we run `cargo xtask check` (no auto-fix) and `cargo xtask selftest` (full governance), so CI checks what is truly necessary without the auto-fix convenience.
 
 ---
 

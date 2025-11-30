@@ -486,9 +486,16 @@ async fn then_json_has_field(world: &mut World, field: String) {
 
 #[then(regex = r#"^the "([^"]+)" array should contain task "([^"]+)"$"#)]
 async fn then_array_contains_task(world: &mut World, field: String, task_id: String) {
-    let response = world.last_response.as_ref().expect("response should exist");
-    let array = response
-        .body
+    // Support both HTTP API responses and CLI JSON output
+    let json = if let Some(cli_json) = &world.cli_json_output {
+        cli_json
+    } else if let Some(response) = &world.last_response {
+        &response.body
+    } else {
+        panic!("response should exist");
+    };
+
+    let array = json
         .get(&field)
         .and_then(|v| v.as_array())
         .unwrap_or_else(|| panic!("field '{}' should be an array", field));
@@ -511,9 +518,16 @@ async fn then_array_contains_task(world: &mut World, field: String, task_id: Str
 
 #[then(regex = r#"^the "([^"]+)" array should not contain task "([^"]+)"$"#)]
 async fn then_array_not_contains_task(world: &mut World, field: String, task_id: String) {
-    let response = world.last_response.as_ref().expect("response should exist");
-    let array = response
-        .body
+    // Support both HTTP API responses and CLI JSON output
+    let json = if let Some(cli_json) = &world.cli_json_output {
+        cli_json
+    } else if let Some(response) = &world.last_response {
+        &response.body
+    } else {
+        panic!("response should exist");
+    };
+
+    let array = json
         .get(&field)
         .and_then(|v| v.as_array())
         .unwrap_or_else(|| panic!("field '{}' should be an array", field));
@@ -536,11 +550,18 @@ async fn then_array_not_contains_task(world: &mut World, field: String, task_id:
 
 #[then(regex = r#"^the first hint should have field "([^"]+)"$"#)]
 async fn then_first_hint_has_field(world: &mut World, field: String) {
-    let response = world.last_response.as_ref().expect("response should exist");
-    let hints = response
-        .body
+    // Support both HTTP API responses and CLI JSON output
+    let json = if let Some(cli_json) = &world.cli_json_output {
+        cli_json
+    } else if let Some(response) = &world.last_response {
+        &response.body
+    } else {
+        panic!("response should exist");
+    };
+
+    let hints = json
         .get("hints")
-        .or_else(|| response.body.get("next_tasks")) // Backward compatibility
+        .or_else(|| json.get("next_tasks")) // Backward compatibility
         .and_then(|v| v.as_array())
         .expect("hints (or next_tasks) should be an array");
 
@@ -557,11 +578,18 @@ async fn then_first_hint_has_field(world: &mut World, field: String) {
 
 #[then(regex = r#"^the first hint "([^"]+)" should equal "([^"]+)"$"#)]
 async fn then_first_hint_field_equals(world: &mut World, field: String, expected: String) {
-    let response = world.last_response.as_ref().expect("response should exist");
-    let hints = response
-        .body
+    // Support both HTTP API responses and CLI JSON output
+    let json = if let Some(cli_json) = &world.cli_json_output {
+        cli_json
+    } else if let Some(response) = &world.last_response {
+        &response.body
+    } else {
+        panic!("response should exist");
+    };
+
+    let hints = json
         .get("hints")
-        .or_else(|| response.body.get("next_tasks")) // Backward compatibility
+        .or_else(|| json.get("next_tasks")) // Backward compatibility
         .and_then(|v| v.as_array())
         .expect("hints (or next_tasks) should be an array");
 
@@ -803,11 +831,44 @@ async fn then_hints_sorted_by_status(
     }
 }
 
-#[then(regex = r#"^within same status hints should be sorted by task_id$"#)]
-async fn then_hints_sorted_by_task_id_within_status(_world: &mut World) {
-    // This is a complex assertion that would require grouping by status and checking
-    // For now, we'll implement a simplified version that checks overall task_id ordering within status groups
-    // TODO: Implement full validation if needed
+#[then(regex = r#"^within same status hints should be sorted by id$"#)]
+async fn then_hints_sorted_by_id_within_status(world: &mut World) {
+    let response = world.last_response.as_ref().expect("response should exist");
+    let hints =
+        response.body.get("hints").and_then(|v| v.as_array()).expect("hints should be an array");
+
+    // Group hints by status
+    use std::collections::HashMap;
+    let mut status_groups: HashMap<String, Vec<&serde_json::Value>> = HashMap::new();
+
+    for hint in hints {
+        let status = hint.get("status").and_then(|v| v.as_str()).unwrap_or("unknown").to_string();
+        status_groups.entry(status).or_default().push(hint);
+    }
+
+    // Check that within each status group, IDs are sorted
+    for (_status, group) in status_groups {
+        for i in 0..group.len() - 1 {
+            let current_id = group[i]
+                .get("task_id")
+                .or_else(|| group[i].get("id"))
+                .and_then(|v| v.as_str())
+                .unwrap_or("");
+            let next_id = group[i + 1]
+                .get("task_id")
+                .or_else(|| group[i + 1].get("id"))
+                .and_then(|v| v.as_str())
+                .unwrap_or("");
+
+            assert!(
+                current_id <= next_id,
+                "Expected hints to be sorted by ID within same status, but found '{}' before '{}'. Group: {:?}",
+                current_id,
+                next_id,
+                group
+            );
+        }
+    }
 }
 
 #[then(regex = r#"^the hints should be sorted by priority: (.+)$"#)]
