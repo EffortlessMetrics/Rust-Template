@@ -202,8 +202,16 @@ cargo xtask bundle implement_ac
 # Task name from .llm/contextpack.yaml; other tasks available for different contexts
 ```
 
-- Use the bundle as your primary working context.
-- Prefer staying within the bundle instead of scanning the entire repo.
+Bundle output structure:
+
+- `bundle/<TASK>/bundle.yaml` – manifest with task_id, requirement_ids, ac_ids, specs, docs, tests
+- `bundle/<TASK>/context.md` – markdown-formatted bundled files
+
+Workflow:
+
+- Read `bundle.yaml` to understand task scope and dependencies
+- Use `context.md` as your primary working context
+- Prefer staying within the bundle instead of scanning the entire repo
 - See `.llm/contextpack.yaml` for available bundle tasks (implement_ac, debug_tests, etc.).
 
 #### 4. Implement code + tests

@@ -1,6 +1,7 @@
 use anyhow::{Context, Result};
+use chrono::Utc;
 use colored::Colorize;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -17,6 +18,41 @@ struct Task {
     include: Vec<String>,
     #[serde(default)]
     description: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct BundleManifest {
+    bundle_version: i32,
+    task_id: String,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    requirement_ids: Vec<String>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    ac_ids: Vec<String>,
+    git_sha: String,
+    timestamp: String,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    specs: Vec<ManifestSpec>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    docs: Vec<ManifestDoc>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    tests: Vec<ManifestTest>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct ManifestSpec {
+    file: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct ManifestDoc {
+    file: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct ManifestTest {
+    r#type: String,
+    tag: String,
+    file: String,
 }
 
 /// Generate LLM context bundle for a task
@@ -54,17 +90,41 @@ pub fn run(task_name: &str) -> Result<()> {
     let files = resolve_files(&workspace_root, &task.include)?;
     println!("  Found {} matching files", files.len());
 
-    let bundle_dir = workspace_root.join(".llm/bundle");
-    fs::create_dir_all(&bundle_dir)?;
-    let bundle_path = bundle_dir.join(format!("{}.md", task_name));
+    // Create bundle/<TASK>/ directory structure
+    let bundle_root = workspace_root.join("bundle");
+    fs::create_dir_all(&bundle_root)?;
+    let bundle_task_dir = bundle_root.join(task_name);
+    fs::create_dir_all(&bundle_task_dir)?;
 
-    println!("Building bundle: {}", bundle_path.display());
+    // Build and write context.md
+    let context_path = bundle_task_dir.join("context.md");
+    println!("Building context: {}", context_path.display());
     let (file_count, total_bytes) =
-        build_bundle(&bundle_path, task, &files, &git_sha, &workspace_root)?;
+        build_context(&context_path, task, &files, &git_sha, &workspace_root)?;
 
-    println!("{} Generated {}", "[OK]".green(), bundle_path.display());
+    // Create manifest
+    let manifest = BundleManifest {
+        bundle_version: 1,
+        task_id: task_name.to_string(),
+        requirement_ids: vec![],
+        ac_ids: vec![],
+        git_sha,
+        timestamp: Utc::now().to_rfc3339(),
+        specs: vec![ManifestSpec { file: "specs/spec_ledger.yaml".to_string() }],
+        docs: vec![ManifestDoc { file: "docs/explanation/TEMPLATE-CONTRACTS.md".to_string() }],
+        tests: vec![],
+    };
+
+    // Write manifest.yaml
+    let manifest_path = bundle_task_dir.join("bundle.yaml");
+    let manifest_yaml =
+        serde_yaml::to_string(&manifest).context("Failed to serialize manifest to YAML")?;
+    fs::write(&manifest_path, manifest_yaml).context("Failed to write manifest")?;
+
+    println!("{} Generated {}", "[OK]".green(), bundle_task_dir.display());
     println!("  Files: {}", file_count);
     println!("  Size: {} bytes", total_bytes);
+    println!("  Manifest: {}", manifest_path.display());
 
     if total_bytes > task.max_bytes {
         println!("  {} Size limit exceeded!", "[WARN]".yellow());
@@ -169,8 +229,8 @@ fn load_llmignore(workspace_root: &Path) -> Result<ignore::gitignore::Gitignore>
     builder.build().context("Failed to build .llmignore matcher")
 }
 
-fn build_bundle(
-    bundle_path: &Path,
+fn build_context(
+    context_path: &Path,
     task: &Task,
     files: &[PathBuf],
     git_sha: &str,
@@ -217,8 +277,8 @@ fn build_bundle(
         }
     }
 
-    fs::write(bundle_path, output)
-        .with_context(|| format!("Failed to write bundle: {}", bundle_path.display()))?;
+    fs::write(context_path, output)
+        .with_context(|| format!("Failed to write context: {}", context_path.display()))?;
 
     Ok((file_count, total_bytes))
 }

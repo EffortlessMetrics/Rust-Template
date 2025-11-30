@@ -5,8 +5,39 @@ Feature: LLM Bundle Structure
   So that I can provide consistent, reliable context for LLM-assisted development
 
   @AC-TPL-BUNDLE-LAYOUT
-  Scenario: Bundle implement_ac creates expected structure
+  Scenario: Bundle creates directory structure with manifest and context
     Given I am in the actual workspace
     When I run "cargo xtask bundle implement_ac"
     Then the command should succeed
-    And the output should contain "bundle"
+    And the output should contain "Generated"
+    And the output should contain "bundle/implement_ac"
+    And the file "bundle/implement_ac/bundle.yaml" should exist
+    And the file "bundle/implement_ac/context.md" should exist
+
+  @AC-TPL-BUNDLE-MANIFEST
+  Scenario: Bundle manifest contains required fields
+    Given I am in the actual workspace
+    When I run "cargo xtask bundle implement_ac"
+    Then the command should succeed
+    And "bundle/implement_ac/bundle.yaml" should contain "bundle_version:"
+    And "bundle/implement_ac/bundle.yaml" should contain "task_id:"
+    And "bundle/implement_ac/bundle.yaml" should contain "git_sha:"
+    And "bundle/implement_ac/bundle.yaml" should contain "timestamp:"
+    And "bundle/implement_ac/bundle.yaml" should contain "specs:"
+    And "bundle/implement_ac/bundle.yaml" should contain "docs:"
+
+  @AC-TPL-BUNDLE-MANIFEST
+  Scenario: Manifest task_id matches requested task name
+    Given I am in the actual workspace
+    When I run "cargo xtask bundle implement_ac"
+    Then the command should succeed
+    And "bundle/implement_ac/bundle.yaml" should contain "task_id: implement_ac"
+
+  @AC-TPL-BUNDLE-LAYOUT
+  Scenario: Context markdown is readable and includes files
+    Given I am in the actual workspace
+    When I run "cargo xtask bundle implement_ac"
+    Then the command should succeed
+    And "bundle/implement_ac/context.md" should contain "# LLM Context Bundle"
+    And "bundle/implement_ac/context.md" should contain "# FILE:"
+    And "bundle/implement_ac/context.md" should contain "spec_ledger.yaml"

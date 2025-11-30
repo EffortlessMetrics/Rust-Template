@@ -916,7 +916,82 @@ fn test_name() {
 
 ---
 
-### 7. Release Evidence (REQ-TPL-REL-BUNDLE)
+### 7. LLM Bundles (REQ-TPL-BUNDLE-CONTRACT)
+
+#### AC-TPL-BUNDLE-LAYOUT: Bundle Directory Structure
+**Contract:**
+- `cargo xtask bundle <TASK>` creates `bundle/<TASK>/` directory with:
+  1. `bundle.yaml` – manifest with task_id, requirement_ids, ac_ids, spec sections, docs, and tests
+  2. `context.md` – markdown-formatted bundled file contents
+  3. Manifest includes `bundle_version`, `git_sha`, and `timestamp` for reproducibility
+
+**Why:**
+- Agents and humans need predictable structure to understand task scope
+- Manifest enables programmatic bundle discovery and validation
+- Reproducibility (git_sha + timestamp) enables traceability
+
+**Bundle Usage:**
+- **For agents:** Use manifest to understand task scope, dependencies, and test coverage before taking action
+- **For humans:** Use context.md for code review; use manifest for scope validation
+- **For CI:** Validate bundle structure and scope against manifest contract
+
+**BDD Test:** `@AC-TPL-BUNDLE-LAYOUT` in `specs/features/bundles.feature`
+
+**How to Maintain:**
+- Ensure `bundle.yaml` is always generated and valid YAML
+- Include all referenced specs, docs, and tests in manifest
+- Keep git_sha and timestamp accurate for reproducibility
+
+---
+
+#### AC-TPL-BUNDLE-MANIFEST: Manifest Structure and Fields
+**Contract:**
+- `bundle.yaml` contains required fields:
+  - `bundle_version`: Current version (e.g., `1`)
+  - `task_id`: Task identifier from `specs/tasks.yaml`
+  - `requirement_ids`: List of REQ-* IDs relevant to this task
+  - `ac_ids`: List of AC-* IDs this task implements
+  - `specs`: Array of spec sections with `file` and optional `line_anchor` or `range`
+  - `docs`: Array of referenced documentation with `file` paths
+  - `tests`: Array of test handles with `type` (bdd/unit/integration), `tag`, and `file`
+
+**Example manifest structure:**
+```yaml
+bundle_version: 1
+task_id: TASK-TPL-BUNDLE-001
+requirement_ids:
+  - REQ-TPL-BUNDLE-CONTRACT
+ac_ids:
+  - AC-TPL-BUNDLE-LAYOUT
+  - AC-TPL-BUNDLE-MANIFEST
+git_sha: "abc123def456"
+timestamp: "2025-11-30T12:34:56Z"
+specs:
+  - file: "specs/spec_ledger.yaml"
+    section: "REQ-TPL-BUNDLE-CONTRACT"
+    lines: "1307-1354"
+docs:
+  - file: "docs/explanation/TEMPLATE-CONTRACTS.md"
+    section: "LLM Bundles"
+tests:
+  - type: bdd
+    tag: "@AC-TPL-BUNDLE-LAYOUT"
+    file: "specs/features/bundles.feature"
+  - type: bdd
+    tag: "@AC-TPL-BUNDLE-MANIFEST"
+    file: "specs/features/bundles.feature"
+```
+
+**BDD Test:** `@AC-TPL-BUNDLE-MANIFEST` in `specs/features/bundles.feature`
+
+**How to Maintain:**
+- Manifest is machine-generated from task definition + spec_ledger + task dependencies
+- Validate manifest YAML at bundle creation time
+- Include accurate line numbers/anchors for spec references
+
+---
+
+### 8. Release Evidence (REQ-TPL-REL-BUNDLE)
 
 #### AC-TPL-REL-EVIDENCE: Release Bundle Generation
 **Contract:**
@@ -948,7 +1023,7 @@ fn test_name() {
 
 ---
 
-### 8. Graph Invariants (REQ-TPL-GRAPH-INVARIANTS)
+### 9. Graph Invariants (REQ-TPL-GRAPH-INVARIANTS)
 
 #### AC-TPL-GRAPH-REQ-HAS-AC: Requirements Have ACs
 **Contract:**
@@ -1018,7 +1093,7 @@ fn test_name() {
 
 ---
 
-### 9. Configuration and Validation (REQ-TPL-CONFIG-INTEGRITY)
+### 10. Configuration and Validation (REQ-TPL-CONFIG-INTEGRITY)
 
 #### AC-TPL-CONFIG-VALIDATION: Startup Configuration Validation
 **Contract:**
@@ -1034,7 +1109,7 @@ fn test_name() {
 
 ---
 
-### 10. Infrastructure Alignment (REQ-TPL-IAC-ALIGNMENT)
+### 11. Infrastructure Alignment (REQ-TPL-IAC-ALIGNMENT)
 
 #### AC-TPL-IAC-K8S-ALIGN: Kubernetes Manifest Alignment
 **Contract:**
@@ -1056,7 +1131,7 @@ fn test_name() {
 
 ---
 
-### 11. Git Hooks (REQ-TPL-GOV-HOOKS)
+### 12. Git Hooks (REQ-TPL-GOV-HOOKS)
 
 #### AC-TPL-HOOKS-INSTALL: Git Pre-Commit Hooks
 **Contract:**
@@ -1074,7 +1149,7 @@ fn test_name() {
 
 ---
 
-### 12. Governance Write Layer (REQ-TPL-GOV-WRITE-001, REQ-TPL-TASK-LIFECYCLE)
+### 13. Governance Write Layer (REQ-TPL-GOV-WRITE-001, REQ-TPL-TASK-LIFECYCLE)
 
 #### AC-TPL-GOV-WRITE-TASK-STATUS-200: Task Status Persistence
 **Contract:**
