@@ -2501,6 +2501,7 @@ async fn then_second_run_reports(world: &mut World, expected: String) {
 #[then("I clean up the service-init test files")]
 async fn then_cleanup_service_init(world: &mut World) {
     let ctx = world.xtask_context();
+    let root = actual_workspace_root();
 
     // Restore backed-up files if they exist
     if let (Some(metadata_backup), Some(readme_backup)) =
@@ -2526,8 +2527,11 @@ async fn then_cleanup_service_init(world: &mut World) {
         }
     }
 
-    // Note: We rely on backup/restore above rather than git stash to avoid
-    // cross-test interference when multiple scenarios push/pop stashes.
+    // Fallback: Use git to restore any modified files to ensure clean state
+    let _ = Command::new("git")
+        .current_dir(&root)
+        .args(["checkout", "HEAD", "specs/service_metadata.yaml", "README.md"])
+        .output();
 }
 
 // ============================================================================
