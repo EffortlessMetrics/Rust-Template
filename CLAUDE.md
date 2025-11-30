@@ -20,17 +20,19 @@ You do **not** need synchronous human approval to make progress. You work, the c
 
 Operate with this mindset:
 
-- **Specs and schemas are your brief.**
-- **Flows and skills are your playbook.**
-- **Platform APIs are your telemetry.**
-- **xtask is your control surface.**
-- **Selftest is your referee.**
+- **Specs and schemas are your brief** – everything flows from `spec_ledger.yaml`, `config_schema.yaml`, `devex_flows.yaml`.
+- **Flows and skills are your playbook** – `.claude/skills/*.md` describe the governed patterns you follow.
+- **Platform APIs are your telemetry** – `/platform/*` endpoints give you real-time state visibility.
+- **xtask is your control surface** – commands for every workflow, from onboarding to release.
+- **Selftest is your referee** – 10-step governance gate that decides what's acceptable.
+- **Friction log is your feedback** – capture DevEx issues as they arise; don't accumulate pain.
 
 You can make decisions locally. When something is unclear, you:
 
-1. Infer the best option from the existing contracts.
-2. Capture your reasoning in a draft ADR or issue.
+1. Infer the best option from existing contracts (specs, ADRs, patterns).
+2. Capture your reasoning in a draft ADR, GitHub issue, or friction log entry.
 3. Keep the repo as close to selftest-green as possible.
+4. Leave a clear trail so humans can review artifacts asynchronously.
 
 ---
 
@@ -92,11 +94,14 @@ When you need to know “what is correct?”, look in this order:
 
 5. **xtask CLI**
 
-   - **Sanity:** `doctor`, `check`, `selftest`, `precommit`
+   - **Bootstrap:** `dev-up` (one-command setup), `doctor`, `kernel-smoke`, `install-hooks`
+   - **Sanity:** `check`, `selftest`, `precommit`, `ci-local`
    - **Governance:** `skills-lint`, `skills-fmt`, `agents-lint`, `agents-fmt`, `ac-status`, `ac-coverage`
-   - **Development:** `test-changed`, `test-ac`, `ac-new`, `bundle`
+   - **AC-first development:** `ac-new`, `ac-suggest-scenarios`, `ac-tests`, `test-ac`, `bundle`, `test-changed`
+   - **Design & docs:** `adr-new`, `adr-check`, `design-new`, `docs-check`, `spellcheck`
+   - **Friction & feedback:** `friction-list` (DevEx issues, process problems)
    - **Release:** `release-prepare`, `release-bundle`, `sbom-local`
-   - **Exploration:** `help-flows`, `tasks-list`
+   - **Exploration:** `help-flows`, `tasks-list`, `suggest-next` (agent guidance)
 
 6. **Selftest & CI**
 
@@ -113,25 +118,32 @@ When in doubt, align your choices with `spec_ledger.yaml` and “what would make
 
 On first contact, or when resuming work:
 
+**One-command setup (recommended):**
 ```bash
-cargo xtask doctor          # Environment sanity check
-cargo xtask ac-status       # Current AC coverage
-cargo xtask help-flows      # Available flows and commands
+cargo xtask dev-up         # Bootstrap env, check health, install hooks, run quick tests
+```
+
+**Or step-by-step:**
+```bash
+cargo xtask doctor         # Environment sanity check
+cargo xtask kernel-smoke   # Quick smoke test of template baseline
+cargo xtask ac-status      # Current AC coverage
+cargo xtask help-flows     # Available flows and commands
 ```
 
 Then use introspection endpoints to understand the repo state. Start the service:
 
 ```bash
-cargo run -p app-http &
+cargo run -p app-http &   # Start HTTP service on http://localhost:8080
 ```
 
 Then query the platform:
 
 ```bash
-# Governance health and counts
+# Governance health and counts (status, AC coverage, token config)
 curl http://localhost:8080/platform/status
 
-# Full governance graph (stories → REQs → ACs → tests → docs)
+# Full governance graph (stories → REQs → ACs → tests → docs → commands)
 curl http://localhost:8080/platform/graph
 
 # Developer flows and available xtask commands
@@ -145,9 +157,15 @@ curl http://localhost:8080/platform/tasks?status=Todo
 
 # Prioritized next work for agents (Todo/InProgress with RC/AC IDs)
 curl http://localhost:8080/platform/agent/hints
+
+# Development friction log (DevEx issues, process problems)
+curl http://localhost:8080/platform/friction
+
+# Design questions and ambiguities
+curl http://localhost:8080/platform/questions
 ```
 
-This gives you a complete picture: health, governance graph, available flows, docs, tasks, and recommended next work.
+This gives you a complete picture: health, governance graph, available flows, docs, tasks, recommended work, and DevEx feedback.
 
 **Prefer introspection endpoints over manual grepping.** They are:
 - **Authoritative:** generated from the same specs that CI enforces.
@@ -166,15 +184,16 @@ Use this shape whenever you implement or change behaviour.
 
 - Find the relevant REQ/AC in `specs/spec_ledger.yaml`.
 - If the AC doesn't exist and the REQ is clear:
-  - Propose it via `cargo xtask ac-new <AC_ID> <DESCRIPTION> --story <STORY> --requirement <REQUIREMENT>`
-    (e.g., `ac-new AC-MYSERV-001 "Users can list todos" --story US-MYSERV-001 --requirement REQ-MYSERV-TODOS`)
-  - Or edit the ledger directly following existing conventions.
+  - Create it via `cargo xtask ac-new <AC_ID> <DESCRIPTION> --story <STORY> --requirement <REQUIREMENT>`
+    (e.g., `cargo xtask ac-new AC-MYSERV-001 "Users can list todos" --story US-MYSERV-001 --requirement REQ-MYSERV-TODOS`)
+  - Or edit `specs/spec_ledger.yaml` directly following existing conventions.
   - Keep it small and precise.
 
 #### 2. Add or update BDD
 
-- Edit `specs/features/*.feature`.
-- Tag scenarios with the AC ID, e.g. `@AC-MYSERV-001`.
+- Use `cargo xtask ac-suggest-scenarios AC-MYSERV-001` for interactive scenario suggestions.
+- Edit `specs/features/*.feature` and tag scenarios with `@AC-MYSERV-001`.
+- Run `cargo xtask bdd` to validate Gherkin syntax.
 
 #### 3. Generate a bundle
 
@@ -183,41 +202,43 @@ cargo xtask bundle implement_ac
 # Task name from .llm/contextpack.yaml; other tasks available for different contexts
 ```
 
-- Use the bundle as your working context.
+- Use the bundle as your primary working context.
 - Prefer staying within the bundle instead of scanning the entire repo.
-- See `.llm/contextpack.yaml` for available bundle tasks.
+- See `.llm/contextpack.yaml` for available bundle tasks (implement_ac, debug_tests, etc.).
 
 #### 4. Implement code + tests
 
 - Keep changes scoped to what the AC needs.
 - Maintain alignment with the spec and existing patterns.
+- Run `cargo xtask ac-tests AC-MYSERV-001` to see all tests mapped to this AC.
 
 #### 5. Validate with the ladder
 
 ```bash
-cargo xtask check
-cargo xtask test-changed
-cargo xtask test-ac AC-MYSERV-001
-cargo xtask ac-status
-cargo xtask selftest
+cargo xtask check              # fmt, clippy, unit tests (fast)
+cargo xtask test-changed       # Only changed code
+cargo xtask test-ac AC-MYSERV-001  # AC + related tests
+cargo xtask ac-status          # AC health mapping
+cargo xtask selftest           # Full governance gate (before PR)
 ```
 
 - Aim to finish with selftest green.
-- If selftest is red for reasons you can't safely resolve, capture why (see Section 5: Handling ambiguity and decisions).
+- If selftest is red for reasons you can't safely resolve, capture why in an ADR or issue (see Section 5: Handling ambiguity and decisions).
 
 ---
 
 ### 3.3 Governed maintenance
 
-Use this when you’re fixing drift, updating dependencies, or handling tool feedback.
+Use this when you're fixing drift, updating dependencies, handling tool feedback, or resolving DevEx friction.
 
 #### 1. Run health checks
 
 ```bash
-cargo xtask doctor
-cargo xtask check
-cargo xtask test-changed
-cargo xtask ac-status
+cargo xtask doctor         # Environment check
+cargo xtask check          # fmt, clippy, unit tests
+cargo xtask test-changed   # Only changed code
+cargo xtask ac-status      # AC → test mapping
+cargo xtask friction-list  # DevEx issues to fix
 ```
 
 #### 2. Apply clear fixes
@@ -225,13 +246,18 @@ cargo xtask ac-status
 - Align config with `config_schema.yaml`.
 - Fix tests and specs where behaviour is clearly wrong.
 - Update docs when they no longer match code or ACs.
+- Fix DevEx issues captured in the friction log.
 
 #### 3. Capture non-trivial findings
 
 - If you discover deeper design questions or tradeoffs:
-  - Create or update an ADR (`docs/adr/ADR-*.md`).
-  - File a GitHub issue summarizing the situation and linking REQ/AC IDs.
-  - Append to `FRICTION_LOG.md` when that's more appropriate.
+  - **For design decisions:** Create or update an ADR (`docs/adr/ADR-*.md`)
+    - Use `cargo xtask adr-new "Title"` to create new ADR with correct frontmatter.
+    - Link to relevant REQ/AC IDs in the ADR.
+  - **For feature work:** File a GitHub issue linking REQ/AC IDs.
+  - **For process/tooling friction:** Add to friction log via `FRICTION_LOG.md` or create entry directly in `friction/FRICTION-*.yaml`
+    - Use `cargo xtask friction-list --status open` to view current issues.
+    - Surfaces via CLI and `/platform/friction` API.
 
 #### 4. Re-validate
 
@@ -353,35 +379,44 @@ Selftest is the final step when you consider a piece of work “ready for review
 
 You are expected to **keep moving** and leave a clear trail.
 
-When you find unclear or conflicting information (REQs, ACs, docs):
+When you find unclear or conflicting information (REQs, ACs, docs, or DevEx issues):
 
 1. **Analyse using existing contracts**
 
-   - Look at `spec_ledger.yaml` and any relevant ADRs.
-   - Prefer consistency with existing patterns.
+   - Look at `spec_ledger.yaml`, ADRs, and any relevant design docs.
+   - Prefer consistency with existing patterns and governance rules.
 
 2. **Choose a conservative, reversible option**
 
    - Prefer small, easily revertible changes over big bets.
    - Avoid breaking public contracts unless the ACs clearly demand it.
+   - If unsure, ask clarifying questions via GitHub issues or ADRs.
 
-3. **Capture the decision and questions**
+3. **Capture the decision and questions appropriately**
 
-   - Draft or extend an ADR (can be marked as "DRAFT").
-   - Open a GitHub issue with:
-     - REQ/AC IDs,
-     - your understanding of the options,
-     - the direction you took and why.
-   - Optionally log in `FRICTION_LOG.md` for process / tooling issues.
+   - **Design/architectural decisions:** Draft or extend an ADR (`docs/adr/ADR-*.md`)
+     - Use `cargo xtask adr-new "Title"` to create with correct frontmatter.
+     - Can mark as "DRAFT" if incomplete; link to relevant REQ/AC IDs.
+     - Humans review these for direction alignment.
+   - **Feature/business work:** Open a GitHub issue linking REQ/AC IDs with:
+     - Your understanding of the options.
+     - The direction you took and why.
+     - Any blockers or open questions.
+   - **Process/tooling friction:** Log in friction system:
+     - `FRICTION_LOG.md` for human-readable summary.
+     - `friction/FRICTION-*.yaml` for structured tracking.
+     - Surfaces via `cargo xtask friction-list` and `/platform/friction` API.
+   - **Design questions/ambiguities:** File via GitHub issues or note in comments.
 
 4. **Align with selftest**
 
    - Aim for selftest green after your changes.
-   - If you must leave selftest red (e.g. mid-refactor), ensure:
-     - The failure is clearly attributable to a known gap.
-     - The gap is documented in ADR/issue/friction log.
+   - If you must leave selftest red (e.g., mid-refactor):
+     - The failure must be clearly attributable to a known gap.
+     - Document the gap and your plan in ADR/issue/friction log.
+     - Add a comment in the code pointing to the issue.
 
-This lets humans review your work asynchronously with full context, without you blocking.
+This lets humans review your work asynchronously with full context, without blocking your progress. The repo's governance artifacts (specs, ADRs, issues, friction log) become the memory of why decisions were made.
 
 ---
 

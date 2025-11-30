@@ -5,6 +5,7 @@ pub mod config;
 pub mod devex;
 pub mod docs;
 pub mod graph;
+pub mod hints;
 pub mod k8s_iac;
 pub mod ledger;
 pub mod local_docker;
@@ -16,6 +17,10 @@ pub use config::{ValidatedConfig, validate_config};
 pub use devex::{DevExFlows, load_devex_flows};
 pub use docs::{DocEntry, DocIndex, load_doc_index};
 pub use graph::{Edge, Graph, Node, build_graph};
+pub use hints::{
+    AcCoverage, AcCoverageIndex, AcExecutionStatus, Hint, HintEngine, HintFilter, HintKind,
+    HintLinks, HintPriority, HintReason, HintStatus, HintTarget,
+};
 pub use ledger::{AcceptanceCriterion, Requirement, SpecLedger, Story, load_spec_ledger};
 pub use schema::{
     EndpointSchema, PlatformSchemas, SchemaInfo, get_all_schemas, get_schema_by_name,
