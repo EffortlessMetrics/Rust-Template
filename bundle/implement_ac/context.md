@@ -1,6 +1,6 @@
 # LLM Context Bundle
 
-**Git SHA:** ead0b32623a83fb5d827fa8305d9e492b7f3dbbd
+**Git SHA:** 80c5c62b75a2052900f98be0c105281a537a4762
 
 **Description:** Context for implementing a single acceptance criterion end-to-end.
 
