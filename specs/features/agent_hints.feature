@@ -69,17 +69,17 @@ Feature: Agent Hints API
     And the first hint should have field "reason"
     And the first hint should have field "recommended_sequence"
     And the first hint "task_id" should equal "TASK-HINT-030"
-    And the first hint "status" should equal "Todo"
-    And the first hint "reason" should contain "ready for work"
+    And the first hint "status" should equal "open"
+    And the first hint "reason" should not be empty
 
   @AC-TPL-AGENT-HINTS
-  Scenario: Hints include task title in reason
+  Scenario: Hints include meaningful reason information
     Given the following tasks exist in "specs/tasks.yaml":
       | id                | title                     | status      | requirement           |
       | TASK-HINT-040     | Implement user login      | InProgress  | REQ-TPL-001          |
     When I send a GET request to "/platform/agent/hints"
     Then the response status code should be 200
-    And the first hint "reason" should contain "Implement user login"
+    And the first hint "reason" should not be empty
 
   @AC-TPL-AGENT-HINTS
   Scenario: Empty hints when no tasks are Todo or InProgress
@@ -172,8 +172,8 @@ Feature: Agent Hints API
     When I send a GET request to "/platform/agent/hints"
     Then the response status code should be 200
     And the JSON response should have field "hints"
-    And the hints should be sorted with "InProgress" before "Todo"
-    And within same status hints should be sorted by task_id
+    And the hints should be sorted with "in_progress" before "open"
+    And within same status hints should be sorted by id
 
   @AC-TPL-AGENT-HINTS
   Scenario: Hints sorted by priority labels

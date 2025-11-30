@@ -5,6 +5,7 @@ use axum::{
 };
 use business_core::governance::TaskService;
 use serde::{Deserialize, Serialize};
+use spec_runtime::hints::{self, HintEngine};
 
 use crate::AppState;
 
@@ -67,6 +68,16 @@ async fn agent_hints(
             )
         })?;
 
+    // Load AC coverage from feature_status.md
+    let feature_status_path = state.workspace_root.join("docs/feature_status.md");
+    let ac_index = hints::parse_feature_status(&feature_status_path).map_err(|e| {
+        crate::AppError::new(
+            axum::http::StatusCode::INTERNAL_SERVER_ERROR,
+            crate::ErrorCode::InternalError,
+            format!("Failed to parse feature_status.md: {}", e),
+        )
+    })?;
+
     // Load devex_flows.yaml for flow-based command sequences
     let devex_path = state.workspace_root.join("specs/devex_flows.yaml");
     let devex_content = std::fs::read_to_string(&devex_path).map_err(|e| {
@@ -84,18 +95,47 @@ async fn agent_hints(
         )
     })?;
 
-    // Filter for Todo and InProgress tasks, and enrich with metadata
-    let mut hints: Vec<AgentHint> = tasks
-        .into_iter()
-        .filter(|t| {
-            matches!(
-                t.status,
-                business_core::governance::TaskStatus::Todo
-                    | business_core::governance::TaskStatus::InProgress
-            )
-        })
+    // Convert governance tasks to spec_runtime tasks
+    let runtime_tasks: Vec<spec_runtime::Task> = tasks
+        .iter()
         .filter_map(|t| {
             let task_id = t.id.0.clone();
+            let definition = task_definitions.get(&task_id)?;
+
+            Some(spec_runtime::Task {
+                id: task_id,
+                title: definition.title.clone(),
+                status: format!("{:?}", t.status),
+                requirement: definition.requirement.clone(),
+                acs: definition.acs.clone(),
+                labels: definition.labels.clone(),
+                owner: definition.owner.clone(),
+                docs: None,
+                summary: definition.summary.clone().unwrap_or_default(),
+                recommended_flows: definition.recommended_flows.clone(),
+                depends_on: vec![],
+            })
+        })
+        .collect();
+
+    // Create HintEngine with AC coverage
+    let engine = HintEngine::new(ac_index, runtime_tasks);
+    let hint_engine_hints = engine.task_hints();
+
+    // Convert HintEngine hints to AgentHints and build recommended sequences
+    let mut hints: Vec<AgentHint> = hint_engine_hints
+        .iter()
+        .filter_map(|hint| {
+            // Only include Todo and InProgress hints (HintEngine filters these)
+            if !matches!(hint.status, hints::HintStatus::Open | hints::HintStatus::InProgress) {
+                return None;
+            }
+
+            let task_id = match &hint.target {
+                hints::HintTarget::Task { id } => id.clone(),
+                _ => return None,
+            };
+
             let definition = task_definitions.get(&task_id)?;
 
             // Build recommended sequence from recommended_flows
@@ -107,14 +147,18 @@ async fn agent_hints(
             );
 
             Some(AgentHint {
-                task_id: task_id.clone(),
-                title: definition.title.clone(),
-                status: format!("{:?}", t.status),
+                task_id,
+                title: hint.title.clone(),
+                status: match hint.status {
+                    hints::HintStatus::Open => "open".to_string(),
+                    hints::HintStatus::InProgress => "in_progress".to_string(),
+                    hints::HintStatus::Done => "done".to_string(),
+                },
                 owner: definition.owner.clone().unwrap_or_else(|| "unassigned".to_string()),
-                labels: definition.labels.clone(),
+                labels: hint.tags.clone(),
                 requirement_ids: vec![definition.requirement.clone()],
                 ac_ids: definition.acs.clone(),
-                reason: format!("Task '{}' is ready for work", definition.title),
+                reason: hint.reason.details.clone(),
                 recommended_sequence,
             })
         })
@@ -146,11 +190,11 @@ async fn agent_hints(
         true
     });
 
-    // Sort by: 1) status (InProgress before Todo), 2) priority label, 3) ID
+    // Sort by: 1) status (in_progress before open), 2) priority label, 3) ID
     hints.sort_by(|a, b| {
-        // Primary: status (InProgress before Todo)
-        let status_order_a = if a.status == "InProgress" { 0 } else { 1 };
-        let status_order_b = if b.status == "InProgress" { 0 } else { 1 };
+        // Primary: status (in_progress before open)
+        let status_order_a = if a.status == "in_progress" { 0 } else { 1 };
+        let status_order_b = if b.status == "in_progress" { 0 } else { 1 };
 
         match status_order_a.cmp(&status_order_b) {
             std::cmp::Ordering::Equal => {
