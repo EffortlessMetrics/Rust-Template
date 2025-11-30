@@ -300,7 +300,7 @@ fn validate_no_secrets(content: &str, errors: &mut Vec<String>) {
         "api_key",
         "api-key",
         "password",
-        "apikey",
+        "api key",
         "token",
         "secret",
         "passwd",
@@ -426,7 +426,7 @@ mod tests {
     #[test]
     fn test_validate_no_secrets_detects_credentials_file() {
         let mut errors = Vec::new();
-        validate_no_secrets("credentials.json: /path/to/creds", &mut errors);
+        validate_no_secrets("credentials.json: /path/to/credentials", &mut errors);
         assert!(!errors.is_empty());
         assert!(errors[0].contains("credentials.json"));
     }

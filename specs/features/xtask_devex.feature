@@ -631,3 +631,4 @@ Feature: Developer Experience Commands
     Then they should exit with code 0
     And when commands fail in non-interactive mode
     Then they should exit with non-zero codes
+
