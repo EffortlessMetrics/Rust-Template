@@ -473,6 +473,7 @@ Feature: Developer Experience Commands
     When I run service-init with the same parameters twice
     Then both runs should succeed
     And the second run should report "No changes needed"
+    And I clean up the service-init test files
 
   @AC-PLT-021
   Scenario: service-init validates service ID format
