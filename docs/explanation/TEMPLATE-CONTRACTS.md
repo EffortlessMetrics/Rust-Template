@@ -935,6 +935,8 @@ fn test_name() {
 - **For humans:** Use context.md for code review; use manifest for scope validation
 - **For CI:** Validate bundle structure and scope against manifest contract
 
+**Important:** Bundle artifacts (`bundle/` directory) are **ephemeral** and ignored by git. They are generated on-demand during development or CI with timestamps and git SHAs baked in. Only the **contract** (specs, ACs, BDD scenarios, tests, docs) is versioned. Bundles should be validated via tests and selftest, not by checking in artifacts.
+
 **BDD Test:** `@AC-TPL-BUNDLE-LAYOUT` in `specs/features/bundles.feature`
 
 **How to Maintain:**

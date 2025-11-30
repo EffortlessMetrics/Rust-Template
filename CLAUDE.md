@@ -213,6 +213,7 @@ Workflow:
 - Use `context.md` as your primary working context
 - Prefer staying within the bundle instead of scanning the entire repo
 - See `.llm/contextpack.yaml` for available bundle tasks (implement_ac, debug_tests, etc.).
+- **Note:** Bundles are ephemeral. The `bundle/` directory is ignored by git and regenerated on-demand with timestamps and git SHAs baked in. Only the **contract** (specs, ACs, BDD, tests, docs) is versioned; validate everything via tests and selftest, not by checking in bundle artifacts.
 
 #### 4. Implement code + tests
 

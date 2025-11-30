@@ -160,11 +160,23 @@ then `git commit` will run:
       → cargo xtask selftest (plus docs+spell checks)
 ```
 
-Behaviour:
+**Behaviour:**
 
 * The hook runs inside the Nix devshell when available.
+* It **automatically fixes and stages**:
+  * Rust formatting (`cargo fmt --all`)
+  * Skills format (`SKILL.md` tidiness)
+  * AC status report (`docs/feature_status.md`)
+* It **blocks the commit** (hard gates) on:
+  * Clippy warnings
+  * Test failures
+  * Skills/Agents governance violations (policy errors)
+* It **warns but doesn't block** (soft gates) on:
+  * Documentation consistency issues
+  * Spelling errors (unless `XTASK_STRICT_PRECOMMIT=1`)
 * It runs the full 8-step selftest, **excluding** `@ci-only` BDD scenarios.
-* If anything fails, the commit is blocked with a clear summary of which gate failed.
+
+**TL;DR:** Just run `git commit`. Mechanical fixes are silent. Real failures show up clearly. If precommit fails, run `nix develop -c cargo xtask precommit` to see details, fix the issue, and commit again.
 
 You should treat a red pre-commit as "something is actually wrong", not "test harness flaked".
 
