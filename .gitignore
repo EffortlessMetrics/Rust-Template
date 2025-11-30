@@ -9,6 +9,7 @@ sbom.json
 *.sig
 .tools/
 .llm/bundle/
+bundle/
 node_modules/
 
 # Ignore Windows zone identifier files
