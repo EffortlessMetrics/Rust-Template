@@ -1307,22 +1307,50 @@ stories:
       - id: REQ-TPL-BUNDLE-CONTRACT
         title: "LLM bundle structure"
         tags: [platform, devex, ai]
-        must_have_ac: false
+        must_have_ac: true
         description: >
-          The template SHOULD provide a predictable minimum structure for
-          context bundles generated for agents.
+          The template MUST provide a predictable, governed structure for
+          context bundles generated for agents. Bundles are first-class artifacts
+          with explicit contracts: manifest structure, scope boundaries, and
+          versioning. Agents and humans rely on bundles to understand task scope
+          and dependencies.
         acceptance_criteria:
           - id: AC-TPL-BUNDLE-LAYOUT
             text: >
-              `cargo xtask bundle implement_ac` creates
-              `.llm/bundle/<id>/bundle.json` with task_id, requirement_ids,
-              ac_ids, and a list of included files, plus at least one
-              human-readable context file (e.g. `context.md`).
-            tags: [template, devex]
-            must_have_ac: false
-            note: "Template feature - bundle structure for agents. Verified via BDD in actual workspace."
+              `cargo xtask bundle <TASK>` creates `bundle/<TASK>/` with:
+              (1) `bundle.yaml` manifest listing task_id, requirement_ids, ac_ids,
+              referenced spec_ledger sections, docs, and tests;
+              (2) `context.md` with bundled file contents (markdown format);
+              (3) manifest includes bundle_version, git_sha, and timestamp for
+              reproducibility.
+            tags: [kernel, template, devex]
+            must_have_ac: true
+            note: "Bundle layout is a kernel contract - agents and CI depend on predictable structure."
             tests:
               - { type: bdd, tag: "@AC-TPL-BUNDLE-LAYOUT", file: "specs/features/bundles.feature" }
+
+          - id: AC-TPL-BUNDLE-MANIFEST
+            text: >
+              `bundle.yaml` contains bundle_version (current: 1), task_id, requirement_ids,
+              ac_ids, spec sections (with file paths and line anchors), referenced docs
+              (with paths), and test handles (type, tag, file). Manifest is machine-readable
+              and governs bundle scope boundaries.
+            tags: [template, devex]
+            must_have_ac: true
+            tests:
+              - { type: bdd, tag: "@AC-TPL-BUNDLE-MANIFEST", file: "specs/features/bundles.feature" }
+
+          - id: AC-TPL-BUNDLE-MINIMAL-SCOPE
+            text: >
+              Bundle scope is minimal: specs/ includes only referenced sections (not entire
+              spec_ledger), docs/ includes only docs mentioned in ACs/tests, src/ is optional
+              and narrowly scoped (crate-specific). Enforcement: bundle size audit in selftest
+              catches over-inclusion.
+            tags: [template, devex]
+            must_have_ac: false
+            note: "Minimal scope is aspirational (v3.4.0) but not enforced at bundle command time yet."
+            tests:
+              - { type: unit, tag: "bundle_scope_audit", file: "crates/xtask/src/commands/bundle.rs" }
 
   - id: US-TPL-PLATFORM-V3
     title: "The Recursive Platform"
