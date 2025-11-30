@@ -1,8 +1,0 @@
-bundle_version: 1
-task_id: implement_ac
-git_sha: d3dac499791d796ba3fb8b9810fdf9dbab542ae8
-timestamp: 2025-11-30T23:03:38.246097459+00:00
-specs:
-- file: specs/spec_ledger.yaml
-docs:
-- file: docs/explanation/TEMPLATE-CONTRACTS.md
