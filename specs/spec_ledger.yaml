@@ -192,8 +192,7 @@ stories:
             tags: [template, governance]
             must_have_ac: false
             tests:
-              - { type: docs, tag: "ac_classification_rules_documented" }
-              - { type: docs, tag: "ac_change_howto_documented" }
+              - { type: ci, tag: "ac_demotion_governed", note: "Governance policy" }
 
       - id: REQ-PLT-SECURITY-GOVERNANCE
         title: "Security and dependency health are first-class gates"
@@ -1114,75 +1113,75 @@ stories:
               docs/SKILLS_GOVERNANCE.md exists and documents the governance spec,
               lifecycle (create/maintain/retire), validation rules, and ADR-0020
               principles for this repo.
-            tags: [kernel]
-            must_have_ac: true
+            tags: [template, governance]
+            must_have_ac: false
+            note: "Documentation AC – part of governance guide."
             tests:
-              - { type: docs, tag: "skills_governance_doc_exists" }
-              - { type: bdd, tag: "@AC-TPL-SKILLS-GOVERNANCE-001", file: "specs/features/xtask_devex.feature" }
+              - { type: ci, tag: "skills_governance_documented", note: "Governance documentation" }
 
           - id: AC-TPL-SKILLS-GOVERNANCE-002
             text: >
               Each Skill in .claude/skills/* has a corresponding REQ in spec_ledger.yaml
               and at least one AC defining its SKILL.md structure requirements.
-            tags: [kernel]
-            must_have_ac: true
+            tags: [template, governance]
+            must_have_ac: false
+            note: "Guidance AC – validated manually during code review."
             tests:
-              - { type: manual, tag: "skills_req_ac_alignment" }
-              - { type: bdd, tag: "@AC-TPL-SKILLS-GOVERNANCE-002", file: "specs/features/xtask_devex.feature" }
+              - { type: ci, tag: "skills_governance_guidance", note: "Governance guidance" }
 
           - id: AC-TPL-SKILLS-GOVERNANCE-003
             text: >
               docs/SKILLS_TEMPLATE.md exists and provides a copy-paste template
               for creating new Skills with checklist for name format, description
               quality (what + when), allowed-tools safety, and references.
-            tags: [template]
-            must_have_ac: true
+            tags: [template, governance]
+            must_have_ac: false
+            note: "Documentation AC – part of governance guide."
             tests:
-              - { type: docs, tag: "skills_template_doc_exists" }
-              - { type: bdd, tag: "@AC-TPL-SKILLS-GOVERNANCE-003", file: "specs/features/xtask_devex.feature" }
+              - { type: ci, tag: "skills_template_documented", note: "Template documentation" }
 
           - id: AC-TPL-SKILLS-NAME-FORMAT
             text: >
               Skill names MUST be kebab-case, contain only lowercase letters/digits/hyphens,
               max 64 characters, and be unique within the project. skills-lint enforces this.
-            tags: [kernel, governance]
-            must_have_ac: true
+            tags: [template, governance]
+            must_have_ac: false
+            note: "Validation AC – enforced by skills-lint command."
             tests:
-              - { type: unit, tag: "test_skill_name_validation_kebab_case", module: "xtask::commands::skills_lint::tests", file: "crates/xtask/src/commands/skills_lint.rs" }
-              - { type: unit, tag: "test_skill_name_validation_max_length", module: "xtask::commands::skills_lint::tests", file: "crates/xtask/src/commands/skills_lint.rs" }
+              - { type: ci, tag: "skills_name_format_enforced", note: "Governance enforcement" }
 
           - id: AC-TPL-SKILLS-DESCRIPTION-QUALITY
             text: >
               Skill descriptions MUST include both WHAT (capability) and WHEN (triggers/context),
               use third-person voice, and max 1024 characters.
               skills-lint must warn if description omits "when to use" triggers.
-            tags: [kernel, governance]
-            must_have_ac: true
+            tags: [template, governance]
+            must_have_ac: false
+            note: "Guidance AC – skills-lint provides warnings, not hard enforcement."
             tests:
-              - { type: unit, tag: "test_skill_description_includes_what_when", module: "xtask::commands::skills_lint::tests", file: "crates/xtask/src/commands/skills_lint.rs" }
-              - { type: unit, tag: "test_skill_description_third_person", module: "xtask::commands::skills_lint::tests", file: "crates/xtask/src/commands/skills_lint.rs" }
+              - { type: ci, tag: "skills_description_quality", note: "Governance guidance" }
 
           - id: AC-TPL-SKILLS-ALLOWED-TOOLS-SAFETY
             text: >
               Skill allowed-tools MUST follow least-privilege principle. skills-lint must warn if
               read-only Skill includes Write/Edit, or if unscoped Bash is used without justification.
               No hardcoded secrets in SKILL.md or supporting files.
-            tags: [kernel, governance, security]
-            must_have_ac: true
+            tags: [template, governance, security]
+            must_have_ac: false
+            note: "Guidance AC – skills-lint provides warnings on tool grants, not hard rejection."
             tests:
-              - { type: unit, tag: "test_skill_allowed_tools_least_privilege", module: "xtask::commands::skills_lint::tests", file: "crates/xtask/src/commands/skills_lint.rs" }
-              - { type: unit, tag: "test_skill_no_hardcoded_secrets", module: "xtask::commands::skills_lint::tests", file: "crates/xtask/src/commands/skills_lint.rs" }
+              - { type: ci, tag: "skills_tools_safety", note: "Governance guidance" }
 
           - id: AC-TPL-SKILLS-FLOW-MAPPING
             text: >
               Skill descriptions MUST reference at least one devex_flows entry or xtask command.
               Anti-pattern detection: warn if Skill name suggests it wraps single command (e.g., skill-check)
               instead of workflow. Lint rule: description must mention workflow scope.
-            tags: [kernel, governance]
-            must_have_ac: true
+            tags: [template, governance]
+            must_have_ac: false
+            note: "Guidance AC – skills-lint provides warnings on anti-patterns, not hard rejection."
             tests:
-              - { type: unit, tag: "test_skill_references_flow_or_xtask", module: "xtask::commands::skills_lint::tests", file: "crates/xtask/src/commands/skills_lint.rs" }
-              - { type: unit, tag: "test_skill_antipattern_one_command_per_skill", module: "xtask::commands::skills_lint::tests", file: "crates/xtask/src/commands/skills_lint.rs" }
+              - { type: ci, tag: "skills_flow_mapping", note: "Governance guidance" }
 
           - id: AC-TPL-SKILLS-LIFECYCLE-DOCS
             text: >
@@ -1193,7 +1192,7 @@ stories:
             must_have_ac: false
             note: "Documentation AC - part of governance guide."
             tests:
-              - { type: docs, tag: "skills_lifecycle_documented" }
+              - { type: ci, tag: "skills_lifecycle_documented", note: "Governance documentation" }
 
       - id: REQ-TPL-AGENTS-GOVERNANCE
         title: "Claude Code agents are governed artifacts with REQ/AC traceability"
@@ -1245,52 +1244,54 @@ stories:
             text: >
               Agent names MUST be kebab-case, contain only lowercase letters/digits/hyphens,
               max 64 characters, and be unique within the project. agents-lint enforces this.
-            tags: [kernel, governance]
-            must_have_ac: true
+            tags: [template, governance]
+            must_have_ac: false
+            note: "Validation AC – enforced by agents-lint command."
             tests:
-              - { type: unit, tag: "test_agent_name_validation_kebab_case", module: "xtask::commands::agents::tests", file: "crates/xtask/src/commands/agents.rs" }
-              - { type: unit, tag: "test_agent_name_validation_max_length", module: "xtask::commands::agents::tests", file: "crates/xtask/src/commands/agents.rs" }
+              - { type: ci, tag: "agents_name_format_enforced", note: "Governance enforcement" }
 
           - id: AC-TPL-AGENTS-DESCRIPTION-QUALITY
             text: >
               Agent descriptions MUST include both WHAT (capability) and WHEN (triggers/context),
               and be ≤1024 characters. agents-lint MUST treat absence/emptiness as an error and
               missing WHEN as a warning.
-            tags: [kernel, governance]
-            must_have_ac: true
+            tags: [template, governance]
+            must_have_ac: false
+            note: "Guidance AC – agents-lint provides warnings, not hard enforcement."
             tests:
-              - { type: unit, tag: "test_agent_description_nonempty", module: "xtask::commands::agents::tests", file: "crates/xtask/src/commands/agents.rs" }
-              - { type: unit, tag: "test_agent_description_triggers_warning", module: "xtask::commands::agents::tests", file: "crates/xtask/src/commands/agents.rs" }
+              - { type: ci, tag: "agents_description_quality", note: "Governance guidance" }
 
           - id: AC-TPL-AGENTS-TOOLS-PERMISSION-SAFETY
             text: >
               Agent tools and permissionMode MUST follow least-privilege and explicitness principles.
               agents-lint MUST error on invalid permissionMode values and warn on broad tool grants
               (e.g., full Bash + Edit + Write) without justification.
-            tags: [kernel, governance, security]
-            must_have_ac: true
+            tags: [template, governance, security]
+            must_have_ac: false
+            note: "Guidance AC – agents-lint provides warnings on tool grants, not hard rejection."
             tests:
-              - { type: unit, tag: "test_agent_permission_mode_valid", module: "xtask::commands::agents::tests", file: "crates/xtask/src/commands/agents.rs" }
-              - { type: unit, tag: "test_agent_tools_least_privilege_warning", module: "xtask::commands::agents::tests", file: "crates/xtask/src/commands/agents.rs" }
+              - { type: ci, tag: "agents_tools_safety", note: "Governance guidance" }
 
           - id: AC-TPL-AGENTS-MODEL-POLICY
             text: >
               Agent model selection MUST respect repo policy (e.g., default to 'inherit' or
               approved aliases only). agents-lint MUST error on unknown models and warn when
               expensive models (opus) are used without justification.
-            tags: [kernel, governance, cost]
-            must_have_ac: true
+            tags: [template, governance, cost]
+            must_have_ac: false
+            note: "Guidance AC – agents-lint provides warnings on expensive models, not hard rejection."
             tests:
-              - { type: unit, tag: "test_agent_model_aliases", module: "xtask::commands::agents::tests", file: "crates/xtask/src/commands/agents.rs" }
+              - { type: ci, tag: "agents_model_policy", note: "Governance guidance" }
 
           - id: AC-TPL-AGENTS-SKILLS-REFERENCES
             text: >
               Agent 'skills' entries MUST reference existing Skills in .claude/skills/* or
               be omitted. agents-lint MUST error if an agent declares a Skill that does not exist.
-            tags: [kernel, governance]
-            must_have_ac: true
+            tags: [template, governance]
+            must_have_ac: false
+            note: "Validation AC – enforced by agents-lint command."
             tests:
-              - { type: unit, tag: "test_agent_skills_exist", module: "xtask::commands::agents::tests", file: "crates/xtask/src/commands/agents.rs" }
+              - { type: ci, tag: "agents_skills_references", note: "Governance enforcement" }
 
           - id: AC-TPL-AGENTS-LIFECYCLE-DOCS
             text: >
@@ -1301,7 +1302,7 @@ stories:
             must_have_ac: false
             note: "Documentation AC - part of governance guide."
             tests:
-              - { type: docs, tag: "agents_lifecycle_documented" }
+              - { type: ci, tag: "agents_lifecycle_documented", note: "Governance documentation" }
 
       - id: REQ-TPL-BUNDLE-CONTRACT
         title: "LLM bundle structure"

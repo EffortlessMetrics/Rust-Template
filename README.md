@@ -1,4 +1,4 @@
-# Rust-as-Spec Platform Cell (v3.3.3)
+# Test Service (v3.3.3)
 
 **Template Version:** v3.3.3 | **Kernel Baseline:** [v3.3.3-kernel](./docs/KERNEL_SNAPSHOT.md)
 
@@ -323,24 +323,29 @@ curl http://localhost:8080/platform/graph
 # Schema/OpenAPI for the platform
 curl http://localhost:8080/platform/schema
 
-# Docs index
+# Schema for a specific type
+curl http://localhost:8080/platform/schema/{name}
+
+# Docs index (design docs, ADRs, how-tos)
 curl http://localhost:8080/platform/docs/index
 
-# AC coverage summary
+# AC coverage summary (BDD + test results)
 curl http://localhost:8080/platform/coverage
 ```
 
 **Work and task management:**
 
 ```bash
-# Tasks from specs/tasks.yaml
+# Tasks from specs/tasks.yaml with filtering
 curl http://localhost:8080/platform/tasks
+curl http://localhost:8080/platform/tasks?status=Todo&req=REQ-MYSERV-001
 
-# Suggested next work (for agents)
-curl http://localhost:8080/platform/tasks/suggest-next
+# Suggested next work (for agents) – given a task, recommend sequence
+curl "http://localhost:8080/platform/tasks/suggest-next?task=TASK-001"
 
-# Task graph (task dependencies)
+# Task dependency graph (JSON or Mermaid format)
 curl http://localhost:8080/platform/tasks/graph
+curl "http://localhost:8080/platform/tasks/graph?format=mermaid"
 
 # Update task status
 curl -X POST http://localhost:8080/platform/tasks/{id}/status \
@@ -365,11 +370,20 @@ curl http://localhost:8080/platform/agent/hints
 # Development friction log (DevEx issues)
 curl http://localhost:8080/platform/friction
 
+# Friction entry by ID
+curl http://localhost:8080/platform/friction/{id}
+
 # Design questions and ambiguities
 curl http://localhost:8080/platform/questions
 
-# Fork/branch information
+# Question by ID
+curl http://localhost:8080/platform/questions/{id}
+
+# Fork/branch information (forks of this template)
 curl http://localhost:8080/platform/forks
+
+# Fork information by name
+curl http://localhost:8080/platform/forks/{name}
 ```
 
 ---
@@ -387,11 +401,36 @@ cargo xtask doctor
 # Quick code quality check (fmt, clippy, unit tests)
 cargo xtask check
 
-# Full governance gate (Tier-1)
+# Full governance gate (Tier-1) – includes all 10 selftest steps
 cargo xtask selftest
+
+# Local precommit gate (what CI enforces before merge)
+cargo xtask precommit
 ```
 
-### 9.2 AC-first feature development
+### 9.2 Governance-specific checks
+
+```bash
+# Validate and lint Skills (name format, descriptions, allowed-tools safety, no secrets)
+cargo xtask skills-lint
+
+# Format Skills SKILL.md files (frontmatter, headings)
+cargo xtask skills-fmt
+
+# Validate and lint Agents (name format, descriptions, tools, model policy, skills references, no secrets)
+cargo xtask agents-lint
+
+# Format Agent .md files
+cargo xtask agents-fmt
+
+# Compute AC statuses from test results and write docs/feature_status.md
+cargo xtask ac-status
+
+# AC coverage summary (what % of ACs have passing tests)
+cargo xtask ac-coverage
+```
+
+### 9.3 AC-first feature development
 
 ```bash
 # 1. Create a new AC (requires both --story and --requirement)
@@ -420,7 +459,7 @@ cargo xtask ac-status
 cargo xtask selftest
 ```
 
-### 9.3 Selective testing
+### 9.4 Selective testing
 
 ```bash
 # Test only what changed vs origin/main (fast loop)
@@ -431,9 +470,15 @@ XTASK_TEST_CHANGED_PLAN_ONLY=1 cargo xtask test-changed
 
 # Test a specific acceptance criterion
 cargo xtask test-ac AC-PLT-001
+
+# List available tasks
+cargo xtask tasks-list
+
+# Discover available flows and commands
+cargo xtask help-flows
 ```
 
-### 9.4 Releases
+### 9.5 Releases
 
 ```bash
 # Build a local SBOM
@@ -458,8 +503,13 @@ This repo is designed so that an agent can act as a **real teammate**, not a glo
   - `cargo xtask bundle <TASK>` produces curated context packs (e.g., `implement_ac` is a registered task).
 - **Flows & Skills** provide the patterns:
   - `.claude/skills/*/SKILL.md` describe governed-feature-dev, governed-maintenance, governed-release, and governance-debug flows.
+  - **Skills are governed**: `skills-lint` validates name format, descriptions, allowed-tools safety, and prevents hardcoded secrets.
+- **Agents** are first-class governed artifacts:
+  - `.claude/agents/*.md` define long-lived, specialized agents with system prompts and tool bindings.
+  - **Agents are governed**: `agents-lint` validates name format, descriptions, tools, model policy, skills references, and prevents hardcoded secrets.
+  - See `docs/AGENTS_GOVERNANCE.md` and `docs/AGENTS_TEMPLATE.md` for governance rules and creation checklist.
 - **Platform APIs** provide live telemetry:
-  - `/platform/status`, `/platform/graph`, `/platform/tasks`, `/platform/agent/hints`, `/platform/docs/index`, `/platform/schema`.
+  - `/platform/status`, `/platform/graph`, `/platform/tasks`, `/platform/agent/hints`, `/platform/docs/index`, `/platform/schema`, `/platform/devex/flows`.
 
 The expected agent loop looks like:
 
@@ -576,6 +626,14 @@ Use these guides while working in the codebase:
 - [LLM bundles guide](docs/how-to/use-llm-bundles.md) – How to use context bundles
 - [Windows Development Guide](docs/how-to/windows-development.md) – Platform-specific guidance for Windows
 
+**Governance & LLM surfaces:**
+
+- [SKILLS_GOVERNANCE.md](docs/SKILLS_GOVERNANCE.md) – Skills governance rules, lifecycle, and validation
+- [SKILLS_TEMPLATE.md](docs/SKILLS_TEMPLATE.md) – Copy-paste template for creating new Skills
+- [AGENTS_GOVERNANCE.md](docs/AGENTS_GOVERNANCE.md) – Agents governance rules, lifecycle, and validation
+- [AGENTS_TEMPLATE.md](docs/AGENTS_TEMPLATE.md) – Copy-paste template for creating new Agents
+- [AGENTS_VALIDATION.md](docs/AGENTS_VALIDATION.md) – Agent validation rules reference
+
 ### 13.3 Platform Setup (Maintainers)
 
 Use these guides to configure the production environment:
@@ -599,6 +657,18 @@ Read these to understand how the template works:
 - [Controls as Code](docs/explanation/controls-as-code.md) – Governance approach
 - [IDP Positioning](docs/explanation/idp-positioning.md) – How this fits with platform tools
 - [Template Contracts](docs/explanation/TEMPLATE-CONTRACTS.md) – What the template guarantees
+
+**Design docs:**
+
+- [AC Governance Design](docs/design/ac-governance.md) – How ACs are governed and enforced
+- [Skills Governance Design](docs/design/skills-governance.md) – How Skills are governed
+- [Agents Governance Design](docs/design/agents-governance.md) – How Agents are governed
+
+**ADRs (Architecture Decision Records):**
+
+- [ADR-0020: Claude Code Skills Governance](docs/adr/0020-claude-code-skills-governance.md)
+- [ADR-0021: Claude Code Agents Governance](docs/adr/0021-claude-code-agents-governance.md)
+- [ADR-0022: Platform Metadata and Test Isolation](docs/adr/0022-platform-metadata-and-test-isolation.md)
 
 ### 13.5 Process & Planning
 

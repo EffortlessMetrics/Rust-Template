@@ -1,34 +1,31 @@
 service_id: rust-template
-display_name: "Rust-as-Spec Platform Cell"
-description: >
-  Governed Rust service template with selftest, platform APIs, and agent support.
-template_version: "3.3.3"
-
+display_name: Rust-as-Spec Platform Cell
+description: Template for per-service AI-governed platform cells built in Rust
+template_version: v3.3.3
 ownership:
   team: plat-governance
   email: platform-governance@example.com
-  slack: "#team-platform"
-
+  slack: '#team-platform'
 lifecycle:
   tier: 1
   data_class: internal
   criticality: platform
-  languages: [rust]
-  runtime: [kubernetes]
-
-links:
-  roadmap: "docs/ROADMAP.md"
-  kernel_contract: "docs/runbooks/platform-kernel.md"
-  agent_guide: "docs/AGENT_GUIDE.md"
-  feature_status: "docs/feature_status.md"
-  support: "docs/reference/platform-support.md"
-  selective_testing: "docs/SELECTIVE_TESTING.md"
-  ui: "http://localhost:8080/ui"
-  status: "http://localhost:8080/platform/status"
-  repo: "https://github.com/EffortlessMetrics/Rust-Template"
-
-tags:
+  languages:
   - rust
-  - idp
-  - governance
-  - template
+  runtime:
+  - kubernetes
+links:
+  roadmap: docs/ROADMAP.md
+  kernel_contract: docs/runbooks/platform-kernel.md
+  agent_guide: docs/AGENT_GUIDE.md
+  feature_status: docs/feature_status.md
+  support: docs/reference/platform-support.md
+  selective_testing: docs/SELECTIVE_TESTING.md
+  ui: http://localhost:8080/ui
+  status: http://localhost:8080/platform/status
+  repo: https://github.com/EffortlessMetrics/Rust-Template
+tags:
+- rust
+- idp
+- governance
+- template

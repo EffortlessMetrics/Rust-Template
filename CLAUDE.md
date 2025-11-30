@@ -45,37 +45,60 @@ When you need to know “what is correct?”, look in this order:
    - `specs/devex_flows.yaml` – developer workflows.
    - `specs/tasks.yaml` – work items and their relationships.
 
-2. **Skills (high-level workflows)**
+2. **Skills (governed workflows)**
 
-   - `.claude/skills/*/SKILL.md`, e.g.:
-     - `bootstrap-dev-env` – one-command environment setup and validation
-     - `governed-feature-dev` – feature/AC work
-     - `governed-maintenance` – fixing drift and health
-     - `governed-release` – preparing and validating releases
-     - `governed-governance-debug` – when selftest or graph is unhappy
+   - `.claude/skills/*/SKILL.md` are workflow recipes that are governed:
+     - **bootstrap-dev-env** – one-command environment setup and validation
+     - **governed-feature-dev** – AC-first feature development workflow
+     - **governed-maintenance** – fixing drift, updating deps, and health checks
+     - **governed-release** – preparing, validating, and publishing releases
+     - **governed-governance-debug** – debugging selftest failures and governance issues
+   - All Skills are validated by `cargo xtask skills-lint` for name format, description quality, allowed-tools safety, and no hardcoded secrets.
+   - See `docs/SKILLS_GOVERNANCE.md` and `docs/SKILLS_TEMPLATE.md` for creation rules.
 
-3. **Platform APIs**
+3. **Agents (governed LLM agents)**
 
-   - `/platform/status` – governance + runtime view.
-   - `/platform/graph` – full governance graph.
-   - `/platform/coverage` – AC coverage summary.
-   - `/platform/tasks` – surfaced tasks.
-   - `/platform/tasks/suggest-next` – suggested next work (for agents).
-   - `/platform/tasks/graph` – task dependencies.
-   - `/platform/devex/flows` – flows and commands.
-   - `/platform/docs/index` – docs inventory.
-   - `/platform/schema` – machine-readable contract.
-   - `/platform/agent/hints` – suggestions for where to work next.
-   - `/platform/friction` – development friction log (DevEx issues).
-   - `/platform/questions` – design questions and ambiguities.
-   - `/platform/forks` – fork/branch information.
+   - `.claude/agents/*.md` are first-class, governed artifacts defining long-lived, specialized agents.
+   - Each agent has:
+     - **name** – kebab-case, unique, max 64 chars
+     - **description** – what the agent does + when to use it (≤1024 chars)
+     - **tools** – explicit tool list (least-privilege)
+     - **permissionMode** – `restricted` or `permissive` with justification
+     - **model** – agent model preference (default: `inherit`)
+     - **skills** – optional list of Skill names to include
+     - **system** – optional system prompt for LLM context
+   - All agents are validated by `cargo xtask agents-lint` for name format, descriptions, tools, model policy, skill references, and no hardcoded secrets.
+   - See `docs/AGENTS_GOVERNANCE.md` and `docs/AGENTS_TEMPLATE.md` for creation rules and validation expectations.
+   - **Do not include secrets, API keys, tokens in agent definitions.** Use environment variables and configuration files.
 
-4. **xtask CLI**
+4. **Platform APIs**
 
-   - `cargo xtask doctor`, `check`, `test-changed`, `test-ac`,
-     `ac-status`, `ac-coverage`, `selftest`, `release-*`, etc.
+   - **Governance & discovery:**
+     - `/platform/status` – governance health, policy status, auth mode, metadata.
+     - `/platform/graph` – full governance graph (stories → REQs → ACs → tests → docs).
+     - `/platform/schema` – machine-readable schema/OpenAPI for the platform.
+     - `/platform/devex/flows` – developer flows and xtask commands.
+     - `/platform/docs/index` – documentation inventory.
+     - `/platform/coverage` – AC coverage summary (BDD + test results).
+   - **Work & tasks:**
+     - `/platform/tasks` – tasks from specs/tasks.yaml (with filtering).
+     - `/platform/tasks/suggest-next` – recommended next work (given a task).
+     - `/platform/tasks/graph` – task dependencies (JSON or Mermaid).
+   - **Metadata & issues:**
+     - `/platform/agent/hints` – prioritized work suggestions for agents (Todo/InProgress tasks).
+     - `/platform/friction` – development friction log (DevEx issues).
+     - `/platform/questions` – design questions and ambiguities.
+     - `/platform/forks` – fork/branch information.
 
-5. **Selftest & CI**
+5. **xtask CLI**
+
+   - **Sanity:** `doctor`, `check`, `selftest`, `precommit`
+   - **Governance:** `skills-lint`, `skills-fmt`, `agents-lint`, `agents-fmt`, `ac-status`, `ac-coverage`
+   - **Development:** `test-changed`, `test-ac`, `ac-new`, `bundle`
+   - **Release:** `release-prepare`, `release-bundle`, `sbom-local`
+   - **Exploration:** `help-flows`, `tasks-list`
+
+6. **Selftest & CI**
 
    - `cargo xtask selftest` – full governance check.
    - CI Tier-1 job running selftest – final say on what is acceptable.
@@ -91,25 +114,47 @@ When in doubt, align your choices with `spec_ledger.yaml` and “what would make
 On first contact, or when resuming work:
 
 ```bash
-cargo xtask doctor
-cargo xtask help-flows
-cargo xtask ac-status
-cargo xtask tasks-list         # List tasks from specs/tasks.yaml
+cargo xtask doctor          # Environment sanity check
+cargo xtask ac-status       # Current AC coverage
+cargo xtask help-flows      # Available flows and commands
 ```
 
-Then look at the platform:
+Then use introspection endpoints to understand the repo state. Start the service:
 
 ```bash
-curl http://localhost:8080/platform/status
-curl http://localhost:8080/platform/graph
-curl http://localhost:8080/platform/docs/index
-curl http://localhost:8080/platform/tasks
-curl http://localhost:8080/platform/agent/hints  # Prioritized task suggestions
+cargo run -p app-http &
 ```
 
-This gives you a complete picture: health, contracts, tasks, docs, and recommended next work.
+Then query the platform:
 
-**Tip:** `/platform/agent/hints` filters for Todo/InProgress tasks and includes title, owner, labels, REQ/AC IDs, and recommended command sequences. See `docs/AGENT_GUIDE.md` for full usage.
+```bash
+# Governance health and counts
+curl http://localhost:8080/platform/status
+
+# Full governance graph (stories → REQs → ACs → tests → docs)
+curl http://localhost:8080/platform/graph
+
+# Developer flows and available xtask commands
+curl http://localhost:8080/platform/devex/flows
+
+# Documentation inventory (design docs, ADRs, how-tos)
+curl http://localhost:8080/platform/docs/index
+
+# All tasks with optional filtering
+curl http://localhost:8080/platform/tasks?status=Todo
+
+# Prioritized next work for agents (Todo/InProgress with RC/AC IDs)
+curl http://localhost:8080/platform/agent/hints
+```
+
+This gives you a complete picture: health, governance graph, available flows, docs, tasks, and recommended next work.
+
+**Prefer introspection endpoints over manual grepping.** They are:
+- **Authoritative:** generated from the same specs that CI enforces.
+- **Fast:** computed at load time and cached.
+- **Agent-friendly:** structured JSON that's easy to parse and act on.
+
+See `docs/AGENT_GUIDE.md` for deeper guidance on using these APIs.
 
 ---
 
@@ -225,6 +270,45 @@ cargo xtask release-bundle X.Y.Z
 - Tag the commit,
 - Push branches and tags,
 - Let CI run Tier-1 selftest.
+
+---
+
+### 3.5 Writing and maintaining Skills & Agents
+
+#### Skills (workflow recipes)
+
+When creating or updating a Skill (`.claude/skills/SKILL_NAME/SKILL.md`):
+
+1. **Name**: kebab-case, lowercase, max 64 chars, unique.
+2. **Description**: include both WHAT (capability) and WHEN (context/triggers) in ≤1024 chars.
+3. **Allowed tools**: follow least-privilege (don't grant Write/Edit to read-only workflows).
+4. **Linked flows**: reference existing flows in `specs/devex_flows.yaml`.
+5. **No secrets**: never hardcode API keys, tokens, or credentials. Use environment variables or pass config at runtime.
+6. **Validate**: `cargo xtask skills-lint` will check format, descriptions, tools, and detect hardcoded secrets.
+
+Template: see `docs/SKILLS_TEMPLATE.md` for copy-paste starting point.
+
+#### Agents (governed LLM agents)
+
+When creating or updating an Agent (`.claude/agents/AGENT_NAME.md`):
+
+1. **Name**: kebab-case, lowercase, max 64 chars, unique within project.
+2. **Description**: include both WHAT (capability) and WHEN (use case) in ≤1024 chars.
+3. **Tools**: be explicit and least-privilege. Only grant tools the agent actually needs.
+4. **PermissionMode**: `restricted` (default, safe) or `permissive` (with justification).
+5. **Model**: prefer `inherit` (use repo default) or explicitly name an approved model.
+6. **Skills**: reference existing Skills from `.claude/skills/*` or omit.
+7. **System prompt**: optional; keep secure and don't include secrets.
+8. **No secrets**: never hardcode API keys, tokens, credentials. Use environment variables.
+9. **Validate**: `cargo xtask agents-lint` will check format, descriptions, tools, model, skill refs, and detect hardcoded secrets.
+
+Template: see `docs/AGENTS_TEMPLATE.md` for copy-paste starting point.
+
+**Security reminder for both Skills and Agents:**
+
+- `skills-lint` and `agents-lint` will **error** on common secret patterns (API_KEY=, password:, token:, etc.).
+- Best practice: phrase docs like "reads the API key from the `API_KEY` environment variable" instead of embedding examples with real or fake keys.
+- See `docs/SKILLS_GOVERNANCE.md` and `docs/AGENTS_GOVERNANCE.md` for full rules.
 
 ---
 
