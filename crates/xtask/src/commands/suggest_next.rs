@@ -3,7 +3,8 @@ use clap::Parser;
 use colored::Colorize;
 use serde::Serialize;
 use spec_runtime::hints::{self, HintEngine};
-use std::path::PathBuf;
+
+use super::tasks::spec_root;
 
 #[derive(Debug, Parser)]
 pub struct SuggestNextArgs {
@@ -46,8 +47,7 @@ pub struct CliHintsResponse {
 }
 
 pub fn run(args: SuggestNextArgs) -> Result<()> {
-    let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-    let root = manifest_dir.parent().unwrap().parent().unwrap();
+    let root = spec_root();
 
     // Load tasks and AC coverage
     let tasks_path = root.join("specs/tasks.yaml");
