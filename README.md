@@ -501,6 +501,7 @@ This repo is designed so that an agent can act as a **real teammate**, not a glo
 - **Specs & schemas** give a precise brief (`spec_ledger.yaml`, `config_schema.yaml`, `devex_flows.yaml`, `tasks.yaml`).
 - **Bundles** give a bounded context:
   - `cargo xtask bundle <TASK>` produces curated context packs (e.g., `implement_ac` is a registered task).
+  - **Note:** `bundle/` is ignored by git. Bundles are generated on-demand with timestamps and git SHAs baked in; the contract (specs, ACs, tests) is what's versioned.
 - **Flows & Skills** provide the patterns:
   - `.claude/skills/*/SKILL.md` describe governed-feature-dev, governed-maintenance, governed-release, and governance-debug flows.
   - **Skills are governed**: `skills-lint` validates name format, descriptions, allowed-tools safety, and prevents hardcoded secrets.
