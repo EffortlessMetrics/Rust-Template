@@ -233,6 +233,15 @@ cargo xtask selftest           # Full governance gate (before PR)
 - Aim to finish with selftest green.
 - If selftest is red for reasons you can't safely resolve, capture why in an ADR or issue (see Section 5: Handling ambiguity and decisions).
 
+**About git pre-commit:**
+
+The repository installs a git pre-commit hook (`.git/hooks/pre-commit`) that automatically:
+
+1. Runs `cargo fmt --all` and stages any formatted Rust files
+2. Calls `cargo xtask precommit` (the same gate as CI)
+
+This means formatting issues are auto-fixed and never block commits — only real governance failures (tests, lint violations, policy breaches) prevent a commit. You do **not** need to modify the hook or run `pre-commit` tool directly; just commit normally. If it fails, run `cargo xtask precommit` to see what broke, fix it, and commit again.
+
 ---
 
 ### 3.3 Governed maintenance
