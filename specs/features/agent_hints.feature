@@ -188,3 +188,94 @@ Feature: Agent Hints API
     And the JSON response should have field "hints"
     And the hints should be sorted by priority: high, medium, low, none
 
+  # CLI tests for suggest-next command (unified HintEngine)
+  @AC-TPL-AGENT-HINTS
+  Scenario: CLI suggest-next returns hints in JSON format
+    Given the following tasks exist in "specs/tasks.yaml":
+      | id                | title                     | status      | requirement           | owner    |
+      | TASK-CLI-001      | Setup database            | Todo        | REQ-TPL-001          | alice    |
+      | TASK-CLI-002      | Write tests               | InProgress  | REQ-TPL-002          | bob      |
+      | TASK-CLI-003      | Deploy to prod            | Done        | REQ-TPL-003          | alice    |
+    When I run the command "cargo xtask suggest-next --format json"
+    Then the exit code should be 0
+    And the output should be valid JSON
+    And the JSON output should have field "hints"
+    And the "hints" array should contain task "TASK-CLI-001"
+    And the "hints" array should contain task "TASK-CLI-002"
+    And the "hints" array should not contain task "TASK-CLI-003"
+
+  @AC-TPL-AGENT-HINTS
+  Scenario: CLI suggest-next filters by owner
+    Given the following tasks exist in "specs/tasks.yaml":
+      | id                | title                     | status      | requirement   | owner     |
+      | TASK-CLI-010      | Frontend work             | Todo        | REQ-TPL-001   | alice     |
+      | TASK-CLI-011      | Backend work              | InProgress  | REQ-TPL-002   | bob       |
+      | TASK-CLI-012      | Security audit            | Todo        | REQ-TPL-003   | alice     |
+    When I run the command "cargo xtask suggest-next --owner alice --format json"
+    Then the exit code should be 0
+    And the JSON output should have field "hints"
+    And the "hints" array should contain task "TASK-CLI-010"
+    And the "hints" array should contain task "TASK-CLI-012"
+    And the "hints" array should not contain task "TASK-CLI-011"
+
+  @AC-TPL-AGENT-HINTS
+  Scenario: CLI suggest-next filters by label
+    Given the following tasks exist in "specs/tasks.yaml":
+      | id                | title                     | status      | requirement   | labels           |
+      | TASK-CLI-020      | Fix auth bypass           | Todo        | REQ-TPL-001   | security         |
+      | TASK-CLI-021      | Add feature               | InProgress  | REQ-TPL-002   | feature          |
+      | TASK-CLI-022      | Security review           | Todo        | REQ-TPL-003   | security,audit   |
+    When I run the command "cargo xtask suggest-next --label security --format json"
+    Then the exit code should be 0
+    And the JSON output should have field "hints"
+    And the "hints" array should contain task "TASK-CLI-020"
+    And the "hints" array should contain task "TASK-CLI-022"
+    And the "hints" array should not contain task "TASK-CLI-021"
+
+  @AC-TPL-AGENT-HINTS
+  Scenario: CLI suggest-next filters by requirement
+    Given the following tasks exist in "specs/tasks.yaml":
+      | id                | title                     | status      | requirement           |
+      | TASK-CLI-030      | Implement health check    | Todo        | REQ-TPL-HEALTH        |
+      | TASK-CLI-031      | Add metrics               | InProgress  | REQ-TPL-METRICS       |
+      | TASK-CLI-032      | Update health check       | Todo        | REQ-TPL-HEALTH        |
+    When I run the command "cargo xtask suggest-next --requirement REQ-TPL-HEALTH --format json"
+    Then the exit code should be 0
+    And the JSON output should have field "hints"
+    And the "hints" array should contain task "TASK-CLI-030"
+    And the "hints" array should contain task "TASK-CLI-032"
+    And the "hints" array should not contain task "TASK-CLI-031"
+
+  @AC-TPL-AGENT-HINTS
+  Scenario: CLI suggest-next respects limit parameter
+    Given the following tasks exist in "specs/tasks.yaml":
+      | id                | title                     | status      | requirement           |
+      | TASK-CLI-040      | Task A                    | Todo        | REQ-TPL-001          |
+      | TASK-CLI-041      | Task B                    | Todo        | REQ-TPL-002          |
+      | TASK-CLI-042      | Task C                    | Todo        | REQ-TPL-003          |
+      | TASK-CLI-043      | Task D                    | Todo        | REQ-TPL-004          |
+    When I run the command "cargo xtask suggest-next --limit 2 --format json"
+    Then the exit code should be 0
+    And the JSON output should have field "hints"
+    And the "hints" array should have 2 items
+
+  @AC-TPL-AGENT-HINTS
+  Scenario: CLI suggest-next outputs structured hints with all required fields
+    Given the following tasks exist in "specs/tasks.yaml":
+      | id                | title                     | status      | requirement   | owner         | labels              |
+      | TASK-CLI-050      | Implement feature         | InProgress  | REQ-TPL-001   | team-backend  | feature,high        |
+    When I run the command "cargo xtask suggest-next --format json"
+    Then the exit code should be 0
+    And the JSON output should have field "hints"
+    And the first hint in JSON should have field "task_id"
+    And the first hint in JSON should have field "title"
+    And the first hint in JSON should have field "status"
+    And the first hint in JSON should have field "owner"
+    And the first hint in JSON should have field "labels"
+    And the first hint in JSON should have field "requirement_ids"
+    And the first hint in JSON should have field "ac_ids"
+    And the first hint in JSON should have field "reason"
+    And the first hint "task_id" should equal "TASK-CLI-050"
+    And the first hint "status" should equal "in_progress"
+    And the first hint "owner" should equal "team-backend"
+
