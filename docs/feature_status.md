@@ -55,6 +55,7 @@ Auto-generated AC status from acceptance (BDD) and unit tests.
 | AC-TPL-004 | US-TPL-001 | REQ-TPL-ERROR-HANDLING | [PASS] pass | 1 / 1 |
 | AC-TPL-007 | US-TPL-001 | REQ-TPL-METRICS | [PASS] pass | 1 / 1 |
 | AC-TPL-AGENT-HINTS | US-TPL-PLT-001 | REQ-TPL-AGENT-INTERFACE | [PASS] pass | 1 / 1 |
+| AC-TPL-AGENT-HINTS-SCHEMA | US-TPL-PLT-001 | REQ-TPL-AGENT-INTERFACE | [PASS] pass | 1 / 2 |
 | AC-TPL-AGENT-SKILLS | US-TPL-PLT-001 | REQ-TPL-AGENT-INTERFACE | [PASS] pass | 1 / 1 |
 | AC-TPL-AGENTS-DESCRIPTION-QUALITY | US-TPL-PLT-001 | REQ-TPL-AGENTS-GOVERNANCE | [UNKNOWN] unknown | 0 / 0 |
 | AC-TPL-AGENTS-GOVERNANCE-001 | US-TPL-PLT-001 | REQ-TPL-AGENTS-GOVERNANCE | [PASS] pass | 1 / 1 |
@@ -129,12 +130,14 @@ Auto-generated AC status from acceptance (BDD) and unit tests.
 | AC-TPL-TASKS-HTTP | US-TPL-PLT-001 | REQ-TPL-PLATFORM-TASKS | [PASS] pass | 1 / 1 |
 | AC-TPL-TASKS-UPDATE-CLI | US-TPL-PLT-001 | REQ-TPL-PLATFORM-TASKS | [PASS] pass | 1 / 1 |
 | AC-TPL-XTASK-NONINTERACTIVE | US-TPL-PLT-001 | REQ-TPL-AUTOMATION-BEHAVIOUR | [PASS] pass | 1 / 1 |
+| AC-TPL-XTASK-SPEC-ROOT | US-TPL-PLT-001 | REQ-PLT-DEVEX-CONTRACT | [UNKNOWN] unknown | 0 / 1 |
 
 ## Unmapped ACs (Service Behaviour)
 
 *(This list SHOULD be empty in this repo. If anything appears here, it's a bug.)*
 
-- AC-TPL-BUNDLE-MINIMAL-SCOPE: Bundle scope is minimal: specs/ includes only referenced sections (not entire spec_ledger), docs/ includes only docs mentioned in ACs/tests, src/ is optional and narrowly scoped (crate-specific). Enforcement: bundle size audit in selftest catches over-inclusion.
+- AC-TPL-XTASK-SPEC-ROOT: xtask commands that read specs or tasks (e.g., `status`, `suggest-next`, `tasks-list`, bundle generation) MUST resolve their workspace root via the SPEC_ROOT environment variable when it is set. When SPEC_ROOT is unset, they default to the repository root.
+- AC-TPL-BUNDLE-MINIMAL-SCOPE: Bundle scope is minimal: specs/ includes only referenced sections (not entire spec_ledger), docs/ includes only docs mentioned in ACs/tests, src/ is optional and narrowly scoped (crate-specific). As a guardrail, a single bundle MUST NOT exceed a configurable size and file-count threshold (default: 300 KiB / 64 files) unless explicitly overridden via BUNDLE_MAX_BYTES / BUNDLE_MAX_FILES.
 
 ## Meta / CI-only ACs (Not Executed Locally)
 

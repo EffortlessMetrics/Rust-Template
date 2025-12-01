@@ -426,6 +426,19 @@ stories:
             tests:
               - { type: integration, tag: "@AC-TPL-CLI-JSON-OUTPUT", file: "specs/features/xtask_devex.feature" }
 
+          - id: AC-TPL-XTASK-SPEC-ROOT
+            text: >
+              xtask commands that read specs or tasks
+              (e.g., `status`, `suggest-next`, `tasks-list`, bundle
+              generation) MUST resolve their workspace root via the
+              SPEC_ROOT environment variable when it is set.
+              When SPEC_ROOT is unset, they default to the repository root.
+            tags: [template, devex, testing]
+            must_have_ac: false
+            note: "Testing infrastructure contract; verified by unit test. BDD scenarios rely on this implicitly."
+            tests:
+              - { type: unit, tag: "spec_root_resolved", file: "crates/xtask/src/commands/tasks.rs" }
+
       - id: REQ-TPL-AUTOMATION-BEHAVIOUR
         title: "Automation-safe xtask behaviour"
         tags: [platform, devex, ci, ai]
@@ -1035,6 +1048,34 @@ stories:
             tests:
               - { type: bdd, tag: "@AC-TPL-AGENT-HINTS" }
 
+          - id: AC-TPL-AGENT-HINTS-SCHEMA
+            text: >
+              Hints returned from `/platform/agent/hints` MUST be objects
+              with fields:
+                - `id`: stable hint identifier (string)
+                - `kind`: category of hint (e.g., `task`, `governance`, `policy`)
+                - `priority`: one of `low`, `medium`, `high`
+                - `status`: one of `open`, `in_progress`, `done`
+                - `reason`: object with `code` and `details`
+                - `target`: object describing what the hint is about
+                  (e.g., `{ "type": "task", "id": "TASK-…" }`)
+                - `tags`: array of strings (labels)
+                - `links`: object with optional `spec`, `task`, `docs`,
+                  `adrs`, and `extra` entries
+
+              The CLI command `cargo xtask suggest-next --format json` MAY
+              project this into a simpler structure
+              (`task_id`, `title`, `status`, `owner`, `labels`,
+              `requirement_ids`, `ac_ids`, `reason`), but it MUST preserve
+              the same underlying semantics (priority, status, linkage to
+              REQs/ACs).
+            tags: [kernel, template, agent-interface]
+            must_have_ac: true
+            note: "Hint shape is a kernel contract; agents depend on stable fields."
+            tests:
+              - { type: bdd, tag: "@AC-TPL-AGENT-HINTS-SCHEMA", file: "specs/features/agent_hints.feature" }
+              - { type: unit, tag: "hint_serialization_schema", file: "crates/spec-runtime/src/hints.rs" }
+
       - id: REQ-TPL-SKILLS-GUIDE
         title: "Agent Skills documentation and governance"
         tags: [platform, agent, docs]
@@ -1358,11 +1399,12 @@ stories:
             text: >
               Bundle scope is minimal: specs/ includes only referenced sections (not entire
               spec_ledger), docs/ includes only docs mentioned in ACs/tests, src/ is optional
-              and narrowly scoped (crate-specific). Enforcement: bundle size audit in selftest
-              catches over-inclusion.
+              and narrowly scoped (crate-specific). As a guardrail, a single bundle MUST NOT
+              exceed a configurable size and file-count threshold (default: 300 KiB / 64 files)
+              unless explicitly overridden via BUNDLE_MAX_BYTES / BUNDLE_MAX_FILES.
             tags: [template, devex]
             must_have_ac: false
-            note: "Minimal scope is aspirational (v3.4.0) but not enforced at bundle command time yet."
+            note: "Soft warning implemented; size thresholds guard against 'dump everything into the bundle' regressions."
             tests:
               - { type: unit, tag: "bundle_scope_audit", file: "crates/xtask/src/commands/bundle.rs" }
 

@@ -279,3 +279,20 @@ Feature: Agent Hints API
     And the first hint "status" should equal "in_progress"
     And the first hint "owner" should equal "team-backend"
 
+  @AC-TPL-AGENT-HINTS-SCHEMA @AC-TPL-AGENT-HINTS
+  Scenario: HTTP hints include all required schema fields
+    Given the following tasks exist in "specs/tasks.yaml":
+      | id                | title                     | status      | requirement           |
+      | TASK-SCHEMA-001   | Schema validation task    | Todo        | REQ-TPL-001          |
+    When I send a GET request to "/platform/agent/hints"
+    Then the response status code should be 200
+    And the JSON response should have field "hints"
+    And the first hint should have field "id"
+    And the first hint should have field "kind"
+    And the first hint should have field "priority"
+    And the first hint should have field "status"
+    And the first hint should have field "reason"
+    And the first hint should have field "target"
+    And the first hint should have field "tags"
+    And the first hint should have field "links"
+
