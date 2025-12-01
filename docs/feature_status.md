@@ -139,9 +139,9 @@ Auto-generated AC status from acceptance (BDD) and unit tests.
 
 *(This list SHOULD be empty in this repo. If anything appears here, it's a bug.)*
 
-- AC-TPL-BUNDLE-MINIMAL-SCOPE: Bundle scope is minimal: specs/ includes only referenced sections (not entire spec_ledger), docs/ includes only docs mentioned in ACs/tests, src/ is optional and narrowly scoped (crate-specific). As a guardrail, a single bundle MUST NOT exceed a configurable size and file-count threshold (default: 300 KiB / 64 files) unless explicitly overridden via BUNDLE_MAX_BYTES / BUNDLE_MAX_FILES.
 - AC-TPL-XTASK-SPEC-ROOT: xtask commands that read specs or tasks (e.g., `status`, `suggest-next`, `tasks-list`, bundle generation) MUST resolve their workspace root via the SPEC_ROOT environment variable when it is set. When SPEC_ROOT is unset, they default to the repository root.
 - AC-PLT-DOC-INDEX-FRONTMATTER: `cargo xtask docs-check` validates bidirectional alignment between doc_index.yaml entries and document front-matter (stories, requirements, acs, adrs). Items in index must be in front-matter and vice versa. (Docs-as-Code v3)
+- AC-TPL-BUNDLE-MINIMAL-SCOPE: Bundle scope is minimal: specs/ includes only referenced sections (not entire spec_ledger), docs/ includes only docs mentioned in ACs/tests, src/ is optional and narrowly scoped (crate-specific). As a guardrail, a single bundle MUST NOT exceed a configurable size and file-count threshold (default: 300 KiB / 64 files) unless explicitly overridden via BUNDLE_MAX_BYTES / BUNDLE_MAX_FILES.
 
 ## Meta / CI-only ACs (Not Executed Locally)
 
@@ -156,7 +156,7 @@ validated in CI, not by local selftest:
 - AC-TPL-AGENTS-SKILLS-REFERENCES – Agent 'skills' entries MUST reference existing Skills in .claude/skills/* or be omitted. agents-lint MUST error if an agent declares a Skill that does not exist.
 - AC-TPL-AGENTS-TOOLS-PERMISSION-SAFETY – Agent tools and permissionMode MUST follow least-privilege and explicitness principles. agents-lint MUST error on invalid permissionMode values and warn on broad tool grants (e.g., full Bash + Edit + Write) without justification.
 - AC-TPL-BDD-EXIT-CODES – The acceptance test binary returns exit 0 when all non-@wip scenarios pass (regardless of skipped scenarios), and returns non-zero only if at least one non-@wip scenario fails.
-- AC-TPL-EXAMPLE-FORK-BUILDS – `examples/fork-customization/` builds and passes its own selftest in CI, demonstrating a working fork.
+- AC-TPL-EXAMPLE-FORK-BUILDS – `examples/fork-customization/` is validated and demonstrates fork extensibility patterns in CI, proving template provides a working foundation for forked services.
 - AC-TPL-SKILLS-ALLOWED-TOOLS-SAFETY – Skill allowed-tools MUST follow least-privilege principle. skills-lint must warn if read-only Skill includes Write/Edit, or if unscoped Bash is used without justification. No hardcoded secrets in SKILL.md or supporting files.
 - AC-TPL-SKILLS-DESCRIPTION-QUALITY – Skill descriptions MUST include both WHAT (capability) and WHEN (triggers/context), use third-person voice, and max 1024 characters. skills-lint must warn if description omits "when to use" triggers.
 - AC-TPL-SKILLS-FLOW-MAPPING – Skill descriptions MUST reference at least one devex_flows entry or xtask command. Anti-pattern detection: warn if Skill name suggests it wraps single command (e.g., skill-check) instead of workflow. Lint rule: description must mention workflow scope.

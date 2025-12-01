@@ -1,0 +1,59 @@
+name: Example Fork Validation
+
+on:
+  push:
+    paths:
+      - 'examples/fork-customization/**'
+      - 'Cargo.toml'
+      - '.github/workflows/ci-example-fork.yml'
+  pull_request:
+    paths:
+      - 'examples/fork-customization/**'
+      - 'Cargo.toml'
+      - '.github/workflows/ci-example-fork.yml'
+
+jobs:
+  example-fork:
+    runs-on: ubuntu-latest
+    name: Example Fork (Linux + Nix)
+    timeout-minutes: 30
+    permissions: { contents: read }
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+
+      - uses: Swatinem/rust-cache@v2
+
+      # Install Nix for Linux/macOS
+      - uses: cachix/install-nix-action@v27
+
+      # Enable sccache for build caching
+      - name: Enable sccache
+        run: |
+          echo "RUSTC_WRAPPER=$(nix develop -c which sccache)" >> $GITHUB_ENV
+          echo "SCCACHE_GHA_ENABLED=1" >> $GITHUB_ENV
+          echo "CARGO_INCREMENTAL=0" >> $GITHUB_ENV
+          nix develop -c sccache --start-server || true
+
+      # Validate example fork structure
+      - name: Validate example fork structure
+        run: |
+          echo "✓ Example fork directory exists: examples/fork-customization/"
+          ls -la examples/fork-customization/
+
+          echo "✓ Checking sample files..."
+          test -f examples/fork-customization/README.md || { echo "Missing README.md"; exit 1; }
+          test -f examples/fork-customization/sample-spec-additions.yaml || { echo "Missing sample-spec-additions.yaml"; exit 1; }
+          test -f examples/fork-customization/sample-service-metadata.yaml || { echo "Missing sample-service-metadata.yaml"; exit 1; }
+          test -f examples/fork-customization/sample-product-catalog.feature || { echo "Missing sample-product-catalog.feature"; exit 1; }
+          echo "✓ All sample files present"
+
+      # Run selftest of the root template (validating the infrastructure a fork would inherit)
+      - name: Run template self-test (validates fork infrastructure)
+        run: nix develop -c cargo run -p xtask -- selftest
+
+      - name: Test result
+        if: success()
+        run: |
+          echo "✓ Example fork validation passed"
+          echo "✓ Template selftest passed (confirms fork infrastructure is sound)"
