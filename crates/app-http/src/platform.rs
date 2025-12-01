@@ -123,6 +123,7 @@ struct DevExCounts {
 struct DocCounts {
     total: usize,
     design: usize,
+    doc_type_issues: usize,
 }
 
 #[derive(Serialize)]
@@ -262,11 +263,167 @@ async fn get_devex_flows(State(state): State<AppState>) -> Json<serde_json::Valu
     Json(serde_json::to_value(devex).unwrap())
 }
 
-async fn get_docs_index(State(state): State<AppState>) -> Json<serde_json::Value> {
+/// Response for /platform/docs/index with health info
+#[derive(Serialize)]
+struct DocsIndexResponse {
+    schema_version: String,
+    template_version: String,
+    docs: Vec<DocInfoWithHealth>,
+    summary: DocHealthSummary,
+}
+
+#[derive(Serialize)]
+struct DocInfoWithHealth {
+    id: String,
+    file: String,
+    doc_type: String,
+    #[serde(default)]
+    stories: Vec<String>,
+    #[serde(default)]
+    requirements: Vec<String>,
+    #[serde(default)]
+    acs: Vec<String>,
+    #[serde(default)]
+    adrs: Vec<String>,
+    /// Doc type contract validation result
+    doc_type_valid: bool,
+    /// Issue description if doc_type_valid is false
+    #[serde(skip_serializing_if = "Option::is_none")]
+    doc_type_issue: Option<String>,
+}
+
+#[derive(Serialize)]
+struct DocHealthSummary {
+    total: usize,
+    valid: usize,
+    with_issues: usize,
+}
+
+async fn get_docs_index(State(state): State<AppState>) -> Json<DocsIndexResponse> {
     let root = &state.workspace_root;
     let docs = spec_runtime::load_doc_index(&root.join("specs/doc_index.yaml"))
         .expect("Failed to load doc index");
-    Json(serde_json::to_value(docs).unwrap())
+
+    let mut docs_with_health = Vec::new();
+    let mut valid_count = 0;
+    let mut issue_count = 0;
+
+    for doc in docs.docs {
+        let (doc_type_valid, doc_type_issue) = validate_doc_type_contract(&doc);
+        if doc_type_valid {
+            valid_count += 1;
+        } else {
+            issue_count += 1;
+        }
+
+        docs_with_health.push(DocInfoWithHealth {
+            id: doc.id,
+            file: doc.file,
+            doc_type: doc.doc_type,
+            stories: doc.stories,
+            requirements: doc.requirements,
+            acs: doc.acs,
+            adrs: doc.adrs,
+            doc_type_valid,
+            doc_type_issue,
+        });
+    }
+
+    Json(DocsIndexResponse {
+        schema_version: docs.schema_version,
+        template_version: docs.template_version,
+        docs: docs_with_health,
+        summary: DocHealthSummary {
+            total: valid_count + issue_count,
+            valid: valid_count,
+            with_issues: issue_count,
+        },
+    })
+}
+
+/// Validate doc_type contract for a single document
+/// Returns (is_valid, issue_description)
+fn validate_doc_type_contract(doc: &spec_runtime::DocEntry) -> (bool, Option<String>) {
+    // Normalize doc_type: treat "how-to" as "how_to"
+    let doc_type = doc.doc_type.replace('-', "_");
+
+    match doc_type.as_str() {
+        "how_to" => {
+            if doc.requirements.is_empty() && doc.acs.is_empty() {
+                return (
+                    false,
+                    Some("how_to should reference at least one requirement or AC".into()),
+                );
+            }
+        }
+        "explanation" => {
+            if doc.stories.is_empty() && doc.requirements.is_empty() {
+                return (
+                    false,
+                    Some("explanation should reference at least one story or requirement".into()),
+                );
+            }
+        }
+        "design_doc" => {
+            if doc.requirements.is_empty() {
+                return (
+                    false,
+                    Some("design_doc should reference at least one requirement".into()),
+                );
+            }
+        }
+        "reference" => {
+            if doc.requirements.is_empty() && doc.acs.is_empty() {
+                return (
+                    false,
+                    Some("reference should reference at least one requirement or AC".into()),
+                );
+            }
+        }
+        "status" => {
+            if doc.requirements.is_empty() || doc.acs.is_empty() {
+                return (false, Some("status should reference both requirements and ACs".into()));
+            }
+        }
+        "adr" => {
+            if doc.requirements.is_empty() {
+                return (false, Some("adr should reference at least one requirement".into()));
+            }
+        }
+        "guide" => {
+            if doc.requirements.is_empty() && doc.acs.is_empty() {
+                return (
+                    false,
+                    Some("guide should reference at least one requirement or AC".into()),
+                );
+            }
+        }
+        "impl_plan" => {
+            if doc.requirements.is_empty() || doc.acs.is_empty() {
+                return (
+                    false,
+                    Some("impl_plan should reference both requirements and ACs".into()),
+                );
+            }
+        }
+        "requirements_doc" => {
+            if doc.requirements.is_empty() {
+                return (
+                    false,
+                    Some("requirements_doc should reference at least one requirement".into()),
+                );
+            }
+        }
+        "ci_workflow" => {
+            // CI workflow YAML: no validation
+        }
+        _ => {
+            // Unknown doc_type
+            return (false, Some(format!("Unknown doc_type '{}'", doc.doc_type)));
+        }
+    }
+
+    (true, None)
 }
 
 async fn get_status(State(state): State<AppState>) -> Json<PlatformStatus> {
@@ -290,9 +447,12 @@ async fn get_status(State(state): State<AppState>) -> Json<PlatformStatus> {
     let devex_counts =
         DevExCounts { commands: specs.devex.commands.len(), flows: specs.devex.flows.len() };
 
+    let doc_type_issues =
+        specs.docs.docs.iter().filter(|d| !validate_doc_type_contract(d).0).count();
     let doc_counts = DocCounts {
         total: specs.docs.docs.len(),
         design: specs.docs.docs.iter().filter(|d| d.doc_type == "design_doc").count(),
+        doc_type_issues,
     };
 
     let task_counts = TaskCounts { total: tasks_spec.tasks.len() };
