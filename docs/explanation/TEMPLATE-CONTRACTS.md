@@ -1491,6 +1491,36 @@ This metadata is exposed via `/platform/status` and used by the UI.
 
 ---
 
+## Version Manifest Contract
+
+`specs/version_manifest.yaml` declares all version-bearing files in the repository. This manifest is the single source of truth for release automation.
+
+**Key Properties:**
+- `schema_version`: Manifest schema version
+- `files`: Array of version targets with paths and patterns
+
+**Version-Bearing Files (10+):**
+- `specs/spec_ledger.yaml` - Canonical version source (priority 1)
+- `specs/service_metadata.yaml` - Service metadata version
+- `specs/doc_index.yaml` - Documentation index version
+- `README.md` - Repository README version references
+- `CLAUDE.md` - Agent instructions version
+- `CHANGELOG.md` - Release history
+- `docs/KERNEL_SNAPSHOT.md` - Kernel baseline version
+- `docs/ROADMAP.md` - Roadmap version references
+- `docs/explanation/TEMPLATE-CONTRACTS.md` - Template version
+
+**Related ACs:**
+- `AC-TPL-VERSION-MANIFEST`: Version locations declared in manifest
+- `AC-TPL-VERSION-DRYRUN`: Dry-run preview before applying
+- `AC-TPL-VERSION-ATOMIC`: Atomic updates with rollback
+
+**Enforcement:**
+- `cargo xtask docs-check` validates version alignment across files
+- `cargo xtask release-prepare X.Y.Z` uses manifest for updates (v3.3.6+)
+
+---
+
 ## Customization Surface (SAFE TO CHANGE)
 
 ### Domain Model and Business Logic
