@@ -396,7 +396,7 @@ docs:
   # Kernel Snapshot (Release Baseline)
   - id: SNAPSHOT-TPL-KERNEL-001
     file: docs/KERNEL_SNAPSHOT.md
-    title: "Kernel Snapshot v3.3.4"
+    title: "Kernel Snapshot v3.3.5"
     doc_type: status
     stories: [US-TPL-PLT-001]
     requirements: [REQ-PLT-DOCS-CONSISTENCY, REQ-TPL-OPINIONATED-DEFAULTS]
@@ -780,4 +780,32 @@ docs:
       - REQ-PLT-DOCS-CONSISTENCY
       - REQ-PLT-AC-MANAGEMENT
     acs: [AC-PLT-009, AC-PLT-010]
+    adrs: [ADR-0005]
+
+  # IDP Tile Specifications
+  - id: DESIGN-TPL-IDP-TILES-001
+    file: docs/design/DESIGN-IDP-TILES.md
+    title: "IDP Tile Specifications for Platform Integration"
+    doc_type: design_doc
+    stories: [US-TPL-PLT-001]
+    requirements:
+      - REQ-TPL-PLATFORM-INTROSPECTION
+      - REQ-TPL-AI-IDP-COMPAT
+    acs:
+      - AC-TPL-CLI-JSON-CORE
+      - AC-TPL-CLI-JSON-OUTPUT
+      - AC-TPL-AGENT-HINTS-SCHEMA
+    adrs: [ADR-0016]
+
+  # Versioning Engine Design (Deferred)
+  - id: DESIGN-TPL-VERSIONING-ENGINE-001
+    file: docs/design/DESIGN-VERSIONING-ENGINE.md
+    title: "Single Versioning Engine for release-prepare"
+    doc_type: design_doc
+    stories: [US-TPL-PLT-001]
+    requirements:
+      - REQ-TPL-RELEASE
+    acs:
+      - AC-TPL-REL-SEMVER
+      - AC-TPL-VERSION-ALIGN
     adrs: [ADR-0005]
