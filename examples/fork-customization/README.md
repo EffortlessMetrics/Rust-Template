@@ -106,7 +106,39 @@ secrets:
 
 ---
 
-### 6. README and CLAUDE.md
+### 6. CI Template
+
+**File:** `.github/workflows/kernel-ci.yaml`
+
+A canonical GitHub Actions workflow is provided at `.github/workflows/kernel-ci.yaml` in this example directory.
+
+**Quick Start:**
+
+```bash
+mkdir -p .github/workflows
+cp examples/fork-customization/.github/workflows/kernel-ci.yaml .github/workflows/
+```
+
+**CI Tiers:**
+
+| Tier | Environment | Commands | Purpose |
+|------|-------------|----------|---------|
+| Tier-1 | Nix devshell | `ci-local` | Full governance validation |
+| Tier-2 | Native OS | `check` | Basic compilation and tests |
+
+**Environment Variables:**
+
+| Variable | Purpose |
+|----------|---------|
+| `CI=1` | Auto-set by GitHub Actions |
+| `XTASK_NONINTERACTIVE=1` | Suppress prompts |
+| `XTASK_LOW_RESOURCES=1` | For constrained runners |
+
+See [docs/how-to/run-in-ci.md](../../docs/how-to/run-in-ci.md) for detailed configuration options.
+
+---
+
+### 7. README and CLAUDE.md
 
 **Files:** `README.md`, `CLAUDE.md`
 

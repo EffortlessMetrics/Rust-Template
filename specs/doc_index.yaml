@@ -25,6 +25,23 @@ docs:
     acs: ["AC-TPL-001"]
     adrs: ["ADR-0001"]
 
+  # v3.4.0 Release Plan
+  - id: PLAN-TPL-V340-001
+    file: docs/v3.4.0-plan.md
+    title: "v3.4.0 Release Plan: IDP-Ready Kernel Framing"
+    doc_type: impl_plan
+    stories: [US-TPL-PLT-001]
+    requirements:
+      - REQ-TPL-IDP-SNAPSHOT
+      - REQ-TPL-PLATFORM-SCHEMA
+      - REQ-PLT-DOCS-CONSISTENCY
+    acs:
+      - AC-TPL-IDP-SNAPSHOT
+      - AC-TPL-IDP-SNAPSHOT-VALID-JSON
+      - AC-PLT-009
+      - AC-PLT-010
+    adrs: [ADR-0016, ADR-0005]
+
   # Example requirements doc entry
   - id: REQS-TPL-CORE-001
     file: docs/requirements/service-core.md
@@ -854,6 +871,10 @@ docs:
       - AC-TPL-CLI-JSON-OUTPUT
       - AC-TPL-AGENT-HINTS-SCHEMA
     adrs: [ADR-0016]
+
+  # Note: specs/platform_schema.yaml is a YAML schema specification, not a markdown doc.
+  # It's referenced by the /platform/schema endpoint in crates/spec-runtime/src/schema.rs
+  # and doesn't require front-matter validation.
 
   # Versioning Engine Design (Deferred)
   - id: DESIGN-TPL-VERSIONING-ENGINE-001
