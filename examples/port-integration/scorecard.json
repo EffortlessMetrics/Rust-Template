@@ -1,0 +1,131 @@
+{
+  "identifier": "governance-health",
+  "title": "Governance Health Scorecard",
+  "filter": {
+    "combinator": "and",
+    "rules": [
+      {
+        "property": "$blueprint",
+        "operator": "=",
+        "value": "rust-template-service"
+      }
+    ]
+  },
+  "levels": [
+    {
+      "title": "Gold",
+      "color": "gold"
+    },
+    {
+      "title": "Silver",
+      "color": "silver"
+    },
+    {
+      "title": "Bronze",
+      "color": "bronze"
+    }
+  ],
+  "rules": [
+    {
+      "identifier": "governance-passing",
+      "title": "Governance Passing",
+      "description": "All governance checks pass (selftest green)",
+      "level": "Gold",
+      "query": {
+        "combinator": "and",
+        "conditions": [
+          {
+            "property": "governance_passing",
+            "operator": "=",
+            "value": true
+          }
+        ]
+      }
+    },
+    {
+      "identifier": "high-ac-coverage",
+      "title": "High AC Coverage",
+      "description": "AC coverage above 90%",
+      "level": "Gold",
+      "query": {
+        "combinator": "and",
+        "conditions": [
+          {
+            "property": "ac_coverage_percent",
+            "operator": ">=",
+            "value": 90
+          }
+        ]
+      }
+    },
+    {
+      "identifier": "medium-ac-coverage",
+      "title": "Medium AC Coverage",
+      "description": "AC coverage above 70%",
+      "level": "Silver",
+      "query": {
+        "combinator": "and",
+        "conditions": [
+          {
+            "property": "ac_coverage_percent",
+            "operator": ">=",
+            "value": 70
+          },
+          {
+            "property": "ac_coverage_percent",
+            "operator": "<",
+            "value": 90
+          }
+        ]
+      }
+    },
+    {
+      "identifier": "docs-clean",
+      "title": "Documentation Clean",
+      "description": "No documentation issues",
+      "level": "Gold",
+      "query": {
+        "combinator": "and",
+        "conditions": [
+          {
+            "property": "docs_with_issues",
+            "operator": "=",
+            "value": 0
+          }
+        ]
+      }
+    },
+    {
+      "identifier": "low-friction",
+      "title": "Low Friction",
+      "description": "Less than 5 friction entries",
+      "level": "Silver",
+      "query": {
+        "combinator": "and",
+        "conditions": [
+          {
+            "property": "friction_count",
+            "operator": "<",
+            "value": 5
+          }
+        ]
+      }
+    },
+    {
+      "identifier": "active-development",
+      "title": "Active Development",
+      "description": "Has in-progress tasks",
+      "level": "Bronze",
+      "query": {
+        "combinator": "and",
+        "conditions": [
+          {
+            "property": "tasks_in_progress",
+            "operator": ">",
+            "value": 0
+          }
+        ]
+      }
+    }
+  ]
+}

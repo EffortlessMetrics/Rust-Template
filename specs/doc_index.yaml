@@ -939,3 +939,14 @@ docs:
     acs: [AC-PLT-003, AC-PLT-004]
     adrs: []
 
+  # Running xtask in CI/CD
+  - id: GUIDE-TPL-RUN-IN-CI-001
+    file: docs/how-to/run-in-ci.md
+    title: "Running xtask Commands in CI/CD Pipelines"
+    doc_type: how_to
+    stories: [US-TPL-PLT-001]
+    requirements:
+      - REQ-PLT-DEVEX-CONTRACT
+    acs: []
+    adrs: []
+
