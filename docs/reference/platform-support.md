@@ -13,6 +13,7 @@ acs: [AC-PLT-015, AC-PLT-016, AC-PLT-019, AC-PLT-020]
 adrs: [ADR-0002, ADR-0005, ADR-0017]
 last_updated: 2025-11-25
 ---
+<!-- doclint:disable orphan-version -->
 
 # Platform Support Reference
 

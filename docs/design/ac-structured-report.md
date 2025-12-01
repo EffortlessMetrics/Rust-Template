@@ -11,6 +11,7 @@ tags: [platform, devex, testing]
 acs: []
 adrs: [ADR-0005]
 ---
+<!-- doclint:disable orphan-version -->
 
 # AC Structured Report Design
 

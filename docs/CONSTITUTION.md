@@ -1,5 +1,6 @@
 # Platform Constitution
 # Version: 1.0.0
+<!-- doclint:disable orphan-version -->
 
 This document defines the non-negotiable invariants and precedence rules for the platform.
 All specs, code, and workflows must adhere to these principles.

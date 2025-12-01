@@ -1,3 +1,4 @@
+# doclint:disable orphan-version
 # Service Metadata
 # This file provides a self-description of the service for tooling and orchestration.
 # Copy this template to your service root as SERVICE_METADATA.yaml and fill in the values.

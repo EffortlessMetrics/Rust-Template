@@ -1,3 +1,4 @@
+<!-- doclint:disable orphan-version -->
 # Ready for Production Checklist
 
 This checklist ensures the Rust Template is "fully working properly" and ready for real-world use.

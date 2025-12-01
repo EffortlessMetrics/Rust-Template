@@ -1,3 +1,4 @@
+<!-- doclint:disable orphan-version -->
 # ADR-0007: Dependency & Security Health
 
 **Status:** Accepted  

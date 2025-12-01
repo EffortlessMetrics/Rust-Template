@@ -1,8 +1,8 @@
 ---
-doc_type: design_doc
 id: DESIGN-TPL-IDP-TILES-001
 title: "IDP Tile Specifications for Platform Integration"
 author: platform-team
+doc_type: design_doc
 date: 2025-12-01
 status: published
 stories: [US-TPL-PLT-001]

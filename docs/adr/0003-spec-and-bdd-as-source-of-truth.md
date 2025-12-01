@@ -1,3 +1,5 @@
+<!-- doclint:disable orphan-version -->
+<!-- ADR: This document contains historical version references as part of the decision record. -->
 # ADR-0003: Spec Ledger and BDD as Source of Truth for Behavior
 
 **Status**: Accepted

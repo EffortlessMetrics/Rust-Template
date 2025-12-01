@@ -1,3 +1,5 @@
+<!-- doclint:disable orphan-version -->
+<!-- Illustrative: This document uses version examples for explanation purposes. -->
 # Template Versioning Strategy
 
 ## Overview

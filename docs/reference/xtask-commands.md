@@ -1,4 +1,5 @@
 # Reference: xtask Commands
+<!-- doclint:disable orphan-version -->
 
 Complete reference for all `xtask` CLI commands.
 
@@ -73,7 +74,7 @@ Performs a comprehensive environment setup and validation:
 [1/6] Checking dependencies...
   ✓ cargo 1.91.0
   ✓ rustc 1.91.0
-  ✓ conftest 0.49.1
+  ✓ conftest 0.52.0
 
 [2/6] Checking platform health...
   ✓ Platform running at http://localhost:8080
@@ -890,7 +891,7 @@ Generate a structured release evidence bundle for a given version.
 cargo run -p xtask -- release-bundle <version>
 
 # Example
-cargo run -p xtask -- release-bundle 3.1.0
+cargo run -p xtask -- release-bundle 3.3.6
 ```
 
 ### What It Does
@@ -906,7 +907,7 @@ Creates a comprehensive evidence file at `release_evidence/v<version>.md` contai
 
 ### Parameters
 
-- `<version>` - Version number (e.g., `3.1.0`) - format should be `X.Y.Z`
+- `<version>` - Version number (e.g., `3.3.6`) - format should be `X.Y.Z`
 
 ### Exit Codes
 
@@ -928,14 +929,14 @@ Creates a comprehensive evidence file at `release_evidence/v<version>.md` contai
 ### Example Output
 
 ```
-📦 Generating release evidence bundle for 3.1.0...
+📦 Generating release evidence bundle for 3.3.6...
 
 📋 Collecting evidence...
 
-✓ Evidence bundle written to: /path/to/release_evidence/v3.1.0.md
+✓ Evidence bundle written to: /path/to/release_evidence/v3.3.6.md
 
 Next steps:
-  1. Review evidence: cat release_evidence/v3.1.0.md
+  1. Review evidence: cat release_evidence/v3.3.6.md
   2. Feed to LLM for changelog generation
   3. Update CHANGELOG.md with generated content
 ```
@@ -945,7 +946,7 @@ Next steps:
 The generated markdown file includes:
 
 ```markdown
-# Release Evidence: v3.1.0
+# Release Evidence: v3.3.6
 
 **Generated:** 2025-01-21 10:30:00
 
@@ -955,7 +956,7 @@ The generated markdown file includes:
 
 **Total completed:** 3 tasks
 
-### TASK-TPL-REL-BUNDLE-3-1-0
+### TASK-TPL-REL-BUNDLE-3-3-6
 
 **Title:** Implement release-bundle command
 **Requirement:** REQ-TPL-REL-BUNDLE
@@ -983,7 +984,7 @@ The generated markdown file includes:
 **Since tag:** v2.4.0
 
 - abc1234 feat: add release-bundle command (Agent)
-- def5678 docs: update roadmap for v3.1.x (User)
+- def5678 docs: update roadmap for v3.3.x (User)
 ...
 
 ## Governance Status
@@ -1021,13 +1022,13 @@ Typical release workflow:
 
 ```bash
 # 1. Prepare release (update versions)
-cargo xtask release-prepare 3.1.0
+cargo xtask release-prepare 3.3.6
 
 # 2. Generate evidence bundle
-cargo xtask release-bundle 3.1.0
+cargo xtask release-bundle 3.3.6
 
 # 3. Review evidence and generate changelog
-cat release_evidence/v3.1.0.md
+cat release_evidence/v3.3.6.md
 # Feed to LLM: "Generate Keep a Changelog entry from this evidence"
 
 # 4. Update CHANGELOG.md with LLM-generated content
@@ -1037,8 +1038,8 @@ cargo xtask release-verify
 
 # 6. Commit and tag
 git add .
-git commit -m "Release v3.1.0"
-git tag -a v3.1.0 -m "Release 3.1.0"
+git commit -m "Release v3.3.6"
+git tag -a v3.3.6 -m "Release 3.3.6"
 git push && git push --tags
 ```
 

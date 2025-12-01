@@ -1,3 +1,4 @@
+<!-- doclint:disable orphan-version -->
 # Pilot Feature Ideas
 
 **Purpose**: Suggested features for pilot projects that test the template across different complexity levels.

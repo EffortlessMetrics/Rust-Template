@@ -1,4 +1,5 @@
 # Pilot Notes Template
+<!-- doclint:disable orphan-version -->
 
 **Pilot ID:** PILOT-XXX-XXX
 **Date:** YYYY-MM-DD

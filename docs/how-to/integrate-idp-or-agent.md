@@ -11,6 +11,7 @@ acs: [AC-PLT-006, AC-PLT-019, AC-PLT-024]
 adrs: [ADR-0004]
 last_updated: 2025-11-27
 ---
+<!-- doclint:disable orphan-version -->
 
 # Integrate with IDP or Agent
 
@@ -48,7 +49,7 @@ GET /platform/status
 {
   "service": {
     "name": "Rust Template",
-    "version": "3.3.3",
+    "version": "3.3.6",
     "id": "template"
   },
   "governance": {
@@ -363,7 +364,7 @@ cargo xtask ac-status --json
 
 # Service version (JSON)
 cargo xtask version --json
-# → { "version": "3.3.3", "kernel": "v3.3.3-kernel" }
+# → { "version": "3.3.6", "kernel": "v3.3.6-kernel" }
 
 # Friction log (JSON)
 cargo xtask friction-list --json

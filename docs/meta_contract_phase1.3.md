@@ -1,3 +1,5 @@
+<!-- doclint:disable orphan-version -->
+<!-- Illustrative: This document uses version examples for explanation purposes. -->
 # Phase 1.3: Machine-Readable Specification & Validation
 
 ## Overview

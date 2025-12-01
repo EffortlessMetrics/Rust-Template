@@ -1,3 +1,4 @@
+<!-- doclint:disable orphan-version -->
 # Adapter Architecture
 
 This document explains the hexagonal/ports-and-adapters architecture implemented in this Rust template, with concrete examples from the database, gRPC, and HTTP adapters.

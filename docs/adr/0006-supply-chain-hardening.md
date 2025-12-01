@@ -1,3 +1,5 @@
+<!-- doclint:disable orphan-version -->
+<!-- ADR: This document contains historical version references as part of the decision record. -->
 # ADR-0006: Supply Chain Hardening via SLSA Provenance
 
 **Status**: Accepted

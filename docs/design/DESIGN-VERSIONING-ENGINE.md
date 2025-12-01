@@ -1,8 +1,8 @@
 ---
-doc_type: design_doc
 id: DESIGN-TPL-VERSIONING-ENGINE-001
 title: "Single Versioning Engine for release-prepare"
 author: platform-team
+doc_type: design_doc
 date: 2025-12-01
 status: published
 stories: [US-TPL-PLT-001]

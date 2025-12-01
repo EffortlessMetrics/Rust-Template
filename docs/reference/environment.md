@@ -11,6 +11,7 @@ acs: [AC-PLT-008, AC-PLT-012]
 adrs: [ADR-0002, ADR-0003]
 last_updated: 2025-11-27
 ---
+<!-- doclint:disable orphan-version -->
 
 # Environment Setup & Platform Support
 

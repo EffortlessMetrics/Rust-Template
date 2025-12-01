@@ -1,4 +1,5 @@
 # CI/CD Integration Examples
+<!-- doclint:disable orphan-version -->
 
 This document provides complete working examples for integrating the xtask tooling into CI/CD pipelines.
 
@@ -321,8 +322,8 @@ jobs:
 
       - name: Install conftest
         run: |
-          wget https://github.com/open-policy-agent/conftest/releases/download/v0.49.1/conftest_0.49.1_Linux_x86_64.tar.gz
-          tar xzf conftest_0.49.1_Linux_x86_64.tar.gz
+          wget https://github.com/open-policy-agent/conftest/releases/download/v0.52.0/conftest_0.52.0_Linux_x86_64.tar.gz
+          tar xzf conftest_0.52.0_Linux_x86_64.tar.gz
           sudo mv conftest /usr/local/bin/
           conftest --version
 
@@ -367,8 +368,8 @@ jobs:
 
       - name: Install conftest
         run: |
-          wget https://github.com/open-policy-agent/conftest/releases/download/v0.49.1/conftest_0.49.1_Linux_x86_64.tar.gz
-          tar xzf conftest_0.49.1_Linux_x86_64.tar.gz
+          wget https://github.com/open-policy-agent/conftest/releases/download/v0.52.0/conftest_0.52.0_Linux_x86_64.tar.gz
+          tar xzf conftest_0.52.0_Linux_x86_64.tar.gz
           sudo mv conftest /usr/local/bin/
           conftest --version
 

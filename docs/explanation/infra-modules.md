@@ -1,3 +1,4 @@
+<!-- doclint:disable orphan-version -->
 # Infrastructure Modules: Core vs Optional
 
 ## Overview

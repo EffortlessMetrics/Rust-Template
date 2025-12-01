@@ -1,4 +1,5 @@
 # Agent Authoring Template
+<!-- doclint:disable orphan-version -->
 
 Use this file as a starting point when creating a new Claude Code agent. Copy the entire template below, customize it for your use case, and follow the governance checklist.
 

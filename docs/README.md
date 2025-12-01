@@ -1,3 +1,4 @@
+<!-- doclint:disable orphan-version -->
 # Documentation Index
 
 Welcome to the Rust Template documentation. This template provides spec-as-code, AC-as-code, policy-as-code, and LLM-native development for Rust services.

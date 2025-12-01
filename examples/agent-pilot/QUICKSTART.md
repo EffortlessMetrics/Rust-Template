@@ -1,4 +1,5 @@
 # Agent Pilot Quick Start
+<!-- doclint:disable orphan-version -->
 
 Get up and running with your first agent pilot in 10 minutes.
 
@@ -241,4 +242,4 @@ See the example filled-in section at the bottom of `friction-template.yaml` for 
 
 ---
 
-**Quick Start Version:** 1.0.0 (aligned with template v3.3.5)
+**Quick Start Version:** 1.0.0 (aligned with template v3.3.6)

@@ -2,7 +2,7 @@
 
 **Audience**: Team leads, Skill authors, and developers creating agent capabilities
 **Status**: Governed by REQ-TPL-SKILLS-GOVERNANCE, ADR-0020
-**Version**: 1.0.0 (aligned with template v3.3.4)
+**Version**: 1.0.0 (aligned with template v3.3.6)
 
 ---
 
@@ -402,7 +402,7 @@ git commit -m "feat: implement mycorp-workflow Skill (REQ-PLT-SKILLS-MYCORP)"
 4. **If major change**: Update version in SKILL.md body
    ```markdown
    ## Version History
-   - v2.0.0 (2025-11-27): Updated for release-v3.3.3 workflow changes
+   - v2.0.0 (2025-11-27): Updated for release-v3.3.6 workflow changes
    - v1.0.0 (2025-09-01): Initial release
    ```
 

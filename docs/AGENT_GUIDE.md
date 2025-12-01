@@ -1,6 +1,7 @@
+<!-- doclint:disable orphan-version -->
 # Agent Guide: Operating the Rust-as-Spec Platform Cell
 
-**Audience:** LLM agents (Claude, GPT-4, etc.) driving development workflows  
+**Audience:** LLM agents (Claude, GPT-4, etc.) driving development workflows
 **Purpose:** Concrete instructions for discovering, planning, and executing work within this governed repository
 
 ---
@@ -1059,7 +1060,7 @@ curl http://localhost:8080/platform/forks/FORK-KHUB-001
       "name": "Knowledge Hub",
       "domain": "ml-documentation",
       "status": "active",
-      "kernel_version": "v3.3.3"
+      "kernel_version": "v3.3.6"
     }
   ],
   "total": 1
@@ -1072,7 +1073,7 @@ curl http://localhost:8080/platform/forks/FORK-KHUB-001
   "id": "FORK-KHUB-001",
   "name": "Knowledge Hub",
   "domain": "ml-documentation",
-  "kernel_version": "v3.3.3",
+  "kernel_version": "v3.3.6",
   "status": "active",
   "url": "https://github.com/org/knowledge-hub",
   "maintainer": {
@@ -1404,7 +1405,7 @@ cargo xtask friction-new --category X --severity Y --summary "..."
 cargo xtask friction-list
 cargo xtask question-new --category X --summary "..." --flow F --phase P --description "..."
 cargo xtask questions-list
-cargo xtask fork-register --name "Name" --domain "domain" --kernel-version "v3.3.3" ...
+cargo xtask fork-register --name "Name" --domain "domain" --kernel-version "v3.3.6" ...
 cargo xtask fork-list
 
 # Introspection

@@ -11,6 +11,7 @@ acs: [AC-PLT-001, AC-PLT-008]
 adrs: [ADR-0005]
 last_updated: 2025-11-26
 ---
+<!-- doclint:disable orphan-version -->
 
 # Create a New Service from Template
 

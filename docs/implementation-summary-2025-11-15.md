@@ -1,3 +1,6 @@
+<!-- doclint:disable orphan-version -->
+<!-- Historical: This document describes a completed release and version references are intentionally preserved. -->
+
 # Implementation Summary: Template Leading Fixes
 **Date:** 2025-11-15
 **Branch:** claude/implement-core-template-gaps-011CV5QFmKktFZpbxaeQXS1D

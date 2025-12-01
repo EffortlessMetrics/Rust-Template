@@ -1522,6 +1522,51 @@ This metadata is exposed via `/platform/status` and used by the UI.
 
 ---
 
+## Version Strings in Documentation
+
+All version strings in documentation fall into one of three categories:
+
+### 1. Governed Versions (Auto-Updated)
+
+Template/kernel versions (`3.3.x`, `v3.3.x`, `v3.3.x-kernel`) are:
+- Declared in `specs/version_manifest.yaml`
+- Updated automatically by `cargo xtask release-prepare X.Y.Z`
+- Validated by `cargo xtask docs-check` orphan-version lint
+
+**Files covered:**
+- `specs/spec_ledger.yaml` (canonical source)
+- `README.md`, `CLAUDE.md` (primary docs)
+- `docs/KERNEL_SNAPSHOT.md`, `docs/ROADMAP.md` (kernel docs)
+- `docs/explanation/TEMPLATE-CONTRACTS.md`, `docs/explanation/json-contracts.md`
+- `docs/testing-strategy.md`, `docs/reference/ci-workflows.md`
+- `docs/SKILLS_GOVERNANCE.md`, `docs/AGENTS_GOVERNANCE.md`
+
+### 2. Historical Versions (Suppressed)
+
+Old versions in archived documentation are intentionally preserved:
+- Marked with `<!-- doclint:disable orphan-version -->` at file top
+- Listed in `version_manifest.yaml` under `historical_docs`
+- Not updated by release automation
+
+**Examples:**
+- `docs/v2.1.0-plan.md`, `docs/v2.2.0-plan.md` (completed release plans)
+- `docs/TECHNICAL-FREEZE-COMPLETE.md` (historical checkpoint)
+- `CHANGELOG.md` (complete version history)
+
+### 3. Pinned External Versions
+
+External dependency versions (rustc, conftest, wasmtime) are:
+- Not tied to template version
+- Either governed separately or intentionally pinned
+- Documented in context (e.g., "uses conftest 0.52.0 from nixpkgs")
+
+**Handling orphan versions:**
+1. **Governed version stale?** → Update with `release-prepare` or manually
+2. **Historical doc?** → Add `<!-- doclint:disable orphan-version -->` at top
+3. **External dep?** → Document version source, suppress if needed
+
+---
+
 ## IDP Snapshot Contract
 
 The IDP snapshot command provides a stable, machine-readable JSON output for Internal Developer Portal integration.

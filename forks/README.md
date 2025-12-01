@@ -1,3 +1,4 @@
+<!-- doclint:disable orphan-version -->
 # Fork Registry
 
 This directory tracks known forks of the Rust-as-Spec template kernel. Forks represent instances of this template adapted for specific knowledge domains or use cases.

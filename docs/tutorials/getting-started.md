@@ -1,3 +1,5 @@
+<!-- doclint:disable orphan-version -->
+<!-- External: This document references external tool versions that are not tied to template version. -->
 # Tutorial: Getting Started with the Rust Template
 
 **Time:** 30 minutes

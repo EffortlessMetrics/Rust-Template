@@ -1,3 +1,5 @@
+<!-- doclint:disable orphan-version -->
+<!-- Illustrative: This document uses version examples for explanation purposes. -->
 # Explanation: Template Adoption Patterns
 
 This document explains three common patterns for adopting this Rust service template in your organization. Each has trade-offs around control, maintenance, and template updates.

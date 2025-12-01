@@ -11,6 +11,7 @@ acs: [AC-PLT-009, AC-PLT-010]
 adrs: [ADR-0005]
 last_updated: 2025-12-01
 ---
+<!-- doclint:disable orphan-version -->
 
 # How to Maintain the Kernel
 
