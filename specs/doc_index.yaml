@@ -275,6 +275,21 @@ docs:
     acs: [AC-PLT-008, AC-PLT-011, AC-PLT-012]
     adrs: [ADR-0005, ADR-0006]
 
+  # ADR-0016: IDP Tile Architecture and JSON Contracts
+  - id: ADR-0016
+    file: docs/adr/0016-idp-tiles-json-contracts.md
+    title: "IDP Tile Architecture and JSON Contract Strategy"
+    doc_type: adr
+    stories: [US-TPL-PLT-001]
+    requirements:
+      - REQ-TPL-PLATFORM-INTROSPECTION
+      - REQ-TPL-AI-IDP-COMPAT
+    acs:
+      - AC-TPL-CLI-JSON-CORE
+      - AC-TPL-CLI-JSON-OUTPUT
+      - AC-TPL-AGENT-HINTS-SCHEMA
+    adrs: []
+
   # ADR-0017: Tier-1 Selftest as Required Gate
   - id: ADR-0017
     file: docs/adr/0017-tier1-selftest-gate.md
@@ -804,8 +819,9 @@ docs:
     doc_type: design_doc
     stories: [US-TPL-PLT-001]
     requirements:
-      - REQ-TPL-RELEASE
+      - REQ-TPL-VERSIONING-ENGINE
     acs:
-      - AC-TPL-REL-SEMVER
-      - AC-TPL-VERSION-ALIGN
+      - AC-TPL-VERSION-MANIFEST
+      - AC-TPL-VERSION-DRYRUN
+      - AC-TPL-VERSION-ATOMIC
     adrs: [ADR-0005]

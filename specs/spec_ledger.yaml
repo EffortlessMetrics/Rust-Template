@@ -346,6 +346,44 @@ stories:
             tests:
               - { type: integration, tag: "@AC-TPL-KERNEL-CONTRACT-EMITTED", file: "specs/features/xtask_devex.feature" }
 
+      - id: REQ-TPL-VERSIONING-ENGINE
+        title: "Single Versioning Engine"
+        tags: [platform, release, devex]
+        must_have_ac: false
+        status: deferred
+        description: >
+          Provide a unified versioning engine that updates all version-bearing files from a single
+          source of truth. Currently release-prepare updates 4 files but docs-check validates 8+,
+          causing manual drift and maintenance burden.
+        rationale: >
+          Currently release-prepare updates 4 files but docs-check validates 8+, causing manual drift.
+          A unified versioning engine would eliminate this maintenance burden and ensure consistency
+          across all version references.
+        acceptance_criteria:
+          - id: AC-TPL-VERSION-MANIFEST
+            text: "Version locations declared in a manifest file (e.g., specs/version_manifest.yaml) listing all files and extraction patterns"
+            tags: [template, release, future]
+            must_have_ac: false
+            note: "Deferred future enhancement - would eliminate hardcoded file paths in release-prepare"
+            tests:
+              - { type: future, tag: "version_manifest_exists" }
+
+          - id: AC-TPL-VERSION-DRYRUN
+            text: "`cargo xtask version-update X.Y.Z --dry-run` shows all changes before applying them, listing each file and the old→new version"
+            tags: [template, release, future]
+            must_have_ac: false
+            note: "Deferred future enhancement - safety gate before applying version changes"
+            tests:
+              - { type: future, tag: "version_dryrun_preview" }
+
+          - id: AC-TPL-VERSION-ATOMIC
+            text: "Version updates are atomic with rollback on failure, ensuring no partial state if any file update fails"
+            tags: [template, release, future]
+            must_have_ac: false
+            note: "Deferred future enhancement - transactional version updates for reliability"
+            tests:
+              - { type: future, tag: "version_atomic_rollback" }
+
       - id: REQ-TPL-EXAMPLE-FORK
         title: "Template fork examples"
         tags: [template, docs, example]
