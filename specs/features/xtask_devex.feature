@@ -183,6 +183,35 @@ Feature: Developer Experience Commands
     And the output should contain git tag command
     And the output should contain git push command
 
+  # Versioning Engine Scenarios (v3.3.6)
+  @AC-TPL-VERSION-MANIFEST
+  Scenario: version manifest declares all version-bearing files
+    Given I am in a clean workspace
+    When I check for "specs/version_manifest.yaml"
+    Then the file should exist
+    And the file should contain version pattern definitions
+    And the file should reference "spec_ledger.yaml"
+    And the file should reference "README.md"
+    And the file should reference "CHANGELOG.md"
+
+  @AC-TPL-VERSION-DRYRUN
+  Scenario: release-prepare dry-run shows changes without modifying files
+    Given the current spec_ledger version is "3.3.6"
+    When I run "cargo xtask release-prepare 3.3.7 --dry-run"
+    Then the command should succeed
+    And the output should contain "Dry run"
+    And the output should contain "changes that would be made"
+    And the output should contain "3.3.6"
+    And the output should contain "3.3.7"
+    And "specs/spec_ledger.yaml" should still contain "3.3.6"
+
+  @AC-TPL-VERSION-ATOMIC
+  Scenario: release-prepare updates all version files atomically
+    Given the version manifest lists multiple files
+    When I run "cargo xtask release-prepare" with a valid version
+    Then either all files are updated or none are
+    And the command should report all files modified on success
+
   @AC-PLT-014
   Scenario: devex_flows.yaml defines canonical flows
     Given I am in a clean workspace

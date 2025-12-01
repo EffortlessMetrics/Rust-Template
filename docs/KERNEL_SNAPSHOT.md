@@ -1,6 +1,6 @@
 ---
 id: SNAPSHOT-TPL-KERNEL-001
-title: Kernel Snapshot v3.3.5
+title: Kernel Snapshot v3.3.6
 doc_type: status
 status: published
 audience: maintainers, platform-engineers, forks
@@ -12,13 +12,18 @@ adrs: [ADR-0005]
 last_updated: 2025-12-01
 ---
 
-# Kernel Snapshot v3.3.5
+# Kernel Snapshot v3.3.6
 
-**Date:** 2025-12-01 | **Version:** v3.3.5-kernel
+**Date:** 2025-12-01 | **Version:** v3.3.6-kernel
 
 ## Executive Summary
 
-This is the frozen kernel baseline (v3.3.5-kernel) for the Rust-as-Spec platform template. All kernel acceptance criteria pass. All selftest gates pass. Day-0 commands work as documented. This is a stable, forkable baseline.
+This is the frozen kernel baseline (v3.3.6-kernel) for the Rust-as-Spec platform template. All kernel acceptance criteria pass. All selftest gates pass. Day-0 commands work as documented. This is a stable, forkable baseline.
+
+**v3.3.6 highlights:**
+
+- **Manifest-driven versioning** – `specs/version_manifest.yaml` + versioning engine ensures all version-bearing files are updated atomically via `release-prepare`
+- **Versioning ACs enforced** – `AC-TPL-VERSION-MANIFEST`, `AC-TPL-VERSION-DRYRUN`, `AC-TPL-VERSION-ATOMIC` are now kernel contracts
 
 **Note:** "Selftest green" means the template meets its own specifications. It does not mean every use case has been validated in production. See [ROADMAP.md](./ROADMAP.md) for known gaps.
 
@@ -42,7 +47,7 @@ cargo xtask selftest     # Full governance validation
 
 ---
 
-### Key Kernel Contracts (v3.3.5)
+### Key Kernel Contracts (v3.3.6)
 
 **Philosophy & Governance:**
 

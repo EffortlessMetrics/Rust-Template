@@ -21,7 +21,7 @@ last_updated: 2025-12-01
 
 # Template Contracts: Kernel Requirements and Extension Points
 
-**Template Version:** v3.3.5
+**Template Version:** v3.3.6
 **Schema Version:** spec_ledger.yaml v1.0
 **Last Updated:** 2025-12-01
 
@@ -39,7 +39,7 @@ If you're building a new service from this template (like the Knowledge Hub), yo
 
 Everything else (your domain logic, additional routes, crates, deployment) is yours to customize.
 
-**See [docs/KERNEL_SNAPSHOT.md](../KERNEL_SNAPSHOT.md) for the baseline v3.3.4 kernel ACs.**
+**See [docs/KERNEL_SNAPSHOT.md](../KERNEL_SNAPSHOT.md) for the baseline v3.3.6 kernel ACs.**
 
 ---
 

@@ -12,9 +12,9 @@ adrs: [ADR-0005]
 last_updated: 2025-12-01
 ---
 
-# Roadmap: Rust-as-Spec Platform Cell (v3.3.5)
+# Roadmap: Rust-as-Spec Platform Cell (v3.3.6)
 
-This document describes the current state of the **v3.3.5 kernel** and what remains to be done.
+This document describes the current state of the **v3.3.6 kernel** and what remains to be done.
 
 ---
 
@@ -43,7 +43,7 @@ Opinions encoded as ACs mean:
 
 ---
 
-## 1. Kernel v3.3.4 Closure
+## 1. Kernel v3.3.4 Closure (Historical)
 
 **Status:** Frozen as of 2025-11-30.
 
@@ -69,9 +69,15 @@ To fork from v3.3.4, start with `docs/how-to/FIRST_FORK.md`.
 
 ---
 
-## 2. Current State (v3.3.5)
+## 2. Current State (v3.3.6)
 
 The kernel has reached a stable, forkable baseline. All acceptance criteria pass, all selftest gates pass.
+
+**v3.3.6 Highlights:**
+
+- **Manifest-driven versioning engine** – `specs/version_manifest.yaml` declares all version-bearing files; `release-prepare` uses this manifest to update versions atomically
+- **Versioning ACs enforced** – `AC-TPL-VERSION-MANIFEST`, `AC-TPL-VERSION-DRYRUN`, `AC-TPL-VERSION-ATOMIC` promoted from deferred to kernel contracts
+- **`--dry-run` support** – Preview all version changes before applying them
 
 ### 2.1 Governance Status
 
