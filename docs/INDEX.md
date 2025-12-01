@@ -116,6 +116,30 @@ New to this repository? Start here:
 
 ---
 
+## Examples & Reference Implementations
+
+Working code examples demonstrating platform integration patterns:
+
+### IDP Integration
+- **[Backstage Plugin Example](../examples/backstage-plugin/README.md)** - React TypeScript plugin for governance tiles
+- **[Port.io Integration Guide](how-to/implement-port-integration.md)** - Python-based IDP ingestion
+
+### Agent & Automation
+- **[Agent Pilot Example](../examples/agent-pilot/README.md)** - Python agent pilot for autonomous workflows
+- **[Agent Guide](AGENT_GUIDE.md)** - Operational guide for LLM agents
+
+### Adoption Patterns
+- **[Brownfield Demo](../examples/brownfield-demo/README.md)** - Adding governance to existing services
+- **[Fork Customization](../examples/fork-customization/README.md)** - Template fork and customization patterns
+
+### Fork Examples
+- **[Example MyService Fork](../forks/example-myservice/README.md)** - Minimal fork demonstrating domain customization
+- **[Fork Registry](../forks/README.md)** - Fork management and tracking
+
+> **Note:** Examples are illustrative quality, not production-ready. See the example README files for quality statements and production considerations.
+
+---
+
 ## Explanation Documents
 
 Deeper understanding of concepts:

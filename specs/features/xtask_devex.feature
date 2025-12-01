@@ -1,6 +1,6 @@
-# Template Version: v3.3.4
+# Template Version: v3.3.6
 # Schema: spec_ledger.yaml v1.0
-# Last Updated: 2025-11-30
+# Last Updated: 2025-12-01
 
 Feature: Developer Experience Commands
   As a developer
@@ -62,6 +62,21 @@ Feature: Developer Experience Commands
     Then the command should succeed
     And the output should contain "environment"
     And the output should contain "Rust"
+    And the output should contain "Recommendations"
+
+  @AC-PLT-ENV-ABI-CHECK
+  Scenario: doctor detects ABI compatibility and reports status
+    Given I am in a clean workspace
+    When I run "cargo xtask doctor"
+    Then the command should succeed
+    And the output should contain "Rust"
+    And the output should mention ABI or toolchain status
+
+  @AC-PLT-ENV-SCCACHE-WARN
+  Scenario: doctor provides workaround guidance for sccache issues
+    Given I am in a clean workspace
+    When I run "cargo xtask doctor"
+    Then the command should succeed
     And the output should contain "Recommendations"
 
   @AC-PLT-002
@@ -685,4 +700,30 @@ Feature: Developer Experience Commands
     Then they should exit with code 0
     And when commands fail in non-interactive mode
     Then they should exit with non-zero codes
+
+  @AC-TPL-IDP-SNAPSHOT
+  Scenario: idp-snapshot emits valid JSON with governance health
+    When I run "cargo xtask idp-snapshot"
+    Then the command should succeed
+    And the output should be valid JSON
+    And the JSON should contain field "timestamp"
+    And the JSON should contain field "template_version"
+    And the JSON should contain field "governance_health"
+    And the JSON should contain field "documentation"
+    And the JSON should contain field "task_hints"
+
+  @AC-TPL-IDP-SNAPSHOT-VALID-JSON
+  Scenario: idp-snapshot JSON is parseable and complete
+    When I run "cargo xtask idp-snapshot --pretty"
+    Then the command should succeed
+    And the output should be valid JSON
+    And the JSON field "governance_health" should have "status"
+    And the JSON field "governance_health" should have "ac_coverage"
+
+  @AC-TPL-IDP-SNAPSHOT
+  Scenario: idp-snapshot writes to file when --output specified
+    When I run "cargo xtask idp-snapshot --output /tmp/idp-test.json"
+    Then the command should succeed
+    And the file "/tmp/idp-test.json" should exist
+    And the file should contain valid JSON
 

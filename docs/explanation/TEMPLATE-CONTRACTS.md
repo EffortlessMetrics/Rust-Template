@@ -81,6 +81,7 @@ This table summarizes the key kernel contract areas for quick reference:
 | Bundles | REQ-TPL-BUNDLE-CONTRACT | AC-TPL-BUNDLE-MANIFEST, AC-TPL-BUNDLE-MANIFEST-LINKED, AC-TPL-BUNDLE-MINIMAL-SCOPE | `cargo xtask bundle`, `selftest` |
 | Agent surfaces | REQ-TPL-AGENT-INTERFACE | AC-TPL-AGENT-HINTS-SCHEMA, AC-TPL-CLI-JSON-CORE, AC-TPL-CLI-JSON-OUTPUT | `/platform/*`, `suggest-next` |
 | Example fork | REQ-TPL-EXAMPLE-FORK-CONTRACT | AC-TPL-EXAMPLE-FORK-BUILDS | `ci-example-fork.yml` workflow |
+| IDP Snapshot | REQ-TPL-IDP-SNAPSHOT | AC-TPL-IDP-SNAPSHOT, AC-TPL-IDP-SNAPSHOT-VALID-JSON | `cargo xtask idp-snapshot` |
 
 For the full contract definitions, see the sections below and `specs/spec_ledger.yaml`.
 
@@ -1518,6 +1519,50 @@ This metadata is exposed via `/platform/status` and used by the UI.
 **Enforcement:**
 - `cargo xtask docs-check` validates version alignment across files
 - `cargo xtask release-prepare X.Y.Z` uses manifest for updates (v3.3.6+)
+
+---
+
+## IDP Snapshot Contract
+
+The IDP snapshot command provides a stable, machine-readable JSON output for Internal Developer Portal integration.
+
+### Contract Requirements
+
+**Requirement:** REQ-TPL-IDP-SNAPSHOT
+**ACs:** AC-TPL-IDP-SNAPSHOT, AC-TPL-IDP-SNAPSHOT-VALID-JSON
+
+### Output Schema
+
+The `cargo xtask idp-snapshot` command outputs JSON with these guaranteed fields:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `timestamp` | string | ISO 8601 timestamp of snapshot generation |
+| `template_version` | string | Semantic version from spec_ledger.yaml |
+| `service_id` | string | Service identifier from service_metadata.yaml |
+| `governance_health` | object | Status (healthy/degraded/failing), AC coverage metrics |
+| `documentation` | object | Doc counts (total, valid, with_issues) |
+| `task_hints` | object | Pending/in_progress counts, high-priority task hints |
+
+### Usage
+
+```bash
+# Generate snapshot to stdout
+cargo xtask idp-snapshot
+
+# Pretty-print for debugging
+cargo xtask idp-snapshot --pretty
+
+# Write to file
+cargo xtask idp-snapshot --output idp-snapshot.json
+```
+
+### IDP Integration
+
+This output is designed for:
+- **Backstage**: Import via custom entity provider or catalog info
+- **Port.io**: Ingest via Python/Ruby scripts using the blueprint schema
+- **Custom IDPs**: Parse JSON directly for governance tiles
 
 ---
 

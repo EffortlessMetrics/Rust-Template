@@ -1,3 +1,17 @@
+---
+id: DESIGN-TPL-AC-REPORT-001
+doc_type: design_doc
+title: "AC Structured Report Design"
+author: platform-team
+date: 2025-11-30
+status: draft
+stories: [US-TPL-PLT-001]
+requirements: [REQ-PLT-DEVEX-CONTRACT]
+tags: [platform, devex, testing]
+acs: []
+adrs: [ADR-0005]
+---
+
 # AC Structured Report Design
 
 ## Overview

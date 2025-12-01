@@ -51,6 +51,7 @@ docs:
       - REQ-PLT-RELEASE-SAFETY
       - REQ-PLT-DEVEX-CONTRACT
       - REQ-TPL-PLATFORM-INTROSPECTION
+      - REQ-PLT-ENV-DIAGNOSTICS
     adrs: [ADR-0002, ADR-0005, ADR-0006, ADR-0007]
 
   # Platform Introspection Design
@@ -847,6 +848,7 @@ docs:
     requirements:
       - REQ-TPL-PLATFORM-INTROSPECTION
       - REQ-TPL-AI-IDP-COMPAT
+      - REQ-TPL-IDP-SNAPSHOT
     acs:
       - AC-TPL-CLI-JSON-CORE
       - AC-TPL-CLI-JSON-OUTPUT
@@ -866,3 +868,24 @@ docs:
       - AC-TPL-VERSION-DRYRUN
       - AC-TPL-VERSION-ATOMIC
     adrs: [ADR-0005]
+
+  # AC Structured Report Design
+  - id: DESIGN-TPL-AC-REPORT-001
+    file: docs/design/ac-structured-report.md
+    title: "AC Structured Report Design"
+    doc_type: design_doc
+    stories: [US-TPL-PLT-001]
+    requirements: [REQ-PLT-DEVEX-CONTRACT]
+    acs: []
+    adrs: [ADR-0005]
+
+  # .llmignore Semantics Design
+  - id: DESIGN-TPL-LLMIGNORE-001
+    file: docs/design/llmignore-semantics.md
+    title: ".llmignore Semantics Design"
+    doc_type: design_doc
+    stories: [US-TPL-PLT-001]
+    requirements: [REQ-TPL-BUNDLE-CONTRACT]
+    acs: [AC-TPL-BUNDLE-MINIMAL-SCOPE]
+    adrs: []
+

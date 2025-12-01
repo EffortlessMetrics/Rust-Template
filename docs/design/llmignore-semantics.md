@@ -1,3 +1,17 @@
+---
+id: DESIGN-TPL-LLMIGNORE-001
+doc_type: design_doc
+title: ".llmignore Semantics Analysis and Recommendation"
+author: platform-team
+date: 2025-11-14
+status: approved
+stories: [US-TPL-PLT-001]
+requirements: [REQ-TPL-BUNDLE-CONTRACT]
+tags: [platform, bundle, agent]
+acs: [AC-TPL-BUNDLE-MINIMAL-SCOPE]
+adrs: []
+---
+
 # .llmignore Semantics Analysis and Recommendation
 
 **Status:** Design Decision
