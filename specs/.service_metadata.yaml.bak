@@ -1,0 +1,31 @@
+service_id: test-service
+display_name: Test Service
+description: A test service
+template_version: v3.3.4
+ownership:
+  team: plat-governance
+  email: platform-governance@example.com
+  slack: '#team-platform'
+lifecycle:
+  tier: 1
+  data_class: internal
+  criticality: platform
+  languages:
+  - rust
+  runtime:
+  - kubernetes
+links:
+  roadmap: docs/ROADMAP.md
+  kernel_contract: docs/runbooks/platform-kernel.md
+  agent_guide: docs/AGENT_GUIDE.md
+  feature_status: docs/feature_status.md
+  support: docs/reference/platform-support.md
+  selective_testing: docs/SELECTIVE_TESTING.md
+  ui: http://localhost:8080/ui
+  status: http://localhost:8080/platform/status
+  repo: https://github.com/EffortlessMetrics/Rust-Template
+tags:
+- rust
+- idp
+- governance
+- template

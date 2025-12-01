@@ -71,7 +71,11 @@ Create a YAML file in `friction/` following the schema in `specs/friction_schema
 
 ### Open
 
-None currently.
+- **FRICTION-ENV-001** (2025-12-01) - Nix devshell sccache/libz.so.1 breaks xtask wrapper
+  - **Category:** tooling
+  - **Severity:** medium
+  - **Status:** Open
+  - **Details:** [friction/FRICTION-ENV-001.yaml](friction/FRICTION-ENV-001.yaml)
 
 ### Resolved
 
