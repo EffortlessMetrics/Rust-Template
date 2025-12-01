@@ -1,0 +1,75 @@
+# Example Version Manifest for the Versioning Engine
+# This is a simplified example showing the schema that the versioning engine expects.
+# See docs/design/DESIGN-VERSIONING-ENGINE.md for full details.
+
+# Source of truth for version and date
+source_of_truth: specs/spec_ledger.yaml
+version_path: metadata.template_version
+date_path: metadata.last_updated
+
+# List of target files to update with their patterns
+targets:
+  # Update README.md
+  - file: README.md
+    patterns:
+      - marker: "# Test Service"
+        format: "# Test Service (v{version})"
+        optional: false
+      - marker: "Current Template Version"
+        format: "**Current Template Version:** v{version}"
+        optional: false
+
+  # Update CLAUDE.md
+  - file: CLAUDE.md
+    patterns:
+      - marker: "# CLAUDE.md"
+        format: "# CLAUDE.md – Rust-as-Spec Platform Cell (v{version})"
+        optional: false
+      - marker: "Template Version:"
+        format: "**Template Version:** v{version}"
+        optional: false
+
+  # Update KERNEL_SNAPSHOT.md
+  - file: docs/KERNEL_SNAPSHOT.md
+    patterns:
+      - marker: "# Kernel Snapshot"
+        format: "# Kernel Snapshot v{version}"
+        optional: false
+      - marker: "**Version:**"
+        format: "**Date:** {date} | **Version:** v{version}-kernel"
+        optional: false
+
+  # Update ROADMAP.md
+  - file: docs/ROADMAP.md
+    patterns:
+      - marker: "# Roadmap: Rust-as-Spec Platform Cell"
+        format: "# Roadmap: Rust-as-Spec Platform Cell (v{version})"
+        optional: false
+
+  # Update TEMPLATE-CONTRACTS.md
+  - file: docs/explanation/TEMPLATE-CONTRACTS.md
+    patterns:
+      - marker: "Template Version:"
+        format: "**Template Version:** v{version}"
+        optional: false
+
+  # Update service_metadata.yaml
+  - file: specs/service_metadata.yaml
+    patterns:
+      - marker: "template_version:"
+        format: "template_version: v{version}"
+        optional: false
+
+  # Update doc_index.yaml (optional)
+  - file: specs/doc_index.yaml
+    patterns:
+      - marker: "template_version:"
+        format: "template_version: \"{version}\""
+        optional: true
+
+# Notes:
+# - {version} placeholder is replaced with version number (e.g., "3.3.5")
+# - {date} placeholder is replaced with date (e.g., "2025-12-01")
+# - marker: text to search for in each line
+# - format: the complete replacement text with placeholders
+# - optional: if true, don't error if marker not found

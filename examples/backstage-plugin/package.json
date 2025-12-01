@@ -1,0 +1,67 @@
+{
+  "name": "rust-spec-platform-plugin",
+  "version": "0.1.0",
+  "description": "Backstage plugin for Rust-as-Spec platform governance visibility (EXAMPLE QUALITY)",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "license": "Apache-2.0",
+  "private": true,
+  "publishConfig": {
+    "access": "public",
+    "main": "dist/index.esm.js",
+    "types": "dist/index.d.ts"
+  },
+  "backstage": {
+    "role": "frontend-plugin"
+  },
+  "scripts": {
+    "build": "backstage-cli package build",
+    "lint": "backstage-cli package lint",
+    "test": "backstage-cli package test",
+    "clean": "backstage-cli package clean",
+    "prepack": "backstage-cli package prepack",
+    "postpack": "backstage-cli package postpack"
+  },
+  "dependencies": {
+    "@backstage/core-components": "^0.14.0",
+    "@backstage/core-plugin-api": "^1.9.0",
+    "@backstage/theme": "^0.5.0",
+    "@material-ui/core": "^4.12.4",
+    "@material-ui/icons": "^4.11.3",
+    "@material-ui/lab": "^4.0.0-alpha.61",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-use": "^17.4.0"
+  },
+  "devDependencies": {
+    "@backstage/cli": "^0.26.0",
+    "@backstage/core-app-api": "^1.12.0",
+    "@backstage/dev-utils": "^1.0.30",
+    "@backstage/test-utils": "^1.5.0",
+    "@testing-library/jest-dom": "^6.1.5",
+    "@testing-library/react": "^14.1.2",
+    "@types/node": "^18.19.3",
+    "@types/react": "^18.2.45",
+    "cross-fetch": "^4.0.0"
+  },
+  "peerDependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "files": [
+    "dist"
+  ],
+  "keywords": [
+    "backstage",
+    "plugin",
+    "rust",
+    "governance",
+    "platform-engineering",
+    "example"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-org/rust-as-spec-template",
+    "directory": "examples/backstage-plugin"
+  }
+}

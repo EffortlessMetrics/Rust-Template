@@ -1,0 +1,172 @@
+# Backstage Configuration for Rust-as-Spec Platform Plugin
+#
+# EXAMPLE QUALITY - NOT PRODUCTION READY
+#
+# This is an example configuration showing how to integrate the
+# Rust-as-Spec platform plugin with Backstage.
+#
+# Copy relevant sections to your app-config.yaml or app-config.local.yaml
+
+app:
+  title: My Organization Portal
+  baseUrl: http://localhost:3000
+
+organization:
+  name: My Organization
+
+backend:
+  # Base URL for the backend - used by frontend to reach backend
+  baseUrl: http://localhost:7007
+
+  # CORS configuration
+  cors:
+    origin: http://localhost:3000
+    methods: [GET, HEAD, PATCH, POST, PUT, DELETE]
+    credentials: true
+
+  # Proxy configuration for external services
+  # This allows frontend to make requests through the backend to avoid CORS issues
+  proxy:
+    # Rust-as-Spec Platform proxy endpoint
+    '/rust-spec-platform':
+      # Target URL of your Rust-as-Spec service
+      target: 'http://localhost:8080'
+
+      # Change the origin header to match the target
+      changeOrigin: true
+
+      # Rewrite the path to remove the proxy prefix
+      # Frontend calls: /api/proxy/rust-spec-platform/platform/status
+      # Backend proxies to: http://localhost:8080/platform/status
+      pathRewrite:
+        '^/api/proxy/rust-spec-platform': '/'
+
+      # Optional: Add authentication headers if needed
+      # headers:
+      #   Authorization: 'Bearer ${RUST_SPEC_PLATFORM_TOKEN}'
+
+      # Optional: Configure timeout (in milliseconds)
+      # timeout: 5000
+
+# Optional: Plugin-specific configuration
+# This can be used to configure the plugin behavior without hardcoding values
+rustSpecPlatform:
+  # Backend configuration
+  backend:
+    # Base URL - can use environment variable
+    baseUrl: ${RUST_SPEC_PLATFORM_URL:-http://localhost:8080}
+
+    # Request timeout in milliseconds
+    timeout: 5000
+
+    # Enable/disable the plugin
+    enabled: true
+
+  # Frontend configuration
+  frontend:
+    # Auto-refresh intervals (milliseconds)
+    refreshIntervals:
+      governance: 30000  # 30 seconds
+      docs: 60000        # 60 seconds
+
+    # Feature flags
+    features:
+      showGovernanceCard: true
+      showDocsCard: true
+      enableAutoRefresh: true
+
+# Optional: Catalog integration
+# If you want to show platform governance in entity pages
+catalog:
+  rules:
+    - allow: [Component, System, API, Resource, Location]
+
+  # Optional: Import platform entities
+  locations:
+    # Example: Import from Git repository
+    - type: url
+      target: https://github.com/your-org/rust-as-spec-template/blob/main/catalog-info.yaml
+      rules:
+        - allow: [Component]
+
+# Optional: Kubernetes integration
+# If your platform runs on Kubernetes
+kubernetes:
+  serviceLocatorMethod:
+    type: 'multiTenant'
+  clusterLocatorMethods:
+    - type: 'config'
+      clusters:
+        - name: production
+          url: https://your-k8s-cluster.example.com
+          authProvider: 'serviceAccount'
+          serviceAccountToken: ${K8S_SERVICE_ACCOUNT_TOKEN}
+
+# Development-specific overrides
+# Use in app-config.local.yaml for local development
+# ---
+# backend:
+#   proxy:
+#     '/rust-spec-platform':
+#       target: 'http://localhost:8080'  # Local development server
+#
+# rustSpecPlatform:
+#   backend:
+#     baseUrl: 'http://localhost:8080'
+#   frontend:
+#     features:
+#       enableAutoRefresh: false  # Disable auto-refresh during development
+
+# Production-specific overrides
+# Use in app-config.production.yaml for production deployment
+# ---
+# backend:
+#   proxy:
+#     '/rust-spec-platform':
+#       target: 'https://platform.your-org.com'
+#       changeOrigin: true
+#       headers:
+#         Authorization: 'Bearer ${RUST_SPEC_PLATFORM_TOKEN}'
+#
+# rustSpecPlatform:
+#   backend:
+#     baseUrl: 'https://platform.your-org.com'
+#     timeout: 10000
+#   frontend:
+#     refreshIntervals:
+#       governance: 60000   # 1 minute in production
+#       docs: 120000        # 2 minutes in production
+
+# Security considerations for production:
+#
+# 1. Authentication/Authorization:
+#    - Use OAuth2, OIDC, or similar for user authentication
+#    - Add service-to-service auth between Backstage and platform
+#    - Validate JWT tokens or API keys
+#
+# 2. Network security:
+#    - Use HTTPS for all connections
+#    - Configure proper CORS headers
+#    - Use private networks or VPNs for backend communication
+#    - Add rate limiting and request throttling
+#
+# 3. Secret management:
+#    - Never commit secrets to version control
+#    - Use environment variables for sensitive values
+#    - Consider using secret management services (Vault, AWS Secrets Manager, etc.)
+#
+# 4. Monitoring:
+#    - Add logging for all proxy requests
+#    - Monitor API usage and error rates
+#    - Set up alerts for failures
+#    - Track response times and latency
+#
+# 5. Access control:
+#    - Implement role-based access control (RBAC)
+#    - Audit access to sensitive endpoints
+#    - Log all administrative actions
+
+# Example environment variables (set in your deployment):
+# RUST_SPEC_PLATFORM_URL=https://platform.your-org.com
+# RUST_SPEC_PLATFORM_TOKEN=your-api-token
+# K8S_SERVICE_ACCOUNT_TOKEN=your-k8s-token

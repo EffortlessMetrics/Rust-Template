@@ -1,0 +1,271 @@
+# Version Manifest for Release Automation
+# Schema Version: 1.0
+# Purpose: Declares all version-bearing files and their update patterns for release-prepare automation
+#
+# This manifest is the single source of truth for version updates during releases.
+# The release-prepare command uses this to update all version references consistently.
+#
+# Pattern Types:
+# - yaml_value: YAML key-value pair (e.g., "template_version: v3.3.5")
+# - heading_version: Markdown heading with version in parentheses (e.g., "# Service (v3.3.5)")
+# - inline_version: Inline markdown text with version (e.g., "**Template Version:** v3.3.5")
+# - badge_version: Markdown badge or link with version
+# - changelog_section: CHANGELOG.md version section header
+# - frontmatter_version: YAML frontmatter version field
+
+schema_version: "1.0"
+description: "Version manifest for release-prepare automation - declares all version-bearing files and update patterns"
+last_updated: "2025-12-01"
+
+# Version format specification
+version_format:
+  pattern: "^v?\\d+\\.\\d+\\.\\d+(-[a-zA-Z0-9.-]+)?$"
+  examples:
+    - "3.3.5"
+    - "v3.3.5"
+    - "3.3.5-kernel"
+    - "v3.3.5-rc1"
+
+# Files that contain version references
+files:
+  # Core specification files
+  - path: "specs/spec_ledger.yaml"
+    description: "Primary spec ledger with canonical template version"
+    patterns:
+      - marker: "template_version:"
+        type: yaml_value
+        format: "quoted"  # Uses "3.3.5" format
+        line_pattern: "^  template_version: \"[^\"]+\"$"
+        example: "  template_version: \"3.3.5\""
+    required: true
+    priority: 1
+
+  - path: "specs/service_metadata.yaml"
+    description: "Service metadata with template version reference"
+    patterns:
+      - marker: "template_version:"
+        type: yaml_value
+        format: "prefixed"  # Uses v3.3.5 format
+        line_pattern: "^template_version: v[\\d.]+.*$"
+        example: "template_version: v3.3.5"
+    required: true
+    priority: 1
+
+  - path: "specs/doc_index.yaml"
+    description: "Documentation index with template version"
+    patterns:
+      - marker: "template_version:"
+        type: yaml_value
+        format: "quoted"  # Uses "3.3.5" format
+        line_pattern: "^template_version: \"[^\"]+\"$"
+        example: "template_version: \"3.3.5\""
+    required: true
+    priority: 1
+
+  # Primary documentation files
+  - path: "README.md"
+    description: "Repository README with multiple version references"
+    patterns:
+      - marker: "# Test Service (v"
+        type: heading_version
+        format: "prefixed_paren"  # (v3.3.5)
+        line_pattern: "^# Test Service \\(v[\\d.]+.*\\)$"
+        example: "# Test Service (v3.3.5)"
+      - marker: "**Template Version:**"
+        type: inline_version
+        format: "prefixed"  # v3.3.5
+        line_pattern: "^\\*\\*Template Version:\\*\\* v[\\d.]+.*"
+        example: "**Template Version:** v3.3.5 | **Kernel Baseline:** [v3.3.5-kernel](./docs/KERNEL_SNAPSHOT.md)"
+      - marker: "Kernel Baseline:**"
+        type: badge_version
+        format: "link_version"  # [v3.3.5-kernel]
+        line_pattern: "\\*\\*Kernel Baseline:\\*\\* \\[v[\\d.]+-kernel\\]"
+        example: "**Kernel Baseline:** [v3.3.5-kernel](./docs/KERNEL_SNAPSHOT.md)"
+    required: true
+    priority: 2
+
+  - path: "CLAUDE.md"
+    description: "Agent instructions with template version"
+    patterns:
+      - marker: "# CLAUDE.md – Rust-as-Spec Platform Cell (v"
+        type: heading_version
+        format: "prefixed_paren"  # (v3.3.5)
+        line_pattern: "^# CLAUDE\\.md – Rust-as-Spec Platform Cell \\(v[\\d.]+.*\\)$"
+        example: "# CLAUDE.md – Rust-as-Spec Platform Cell (v3.3.5)"
+      - marker: "**Template Version:**"
+        type: inline_version
+        format: "prefixed"  # v3.3.5
+        line_pattern: "^\\*\\*Template Version:\\*\\* v[\\d.]+.*$"
+        example: "**Template Version:** v3.3.5"
+    required: true
+    priority: 2
+
+  - path: "CHANGELOG.md"
+    description: "Changelog with version section headers"
+    patterns:
+      - marker: "## [Unreleased]"
+        type: changelog_section
+        format: "unreleased"
+        line_pattern: "^## \\[Unreleased\\]$"
+        example: "## [Unreleased]"
+      - marker: "## ["
+        type: changelog_section
+        format: "dated_release"  # [3.3.5] - 2025-12-01
+        line_pattern: "^## \\[[\\d.]+\\] - \\d{4}-\\d{2}-\\d{2}$"
+        example: "## [3.3.5] - 2025-12-01"
+    required: true
+    priority: 1
+    notes: "Requires special handling: insert new section after [Unreleased], preserve existing sections"
+
+  # Kernel and roadmap documentation
+  - path: "docs/KERNEL_SNAPSHOT.md"
+    description: "Kernel snapshot with version in frontmatter and heading"
+    patterns:
+      - marker: "title: Kernel Snapshot v"
+        type: frontmatter_version
+        format: "prefixed"  # v3.3.5
+        line_pattern: "^title: Kernel Snapshot v[\\d.]+.*$"
+        example: "title: Kernel Snapshot v3.3.5"
+      - marker: "# Kernel Snapshot v"
+        type: heading_version
+        format: "prefixed"  # v3.3.5
+        line_pattern: "^# Kernel Snapshot v[\\d.]+.*$"
+        example: "# Kernel Snapshot v3.3.5"
+      - marker: "**Version:**"
+        type: inline_version
+        format: "kernel_suffixed"  # v3.3.5-kernel
+        line_pattern: "^\\*\\*Date:\\*\\* [\\d-]+ \\| \\*\\*Version:\\*\\* v[\\d.]+-kernel$"
+        example: "**Date:** 2025-12-01 | **Version:** v3.3.5-kernel"
+    required: true
+    priority: 2
+
+  - path: "docs/ROADMAP.md"
+    description: "Roadmap with version references"
+    patterns:
+      - marker: "# Roadmap: Rust-as-Spec Platform Cell (v"
+        type: heading_version
+        format: "prefixed_paren"  # (v3.3.5)
+        line_pattern: "^# Roadmap: Rust-as-Spec Platform Cell \\(v[\\d.]+.*\\)$"
+        example: "# Roadmap: Rust-as-Spec Platform Cell (v3.3.5)"
+      - marker: "## 1. Kernel v"
+        type: heading_version
+        format: "prefixed"  # v3.3.4 (describes previous/current kernel)
+        line_pattern: "^## \\d+\\. Kernel v[\\d.]+.*"
+        example: "## 1. Kernel v3.3.4 Closure"
+        notes: "May reference previous kernel version, handle with care"
+    required: true
+    priority: 3
+
+  - path: "docs/INDEX.md"
+    description: "Documentation index with version reference"
+    patterns:
+      - marker: "**Navigation hub for the Rust-as-Spec Platform Cell (v"
+        type: inline_version
+        format: "prefixed_paren"  # (v3.3.5)
+        line_pattern: "^\\*\\*Navigation hub for the Rust-as-Spec Platform Cell \\(v[\\d.]+.*\\)\\*\\*$"
+        example: "**Navigation hub for the Rust-as-Spec Platform Cell (v3.3.5)**"
+    required: false
+    priority: 4
+
+  - path: "docs/explanation/TEMPLATE-CONTRACTS.md"
+    description: "Template contracts documentation with version"
+    patterns:
+      - marker: "**Template Version:**"
+        type: inline_version
+        format: "prefixed"  # v3.3.5
+        line_pattern: "^\\*\\*Template Version:\\*\\* v[\\d.]+.*$"
+        example: "**Template Version:** v3.3.5"
+    required: true
+    priority: 3
+
+  # Release evidence (generated artifacts)
+  - path: "release_evidence/v*.md"
+    description: "Release evidence bundles (generated)"
+    patterns:
+      - marker: "# Release Evidence: v"
+        type: heading_version
+        format: "prefixed"  # v3.3.5
+        line_pattern: "^# Release Evidence: v[\\d.]+.*$"
+        example: "# Release Evidence: v3.3.5"
+    required: false
+    priority: 5
+    notes: "Generated by release-bundle command, not manually updated"
+
+  - path: "release_evidence/kernel_contract.v*.json"
+    description: "Kernel contract JSON (generated)"
+    patterns:
+      - marker: "\"version\":"
+        type: yaml_value
+        format: "json_string"  # "3.3.5"
+        line_pattern: "^  \"version\": \"[\\d.]+.*\",$"
+        example: "  \"version\": \"3.3.5\","
+    required: false
+    priority: 5
+    notes: "Generated artifact, should be regenerated not edited"
+
+# Validation rules
+validation:
+  # All required files must exist
+  check_required_files: true
+
+  # All patterns must match at least once per file
+  check_pattern_matches: true
+
+  # Version format must be consistent within categories
+  check_format_consistency: true
+
+  # Changelog must have [Unreleased] section
+  check_unreleased_section: true
+
+# Update strategy for release-prepare
+update_strategy:
+  # Order of operations for version updates
+  phases:
+    - phase: 1
+      description: "Update core spec files first"
+      files: ["specs/spec_ledger.yaml", "specs/service_metadata.yaml", "specs/doc_index.yaml"]
+
+    - phase: 2
+      description: "Update primary documentation"
+      files: ["README.md", "CLAUDE.md"]
+
+    - phase: 3
+      description: "Update kernel and contracts documentation"
+      files: ["docs/KERNEL_SNAPSHOT.md", "docs/explanation/TEMPLATE-CONTRACTS.md"]
+
+    - phase: 4
+      description: "Update changelog with new version section"
+      files: ["CHANGELOG.md"]
+      special_handling: "insert_new_section"
+
+    - phase: 5
+      description: "Update supporting documentation"
+      files: ["docs/ROADMAP.md", "docs/INDEX.md"]
+
+  # Backup strategy
+  backup_before_update: true
+
+  # Validation after update
+  validate_after_update: true
+
+# Notes for maintainers
+notes: |
+  This manifest is used by `cargo xtask release-prepare` to update all version references consistently.
+
+  When adding new version-bearing files:
+  1. Add the file path and patterns to the files list
+  2. Set appropriate priority (1=critical, 5=optional)
+  3. Mark as required: true if the file must exist
+  4. Test with `cargo xtask release-prepare --dry-run X.Y.Z`
+
+  Pattern matching strategies:
+  - Use line_pattern for regex matching entire lines
+  - Use marker for human-readable search strings
+  - Use example to document the expected format
+
+  Version format conventions:
+  - "3.3.5" (quoted, no prefix) - YAML values in spec files
+  - v3.3.5 (prefixed, unquoted) - Markdown inline references
+  - (v3.3.5) (prefixed, parentheses) - Markdown headings
+  - v3.3.5-kernel (kernel suffix) - Kernel baseline references
+  - [3.3.5] (brackets, no prefix) - CHANGELOG section headers

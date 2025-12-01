@@ -1,0 +1,56 @@
+# Fork Entry: MyService Example
+#
+# This is a fork registry entry for the MyService example fork.
+# It demonstrates how to register your fork in the template's fork registry.
+#
+# Fork registry entries help:
+# - Track which template version your fork is based on
+# - Document your fork's purpose and domain
+# - Connect fork maintainers for knowledge sharing
+# - Identify common patterns that should be backported to the kernel
+
+id: FORK-MYSERV-001
+name: "MyService Example Fork"
+domain: "example-tutorial"
+kernel_version: v3.3.5
+status: experimental
+
+maintainer:
+  name: "Example Team"
+  contact: "example-team@example.com"
+
+forked_at: "2025-12-01"
+last_synced: "2025-12-01"
+
+features:
+  - "Echo endpoint demonstrating basic request/response pattern"
+  - "Domain-specific specs extending template kernel"
+  - "BDD scenarios in fork-local features directory"
+  - "Service metadata and identity management"
+  - "Example of fork registration process"
+
+pain_points: []
+
+notes: >
+  This is a minimal example fork created to demonstrate the fork pattern
+  and serve as a starting point for new service forks.
+
+  Key learnings:
+  - Fork structure integrates cleanly with template governance
+  - Spec additions follow same patterns as kernel specs
+  - BDD scenarios can be placed in fork-local directories
+  - Service metadata helps track fork identity and ownership
+
+  This fork is marked as 'experimental' because it's a demonstration/tutorial
+  rather than a production service. Real forks would typically be 'active'.
+
+  Intended audience:
+  - Teams creating new service forks from the template
+  - Template kernel maintainers evaluating the fork system
+  - Developers learning the Rust-as-Spec template patterns
+
+related_items:
+  adrs:
+    - "ADR-008-forks"
+  friction: []
+  issues: []

@@ -1,0 +1,38 @@
+# Agent Pilot Harness .gitignore
+#
+# These files are ephemeral pilot artifacts and should not be committed.
+# Only commit templates, examples, and generalizable learnings.
+
+# Evidence directory (logs, screenshots, bundle outputs)
+evidence/*
+!evidence/.gitkeep
+
+# Pilot-specific notes (unless they're examples)
+pilot-notes-*.md
+
+# Pilot-specific plans (unless they're examples)
+pilot-plan-*.yaml
+!pilot-plan-template.yaml
+!pilot-plan-example.yaml
+
+# Temporary bundle outputs
+bundle/
+
+# Pilot-specific friction (move to /friction/ if generalizable)
+friction-entries/*
+!friction-entries/.gitkeep
+
+# Pilot-specific ADRs (promote to /docs/adr/ if generalizable)
+adrs/*
+!adrs/.gitkeep
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor files
+*.swp
+*.swo
+*~
+.vscode/
+.idea/

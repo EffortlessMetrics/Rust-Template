@@ -1,0 +1,181 @@
+# Example Backstage Catalog Entity for Rust-as-Spec Platform
+#
+# EXAMPLE QUALITY - NOT PRODUCTION READY
+#
+# This shows how you might register your platform service in Backstage's catalog.
+# Copy and customize for your needs.
+#
+# Place this file in your service repository and register it with Backstage via:
+#   catalog.locations in app-config.yaml
+#
+# Documentation: https://backstage.io/docs/features/software-catalog/descriptor-format
+
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: rust-spec-platform
+  description: |
+    Rust-as-Spec platform service providing governance APIs for AC coverage,
+    policy enforcement, documentation inventory, and task management.
+  annotations:
+    # Link to repository
+    github.com/project-slug: your-org/rust-as-spec-template
+
+    # Link to documentation
+    backstage.io/techdocs-ref: dir:.
+
+    # CI/CD integration (optional)
+    github.com/workflows: ci.yaml
+
+    # Monitoring (optional)
+    prometheus.io/rule: rust-spec-platform-metrics
+    grafana/dashboard-selector: rust-spec-platform
+
+  tags:
+    - rust
+    - governance
+    - platform-engineering
+    - developer-experience
+    - bdd
+    - acceptance-criteria
+
+  links:
+    # Link to live service
+    - url: https://platform.your-org.com
+      title: Platform API
+      icon: dashboard
+
+    # Link to documentation
+    - url: https://platform.your-org.com/ui
+      title: Governance UI
+      icon: docs
+
+    # Link to repository
+    - url: https://github.com/your-org/rust-as-spec-template
+      title: Repository
+      icon: github
+
+    # Link to monitoring
+    - url: https://grafana.your-org.com/d/rust-spec-platform
+      title: Grafana Dashboard
+      icon: grafana
+
+spec:
+  # Type of component
+  type: service
+
+  # Lifecycle stage
+  lifecycle: production  # or: experimental, production, deprecated
+
+  # Team/group that owns this service
+  owner: platform-team
+
+  # System this component belongs to (optional)
+  system: developer-platform
+
+  # Dependencies (optional)
+  dependsOn:
+    - resource:postgres-database
+    - component:authentication-service
+
+  # Provides APIs (optional)
+  providesApis:
+    - rust-spec-platform-api
+
+---
+# Optional: Define the API this service provides
+apiVersion: backstage.io/v1alpha1
+kind: API
+metadata:
+  name: rust-spec-platform-api
+  description: REST API for governance visibility and platform introspection
+  tags:
+    - rest
+    - governance
+    - platform
+
+spec:
+  type: openapi
+  lifecycle: production
+  owner: platform-team
+  system: developer-platform
+
+  # API definition location
+  definition:
+    $text: https://platform.your-org.com/platform/schema
+
+---
+# Optional: Define infrastructure resources
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: postgres-database
+  description: PostgreSQL database for platform state (if needed)
+
+spec:
+  type: database
+  owner: platform-team
+  system: developer-platform
+
+---
+# Optional: Define the team
+apiVersion: backstage.io/v1alpha1
+kind: Group
+metadata:
+  name: platform-team
+  description: Platform Engineering Team
+
+spec:
+  type: team
+  children: []
+
+---
+# Optional: Define the system
+apiVersion: backstage.io/v1alpha1
+kind: System
+metadata:
+  name: developer-platform
+  description: Internal Developer Platform and tooling
+
+spec:
+  owner: platform-team
+
+# Additional catalog entity types you might use:
+#
+# 1. Domain - high-level grouping of related systems
+# 2. Location - pointer to other catalog files
+# 3. User - individual users in the organization
+# 4. Template - software templates for scaffolding new projects
+
+# Example advanced annotations:
+#
+# metadata:
+#   annotations:
+#     # TechDocs
+#     backstage.io/techdocs-ref: dir:.
+#
+#     # Kubernetes
+#     backstage.io/kubernetes-id: rust-spec-platform
+#     backstage.io/kubernetes-namespace: production
+#
+#     # GitHub Actions
+#     github.com/project-slug: your-org/rust-as-spec-template
+#     github.com/workflows: ci.yaml,deploy.yaml
+#
+#     # Sentry
+#     sentry.io/project-slug: rust-spec-platform
+#
+#     # PagerDuty
+#     pagerduty.com/integration-key: your-integration-key
+#
+#     # Datadog
+#     datadoghq.com/dashboard-url: https://app.datadoghq.com/dashboard/abc-123
+#
+#     # SonarQube
+#     sonarqube.org/project-key: your-org_rust-as-spec-template
+#
+#     # Jira
+#     jira/project-key: PLATFORM
+#
+#     # Slack
+#     slack.com/channel: #platform-team

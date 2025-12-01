@@ -537,7 +537,64 @@ git commit --no-verify -m "your message"
 
 ---
 
-## 14. Summary: Choose Your Path
+## 14. Dictionary Governance (cspell.json)
+
+The `cspell.json` file is a **governed artifact** (part of the kernel surface). It defines project-specific vocabulary for spell checking and is validated as part of `cargo xtask selftest`.
+
+### When to Add Words
+
+**Add to `cspell.json` when:**
+
+- **Project-specific terminology**: Framework names, tool names, acronyms (e.g., "Axum", "sqlx", "OTLP")
+- **Domain vocabulary**: Terms used repeatedly across specs, docs, and code (e.g., "selftest", "devex", "brownfield")
+- **Intentional identifiers**: Product names, component names, technical concepts central to the system
+
+### When NOT to Add Words
+
+**Do NOT add to `cspell.json` when:**
+
+- **It's a typo**: Fix the typo in the document instead of masking it
+- **One-off proper nouns**: Quote them or rephrase to avoid false negatives
+- **Generic words**: If it's a standard English word, it's already in cspell's base dictionaries
+- **Would mask real errors**: Adding overly broad patterns can hide genuine mistakes
+
+### How to Add Words
+
+1. **Edit `cspell.json`**: Add to the `"words"` array
+2. **Keep it organized**: Roughly alphabetical, grouped by category if helpful
+3. **Commit with the change**: Include dictionary updates in the same commit that introduces the term
+
+Example:
+```json
+{
+  "words": [
+    "Axum",
+    "brownfield",
+    "devex",
+    "sqlx"
+  ]
+}
+```
+
+### Running Spellcheck
+
+```bash
+# Check all docs and specs
+cargo xtask spellcheck
+
+# Or use the full validation ladder
+cargo xtask selftest
+```
+
+**Enforcement:**
+- **Pre-commit**: Soft warning (doesn't block commit by default)
+- **CI**: Part of `selftest` validation (hard gate when `XTASK_STRICT_PRECOMMIT=1`)
+
+**Best practice:** Run `spellcheck` before committing docs changes to catch issues early.
+
+---
+
+## 15. Summary: Choose Your Path
 
 | Your Situation | Recommended | Why |
 |---|---|---|
