@@ -252,7 +252,29 @@ cat **/*.rs > context.txt  # ❌ Overwhelming
 
 ---
 
-## 9. Summary for a New Team
+## 9. Cucumber/Gherkin IDE Diagnostics
+
+VS Code extensions for Cucumber/Gherkin (like "Cucumber" or "Feature Syntax Support") may show "Undefined step" warnings on `.feature` files. This is **expected behavior**, not a real error.
+
+**Why the warnings appear:**
+
+- Step definitions are in Rust (`crates/acceptance/src/steps/*.rs`)
+- Most Cucumber IDE plugins expect JavaScript/TypeScript/Ruby step definitions
+- The runtime BDD harness correctly resolves all steps
+
+**Options:**
+
+1. **Ignore the warnings (recommended)** - The `selftest` and `bdd` commands verify steps at runtime
+2. **Disable the extension** for this workspace if the noise is distracting
+3. **Configure the extension** to only warn (not error) on undefined steps
+
+**When to worry:**
+
+Only if `cargo xtask bdd` or `cargo xtask selftest` reports actual step failures. The canonical source of truth for step validity is the runtime harness, not IDE diagnostics.
+
+---
+
+## 10. Summary for a New Team
 
 Before you start:
 
@@ -288,7 +310,7 @@ Before you start:
 
 ---
 
-## 10. When to **Not** Use This Template
+## 11. When to **Not** Use This Template
 
 This template is **not** suitable if:
 
@@ -319,7 +341,7 @@ Still stuck? Open an issue with `[pilot]` prefix.
 
 ---
 
-## 11. Low-Resource Environments
+## 12. Low-Resource Environments
 
 If you are running on a constrained machine (e.g., small CI runner, cheap VPS, or old laptop), the default parallel builds and caching might be too heavy.
 
@@ -342,7 +364,7 @@ XTASK_LOW_RESOURCES=1 cargo run -p xtask -- selftest
 
 ---
 
-## 12. Platform Support
+## 13. Platform Support
 
 This template supports development across multiple platforms with different validation guarantees.
 
@@ -515,7 +537,7 @@ git commit --no-verify -m "your message"
 
 ---
 
-## 13. Summary: Choose Your Path
+## 14. Summary: Choose Your Path
 
 | Your Situation | Recommended | Why |
 |---|---|---|

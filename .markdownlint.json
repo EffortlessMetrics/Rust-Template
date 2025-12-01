@@ -1,0 +1,12 @@
+{
+  "extends": "default",
+  "ignore-path": ".markdownlintignore",
+  "no-inline-html": false,
+  "line-length": {
+    "line_length": 120,
+    "heading_line_length": 120,
+    "headers": true,
+    "code_blocks": false,
+    "code_inline": false
+  }
+}

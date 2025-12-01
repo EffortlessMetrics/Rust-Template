@@ -119,11 +119,13 @@ When in doubt, align your choices with `spec_ledger.yaml` and “what would make
 On first contact, or when resuming work:
 
 **One-command setup (recommended):**
+
 ```bash
 cargo xtask dev-up         # Bootstrap env, check health, install hooks, run quick tests
 ```
 
 **Or step-by-step:**
+
 ```bash
 cargo xtask doctor         # Environment sanity check
 cargo xtask kernel-smoke   # Quick smoke test of template baseline
@@ -168,6 +170,7 @@ curl http://localhost:8080/platform/questions
 This gives you a complete picture: health, governance graph, available flows, docs, tasks, recommended work, and DevEx feedback.
 
 **Prefer introspection endpoints over manual grepping.** They are:
+
 - **Authoritative:** generated from the same specs that CI enforces.
 - **Fast:** computed at load time and cached.
 - **Agent-friendly:** structured JSON that's easy to parse and act on.
@@ -248,6 +251,7 @@ The repository installs a git pre-commit hook (`.git/hooks/pre-commit`) that:
    - Runs **docs-check** and **spellcheck** (soft by default; only hard if `XTASK_STRICT_PRECOMMIT=1`)
 
 This means:
+
 - **Mechanical issues are silently auto-fixed and staged** (formatting, SKILL.md tidiness, AC status report).
 - **Only real governance failures block the commit** (test failures, clippy violations, Skills/Agents policy breaches).
 
