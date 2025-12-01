@@ -193,8 +193,48 @@ pub fn run(args: AcStatusArgs) -> Result<()> {
         println!("  Found {} ACs", acs.len());
     }
 
-    let junit_status = ReportStatus::from_path(&args.junit);
+    // Check JUnit status and auto-regenerate if missing/empty
+    let mut junit_status = ReportStatus::from_path(&args.junit);
     let json_status = args.json_report.as_ref().map(|p| ReportStatus::from_path(p));
+
+    // AUTO-REGENERATION: If JUnit is missing/empty and JSON is also missing/empty,
+    // run BDD tests to generate the JUnit file before proceeding.
+    if junit_status != ReportStatus::NonEmpty {
+        let json_available = json_status == Some(ReportStatus::NonEmpty);
+
+        if !json_available {
+            // No usable test results - run BDD to generate them
+            if !args.verbosity.is_quiet() {
+                eprintln!(
+                    "JUnit file `{}` is {} - running BDD suite to regenerate...",
+                    args.junit.display(),
+                    junit_status
+                );
+            }
+
+            // Run BDD tests - this will write to target/junit/acceptance.xml
+            // We ignore errors here because BDD tests may fail, but we still want
+            // to parse the JUnit output for AC status
+            let _ = super::bdd::run_for_junit(&args.junit);
+
+            // Re-check JUnit status after running BDD
+            junit_status = ReportStatus::from_path(&args.junit);
+
+            if junit_status != ReportStatus::NonEmpty {
+                anyhow::bail!(
+                    "Acceptance JUnit file `{}` is still {} after running BDD.\n\
+                    This indicates the BDD tests could not be run successfully.\n\
+                    Check that the acceptance test harness is configured correctly.",
+                    args.junit.display(),
+                    junit_status
+                );
+            }
+
+            if !args.verbosity.is_quiet() {
+                println!("  JUnit regenerated successfully");
+            }
+        }
+    }
 
     // PRIMARY PATH: JUnit XML + feature file parsing
     // JUnit is now the preferred path as it's more stable and consistent.
@@ -222,6 +262,8 @@ pub fn run(args: AcStatusArgs) -> Result<()> {
             }
             (scenario_map, results)
         } else {
+            // This branch should rarely be hit now since we auto-regenerate above,
+            // but keep it for safety
             let json_state = json_status.unwrap_or(ReportStatus::Missing);
             anyhow::bail!(
                 "Acceptance test results missing or empty:\n  - JUnit XML: {} ({junit_status})\n  - JSON report: {} ({json_state})\nRun acceptance tests first: cargo test -p acceptance --tests\nOr generate reports via: cargo xtask bdd",
@@ -230,6 +272,8 @@ pub fn run(args: AcStatusArgs) -> Result<()> {
             );
         }
     } else {
+        // This branch should rarely be hit now since we auto-regenerate above,
+        // but keep it for safety
         anyhow::bail!(
             "Acceptance test results missing or empty:\n  - JUnit XML: {} ({junit_status})\n  - JSON report: not configured\nRun acceptance tests first: cargo test -p acceptance --tests\nOr generate reports via: cargo xtask bdd",
             args.junit.display()
