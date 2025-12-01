@@ -528,12 +528,13 @@ Feature: Developer Experience Commands
 
   @AC-TPL-CLI-JSON-OUTPUT
   Scenario: ac-status supports JSON output format
-    # Note: ac-status requires JUnit test results to exist;
-    # test hermetically validates JSON error response
+    # ac-status auto-regenerates JUnit if missing and outputs JSON
+    # Exit code depends on AC status (fail if any ACs fail)
     Given I am in the actual workspace
     When I run "cargo xtask ac-status --json"
-    Then the command should fail
-    And the output should contain "Acceptance test results missing"
+    Then the output should be valid JSON
+    And the JSON should include "timestamp" field
+    And the JSON should include "acs" field
 
   @AC-TPL-CLI-JSON-OUTPUT
   Scenario: friction-list supports JSON output
@@ -566,11 +567,16 @@ Feature: Developer Experience Commands
 
   @AC-TPL-CLI-JSON-CORE
   Scenario: ac-status command produces JSON output for tooling
-    # Hermetic smoke test - validates JSON structure in error case
+    # ac-status outputs valid JSON with stable top-level structure
+    # Exit code depends on whether any ACs are failing
     Given I am in the actual workspace
     When I run "cargo xtask ac-status --json"
-    Then the command should fail
-    And the output should contain "Acceptance test results missing"
+    Then the output should be valid JSON
+    And the JSON should include "timestamp" field
+    And the JSON should include "kernel_acs" field
+    And the JSON should include "template_acs" field
+    And the JSON should include "coverage_percent" field
+    And the JSON should include "acs" field
 
   @AC-TPL-XTASK-NONINTERACTIVE
   Scenario: doctor runs non-interactively with CI=1
