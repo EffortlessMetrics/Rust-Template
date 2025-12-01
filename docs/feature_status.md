@@ -137,9 +137,9 @@ Auto-generated AC status from acceptance (BDD) and unit tests.
 
 *(This list SHOULD be empty in this repo. If anything appears here, it's a bug.)*
 
-- AC-TPL-BUNDLE-MINIMAL-SCOPE: Bundle scope is minimal: specs/ includes only referenced sections (not entire spec_ledger), docs/ includes only docs mentioned in ACs/tests, src/ is optional and narrowly scoped (crate-specific). As a guardrail, a single bundle MUST NOT exceed a configurable size and file-count threshold (default: 300 KiB / 64 files) unless explicitly overridden via BUNDLE_MAX_BYTES / BUNDLE_MAX_FILES.
-- AC-PLT-DOC-INDEX-FRONTMATTER: `cargo xtask docs-check` validates bidirectional alignment between doc_index.yaml entries and document front-matter (stories, requirements, acs, adrs). Items in index must be in front-matter and vice versa. (Docs-as-Code v3)
 - AC-TPL-XTASK-SPEC-ROOT: xtask commands that read specs or tasks (e.g., `status`, `suggest-next`, `tasks-list`, bundle generation) MUST resolve their workspace root via the SPEC_ROOT environment variable when it is set. When SPEC_ROOT is unset, they default to the repository root.
+- AC-PLT-DOC-INDEX-FRONTMATTER: `cargo xtask docs-check` validates bidirectional alignment between doc_index.yaml entries and document front-matter (stories, requirements, acs, adrs). Items in index must be in front-matter and vice versa. (Docs-as-Code v3)
+- AC-TPL-BUNDLE-MINIMAL-SCOPE: Bundle scope is minimal: specs/ includes only referenced sections (not entire spec_ledger), docs/ includes only docs mentioned in ACs/tests, src/ is optional and narrowly scoped (crate-specific). As a guardrail, a single bundle MUST NOT exceed a configurable size and file-count threshold (default: 300 KiB / 64 files) unless explicitly overridden via BUNDLE_MAX_BYTES / BUNDLE_MAX_FILES.
 
 ## Meta / CI-only ACs (Not Executed Locally)
 
