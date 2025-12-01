@@ -238,14 +238,16 @@ stories:
         tags: [platform, docs]
         must_have_ac: true
         description: >
-          Version drift between spec_ledger, README, CLAUDE is caught by CI,
-          not discovered months later.
+          Version drift between spec_ledger and consumer files is caught by CI,
+          not discovered months later. Consumer files: README.md, CLAUDE.md,
+          ROADMAP.md, KERNEL_SNAPSHOT.md, TEMPLATE-CONTRACTS.md, service_metadata.yaml,
+          doc_index.yaml, and CHANGELOG.md.
         adr: ADR-0005
         ci_workflows:
           - CI-DOCS
         acceptance_criteria:
           - id: AC-PLT-009
-            text: "`cargo xtask docs-check` validates version alignment across spec_ledger, README, CLAUDE"
+            text: "`cargo xtask docs-check` validates version alignment across spec_ledger (canonical) and 8 consumer files"
             tags: [kernel]
             must_have_ac: true
             tests:

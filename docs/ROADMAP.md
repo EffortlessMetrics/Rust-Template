@@ -83,6 +83,8 @@ The kernel has reached a stable, forkable baseline. All acceptance criteria pass
 | **Policy Tests** | 22/22 passing |
 | **BDD Scenarios** | 170+ passing |
 
+> **Note:** Selftest only gates on **kernel ACs** (`must_have_ac: true`). Non-kernel ACs are tracked as soft gates and may be failing or unknown without blocking merges. See `docs/feature_status_notes.md` for details.
+
 ### 2.2 What's Working
 
 **Runtime & APIs:**
@@ -110,6 +112,7 @@ The kernel has reached a stable, forkable baseline. All acceptance criteria pass
 - Policy tests (OPA/Rego) for configuration compliance
 - Pre-commit hooks with auto-staging
 - AC/ADR bidirectional mapping
+- **Docs-as-Code v2:** `spec_ledger.yaml` is the version authority; `docs-check` enforces alignment across 8 consumer files; `xtask version --json` is the machine surface
 
 **v3.3.4 Additions:**
 
@@ -127,9 +130,11 @@ cargo xtask ac-status      # All kernel ACs PASS
 cargo run -p app-http      # Listening on :8080
 ```
 
+> **Version authority:** `specs/spec_ledger.yaml → metadata.template_version` is the canonical kernel version. All other docs (README, CLAUDE, ROADMAP, KERNEL_SNAPSHOT, TEMPLATE-CONTRACTS, service_metadata, doc_index, CHANGELOG) are validated against it by `cargo xtask docs-check`.
+
 ---
 
-## 3. What's Been Completed (v3.3.3 Polish)
+## 3. What's Been Completed (3.3.x Polish)
 
 The following gaps have been addressed:
 
@@ -195,6 +200,7 @@ The following gaps have been addressed:
 | **Bundle manifest v1.5** | ✅ Complete | `bundle.yaml` links REQs/ACs/tests; soft scope audit |
 | **SPEC_ROOT contract** | ✅ Complete | `spec_root()` honors SPEC_ROOT env var; unit-tested |
 | **Pre-commit auto-fix** | ✅ Complete | Hook runs `xtask precommit`, auto-fixes fmt/skills/feature_status |
+| **Docs-as-Code v2** | ✅ Complete | `docs-check` validates 8 consumer files against spec_ledger; `xtask version --json` canonical source |
 
 ---
 
@@ -221,6 +227,13 @@ Only a few items remain - all now have documentation or are external dependencie
 |------|--------|-------|
 | **`lazy-trees` Nix warning** | Cosmetic noise in output | Deprecated Nix 2.30+ setting in Determinate installer config. Documented in TROUBLESHOOTING.md with fix instructions. Safe to ignore. |
 
+### 4.4 v3.4.0 Backlog (Planned)
+
+| Item | Description | Notes |
+|------|-------------|-------|
+| **Docs-as-Code v3** | Validate `doc_index.yaml` entries match document frontmatter | Builds on v2 version alignment; likely extension of `REQ-PLT-DOCS-CONSISTENCY` with new AC (e.g., AC-PLT-0XX) |
+| **Feature-status invariants** | Light checks that `feature_status.md` references correct version | Extension to `AC-PLT-010` or new AC to validate header/version alignment |
+
 ---
 
 ## 5. Path Forward Options
@@ -234,7 +247,7 @@ Only a few items remain - all now have documentation or are external dependencie
 1. Configure GitHub branch protection (require selftest, no direct pushes)
    - **Run:** `.github/scripts/setup-branch-protection.sh`
    - **Docs:** `docs/how-to/setup-branch-protection.md`
-2. Tag `v3.3.3` as the stable baseline
+2. Tag `v3.3.4-kernel` as the stable baseline (see `cargo xtask version --json | jq -r .kernel_tag`)
 3. Fork for Knowledge Hub or other service
 4. Capture friction in `FRICTION_LOG.md`
 5. Only update kernel when friction is systematic
@@ -257,16 +270,16 @@ Only a few items remain - all now have documentation or are external dependencie
 
 **Goal:** Complete documentation before first fork.
 
-**Actions:**
+**Actions (mostly done in v3.3.4):**
 
 1. Write `docs/explanation/idp-positioning.md` ✅
 2. Write `docs/how-to/brownfield-adoption.md` ✅
-3. Test and document Windows Tier-2 flow
-4. Clean up ADR numbering duplicates
-5. Configure branch protection (see `docs/how-to/setup-branch-protection.md`) ✅
-6. Then fork
+3. Configure branch protection (see `docs/how-to/setup-branch-protection.md`) ✅
+4. Windows Tier-2 flow documented ✅ (see `docs/how-to/windows-development.md`)
+5. ADR numbering duplicates cleaned up ✅
+6. (Optional ongoing) Keep Tier-2 Windows notes fresh as friction is discovered
 
-**Timeline:** 1-2 sessions
+**Timeline:** Mostly complete; ongoing maintenance only
 
 **Pros:**
 
@@ -382,7 +395,7 @@ cargo xtask friction-new --category X --severity Y --summary "..."
 cargo xtask friction-list      # List friction entries (--json available)
 cargo xtask question-new --category X --summary "..." --flow F --phase P --description "..."
 cargo xtask questions-list     # List questions (--json available)
-cargo xtask fork-register --name "Name" --domain "domain" --kernel-version "v3.3.3" ...
+cargo xtask fork-register --name "Name" --domain "domain" --kernel-version "vX.Y.Z" ...
 cargo xtask fork-list          # List registered forks (--json available)
 ```
 
@@ -417,12 +430,12 @@ The kernel is "fully implemented" when:
 3. **Platform teams can integrate it** via documented APIs and artifacts
 4. **New teams can onboard in < 1 hour** with written docs alone
 
-Until then, it's a stable baseline (v3.3.3) suitable for early adopters who accept some friction.
+Until then, it's a stable baseline (v3.3.4) suitable for early adopters who accept some friction.
 
 ---
 
 ## 9. Summary
 
-**v3.3.3** is a stable, selftest-green kernel. All 65 ACs pass. But "selftest green" and "ready for production" are different bars. The gaps are documented above.
+**v3.3.4** is a stable, selftest-green kernel. All **kernel ACs** (`must_have_ac: true`) pass; non-kernel ACs are tracked as soft gates and may be failing or unknown without blocking selftest. But "selftest green" and "ready for production" are different bars. The gaps are documented above.
 
 The recommended path: fork immediately, capture friction, fix what matters, document what you learned. Don't try to anticipate every need—let real usage tell you what's missing.
