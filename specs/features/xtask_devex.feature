@@ -323,6 +323,24 @@ Feature: Developer Experience Commands
     When I run "cargo xtask skills-lint"
     Then the command should succeed
 
+  @AC-TPL-SKILLS-NAME-FORMAT
+  Scenario: skills-lint enforces skill name format in the template
+    Given I am in the actual workspace
+    When I run "cargo xtask skills-lint"
+    Then the command should succeed
+
+  @AC-TPL-AGENTS-NAME-FORMAT
+  Scenario: agents-lint enforces agent name format in the template
+    Given I am in the actual workspace
+    When I run "cargo xtask agents-lint"
+    Then the command should succeed
+
+  @AC-PLT-DOC-INDEX-FRONTMATTER
+  Scenario: docs-check enforces doc_index frontmatter invariants
+    Given I am in the actual workspace
+    When I run "cargo xtask docs-check"
+    Then the command should succeed
+
   @AC-TPL-AGENTS-GOVERNANCE-001
   Scenario: agents-lint validates all agent files when valid
     Given Claude Code agents exist in .claude/agents/

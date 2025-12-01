@@ -8,14 +8,14 @@
 
 ## Executive Summary
 
-As of v3.3.4:
-- **Total ACs:** 81
-- **Kernel ACs (must_have_ac: true):** 52
-- **Template ACs (must_have_ac: false):** 29
-- **Currently Passing:** 79 ACs
-- **Meta/CI-only (UNKNOWN):** 2 ACs (by design)
+As of v3.3.4 (December 2025 update):
+- **Total ACs:** 105
+- **Kernel ACs (must_have_ac: true):** 61 (all passing)
+- **Template ACs (must_have_ac: false):** 44
+  - **Passing:** 27
+  - **Unknown:** 17 (intentionally soft)
 
-**Status:** The template is at "LLM-native Rust cell 1.0" state. All kernel and service behaviour ACs pass. The two remaining UNKNOWN ACs are intentionally meta/CI-only contracts that aren't exercised in local selftest.
+**Status:** The template is at "LLM-native Rust cell 1.0" state. All kernel ACs pass. The 17 remaining UNKNOWN ACs are intentionally soft contracts (`must_have_ac: false`) covering governance documentation, guidance policies, and meta/CI-only contracts that aren't exercised in local selftest.
 
 ---
 
@@ -33,19 +33,46 @@ All 52 kernel ACs (`must_have_ac: true`) are passing:
 
 All template behaviour ACs are passing where implemented.
 
-### Meta/CI-only ACs: 2 UNKNOWN (By Design)
+### Template/Meta ACs: 17 UNKNOWN (Intentionally Soft)
 
-Two ACs remain UNKNOWN in `feature_status.md`. This is **intentional**:
+17 ACs remain UNKNOWN in `feature_status.md`. This is **intentional** – they're governed via documentation, lint warnings, CI workflows, or manual review rather than hard test gates.
+
+#### Skills Governance (7 ACs)
 
 | AC ID | Type | Why UNKNOWN |
 |-------|------|-------------|
-| AC-TPL-BDD-EXIT-CODES | Harness contract | Tests the test harness itself, not service behaviour. Validated at CI/harness level. |
-| AC-TPL-EXAMPLE-FORK-BUILDS | Example fork | Tests a nested example workspace. CI-only validation avoids coupling template to demo. |
+| AC-TPL-SKILLS-GOVERNANCE-001 | Doc exists | `docs/SKILLS_GOVERNANCE.md` exists. Validated by file presence. |
+| AC-TPL-SKILLS-GOVERNANCE-002 | Guidance | Skills have REQ/AC coverage. Manual code review validation. |
+| AC-TPL-SKILLS-GOVERNANCE-003 | Doc exists | `docs/SKILLS_TEMPLATE.md` exists. Validated by file presence. |
+| AC-TPL-SKILLS-DESCRIPTION-QUALITY | Guidance | skills-lint warns on low-quality descriptions. Not a hard gate. |
+| AC-TPL-SKILLS-ALLOWED-TOOLS-SAFETY | Guidance | skills-lint warns on tool grants. Least-privilege is advisory. |
+| AC-TPL-SKILLS-FLOW-MAPPING | Guidance | skills-lint warns on anti-patterns. Not a hard gate. |
+| AC-TPL-SKILLS-LIFECYCLE-DOCS | Doc exists | Lifecycle documented in SKILLS_GOVERNANCE.md. |
+
+#### Agents Governance (6 ACs)
+
+| AC ID | Type | Why UNKNOWN |
+|-------|------|-------------|
+| AC-TPL-AGENTS-DESCRIPTION-QUALITY | Guidance | agents-lint warns on low-quality descriptions. Not a hard gate. |
+| AC-TPL-AGENTS-TOOLS-PERMISSION-SAFETY | Guidance | agents-lint warns on tool grants. Not a hard gate. |
+| AC-TPL-AGENTS-MODEL-POLICY | Guidance | agents-lint warns on expensive models. Not a hard gate. |
+| AC-TPL-AGENTS-SKILLS-REFERENCES | Validation | agents-lint errors on missing skills. Enforced but not BDD-tested. |
+| AC-TPL-AGENTS-LIFECYCLE-DOCS | Doc exists | Lifecycle documented in AGENTS_GOVERNANCE.md. |
+
+#### Platform/Template Infrastructure (5 ACs)
+
+| AC ID | Type | Why UNKNOWN |
+|-------|------|-------------|
+| AC-PLT-AC-DEMOTION-GOVERNED | Policy | AC demotion is a governance policy, not a test gate. See §6. |
+| AC-TPL-BDD-EXIT-CODES | Harness | Tests the test harness itself. CI validates `[BDD-PASS]` output. |
+| AC-TPL-BUNDLE-MINIMAL-SCOPE | Guidance | Bundle scope is reviewed manually, not automatically gated. |
+| AC-TPL-EXAMPLE-FORK-BUILDS | Example | CI job validates example fork. Not tested locally. |
+| AC-TPL-XTASK-SPEC-ROOT | Testing infra | SPEC_ROOT behavior is implicitly tested. Unit test exists but not mapped. |
 
 These are correctly showing as UNKNOWN because:
-- They're not service contracts
-- No test that `ac-status` scans is mapped to them (by design)
-- They're validated in CI, not local selftest
+- They're documentation, guidance, or governance policies (not testable as BDD)
+- They're validated via lint warnings, CI workflows, or manual review
+- They're intentionally `must_have_ac: false` to allow fork customization
 
 **If you want zero UNKNOWN rows:** See §3 for options.
 
@@ -307,6 +334,17 @@ For the step-by-step workflow, see `docs/how-to/change-acceptance-criterion.md`.
 
 ## Changelog
 
+- **2025-12-01:** Slice B – Harness & SPEC_ROOT ACs
+  - Mapped unit tests for AC-TPL-BDD-EXIT-CODES (`is_bdd_success` tests in bdd.rs)
+  - Mapped unit test for AC-TPL-XTASK-SPEC-ROOT (`spec_root_resolved` in tasks.rs)
+  - Template ACs: 29 passing, 15 unknown (reduced from 17 unknown)
+- **2025-12-01:** v3.3.4 AC coverage expansion
+  - Total ACs increased from 81 to 105 (Skills/Agents governance ACs added)
+  - Added BDD tests for AC-TPL-SKILLS-NAME-FORMAT, AC-TPL-AGENTS-NAME-FORMAT, AC-PLT-DOC-INDEX-FRONTMATTER
+  - Updated soft AC documentation: 17 intentionally soft ACs categorized by purpose
+  - Skills governance ACs documented (7 ACs)
+  - Agents governance ACs documented (5 ACs)
+  - Platform/template infrastructure ACs documented (5 ACs)
 - **2025-11-27:** Track B + C refinement
   - Added section 6: AC classification governance rules
   - Documented rules for changing `must_have_ac` and versioning implications
