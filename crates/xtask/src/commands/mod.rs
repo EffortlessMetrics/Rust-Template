@@ -27,6 +27,7 @@ pub mod hakari;
 pub mod help_flows;
 pub mod install_hooks;
 pub mod kernel_smoke;
+pub mod kernel_status;
 pub mod migrate;
 pub mod pin_actions;
 pub mod policy_test;
