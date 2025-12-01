@@ -108,6 +108,7 @@ This section documents the **code-enforced invariants** that keep docs in sync w
 | **Doc index ↔ frontmatter sync (AC-PLT-DOC-INDEX-FRONTMATTER)** | All indexed docs in `specs/doc_index.yaml` | Every indexed doc's frontmatter must match doc_index; every doc with frontmatter must appear in the index |
 | **Feature status header (AC-PLT-010 extension)** | `docs/feature_status.md` | Header must contain Template Version matching spec_ledger |
 | **ADR structure** | `docs/adr/ADR-*.md` | ADR format and numbering validated |
+| **Kernel REQs must have docs** | `specs/spec_ledger.yaml`, `specs/doc_index.yaml` | Every REQ with `must_have_ac: true` (or containing such ACs) must appear in `requirements:` for at least one doc (currently soft warning) |
 | **Skills definitions** | `.claude/skills/*/SKILL.md` | skills-lint validates format, descriptions, tools, and no secrets |
 
 ### 6.2. Invariants enforced by `cargo xtask ac-status`

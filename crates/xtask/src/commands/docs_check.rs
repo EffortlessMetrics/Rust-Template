@@ -94,6 +94,20 @@ pub fn run() -> Result<()> {
         }
     }
 
+    // Check Kernel REQ→Doc coverage (Slice C)
+    // Note: This is currently a soft check (warning) to allow incremental doc coverage.
+    // Once all kernel REQs are documented, promote this to a hard failure.
+    print!("Kernel REQ doc coverage... ");
+    match validate_kernel_req_doc_coverage() {
+        Ok(_) => println!("{}", "✓ Covered".green()),
+        Err(e) => {
+            println!("{}", "⚠ Gaps".yellow());
+            eprintln!("  [WARN] {}", e);
+            // Soft check: don't increment issues count
+            // TODO: Promote to hard failure once all kernel REQs are documented
+        }
+    }
+
     // Check Skills definitions
     print!("Skills definitions... ");
     match crate::commands::skills::run_lint() {
@@ -872,6 +886,67 @@ pub(crate) fn validate_feature_status_invariants() -> Result<()> {
             "{} Template Version does not match spec_ledger.yaml",
             feature_status_path
         ));
+    }
+
+    Ok(())
+}
+
+/// Validate that every kernel REQ (must_have_ac=true) has at least one doc covering it
+/// in doc_index.yaml. This ensures kernel design is documented, not just tested.
+///
+/// A "kernel REQ" is defined as:
+/// - A requirement with `must_have_ac: true`, OR
+/// - A requirement that contains at least one AC with `must_have_ac: true`
+fn validate_kernel_req_doc_coverage() -> Result<()> {
+    let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    let root = manifest_dir.parent().expect("workspace root").parent().expect("repo root");
+    let ledger_path = root.join("specs/spec_ledger.yaml");
+    let index_path = root.join("specs/doc_index.yaml");
+
+    // If doc_index doesn't exist, skip this check (MVP phase)
+    if !index_path.exists() {
+        return Ok(());
+    }
+
+    let ledger = crate::docs_index::load_ledger(&ledger_path)?;
+    let index = crate::docs_index::load_doc_index(&index_path)?;
+
+    // Build set of REQ IDs that are documented
+    let documented_reqs: std::collections::HashSet<&str> =
+        index.docs.iter().flat_map(|doc| doc.requirements.iter().map(|r| r.as_str())).collect();
+
+    // Find kernel REQs without documentation
+    let mut missing_docs: Vec<String> = Vec::new();
+
+    for story in &ledger.stories {
+        for req in &story.requirements {
+            // Check if this is a kernel REQ:
+            // 1. REQ itself has must_have_ac: true, OR
+            // 2. Any AC under it has must_have_ac: true
+            let is_kernel_req =
+                req.must_have_ac || req.acceptance_criteria.iter().any(|ac| ac.must_have_ac);
+
+            if is_kernel_req && !documented_reqs.contains(req.id.as_str()) {
+                missing_docs.push(format!("{} (\"{}\")", req.id, req.title));
+            }
+        }
+    }
+
+    if !missing_docs.is_empty() {
+        eprintln!();
+        eprintln!("{}", "Kernel requirements missing documentation:".yellow().bold());
+        for req in &missing_docs {
+            eprintln!("  ✗ {}", req);
+        }
+        eprintln!();
+        eprintln!("{}", "To fix:".bold());
+        eprintln!("  • Create a doc in docs/… covering the requirement");
+        eprintln!("  • Register it in specs/doc_index.yaml with the REQ ID in 'requirements:'");
+        eprintln!("  • Or demote the REQ to non-kernel by removing must_have_ac: true");
+        anyhow::bail!(
+            "Kernel REQ doc coverage: {} kernel requirement(s) have no documentation",
+            missing_docs.len()
+        );
     }
 
     Ok(())
