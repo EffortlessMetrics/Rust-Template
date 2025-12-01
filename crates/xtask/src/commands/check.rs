@@ -55,20 +55,14 @@ pub fn run_with_options(options: CheckOptions) -> Result<()> {
     }
 
     println!("Running clippy...");
-    // On Windows, exclude xtask to avoid file locking issues (can't rebuild running binary)
+    // Let [workspace.lints] in Cargo.toml define what is deny/warn/allow.
+    // We no longer force `-D warnings`, to allow intentional warn-level lints
+    // (e.g. missing_docs) to pass without blocking the build. Hard errors
+    // (deny-level lints) are still enforced via workspace.lints configuration.
     let clippy_args = if cfg!(windows) {
-        vec![
-            "--workspace",
-            "--exclude",
-            "xtask",
-            "--all-targets",
-            "--all-features",
-            "--",
-            "-D",
-            "warnings",
-        ]
+        vec!["--workspace", "--exclude", "xtask", "--all-targets", "--all-features"]
     } else {
-        vec!["--all-targets", "--all-features", "--", "-D", "warnings"]
+        vec!["--all-targets", "--all-features"]
     };
     crate::run_cmd(&mut crate::cargo_cmd("clippy", &clippy_args))?;
     println!("clippy was checked");

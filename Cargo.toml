@@ -1,27 +1,29 @@
 [workspace]
-members = [
-  "crates/*",
-]
-exclude = [
-  "examples/brownfield-demo",
-]
+members = ["crates/*"]
+exclude = ["examples/brownfield-demo"]
 resolver = "2"
 
 [workspace.package]
 edition = "2024"
 rust-version = "1.89.0"
 license = "Apache-2.0 OR MIT"
+homepage = "https://github.com/effortlessmetrics/rust-as-spec"
+repository = "https://github.com/effortlessmetrics/rust-as-spec"
+authors = ["EffortlessSteven"]
+documentation = "https://docs.rs/as-spec"
+version = "3.3.4"
 
 [workspace.lints.rust]
-unused = "deny"
-rust_2018_idioms = "deny"
+unused = { level = "deny", priority = -1 }
+rust_2018_idioms = { level = "deny", priority = -1 }
+missing_docs = "warn"
 
 [workspace.dependencies]
 anyhow = "1.0.100"
 thiserror = "2.0.17"
 serde = { version = "1.0.228", features = ["derive"] }
-tracing = "0.1.41"
-tracing-subscriber = { version = "0.3.20", features = ["env-filter", "fmt"] }
+tracing = "0.1.43"
+tracing-subscriber = { version = "0.3.22", features = ["env-filter", "fmt"] }
 serde_yaml = { package = "serde_yaml_ng", version = "0.10.0" }
 
 # OTLP Telemetry

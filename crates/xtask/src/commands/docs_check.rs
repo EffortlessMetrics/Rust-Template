@@ -522,12 +522,18 @@ fn check_ac_status_clean() -> Result<()> {
     Ok(())
 }
 
+/// Document front-matter extracted from markdown files
+/// Must align with specs/doc_index.yaml entries (Docs-as-Code v3)
 #[derive(Debug, Deserialize)]
 struct DocFrontMatter {
-    doc_type: String,
     id: String,
+    doc_type: String,
+    #[serde(default)]
+    stories: Vec<String>,
     #[serde(default)]
     requirements: Vec<String>,
+    #[serde(default)]
+    acs: Vec<String>,
     #[serde(default)]
     adrs: Vec<String>,
 }
@@ -563,6 +569,7 @@ fn validate_doc_index() -> Result<()> {
         let content = fs::read_to_string(&doc_path)?;
         match parse_front_matter(&content) {
             Ok(fm) => {
+                // Core field validation
                 if fm.id != entry.id {
                     errors.push(format!(
                         "ID mismatch in {}: front-matter='{}', index='{}'",
@@ -575,7 +582,17 @@ fn validate_doc_index() -> Result<()> {
                         entry.file, fm.doc_type, entry.doc_type
                     ));
                 }
-                // Check requirements and ADRs are consistent
+
+                // Docs-as-Code v3: Bidirectional validation for all reference fields
+                // Check index → front-matter (items in index must be in front-matter)
+                for story in &entry.stories {
+                    if !fm.stories.contains(story) {
+                        errors.push(format!(
+                            "Story '{}' in index but not front-matter: {}",
+                            story, entry.file
+                        ));
+                    }
+                }
                 for req in &entry.requirements {
                     if !fm.requirements.contains(req) {
                         errors.push(format!(
@@ -584,10 +601,52 @@ fn validate_doc_index() -> Result<()> {
                         ));
                     }
                 }
+                for ac in &entry.acs {
+                    if !fm.acs.contains(ac) {
+                        errors.push(format!(
+                            "AC '{}' in index but not front-matter: {}",
+                            ac, entry.file
+                        ));
+                    }
+                }
                 for adr in &entry.adrs {
                     if !fm.adrs.contains(adr) {
                         errors.push(format!(
                             "ADR '{}' in index but not front-matter: {}",
+                            adr, entry.file
+                        ));
+                    }
+                }
+
+                // Check front-matter → index (items in front-matter must be in index)
+                for story in &fm.stories {
+                    if !entry.stories.contains(story) {
+                        errors.push(format!(
+                            "Story '{}' in front-matter but not index: {}",
+                            story, entry.file
+                        ));
+                    }
+                }
+                for req in &fm.requirements {
+                    if !entry.requirements.contains(req) {
+                        errors.push(format!(
+                            "Requirement '{}' in front-matter but not index: {}",
+                            req, entry.file
+                        ));
+                    }
+                }
+                for ac in &fm.acs {
+                    if !entry.acs.contains(ac) {
+                        errors.push(format!(
+                            "AC '{}' in front-matter but not index: {}",
+                            ac, entry.file
+                        ));
+                    }
+                }
+                for adr in &fm.adrs {
+                    if !entry.adrs.contains(adr) {
+                        errors.push(format!(
+                            "ADR '{}' in front-matter but not index: {}",
                             adr, entry.file
                         ));
                     }
@@ -747,4 +806,71 @@ fn validate_service_policies() -> Result<()> {
     }
 
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// AC-PLT-DOC-INDEX-FRONTMATTER: Tests that doc_index.yaml entries and document
+    /// front-matter are bidirectionally synchronized for stories, requirements, acs, adrs.
+    #[test]
+    fn test_doc_index_frontmatter_sync() {
+        // This test validates that the validate_doc_index function can catch:
+        // 1. Items in index but not in front-matter
+        // 2. Items in front-matter but not in index
+
+        // Test parsing of front-matter with all fields
+        let content_full = r#"---
+id: TEST-DOC-001
+doc_type: design_doc
+stories: [US-TEST-001]
+requirements: [REQ-TEST-001]
+acs: [AC-TEST-001]
+adrs: [ADR-0001]
+---
+
+# Test Document
+"#;
+
+        let fm = parse_front_matter(content_full).expect("should parse full front-matter");
+        assert_eq!(fm.id, "TEST-DOC-001");
+        assert_eq!(fm.doc_type, "design_doc");
+        assert_eq!(fm.stories, vec!["US-TEST-001"]);
+        assert_eq!(fm.requirements, vec!["REQ-TEST-001"]);
+        assert_eq!(fm.acs, vec!["AC-TEST-001"]);
+        assert_eq!(fm.adrs, vec!["ADR-0001"]);
+
+        // Test parsing with empty arrays (defaults)
+        let content_minimal = r#"---
+id: TEST-DOC-002
+doc_type: guide
+---
+
+# Minimal Document
+"#;
+
+        let fm_min =
+            parse_front_matter(content_minimal).expect("should parse minimal front-matter");
+        assert_eq!(fm_min.id, "TEST-DOC-002");
+        assert_eq!(fm_min.doc_type, "guide");
+        assert!(fm_min.stories.is_empty());
+        assert!(fm_min.requirements.is_empty());
+        assert!(fm_min.acs.is_empty());
+        assert!(fm_min.adrs.is_empty());
+    }
+
+    #[test]
+    fn test_parse_front_matter_missing() {
+        let content = "# No Front Matter\n\nJust content.";
+        let result = parse_front_matter(content);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_parse_front_matter_malformed() {
+        let content = "---\nid: TEST\ndoc_type: guide\n# Missing closing ---\n";
+        let result = parse_front_matter(content);
+        assert!(result.is_err());
+    }
 }

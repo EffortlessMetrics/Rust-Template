@@ -260,6 +260,16 @@ stories:
             tests:
               - { type: integration, tag: "@AC-PLT-010", file: "specs/features/xtask_devex.feature" }
 
+          - id: AC-PLT-DOC-INDEX-FRONTMATTER
+            text: >
+              `cargo xtask docs-check` validates bidirectional alignment between doc_index.yaml entries
+              and document front-matter (stories, requirements, acs, adrs). Items in index must be in
+              front-matter and vice versa. (Docs-as-Code v3)
+            tags: [kernel]
+            must_have_ac: true
+            tests:
+              - { type: unit, tag: "test_doc_index_frontmatter_sync", module: "commands::docs_check", file: "crates/xtask/src/commands/docs_check.rs" }
+
       - id: REQ-PLT-RELEASE-SAFETY
         title: "Releases are guided, validated, and never skip steps"
         tags: [platform, release]

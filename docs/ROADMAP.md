@@ -77,13 +77,13 @@ The kernel has reached a stable, forkable baseline. All acceptance criteria pass
 
 | Metric | Value |
 |--------|-------|
-| **Kernel ACs** | ~60 (all PASS) |
-| **Non-kernel ACs** | ~20 (soft gates) |
+| **Kernel ACs** | All passing (see `docs/feature_status_notes.md` for current count) |
+| **Non-kernel ACs** | Soft gates (tracked, not enforced) |
 | **Selftest Gates** | 10/10 passing |
 | **Policy Tests** | 22/22 passing |
 | **BDD Scenarios** | 170+ passing |
 
-> **Note:** Selftest only gates on **kernel ACs** (`must_have_ac: true`). Non-kernel ACs are tracked as soft gates and may be failing or unknown without blocking merges. See `docs/feature_status_notes.md` for details.
+> **Note:** Selftest only gates on **kernel ACs** (`must_have_ac: true`). Non-kernel ACs are tracked as soft gates and may be failing or unknown without blocking merges. See `docs/feature_status_notes.md` for exact counts and AC classification details.
 
 ### 2.2 What's Working
 
@@ -195,12 +195,12 @@ The following gaps have been addressed:
 
 | Item | Status | Notes |
 |------|--------|-------|
-| **BDD harness semantics** | ✅ Complete | `bdd.rs` centralizes success detection via `is_bdd_success()` |
-| **Agent Hint schema** | ✅ Complete | AC-TPL-AGENT-HINTS-SCHEMA + BDD + unit tests |
-| **Bundle manifest v1.5** | ✅ Complete | `bundle.yaml` links REQs/ACs/tests; soft scope audit |
-| **SPEC_ROOT contract** | ✅ Complete | `spec_root()` honors SPEC_ROOT env var; unit-tested |
+| **BDD harness semantics** | ✅ Complete | `bdd.rs` + `is_bdd_success()` (`AC-TPL-BDD-EXIT-CODES`) |
+| **Agent Hint schema** | ✅ Complete | `AC-TPL-AGENT-HINTS-SCHEMA` + BDD + unit tests |
+| **Bundle manifest v1.5** | ✅ Complete | `AC-TPL-BUNDLE-MANIFEST-LINKED` + `AC-TPL-BUNDLE-MINIMAL-SCOPE` |
+| **SPEC_ROOT contract** | ✅ Complete | `AC-TPL-XTASK-SPEC-ROOT` — `spec_root()` honors env var |
 | **Pre-commit auto-fix** | ✅ Complete | Hook runs `xtask precommit`, auto-fixes fmt/skills/feature_status |
-| **Docs-as-Code v2** | ✅ Complete | `docs-check` validates 8 consumer files against spec_ledger; `xtask version --json` canonical source |
+| **Docs-as-Code v2** | ✅ Complete | `AC-PLT-009` + `AC-PLT-010` — see `docs/explanation/TEMPLATE-CONTRACTS.md` |
 
 ---
 
@@ -215,11 +215,13 @@ Only a few items remain - all now have documentation or are external dependencie
 | **Branch protection** | CI can be bypassed | `docs/how-to/setup-branch-protection.md` | Run `.github/scripts/setup-branch-protection.sh` |
 | **Tag signing** | Releases not cryptographically verified | `docs/how-to/setup-tag-signing.md` | Set up GPG key and configure Git |
 
-### 4.2 Validation Gap
+### 4.2 External Validation (Out of Scope for This Repo)
 
 | Gap | Impact | Effort | Notes |
 |-----|--------|--------|-------|
-| **No second service validation** | Template assumptions untested in real use | High | Requires building a real service from the template |
+| **No second service built yet** | Template assumptions untested in a real fork | High | Requires building a service in another repo using this template as a baseline |
+
+> This is intentionally **outside the scope of this repository**. This roadmap tracks it as a recommended next step for adopters, not as work to be done here. The kernel is complete; validation happens in forks.
 
 ### 4.3 External Dependencies
 
@@ -227,12 +229,20 @@ Only a few items remain - all now have documentation or are external dependencie
 |------|--------|-------|
 | **`lazy-trees` Nix warning** | Cosmetic noise in output | Deprecated Nix 2.30+ setting in Determinate installer config. Documented in TROUBLESHOOTING.md with fix instructions. Safe to ignore. |
 
-### 4.4 v3.4.0 Backlog (Planned)
+### 4.4 v3.4.0 Completed
 
 | Item | Description | Notes |
 |------|-------------|-------|
-| **Docs-as-Code v3** | Validate `doc_index.yaml` entries match document frontmatter | Builds on v2 version alignment; likely extension of `REQ-PLT-DOCS-CONSISTENCY` with new AC (e.g., AC-PLT-0XX) |
-| **Feature-status invariants** | Light checks that `feature_status.md` references correct version | Extension to `AC-PLT-010` or new AC to validate header/version alignment |
+| **Docs-as-Code v3** | Validate `doc_index.yaml` entries match document frontmatter | `AC-PLT-DOC-INDEX-FRONTMATTER` — bidirectional sync validation |
+
+### 4.5 v3.4.0 Backlog (Remaining)
+
+| Item | Description | Notes |
+|------|-------------|-------|
+| **Feature-status invariants** | Light checks that `feature_status.md` references correct version | Extension to `AC-PLT-010` |
+| **Example fork CI** | `examples/fork-customization/` passes selftest in CI | `AC-TPL-EXAMPLE-FORK-BUILDS` wired and green |
+
+> **Spec wiring:** Remaining v3.4.0 items will be wired into `specs/spec_ledger.yaml`. Feature-status invariants extend `AC-PLT-010`. Example fork validation is tracked as `AC-TPL-EXAMPLE-FORK-BUILDS`.
 
 ---
 
@@ -247,7 +257,12 @@ Only a few items remain - all now have documentation or are external dependencie
 1. Configure GitHub branch protection (require selftest, no direct pushes)
    - **Run:** `.github/scripts/setup-branch-protection.sh`
    - **Docs:** `docs/how-to/setup-branch-protection.md`
-2. Tag `v3.3.4-kernel` as the stable baseline (see `cargo xtask version --json | jq -r .kernel_tag`)
+2. Tag the current kernel:
+
+   ```bash
+   git tag "$(cargo xtask version --json | jq -r .kernel_tag)" -m "Kernel closure"
+   ```
+
 3. Fork for Knowledge Hub or other service
 4. Capture friction in `FRICTION_LOG.md`
 5. Only update kernel when friction is systematic
@@ -266,7 +281,9 @@ Only a few items remain - all now have documentation or are external dependencie
 - Documentation incomplete
 - May hit issues in first fork
 
-### 5.2 Option B: Consolidate (Fill Documentation Gaps)
+### 5.2 Option B: Consolidate (Fill Documentation Gaps) — *Historical*
+
+> **Note:** Option B was largely executed during the 3.3.3 → 3.3.4 cycle. It's kept here to explain how we closed the documentation gaps.
 
 **Goal:** Complete documentation before first fork.
 
@@ -293,19 +310,22 @@ Only a few items remain - all now have documentation or are external dependencie
 - Documentation may not match reality
 - Speculative improvements
 
-### 5.3 Option C: Validate (Second Service First)
+### 5.3 Option C: Validate (Second Service First) — **Adoption Track, Not Kernel Work**
 
-**Goal:** Prove the template works before declaring it ready.
+> This option describes how to use the template in a **separate service repository**.
+> It does not require changes to this repository once `v3.3.4-kernel` is tagged.
 
-**Actions:**
+**Goal:** Prove the template works by building a real service from it.
 
-1. Fork for Knowledge Hub immediately
+**Actions (in the fork repo, not here):**
+
+1. Fork for Knowledge Hub or other service
 2. Document friction as it occurs
-3. Fix kernel issues discovered during use
-4. Extract patterns into docs after validation
-5. Re-baseline kernel at v3.4.0
+3. Report kernel issues back via `docs/how-to/report-fork-feedback.md`
+4. Extract patterns into fork docs after validation
+5. Kernel improvements (if any) land in v3.4.0 based on real friction
 
-**Timeline:** 2-4 sessions
+**Timeline:** 2-4 sessions (in the fork)
 
 **Pros:**
 
@@ -321,7 +341,10 @@ Only a few items remain - all now have documentation or are external dependencie
 
 ---
 
-## 6. Recommended Path
+## 6. Recommended Path (For Adopters)
+
+> **Scope note:** This section describes what happens **in forks**, not in this repo.
+> The kernel (v3.3.4) is complete. Validation happens when you use it.
 
 **Option C (Validate) is recommended** for these reasons:
 
@@ -331,10 +354,10 @@ Only a few items remain - all now have documentation or are external dependencie
 
 3. **Friction is valuable signal.** The first fork will generate a friction log that tells us exactly what to fix.
 
-### Recommended Sequence
+### Recommended Sequence (In Your Fork)
 
 ```text
-Week 1: Fork for Knowledge Hub
+Week 1: Fork for your service
         - Use only documented flows and commands
         - Capture friction immediately
         - Don't fix kernel, just document
@@ -347,12 +370,11 @@ Week 2: Service development
 Week 3: Kernel retrospective
         - Review friction log
         - Categorize: kernel fix vs. service-specific vs. doc-only
-        - Batch kernel fixes into v3.4.0
+        - Report kernel issues via docs/how-to/report-fork-feedback.md
 
 Week 4: Documentation
         - Write docs based on actual experience
-        - Update ROADMAP with lessons
-        - Release v3.4.0 with fixes + docs
+        - Kernel fixes (if any) batch into v3.4.0 here
 ```
 
 ---
@@ -423,14 +445,29 @@ cargo xtask release-bundle X.Y.Z
 
 ## 8. Definition of Done
 
-The kernel is "fully implemented" when:
+### 8.1 Kernel Definition of Done (This Repo)
+
+The template kernel is "done" when:
+
+1. **All kernel ACs pass** (`must_have_ac: true` in `spec_ledger.yaml`)
+2. **`cargo xtask selftest` is green** on Tier-1 (Nix devshell) and enforced in CI
+3. **Docs-as-Code invariants hold:**
+   - Version alignment (`AC-PLT-009`, `AC-PLT-010`)
+   - `doc_index.yaml` ↔ front-matter sync (`AC-PLT-DOC-INDEX-FRONTMATTER`)
+4. **Example fork passes** (`examples/fork-customization/`) passes selftest in CI (`AC-TPL-EXAMPLE-FORK-BUILDS`)
+
+**Status:** v3.3.4 meets criteria 1-3. Criterion 4 is tracked in v3.4.0 backlog.
+
+### 8.2 Adoption Definition of Done (Other Repos)
+
+The template is "production ready" when:
 
 1. **At least one service has been built from it** and reached production
 2. **Friction log from that service is addressed** (or documented as out-of-scope)
 3. **Platform teams can integrate it** via documented APIs and artifacts
 4. **New teams can onboard in < 1 hour** with written docs alone
 
-Until then, it's a stable baseline (v3.3.4) suitable for early adopters who accept some friction.
+> This is evaluated in forks, not in this repository. Until adoption criteria are met, v3.3.4 remains a stable baseline suitable for early adopters who accept some friction.
 
 ---
 

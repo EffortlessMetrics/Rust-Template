@@ -1,15 +1,56 @@
+//! Filesystem-backed governance repository for task state.
+//!
+//! This crate provides an implementation of `GovernanceRepository` that
+//! reads static task definitions from the spec tree and persists task
+//! status to a separate `tasks_state.yaml` file on disk.
+//!
+//! It is deliberately simple and transparent:
+//! - `tasks_def` exposes read-only access to the canonical task definitions
+//!   derived from `specs/tasks.yaml`.
+//! - `tasks_state` persists `TaskStatus` updates without rewriting the spec.
+//!
+//! This is the "write layer" for the Rust-as-Spec platform cell: the kernel
+//! can enforce governance rules while leaving the fork's task YAML under
+//! human control.
+
+/// Helpers for loading canonical task definitions from the spec tree.
+///
+/// This module treats `specs/tasks.yaml` as the source of truth for
+/// task metadata (id, requirement, ACs, owner, labels, docs).
 pub mod tasks_def;
+
+/// Helpers for reading and writing task status to `tasks_state.yaml`.
+///
+/// This module keeps mutable state (Todo/InProgress/Done, etc.)
+/// separate from the immutable spec so that governance writes do not
+/// clobber human-authored YAML.
 pub mod tasks_state;
 
 use business_core::governance::{GovernanceError, GovernanceRepository, TaskId, TaskStatus};
 use std::path::PathBuf;
 
+/// Filesystem-backed implementation of the governance repository.
+///
+/// `FsGovernanceRepository` reads task definitions from the spec tree and
+/// persists task status to `tasks_state.yaml` under the same root. It is
+/// intended for:
+/// - local development
+/// - acceptance tests
+/// - simple deployments that want transparent YAML state
+///
+/// For more advanced storage (database, API), implement `GovernanceRepository`
+/// in a separate crate.
 pub struct FsGovernanceRepository {
     state_file_path: PathBuf,
     tasks_file_path: PathBuf,
 }
 
 impl FsGovernanceRepository {
+    /// Create a new filesystem governance repository rooted at `specs_dir`.
+    ///
+    /// The `specs_dir` should be the directory that contains `specs/tasks.yaml`
+    /// and the companion `tasks_state.yaml` file. All read/write operations
+    /// are resolved relative to this path.
     pub fn new(specs_dir: PathBuf) -> Self {
         Self {
             state_file_path: specs_dir.join("tasks_state.yaml"),
