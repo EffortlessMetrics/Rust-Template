@@ -417,6 +417,9 @@ enum Commands {
     ReleasePrepare {
         /// Version to release (e.g., 2.5.0)
         version: String,
+        /// Preview changes without applying them
+        #[arg(long)]
+        dry_run: bool,
     },
 
     /// Generate release evidence bundle
@@ -657,7 +660,9 @@ fn main() -> Result<()> {
         Commands::PinActions => commands::pin_actions::run(),
         Commands::PolicyTest => commands::policy_test::run().map_err(|e| anyhow::anyhow!("{}", e)),
         Commands::Quickstart => commands::quickstart::run(),
-        Commands::ReleasePrepare { version } => commands::release_prepare::run(&version),
+        Commands::ReleasePrepare { version, dry_run } => {
+            commands::release_prepare::run(&version, dry_run)
+        }
         Commands::ReleaseBundle { version } => commands::release_bundle::run(&version),
         Commands::ReleaseVerify => commands::release_verify::run(),
         Commands::SbomLocal => commands::sbom_local::run(),
