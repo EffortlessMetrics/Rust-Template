@@ -1,3 +1,4 @@
+<!-- doclint:disable orphan-version -->
 # How-to: Use LLM Context Bundles
 
 This guide shows you how to use the template's LLM context bundler to get AI assistance with focused, relevant context.

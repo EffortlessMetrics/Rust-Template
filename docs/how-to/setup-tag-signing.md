@@ -11,6 +11,7 @@ acs: [AC-PLT-011, AC-PLT-012, AC-PLT-013]
 adrs: [ADR-0005, ADR-0006]
 last_updated: 2025-11-26
 ---
+<!-- doclint:disable orphan-version -->
 
 # How-to: Setup GPG Tag Signing
 

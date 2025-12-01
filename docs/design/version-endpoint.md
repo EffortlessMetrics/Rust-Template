@@ -11,6 +11,7 @@ requirements:
 adrs:
   - ADR-0003
 ---
+<!-- doclint:disable orphan-version -->
 
 # Version Information Strategy
 

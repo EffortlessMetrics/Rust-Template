@@ -23,7 +23,7 @@ last_updated: 2025-12-01
 
 # JSON Contracts for CLI and Platform APIs
 
-**Template Version:** v3.3.4
+**Template Version:** v3.3.6
 
 This document defines the JSON contracts for all machine-readable outputs from the Rust-as-Spec platform cell. These contracts enable AI agents, IDPs (Internal Developer Portals), and automation tools to integrate with the platform reliably.
 
@@ -60,7 +60,7 @@ Returns AC (Acceptance Criteria) health status.
 **Top-level shape:**
 ```json
 {
-  "template_version": "3.3.4",
+  "template_version": "3.3.6",
   "timestamp": "2025-12-01T10:00:00Z",
   "summary": {
     "total": 85,
@@ -114,7 +114,7 @@ Returns version and build information.
 **Top-level shape:**
 ```json
 {
-  "version": "3.3.4",
+  "version": "3.3.6",
   "git_sha": "abc123def",
   "build_date": "2025-12-01"
 }
@@ -204,7 +204,7 @@ Returns overall platform health and governance state.
 {
   "service": {
     "service_id": "rust-template",
-    "template_version": "3.3.4",
+    "template_version": "3.3.6",
     "display_name": "My Service",
     "description": "Service description",
     "links": {},
@@ -315,7 +315,7 @@ Returns documentation index with health information.
 ```json
 {
   "schema_version": "1.0",
-  "template_version": "3.3.4",
+  "template_version": "3.3.6",
   "docs": [
     {
       "id": "DESIGN-TPL-HEALTH-001",

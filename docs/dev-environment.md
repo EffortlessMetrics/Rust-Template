@@ -1,6 +1,8 @@
+<!-- doclint:disable orphan-version -->
+<!-- External: This document references external tool versions that are not tied to template version. -->
 # Development Environment
 
-**Version**: v2.4.0
+**Version**: v3.3.6
 **Last Updated**: 2025-11-18
 
 ---

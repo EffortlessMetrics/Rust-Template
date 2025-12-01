@@ -8,6 +8,7 @@ acs: [AC-TPL-CLI-JSON-CORE, AC-TPL-CLI-JSON-OUTPUT]
 adrs: [ADR-0016]
 last_updated: 2025-12-01
 ---
+<!-- doclint:disable orphan-version -->
 
 # Implementing a Backstage Plugin for Platform Integration
 

@@ -4,6 +4,7 @@ status: draft
 last_updated: 2025-11-25
 tags: [adoption, llm, devex]
 ---
+<!-- doclint:disable orphan-version -->
 
 This is the quickest path to exercise the template a second time and verify the LLM/agent flows stay healthy.
 

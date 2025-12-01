@@ -1,3 +1,5 @@
+<!-- doclint:disable orphan-version -->
+<!-- ADR: This document contains historical version references as part of the decision record. -->
 # ADR-0002: Nix-First Development Environment
 
 **Status**: Accepted

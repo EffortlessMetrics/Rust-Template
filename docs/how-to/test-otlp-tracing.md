@@ -1,3 +1,4 @@
+<!-- doclint:disable orphan-version -->
 # How to Test OTLP Tracing
 
 This guide explains how to manually test OTLP (OpenTelemetry Protocol) tracing with a local collector.

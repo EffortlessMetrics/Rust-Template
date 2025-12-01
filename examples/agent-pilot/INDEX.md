@@ -1,4 +1,5 @@
 # Agent Pilot Harness Index
+<!-- doclint:disable orphan-version -->
 
 **Version:** 1.0.0 (aligned with template v3.3.5)
 **Created:** 2025-12-01

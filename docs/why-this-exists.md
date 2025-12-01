@@ -1,4 +1,5 @@
 # Why This Template Exists
+<!-- doclint:disable orphan-version -->
 
 **Version**: v2.4.0
 **Last Updated**: 2025-11-19

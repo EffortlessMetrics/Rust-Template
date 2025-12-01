@@ -14,6 +14,7 @@ acs:
 adrs: [ADR-0016]
 last_updated: 2025-12-01
 ---
+<!-- doclint:disable orphan-version -->
 
 # Integrating Platform Status with Port.io
 
@@ -39,7 +40,7 @@ Before starting, ensure you have:
 2. **Port.io API credentials**: Client ID and secret from Port.io settings
 3. **Platform service running**: Your Rust-as-Spec service deployed and accessible
 4. **Network access**: Port.io can reach your platform's `/platform/*` endpoints (or use GitHub Actions for polling)
-5. **Platform version**: Template v3.3.5 or later (for stable JSON contracts)
+5. **Platform version**: Template v3.3.6 or later (for stable JSON contracts)
 
 **Verify prerequisites:**
 ```bash
@@ -789,7 +790,7 @@ curl http://localhost:8080/platform/status | jq '.service.service_id'
 # Inspect actual response
 curl http://localhost:8080/platform/status | jq '.'
 
-# Check template version (must be v3.3.5+)
+# Check template version (must be v3.3.6+)
 curl http://localhost:8080/platform/status | jq '.service.template_version'
 ```
 

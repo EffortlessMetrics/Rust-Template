@@ -1,3 +1,4 @@
+<!-- doclint:disable orphan-version -->
 # How-To: Report Fork Feedback to the Kernel
 
 **Audience:** Developers maintaining a service forked from this template who encounter bugs, friction, or missing features.

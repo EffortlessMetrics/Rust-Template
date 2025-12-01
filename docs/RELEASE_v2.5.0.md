@@ -1,3 +1,6 @@
+<!-- doclint:disable orphan-version -->
+<!-- Historical: This document describes a completed release and version references are intentionally preserved. -->
+
 # v2.5.0 Release Tag Instructions
 
 ## Status

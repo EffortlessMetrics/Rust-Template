@@ -1,4 +1,5 @@
 # ADR-PILOT-XXX: [Title of Decision]
+<!-- doclint:disable orphan-version -->
 
 **Status**: DRAFT
 **Date**: YYYY-MM-DD

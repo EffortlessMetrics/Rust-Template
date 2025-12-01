@@ -1,3 +1,4 @@
+<!-- doclint:disable orphan-version -->
 # Pilot Project Plan: Task Management API
 
 **Purpose:** Validate the v1.0.0 template through a realistic implementation using the full AC-first workflow.

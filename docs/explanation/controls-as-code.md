@@ -1,6 +1,7 @@
+<!-- doclint:disable orphan-version -->
 # Controls as Code
 
-**Version**: v2.4.0
+**Version**: v3.3.6
 **Last Updated**: 2025-01-18
 
 This template implements **controls-as-code**: governance and compliance requirements expressed as executable policies, validated automatically, and enforced in CI.

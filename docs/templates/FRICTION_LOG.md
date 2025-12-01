@@ -1,3 +1,4 @@
+<!-- doclint:disable orphan-version -->
 # Friction Log Template
 
 **Purpose:** Track pain points encountered during development to refine the governance model

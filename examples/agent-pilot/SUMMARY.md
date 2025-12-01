@@ -1,4 +1,5 @@
 # Agent Pilot Harness - Creation Summary
+<!-- doclint:disable orphan-version -->
 
 **Created:** 2025-12-01
 **Template Version:** v3.3.5

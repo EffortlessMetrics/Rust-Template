@@ -10,6 +10,8 @@ requirements: [REQ-TPL-PLATFORM-INTROSPECTION, REQ-TPL-AI-IDP-COMPAT]
 acs: [AC-TPL-CLI-JSON-CORE, AC-TPL-CLI-JSON-OUTPUT, AC-TPL-AGENT-HINTS-SCHEMA]
 adrs: []
 ---
+<!-- doclint:disable orphan-version -->
+<!-- ADR: This document contains historical version references as part of the decision record. -->
 
 # ADR-0016: IDP Tile Architecture and JSON Contract Strategy
 

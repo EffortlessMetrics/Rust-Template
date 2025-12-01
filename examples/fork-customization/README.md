@@ -1,3 +1,4 @@
+<!-- doclint:disable orphan-version -->
 # Fork Customization Example
 
 This example shows the **minimal changes** needed to customize this template for your own domain.

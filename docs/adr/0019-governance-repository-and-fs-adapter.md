@@ -11,6 +11,8 @@ acs: [AC-TPL-GOV-WRITE-TASK-STATUS-200]
 adrs: [ADR-0001]
 last_updated: 2025-11-26
 ---
+<!-- doclint:disable orphan-version -->
+<!-- ADR: This document contains historical version references as part of the decision record. -->
 
 # ADR-0019: Governance Repository and FS Adapter
 

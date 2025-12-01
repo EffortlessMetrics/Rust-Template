@@ -1295,8 +1295,20 @@ fn check_orphaned_versions() -> Result<()> {
             let content = fs::read_to_string(&file_path)
                 .with_context(|| format!("Failed to read {}", file_path.display()))?;
 
-            for (line_num, line) in content.lines().enumerate() {
-                // Check for suppression comment
+            // Check for file-wide suppression comment in first 25 lines (covers frontmatter + comment)
+            let lines: Vec<&str> = content.lines().collect();
+            let file_suppressed = lines
+                .iter()
+                .take(25) // Check first 25 lines for suppression (covers typical frontmatter)
+                .any(|line| line.contains(md_suppress) || line.contains(yaml_suppress));
+
+            if file_suppressed {
+                // Entire file is suppressed from orphan-version checking
+                continue;
+            }
+
+            for (line_num, line) in lines.iter().enumerate() {
+                // Check for inline suppression comment (per-line)
                 if line.contains(md_suppress) || line.contains(yaml_suppress) {
                     continue;
                 }

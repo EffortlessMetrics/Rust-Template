@@ -1,6 +1,8 @@
+<!-- doclint:disable orphan-version -->
+<!-- External: This document references external tool versions that are not tied to template version. -->
 # The Missing Manual: Operational Realities
 
-**Audience:** Teams adopting this template  
+**Audience:** Teams adopting this template
 **Purpose:** Critical context and constraints that aren't obvious from code alone
 
 This document captures the **"things you'll wish someone told you"** before starting. Read this before your first pilot.

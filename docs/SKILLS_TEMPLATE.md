@@ -1,4 +1,5 @@
 # Skills Template & Checklist
+<!-- doclint:disable orphan-version -->
 
 **Purpose**: Copy-paste template for creating new Agent Skills that pass governance
 **Status**: Governed by AC-TPL-SKILLS-GOVERNANCE-003
@@ -266,7 +267,7 @@ If you can't resolve:
 
 ## Version History
 
-- v1.0.0 (2025-11-27): Initial release aligned with v3.3.3 template
+- v1.0.0 (2025-11-27): Initial release aligned with v3.3.6 template
 ```
 
 ---

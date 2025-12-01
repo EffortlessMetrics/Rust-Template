@@ -2,7 +2,7 @@
 id: REF-CI-WORKFLOWS-001
 title: "CI Workflows Reference Guide"
 doc_type: reference
-version: 3.3.4
+version: 3.3.6
 stories: [US-TPL-PLT-001]
 requirements:
   - REQ-PLT-DEVEX-CONTRACT
@@ -474,7 +474,7 @@ cargo update -p <dependency-name>
 
 #### `ci-supply-chain.yml` - SBOM and Provenance
 **Purpose:** Generate SBOM and sign release artifacts
-**Triggers:** Git tags matching `v*.*.*` (e.g., `v3.3.3`)
+**Triggers:** Git tags matching `v*.*.*` (e.g., `v3.3.6`)
 **Runtime:** 15-20 minutes
 **Blocks Merges:** N/A (release workflow)
 
@@ -484,8 +484,8 @@ cargo update -p <dependency-name>
 3. **Source Tarball:** Signed release archive
 
 **Artifacts:**
-- `rust-template-v3.3.3.tar.gz` - Source archive
-- `rust-template-v3.3.3-sbom.spdx.json` - SBOM
+- `rust-template-v3.3.6.tar.gz` - Source archive
+- `rust-template-v3.3.6-sbom.spdx.json` - SBOM
 - Provenance attestations (GitHub Attestations API)
 
 **Permissions Required:**
@@ -496,8 +496,8 @@ cargo update -p <dependency-name>
 **How to use:**
 ```bash
 # Create release
-git tag v3.3.3
-git push origin v3.3.3
+git tag v3.3.6
+git push origin v3.3.6
 
 # Workflow automatically:
 # - Builds release artifacts

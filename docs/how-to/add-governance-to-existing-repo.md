@@ -1,4 +1,5 @@
 # How To: Add Governance to an Existing Rust Repository
+<!-- doclint:disable orphan-version -->
 
 This guide shows you how to add the Rust Template's governance infrastructure to an **existing Rust project** without starting from scratch.
 
@@ -684,8 +685,8 @@ jobs:
       - name: Run policy tests
         run: |
           # Install conftest
-          wget https://github.com/open-policy-agent/conftest/releases/download/v0.56.0/conftest_0.56.0_Linux_x86_64.tar.gz
-          tar xzf conftest_0.56.0_Linux_x86_64.tar.gz
+          wget https://github.com/open-policy-agent/conftest/releases/download/v0.52.0/conftest_0.52.0_Linux_x86_64.tar.gz
+          tar xzf conftest_0.52.0_Linux_x86_64.tar.gz
           sudo mv conftest /usr/local/bin/
 
           # Run tests
@@ -723,7 +724,7 @@ governance:policies:
   stage: governance
   image: rust:latest
   before_script:
-    - wget -O /usr/local/bin/conftest https://github.com/open-policy-agent/conftest/releases/download/v0.56.0/conftest_0.56.0_Linux_x86_64
+    - wget -O /usr/local/bin/conftest https://github.com/open-policy-agent/conftest/releases/download/v0.52.0/conftest_0.52.0_Linux_x86_64
     - chmod +x /usr/local/bin/conftest
   script:
     - cargo run -p xtask -- policy-test
@@ -1053,8 +1054,8 @@ cargo run -p xtask -- policy-test
 brew install conftest
 
 # Linux
-wget https://github.com/open-policy-agent/conftest/releases/download/v0.56.0/conftest_0.56.0_Linux_x86_64.tar.gz
-tar xzf conftest_0.56.0_Linux_x86_64.tar.gz
+wget https://github.com/open-policy-agent/conftest/releases/download/v0.52.0/conftest_0.52.0_Linux_x86_64.tar.gz
+tar xzf conftest_0.52.0_Linux_x86_64.tar.gz
 sudo mv conftest /usr/local/bin/
 ```
 

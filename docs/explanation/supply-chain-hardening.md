@@ -11,10 +11,11 @@ acs: [AC-PLT-008, AC-PLT-012]
 adrs: [ADR-0006, ADR-0007]
 last_updated: 2025-11-26
 ---
+<!-- doclint:disable orphan-version -->
 
 # Supply Chain Hardening
 
-**Version**: v2.4.0
+**Version**: v3.3.6
 **Last Updated**: 2025-11-19
 
 This template implements **supply chain hardening** via SLSA v1.0 Level 2 provenance and SBOM generation, providing cryptographic proof that released artifacts match their source code.
@@ -27,7 +28,7 @@ For every tagged release (`v*.*.*`), the template generates:
 
 ### 1. Source Tarball
 
-**File**: `rust-template-v2.4.0.tar.gz`
+**File**: `rust-template-v3.3.6.tar.gz`
 
 **Purpose**: Reproducible source archive created via `git archive`.
 
@@ -44,10 +45,10 @@ For every tagged release (`v*.*.*`), the template generates:
 **Example**:
 ```bash
 # Download from GitHub Releases
-gh release download v2.4.0 --pattern 'rust-template-*.tar.gz'
+gh release download v3.3.6 --pattern 'rust-template-*.tar.gz'
 
 # Verify integrity
-sha256sum rust-template-v2.4.0.tar.gz
+sha256sum rust-template-v3.3.6.tar.gz
 # Compare against provenance attestation
 ```
 
@@ -55,7 +56,7 @@ sha256sum rust-template-v2.4.0.tar.gz
 
 ### 2. SBOM (Software Bill of Materials)
 
-**File**: `rust-template-v2.4.0-sbom.spdx.json`
+**File**: `rust-template-v3.3.6-sbom.spdx.json`
 
 **Format**: SPDX 2.3 (ISO/IEC 5962:2021 standard)
 
@@ -73,7 +74,7 @@ sha256sum rust-template-v2.4.0.tar.gz
   "spdxVersion": "SPDX-2.3",
   "dataLicense": "CC0-1.0",
   "SPDXID": "SPDXRef-DOCUMENT",
-  "name": "rust-template-v2.4.0",
+  "name": "rust-template-v3.3.6",
   "packages": [
     {
       "SPDXID": "SPDXRef-Package-tokio-1.40.0",
@@ -131,7 +132,7 @@ sha256sum rust-template-v2.4.0.tar.gz
 {
   "subject": [
     {
-      "name": "rust-template-v2.4.0.tar.gz",
+      "name": "rust-template-v3.3.6.tar.gz",
       "digest": {
         "sha256": "a3f8e9d2b1c4f5e6d7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0"
       }
@@ -149,14 +150,14 @@ sha256sum rust-template-v2.4.0.tar.gz
       "buildType": "https://slsa.dev/github-actions/v1",
       "externalParameters": {
         "workflow": {
-          "ref": "refs/tags/v2.4.0",
+          "ref": "refs/tags/v3.3.6",
           "repository": "https://github.com/EffortlessMetrics/Rust-Template",
           "path": ".github/workflows/ci-supply-chain.yml"
         }
       },
       "resolvedDependencies": [
         {
-          "uri": "git+https://github.com/EffortlessMetrics/Rust-Template@refs/tags/v2.4.0",
+          "uri": "git+https://github.com/EffortlessMetrics/Rust-Template@refs/tags/v3.3.6",
           "digest": {
             "sha1": "bca756c3d8e9f1a2b3c4d5e6f7a8b9c0d1e2f3a4"
           }
@@ -205,7 +206,7 @@ sha256sum rust-template-v2.4.0.tar.gz
 **Trigger**: Push git tag matching `v*.*.*`
 
 ```bash
-git tag v2.4.0
+git tag v3.3.6
 git push --tags
 # Workflow .github/workflows/ci-supply-chain.yml runs automatically
 ```
@@ -324,24 +325,24 @@ gh auth login
 
 **Download artifact**:
 ```bash
-gh release download v2.4.0 --pattern 'rust-template-*.tar.gz'
+gh release download v3.3.6 --pattern 'rust-template-*.tar.gz'
 ```
 
 **Verify provenance**:
 ```bash
-gh attestation verify rust-template-v2.4.0.tar.gz --owner EffortlessMetrics
+gh attestation verify rust-template-v3.3.6.tar.gz --owner EffortlessMetrics
 ```
 
 **Output**:
 ```
 ✓ Verification succeeded!
 
-Attestation subject name: rust-template-v2.4.0.tar.gz
+Attestation subject name: rust-template-v3.3.6.tar.gz
 Attestation subject digest: sha256:a3f8e9d2b1c4f5e6d7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0
 
 Build source repository: https://github.com/EffortlessMetrics/Rust-Template
 Build source commit: bca756c3d8e9f1a2b3c4d5e6f7a8b9c0d1e2f3a4
-Build workflow: .github/workflows/ci-supply-chain.yml@refs/tags/v2.4.0
+Build workflow: .github/workflows/ci-supply-chain.yml@refs/tags/v3.3.6
 ```
 
 **What this proves**:
@@ -365,24 +366,24 @@ go install github.com/slsa-framework/slsa-verifier/v2/cli/slsa-verifier@latest
 # GitHub Attestations API
 gh attestation download \
   --predicate-type https://slsa.dev/provenance/v1 \
-  --artifact rust-template-v2.4.0.tar.gz \
+  --artifact rust-template-v3.3.6.tar.gz \
   --output provenance.json
 ```
 
 **Verify**:
 ```bash
 slsa-verifier verify-artifact \
-  rust-template-v2.4.0.tar.gz \
+  rust-template-v3.3.6.tar.gz \
   --provenance-path provenance.json \
   --source-uri github.com/EffortlessMetrics/Rust-Template \
-  --source-tag v2.4.0
+  --source-tag v3.3.6
 ```
 
 **Output**:
 ```
 Verified signature against tlog entry index 12345 at URL: https://rekor.sigstore.dev/...
 Verified build using builder "https://github.com/slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@refs/tags/v1.0.0" at commit bca756c
-Verifying artifact rust-template-v2.4.0.tar.gz: PASSED
+Verifying artifact rust-template-v3.3.6.tar.gz: PASSED
 
 PASSED: Verified SLSA provenance
 ```
@@ -427,7 +428,7 @@ warn[msg] {
 **Usage**:
 ```bash
 # Before deploying artifact, validate provenance + SBOM
-conftest test -p policies/supply_chain.rego <(gh attestation verify rust-template-v2.4.0.tar.gz --format json)
+conftest test -p policies/supply_chain.rego <(gh attestation verify rust-template-v3.3.6.tar.gz --format json)
 ```
 
 **Use case**: Automated deployment gates, policy-as-code enforcement.
@@ -458,7 +459,7 @@ If you distribute compiled binaries (e.g., via GitHub Releases):
 
 **Verification**:
 ```bash
-gh release download v2.4.0 --pattern my-service
+gh release download v3.3.6 --pattern my-service
 gh attestation verify my-service --owner my-org
 ```
 
@@ -547,10 +548,10 @@ verified_provenance(image) {
 **Third-party scanners** (Grype, Snyk, etc.):
 ```bash
 # Download SBOM
-gh release download v2.4.0 --pattern '*-sbom.spdx.json'
+gh release download v3.3.6 --pattern '*-sbom.spdx.json'
 
 # Scan with Grype
-grype sbom:rust-template-v2.4.0-sbom.spdx.json
+grype sbom:rust-template-v3.3.6-sbom.spdx.json
 
 # Output:
 # NAME    INSTALLED  VULNERABILITY  SEVERITY

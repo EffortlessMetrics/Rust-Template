@@ -20,6 +20,8 @@ adrs: [ADR-0001, ADR-0004, ADR-0005]
 status: published
 last_updated: 2025-11-26
 ---
+<!-- doclint:disable orphan-version -->
+<!-- Illustrative: This document uses version examples for explanation purposes. -->
 
 # IDP Positioning: Integrating Platform Cells with Internal Developer Portals
 

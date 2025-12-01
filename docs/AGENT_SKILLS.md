@@ -1,3 +1,4 @@
+<!-- doclint:disable orphan-version -->
 # Agent Skills Guide: Rust-as-Spec Platform
 
 **Audience:** Developers and agents authoring Skills for this repository

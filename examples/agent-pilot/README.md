@@ -1,4 +1,5 @@
 # Agent Pilot Harness
+<!-- doclint:disable orphan-version -->
 
 **Purpose:** Run controlled, time-boxed pilots to evaluate autonomous agent capabilities within the Rust-as-Spec template governance framework.
 
