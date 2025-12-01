@@ -141,7 +141,7 @@ pub fn run() -> Result<()> {
 ///
 /// Treats `specs/spec_ledger.yaml.metadata.template_version` as the canonical version,
 /// and all other files as consumers that must match.
-fn check_version_alignment_v2() -> Result<()> {
+pub(crate) fn check_version_alignment_v2() -> Result<()> {
     // Step 1: Extract canonical version from spec_ledger
     let canonical_version = extract_version_from_ledger()?;
     if canonical_version == "unknown" {
@@ -549,7 +549,7 @@ struct DocFrontMatter {
     adrs: Vec<String>,
 }
 
-fn validate_doc_index() -> Result<()> {
+pub(crate) fn validate_doc_index() -> Result<()> {
     let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     let root = manifest_dir.parent().expect("workspace root").parent().expect("repo root");
     let index_path = root.join("specs/doc_index.yaml");
@@ -822,7 +822,7 @@ fn validate_service_policies() -> Result<()> {
 /// Validate feature_status.md header invariants (AC-PLT-010 extension)
 /// Ensures the generated file contains Template Version and Last Updated metadata
 /// that match the spec_ledger.yaml source of truth.
-fn validate_feature_status_invariants() -> Result<()> {
+pub(crate) fn validate_feature_status_invariants() -> Result<()> {
     let canonical_version = extract_version_from_ledger()?;
     if canonical_version == "unknown" {
         return Ok(()); // Can't validate if we can't extract canonical version

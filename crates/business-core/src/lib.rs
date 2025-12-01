@@ -1,15 +1,19 @@
-// Core business logic goes here
-//
-// This crate should contain:
-// - Domain entities and business rules
-// - Use case / application service logic
-// - Port definitions (traits for adapters to implement)
-//
-// Architecture principles:
-// - No dependencies on HTTP, database, or other adapters
-// - Adapters (app-http, app-db, etc.) call core, never the reverse
-// - Core defines ports (traits), adapters implement them
-//
+//! Core business logic for the Rust-as-Spec platform cell.
+//!
+//! This crate defines the domain model and governance traits used by the
+//! rest of the workspace, including:
+//! - `TaskRepository` – persistence boundary for task state
+//! - `Task` types (from `model` crate) – core task lifecycle
+//!
+//! Adapters (HTTP handlers, database drivers, event systems) implement these
+//! ports to provide concrete storage and transport. The kernel treats this crate
+//! as the source of truth for governance semantics.
+//!
+//! ## Architecture
+//!
+//! - No dependencies on HTTP, database, or other infrastructure adapters
+//! - Adapters (app-http, app-db, etc.) call core, never the reverse
+//! - Core defines ports (traits), adapters implement them
 
 pub mod ports {
     use model::Task;

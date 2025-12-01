@@ -85,6 +85,10 @@ enum Commands {
     #[command(next_help_heading = "✅ Validation Gates")]
     KernelSmoke,
 
+    /// Show aggregated kernel health (specs, docs, governance)
+    #[command(next_help_heading = "✅ Validation Gates")]
+    KernelStatus,
+
     /// Run full template self-test suite (8-step governance validation – run before PR)
     #[command(next_help_heading = "✅ Validation Gates")]
     Selftest,
@@ -646,6 +650,7 @@ fn main() -> Result<()> {
         Commands::SuggestNext(args) => commands::suggest_next::run(args),
         Commands::Selftest => commands::selftest::run_with_verbosity(verbosity),
         Commands::KernelSmoke => commands::kernel_smoke::run(),
+        Commands::KernelStatus => commands::kernel_status::run(),
         Commands::Status => commands::status::run(),
         Commands::FrictionList { status, severity, json } => {
             commands::friction::list_friction_entries(status.as_deref(), severity.as_deref(), json)
@@ -871,6 +876,7 @@ pub fn all_command_names() -> Vec<&'static str> {
         "sbom-local",
         "quickstart",
         "selftest",
+        "kernel-status",
         "skills-fmt",
         "skills-lint",
         "agents-lint",

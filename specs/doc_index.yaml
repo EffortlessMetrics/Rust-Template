@@ -649,6 +649,16 @@ docs:
     acs: [AC-TPL-OVERRIDE-TRACEABLE]
     adrs: [ADR-0005]
 
+  # Kernel Maintenance How-To Guide
+  - id: GUIDE-TPL-KERNEL-MAINT-001
+    file: docs/how-to/maintain-kernel.md
+    title: "How to Maintain the Kernel"
+    doc_type: how_to
+    stories: [US-TPL-PLT-001]
+    requirements: [REQ-PLT-DOCS-CONSISTENCY, REQ-PLT-DEVEX-CONTRACT]
+    acs: [AC-PLT-009, AC-PLT-010]
+    adrs: [ADR-0005]
+
   # AC Governance Framework
   - id: DESIGN-PLT-AC-GOVERNANCE-001
     file: docs/design/ac-governance.md
