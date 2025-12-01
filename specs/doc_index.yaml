@@ -889,3 +889,53 @@ docs:
     acs: [AC-TPL-BUNDLE-MINIMAL-SCOPE]
     adrs: []
 
+  # First Fork Runbook
+  - id: GUIDE-TPL-FIRST-FORK-001
+    file: docs/how-to/FIRST_FORK.md
+    title: "First Fork Runbook"
+    doc_type: how-to
+    stories: [US-TPL-PLT-001]
+    requirements: [REQ-PLT-ONBOARDING]
+    acs: [AC-PLT-001, AC-PLT-008]
+    adrs: []
+
+  # Change an Acceptance Criterion
+  - id: GUIDE-TPL-CHANGE-AC-001
+    file: docs/how-to/change-acceptance-criterion.md
+    title: "Change an Acceptance Criterion"
+    doc_type: how-to
+    stories: [US-TPL-PLT-001]
+    requirements: [REQ-PLT-AC-MANAGEMENT]
+    acs: [AC-PLT-003, AC-PLT-004]
+    adrs: [ADR-0003]
+
+  # Integrate with IDP or Agent
+  - id: GUIDE-TPL-INTEGRATE-IDP-001
+    file: docs/how-to/integrate-idp-or-agent.md
+    title: "Integrate with IDP or Agent"
+    doc_type: how-to
+    stories: [US-TPL-PLT-001]
+    requirements: [REQ-PLT-PLATFORM-APIS]
+    acs: [AC-PLT-006, AC-PLT-019, AC-PLT-024]
+    adrs: [ADR-0004]
+
+  # Environment Setup & Platform Support
+  - id: REF-TPL-ENVIRONMENT-001
+    file: docs/reference/environment.md
+    title: "Environment Setup & Platform Support"
+    doc_type: reference
+    stories: [US-TPL-PLT-001]
+    requirements: [REQ-PLT-DEVEX-CONTRACT, REQ-PLT-NIX-DEVSHELL]
+    acs: [AC-PLT-008, AC-PLT-012]
+    adrs: [ADR-0002, ADR-0003]
+
+  # Documentation Sources and Governance
+  - id: REF-TPL-DOC-SOURCES-001
+    file: docs/reference/doc-sources.md
+    title: "Documentation Sources and Governance"
+    doc_type: reference
+    stories: [US-TPL-PLT-001]
+    requirements: [REQ-PLT-AC-MANAGEMENT]
+    acs: [AC-PLT-003, AC-PLT-004]
+    adrs: []
+

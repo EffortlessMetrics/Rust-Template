@@ -18,6 +18,7 @@ pub mod deploy;
 pub mod design_new;
 pub mod dev_up;
 pub mod docs_check;
+pub mod docs_frontmatter_sync;
 pub mod doctor;
 pub mod fmt_all;
 pub mod fork;

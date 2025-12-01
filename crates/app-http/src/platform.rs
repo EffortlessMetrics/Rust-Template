@@ -14,6 +14,7 @@ use std::fs;
 
 mod forks;
 mod friction;
+mod idp;
 mod questions;
 mod ui;
 
@@ -34,6 +35,7 @@ pub fn router(state: AppState) -> Router<AppState> {
         .merge(friction::router())
         .merge(questions::router())
         .merge(forks::router())
+        .merge(idp::router())
         .with_state(state)
 }
 

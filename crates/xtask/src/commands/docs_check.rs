@@ -2,7 +2,7 @@ use anyhow::{Context, Result};
 use colored::Colorize;
 use serde::Deserialize;
 use std::fs;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 /// Version alignment result for a single file
 #[derive(Debug)]
@@ -61,13 +61,26 @@ pub fn run() -> Result<()> {
         }
     }
 
-    // Check Docs-as-Spec validation
+    // Check Docs-as-Spec validation (front-matter sync - HARD GATE)
     print!("Doc index & front-matter... ");
     match validate_doc_index() {
         Ok(_) => println!("{}", "✓ Consistent".green()),
         Err(e) => {
             println!("{}", "✗ Issues found".red());
             eprintln!("  {}", e);
+            eprintln!();
+            eprintln!("{}", "To fix front-matter mismatches:".bold());
+            eprintln!(
+                "  1. Edit {} to reflect desired doc metadata",
+                "specs/doc_index.yaml".cyan()
+            );
+            eprintln!(
+                "  2. Run {} to sync front-matter",
+                "cargo xtask docs-frontmatter-sync --fix".cyan()
+            );
+            eprintln!("  3. Commit the updated doc files");
+            eprintln!();
+            eprintln!("Note: Front-matter must match doc_index.yaml exactly (bidirectional).");
             issues += 1;
         }
     }
@@ -143,6 +156,17 @@ pub fn run() -> Result<()> {
         Ok(_) => println!("{}", "✓ Valid".green()),
         Err(e) => {
             println!("{}", "✗ Issues found".red());
+            eprintln!("  {}", e);
+            issues += 1;
+        }
+    }
+
+    // Check for orphaned version strings (AC-TPL-VERSION-MANIFEST extension)
+    print!("Orphaned version strings... ");
+    match check_orphaned_versions() {
+        Ok(_) => println!("{}", "✓ No orphans".green()),
+        Err(e) => {
+            println!("{}", "✗ Orphans found".red());
             eprintln!("  {}", e);
             issues += 1;
         }
@@ -712,6 +736,52 @@ pub(crate) fn validate_doc_index() -> Result<()> {
         }
     }
 
+    // Check for orphaned docs: docs with front-matter but not in the index
+    // Scan docs/ directory for markdown files with front-matter that aren't registered
+    let indexed_files: std::collections::HashSet<String> =
+        index.docs.iter().map(|e| e.file.clone()).collect();
+
+    for docs_dir in [
+        "docs",
+        "docs/adr",
+        "docs/design",
+        "docs/how-to",
+        "docs/explanation",
+        "docs/reference",
+        "docs/plans",
+        "docs/runbooks",
+    ] {
+        let dir_path = root.join(docs_dir);
+        if !dir_path.exists() {
+            continue;
+        }
+
+        let Ok(entries) = fs::read_dir(&dir_path) else { continue };
+        for entry in entries.flatten() {
+            let path = entry.path();
+            if !path.is_file() || path.extension().and_then(|s| s.to_str()) != Some("md") {
+                continue;
+            }
+
+            // Get relative path from repo root
+            let rel_path =
+                path.strip_prefix(root).ok().and_then(|p| p.to_str()).unwrap_or("").to_string();
+            if rel_path.is_empty() || indexed_files.contains(&rel_path) {
+                continue;
+            }
+
+            // Check if this file has front-matter
+            if let Ok(content) = fs::read_to_string(&path) {
+                if let Ok(fm) = parse_front_matter(&content) {
+                    errors.push(format!(
+                        "Doc '{}' ({}) has front-matter but is not registered in doc_index.yaml",
+                        fm.id, rel_path
+                    ));
+                }
+            }
+        }
+    }
+
     if !errors.is_empty() {
         eprintln!();
         for err in &errors {
@@ -1100,6 +1170,197 @@ fn validate_doc_types(index: &crate::docs_index::DocIndex) -> Result<()> {
         eprintln!("  • Or adjust doc_type if the doc was misclassified");
         eprintln!("  • See: docs/reference/doc-sources.md Section 6.5");
         anyhow::bail!("Doc type contracts: {} warning(s)", issues.len());
+    }
+
+    Ok(())
+}
+
+/// Check for orphaned version strings not covered by version_manifest.yaml.
+///
+/// Scans Markdown and YAML files for version patterns (vX.Y.Z, X.Y.Z) and
+/// checks if they are covered by patterns declared in specs/version_manifest.yaml.
+/// Emits DOC_ORPHANED_VERSION errors for unmanaged version strings.
+///
+/// Supports inline suppression via comments:
+/// - Markdown: `<!-- doclint:disable orphan-version -->`
+/// - YAML: `# doclint:disable orphan-version`
+///
+/// Tagged with: AC-TPL-VERSION-MANIFEST
+fn check_orphaned_versions() -> Result<()> {
+    use regex::Regex;
+    use std::collections::HashSet;
+    use walkdir::WalkDir;
+
+    let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    let root = manifest_dir.parent().expect("workspace root").parent().expect("repo root");
+
+    // Load version manifest
+    let manifest_path = root.join("specs/version_manifest.yaml");
+    if !manifest_path.exists() {
+        // No manifest means no version governance - skip check
+        return Ok(());
+    }
+
+    let manifest = crate::commands::versioning::VersionManifest::load_from_path(&manifest_path)
+        .context("Failed to load version manifest")?;
+
+    // Build set of "owned" file paths and their patterns
+    // A version string is "owned" if it appears in a file covered by the manifest
+    // and matches one of the declared patterns for that file
+    let mut owned_patterns: HashSet<String> = HashSet::new();
+
+    for target in &manifest.files {
+        // Skip glob patterns (e.g., release_evidence/v*.md)
+        if target.path.contains('*') {
+            continue;
+        }
+
+        for pattern in &target.patterns {
+            // Track the marker as an owned pattern
+            owned_patterns.insert(pattern.marker.clone());
+
+            // Also track the line_pattern regex if available
+            if let Some(line_pat) = &pattern.line_pattern {
+                owned_patterns.insert(line_pat.clone());
+            }
+        }
+    }
+
+    // Version pattern: vX.Y.Z or X.Y.Z (possibly with -kernel suffix)
+    let version_re =
+        Regex::new(r"v?\d+\.\d+\.\d+(-kernel)?").context("Failed to compile version regex")?;
+
+    // Suppression comment patterns
+    let md_suppress = "<!-- doclint:disable orphan-version -->";
+    let yaml_suppress = "# doclint:disable orphan-version";
+
+    let mut orphans = Vec::new();
+
+    // Walk docs/ and specs/ directories for markdown and YAML files
+    let scan_dirs =
+        vec![root.join("docs"), root.join("specs"), root.join("README.md"), root.join("CLAUDE.md")];
+
+    // Files to skip entirely (they contain version examples or non-template versions)
+    let skip_files = [
+        "specs/version_manifest.yaml",
+        "specs/version_manifest.example.yaml",
+        "specs/openapi/openapi.yaml",
+        "specs/service_policies.yaml",
+        "specs/doc_policies.yaml",
+        "specs/devex_flows.yaml",
+    ];
+
+    for scan_path in scan_dirs {
+        if !scan_path.exists() {
+            continue;
+        }
+
+        let entries: Vec<_> = if scan_path.is_file() {
+            vec![scan_path]
+        } else {
+            WalkDir::new(&scan_path)
+                .into_iter()
+                .filter_map(|e| e.ok())
+                .filter(|e| {
+                    let path = e.path();
+                    path.is_file()
+                        && (path.extension().map(|s| s == "md").unwrap_or(false)
+                            || path.extension().map(|s| s == "yaml" || s == "yml").unwrap_or(false))
+                })
+                .map(|e| e.path().to_path_buf())
+                .collect()
+        };
+
+        for file_path in entries {
+            // Get relative path for checks
+            let relative_path = file_path.strip_prefix(root).ok().and_then(|p| p.to_str());
+
+            // Skip files that are explicitly excluded
+            if let Some(rel) = relative_path {
+                if skip_files.iter().any(|skip| rel == *skip) {
+                    continue;
+                }
+            }
+
+            // Skip files covered by manifest
+            let is_manifest_file = relative_path
+                .and_then(|p| manifest.files.iter().find(|f| Path::new(&f.path) == Path::new(p)))
+                .is_some();
+
+            if is_manifest_file {
+                // This file is governed by the manifest - its versions are "owned"
+                continue;
+            }
+
+            let content = fs::read_to_string(&file_path)
+                .with_context(|| format!("Failed to read {}", file_path.display()))?;
+
+            for (line_num, line) in content.lines().enumerate() {
+                // Check for suppression comment
+                if line.contains(md_suppress) || line.contains(yaml_suppress) {
+                    continue;
+                }
+
+                // Skip lines with schema_version (these are YAML schema versions, not template versions)
+                if line.contains("schema_version")
+                    || line.contains("openapi:")
+                    || line.contains("version:") && line.contains("\"")
+                {
+                    continue;
+                }
+
+                // Look for version patterns
+                for cap in version_re.find_iter(line) {
+                    let version_str = cap.as_str();
+
+                    // Check if this version occurrence is in an owned context
+                    // A version is "owned" if the line contains one of the manifest markers
+                    let is_owned =
+                        owned_patterns.iter().any(|marker| line.contains(marker.as_str()));
+
+                    if !is_owned {
+                        let relative = file_path
+                            .strip_prefix(root)
+                            .unwrap_or(&file_path)
+                            .display()
+                            .to_string();
+
+                        orphans.push(format!(
+                            "{}:{} - orphaned version '{}' (not in version_manifest.yaml)",
+                            relative,
+                            line_num + 1,
+                            version_str
+                        ));
+                    }
+                }
+            }
+        }
+    }
+
+    if !orphans.is_empty() {
+        eprintln!();
+        eprintln!("{}", "DOC_ORPHANED_VERSION errors:".yellow().bold());
+        for orphan in &orphans {
+            eprintln!("  ✗ {}", orphan);
+        }
+        eprintln!();
+        eprintln!("{}", "To fix:".bold());
+        eprintln!(
+            "  1. Add the file and pattern to {} if this version should be managed",
+            "specs/version_manifest.yaml".cyan()
+        );
+        eprintln!(
+            "  2. Or suppress with {} or {}",
+            "<!-- doclint:disable orphan-version -->".cyan(),
+            "# doclint:disable orphan-version".cyan()
+        );
+        eprintln!("  3. Or remove the version string if it's stale/duplicated");
+        eprintln!(
+            "  4. Run {} to see what's managed",
+            "cargo xtask release-prepare --dry-run X.Y.Z".cyan()
+        );
+
+        anyhow::bail!("{} orphaned version string(s) found", orphans.len());
     }
 
     Ok(())

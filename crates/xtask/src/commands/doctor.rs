@@ -107,6 +107,32 @@ pub fn run() -> Result<()> {
         warnings += 1;
     }
 
+    // Check CI environment
+    print!("CI mode... ");
+    if std::env::var("CI").is_ok() {
+        println!("{} Running in CI", "✓".green());
+    } else {
+        println!("{} Local development", "✓".green());
+    }
+
+    // Check low-resource mode
+    print!("XTASK_LOW_RESOURCES... ");
+    if std::env::var("XTASK_LOW_RESOURCES").is_ok() {
+        println!("{} Enabled (reduced parallelism)", "✓".green());
+    } else {
+        println!("{} Not set (using full resources)", "✓".green());
+    }
+
+    // Check sccache health
+    print!("sccache health... ");
+    match check_sccache_health() {
+        Ok(msg) => println!("{} {}", "✓".green(), msg.dimmed()),
+        Err(warning) => {
+            println!("{} {}", "⚠".yellow(), warning);
+            warnings += 1;
+        }
+    }
+
     // Check Rust edition
     print!("Rust edition... ");
     if std::fs::read_to_string("Cargo.toml")?.contains("edition = \"2024\"") {
@@ -120,28 +146,32 @@ pub fn run() -> Result<()> {
     println!();
     if issues == 0 && warnings == 0 {
         println!("{}", "✓ Environment checks passed!".green().bold());
-        println!();
-        println!("{}", "Next steps:".bold());
-        println!("  • Fast dev loop:  {}", "cargo xtask check".cyan());
-        println!("  • Before pushing: {}", "cargo xtask selftest".cyan());
-        println!("  • See all flows:  {}", "cargo xtask help-flows".cyan());
     } else {
         if issues > 0 {
             println!("{} {} critical issue(s) found", "✗".red().bold(), issues);
         }
         if warnings > 0 {
             println!("{}", "⚠ Environment functional with warnings".yellow().bold());
-            println!();
-            println!("{}", "Recommendations:".bold());
-            if !has_cargo_hakari {
-                println!("  • Install hakari: {}", "cargo install cargo-hakari".dimmed());
-            }
-            if std::env::var("IN_NIX_SHELL").is_err() {
-                println!("  • Enter Nix shell: {}", "nix develop".cyan());
-                println!("    {}", "(Provides hermetic tools + policy tests)".dimmed());
-            }
-            println!("  • View flows: {}", "cargo xtask help-flows".cyan());
         }
+    }
+
+    // Always show recommendations section
+    println!();
+    println!("{}", "Recommendations:".bold());
+
+    if issues == 0 && warnings == 0 {
+        println!("  • Fast dev loop:  {}", "cargo xtask check".cyan());
+        println!("  • Before pushing: {}", "cargo xtask selftest".cyan());
+        println!("  • See all flows:  {}", "cargo xtask help-flows".cyan());
+    } else {
+        if !has_cargo_hakari {
+            println!("  • Install hakari: {}", "cargo install cargo-hakari".dimmed());
+        }
+        if std::env::var("IN_NIX_SHELL").is_err() {
+            println!("  • Enter Nix shell: {}", "nix develop".cyan());
+            println!("    {}", "(Provides hermetic tools + policy tests)".dimmed());
+        }
+        println!("  • View flows: {}", "cargo xtask help-flows".cyan());
     }
 
     if issues > 0 {
@@ -209,6 +239,55 @@ fn check_abi_consistency() -> Result<String, String> {
 fn extract_version_number(version_output: &str) -> String {
     // Extract version number from "rustc X.Y.Z (hash date)" format
     version_output.trim().split_whitespace().nth(1).unwrap_or("unknown").to_string()
+}
+
+fn check_sccache_health() -> Result<String, String> {
+    // Check if RUSTC_WRAPPER is set to use sccache
+    let rustc_wrapper = std::env::var("RUSTC_WRAPPER").ok();
+
+    match rustc_wrapper {
+        None => {
+            // sccache not configured, which is fine
+            Ok("Not configured (optional)".to_string())
+        }
+        Some(wrapper) if wrapper.is_empty() => {
+            // RUSTC_WRAPPER set to empty string (explicitly disabled)
+            Ok("Not configured (optional)".to_string())
+        }
+        Some(wrapper) if !wrapper.contains("sccache") => {
+            // RUSTC_WRAPPER set to something else
+            Ok(format!("RUSTC_WRAPPER={}", wrapper))
+        }
+        Some(_) => {
+            // sccache is configured, check if it works
+            match Command::new("sccache").arg("--version").output() {
+                Ok(output) => {
+                    if output.status.success() {
+                        let version = String::from_utf8_lossy(&output.stdout);
+                        Ok(format!("sccache {}", version.trim()))
+                    } else {
+                        // sccache command failed, check for libz.so.1 error
+                        let stderr = String::from_utf8_lossy(&output.stderr);
+                        if stderr.contains("libz.so.1") {
+                            Err(format!(
+                                "sccache libz.so.1 error detected\n      \
+                                Workaround: unset RUSTC_WRAPPER=\"\" in current shell\n      \
+                                See: docs/TROUBLESHOOTING.md §sccache"
+                            ))
+                        } else {
+                            Err(format!("sccache failed: {}", stderr.trim()))
+                        }
+                    }
+                }
+                Err(e) => Err(format!(
+                    "sccache not found or failed to run: {}\n      \
+                        Workaround: unset RUSTC_WRAPPER=\"\" in current shell\n      \
+                        See: docs/TROUBLESHOOTING.md §sccache",
+                    e
+                )),
+            }
+        }
+    }
 }
 
 #[cfg(test)]
@@ -289,6 +368,35 @@ mod tests {
                 "Should handle malformed input: {}",
                 input
             );
+        }
+    }
+
+    #[test]
+    fn test_check_sccache_health_when_not_configured() {
+        // When RUSTC_WRAPPER is not set, sccache check should pass
+        // This test validates the function logic without requiring sccache to be installed
+        unsafe {
+            std::env::remove_var("RUSTC_WRAPPER");
+        }
+
+        let result = check_sccache_health();
+        assert!(result.is_ok(), "Should succeed when RUSTC_WRAPPER not set");
+        assert!(result.unwrap().contains("Not configured"), "Should report not configured");
+    }
+
+    #[test]
+    fn test_check_sccache_health_with_other_wrapper() {
+        // When RUSTC_WRAPPER is set to something else, should report it
+        unsafe {
+            std::env::set_var("RUSTC_WRAPPER", "some-other-wrapper");
+        }
+
+        let result = check_sccache_health();
+        assert!(result.is_ok(), "Should succeed with other wrapper");
+        assert!(result.unwrap().contains("RUSTC_WRAPPER=some-other-wrapper"));
+
+        unsafe {
+            std::env::remove_var("RUSTC_WRAPPER");
         }
     }
 }

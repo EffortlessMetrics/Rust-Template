@@ -1,17 +1,11 @@
 ---
 id: GUIDE-TPL-OVERRIDE-001
-title: Change Template Opinions in Your Fork
 doc_type: how-to
-status: published
-audience: fork-maintainers, platform-engineers
-tags: [fork, customization, governance, override, opinion]
 stories: [US-TPL-PLT-001]
-requirements: [REQ-PLT-ONBOARDING, REQ-PLT-DOC-TEMPLATES, REQ-TPL-OVERRIDE-PATH, REQ-TPL-EXAMPLE-FORK]
+requirements: [REQ-PLT-DOC-TEMPLATES, REQ-PLT-ONBOARDING, REQ-TPL-OVERRIDE-PATH, REQ-TPL-EXAMPLE-FORK]
 acs: [AC-TPL-OVERRIDE-TRACEABLE]
 adrs: [ADR-0005]
-last_updated: 2025-11-26
 ---
-
 # Change Template Opinions in Your Fork
 
 This guide explains how to safely override or relax the template's built-in opinions when they don't fit your organization's needs.

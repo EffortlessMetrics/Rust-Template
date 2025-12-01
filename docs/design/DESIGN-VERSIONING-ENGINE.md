@@ -1,6 +1,6 @@
 ---
-id: DESIGN-TPL-VERSIONING-ENGINE-001
 doc_type: design_doc
+id: DESIGN-TPL-VERSIONING-ENGINE-001
 title: "Single Versioning Engine for release-prepare"
 author: platform-team
 date: 2025-12-01
@@ -16,7 +16,7 @@ adrs: [ADR-0005]
 
 ## Status
 
-**In Progress** - Implementation underway for v3.3.6 kernel. Core components ready:
+**In Progress** - Implementation underway for v3.3.6 kernel. Core components ready: <!-- doclint:disable orphan-version -->
 - ✅ Version manifest (`specs/version_manifest.yaml`) - declares all 10+ version-bearing files
 - ✅ Versioning module (`crates/xtask/src/commands/versioning.rs`) - schema-aligned structs
 - 🔲 Unit tests for engine (TASK-VERS-TEST-001)
@@ -84,7 +84,7 @@ crates/xtask/src/versioning/
 
 ```rust
 struct VersionInfo {
-    current: String,      // "3.3.5"
+    current: String,      // "3.3.5" <!-- doclint:disable orphan-version -->
     previous: Option<String>,
     date: String,         // "2025-12-01"
 }
@@ -154,7 +154,7 @@ Total: ~12 hours (1.5 dev days)
 
 ## Decision
 
-Implementing for v3.3.6 kernel. This enables manifest-driven releases with dry-run support.
+Implementing for v3.3.6 kernel. This enables manifest-driven releases with dry-run support. <!-- doclint:disable orphan-version -->
 
 ## Progress Tracking
 
@@ -177,7 +177,7 @@ Implementing for v3.3.6 kernel. This enables manifest-driven releases with dry-r
 ## Open Questions
 
 1. Should `version_manifest.yaml` support JSONPath for nested YAML updates?
-2. Should we validate version ordering (3.3.6 > 3.3.5) at update time?
+2. Should we validate version ordering (3.3.6 > 3.3.5) at update time? <!-- doclint:disable orphan-version -->
 3. Should the manifest support conditional patterns (e.g., only update if marker exists)?
 4. Should we add a `--force` flag to override validation failures?
 
