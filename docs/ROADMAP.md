@@ -9,12 +9,12 @@ stories: [US-TPL-PLT-001]
 requirements: [REQ-PLT-DOCS-CONSISTENCY]
 acs: [AC-PLT-009, AC-PLT-010]
 adrs: [ADR-0005]
-last_updated: 2025-11-26
+last_updated: 2025-11-30
 ---
 
-# Roadmap: Rust-as-Spec Platform Cell (v3.3.3)
+# Roadmap: Rust-as-Spec Platform Cell (v3.3.4)
 
-This document describes the current state of the **v3.3.3 kernel** and what remains to be done.
+This document describes the current state of the **v3.3.4 kernel** and what remains to be done.
 
 ---
 
@@ -43,26 +43,33 @@ Opinions encoded as ACs mean:
 
 ---
 
-## 1. Kernel v3.3.3 Closure
+## 1. Kernel v3.3.4 Closure
 
-**Status:** Frozen as of 2025-11-27.
+**Status:** Frozen as of 2025-11-30.
 
-The v3.3.3 kernel is **closed**. No new features land here. All work now targets:
+v3.3.3 was the first kernel closure. v3.3.4 is a patch-level closure that stabilizes:
 
-- **Forks**: Build services on v3.3.3 baseline; capture friction
+- **BDD harness exit semantics** (`AC-TPL-BDD-EXIT-CODES`)
+- **Agent hint schema** (`AC-TPL-AGENT-HINTS-SCHEMA`)
+- **Bundle manifest linkage** (`AC-TPL-BUNDLE-MANIFEST-LINKED`, `AC-TPL-BUNDLE-MINIMAL-SCOPE`)
+- **SPEC_ROOT contract** for xtask commands
+
+No new features land here. All forward work targets:
+
+- **Forks**: Build services on v3.3.4 baseline; capture friction
 - **v3.4.0**: Kernel improvements driven by real fork feedback
 
 This closure is enforced:
 
-- Git tag: `v3.3.3-kernel` marks the frozen baseline
+- Git tag: `v3.3.4-kernel` marks the frozen baseline
 - `ROADMAP.md` updated to reflect closure
-- `docs/reference/environment.md` added for clear setup guidance
+- Selftest gates expanded to 10 steps
 
-To fork from v3.3.3, start with `docs/how-to/FIRST_FORK.md`.
+To fork from v3.3.4, start with `docs/how-to/FIRST_FORK.md`.
 
 ---
 
-## 2. Current State (v3.3.3)
+## 2. Current State (v3.3.4)
 
 The kernel has reached a stable, forkable baseline. All acceptance criteria pass, all selftest gates pass.
 
@@ -70,11 +77,11 @@ The kernel has reached a stable, forkable baseline. All acceptance criteria pass
 
 | Metric | Value |
 |--------|-------|
-| **Total ACs** | 65 |
-| **Passing** | 65 (100%) |
-| **Selftest Gates** | 8/8 passing |
+| **Kernel ACs** | ~60 (all PASS) |
+| **Non-kernel ACs** | ~20 (soft gates) |
+| **Selftest Gates** | 10/10 passing |
 | **Policy Tests** | 22/22 passing |
-| **BDD Scenarios** | 110+ passing |
+| **BDD Scenarios** | 170+ passing |
 
 ### 2.2 What's Working
 
@@ -98,19 +105,25 @@ The kernel has reached a stable, forkable baseline. All acceptance criteria pass
 
 **Governance:**
 
-- BDD acceptance tests covering all 65 ACs
+- BDD acceptance tests covering all kernel ACs
 - Graph invariants for REQ/AC/test/doc relationships
 - Policy tests (OPA/Rego) for configuration compliance
 - Pre-commit hooks with auto-staging
 - AC/ADR bidirectional mapping
+
+**v3.3.4 Additions:**
+
+- **BDD Harness**: Semantic exit detection via `is_bdd_success()` - stable across runs
+- **Hint Schema**: `/platform/agent/hints` and `xtask suggest-next --format json` share canonical Hint types
+- **Bundle Manifests**: `bundle.yaml` links to REQs/ACs/tests with soft scope audit
 
 ### 2.3 Verification
 
 ```bash
 nix develop
 cargo xtask doctor         # Environment validated
-cargo xtask selftest       # 8/8 gates pass
-cargo xtask ac-status      # 65/65 PASS, 0 FAIL
+cargo xtask selftest       # 10/10 gates pass
+cargo xtask ac-status      # All kernel ACs PASS
 cargo run -p app-http      # Listening on :8080
 ```
 
@@ -172,6 +185,16 @@ The following gaps have been addressed:
 |------|--------|-------|
 | **ADR numbering duplicates** | ✅ Fixed | Removed test scaffolds, renumbered 0007→0019 |
 | **Release evidence incomplete** | ✅ Fixed | AC delta tracking added to release-bundle |
+
+### 3.6 v3.3.4 Polish (Harness, Hints, Bundles) ✅
+
+| Item | Status | Notes |
+|------|--------|-------|
+| **BDD harness semantics** | ✅ Complete | `bdd.rs` centralizes success detection via `is_bdd_success()` |
+| **Agent Hint schema** | ✅ Complete | AC-TPL-AGENT-HINTS-SCHEMA + BDD + unit tests |
+| **Bundle manifest v1.5** | ✅ Complete | `bundle.yaml` links REQs/ACs/tests; soft scope audit |
+| **SPEC_ROOT contract** | ✅ Complete | `spec_root()` honors SPEC_ROOT env var; unit-tested |
+| **Pre-commit auto-fix** | ✅ Complete | Hook runs `xtask precommit`, auto-fixes fmt/skills/feature_status |
 
 ---
 

@@ -48,6 +48,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Spec ledger version consistency** - Aligned all spec files to v3.3.3
 - **ADR cross-references** - Updated all ADR links in spec ledger and documentation to use 4-digit numbering
 
+## [3.3.4] - 2025-11-30
+
+### Added
+
+- **BDD harness meta-contract** (`AC-TPL-BDD-EXIT-CODES`):
+  - `is_bdd_success(&Output)` canonicalizes BDD success across exit code, `[BDD-PASS]`, JUnit, and textual markers
+  - Unit tests in `bdd.rs` cover exit=101 + `[BDD-PASS]`, JUnit failures, and output markers
+  - All BDD callers (`bdd`, `check`, `selftest`, `test-ac`, `test-changed`) use semantic detection
+
+- **Agent Hint schema** (`AC-TPL-AGENT-HINTS-SCHEMA`):
+  - Canonical Hint types in `spec_runtime::hints` (kind, priority, status, reason, target, tags, links)
+  - BDD scenario in `agent_hints.feature` and golden response example in `docs/examples/agent_hints_response.json`
+  - HTTP endpoint and CLI reuse the same schema with legacy compatibility fields
+
+- **Bundle manifest linkage** (`AC-TPL-BUNDLE-MANIFEST-LINKED`):
+  - `bundle.yaml` now includes `requirement_ids`, `ac_ids`, and `tests` derived from `specs/tasks.yaml` and `spec_ledger.yaml`
+  - Soft scope audit added with `BUNDLE_MAX_FILES` / `BUNDLE_MAX_BYTES` env overrides
+
+- **SPEC_ROOT contract**:
+  - `spec_root()` in `tasks.rs` and unit test (`spec_root_resolved`) ensure spec-reading commands honor the SPEC_ROOT environment variable
+
+### Changed
+
+- **xtask check**: Change-aware BDD now uses `bdd::run_with_options()` instead of raw `cargo test`
+- **xtask test-ac / test-changed**: Use `bdd::is_bdd_success()` for acceptance test success detection
+- **/platform/agent/hints & suggest-next**: Both reuse the same Hint schema and filtering logic
+- **Selftest gates**: Expanded from 8 to 10 steps (Core, Skills, Agents, BDD, AC/ADR, Bundler, Policy, DevEx, Graph, AC coverage)
+
+### Fixed
+
+- Intermittent `cargo test -p acceptance` exit=101 failures no longer cause `xtask bdd`, `xtask check`, or `xtask selftest` to flap when all scenarios pass
+
 ## [3.2.0] - 2025-11-22
 
 ### Added
