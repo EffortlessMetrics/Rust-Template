@@ -210,6 +210,14 @@ enum Commands {
     #[command(next_help_heading = "📚 Design & Documentation")]
     DocsCheck,
 
+    /// Sync front-matter in design docs from doc_index.yaml
+    #[command(next_help_heading = "📚 Design & Documentation")]
+    DocsFrontmatterSync {
+        /// Apply changes instead of just checking
+        #[arg(long)]
+        fix: bool,
+    },
+
     /// Run spellcheck across docs/specs
     #[command(next_help_heading = "📚 Design & Documentation")]
     Spellcheck,
@@ -643,6 +651,7 @@ fn main() -> Result<()> {
         }
         Commands::Doctor => commands::doctor::run(),
         Commands::DocsCheck => commands::docs_check::run(),
+        Commands::DocsFrontmatterSync { fix } => commands::docs_frontmatter_sync::run(fix),
         Commands::Spellcheck => commands::spellcheck::run_with_default_targets(),
         Commands::GraphExport { format, check } => {
             commands::graph_export::run(commands::graph_export::GraphExportArgs { format, check })
@@ -877,6 +886,7 @@ pub fn all_command_names() -> Vec<&'static str> {
         "audit",
         "doctor",
         "docs-check",
+        "docs-frontmatter-sync",
         "spellcheck",
         "dev-up",
         "fmt-all",

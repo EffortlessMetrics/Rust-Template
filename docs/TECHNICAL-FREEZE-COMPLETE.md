@@ -1,3 +1,4 @@
+<!-- doclint:disable orphan-version -->
 # Technical Freeze Complete ✅
 
 **Date:** 2025-11-15

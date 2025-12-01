@@ -62,6 +62,35 @@ files:
     required: true
     priority: 1
 
+  - path: "specs/tasks.yaml"
+    description: "Task manifest with template version reference"
+    patterns:
+      - marker: "template_version:"
+        type: yaml_value
+        format: "quoted"  # Uses "3.3.5" format
+        line_pattern: "^template_version: \"[^\"]+\"$"
+        example: "template_version: \"3.3.6\""
+    required: true
+    priority: 1
+
+  # BDD feature files
+  - path: "specs/features/*.feature"
+    description: "Gherkin feature files with version and date headers"
+    patterns:
+      - marker: "# Template Version: v"
+        type: inline_version
+        format: "prefixed"  # v3.3.6
+        line_pattern: "^# Template Version: v[\\d.]+.*$"
+        example: "# Template Version: v3.3.6"
+      - marker: "# Last Updated: "
+        type: inline_version
+        format: "date_only"  # 2025-12-01
+        line_pattern: "^# Last Updated: \\d{4}-\\d{2}-\\d{2}$"
+        example: "# Last Updated: 2025-12-01"
+    required: false
+    priority: 3
+    notes: "Feature files have standardized headers; Last Updated uses current date not version number"
+
   # Primary documentation files
   - path: "README.md"
     description: "Repository README with multiple version references"

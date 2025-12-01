@@ -471,3 +471,188 @@ tasks:
     docs:
       design: []
       plan: []
+
+  # Docs Automation Hardening Track (E1-E3)
+  - id: TASK-DOCS-MANIFEST-EXTEND-001
+    title: "Extend version manifest to cover all version-bearing files"
+    requirement: REQ-TPL-VERSIONING-ENGINE
+    acs:
+      - AC-TPL-VERSION-MANIFEST
+      - AC-TPL-VERSION-ATOMIC
+    status: todo
+    owner: agent
+    labels: [platform, versioning, docs, p1]
+    summary: >
+      Inventory all vX.Y.Z occurrences in repo. For each intentional versioned
+      field (specs/tasks.yaml version, docs/feature_status.md header, AGENT_SKILLS),
+      add or refine an entry in specs/version_manifest.yaml. Remove or generalize
+      accidental/duplicated version prose. Extend versioning.rs tests for new patterns.
+    recommended_flows: ["ac_first"]
+    depends_on:
+      - TASK-VERS-RELEASE-001
+    docs:
+      design: [DESIGN-TPL-VERSIONING-ENGINE-001]
+      plan: []
+
+  - id: TASK-DOCS-FM-GATE-001
+    title: "Wire docs-frontmatter-sync into docs-check as a first-class gate"
+    requirement: REQ-PLT-DOCS-CONSISTENCY
+    acs:
+      - AC-PLT-009
+      - AC-PLT-010
+    status: done
+    owner: agent
+    labels: [platform, docs, governance, p1]
+    summary: >
+      Make docs-frontmatter-sync a mandatory gate in docs-check. docs-check should
+      fail if any doc front-matter doesn't match specs/doc_index.yaml. Add BDD
+      scenarios for FM mismatch detection. Document that docs-frontmatter-sync --fix
+      is the only supported way to touch front-matter.
+    recommended_flows: ["ac_first"]
+    docs:
+      design: []
+      plan: []
+
+  - id: TASK-DOCS-ORPHAN-LINT-001
+    title: "Make orphaned version lint actionable with suppression support"
+    requirement: REQ-TPL-VERSIONING-ENGINE
+    acs:
+      - AC-TPL-VERSION-MANIFEST
+    status: done
+    owner: agent
+    labels: [platform, docs, lint, p2]
+    summary: >
+      Extend docs-check orphan version lint to: (1) read all regexes from
+      version_manifest.yaml and treat matches as "owned", (2) emit DOC_ORPHANED_VERSION
+      for remaining vX.Y.Z matches with line pointers, (3) support inline suppression
+      comments (<!-- doclint:disable orphan-version -->). Add test suite for clean/orphan/suppressed cases.
+    recommended_flows: ["ac_first"]
+    depends_on:
+      - TASK-DOCS-MANIFEST-EXTEND-001
+    docs:
+      design: []
+      plan: []
+
+  # IDP Contract and Schema Track
+  - id: TASK-IDP-SCHEMA-001
+    title: "Define IDP snapshot schema in specs/platform_schema.yaml"
+    requirement: REQ-TPL-PLATFORM-INTROSPECTION
+    acs:
+      - AC-TPL-AGENT-HINTS-SCHEMA
+      - AC-TPL-CLI-JSON-OUTPUT
+    status: todo
+    owner: agent
+    labels: [platform, idp, schema, p1]
+    summary: >
+      Extract current idp.rs response shape into specs/platform_schema.yaml
+      under paths:/platform/idp/snapshot. Add schema_version field to payload.
+      Add BDD scenarios for schema validation. Add idp_api.rs test that validates
+      response against JSON schema.
+    recommended_flows: ["ac_first"]
+    depends_on:
+      - TASK-ADOPT-IDP-001
+    docs:
+      design: [DESIGN-TPL-IDP-TILES-001]
+      plan: []
+
+  - id: TASK-IDP-BACKSTAGE-HARDEN-001
+    title: "Harden Backstage plugin packaging and documentation"
+    requirement: REQ-TPL-AI-IDP-COMPAT
+    acs:
+      - AC-TPL-IDP-DEMO
+    status: todo
+    owner: agent
+    labels: [platform, idp, backstage, p2]
+    summary: >
+      Extract Backstage plugin into examples/backstage-plugin/ with its own
+      package.json and README. Document configuration (base URL, auth, deployment).
+      Add short runbook docs/how-to/connect-backstage-to-idp-tiles.md with screenshots.
+    recommended_flows: ["ac_first"]
+    depends_on:
+      - TASK-IDP-SCHEMA-001
+      - TASK-ADOPT-IDP-002
+    docs:
+      design: [DESIGN-TPL-IDP-TILES-001]
+      plan: []
+
+  - id: TASK-IDP-PORT-HARDEN-001
+    title: "Harden Port.io integration with sync script and demo"
+    requirement: REQ-TPL-AI-IDP-COMPAT
+    acs: []
+    status: todo
+    owner: agent
+    labels: [platform, idp, port-io, p2]
+    summary: >
+      Move Port.io sync script and YAML into examples/port-integration/.
+      Ensure sync is incremental and idempotent. Add cargo xtask idp-demo or
+      make idp-demo that generates payload for local testing. Document how
+      to point a real Port workspace at the endpoint.
+    recommended_flows: ["ac_first"]
+    depends_on:
+      - TASK-IDP-SCHEMA-001
+    docs:
+      design: [DESIGN-TPL-IDP-TILES-001]
+      plan: []
+
+  # Environment and CI Expectations Track
+  - id: TASK-ENV-NONINT-001
+    title: "Document non-interactive and CI expectations"
+    requirement: REQ-PLT-DEVEX-CONTRACT
+    acs: []
+    status: todo
+    owner: agent
+    labels: [dx, ci, docs, p2]
+    summary: >
+      Create docs/how-to/run-in-ci.md describing required env vars
+      (CI, XTASK_NONINTERACTIVE, XTASK_LOW_RESOURCES) and their effects.
+      Add BDD scenarios verifying doctor/check/selftest never prompt in CI.
+      Consider making missing XTASK_NONINTERACTIVE in CI a warning.
+    recommended_flows: ["ac_first"]
+    depends_on:
+      - TASK-ENV-DIAG-002
+    docs:
+      design: []
+      plan: []
+
+  # Cross-Repo Adoption Track
+  - id: TASK-XORG-FORK-ADOPT-001
+    title: "Apply docs automation stack to examples/fork-*"
+    requirement: REQ-TPL-ADOPTION-FORKS
+    acs:
+      - AC-TPL-FORK-SANITY
+    status: todo
+    owner: agent
+    labels: [adoption, forks, integration, p2]
+    summary: >
+      In examples/fork-*, add minimal specs/spec_ledger.yaml, specs/doc_index.yaml,
+      docs/ skeleton. Wire CI to call cargo xtask selftest via kernel ci-template.
+      Use idp-snapshot and docs-frontmatter-sync from kernel. Record friction.
+    recommended_flows: ["ac_first"]
+    depends_on:
+      - TASK-DOCS-FM-GATE-001
+      - TASK-IDP-SCHEMA-001
+    docs:
+      design: []
+      plan: []
+
+  # Release Planning Track
+  - id: TASK-REL-340-PLAN-001
+    title: "Define 3.4.0 IDP-ready kernel release scope"
+    requirement: REQ-PLT-RELEASE-SAFETY
+    acs: []
+    status: todo
+    owner: agent
+    labels: [release, planning, milestone, p2]
+    summary: >
+      Define what makes 3.4.0 "IDP-ready": idp-snapshot contract frozen,
+      docs automation mandatory in docs-check, env diagnostics ACs green.
+      Add "Kernel v3.4.0 – IDP & Docs Automation" section to docs/ROADMAP.md.
+      Prepare release_evidence template for IDP schema snapshot and doctor output.
+    recommended_flows: ["governed_release"]
+    depends_on:
+      - TASK-IDP-SCHEMA-001
+      - TASK-DOCS-FM-GATE-001
+      - TASK-ENV-DIAG-002
+    docs:
+      design: []
+      plan: []
