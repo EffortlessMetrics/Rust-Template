@@ -188,7 +188,7 @@ Environment Mode
 
 Detection Flags
   is_ci:            false
-  is_noninteractive:false
+  is_noninteractive: false
   is_low_resources: false
   should_skip_bdd:  false
 
@@ -211,7 +211,7 @@ Environment Mode
 
 Detection Flags
   is_ci:            true
-  is_noninteractive:true
+  is_noninteractive: true
   is_low_resources: true
   should_skip_bdd:  true
 ```
@@ -231,7 +231,11 @@ $ cargo xtask env-mode --json
 | `XTASK_NONINTERACTIVE=1` | `non-interactive` | No |
 | `XTASK_LOW_RESOURCES=1` | `low-resources` | Yes |
 | `CI=1 XTASK_LOW_RESOURCES=1` | `CI (low-resources)` | Yes |
-| `XTASK_SKIP_BDD=1` | (any) | Yes |
+| `XTASK_SKIP_BDD=1` | `interactive` | Yes |
+
+> **Note:** `XTASK_SKIP_BDD=1` only affects the `should_skip_bdd` flag; it does
+> not change the reported mode. The mode remains `interactive` unless other
+> environment variables (`CI`, `XTASK_NONINTERACTIVE`, `XTASK_LOW_RESOURCES`) are set.
 
 ---
 
