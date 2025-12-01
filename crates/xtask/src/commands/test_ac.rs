@@ -50,21 +50,27 @@ pub fn run(ac_id: &str) -> Result<()> {
     println!("\n[INFO] Running acceptance tests for @{}...", ac_id);
 
     let tag_filter = format!("@{}", ac_id);
-    let test_result = crate::run_cmd(&mut crate::cargo_cmd(
-        "test",
-        &["-p", "acceptance", "--test", "acceptance", "--", "--tags", &tag_filter],
-    ));
+    let mut cmd = crate::cargo_cmd("test", &["-p", "acceptance", "--test", "acceptance"]);
+    cmd.env("CUCUMBER_TAG_EXPRESSION", &tag_filter);
+    let output = cmd.output().context("Failed to run acceptance tests")?;
 
-    match test_result {
-        Ok(_) => {
-            println!("\n[PASS] All tests passed for {}", ac_id);
-            println!("       Scenarios: {}", ac_scenarios.len());
-            Ok(())
+    // Use semantic BDD success detection (not just exit code)
+    if super::bdd::is_bdd_success(&output) {
+        println!("\n[PASS] All tests passed for {}", ac_id);
+        println!("       Scenarios: {}", ac_scenarios.len());
+        Ok(())
+    } else {
+        // Print output for debugging
+        let stdout = String::from_utf8_lossy(&output.stdout);
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        if !stdout.is_empty() {
+            eprintln!("{}", stdout);
         }
-        Err(e) => {
-            println!("\n[FAIL] Tests failed for {}", ac_id);
-            println!("       Scenarios: {}", ac_scenarios.len());
-            Err(e).context(format!("Tests failed for {}", ac_id))
+        if !stderr.is_empty() {
+            eprintln!("{}", stderr);
         }
+        println!("\n[FAIL] Tests failed for {}", ac_id);
+        println!("       Scenarios: {}", ac_scenarios.len());
+        anyhow::bail!("Tests failed for {}", ac_id)
     }
 }

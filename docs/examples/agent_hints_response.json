@@ -1,0 +1,67 @@
+{
+  "hints": [
+    {
+      "id": "HINT-TASK-001",
+      "kind": "task",
+      "title": "Implement supply chain hardening",
+      "priority": "high",
+      "status": "in_progress",
+      "reason": {
+        "code": "TASK_OPEN_SECURITY_CRITICAL",
+        "details": "Task TASK-SEC-001 is in_progress with 2 linked ACs. AC status: AC-TPL-SBOM passing (1/1), AC-TPL-VULN-SCAN passing (1/1). This task is security-sensitive and may require careful review before merging."
+      },
+      "target": {
+        "type": "task",
+        "id": "TASK-SEC-001"
+      },
+      "tags": ["security", "dependencies", "v3"],
+      "links": {
+        "spec": "specs/spec_ledger.yaml#REQ-TPL-SUPPLY-CHAIN",
+        "task": "TASK-SEC-001",
+        "docs": ["docs/adr/0006-supply-chain-hardening.md"],
+        "adrs": ["ADR-0006"]
+      }
+    },
+    {
+      "id": "HINT-TASK-002",
+      "kind": "task",
+      "title": "Add platform schema endpoint",
+      "priority": "medium",
+      "status": "open",
+      "reason": {
+        "code": "TASK_OPEN_ACS_PASS",
+        "details": "Task TASK-PLT-042 is todo with 1 linked ACs. AC status: AC-TPL-PLATFORM-SCHEMA passing (1/1)."
+      },
+      "target": {
+        "type": "task",
+        "id": "TASK-PLT-042"
+      },
+      "tags": ["platform", "api"],
+      "links": {
+        "spec": "specs/spec_ledger.yaml#REQ-TPL-PLATFORM-SCHEMA",
+        "task": "TASK-PLT-042",
+        "docs": ["docs/explanation/TEMPLATE-CONTRACTS.md"]
+      }
+    },
+    {
+      "id": "HINT-TASK-003",
+      "kind": "task",
+      "title": "Implement feature toggle system",
+      "priority": "medium",
+      "status": "open",
+      "reason": {
+        "code": "TASK_OPEN_ACS_INCOMPLETE",
+        "details": "Task TASK-FEAT-010 is todo with 2 linked ACs. AC status: AC-TPL-FEATURE-FLAGS not yet tested (1 total), AC-TPL-FLAG-EVAL not yet tested (1 total)."
+      },
+      "target": {
+        "type": "task",
+        "id": "TASK-FEAT-010"
+      },
+      "tags": ["feature-flags"],
+      "links": {
+        "spec": "specs/spec_ledger.yaml#REQ-TPL-FEATURE-FLAGS",
+        "task": "TASK-FEAT-010"
+      }
+    }
+  ]
+}

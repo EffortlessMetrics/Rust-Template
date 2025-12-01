@@ -97,6 +97,8 @@ pub fn run_with_options(options: CheckOptions) -> Result<()> {
     Ok(())
 }
 
+// AC-TPL-BDD-EXIT-CODES: Do not call `cargo test -p acceptance` directly here.
+// BDD success is normalized via bdd::is_bdd_success() to avoid exit=101 flakiness.
 fn run_change_aware_bdd(base_ref: &str, changed_files: &[String], plan: BddPlan) -> Result<()> {
     use crate::commands::bdd::{self, BddOptions};
 
