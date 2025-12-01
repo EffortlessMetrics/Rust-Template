@@ -1,6 +1,6 @@
 # Template Contracts: Kernel Requirements and Extension Points
 
-**Template Version:** v3.3.1
+**Template Version:** v3.3.3
 **Schema Version:** spec_ledger.yaml v1.0
 **Last Updated:** 2025-11-26
 
@@ -527,6 +527,34 @@ fn test_name() {
 
 ---
 
+#### AC-TPL-AGENT-HINTS-SCHEMA: Hint Schema Definition
+**Contract:**
+- `GET /platform/agent/hints` returns hints with a well-defined schema
+- Each hint contains these canonical fields:
+  - `id`: Unique hint identifier (e.g., `HINT-TASK-001`)
+  - `kind`: Category - `task`, `governance`, `policy`, or `flow`
+  - `priority`: `low`, `medium`, or `high`
+  - `status`: `open`, `in_progress`, or `done`
+  - `reason`: Object with `code` (machine-readable) and `details` (human-readable)
+  - `target`: Tagged union with `type` and `id` (e.g., `{"type": "task", "id": "TASK-001"}`)
+  - `tags`: Array of labels for filtering
+  - `links`: Object with `spec`, `task`, `docs`, `adrs`, `extra` for resource references
+- CLI `suggest-next --format json` is a projection of this schema (not a separate contract)
+
+**Why:**
+- Provides a stable, machine-readable interface for agent consumption
+- Enables consistent tooling across HTTP API and CLI
+- Supports filtering, prioritization, and automated workflows
+
+**BDD Test:** `@AC-TPL-AGENT-HINTS-SCHEMA` in `specs/features/agent_hints.feature`
+
+**How to Maintain:**
+- Canonical types defined in `crates/spec-runtime/src/hints.rs`
+- HTTP endpoint in `crates/app-http/src/agent.rs` reuses these types directly
+- CLI projection mirrors schema fields for convenience
+
+---
+
 #### AC-TPL-QUESTIONS-LOGGED: Question Artifacts
 **Contract:**
 - Ambiguity during automated flows or suggest-next emits a structured question
@@ -566,6 +594,25 @@ fn test_name() {
 
 ---
 
+#### AC-TPL-XTASK-SPEC-ROOT: Isolated Testing Support
+**Contract:**
+- xtask spec-reading commands respect `SPEC_ROOT` environment variable when set
+- BDD harness uses `SPEC_ROOT` to work on isolated temp workspaces
+- Commands reading `spec_ledger.yaml`, `tasks.yaml`, etc. resolve paths relative to `SPEC_ROOT`
+
+**Why:**
+- Enables BDD scenarios to test xtask commands without modifying the real workspace
+- Supports hermetic testing with isolated fixtures
+- Prevents test pollution of production spec files
+
+**BDD Test:** `@AC-TPL-XTASK-SPEC-ROOT` in `specs/features/agent_hints.feature`
+
+**How to Maintain:**
+- All xtask commands that read spec files should check `SPEC_ROOT` first
+- Use `spec_runtime::workspace::resolve_spec_path()` helper for consistent resolution
+- BDD steps set `SPEC_ROOT` to a temp directory before invoking commands
+
+---
 
 #### AC-TPL-SKILLS-GUIDE-001: Skills Documentation
 **Contract:**
@@ -990,6 +1037,32 @@ tests:
 - Manifest is machine-generated from task definition + spec_ledger + task dependencies
 - Validate manifest YAML at bundle creation time
 - Include accurate line numbers/anchors for spec references
+
+---
+
+#### AC-TPL-BUNDLE-MINIMAL-SCOPE: Bundle Scope Guard
+**Contract:**
+- Bundle scope audit warns if a bundle exceeds soft thresholds:
+  - `~64 files` (default, overridable via `BUNDLE_MAX_FILES`)
+  - `~300 KiB` total size (default, overridable via `BUNDLE_MAX_BYTES`)
+- Warnings are advisory; bundle generation completes regardless
+- Hard failures only occur for manifest/structure issues, not size
+
+**Why:**
+- Prevents unbounded context from overwhelming agents/LLMs
+- Encourages focused task scoping during bundle definition
+- Provides early feedback when task scope may be too broad
+
+**Environment Variables:**
+- `BUNDLE_MAX_FILES`: Override default file count threshold (e.g., `128`)
+- `BUNDLE_MAX_BYTES`: Override default byte size threshold (e.g., `512000`)
+
+**BDD Test:** `@AC-TPL-BUNDLE-MINIMAL-SCOPE` in `specs/features/bundles.feature`
+
+**How to Maintain:**
+- Scope audit runs during `cargo xtask bundle` after manifest generation
+- Thresholds are configurable via environment variables for special cases
+- Consider splitting large tasks if scope warnings appear frequently
 
 ---
 
