@@ -1,6 +1,6 @@
 ---
 id: SNAPSHOT-TPL-KERNEL-001
-title: Kernel Snapshot v3.3.4
+title: Kernel Snapshot v3.3.5
 doc_type: status
 status: published
 audience: maintainers, platform-engineers, forks
@@ -9,12 +9,12 @@ stories: [US-TPL-PLT-001]
 requirements: [REQ-PLT-DOCS-CONSISTENCY, REQ-TPL-OPINIONATED-DEFAULTS]
 acs: [AC-PLT-009, AC-PLT-010, AC-TPL-OPINIONS-DOCUMENTED]
 adrs: [ADR-0005]
-last_updated: 2025-11-30
+last_updated: 2025-12-01
 ---
 
-# Kernel Snapshot v3.3.4
+# Kernel Snapshot v3.3.5
 
-**Date:** 2025-11-30 | **Version:** v3.3.4-kernel
+**Date:** 2025-12-01 | **Version:** v3.3.5-kernel
 
 ## Executive Summary
 

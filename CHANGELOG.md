@@ -9,6 +9,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+(empty)
+
+## [3.3.5] - 2025-12-01
+
+### Added
+
+**Documentation:**
+
+- **JSON contracts documentation** (`docs/explanation/JSON-CONTRACTS.md`) - Reference for CLI and platform API JSON schemas
+- **"Change docs safely" how-to guide** (`docs/how-to/change-docs-safely.md`) - Step-by-step guide for modifying template documentation
+- **KERNEL_SNAPSHOT frontmatter** - Added doc_type and governance metadata to kernel snapshot
+
+**Platform APIs:**
+
+- **`/platform/docs/index`** - Documentation inventory with per-doc health status (frontmatter validation, doc_type contracts)
+- **`/platform/status` docs_summary** - Includes doc health counts and doc_type validation issues
+
+**Governance:**
+
+- **Doc type contracts** - Soft validation for doc_type frontmatter field in docs-check
+- **Kernel REQ→doc coverage** - Enforcement of documentation coverage for kernel requirements
+- **BDD/unit mappings** - Test coverage for skills-lint, agents-lint, docs-check, BDD harness, SPEC_ROOT
+
+### Changed
+
+- **CLI JSON output** - Hardened `ac-status --json` for machine consumption
+- **KERNEL_SNAPSHOT structure** - Non-duplicative summary; points to feature_status + notes instead of inline counts
+- **Metadata AC** - Fixed AC-GOV-METADATA test mapping and validation
+
+### Fixed
+
+- **ac-status --json** - Properly outputs valid JSON for CI/IDP integration
+
+## [3.3.4] - 2025-11-30
+
 ### Added
 
 **Documentation:**
