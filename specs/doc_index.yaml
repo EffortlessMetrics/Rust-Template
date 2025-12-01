@@ -797,6 +797,47 @@ docs:
     acs: [AC-PLT-009, AC-PLT-010]
     adrs: [ADR-0005]
 
+  # Running a Governed Agent Pilot How-To
+  - id: GUIDE-TPL-AGENT-PILOT-001
+    file: docs/how-to/run-agent-pilot.md
+    title: "Running a Governed Agent Pilot"
+    doc_type: how_to
+    stories: [US-TPL-PLT-001]
+    requirements:
+      - REQ-TPL-AI-DISCOVERY
+      - REQ-TPL-AI-CONTEXT
+      - REQ-TPL-AI-IDP-COMPAT
+    acs:
+      - AC-TPL-AGENT-HINTS-SCHEMA
+      - AC-TPL-BUNDLE-MANIFEST-LINKED
+    adrs: [ADR-0004]
+
+  # Backstage Plugin Implementation How-To
+  - id: GUIDE-TPL-BACKSTAGE-PLUGIN-001
+    file: docs/how-to/implement-backstage-plugin.md
+    title: "Implementing a Backstage Plugin for Platform Integration"
+    doc_type: how-to
+    stories: [US-TPL-PLT-001]
+    requirements:
+      - REQ-TPL-PLATFORM-INTROSPECTION
+      - REQ-TPL-AI-IDP-COMPAT
+    acs:
+      - AC-TPL-CLI-JSON-CORE
+      - AC-TPL-CLI-JSON-OUTPUT
+    adrs: [ADR-0016]
+
+  # Port.io Integration How-To
+  - id: GUIDE-TPL-PORT-INTEGRATION-001
+    file: docs/how-to/implement-port-integration.md
+    title: "Integrating Platform Status with Port.io"
+    doc_type: how_to
+    stories: [US-TPL-PLT-001]
+    requirements:
+      - REQ-TPL-PLATFORM-INTROSPECTION
+      - REQ-TPL-AI-IDP-COMPAT
+    acs: [AC-TPL-CLI-JSON-CORE]
+    adrs: [ADR-0016]
+
   # IDP Tile Specifications
   - id: DESIGN-TPL-IDP-TILES-001
     file: docs/design/DESIGN-IDP-TILES.md
