@@ -1,0 +1,55 @@
+# Service Metadata: MyService Example
+#
+# This file defines the identity and metadata for this service fork.
+# It helps track service ownership, versioning, and relationship to the template kernel.
+
+service_id: "myservice"
+name: "My Service"
+description: "Example fork demonstrating domain customization of the Rust-as-Spec template"
+
+tags:
+  - example
+  - demo
+  - tutorial
+
+version: "0.1.0"
+
+owner_team: "example-team"
+
+template_version: "3.3.5"
+
+# Optional: Contact information for service maintainers
+maintainer:
+  name: "Example Team"
+  contact: "example-team@example.com"
+
+# Optional: Service-specific configuration
+metadata:
+  deployment_target: "development"
+  requires_database: false
+  requires_message_queue: false
+
+  # Service-specific feature flags
+  features:
+    echo_endpoint: true
+    metrics_enabled: true
+
+  # Dependencies on other services (if applicable)
+  dependencies: []
+
+# Notes about this service implementation
+notes: |
+  This is a minimal example service fork demonstrating the fork pattern.
+
+  Key characteristics:
+  - Single echo endpoint for demonstration
+  - No external dependencies
+  - Focuses on showing the fork structure and integration
+  - Intended as a learning resource and template starting point
+
+  When creating your own fork:
+  1. Change service_id to match your domain (lowercase, no spaces)
+  2. Update name and description to reflect your service
+  3. Choose meaningful tags for categorization
+  4. Set owner_team to your actual team name
+  5. Track your service version independently from template_version

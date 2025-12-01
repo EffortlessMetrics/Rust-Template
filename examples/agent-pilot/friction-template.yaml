@@ -1,0 +1,231 @@
+# Friction Entry Template for Agent Pilots
+#
+# Template Version: 1.0.0 (aligned with template v3.3.5)
+# Schema Version: 1.0
+# Last Updated: 2025-12-01
+#
+# Purpose: Capture DevEx friction discovered during agent pilots
+#
+# Usage:
+#   1. Copy this file: cp friction-template.yaml friction-entries/FRICTION-PILOT-<N>.yaml
+#   2. Fill in all fields below
+#   3. Capture friction AS IT OCCURS (don't wait until end of pilot)
+#   4. Reference in pilot-notes.md for summary
+#
+# Note: This is a pilot-specific version of the template friction format.
+#       For production friction, see /friction/ in repo root.
+
+# REQUIRED FIELDS
+
+id: FRICTION-PILOT-XXX
+# Format: FRICTION-PILOT-<NUMBER> (e.g., FRICTION-PILOT-001, FRICTION-PILOT-002)
+# Must be unique within this pilot
+
+date: "YYYY-MM-DD"
+# When this friction was first encountered (ISO 8601 date)
+
+pilot_id: PILOT-XXX-XXX
+# Which pilot this friction was discovered in (matches pilot-plan.yaml pilot_id)
+
+category: <category>
+# Valid categories:
+#   - api: Platform API issues (/platform/*, /ui/*)
+#   - docs: Missing, unclear, or outdated documentation
+#   - tooling: xtask, conftest, Nix, cargo, CI/CD issues
+#   - specs: Ambiguous or conflicting specs (spec_ledger, config_schema, flows)
+#   - test: Flaky, unclear, or slow tests
+#   - workflow: Process or flow issues (governed-feature-dev, etc.)
+#   - bundle: Context bundle issues (incomplete, too large, wrong files)
+#   - agent: Agent-specific issues (permissions, tool access, context limits)
+
+severity: <severity>
+# Valid severities:
+#   - low: Annoyance, doesn't block work
+#   - medium: Slows down work, workaround exists
+#   - high: Blocks progress, requires manual intervention
+#   - critical: Complete blocker, prevents any progress
+
+summary: "Short one-line description of the friction"
+# Max 200 chars. Should be clear enough to understand the issue at a glance.
+
+# DETAILED DESCRIPTION
+
+description: |
+  Detailed explanation of what went wrong, why it's friction, and when it occurred.
+
+  Include:
+  - What you were trying to do
+  - What you expected to happen
+  - What actually happened
+  - Why this creates friction (time lost, confusion, etc.)
+
+  Be specific and actionable. Provide enough detail that someone else could
+  understand and reproduce the issue.
+
+# EXPECTED BEHAVIOR
+
+expected_behavior: |
+  What should have happened instead?
+
+  Describe the ideal experience or behavior that would eliminate this friction.
+  Be concrete and actionable.
+
+# IMPACT
+
+impact: |
+  What was the impact of this friction?
+
+  Quantify if possible:
+  - Time lost (minutes/hours)
+  - Manual intervention required
+  - Task blocked or delayed
+  - Workaround complexity
+  - Cognitive load increase
+
+# CONTEXT
+
+context:
+  discovered_by: <agent|human>
+  # Who discovered this friction? (agent or human)
+
+  phase: <setup|execute|review>
+  # Which pilot phase was this discovered in?
+
+  ac_ids: []
+  # Optional: List AC IDs being worked on when friction occurred
+
+  task_ids: []
+  # Optional: List task IDs from specs/tasks.yaml
+
+  commands_involved: []
+  # List of commands that were run when friction occurred
+  # Example: ["cargo xtask bundle implement_ac", "curl /platform/agent/hints"]
+
+  files_involved: []
+  # List of files being worked on or that caused the issue
+  # Use absolute paths from repo root
+  # Example: ["specs/spec_ledger.yaml", "docs/CLAUDE.md"]
+
+# STATUS
+
+status: open
+# Valid statuses:
+#   - open: Friction identified, not yet resolved
+#   - in_progress: Being worked on
+#   - resolved: Fixed
+#   - wont_fix: Decided not to fix (document reason)
+
+# RESOLUTION (fill in when status = resolved or wont_fix)
+
+resolution:
+  resolved_by: <agent|human|name>
+  # Who resolved this friction?
+
+  resolved_at: "YYYY-MM-DD"
+  # When was this resolved?
+
+  fix_description: |
+    How was this friction resolved?
+
+    Be specific:
+    - What changes were made (code, docs, process)?
+    - Where were changes made (files, ADRs, issues)?
+    - Why does this fix eliminate the friction?
+
+  verification: |
+    How was the fix verified?
+
+    Include:
+    - Tests run (xtask check, selftest, etc.)
+    - Manual verification steps
+    - Confirmation that original friction no longer occurs
+
+  related_issues: []
+  # Optional: Link to GitHub issues, ADRs, or PRs
+  # Example: ["#123", "ADR-PILOT-001", "PR-456"]
+
+# RECOMMENDATIONS
+
+recommendations: |
+  Optional: Suggestions for preventing this friction in the future.
+
+  Examples:
+  - Documentation improvements
+  - Tool enhancements
+  - Process changes
+  - Clearer error messages
+  - Additional validation checks
+  - Template changes
+
+# METADATA
+
+metadata:
+  time_lost_minutes: 0
+  # Estimated time lost due to this friction (in minutes)
+
+  recurrence_count: 1
+  # How many times this friction occurred during the pilot?
+
+  workaround_exists: false
+  # Was there a workaround? (true/false)
+
+  workaround_description: ""
+  # If workaround_exists = true, describe the workaround
+
+# NOTES
+
+notes: |
+  Additional context, observations, or related thoughts.
+
+  Use this space for:
+  - Related friction patterns
+  - Potential root causes
+  - Open questions
+  - Follow-up items
+
+# EXAMPLE FILLED-IN ENTRY (delete this section when using template):
+#
+# id: FRICTION-PILOT-001
+# date: "2025-12-01"
+# pilot_id: PILOT-001
+# category: docs
+# severity: medium
+# summary: "Unclear where to add OpenAPI spec for new endpoint"
+#
+# description: |
+#   When implementing AC-EXAMPLE-001 (GET /api/todos), needed to add OpenAPI spec
+#   but documentation didn't clearly indicate whether to modify:
+#   - specs/openapi/service.yaml
+#   - crates/app-http/src/openapi/mod.rs
+#   - Both?
+#
+#   Spent 15 minutes grepping and reading multiple files before finding the right place.
+#   CLAUDE.md mentions OpenAPI but doesn't specify the workflow.
+#
+# expected_behavior: |
+#   CLAUDE.md or governed-feature-dev skill should explicitly document:
+#   "When adding a new endpoint, update specs/openapi/service.yaml and run
+#   cargo xtask openapi-validate to check."
+#
+# impact: |
+#   - 15 minutes lost searching
+#   - Uncertainty about correctness (is the spec in the right place?)
+#   - Could have been 5 minutes if clear docs existed
+#
+# context:
+#   discovered_by: agent
+#   phase: execute
+#   ac_ids: [AC-EXAMPLE-001]
+#   commands_involved:
+#     - "grep -r openapi"
+#     - "fd openapi"
+#   files_involved:
+#     - "specs/openapi/service.yaml"
+#     - "CLAUDE.md"
+#
+# status: open
+#
+# recommendations: |
+#   - Add OpenAPI workflow section to CLAUDE.md or docs/how-to/add-endpoint.md
+#   - Update governed-feature-dev skill to mention OpenAPI update step
+#   - Add xtask command: `cargo xtask openapi-validate` to check spec correctness

@@ -1,0 +1,105 @@
+# Spec Additions: MyService Domain
+#
+# This file extends the template's core spec_ledger.yaml with domain-specific
+# stories, requirements, and acceptance criteria.
+#
+# Naming Convention:
+# - Use domain prefix: MYSERV (for MyService)
+# - Stories: US-MYSERV-NNN
+# - Requirements: REQ-MYSERV-FEATURE
+# - Acceptance Criteria: AC-MYSERV-NNN
+
+metadata:
+  schema_version: "1.0"
+  service_id: "myservice"
+  template_version: "3.3.5"
+  last_updated: "2025-12-01"
+  description: "MyService domain specifications - demonstrates echo endpoint pattern"
+
+stories:
+  - id: US-MYSERV-001
+    title: "MyService Core Capabilities"
+    description: >
+      As a developer using MyService
+      I want basic echo functionality
+      So that I can verify the service is working and test request/response patterns
+    requirements:
+      - id: REQ-MYSERV-ECHO
+        title: "Echo Endpoint"
+        description: >
+          The service must provide an echo endpoint that returns the message
+          provided by the client. This enables basic connectivity testing and
+          demonstrates the request/response pattern.
+        tags: [core, api]
+        must_have_ac: true
+        acceptance_criteria:
+          - id: AC-MYSERV-001
+            text: "GET /api/echo returns the message provided in query parameter"
+            description: >
+              When a client sends a GET request to /api/echo with a message
+              query parameter, the service responds with 200 OK and includes
+              the message in the response body.
+            tags: [kernel, api]
+            must_have_ac: true
+            tests:
+              - type: bdd
+                tag: "@AC-MYSERV-001"
+                file: "forks/example-myservice/features/myservice.feature"
+            implementation_notes: >
+              - Use standard error envelope from template core
+              - Include request ID in response headers
+              - Validate message parameter (non-empty, max length)
+              - Return 400 if message parameter is missing or invalid
+
+          - id: AC-MYSERV-002
+            text: "Echo endpoint validates message parameter"
+            description: >
+              The echo endpoint must validate that the message parameter is
+              present and not empty. Invalid requests return 400 Bad Request
+              with a standard error envelope.
+            tags: [validation, error-handling]
+            must_have_ac: true
+            tests:
+              - type: bdd
+                tag: "@AC-MYSERV-002"
+                file: "forks/example-myservice/features/myservice.feature"
+            implementation_notes: >
+              - Check message parameter exists
+              - Check message is non-empty after trimming
+              - Return standard error envelope with clear error message
+              - Include request ID in error response
+
+# Optional: Document architectural decisions specific to this service
+adrs:
+  - id: ADR-MYSERV-001
+    title: "Echo Endpoint Design"
+    status: proposed
+    description: >
+      Why we chose GET with query parameter instead of POST with body for the
+      echo endpoint. Decision: GET is simpler for testing and doesn't require
+      request body parsing. Suitable for this demonstration endpoint.
+
+# Optional: Link to design documents
+design_docs:
+  - title: "MyService API Design"
+    file: "forks/example-myservice/docs/api-design.md"
+    description: "Overall API design principles and patterns"
+
+# Optional: Track tasks and work items specific to this service
+tasks:
+  - id: TASK-MYSERV-001
+    title: "Implement echo endpoint handler"
+    status: Todo
+    acceptance_criteria:
+      - AC-MYSERV-001
+      - AC-MYSERV-002
+    depends_on: []
+
+  - id: TASK-MYSERV-002
+    title: "Add integration tests for echo endpoint"
+    status: Todo
+    acceptance_criteria:
+      - AC-MYSERV-001
+      - AC-MYSERV-002
+    depends_on:
+      - TASK-MYSERV-001

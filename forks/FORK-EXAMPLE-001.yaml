@@ -1,0 +1,25 @@
+# Fork Entry: Example MyService Fork
+#
+# This is a documentation example showing the minimal changes needed
+# when forking the template for a new domain service.
+
+id: FORK-EXAMPLE-001
+name: "Example MyService Fork"
+domain: "example"
+kernel_version: v3.3.5
+status: experimental
+
+maintainer:
+  name: "Template Examples"
+  contact: "See examples documentation"
+
+forked_at: "2025-12-01"
+
+features:
+  - "Demonstrates minimal domain customization"
+  - "Shows ID prefixing strategy"
+  - "Includes BDD example scenario"
+
+notes: |
+  This is a documentation example showing the minimal changes needed
+  when forking the template for a new domain service.

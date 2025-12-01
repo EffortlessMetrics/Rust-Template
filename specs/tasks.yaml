@@ -131,3 +131,202 @@ tasks:
     docs:
       design: []
       plan: []
+
+  # Versioning Engine Track
+  - id: TASK-VERS-ENGINE-001
+    title: "Introduce versioning module in xtask"
+    requirement: REQ-TPL-VERSIONING-ENGINE
+    acs:
+      - AC-TPL-VERSION-MODULE
+    status: in_progress
+    owner: agent
+    labels: [platform, versioning, release, p0]
+    summary: >
+      Create a dedicated versioning module in xtask that encapsulates all version
+      manipulation logic. This provides a single source of truth for version parsing,
+      validation, and updates across all release commands.
+    recommended_flows: ["ac_first"]
+    docs:
+      design: []
+      plan: []
+
+  - id: TASK-VERS-ENGINE-002
+    title: "Wire spec-ledger as single source of version"
+    requirement: REQ-TPL-VERSIONING-ENGINE
+    acs:
+      - AC-TPL-VERSION-SOURCE
+    status: in_progress
+    owner: agent
+    labels: [platform, versioning, release, p0]
+    summary: >
+      Make specs/spec_ledger.yaml the canonical source of template version.
+      All xtask commands (release-prepare, release-bundle, etc.) should read
+      version from spec_ledger.yaml instead of hardcoded values or multiple sources.
+    recommended_flows: ["ac_first"]
+    depends_on:
+      - TASK-VERS-ENGINE-001
+    docs:
+      design: []
+      plan: []
+
+  - id: TASK-VERS-ENGINE-003
+    title: "Manifest-driven updates for all version-bearing files"
+    requirement: REQ-TPL-VERSIONING-ENGINE
+    acs:
+      - AC-TPL-VERSION-MANIFEST
+    status: in_progress
+    owner: agent
+    labels: [platform, versioning, release, p0]
+    summary: >
+      Define a version manifest (YAML or embedded in spec_ledger) that lists all
+      files requiring version updates (Cargo.toml, pyproject.toml, CLAUDE.md, etc.).
+      The versioning engine reads this manifest and applies updates atomically.
+    recommended_flows: ["ac_first"]
+    depends_on:
+      - TASK-VERS-ENGINE-002
+    docs:
+      design: []
+      plan: []
+
+  - id: TASK-VERS-ENGINE-004
+    title: "Dry-run and atomicity for release-prepare"
+    requirement: REQ-TPL-VERSIONING-ENGINE
+    acs:
+      - AC-TPL-VERSION-DRYRUN
+      - AC-TPL-VERSION-ATOMIC
+    status: in_progress
+    owner: agent
+    labels: [platform, versioning, release, p0]
+    summary: >
+      Add --dry-run flag to release-prepare that shows what would be changed without
+      writing files. Ensure all file updates are atomic (write to temp, then rename)
+      to prevent partial state on errors.
+    recommended_flows: ["ac_first"]
+    depends_on:
+      - TASK-VERS-ENGINE-003
+    docs:
+      design: []
+      plan: []
+
+  # Adoption Track
+  - id: TASK-ADOPT-FORKS-001
+    title: "Template sanity acceptance for first fork"
+    requirement: REQ-TPL-ADOPTION-FORKS
+    acs:
+      - AC-TPL-FORK-SANITY
+    status: in_progress
+    owner: agent
+    labels: [adoption, template, devex, p1]
+    summary: >
+      Define and implement sanity checks for first-time template adopters.
+      Ensure cargo xtask doctor, kernel-smoke, and basic selftest pass cleanly
+      on fresh fork. Document common fork customization points.
+    recommended_flows: ["ac_first"]
+    docs:
+      design: []
+      plan: []
+
+  - id: TASK-ADOPT-IDP-001
+    title: "Add xtask idp-snapshot to emit tile JSON"
+    requirement: REQ-TPL-ADOPTION-IDP
+    acs:
+      - AC-TPL-IDP-SNAPSHOT
+    status: in_progress
+    owner: agent
+    labels: [adoption, idp, backstage, integration, p1]
+    summary: >
+      Implement cargo xtask idp-snapshot command that emits JSON suitable for
+      IDP tile consumption. Include governance health, AC coverage, task counts,
+      recent activity, and metadata conforming to common IDP catalog schemas.
+    recommended_flows: ["ac_first"]
+    docs:
+      design: []
+      plan: []
+
+  - id: TASK-ADOPT-IDP-002
+    title: "Ship minimal Backstage demo plugin in examples/"
+    requirement: REQ-TPL-ADOPTION-IDP
+    acs:
+      - AC-TPL-IDP-DEMO
+    status: in_progress
+    owner: agent
+    labels: [adoption, idp, backstage, example, p1]
+    summary: >
+      Create a minimal Backstage frontend plugin in examples/backstage-plugin/
+      that consumes the idp-snapshot JSON and displays governance tiles.
+      Include setup instructions and screenshots in docs.
+    recommended_flows: ["ac_first"]
+    depends_on:
+      - TASK-ADOPT-IDP-001
+    docs:
+      design: []
+      plan: []
+
+  - id: TASK-ADOPT-AGENTS-001
+    title: "Happy-path agent pilot harness"
+    requirement: REQ-TPL-ADOPTION-AGENTS
+    acs:
+      - AC-TPL-AGENT-PILOT
+    status: in_progress
+    owner: agent
+    labels: [adoption, agents, devex, pilot, p1]
+    summary: >
+      Build a pilot harness for testing agent workflows end-to-end.
+      Include scripts/agent-pilot.sh that runs bootstrap-dev-env, governed-feature-dev,
+      and governed-release Skills in sequence, capturing output and validating state.
+    recommended_flows: ["ac_first"]
+    docs:
+      design: []
+      plan: []
+
+  # DX Track
+  - id: TASK-DX-TOOLING-001
+    title: "xtask doctor lint for rust-analyzer ABI risk"
+    requirement: REQ-TPL-DX-TOOLING
+    acs:
+      - AC-TPL-DOCTOR-ABI
+    status: in_progress
+    owner: agent
+    labels: [dx, tooling, devex, p2]
+    summary: >
+      Add rust-analyzer ABI compatibility check to cargo xtask doctor.
+      Detect mismatched rustc versions between system and Nix shell, warn about
+      stale rust-analyzer caches, and recommend mitigation steps.
+    recommended_flows: ["ac_first"]
+    docs:
+      design: []
+      plan: []
+
+  - id: TASK-DX-LINT-001
+    title: "Decide markdownlint policy level"
+    requirement: REQ-TPL-DX-LINT
+    acs:
+      - AC-TPL-MDLINT-POLICY
+    status: in_progress
+    owner: agent
+    labels: [dx, lint, docs, policy, p2]
+    summary: >
+      Define and document markdownlint policy for the template.
+      Decide whether to run as hard gate (precommit/selftest) or soft warning
+      (docs-check). Add .markdownlint.json config and integrate with xtask.
+    recommended_flows: ["ac_first"]
+    docs:
+      design: []
+      plan: []
+
+  - id: TASK-DX-SPELL-001
+    title: "Extract dictionary governance into a short note"
+    requirement: REQ-TPL-DX-SPELL
+    acs:
+      - AC-TPL-SPELL-DOC
+    status: in_progress
+    owner: agent
+    labels: [dx, spellcheck, docs, governance, p2]
+    summary: >
+      Document cspell dictionary governance in docs/how-to/spellcheck.md.
+      Cover when to add words, how to keep cspell.yaml tidy, and policy for
+      technical jargon vs. typos. Link from CLAUDE.md and xtask help-flows.
+    recommended_flows: ["ac_first"]
+    docs:
+      design: []
+      plan: []

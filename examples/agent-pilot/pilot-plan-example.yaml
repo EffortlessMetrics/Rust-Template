@@ -1,0 +1,182 @@
+# Example Agent Pilot Plan: Implement Single AC
+#
+# This is a concrete example pilot that can be run to test the agent-pilot harness.
+# It demonstrates implementing a single acceptance criterion end-to-end.
+
+metadata:
+  pilot_id: PILOT-EXAMPLE-001
+  created_date: "2025-12-01"
+  author: "Template Author"
+  template_version: "v3.3.5"
+  description: >
+    Example pilot demonstrating end-to-end AC implementation using the governed-feature-dev workflow.
+    This pilot uses AC-TPL-001 (health check endpoint) as a known-working example to validate
+    the pilot harness itself.
+
+objective: >
+  Validate that the agent-pilot harness enables autonomous AC implementation by re-implementing
+  an existing AC (AC-TPL-001) in a clean branch, following all governed workflows, and
+  capturing friction/learnings along the way.
+
+scope:
+  # What's in scope
+  ac_ids:
+    - AC-TPL-001  # Health check endpoint (known working AC for validation)
+
+  task_ids:
+    - TASK-001  # If you've defined tasks in specs/tasks.yaml
+
+  # Time constraints
+  time_limit: "2 hours"
+  time_notes: >
+    This is a validation pilot for the harness itself, so we use a known-working AC.
+    If implementing a genuinely new AC, allow 3-4 hours for first attempts.
+
+  # Out of scope
+  excluded:
+    - "Refactoring existing health check implementation"
+    - "Adding new health check features beyond AC-TPL-001"
+    - "Modifying other endpoints or handlers"
+
+# Execution phases
+phases:
+  # Phase 1: Setup and orientation
+  - name: "Setup"
+    description: >
+      Bootstrap environment, verify health, and prepare context for AC implementation.
+    commands:
+      - "cargo xtask dev-up"  # One-command setup: env check + hooks + quick tests
+      - "cargo run -p app-http &"  # Start platform APIs for introspection
+      - "sleep 3"  # Give service time to start
+      - "curl http://localhost:8080/platform/status"  # Verify APIs running
+      - "curl http://localhost:8080/platform/agent/hints"  # Get prioritized work
+      - "curl http://localhost:8080/platform/graph | jq '.stories[] | select(.id == \"US-TPL-001\")'"  # Understand story context
+      - "cargo xtask bundle implement_ac"  # Generate focused context bundle
+      - "cargo xtask ac-status"  # Baseline AC coverage
+    checkpoints:
+      - "Environment is healthy (cargo xtask doctor passes)"
+      - "Platform APIs are running on localhost:8080"
+      - "Bundle generated successfully in bundle/implement_ac/"
+      - "Understand AC-TPL-001 requirements from bundle"
+      - "Current AC status is 'Passing' (baseline before re-implementation)"
+
+  # Phase 2: Execute the work
+  - name: "Execute"
+    description: >
+      Re-implement the health check endpoint following the bundle context and governed workflows.
+      This is a learning exercise to validate the pilot harness, not production work.
+    agent: "pilot-agent"
+    skills:
+      - "governed-feature-dev"
+    guardrails:
+      - "Must read bundle/implement_ac/context.md as primary working context"
+      - "Must query /platform/agent/hints before starting work"
+      - "Must follow AC-first methodology (understand AC before coding)"
+      - "Must run cargo xtask test-changed after each logical change"
+      - "Must run cargo xtask ac-tests AC-TPL-001 to validate AC-specific tests"
+      - "Must run cargo xtask check before Review phase"
+      - "Must capture friction immediately when encountered (don't accumulate)"
+      - "Must NOT push to remote repository"
+      - "Must NOT modify specs without understanding the governance impact"
+    commands:
+      - "cat bundle/implement_ac/context.md | head -100"  # Preview bundle context
+      - "cat bundle/implement_ac/bundle.yaml"  # Understand bundle manifest
+      - "# Read relevant files from bundle (use Read tool)"
+      - "# Identify files to modify: crates/app-http/src/handlers/health.rs"
+      - "# Run: cargo xtask test-changed (incremental validation)"
+      - "# Run: cargo xtask ac-tests AC-TPL-001 (AC-specific tests)"
+      - "# Run: cargo xtask check (full validation)"
+    checkpoints:
+      - "Health check handler code reviewed and understood"
+      - "BDD scenario reviewed (specs/features/template_core.feature @AC-TPL-005)"
+      - "Tests pass: cargo xtask test-changed"
+      - "AC tests pass: cargo xtask ac-tests AC-TPL-001"
+      - "No clippy violations: cargo xtask check"
+      - "At least one friction entry captured (even if minor)"
+
+  # Phase 3: Review and validate
+  - name: "Review"
+    description: >
+      Run full governance validation, assess outcomes, and document learnings.
+    commands:
+      - "cargo xtask selftest"  # Full 10-step governance gate
+      - "cargo xtask ac-status"  # Verify AC status unchanged (should still be Passing)
+      - "ls -la friction-entries/"  # Check friction captured
+      - "ls -la adrs/"  # Check if any design decisions documented
+      - "# Document findings in pilot-notes.md"
+    checkpoints:
+      - "Selftest passes (all 10 steps)"
+      - "AC-TPL-001 status unchanged (still Passing)"
+      - "At least one friction entry exists (demonstrates capture workflow)"
+      - "Pilot notes documented with clear summary"
+      - "Repo is in clean state (no uncommitted changes or broken tests)"
+
+# Success criteria
+success_criteria:
+  - id: "SC-001"
+    text: "AC-TPL-001 understood and context reviewed"
+    metric: "Agent can explain what AC-TPL-001 requires and where the code is"
+
+  - id: "SC-002"
+    text: "Validation ladder executed successfully"
+    metric: "cargo xtask check and cargo xtask selftest both pass"
+
+  - id: "SC-003"
+    text: "Friction capture workflow validated"
+    metric: "At least one friction entry created in friction-entries/"
+
+  - id: "SC-004"
+    text: "Platform APIs used for introspection"
+    metric: "Agent queried /platform/status, /platform/agent/hints, /platform/graph"
+
+  - id: "SC-005"
+    text: "Bundle workflow validated"
+    metric: "cargo xtask bundle implement_ac generated usable context"
+
+  - id: "SC-006"
+    text: "Pilot harness is usable for future pilots"
+    metric: "Clear documentation and templates enable next pilot without confusion"
+
+# Metrics to collect
+metrics:
+  quantitative:
+    - "Total time taken (target: < 2 hours)"
+    - "Number of commands executed"
+    - "Number of platform API queries"
+    - "Files read from bundle"
+    - "Validation attempts (check, test-ac, selftest) and results"
+    - "Friction entries created"
+
+  qualitative:
+    - "Bundle quality: Was context sufficient? (1-5 scale)"
+    - "Platform API usefulness: Did APIs surface needed info? (1-5 scale)"
+    - "Documentation clarity: Was pilot harness easy to follow? (1-5 scale)"
+    - "Friction capture ease: Was template helpful? (1-5 scale)"
+    - "Overall autonomy: Could this be run without human intervention? (yes/partial/no)"
+
+# Expected outputs
+outputs:
+  required:
+    - "pilot-notes.md with summary and findings"
+    - "friction-entries/ with at least one entry demonstrating template"
+    - "evidence/selftest-results.txt with selftest output"
+
+  optional:
+    - "adrs/ with design decision (if any ambiguity encountered)"
+    - "evidence/bundle-output.md with bundle content preview"
+    - "Recommendations for improving pilot harness"
+
+# Notes and context
+notes: >
+  This is a META-PILOT: it validates the pilot harness itself by using a known-working AC.
+  Future pilots will use this as a reference for structure and process.
+
+  Key learnings to capture:
+  - Is the pilot-plan.yaml format clear and actionable?
+  - Are the templates (friction, ADR) easy to use?
+  - Do platform APIs provide the right information?
+  - Are bundles scoped correctly?
+  - Is the README comprehensive enough for a first-time pilot runner?
+
+  This pilot does NOT modify code (AC-TPL-001 already exists and passes).
+  It focuses on PROCESS validation: can an agent follow the pilot workflow?

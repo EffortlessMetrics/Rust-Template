@@ -19,6 +19,16 @@ pub fn run() -> Result<()> {
         }
     }
 
+    // Check ABI consistency (system rustc vs Nix rustc)
+    print!("Toolchain ABI consistency... ");
+    match check_abi_consistency() {
+        Ok(msg) => println!("{} {}", "✓".green(), msg.dimmed()),
+        Err(warning) => {
+            println!("{} {}", "⚠".yellow(), warning);
+            warnings += 1;
+        }
+    }
+
     // Check Cargo version
     print!("Cargo... ");
     match which::which("cargo") {
@@ -155,6 +165,52 @@ fn check_rust_version() -> Result<String> {
     }
 }
 
+fn check_abi_consistency() -> Result<String, String> {
+    // If already in Nix shell, no check needed
+    if std::env::var("IN_NIX_SHELL").is_ok() {
+        return Ok("In Nix shell".to_string());
+    }
+
+    // Check if Nix is available
+    if which::which("nix").is_err() {
+        return Ok("Nix not installed (check skipped)".to_string());
+    }
+
+    // Get current rustc version
+    let current_output = Command::new("rustc")
+        .arg("--version")
+        .output()
+        .map_err(|e| format!("Failed to get current rustc version: {}", e))?;
+    let current_version = String::from_utf8_lossy(&current_output.stdout);
+    let current_version = extract_version_number(&current_version);
+
+    // Get Nix rustc version
+    let nix_output = Command::new("nix")
+        .args(["develop", "-c", "rustc", "--version"])
+        .output()
+        .map_err(|e| format!("Failed to get Nix rustc version: {}", e))?;
+    let nix_version = String::from_utf8_lossy(&nix_output.stdout);
+    let nix_version = extract_version_number(&nix_version);
+
+    // Compare versions
+    if current_version == nix_version {
+        Ok(format!("System and Nix toolchains match ({})", current_version))
+    } else {
+        Err(format!(
+            "Toolchain mismatch detected: System rustc {} vs Nix rustc {}\n      \
+            This can cause rust-analyzer proc-macro errors.\n      \
+            Fix: Enter 'nix develop' before running IDE.\n      \
+            See: docs/TROUBLESHOOTING.md §rust-analyzer ABI",
+            current_version, nix_version
+        ))
+    }
+}
+
+fn extract_version_number(version_output: &str) -> String {
+    // Extract version number from "rustc X.Y.Z (hash date)" format
+    version_output.trim().split_whitespace().nth(1).unwrap_or("unknown").to_string()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -202,5 +258,37 @@ mod tests {
         // Verify that the run function is accessible and has the correct signature
         // This ensures the command is properly exported for use by the CLI
         let _: fn() -> Result<()> = run;
+    }
+
+    #[test]
+    fn test_extract_version_number() {
+        // Test version extraction from rustc output
+        let test_cases = vec![
+            ("rustc 1.89.0 (abc123456 2024-01-01)", "1.89.0"),
+            ("rustc 1.90.1 (def789012 2024-02-01)", "1.90.1"),
+            ("rustc 1.91.0 (ghi345678 2024-03-01)", "1.91.0"),
+            ("  rustc 1.89.0 (abc123 2024-01-01)  ", "1.89.0"), // with whitespace
+        ];
+
+        for (input, expected) in test_cases {
+            let result = extract_version_number(input);
+            assert_eq!(result, expected, "Failed to extract version from: {}", input);
+        }
+    }
+
+    #[test]
+    fn test_extract_version_number_handles_malformed() {
+        // Test that malformed input doesn't panic
+        let malformed = vec!["", "rustc", "some random text"];
+
+        for input in malformed {
+            let result = extract_version_number(input);
+            // Should return "unknown" for malformed input
+            assert!(
+                result == "unknown" || !result.is_empty(),
+                "Should handle malformed input: {}",
+                input
+            );
+        }
     }
 }

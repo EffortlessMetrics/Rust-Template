@@ -1,0 +1,163 @@
+# Agent Pilot Plan Template
+#
+# Template Version: 1.0.0 (aligned with template v3.3.5)
+# Schema Version: 1.0
+# Last Updated: 2025-12-01
+#
+# Purpose: Define a structured, time-boxed pilot for evaluating autonomous agent capabilities
+#
+# Usage:
+#   1. Copy this file: cp pilot-plan-template.yaml pilot-plan-<NAME>.yaml
+#   2. Fill in metadata, scope, phases, and success_criteria
+#   3. Run pilot following README.md instructions
+#   4. Capture findings in pilot-notes.md and friction-entries/
+
+metadata:
+  pilot_id: PILOT-TEMPLATE-001  # Unique identifier (e.g., PILOT-001, PILOT-AC-IMPL-001)
+  created_date: "2025-12-01"
+  author: "Your Name or Agent"
+  template_version: "v3.3.5"
+  description: >
+    Brief description of what this pilot is testing.
+    Include the hypothesis or goal you want to validate.
+
+objective: >
+  High-level goal in 1-2 sentences.
+  Example: "Test agent's ability to implement a single AC autonomously using the implement_ac bundle."
+
+scope:
+  # What's in scope
+  ac_ids:
+    - AC-EXAMPLE-001  # List specific AC IDs this pilot covers
+  task_ids:
+    - TASK-EXAMPLE-001  # Optional: tasks from specs/tasks.yaml
+
+  # Time constraints
+  time_limit: "2 hours"  # Hard time-box
+  time_notes: >
+    If time runs out, stop work and document how far you got.
+    The goal is to learn, not to force completion.
+
+  # Out of scope
+  excluded:
+    - "Refactoring unrelated code"
+    - "Adding features beyond the specified ACs"
+    - "Pushing to remote repository"
+
+# Execution phases
+phases:
+  # Phase 1: Setup and orientation
+  - name: "Setup"
+    description: >
+      Bootstrap environment, understand task scope, and prepare context.
+    commands:
+      - "cargo xtask dev-up"  # One-command environment setup
+      - "cargo run -p app-http &"  # Start platform APIs
+      - "curl http://localhost:8080/platform/status"  # Check governance health
+      - "curl http://localhost:8080/platform/agent/hints"  # Get prioritized work
+      - "cargo xtask bundle implement_ac"  # Generate focused context bundle
+      - "cargo xtask ac-status"  # Understand AC coverage before work
+    checkpoints:
+      - "Environment is healthy (doctor passes)"
+      - "Platform APIs are running"
+      - "Bundle generated successfully"
+      - "Understand AC requirements and current status"
+
+  # Phase 2: Execute the work
+  - name: "Execute"
+    description: >
+      Implement code, tests, and documentation following governed workflows.
+    agent: "pilot-agent"  # Reference to .claude/agents/pilot-agent.md
+    skills:
+      - "governed-feature-dev"  # Or governed-maintenance, governed-governance-debug
+    guardrails:
+      - "Must use /platform/agent/hints to understand prioritized work"
+      - "Must use bundles for focused context (avoid scanning entire repo)"
+      - "Must run `cargo xtask ac-tests <AC_ID>` after changes"
+      - "Must run `cargo xtask check` before moving to Review phase"
+      - "Must capture friction as it occurs (use friction-template.yaml)"
+      - "Must NOT push to remote without explicit instruction"
+    commands:
+      - "Read bundle/implement_ac/context.md"  # Primary working context
+      - "Implement code following patterns from bundle"
+      - "cargo xtask test-changed"  # Incremental validation
+      - "cargo xtask ac-tests AC-EXAMPLE-001"  # AC-specific validation
+      - "cargo xtask check"  # Full fmt, clippy, unit tests
+    checkpoints:
+      - "Code implements AC requirements"
+      - "BDD scenario passes (if applicable)"
+      - "Unit tests pass"
+      - "No clippy violations"
+      - "AC tests pass"
+
+  # Phase 3: Review and validate
+  - name: "Review"
+    description: >
+      Final validation, capture learnings, and document outcomes.
+    commands:
+      - "cargo xtask selftest"  # Full governance gate
+      - "cargo xtask ac-status"  # Verify AC status improved
+      - "Review friction-entries/ for captured issues"
+      - "Review adrs/ for design decisions"
+      - "Summarize findings in pilot-notes.md"
+    checkpoints:
+      - "Selftest passes (or documented reason for failure)"
+      - "AC status improved (Failing → Passing or NotStarted → InProgress)"
+      - "All friction captured in structured format"
+      - "All design decisions documented in ADRs"
+      - "Clear summary of outcomes and next steps"
+
+# Success criteria
+success_criteria:
+  - id: "SC-001"
+    text: "AC implemented correctly according to spec_ledger.yaml"
+    metric: "BDD scenario passes or unit tests verify behavior"
+
+  - id: "SC-002"
+    text: "All tests pass"
+    metric: "`cargo xtask check` exits 0"
+
+  - id: "SC-003"
+    text: "No regressions introduced"
+    metric: "`cargo xtask selftest` passes or failures are unrelated to changes"
+
+  - id: "SC-004"
+    text: "Friction captured and documented"
+    metric: "At least one friction entry per hour of work"
+
+  - id: "SC-005"
+    text: "Agent operated autonomously"
+    metric: "No manual intervention required after Setup phase"
+
+# Metrics to collect
+metrics:
+  quantitative:
+    - "Actual time taken (vs. time_limit)"
+    - "Number of commands executed"
+    - "Number of platform API queries"
+    - "Files modified (count and categories: code/tests/docs/specs)"
+    - "Validation attempts (check, test-ac, selftest) and results"
+
+  qualitative:
+    - "Clarity of specs/ACs (1-5 scale)"
+    - "Tooling effectiveness (1-5 scale)"
+    - "API usefulness (1-5 scale)"
+    - "Friction level (low/medium/high)"
+    - "Autonomy achieved (none/partial/full)"
+
+# Expected outputs
+outputs:
+  required:
+    - "pilot-notes.md with summary and findings"
+    - "friction-entries/ with at least one entry"
+    - "evidence/ with selftest output"
+
+  optional:
+    - "adrs/ with design decisions (if non-trivial choices made)"
+    - "GitHub issue linking REQ/AC IDs (if follow-up needed)"
+    - "PR (if work is complete and selftest-green)"
+
+# Notes and context
+notes: >
+  Additional context, assumptions, or constraints for this pilot.
+  Example: "This pilot assumes the developer has Nix installed and cargo xtask dev-up has run successfully."

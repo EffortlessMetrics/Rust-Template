@@ -553,6 +553,20 @@ enum Commands {
         #[arg(long)]
         json: bool,
     },
+
+    // ============================================================================
+    // IDP INTEGRATION (Machine-readable snapshots for IDPs)
+    // ============================================================================
+    /// Generate IDP snapshot (consolidated governance + task state for IDPs)
+    #[command(next_help_heading = "🔌 IDP Integration")]
+    IdpSnapshot {
+        /// Output file path (default: stdout)
+        #[arg(long)]
+        output: Option<String>,
+        /// Pretty-print JSON output
+        #[arg(long)]
+        pretty: bool,
+    },
 }
 
 fn main() -> Result<()> {
@@ -743,6 +757,9 @@ fn main() -> Result<()> {
         Commands::Version { json } => {
             commands::version::run(commands::version::VersionArgs { json })
         }
+        Commands::IdpSnapshot { output, pretty } => {
+            commands::idp_snapshot::run(commands::idp_snapshot::IdpSnapshotArgs { output, pretty })
+        }
     }
 }
 
@@ -866,6 +883,7 @@ pub fn all_command_names() -> Vec<&'static str> {
         "questions-list",
         "questions-new",
         "hakari",
+        "idp-snapshot",
         "install-hooks",
         "migrate",
         "pin-actions",
