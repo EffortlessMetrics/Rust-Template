@@ -1,14 +1,14 @@
 # Feature Status Notes
 
-**Last Updated:** 2025-11-27
-**Template Version:** v3.3.3
+**Last Updated:** 2025-11-30
+**Template Version:** v3.3.4
 **Purpose:** Document AC coverage state, @ci-only testing pattern, and meta/CI-only contracts.
 
 ---
 
 ## Executive Summary
 
-As of v3.3.3:
+As of v3.3.4:
 - **Total ACs:** 81
 - **Kernel ACs (must_have_ac: true):** 52
 - **Template ACs (must_have_ac: false):** 29

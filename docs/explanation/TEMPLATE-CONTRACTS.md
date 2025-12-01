@@ -1,8 +1,8 @@
 # Template Contracts: Kernel Requirements and Extension Points
 
-**Template Version:** v3.3.3
+**Template Version:** v3.3.4
 **Schema Version:** spec_ledger.yaml v1.0
-**Last Updated:** 2025-11-26
+**Last Updated:** 2025-11-30
 
 ---
 
@@ -18,7 +18,7 @@ If you're building a new service from this template (like the Knowledge Hub), yo
 
 Everything else (your domain logic, additional routes, crates, deployment) is yours to customize.
 
-**See [docs/KERNEL_SNAPSHOT.md](../KERNEL_SNAPSHOT.md) for the baseline v3.3.2 kernel ACs.**
+**See [docs/KERNEL_SNAPSHOT.md](../KERNEL_SNAPSHOT.md) for the baseline v3.3.4 kernel ACs.**
 
 ---
 
@@ -842,6 +842,27 @@ fn test_name() {
 - Regenerate feature_status.md
 - Check git diff for changes
 - Fail if file changed (not committed)
+
+---
+
+#### Docs Alignment Invariants (AC-PLT-009 / AC-PLT-010)
+
+**Contract:**
+
+`cargo xtask docs-check` enforces that these sources agree on version and kernel state:
+
+- `specs/spec_ledger.yaml` → `metadata.template_version`
+- `README.md` → Template Version / Kernel Baseline badges
+- `docs/ROADMAP.md` → frontmatter `last_updated` + H1 `(vX.Y.Z)`
+- `CHANGELOG.md` → latest `[X.Y.Z]` entry
+
+**On version bumps:**
+
+1. Update `spec_ledger.yaml` metadata.
+2. Update README badges and "Kernel Version" section.
+3. Add or update the `[X.Y.Z]` section in `CHANGELOG.md`.
+4. Update `docs/ROADMAP.md` frontmatter + title to the new version.
+5. Run `cargo xtask docs-check && cargo xtask selftest`.
 
 ---
 

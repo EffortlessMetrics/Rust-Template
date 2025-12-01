@@ -34,7 +34,7 @@ Feature: Platform schema and metadata surfaces
     When I send a GET request to "/platform/status"
     Then the response status code should be 200
     And the response body should contain "rust-template"
-    And the response body should contain "3.3.3"
+    And the response body should contain "3.3.4"
     When I send a GET request to "/ui"
     Then the response status code should be 200
     And the response body should contain "docs/runbooks/platform-kernel.md"
