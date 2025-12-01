@@ -6,7 +6,7 @@ status: published
 audience: fork-maintainers, platform-engineers
 tags: [fork, customization, governance, override, opinion]
 stories: [US-TPL-PLT-001]
-requirements: [REQ-PLT-ONBOARDING, REQ-PLT-DOC-TEMPLATES]
+requirements: [REQ-PLT-ONBOARDING, REQ-PLT-DOC-TEMPLATES, REQ-TPL-OVERRIDE-PATH, REQ-TPL-EXAMPLE-FORK]
 acs: [AC-TPL-OVERRIDE-TRACEABLE]
 adrs: [ADR-0005]
 last_updated: 2025-11-26

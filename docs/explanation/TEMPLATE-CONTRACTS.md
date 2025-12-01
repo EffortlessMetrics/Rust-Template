@@ -1,8 +1,29 @@
+---
+id: EXPLANATION-TPL-CONTRACTS-001
+title: "Template Contracts: Kernel Requirements and Extension Points"
+doc_type: explanation
+status: published
+audience: fork-maintainers, platform-engineers, contributors
+tags: [kernel, contracts, governance, bdd, fork]
+stories: [US-TPL-PLT-001]
+requirements:
+  - REQ-TPL-BDD-HARNESS
+  - REQ-TPL-FORK-VISIBILITY
+  - REQ-TPL-OPINIONATED-DEFAULTS
+  - REQ-PLT-DOCS-CONSISTENCY
+acs:
+  - AC-TPL-BDD-EXIT-CODES
+  - AC-TPL-KERNEL-CONTRACT-EMITTED
+  - AC-TPL-OPINIONS-DOCUMENTED
+adrs: [ADR-0005]
+last_updated: 2025-12-01
+---
+
 # Template Contracts: Kernel Requirements and Extension Points
 
 **Template Version:** v3.3.4
 **Schema Version:** spec_ledger.yaml v1.0
-**Last Updated:** 2025-11-30
+**Last Updated:** 2025-12-01
 
 ---
 
