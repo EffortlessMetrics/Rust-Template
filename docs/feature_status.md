@@ -142,10 +142,10 @@ Auto-generated AC status from acceptance (BDD) and unit tests.
 
 *(This list SHOULD be empty in this repo. If anything appears here, it's a bug.)*
 
+- AC-TPL-VERSION-ATOMIC: Version updates are atomic with rollback on failure, ensuring no partial state if any file update fails
+- AC-TPL-VERSION-MANIFEST: Version locations declared in a manifest file (e.g., specs/version_manifest.yaml) listing all files and extraction patterns
 - AC-TPL-VERSION-DRYRUN: `cargo xtask version-update X.Y.Z --dry-run` shows all changes before applying them, listing each file and the old→new version
 - AC-TPL-BUNDLE-MINIMAL-SCOPE: Bundle scope is minimal: specs/ includes only referenced sections (not entire spec_ledger), docs/ includes only docs mentioned in ACs/tests, src/ is optional and narrowly scoped (crate-specific). As a guardrail, a single bundle MUST NOT exceed a configurable size and file-count threshold (default: 300 KiB / 64 files) unless explicitly overridden via BUNDLE_MAX_BYTES / BUNDLE_MAX_FILES.
-- AC-TPL-VERSION-MANIFEST: Version locations declared in a manifest file (e.g., specs/version_manifest.yaml) listing all files and extraction patterns
-- AC-TPL-VERSION-ATOMIC: Version updates are atomic with rollback on failure, ensuring no partial state if any file update fails
 
 ## Meta / CI-only ACs (Not Executed Locally)
 
