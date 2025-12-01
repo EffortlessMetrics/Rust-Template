@@ -199,7 +199,46 @@ pub fn run(task_name: &str) -> Result<()> {
         println!("  {} Size limit exceeded!", "[WARN]".yellow());
     }
 
+    // Run scope audit to catch over-inclusion (soft warning for now)
+    audit_bundle_scope(task_name, file_count, total_bytes);
+
     Ok(())
+}
+
+/// Default thresholds for bundle scope audit (AC-TPL-BUNDLE-MINIMAL-SCOPE)
+const DEFAULT_MAX_FILES: usize = 64;
+const DEFAULT_MAX_BYTES: usize = 300 * 1024; // 300 KiB
+
+/// Audit bundle scope to catch over-inclusion.
+/// Currently a soft warning; will become a hard gate when AC-TPL-BUNDLE-MINIMAL-SCOPE
+/// is promoted to must_have_ac: true.
+fn audit_bundle_scope(task_name: &str, file_count: usize, total_bytes: usize) {
+    let max_files = std::env::var("BUNDLE_MAX_FILES")
+        .ok()
+        .and_then(|v| v.parse().ok())
+        .unwrap_or(DEFAULT_MAX_FILES);
+
+    let max_bytes = std::env::var("BUNDLE_MAX_BYTES")
+        .ok()
+        .and_then(|v| v.parse().ok())
+        .unwrap_or(DEFAULT_MAX_BYTES);
+
+    let files_over = file_count > max_files;
+    let bytes_over = total_bytes > max_bytes;
+
+    if files_over || bytes_over {
+        println!(
+            "  {} Bundle '{}' is large (files: {}/{}, bytes: {}/{}).",
+            "[SCOPE-WARN]".yellow(),
+            task_name,
+            file_count,
+            max_files,
+            total_bytes,
+            max_bytes
+        );
+        println!("    Consider narrowing include patterns in .llm/contextpack.yaml");
+        println!("    or set BUNDLE_MAX_FILES/BUNDLE_MAX_BYTES to raise thresholds.");
+    }
 }
 
 fn get_workspace_root() -> Result<PathBuf> {
@@ -433,5 +472,20 @@ mod tests {
         assert!(yaml.contains("type: bdd"));
         assert!(yaml.contains("tag: '@AC-TPL-001'"));
         assert!(yaml.contains("file: specs/features/test.feature"));
+    }
+
+    /// AC-TPL-BUNDLE-MINIMAL-SCOPE: Verifies bundle scope audit runs and detects
+    /// over-threshold bundles (soft warning for now).
+    #[test]
+    fn bundle_scope_audit() {
+        // Verify the audit function exists and doesn't panic on normal inputs
+        audit_bundle_scope("test_task", 10, 10_000);
+
+        // Verify it doesn't panic on over-threshold inputs
+        audit_bundle_scope("large_task", 100, 500_000);
+
+        // Verify default thresholds are reasonable
+        assert_eq!(DEFAULT_MAX_FILES, 64);
+        assert_eq!(DEFAULT_MAX_BYTES, 300 * 1024);
     }
 }

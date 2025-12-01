@@ -425,4 +425,66 @@ mod tests {
         assert_eq!(hints[0].title, "Test task");
         assert_eq!(hints[0].priority, HintPriority::Medium);
     }
+
+    /// AC-TPL-AGENT-HINTS-SCHEMA: Validates the Hint struct serializes with all
+    /// required fields: id, kind, priority, status, reason, target, tags, links.
+    #[test]
+    fn hint_serialization_schema() {
+        let hint = Hint {
+            id: "HINT-TEST-001".to_string(),
+            kind: HintKind::Task,
+            title: "Test hint".to_string(),
+            priority: HintPriority::High,
+            status: HintStatus::Open,
+            reason: HintReason {
+                code: "TASK_OPEN".to_string(),
+                details: "Task is open and ready for work".to_string(),
+            },
+            target: HintTarget::Task { id: "TASK-001".to_string() },
+            tags: vec!["security".to_string(), "v3".to_string()],
+            links: HintLinks {
+                spec: Some("specs/spec_ledger.yaml#REQ-TPL-001".to_string()),
+                task: Some("TASK-001".to_string()),
+                docs: vec!["docs/adr/0006-supply-chain-hardening.md".to_string()],
+                adrs: vec!["ADR-0006".to_string()],
+                extra: BTreeMap::new(),
+            },
+        };
+
+        let json = serde_json::to_string(&hint).unwrap();
+        let parsed: serde_json::Value = serde_json::from_str(&json).unwrap();
+
+        // Verify all required fields are present
+        assert!(parsed.get("id").is_some(), "Missing 'id' field");
+        assert!(parsed.get("kind").is_some(), "Missing 'kind' field");
+        assert!(parsed.get("priority").is_some(), "Missing 'priority' field");
+        assert!(parsed.get("status").is_some(), "Missing 'status' field");
+        assert!(parsed.get("reason").is_some(), "Missing 'reason' field");
+        assert!(parsed.get("target").is_some(), "Missing 'target' field");
+        assert!(parsed.get("tags").is_some(), "Missing 'tags' field");
+        assert!(parsed.get("links").is_some(), "Missing 'links' field");
+
+        // Verify reason has code and details
+        let reason = parsed.get("reason").unwrap();
+        assert!(reason.get("code").is_some(), "reason missing 'code'");
+        assert!(reason.get("details").is_some(), "reason missing 'details'");
+
+        // Verify target has type and id
+        let target = parsed.get("target").unwrap();
+        assert!(target.get("type").is_some(), "target missing 'type'");
+        assert!(target.get("id").is_some(), "target missing 'id'");
+
+        // Verify links structure
+        let links = parsed.get("links").unwrap();
+        assert!(links.get("spec").is_some(), "links missing 'spec'");
+        assert!(links.get("task").is_some(), "links missing 'task'");
+        assert!(links.get("docs").is_some(), "links missing 'docs'");
+        assert!(links.get("adrs").is_some(), "links missing 'adrs'");
+
+        // Verify enum serialization format (snake_case)
+        assert_eq!(parsed.get("kind").unwrap(), "task");
+        assert_eq!(parsed.get("priority").unwrap(), "high");
+        assert_eq!(parsed.get("status").unwrap(), "open");
+        assert_eq!(target.get("type").unwrap(), "task");
+    }
 }

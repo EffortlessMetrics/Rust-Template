@@ -6,6 +6,7 @@ use axum::{
 use business_core::governance::TaskService;
 use serde::{Deserialize, Serialize};
 use spec_runtime::hints::{self, HintEngine};
+use std::collections::BTreeMap;
 
 use crate::AppState;
 
@@ -15,16 +16,57 @@ pub struct RecommendedStep {
     pub value: String,
 }
 
+/// Reason for the hint (why it's being suggested)
+#[derive(Debug, Serialize, Deserialize)]
+pub struct HintReason {
+    pub code: String,
+    pub details: String,
+}
+
+/// Target of the hint (what entity it's about)
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(tag = "type", rename_all = "snake_case")]
+pub enum HintTarget {
+    Task { id: String },
+    Flow { id: String },
+    Requirement { id: String },
+    Ac { id: String },
+}
+
+/// Links to related resources
+#[derive(Debug, Serialize, Deserialize, Default)]
+pub struct HintLinks {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub spec: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub task: Option<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub docs: Vec<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub adrs: Vec<String>,
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub extra: BTreeMap<String, String>,
+}
+
 #[derive(Debug, Serialize, Deserialize)]
 pub struct AgentHint {
+    // Full schema fields (AC-TPL-AGENT-HINTS-SCHEMA)
+    pub id: String,
+    pub kind: String,
+    pub priority: String,
+    pub status: String,
+    pub reason: HintReason,
+    pub target: HintTarget,
+    pub tags: Vec<String>,
+    pub links: HintLinks,
+
+    // Convenience fields (backward compatibility with AC-TPL-AGENT-HINTS)
     pub task_id: String,
     pub title: String,
-    pub status: String,
     pub owner: String,
     pub labels: Vec<String>,
     pub requirement_ids: Vec<String>,
     pub ac_ids: Vec<String>,
-    pub reason: String,
     pub recommended_sequence: Vec<RecommendedStep>,
 }
 
@@ -146,19 +188,66 @@ async fn agent_hints(
                 &devex_spec,
             );
 
+            // Convert status
+            let status_str = match hint.status {
+                hints::HintStatus::Open => "open".to_string(),
+                hints::HintStatus::InProgress => "in_progress".to_string(),
+                hints::HintStatus::Done => "done".to_string(),
+            };
+
+            // Convert priority
+            let priority_str = match hint.priority {
+                hints::HintPriority::Low => "low".to_string(),
+                hints::HintPriority::Medium => "medium".to_string(),
+                hints::HintPriority::High => "high".to_string(),
+            };
+
+            // Convert kind
+            let kind_str = match hint.kind {
+                hints::HintKind::Task => "task".to_string(),
+                hints::HintKind::Governance => "governance".to_string(),
+                hints::HintKind::Policy => "policy".to_string(),
+                hints::HintKind::Flow => "flow".to_string(),
+            };
+
+            // Build links
+            let links = HintLinks {
+                spec: hint.links.spec.clone(),
+                task: hint.links.task.clone(),
+                docs: hint.links.docs.clone(),
+                adrs: hint.links.adrs.clone(),
+                extra: hint.links.extra.clone(),
+            };
+
+            // Build target
+            let target = match &hint.target {
+                hints::HintTarget::Task { id } => HintTarget::Task { id: id.clone() },
+                hints::HintTarget::Flow { id } => HintTarget::Flow { id: id.clone() },
+                hints::HintTarget::Requirement { id } => HintTarget::Requirement { id: id.clone() },
+                hints::HintTarget::Ac { id } => HintTarget::Ac { id: id.clone() },
+            };
+
             Some(AgentHint {
+                // Full schema fields
+                id: hint.id.clone(),
+                kind: kind_str,
+                priority: priority_str,
+                status: status_str,
+                reason: HintReason {
+                    code: hint.reason.code.clone(),
+                    details: hint.reason.details.clone(),
+                },
+                target,
+                tags: hint.tags.clone(),
+                links,
+
+                // Backward-compatible convenience fields
                 task_id,
                 title: hint.title.clone(),
-                status: match hint.status {
-                    hints::HintStatus::Open => "open".to_string(),
-                    hints::HintStatus::InProgress => "in_progress".to_string(),
-                    hints::HintStatus::Done => "done".to_string(),
-                },
                 owner: definition.owner.clone().unwrap_or_else(|| "unassigned".to_string()),
-                labels: hint.tags.clone(),
+                labels: definition.labels.clone(),
                 requirement_ids: vec![definition.requirement.clone()],
                 ac_ids: definition.acs.clone(),
-                reason: hint.reason.details.clone(),
                 recommended_sequence,
             })
         })

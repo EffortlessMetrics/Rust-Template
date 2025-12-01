@@ -174,3 +174,46 @@ fn validate_requirement_and_acs(
 
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// AC-TPL-XTASK-SPEC-ROOT: Verifies that spec_root() resolves via SPEC_ROOT
+    /// environment variable when set, enabling BDD tests to operate on temporary workspaces.
+    #[test]
+    fn spec_root_resolved() {
+        // Save original value if set
+        let original = std::env::var("SPEC_ROOT").ok();
+        let had_original = original.is_some();
+
+        // Test with SPEC_ROOT set
+        let test_path = "/tmp/test-spec-root";
+        // SAFETY: This test runs in isolation and we restore the env var after
+        unsafe { std::env::set_var("SPEC_ROOT", test_path) };
+        let resolved = spec_root();
+        assert_eq!(
+            resolved,
+            PathBuf::from(test_path),
+            "spec_root should return SPEC_ROOT value when set"
+        );
+
+        // Restore original value
+        // SAFETY: Restoring the original environment state
+        if let Some(orig) = original {
+            unsafe { std::env::set_var("SPEC_ROOT", orig) };
+        } else {
+            unsafe { std::env::remove_var("SPEC_ROOT") };
+        }
+
+        // Test without SPEC_ROOT (should fall back to repo root via CARGO_MANIFEST_DIR)
+        // Skip this check if original was set (we just restored it)
+        if !had_original {
+            let fallback = spec_root();
+            assert!(
+                fallback.exists(),
+                "spec_root should return a valid path when SPEC_ROOT is unset"
+            );
+        }
+    }
+}
