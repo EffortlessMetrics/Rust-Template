@@ -23,6 +23,8 @@ pub struct Requirement {
     pub title: String,
     #[serde(default)]
     pub tags: Vec<String>,
+    #[serde(default)]
+    pub must_have_ac: bool,
     pub acceptance_criteria: Vec<AcceptanceCriterion>,
 }
 
@@ -31,6 +33,8 @@ pub struct Requirement {
 pub struct AcceptanceCriterion {
     pub id: String,
     pub text: String,
+    #[serde(default)]
+    pub must_have_ac: bool,
 }
 
 pub fn load_ledger(path: &Path) -> Result<Ledger> {
