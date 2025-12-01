@@ -1,4 +1,4 @@
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 use std::path::Path;
 
@@ -31,7 +31,7 @@ pub enum HintStatus {
 }
 
 /// Why the hint is being suggested
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HintReason {
     /// Machine-readable code (e.g. "TASK_OPEN", "TASK_SECURITY_CRITICAL")
     pub code: String,
@@ -40,7 +40,7 @@ pub struct HintReason {
 }
 
 /// The entity that the hint is about
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "type", rename_all = "snake_case")]
 pub enum HintTarget {
     Task { id: String },
@@ -50,17 +50,22 @@ pub enum HintTarget {
 }
 
 /// Links to related resources (specs, ADRs, docs)
-#[derive(Debug, Clone, Serialize, Default)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct HintLinks {
     /// Reference to spec_ledger.yaml section (e.g. "specs/spec_ledger.yaml#REQ-TPL-001")
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub spec: Option<String>,
     /// Task ID for convenience
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub task: Option<String>,
     /// Documentation paths
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub docs: Vec<String>,
     /// ADR file paths or IDs
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub adrs: Vec<String>,
     /// Extra arbitrary link slots
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
     pub extra: BTreeMap<String, String>,
 }
 

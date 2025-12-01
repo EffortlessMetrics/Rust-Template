@@ -9,6 +9,20 @@ use spec_runtime::tasks::{Task, TaskDocs, TasksSpec};
 use std::{fs, path::Path};
 use tower::util::ServiceExt;
 
+/// Extract task ID from a hint JSON value.
+///
+/// Supports multiple field layouts for forward/backward compatibility:
+/// - `task_id` (convenience field in HTTP/CLI)
+/// - `id` (legacy)
+/// - `target.id` (canonical schema location for task hints)
+fn extract_hint_task_id(hint: &serde_json::Value) -> &str {
+    hint.get("task_id")
+        .and_then(|v| v.as_str())
+        .or_else(|| hint.get("id").and_then(|v| v.as_str()))
+        .or_else(|| hint.get("target").and_then(|t| t.get("id")).and_then(|v| v.as_str()))
+        .unwrap_or("")
+}
+
 #[given("the platform is running")]
 async fn given_platform_running(_world: &mut World) {
     // Background step for platform tests
@@ -500,14 +514,7 @@ async fn then_array_contains_task(world: &mut World, field: String, task_id: Str
         .and_then(|v| v.as_array())
         .unwrap_or_else(|| panic!("field '{}' should be an array", field));
 
-    let found = array.iter().any(|item| {
-        // Support both "id" (old) and "task_id" (new) for backward compatibility
-        item.get("task_id")
-            .or_else(|| item.get("id"))
-            .and_then(|id| id.as_str())
-            .map(|id| id == task_id)
-            .unwrap_or(false)
-    });
+    let found = array.iter().any(|item| extract_hint_task_id(item) == task_id);
 
     assert!(
         found,
@@ -532,14 +539,7 @@ async fn then_array_not_contains_task(world: &mut World, field: String, task_id:
         .and_then(|v| v.as_array())
         .unwrap_or_else(|| panic!("field '{}' should be an array", field));
 
-    let found = array.iter().any(|item| {
-        // Support both "id" (old) and "task_id" (new) for backward compatibility
-        item.get("task_id")
-            .or_else(|| item.get("id"))
-            .and_then(|id| id.as_str())
-            .map(|id| id == task_id)
-            .unwrap_or(false)
-    });
+    let found = array.iter().any(|item| extract_hint_task_id(item) == task_id);
 
     assert!(
         !found,
@@ -849,16 +849,8 @@ async fn then_hints_sorted_by_id_within_status(world: &mut World) {
     // Check that within each status group, IDs are sorted
     for (_status, group) in status_groups {
         for i in 0..group.len() - 1 {
-            let current_id = group[i]
-                .get("task_id")
-                .or_else(|| group[i].get("id"))
-                .and_then(|v| v.as_str())
-                .unwrap_or("");
-            let next_id = group[i + 1]
-                .get("task_id")
-                .or_else(|| group[i + 1].get("id"))
-                .and_then(|v| v.as_str())
-                .unwrap_or("");
+            let current_id = extract_hint_task_id(group[i]);
+            let next_id = extract_hint_task_id(group[i + 1]);
 
             assert!(
                 current_id <= next_id,
