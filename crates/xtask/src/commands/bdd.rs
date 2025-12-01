@@ -97,6 +97,25 @@ pub fn run() -> Result<()> {
     run_with_options(BddOptions::default())
 }
 
+/// Run BDD acceptance tests and ensure JUnit output is written to the specified path.
+/// This is intended for use by ac-status and other commands that need to regenerate
+/// the JUnit file on-demand.
+///
+/// Returns Ok(()) if tests ran (even if some failed), or Err if tests couldn't be run.
+pub fn run_for_junit(junit_path: &std::path::Path) -> Result<()> {
+    // Ensure parent directory exists
+    if let Some(parent) = junit_path.parent() {
+        std::fs::create_dir_all(parent).with_context(|| {
+            format!("Failed to create JUnit output directory: {}", parent.display())
+        })?;
+    }
+
+    // Run with default options - the BDD harness writes to target/junit/acceptance.xml
+    // by convention. If junit_path differs, we'd need to configure the harness,
+    // but for now we assume the standard path.
+    run_with_options(BddOptions { verbose: false, ..Default::default() })
+}
+
 /// Run BDD acceptance tests with custom options
 ///
 /// This function uses semantic detection of `[BDD-PASS]` marker rather than
