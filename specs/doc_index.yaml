@@ -295,6 +295,23 @@ docs:
     acs: [AC-TPL-GOV-WRITE-TASK-STATUS-200]
     adrs: [ADR-0001]
 
+  # Template Contracts (Kernel Requirements and Extension Points)
+  - id: EXPLANATION-TPL-CONTRACTS-001
+    file: docs/explanation/TEMPLATE-CONTRACTS.md
+    title: "Template Contracts: Kernel Requirements and Extension Points"
+    doc_type: explanation
+    stories: [US-TPL-PLT-001]
+    requirements:
+      - REQ-TPL-BDD-HARNESS
+      - REQ-TPL-FORK-VISIBILITY
+      - REQ-TPL-OPINIONATED-DEFAULTS
+      - REQ-PLT-DOCS-CONSISTENCY
+    acs:
+      - AC-TPL-BDD-EXIT-CODES
+      - AC-TPL-KERNEL-CONTRACT-EMITTED
+      - AC-TPL-OPINIONS-DOCUMENTED
+    adrs: [ADR-0005]
+
   # IDP Positioning Guide
   - id: EXPLANATION-TPL-IDP-POSITIONING-001
     file: docs/explanation/idp-positioning.md
@@ -306,6 +323,7 @@ docs:
       - REQ-TPL-METADATA-CONSISTENT
       - REQ-TPL-PLATFORM-SCHEMA
       - REQ-TPL-REL-BUNDLE
+      - REQ-TPL-AI-IDP-COMPAT
     acs:
       - AC-TPL-PLATFORM-GRAPH
       - AC-TPL-PLATFORM-DEVEX
@@ -655,7 +673,11 @@ docs:
     doc_type: how-to
     tags: [override_path]
     stories: [US-TPL-PLT-001]
-    requirements: [REQ-PLT-DOC-TEMPLATES, REQ-PLT-ONBOARDING]
+    requirements:
+      - REQ-PLT-DOC-TEMPLATES
+      - REQ-PLT-ONBOARDING
+      - REQ-TPL-OVERRIDE-PATH
+      - REQ-TPL-EXAMPLE-FORK
     acs: [AC-TPL-OVERRIDE-TRACEABLE]
     adrs: [ADR-0005]
 
