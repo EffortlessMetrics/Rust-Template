@@ -154,6 +154,40 @@ When you change docs, follow this pattern:
 2. Run `cargo xtask skills-lint` or `cargo xtask agents-lint`
 3. Run `cargo xtask docs-check` to verify
 
+### 6.4.1 Example: docs-check catching README version drift <!-- doclint:disable orphan-version -->
+
+If `README.md` claims `Template Version: vA.B.C` but `specs/spec_ledger.yaml` has a different `template_version` (say `X.Y.Z`), the `cargo xtask docs-check` "Version alignment" gate will catch it:
+
+```text
+📚 Checking documentation consistency...
+
+  Canonical version (spec_ledger): X.Y.Z
+  README.md version: A.B.C (expected X.Y.Z) ✗
+  ...
+
+Version mismatches found:
+  • README.md has 'A.B.C', expected 'X.Y.Z' (pattern: H1: # ... (vX.Y.Z))
+
+To fix:
+  1. Update the canonical version: specs/spec_ledger.yaml → metadata.template_version
+  2. Or run: cargo xtask release-prepare X.Y.Z to bump all files
+  3. Commit changes and verify: cargo xtask selftest
+Version alignment... ✗ Mismatch
+```
+
+**Typical fix paths:**
+
+1. **You made a mistake (not actually releasing a new version):**
+   - Revert README.md back to the canonical version from spec_ledger.yaml
+   - Run `cargo xtask docs-check` to verify alignment
+
+2. **You're doing a proper version bump:**
+   - Update `specs/spec_ledger.yaml → metadata.template_version` to the new version
+   - Run `cargo xtask release-prepare <VERSION>` to apply changes consistently to all versioned files
+   - Run `cargo xtask docs-check` and `cargo xtask selftest` to verify
+
+This demonstrates the governance principle: **the spec_ledger is the source of truth** for the template version. All other versioned files must agree with it.
+
 ### 6.5. Doc type contracts
 
 Each `doc_type` carries light structural expectations. These are enforced as **soft checks** by `cargo xtask docs-check`:
