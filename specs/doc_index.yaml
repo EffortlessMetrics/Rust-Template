@@ -750,3 +750,22 @@ docs:
     requirements: [REQ-TPL-BUNDLE-CONTRACT]
     acs: [AC-TPL-BUNDLE-LAYOUT, AC-TPL-BUNDLE-CONTENT]
     adrs: [ADR-0001, ADR-0005]
+
+  # JSON Contracts for CLI and Platform APIs
+  - id: EXPLANATION-TPL-JSON-CONTRACTS-001
+    file: docs/explanation/json-contracts.md
+    title: "JSON Contracts for CLI and Platform APIs"
+    doc_type: explanation
+    stories: [US-TPL-PLT-001]
+    requirements:
+      - REQ-TPL-AI-IDP-COMPAT
+      - REQ-TPL-PLATFORM-INTROSPECTION
+      - REQ-TPL-PLATFORM-SCHEMA
+    acs:
+      - AC-TPL-CLI-JSON-CORE
+      - AC-TPL-CLI-JSON-OUTPUT
+      - AC-TPL-AGENT-HINTS-SCHEMA
+      - AC-TPL-PLATFORM-SCHEMA
+      - AC-TPL-PLATFORM-GRAPH
+      - AC-TPL-PLATFORM-DEVEX
+    adrs: [ADR-0001, ADR-0005]
