@@ -254,11 +254,15 @@ stories:
               - { type: integration, tag: "@AC-PLT-009", file: "specs/features/xtask_devex.feature" }
 
           - id: AC-PLT-010
-            text: "`cargo xtask docs-check` regenerates feature_status and fails on dirty git tree"
+            text: >
+              `cargo xtask docs-check` regenerates feature_status and fails on dirty git tree.
+              Validates feature_status.md header contains Template Version metadata that matches
+              spec_ledger.yaml, ensuring the document cannot silently drift from its source of truth.
             tags: [kernel]
             must_have_ac: true
             tests:
               - { type: integration, tag: "@AC-PLT-010", file: "specs/features/xtask_devex.feature" }
+              - { type: unit, tag: "validate_feature_status_invariants", module: "commands::docs_check", file: "crates/xtask/src/commands/docs_check.rs" }
 
           - id: AC-PLT-DOC-INDEX-FRONTMATTER
             text: >
