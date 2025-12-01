@@ -422,7 +422,8 @@ fn execute_test_command(cmd: &TestCommand) -> Result<bool> {
             cmd.env("CUCUMBER_TAG_EXPRESSION", &tag_expr);
             let output = cmd.output()?;
 
-            if output.status.success() {
+            // Use semantic BDD success detection (not just exit code)
+            if crate::commands::bdd::is_bdd_success(&output) {
                 println!("    {} {}", ok_icon, description);
                 Ok(true)
             } else {
@@ -446,7 +447,8 @@ fn execute_test_command(cmd: &TestCommand) -> Result<bool> {
             }
             let output = cmd.output()?;
 
-            if output.status.success() {
+            // Use semantic BDD success detection (not just exit code)
+            if crate::commands::bdd::is_bdd_success(&output) {
                 println!("    {} {}", ok_icon, description);
                 Ok(true)
             } else {

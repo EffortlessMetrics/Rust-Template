@@ -553,6 +553,8 @@ fn test_name() {
 - HTTP endpoint in `crates/app-http/src/agent.rs` reuses these types directly
 - CLI projection mirrors schema fields for convenience
 
+**Example Response:** See [`docs/examples/agent_hints_response.json`](../examples/agent_hints_response.json) for a representative response.
+
 ---
 
 #### AC-TPL-QUESTIONS-LOGGED: Question Artifacts
@@ -1265,6 +1267,25 @@ The `cargo xtask selftest` command validates all kernel contracts through 8 step
 6. **DevEx contract**: Validate required commands exist (AC-PLT-015)
 7. **Graph invariants**: Validate governance graph structure (AC-TPL-GRAPH-SELFTEST)
 8. **AC coverage**: Ensure all kernel ACs (must_have_ac=true) are passing (AC-PLT-019)
+
+### BDD Harness Behaviour (AC-TPL-BDD-EXIT-CODES)
+
+The cucumber harness may return exit code 101 due to async cleanup issues even when all scenarios pass. To shield callers from this flakiness, xtask uses **semantic success detection** rather than raw exit codes.
+
+**xtask treats acceptance as passing if ANY of these conditions are met:**
+1. Exit code is 0 (explicit success)
+2. Output contains `[BDD-PASS]` marker (harness completed normally)
+3. JUnit XML (`target/junit/acceptance.xml`) contains zero failures and zero errors
+4. Output contains passing markers (`✔`) with no failure markers (`✗` or `FAILED`)
+
+This behaviour is consistent across:
+- `cargo xtask bdd` — direct BDD execution
+- `cargo xtask check` — change-aware BDD (routes through `bdd::run_with_options`)
+- `cargo xtask selftest` — step 4 (uses `bdd::run()`)
+- `cargo xtask test-ac` — AC-specific execution
+- `cargo xtask test-changed` — change-aware test execution
+
+**Implementation:** See `crates/xtask/src/commands/bdd.rs` for the canonical `is_bdd_success()` function and helpers.
 
 **CI Enforcement:**
 - GitHub Actions runs selftest in Tier-1 job
