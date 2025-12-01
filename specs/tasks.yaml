@@ -194,7 +194,7 @@ tasks:
     acs:
       - AC-TPL-VERSION-DRYRUN
       - AC-TPL-VERSION-ATOMIC
-    status: in_progress
+    status: done
     owner: agent
     labels: [platform, versioning, release, p0]
     summary: >
@@ -214,7 +214,7 @@ tasks:
     requirement: REQ-TPL-VERSIONING-ENGINE
     acs:
       - AC-TPL-VERSION-MANIFEST
-    status: open
+    status: done
     owner: agent
     labels: [platform, versioning, release, v336, p0]
     summary: >
@@ -235,7 +235,7 @@ tasks:
     acs:
       - AC-TPL-VERSION-MANIFEST
       - AC-TPL-VERSION-ATOMIC
-    status: open
+    status: done
     owner: agent
     labels: [platform, versioning, testing, v336, p0]
     summary: >
@@ -256,7 +256,7 @@ tasks:
       - AC-TPL-VERSION-MANIFEST
       - AC-TPL-VERSION-DRYRUN
       - AC-TPL-VERSION-ATOMIC
-    status: open
+    status: done
     owner: agent
     labels: [platform, versioning, release, v336, p0]
     summary: >
@@ -278,7 +278,7 @@ tasks:
       - AC-TPL-VERSION-MANIFEST
       - AC-TPL-VERSION-DRYRUN
       - AC-TPL-VERSION-ATOMIC
-    status: open
+    status: done
     owner: agent
     labels: [platform, versioning, release, v336, milestone]
     summary: >

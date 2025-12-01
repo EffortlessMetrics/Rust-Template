@@ -2,18 +2,14 @@
 id: DESIGN-TPL-IDP-TILES-001
 doc_type: design_doc
 title: "IDP Tile Specifications for Platform Integration"
-last_updated: "2025-12-01"
-stories:
-  - US-TPL-PLT-001
-requirements:
-  - REQ-TPL-PLATFORM-INTROSPECTION
-  - REQ-TPL-AI-IDP-COMPAT
-acs:
-  - AC-TPL-CLI-JSON-CORE
-  - AC-TPL-CLI-JSON-OUTPUT
-  - AC-TPL-AGENT-HINTS-SCHEMA
-adrs:
-  - ADR-0016
+author: platform-team
+date: 2025-12-01
+status: published
+stories: [US-TPL-PLT-001]
+requirements: [REQ-TPL-PLATFORM-INTROSPECTION, REQ-TPL-AI-IDP-COMPAT]
+tags: [platform, idp, integration, ai]
+acs: [AC-TPL-CLI-JSON-CORE, AC-TPL-CLI-JSON-OUTPUT, AC-TPL-AGENT-HINTS-SCHEMA]
+adrs: [ADR-0016]
 ---
 
 # IDP Tile Specifications for Platform Integration

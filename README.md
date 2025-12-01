@@ -1,6 +1,6 @@
-# Test Service (v3.3.5)
+# Test Service (v3.3.6)
 
-**Template Version:** v3.3.5 | **Kernel Baseline:** [v3.3.5-kernel](./docs/KERNEL_SNAPSHOT.md)
+**Template Version:** v3.3.6 | **Kernel Baseline:** [v3.3.6-kernel](./docs/KERNEL_SNAPSHOT.md)
 
 **A governed Rust service template where specs, tests, docs, policies, and infra all agree – and the repo can prove it.**
 

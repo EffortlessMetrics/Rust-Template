@@ -14,7 +14,7 @@ last_updated: 2025-11-30
 
 # Documentation Index
 
-**Navigation hub for the Rust-as-Spec Platform Cell (v3.3.5)**
+**Navigation hub for the Rust-as-Spec Platform Cell (v3.3.6)**
 
 ---
 

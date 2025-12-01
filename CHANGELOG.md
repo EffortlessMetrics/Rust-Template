@@ -11,6 +11,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 (empty)
 
+## [3.3.6] - 2025-12-01
+
+### Added
+
+**Release Tooling:**
+
+- **Manifest-driven versioning engine** – `crates/xtask/src/commands/versioning.rs` + `specs/version_manifest.yaml` now drive release version updates across all version-bearing files
+- **Release `--dry-run` support** – `cargo xtask release-prepare X.Y.Z --dry-run` previews all planned edits without touching the working tree
+- **Atomic version updates** – All file updates are transactional with rollback on failure, ensuring no partial state
+
+**Governance:**
+
+- **Versioning ACs promoted to enforced** – `AC-TPL-VERSION-MANIFEST`, `AC-TPL-VERSION-DRYRUN`, `AC-TPL-VERSION-ATOMIC` are now `must_have_ac: true` and tracked as kernel contracts
+
+### Changed
+
+- **REQ-TPL-VERSIONING-ENGINE** – Promoted from deferred to enforced; now a core platform requirement with documented rationale and ADR linkage
+- **Design doc front-matter** – Standardized format for `DESIGN-IDP-TILES.md` and `DESIGN-VERSIONING-ENGINE.md` to use consistent `date`/`status`/`tags` fields
+
 ## [3.3.5] - 2025-12-01
 
 ### Added
