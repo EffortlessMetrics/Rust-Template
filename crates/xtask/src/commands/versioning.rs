@@ -224,19 +224,38 @@ pub const DATE_PATH: &str = "metadata.last_updated";
 
 impl VersionManifest {
     /// Load the version manifest from specs/version_manifest.yaml.
+    /// Searches from repo root (determined via CARGO_MANIFEST_DIR for xtask).
     pub fn load() -> Result<Self> {
-        let manifest_path = "specs/version_manifest.yaml";
-        if !Path::new(manifest_path).exists() {
+        Self::load_from_path(Self::default_manifest_path()?)
+    }
+
+    /// Get the default manifest path, resolving from repo root.
+    fn default_manifest_path() -> Result<std::path::PathBuf> {
+        // When running as part of xtask, CARGO_MANIFEST_DIR is crates/xtask
+        // We need to go up two levels to get to repo root
+        let manifest_dir = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        let repo_root = manifest_dir
+            .parent()
+            .and_then(|p| p.parent())
+            .context("Could not determine repo root from CARGO_MANIFEST_DIR")?;
+        Ok(repo_root.join("specs/version_manifest.yaml"))
+    }
+
+    /// Load a version manifest from a specific path.
+    pub fn load_from_path<P: AsRef<Path>>(path: P) -> Result<Self> {
+        let manifest_path = path.as_ref();
+        if !manifest_path.exists() {
             anyhow::bail!(
                 "Version manifest not found at {}. Create it to enable manifest-driven versioning.",
-                manifest_path
+                manifest_path.display()
             );
         }
 
         let content = fs::read_to_string(manifest_path)
-            .with_context(|| format!("Failed to read {}", manifest_path))?;
+            .with_context(|| format!("Failed to read {}", manifest_path.display()))?;
 
-        serde_yaml::from_str(&content).with_context(|| format!("Failed to parse {}", manifest_path))
+        serde_yaml::from_str(&content)
+            .with_context(|| format!("Failed to parse {}", manifest_path.display()))
     }
 
     /// Extract the current version from the source of truth file (specs/spec_ledger.yaml).
@@ -547,5 +566,266 @@ mod tests {
         assert!(preview.contains("README.md:5"));
         assert!(preview.contains("3.3.5"));
         assert!(preview.contains("3.3.6"));
+    }
+
+    // === A2 Tests: Manifest Loading, Plan Generation, Apply Changes ===
+
+    #[test]
+    fn test_manifest_load_from_repo() {
+        // Test loading actual manifest from specs/version_manifest.yaml
+        // This test should run from repo root during `cargo test -p xtask`
+        let manifest = VersionManifest::load();
+        assert!(manifest.is_ok(), "Should load manifest: {:?}", manifest.err());
+
+        let manifest = manifest.unwrap();
+        assert_eq!(manifest.schema_version, "1.0");
+        assert!(!manifest.files.is_empty(), "Manifest should have files");
+
+        // Check that spec_ledger.yaml is in the files list
+        let has_spec_ledger = manifest.files.iter().any(|f| f.path.contains("spec_ledger.yaml"));
+        assert!(has_spec_ledger, "Manifest should include spec_ledger.yaml");
+    }
+
+    #[test]
+    fn test_manifest_files_by_priority() {
+        let manifest = VersionManifest::load().expect("Should load manifest");
+        let sorted = manifest.files_by_priority();
+
+        // Priority 1 files should come first
+        assert!(!sorted.is_empty());
+        assert_eq!(sorted[0].priority, 1, "First file should be priority 1");
+
+        // Check ordering is correct (lower priority number = higher priority)
+        for i in 1..sorted.len() {
+            assert!(
+                sorted[i].priority >= sorted[i - 1].priority,
+                "Files should be sorted by priority ascending"
+            );
+        }
+    }
+
+    #[test]
+    fn test_generate_new_line_yaml_value() {
+        let pattern = FilePattern {
+            marker: "template_version:".to_string(),
+            pattern_type: "yaml_value".to_string(),
+            format: "quoted".to_string(),
+            line_pattern: None,
+            example: Some("  template_version: \"3.3.5\"".to_string()),
+            notes: None,
+        };
+
+        let version = VersionInfo::with_date("3.3.6", "2025-12-01").unwrap();
+        let new_line = generate_new_line(&pattern, &version).unwrap();
+
+        assert_eq!(new_line, "  template_version: \"3.3.6\"");
+    }
+
+    #[test]
+    fn test_generate_new_line_heading_version() {
+        let pattern = FilePattern {
+            marker: "# Test Service (v".to_string(),
+            pattern_type: "heading_version".to_string(),
+            format: "prefixed_paren".to_string(),
+            line_pattern: None,
+            example: Some("# Test Service (v3.3.5)".to_string()),
+            notes: None,
+        };
+
+        let version = VersionInfo::with_date("3.3.6", "2025-12-01").unwrap();
+        let new_line = generate_new_line(&pattern, &version).unwrap();
+
+        assert_eq!(new_line, "# Test Service (v3.3.6)");
+    }
+
+    #[test]
+    fn test_generate_new_line_kernel_suffixed() {
+        let pattern = FilePattern {
+            marker: "**Version:**".to_string(),
+            pattern_type: "inline_version".to_string(),
+            format: "kernel_suffixed".to_string(),
+            line_pattern: None,
+            example: Some("**Date:** 2025-11-30 | **Version:** v3.3.5-kernel".to_string()),
+            notes: None,
+        };
+
+        let version = VersionInfo::with_date("3.3.6", "2025-12-01").unwrap();
+        let new_line = generate_new_line(&pattern, &version).unwrap();
+
+        assert_eq!(new_line, "**Date:** 2025-12-01 | **Version:** v3.3.6-kernel");
+    }
+
+    #[test]
+    fn test_generate_new_line_with_date_substitution() {
+        let pattern = FilePattern {
+            marker: "**Date:**".to_string(),
+            pattern_type: "inline_version".to_string(),
+            format: "prefixed".to_string(),
+            line_pattern: None,
+            example: Some("**Date:** 2025-11-30 | **Version:** v3.3.5".to_string()),
+            notes: None,
+        };
+
+        let version = VersionInfo::with_date("3.3.6", "2025-12-01").unwrap();
+        let new_line = generate_new_line(&pattern, &version).unwrap();
+
+        // Both version and date should be updated
+        assert!(new_line.contains("2025-12-01"), "Date should be updated");
+        assert!(new_line.contains("3.3.6"), "Version should be updated");
+    }
+
+    #[test]
+    fn test_plan_changes_with_temp_files() {
+        use std::io::Write;
+        use tempfile::TempDir;
+
+        // Create a temp directory with test files
+        let temp_dir = TempDir::new().expect("Failed to create temp dir");
+        let temp_path = temp_dir.path();
+
+        // Create a test file
+        let readme_path = temp_path.join("README.md");
+        let mut readme = fs::File::create(&readme_path).expect("Failed to create README");
+        writeln!(readme, "# Test Service (v3.3.5)").expect("Failed to write");
+        writeln!(readme, "Some content").expect("Failed to write");
+        writeln!(readme, "**Template Version:** v3.3.5").expect("Failed to write");
+
+        // Create a minimal manifest for testing
+        let manifest = VersionManifest {
+            schema_version: "1.0".to_string(),
+            description: Some("Test manifest".to_string()),
+            version_format: None,
+            files: vec![VersionTarget {
+                path: readme_path.to_string_lossy().to_string(),
+                description: Some("Test README".to_string()),
+                patterns: vec![
+                    FilePattern {
+                        marker: "# Test Service (v".to_string(),
+                        pattern_type: "heading_version".to_string(),
+                        format: "prefixed_paren".to_string(),
+                        line_pattern: None,
+                        example: Some("# Test Service (v3.3.5)".to_string()),
+                        notes: None,
+                    },
+                    FilePattern {
+                        marker: "**Template Version:**".to_string(),
+                        pattern_type: "inline_version".to_string(),
+                        format: "prefixed".to_string(),
+                        line_pattern: None,
+                        example: Some("**Template Version:** v3.3.5".to_string()),
+                        notes: None,
+                    },
+                ],
+                required: true,
+                priority: 1,
+                notes: None,
+            }],
+        };
+
+        let version = VersionInfo::with_date("3.3.6", "2025-12-01").unwrap();
+        let edits = plan_changes(&version, &manifest).expect("Should plan changes");
+
+        assert_eq!(edits.len(), 2, "Should plan 2 edits");
+        assert!(edits[0].new_text.contains("3.3.6"), "First edit should have new version");
+        assert!(edits[1].new_text.contains("3.3.6"), "Second edit should have new version");
+    }
+
+    #[test]
+    fn test_apply_changes_dry_run() {
+        use std::io::Write;
+        use tempfile::TempDir;
+
+        // Create a temp directory with test files
+        let temp_dir = TempDir::new().expect("Failed to create temp dir");
+        let temp_path = temp_dir.path();
+
+        // Create a test file
+        let readme_path = temp_path.join("README.md");
+        let mut readme = fs::File::create(&readme_path).expect("Failed to create README");
+        writeln!(readme, "version: 3.3.5").expect("Failed to write");
+
+        let original_content =
+            fs::read_to_string(&readme_path).expect("Failed to read original content");
+
+        // Create edit
+        let edits = vec![FileEdit {
+            path: readme_path.to_string_lossy().to_string(),
+            line_number: 1,
+            old_text: "version: 3.3.5".to_string(),
+            new_text: "version: 3.3.6".to_string(),
+        }];
+
+        // Apply with dry_run = true
+        apply_changes(&edits, true).expect("Dry run should succeed");
+
+        // Verify file was NOT modified
+        let after_content = fs::read_to_string(&readme_path).expect("Failed to read after dry run");
+        assert_eq!(original_content, after_content, "File should not be modified in dry run");
+    }
+
+    #[test]
+    fn test_apply_changes_actual() {
+        use std::io::Write;
+        use tempfile::TempDir;
+
+        // Create a temp directory with test files
+        let temp_dir = TempDir::new().expect("Failed to create temp dir");
+        let temp_path = temp_dir.path();
+
+        // Create a test file
+        let readme_path = temp_path.join("README.md");
+        let mut readme = fs::File::create(&readme_path).expect("Failed to create README");
+        writeln!(readme, "version: 3.3.5").expect("Failed to write");
+
+        // Create edit
+        let edits = vec![FileEdit {
+            path: readme_path.to_string_lossy().to_string(),
+            line_number: 1,
+            old_text: "version: 3.3.5".to_string(),
+            new_text: "version: 3.3.6".to_string(),
+        }];
+
+        // Apply with dry_run = false
+        apply_changes(&edits, false).expect("Apply should succeed");
+
+        // Verify file was modified
+        let after_content = fs::read_to_string(&readme_path).expect("Failed to read after apply");
+        assert!(after_content.contains("3.3.6"), "File should contain new version");
+        assert!(!after_content.contains("3.3.5"), "File should not contain old version");
+    }
+
+    #[test]
+    fn test_apply_changes_atomicity_on_mismatch() {
+        use std::io::Write;
+        use tempfile::TempDir;
+
+        // Create a temp directory with test files
+        let temp_dir = TempDir::new().expect("Failed to create temp dir");
+        let temp_path = temp_dir.path();
+
+        // Create a test file
+        let readme_path = temp_path.join("README.md");
+        let mut readme = fs::File::create(&readme_path).expect("Failed to create README");
+        writeln!(readme, "version: 3.3.4").expect("Failed to write"); // Note: different version
+
+        let original_content =
+            fs::read_to_string(&readme_path).expect("Failed to read original content");
+
+        // Create edit with mismatched old_text (expects 3.3.5 but file has 3.3.4)
+        let edits = vec![FileEdit {
+            path: readme_path.to_string_lossy().to_string(),
+            line_number: 1,
+            old_text: "version: 3.3.5".to_string(), // This doesn't match!
+            new_text: "version: 3.3.6".to_string(),
+        }];
+
+        // Apply should fail due to mismatch
+        let result = apply_changes(&edits, false);
+        assert!(result.is_err(), "Should fail on text mismatch");
+
+        // Verify file was NOT modified (atomicity)
+        let after_content =
+            fs::read_to_string(&readme_path).expect("Failed to read after failed apply");
+        assert_eq!(original_content, after_content, "File should not be modified on failure");
     }
 }
