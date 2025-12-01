@@ -8,6 +8,9 @@ stories:
   - US-TPL-PLT-001
 requirements:
   - REQ-TPL-REL-BUNDLE
+acs:
+  - AC-TPL-REL-EVIDENCE
+  - AC-TPL-REL-CHANGELOG
 adrs:
   - ADR-0005
 ---
