@@ -72,6 +72,17 @@ pub fn run() -> Result<()> {
         }
     }
 
+    // Check Feature Status header invariants (AC-PLT-010 extension)
+    print!("Feature Status invariants... ");
+    match validate_feature_status_invariants() {
+        Ok(_) => println!("{}", "✓ Valid".green()),
+        Err(e) => {
+            println!("{}", "✗ Issues found".red());
+            eprintln!("  {}", e);
+            issues += 1;
+        }
+    }
+
     // Check Doc Policies
     print!("Doc policies... ");
     match validate_doc_policies() {
@@ -803,6 +814,64 @@ fn validate_service_policies() -> Result<()> {
                 )?;
             }
         }
+    }
+
+    Ok(())
+}
+
+/// Validate feature_status.md header invariants (AC-PLT-010 extension)
+/// Ensures the generated file contains Template Version and Last Updated metadata
+/// that match the spec_ledger.yaml source of truth.
+fn validate_feature_status_invariants() -> Result<()> {
+    let canonical_version = extract_version_from_ledger()?;
+    if canonical_version == "unknown" {
+        return Ok(()); // Can't validate if we can't extract canonical version
+    }
+
+    let feature_status_path = "docs/feature_status.md";
+    let content = fs::read_to_string(feature_status_path)
+        .map_err(|e| anyhow::anyhow!("Could not read {}: {}", feature_status_path, e))?;
+
+    let mut has_version = false;
+    let mut version_match = false;
+
+    // Check for Template Version in the HTML comment header
+    for line in content.lines().take(20) {
+        // Look for: "  Template Version: X.Y.Z"
+        if line.contains("Template Version:") {
+            has_version = true;
+            if line.contains(&canonical_version) {
+                version_match = true;
+            } else {
+                // Extract the version found
+                if let Some(found_version) = line.split("Template Version:").nth(1) {
+                    let found = found_version.trim();
+                    eprintln!(
+                        "  Version mismatch in {}: found '{}', expected '{}'",
+                        feature_status_path, found, canonical_version
+                    );
+                }
+            }
+            break;
+        }
+    }
+
+    if !has_version {
+        eprintln!(
+            "  {} header missing Template Version metadata. Run 'cargo xtask ac-status' to regenerate.",
+            feature_status_path
+        );
+        return Err(anyhow::anyhow!(
+            "{} header does not contain Template Version invariant",
+            feature_status_path
+        ));
+    }
+
+    if !version_match {
+        return Err(anyhow::anyhow!(
+            "{} Template Version does not match spec_ledger.yaml",
+            feature_status_path
+        ));
     }
 
     Ok(())
