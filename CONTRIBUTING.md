@@ -126,6 +126,54 @@ git push origin main --follow-tags
 
 **Recommended:** Configure GPG signing for tags to ensure release authenticity. See [`docs/how-to/setup-tag-signing.md`](docs/how-to/setup-tag-signing.md) for setup instructions.
 
+### Version bump checklist (Docs-as-Code v2)
+
+Version numbers are centrally tracked in `specs/spec_ledger.yaml`. All other files **derive from** this canonical source.
+
+**Canonical version authority:** `specs/spec_ledger.yaml → metadata.template_version`
+
+**Files that must match:**
+
+| File | Pattern |
+|------|---------|
+| `README.md` | H1 `# ... (vX.Y.Z)` or `**Template Version:** vX.Y.Z` |
+| `CLAUDE.md` | H1 `# ... (vX.Y.Z)` |
+| `docs/ROADMAP.md` | H1 `# ... (vX.Y.Z)` |
+| `docs/KERNEL_SNAPSHOT.md` | H1 `# Kernel Snapshot vX.Y.Z` |
+| `docs/explanation/TEMPLATE-CONTRACTS.md` | `**Template Version:** vX.Y.Z` |
+| `specs/service_metadata.yaml` | `template_version: vX.Y.Z` |
+| `specs/doc_index.yaml` | `template_version: "X.Y.Z"` |
+| `CHANGELOG.md` | First version section `## [X.Y.Z]` after `[Unreleased]` |
+
+**Bump workflow:**
+
+1. Update the canonical version:
+   ```bash
+   # In specs/spec_ledger.yaml
+   metadata:
+     template_version: "X.Y.Z"
+     last_updated: "YYYY-MM-DD"
+   ```
+
+2. Run `cargo xtask release-prepare X.Y.Z` (updates most files automatically)
+
+3. Run `cargo xtask docs-check` to see any remaining mismatches
+
+4. Fix any files that weren't auto-updated
+
+5. Run `cargo xtask selftest` to validate
+
+6. Tag as `vX.Y.Z-kernel`:
+   ```bash
+   git tag -s vX.Y.Z-kernel -m "Kernel release vX.Y.Z"
+   ```
+
+**Verify canonical version programmatically:**
+
+```bash
+cargo xtask version --json | jq .kernel_version
+```
+
 ### All flows
 
 ```bash
