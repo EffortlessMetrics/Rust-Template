@@ -20,6 +20,7 @@ pub mod dev_up;
 pub mod docs_check;
 pub mod docs_frontmatter_sync;
 pub mod doctor;
+pub mod env_mode;
 pub mod fmt_all;
 pub mod fork;
 pub mod friction;
