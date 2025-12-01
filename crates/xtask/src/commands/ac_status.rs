@@ -185,12 +185,15 @@ pub fn run(args: AcStatusArgs) -> Result<()> {
         anyhow::bail!("Features directory not found: {}", args.features_dir.display());
     }
 
-    if !args.verbosity.is_quiet() {
-        println!("Parsing ledger: {}", args.ledger.display());
+    // Helper: should we print progress messages? (not in quiet or JSON mode)
+    let should_print_progress = !args.verbosity.is_quiet() && !args.json;
+
+    if should_print_progress {
+        eprintln!("Parsing ledger: {}", args.ledger.display());
     }
     let mut acs = parse_ledger(&args.ledger)?;
-    if !args.verbosity.is_quiet() {
-        println!("  Found {} ACs", acs.len());
+    if should_print_progress {
+        eprintln!("  Found {} ACs", acs.len());
     }
 
     // Check JUnit status and auto-regenerate if missing/empty
@@ -199,12 +202,17 @@ pub fn run(args: AcStatusArgs) -> Result<()> {
 
     // AUTO-REGENERATION: If JUnit is missing/empty and JSON is also missing/empty,
     // run BDD tests to generate the JUnit file before proceeding.
-    if junit_status != ReportStatus::NonEmpty {
+    // Skip auto-regeneration if XTASK_SKIP_BDD=1 is set (to avoid nested BDD runs)
+    // or if XTASK_NO_REGEN=1 is set explicitly
+    let skip_regen =
+        std::env::var("XTASK_SKIP_BDD").is_ok() || std::env::var("XTASK_NO_REGEN").is_ok();
+
+    if junit_status != ReportStatus::NonEmpty && !skip_regen {
         let json_available = json_status == Some(ReportStatus::NonEmpty);
 
         if !json_available {
             // No usable test results - run BDD to generate them
-            if !args.verbosity.is_quiet() {
+            if should_print_progress {
                 eprintln!(
                     "JUnit file `{}` is {} - running BDD suite to regenerate...",
                     args.junit.display(),
@@ -230,8 +238,8 @@ pub fn run(args: AcStatusArgs) -> Result<()> {
                 );
             }
 
-            if !args.verbosity.is_quiet() {
-                println!("  JUnit regenerated successfully");
+            if should_print_progress {
+                eprintln!("  JUnit regenerated successfully");
             }
         }
     }
@@ -242,29 +250,34 @@ pub fn run(args: AcStatusArgs) -> Result<()> {
     // FALLBACK PATH: Structured JSON report from acceptance tests
     // The Cucumber JSON format is available as a fallback option.
     let (scenarios, bdd_results) = if junit_status == ReportStatus::NonEmpty {
-        if !args.verbosity.is_quiet() {
-            println!("Parsing JUnit results (primary path): {}", args.junit.display());
+        if should_print_progress {
+            eprintln!("Parsing JUnit results (primary path): {}", args.junit.display());
         }
-        fallback_to_junit(&args)?
+        fallback_to_junit(&args, should_print_progress)?
     } else if let Some(json_path) = &args.json_report {
         if json_status == Some(ReportStatus::NonEmpty) {
-            if !args.verbosity.is_quiet() {
-                println!(
+            if should_print_progress {
+                eprintln!(
                     "JUnit not found or empty ({}); falling back to JSON report: {}",
                     junit_status,
                     json_path.display()
                 );
             }
             let (scenario_map, results) = parse_cucumber_json_with_scenarios(json_path)?;
-            if !args.verbosity.is_quiet() {
-                println!("  Found {} scenarios", scenario_map.len());
-                println!("  Found results for {} ACs", results.len());
+            if should_print_progress {
+                eprintln!("  Found {} scenarios", scenario_map.len());
+                eprintln!("  Found results for {} ACs", results.len());
             }
             (scenario_map, results)
         } else {
             // This branch should rarely be hit now since we auto-regenerate above,
             // but keep it for safety
             let json_state = json_status.unwrap_or(ReportStatus::Missing);
+            if args.json {
+                return print_json_error(&format!(
+                    "Acceptance test results missing or empty: JUnit XML ({junit_status}), JSON report ({json_state})"
+                ));
+            }
             anyhow::bail!(
                 "Acceptance test results missing or empty:\n  - JUnit XML: {} ({junit_status})\n  - JSON report: {} ({json_state})\nRun acceptance tests first: cargo test -p acceptance --tests\nOr generate reports via: cargo xtask bdd",
                 args.junit.display(),
@@ -274,6 +287,11 @@ pub fn run(args: AcStatusArgs) -> Result<()> {
     } else {
         // This branch should rarely be hit now since we auto-regenerate above,
         // but keep it for safety
+        if args.json {
+            return print_json_error(&format!(
+                "Acceptance test results missing or empty: JUnit XML ({junit_status}), JSON report not configured"
+            ));
+        }
         anyhow::bail!(
             "Acceptance test results missing or empty:\n  - JUnit XML: {} ({junit_status})\n  - JSON report: not configured\nRun acceptance tests first: cargo test -p acceptance --tests\nOr generate reports via: cargo xtask bdd",
             args.junit.display()
@@ -288,7 +306,7 @@ pub fn run(args: AcStatusArgs) -> Result<()> {
     }
 
     // Collect unit test results for ACs that declare unit tests
-    let unit_results = collect_unit_test_results(&acs, args.verbosity)?;
+    let unit_results = collect_unit_test_results(&acs, args.verbosity, should_print_progress)?;
 
     // Combine BDD + unit results into a final AC status
     update_ac_statuses(&mut acs, &bdd_results, &unit_results);
@@ -301,10 +319,10 @@ pub fn run(args: AcStatusArgs) -> Result<()> {
         print_summary(&acs)?;
     } else {
         // Generate full markdown report
-        if !args.verbosity.is_quiet() {
-            println!("Generating status: {}", args.output.display());
+        if should_print_progress {
+            eprintln!("Generating status: {}", args.output.display());
         }
-        generate_status_md(&mut acs, &scenarios, &args.output, &args)?;
+        generate_status_md(&mut acs, &scenarios, &args.output, &args, should_print_progress)?;
 
         // Check for failures
         let failed: Vec<_> = acs
@@ -318,7 +336,7 @@ pub fn run(args: AcStatusArgs) -> Result<()> {
             anyhow::bail!("One or more ACs failed");
         }
 
-        println!("\n{} All ACs passed", "[OK]".green());
+        eprintln!("\n{} All ACs passed", "[OK]".green());
     }
 
     Ok(())
@@ -326,21 +344,22 @@ pub fn run(args: AcStatusArgs) -> Result<()> {
 
 fn fallback_to_junit(
     args: &AcStatusArgs,
+    should_print_progress: bool,
 ) -> Result<(HashMap<String, Scenario>, HashMap<String, AcStatus>)> {
-    if !args.verbosity.is_quiet() {
-        println!("Parsing features: {}", args.features_dir.display());
+    if should_print_progress {
+        eprintln!("Parsing features: {}", args.features_dir.display());
     }
     let scenarios = parse_features_with_metadata(&args.features_dir)?;
-    if !args.verbosity.is_quiet() {
-        println!("  Found {} scenarios", scenarios.len());
+    if should_print_progress {
+        eprintln!("  Found {} scenarios", scenarios.len());
     }
 
-    if !args.verbosity.is_quiet() {
-        println!("Parsing JUnit results: {}", args.junit.display());
+    if should_print_progress {
+        eprintln!("Parsing JUnit results: {}", args.junit.display());
     }
     let ac_results = parse_junit_with_scenarios(&args.junit, &scenarios)?;
-    if !args.verbosity.is_quiet() {
-        println!("  Found results for {} ACs", ac_results.len());
+    if should_print_progress {
+        eprintln!("  Found results for {} ACs", ac_results.len());
     }
 
     Ok((scenarios, ac_results))
@@ -399,14 +418,15 @@ fn is_meta_ac(ac: &Ac) -> bool {
 
 fn collect_unit_test_results(
     acs: &HashMap<String, Ac>,
-    verbosity: crate::Verbosity,
+    _verbosity: crate::Verbosity,
+    should_print_progress: bool,
 ) -> Result<HashMap<String, bool>> {
     if !has_unit_tests(acs) {
         return Ok(HashMap::new());
     }
 
-    if !verbosity.is_quiet() {
-        println!("Running unit tests for AC mappings...");
+    if should_print_progress {
+        eprintln!("Running unit tests for AC mappings...");
     }
 
     let mut results = HashMap::new();
@@ -466,8 +486,8 @@ fn collect_unit_test_results(
         );
     }
 
-    if !verbosity.is_quiet() {
-        println!("  Captured results for {} unit tests", results.len());
+    if should_print_progress {
+        eprintln!("  Captured results for {} unit tests", results.len());
     }
 
     Ok(results)
@@ -734,6 +754,33 @@ fn print_summary(acs: &HashMap<String, Ac>) -> Result<()> {
     Ok(())
 }
 
+/// Print a JSON error response and exit with error code
+fn print_json_error(message: &str) -> Result<()> {
+    #[derive(serde::Serialize)]
+    struct JsonError {
+        timestamp: String,
+        error: String,
+        kernel_acs: AcCategoryStats,
+        template_acs: AcCategoryStats,
+        coverage_percent: f64,
+        acs: Vec<AcJson>,
+    }
+
+    let output = JsonError {
+        timestamp: chrono::Utc::now().to_rfc3339(),
+        error: message.to_string(),
+        kernel_acs: AcCategoryStats { total: 0, passing: 0, failing: 0, unknown: 0 },
+        template_acs: AcCategoryStats { total: 0, passing: 0, failing: 0, unknown: 0 },
+        coverage_percent: 0.0,
+        acs: vec![],
+    };
+
+    let json_output =
+        serde_json::to_string_pretty(&output).context("Failed to serialize error to JSON")?;
+    println!("{}", json_output);
+    anyhow::bail!("{}", message);
+}
+
 fn print_json_output(acs: &HashMap<String, Ac>) -> Result<()> {
     // Separate kernel ACs (AC-KERN-*) from template ACs (AC-TPL-*)
     let kernel_acs: Vec<_> = acs.values().filter(|ac| ac.id.starts_with("AC-KERN-")).collect();
@@ -830,7 +877,8 @@ fn generate_status_md(
     acs: &mut HashMap<String, Ac>,
     scenarios: &HashMap<String, Scenario>,
     output_path: &Path,
-    args: &AcStatusArgs,
+    _args: &AcStatusArgs,
+    should_print_progress: bool,
 ) -> Result<()> {
     // Create output directory if needed
     if let Some(parent) = output_path.parent() {
@@ -941,8 +989,8 @@ fn generate_status_md(
     }
 
     fs::write(output_path, output)?;
-    if !args.verbosity.is_quiet() {
-        println!("{} Generated {}", "[OK]".green(), output_path.display());
+    if should_print_progress {
+        eprintln!("{} Generated {}", "[OK]".green(), output_path.display());
     }
 
     Ok(())

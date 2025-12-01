@@ -1517,7 +1517,8 @@ async fn execute_command(world: &mut World, command: &str, env_vars: &[(&str, &s
     }
 
     cmd.env("XTASK_LOW_RESOURCES", &low_resource);
-    if command.contains("selftest") {
+    // Skip BDD auto-regeneration in selftest and ac-status to avoid nested BDD runs
+    if command.contains("selftest") || command.contains("ac-status") {
         cmd.env("XTASK_SKIP_BDD", "1");
     }
     cmd.env_remove("RUSTC_WRAPPER");
