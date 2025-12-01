@@ -307,14 +307,16 @@ fn extract_yaml_value(yaml: &serde_yaml::Value, path: &str) -> Result<String> {
 
 /// Generate the new line by substituting version in the example pattern.
 fn generate_new_line(pattern: &FilePattern, version: &VersionInfo) -> Result<String> {
-    // Use the example field if available, otherwise construct from format
+    // Use the example field if available
     let example = pattern
         .example
         .as_ref()
         .with_context(|| format!("Pattern '{}' missing example field", pattern.marker))?;
 
-    // The example contains a version like "3.3.5" - replace it with the new version
-    // We use regex to find and replace version patterns
+    // Find the marker position in the example
+    let marker_pos = example.find(&pattern.marker);
+
+    // The example contains a version like "3.3.5" - replace the first one after the marker
     let version_re =
         Regex::new(r"\d+\.\d+\.\d+(-kernel)?").context("Failed to compile version regex")?;
 
@@ -324,23 +326,39 @@ fn generate_new_line(pattern: &FilePattern, version: &VersionInfo) -> Result<Str
         _ => version.version.clone(),
     };
 
-    // Replace all version occurrences in the example
-    let new_line = version_re.replace_all(example, replacement.as_str()).to_string();
+    // Replace only the first version occurrence after the marker
+    let new_line = if let Some(pos) = marker_pos {
+        // Split at marker, replace first version in the portion after marker
+        let (before_marker, at_and_after) = example.split_at(pos);
+        let replaced_after = version_re.replacen(at_and_after, 1, replacement.as_str());
+        format!("{}{}", before_marker, replaced_after)
+    } else {
+        // Fallback: replace first occurrence in the entire example
+        version_re.replacen(example, 1, replacement.as_str()).to_string()
+    };
 
-    // Also handle date substitution if present
+    // Handle date substitution - replace first date if present
     let date_re = Regex::new(r"\d{4}-\d{2}-\d{2}").context("Failed to compile date regex")?;
-    let new_line = date_re.replace_all(&new_line, version.date.as_str()).to_string();
+    let new_line = date_re.replacen(&new_line, 1, version.date.as_str()).to_string();
 
     Ok(new_line)
 }
 
 /// Plan version changes for all target files.
 pub fn plan_changes(version: &VersionInfo, manifest: &VersionManifest) -> Result<Vec<FileEdit>> {
+    use std::collections::HashSet;
     let mut edits = Vec::new();
+    let mut edited_lines: HashSet<(String, usize)> = HashSet::new();
 
     for target in &manifest.files {
         // Skip glob patterns (release_evidence files)
         if target.path.contains('*') {
+            continue;
+        }
+
+        // Skip CHANGELOG.md - it's handled specially in release_prepare
+        // (we insert a new section rather than replacing)
+        if target.path.contains("CHANGELOG.md") {
             continue;
         }
 
@@ -357,15 +375,18 @@ pub fn plan_changes(version: &VersionInfo, manifest: &VersionManifest) -> Result
         let lines: Vec<&str> = content.lines().collect();
 
         for pattern in &target.patterns {
-            // Skip patterns without examples (like [Unreleased] section which needs special handling)
+            // Skip patterns without examples
             if pattern.example.is_none() {
                 continue;
             }
 
-            let mut found = false;
             for (i, line) in lines.iter().enumerate() {
                 if line.contains(&pattern.marker) {
-                    found = true;
+                    // Skip if this line was already edited by another pattern
+                    let key = (target.path.clone(), i + 1);
+                    if edited_lines.contains(&key) {
+                        continue;
+                    }
 
                     let new_line = generate_new_line(pattern, version)?;
 
@@ -376,14 +397,10 @@ pub fn plan_changes(version: &VersionInfo, manifest: &VersionManifest) -> Result
                             old_text: line.to_string(),
                             new_text: new_line,
                         });
+                        edited_lines.insert(key);
                     }
                     break;
                 }
-            }
-
-            if !found && target.required {
-                // Only warn for required files with missing patterns
-                eprintln!("Warning: Pattern '{}' not found in {}", pattern.marker, target.path);
             }
         }
     }
