@@ -1,0 +1,5 @@
+# Ignore generated bundle content
+bundle/**
+
+# Ignore node_modules if present
+node_modules/

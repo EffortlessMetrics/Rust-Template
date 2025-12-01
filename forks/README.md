@@ -50,11 +50,13 @@ cargo xtask fork-register \
 ```
 
 **Required fields:**
+
 - `--name`: Human-readable fork name
 - `--domain`: Knowledge domain or purpose (e.g., "rust-sdk", "python-ml", "knowledge-hub")
 - `--kernel-version`: Which kernel version this fork is based on (e.g., "v3.3.4")
 
 **Optional fields:**
+
 - `--url`: Repository URL (may be private/omitted)
 - `--maintainer-name`: Maintainer name or team
 - `--maintainer-contact`: Contact method (email, GitHub handle, etc.)
@@ -62,6 +64,7 @@ cargo xtask fork-register \
 - `--notes`: Free-form notes about the fork
 
 After registration, you can edit the generated YAML file to add:
+
 - `features`: Key capabilities added beyond the kernel
 - `pain_points`: Known friction areas (link to friction entries or issues)
 - `related_items`: Links to kernel issues, ADRs, or friction entries
@@ -77,6 +80,7 @@ After registration, you can edit the generated YAML file to add:
 ### Maintenance
 
 Update fork entries when:
+
 - Fork syncs with new kernel version (update `kernel_version` and `last_synced`)
 - Fork status changes (experimental → active, active → archived)
 - New pain points or features are discovered

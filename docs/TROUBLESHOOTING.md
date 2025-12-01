@@ -260,6 +260,62 @@ XTASK_LOW_RESOURCES=1 cargo xtask ac-status
 
 ---
 
+### Q: rust-analyzer shows "mismatched ABI" or proc-macro errors
+
+**Symptom:**
+
+```
+proc-macro server error: expected rustc 1.90.0, got rustc 1.91.1
+```
+
+Or rust-analyzer features (autocomplete, diagnostics) break for proc-macro-heavy code.
+
+**Cause:** rust-analyzer is using a different rustc than the one used to compile proc-macro `.so` files in `target/`.
+
+**Diagnostic:**
+
+```bash
+# Check rustc inside nix develop
+nix develop -c rustc --version
+
+# Check rustc outside (system)
+rustc --version
+
+# If they differ, that's the issue
+```
+
+**Fix (Option 1):** Launch IDE from inside `nix develop`
+
+```bash
+nix develop
+code .  # or your IDE
+```
+
+**Fix (Option 2):** Clean and rebuild in correct shell
+
+```bash
+cargo clean
+nix develop -c cargo build
+```
+
+**Fix (Option 3):** Configure VS Code to use Nix toolchain
+
+```json
+{
+  "rust-analyzer.server.extraEnv": {
+    "PATH": "/nix/store/.../bin:${env:PATH}"
+  }
+}
+```
+
+**Prevention:**
+
+- Always work inside `nix develop` for consistent toolchain
+- If you see ABI errors, `cargo clean` and rebuild in the correct shell
+- Don't mix system rustup builds with Nix builds
+
+---
+
 ## Build Failures
 
 ### Q: "failed to remove xtask.exe" (os error 5) on Windows
