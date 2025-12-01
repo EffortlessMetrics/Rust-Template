@@ -59,7 +59,7 @@ pub fn run(args: EnvModeArgs) -> Result<()> {
 
         println!("{}", "Detection Flags".bold());
         println!("  is_ci:            {}", format_bool(ci));
-        println!("  is_noninteractive:{}", format_bool(noninteractive));
+        println!("  is_noninteractive: {}", format_bool(noninteractive));
         println!("  is_low_resources: {}", format_bool(low_resources));
         println!("  should_skip_bdd:  {}", format_bool(skip_bdd));
         println!();
