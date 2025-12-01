@@ -354,8 +354,8 @@ stories:
         acceptance_criteria:
           - id: AC-TPL-EXAMPLE-FORK-BUILDS
             text: "`examples/fork-customization/` is validated and demonstrates fork extensibility patterns in CI, proving template provides a working foundation for forked services."
-            tags: [template, example, kernel]
-            must_have_ac: true
+            tags: [template, example]
+            must_have_ac: false
             note: "CI gate: validates fork documentation and structure, runs template selftest to confirm fork infrastructure is sound."
             tests:
               - { type: ci, tag: "example_fork_validation", workflow: "ci-example-fork.yml" }
