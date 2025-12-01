@@ -769,3 +769,15 @@ docs:
       - AC-TPL-PLATFORM-GRAPH
       - AC-TPL-PLATFORM-DEVEX
     adrs: [ADR-0001, ADR-0005]
+
+  # Change Documentation Safely How-To
+  - id: GUIDE-TPL-CHANGE-DOCS-001
+    file: docs/how-to/change-docs-safely.md
+    title: "How to Change Documentation Safely"
+    doc_type: how_to
+    stories: [US-TPL-PLT-001]
+    requirements:
+      - REQ-PLT-DOCS-CONSISTENCY
+      - REQ-PLT-AC-MANAGEMENT
+    acs: [AC-PLT-009, AC-PLT-010]
+    adrs: [ADR-0005]
