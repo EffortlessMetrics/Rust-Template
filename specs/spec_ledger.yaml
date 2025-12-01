@@ -143,6 +143,36 @@ stories:
             tests:
               - { type: integration, tag: "@AC-PLT-021", file: "specs/features/xtask_devex.feature" }
 
+      - id: REQ-PLT-ENV-DIAGNOSTICS
+        title: "Environment diagnostics classify issues correctly"
+        tags: [platform, devex, environment]
+        must_have_ac: true
+        description: >
+          The doctor command MUST classify environment issues appropriately:
+          toolchain issues (rustc/sccache/libz) are surfaced as warnings with
+          remediation guidance, while actual template failures are errors.
+        adr: [ADR-0002]
+        acceptance_criteria:
+          - id: AC-PLT-ENV-ABI-CHECK
+            text: >
+              `cargo xtask doctor` detects ABI mismatches between system rustc
+              and Nix devshell rustc, warns about proc-macro compatibility issues,
+              and points to TROUBLESHOOTING.md for resolution.
+            tags: [kernel]
+            must_have_ac: true
+            tests:
+              - { type: bdd, tag: "@AC-PLT-ENV-ABI-CHECK", file: "specs/features/xtask_devex.feature" }
+          - id: AC-PLT-ENV-SCCACHE-WARN
+            text: >
+              When sccache/libz.so.1 issues are detected, doctor classifies them
+              as environment warnings (not template failures) and suggests workarounds
+              including RUSTC_WRAPPER="" and IN_NIX_SHELL=1 patterns.
+            tags: [kernel]
+            must_have_ac: false
+            note: "Detection is best-effort; sccache issues may be silent."
+            tests:
+              - { type: bdd, tag: "@AC-PLT-ENV-SCCACHE-WARN", file: "specs/features/xtask_devex.feature" }
+
       - id: REQ-PLT-DESIGN-SCAFFOLDING
         title: "Design decisions and ACs are easy to create correctly"
         tags: [platform, devex]
@@ -1594,6 +1624,33 @@ stories:
             must_have_ac: true
             tests:
               - { type: bdd, tag: "@AC-TPL-PLATFORM-GOVERNANCE-APIS", file: "specs/features/platform_introspection.feature" }
+
+      - id: REQ-TPL-IDP-SNAPSHOT
+        title: "IDP Snapshot Contract"
+        tags: [kernel, philosophy, ai, idp]
+        must_have_ac: true
+        description: >
+          The kernel MUST provide a stable, machine-readable snapshot command
+          that emits JSON suitable for IDP tile consumption, including governance
+          health, AC coverage, task hints, and service metadata.
+        acceptance_criteria:
+          - id: AC-TPL-IDP-SNAPSHOT
+            text: >
+              `cargo xtask idp-snapshot` emits JSON containing timestamp,
+              template_version, service_id, governance_health (status, ac_coverage),
+              documentation metrics, and task hints for pending/in_progress tasks.
+            tags: [kernel, idp]
+            must_have_ac: true
+            tests:
+              - { type: bdd, tag: "@AC-TPL-IDP-SNAPSHOT", file: "specs/features/xtask_devex.feature" }
+          - id: AC-TPL-IDP-SNAPSHOT-VALID-JSON
+            text: >
+              The idp-snapshot output is valid JSON that can be parsed without errors
+              and contains all required top-level keys.
+            tags: [kernel, idp]
+            must_have_ac: true
+            tests:
+              - { type: bdd, tag: "@AC-TPL-IDP-SNAPSHOT-VALID-JSON", file: "specs/features/xtask_devex.feature" }
 
   # When adding your domain features:
   # - Copy the structure above (story → requirement → AC → tests)

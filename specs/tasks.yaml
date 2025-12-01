@@ -1,5 +1,5 @@
 schema_version: "1.0"
-template_version: "3.3.5"
+template_version: "3.3.6"
 
 tasks:
   - id: TASK-TPL-IMPLEMENT-AC-001
@@ -412,6 +412,62 @@ tasks:
       Cover when to add words, how to keep cspell.yaml tidy, and policy for
       technical jargon vs. typos. Link from CLAUDE.md and xtask help-flows.
     recommended_flows: ["ac_first"]
+    docs:
+      design: []
+      plan: []
+
+  # Environment Diagnostics Track
+  - id: TASK-ENV-DIAG-001
+    title: "Spec and AC alignment for environment diagnostics"
+    requirement: REQ-PLT-ENV-DIAGNOSTICS
+    acs:
+      - AC-PLT-ENV-ABI-CHECK
+    status: todo
+    owner: agent
+    labels: [dx, environment, diagnostics, p2]
+    summary: >
+      Ensure REQ-PLT-ENV-DIAGNOSTICS and its ACs accurately describe what
+      cargo xtask doctor does for environment checks. Verify ABI mismatch
+      detection is spec-aligned and documented.
+    recommended_flows: ["ac_first"]
+    docs:
+      design: []
+      plan: []
+
+  - id: TASK-ENV-DIAG-002
+    title: "Expand doctor BDD coverage for environment checks"
+    requirement: REQ-PLT-ENV-DIAGNOSTICS
+    acs:
+      - AC-PLT-ENV-ABI-CHECK
+      - AC-PLT-ENV-SCCACHE-WARN
+    status: todo
+    owner: agent
+    labels: [dx, environment, testing, p2]
+    summary: >
+      Add BDD scenarios for doctor environment diagnostics including ABI
+      compatibility warnings and sccache/libz issue detection. Ensure
+      TROUBLESHOOTING.md references are surfaced in output.
+    recommended_flows: ["ac_first"]
+    depends_on:
+      - TASK-ENV-DIAG-001
+    docs:
+      design: []
+      plan: []
+
+  - id: TASK-ENV-DIAG-003
+    title: "Document environment diagnostics in MISSING_MANUAL.md"
+    requirement: REQ-PLT-ENV-DIAGNOSTICS
+    acs: []
+    status: todo
+    owner: agent
+    labels: [dx, docs, environment, p3]
+    summary: >
+      Add a "Doctor & Environment Diagnostics" section to MISSING_MANUAL.md
+      explaining the distinction between template failures and environment
+      issues, with references to TROUBLESHOOTING.md sections.
+    recommended_flows: ["ac_first"]
+    depends_on:
+      - TASK-ENV-DIAG-002
     docs:
       design: []
       plan: []

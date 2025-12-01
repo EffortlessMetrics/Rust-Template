@@ -111,7 +111,78 @@ vim specs/spec_ledger.yaml  # ❌ Leads to errors
 
 ---
 
-## 4. What "Self-Healing" Actually Means
+## 4. Doctor & Environment Diagnostics
+
+**Myth:** "If `cargo xtask doctor` warns, my template is broken."
+**Reality:** Doctor distinguishes between **template issues** and **environment issues**.
+
+### The Two Types of Issues
+
+**Template Issues (Errors):**
+- Missing required files (spec_ledger.yaml, service_metadata.yaml)
+- Invalid configuration format
+- Selftest failures in template logic
+
+**Environment Issues (Warnings):**
+- Rustc version mismatch between system and Nix devshell
+- sccache/libz.so.1 missing in `nix develop -c` mode
+- rust-analyzer ABI incompatibility
+- Windows file locking during rebuilds
+
+### The sccache/libz.so.1 Issue
+
+When running xtask via `nix develop -c`, sccache may fail to find libz.so.1:
+
+```
+error while loading shared libraries: libz.so.1: cannot open shared object file
+```
+
+**This is NOT a template failure.** It's a Nix environment composition issue.
+
+**Workarounds:**
+```bash
+# Option 1: Run inside interactive shell (recommended)
+nix develop
+cargo xtask ac-status
+
+# Option 2: Disable sccache
+RUSTC_WRAPPER="" cargo xtask ac-status
+
+# Option 3: Simulate in-shell environment
+IN_NIX_SHELL=1 RUSTC_WRAPPER="" ./target/release/xtask ac-status
+
+# Option 4: Low-resource mode (also disables sccache)
+XTASK_LOW_RESOURCES=1 cargo xtask ac-status
+```
+
+**See:** FRICTION-ENV-001 in `friction/` and `docs/TROUBLESHOOTING.md` for details.
+
+### rust-analyzer ABI Mismatches
+
+If rust-analyzer complains about proc-macro version mismatches:
+
+```
+proc-macro server error: expected rustc 1.90.0, got rustc 1.91.1
+```
+
+**Fix:** Launch your IDE from inside `nix develop`:
+
+```bash
+nix develop
+code .  # or your preferred editor
+```
+
+This ensures rust-analyzer uses the same toolchain as your build.
+
+### When to Worry
+
+- **Warnings about environment:** Check TROUBLESHOOTING.md, apply workarounds, move on
+- **Errors about template:** These need fixing before commits; selftest will fail
+- **Unclear?:** Run `cargo xtask selftest` - if it passes, your template is fine
+
+---
+
+## 5. What "Self-Healing" Actually Means
 
 **Marketing Claim:** "Self-healing platform cell"  
 **Ground Truth:** The system **refuses to exist in an inconsistent state**
@@ -143,7 +214,7 @@ selftest fails ✗  # Because devex_flows.yaml not updated
 
 ---
 
-## 5. Observability Specifics (Logs vs Traces)
+## 6. Observability Specifics (Logs vs Traces)
 
 We hit an OpenTelemetry constraint:
 
@@ -157,7 +228,7 @@ We hit an OpenTelemetry constraint:
 
 ---
 
-## 6. The "Pilot Discipline" (No New Features)
+## 7. The "Pilot Discipline" (No New Features)
 
 **Current State:** Logic freeze.
 
@@ -189,7 +260,7 @@ Think of Cool Feature → Build It → Hope Someone Uses It
 
 ---
 
-## 7. The Agent Interface is JSON, Not CLAUDE.md
+## 8. The Agent Interface is JSON, Not CLAUDE.md
 
 **Common Misconception:** `CLAUDE.md` is the agent interface.  
 **Reality:** The **HTTP APIs are** the agent interface.
@@ -224,7 +295,7 @@ cat **/*.rs > context.txt  # ❌ Overwhelming
 
 ---
 
-## 8. Common Pitfalls
+## 9. Common Pitfalls
 
 ### Pitfall: Editing Specs Without Generators
 
@@ -252,7 +323,7 @@ cat **/*.rs > context.txt  # ❌ Overwhelming
 
 ---
 
-## 9. Cucumber/Gherkin IDE Diagnostics
+## 10. Cucumber/Gherkin IDE Diagnostics
 
 VS Code extensions for Cucumber/Gherkin (like "Cucumber" or "Feature Syntax Support") may show "Undefined step" warnings on `.feature` files. This is **expected behavior**, not a real error.
 
@@ -274,7 +345,7 @@ Only if `cargo xtask bdd` or `cargo xtask selftest` reports actual step failures
 
 ---
 
-## 10. Summary for a New Team
+## 11. Summary for a New Team
 
 Before you start:
 
@@ -310,7 +381,7 @@ Before you start:
 
 ---
 
-## 11. When to **Not** Use This Template
+## 12. When to **Not** Use This Template
 
 This template is **not** suitable if:
 
@@ -341,7 +412,7 @@ Still stuck? Open an issue with `[pilot]` prefix.
 
 ---
 
-## 12. Low-Resource Environments
+## 13. Low-Resource Environments
 
 If you are running on a constrained machine (e.g., small CI runner, cheap VPS, or old laptop), the default parallel builds and caching might be too heavy.
 
@@ -364,7 +435,7 @@ XTASK_LOW_RESOURCES=1 cargo run -p xtask -- selftest
 
 ---
 
-## 13. Platform Support
+## 14. Platform Support
 
 This template supports development across multiple platforms with different validation guarantees.
 
@@ -537,7 +608,7 @@ git commit --no-verify -m "your message"
 
 ---
 
-## 14. Dictionary Governance (cspell.json)
+## 15. Dictionary Governance (cspell.json)
 
 The `cspell.json` file is a **governed artifact** (part of the kernel surface). It defines project-specific vocabulary for spell checking and is validated as part of `cargo xtask selftest`.
 
@@ -594,7 +665,7 @@ cargo xtask selftest
 
 ---
 
-## 15. Summary: Choose Your Path
+## 16. Summary: Choose Your Path
 
 | Your Situation | Recommended | Why |
 |---|---|---|

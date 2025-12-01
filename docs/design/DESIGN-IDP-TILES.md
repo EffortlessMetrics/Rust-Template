@@ -6,7 +6,7 @@ author: platform-team
 date: 2025-12-01
 status: published
 stories: [US-TPL-PLT-001]
-requirements: [REQ-TPL-PLATFORM-INTROSPECTION, REQ-TPL-AI-IDP-COMPAT]
+requirements: [REQ-TPL-PLATFORM-INTROSPECTION, REQ-TPL-AI-IDP-COMPAT, REQ-TPL-IDP-SNAPSHOT]
 tags: [platform, idp, integration, ai]
 acs: [AC-TPL-CLI-JSON-CORE, AC-TPL-CLI-JSON-OUTPUT, AC-TPL-AGENT-HINTS-SCHEMA]
 adrs: [ADR-0016]
