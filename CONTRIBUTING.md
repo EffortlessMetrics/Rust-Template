@@ -217,6 +217,25 @@ If `selftest` is red:
 2. Use `cargo xtask ac-status` to see which ACs are `[FAIL]`.
 3. Fix the root cause or adjust the AC/tests in `specs/spec_ledger.yaml` if you're intentionally changing the contract.
 
+### 3.4 Version bump checklist (AC-PLT-009 / AC-PLT-010)
+
+When bumping the template/kernel version:
+
+1. Update `specs/spec_ledger.yaml` `metadata.template_version` and `last_updated`.
+2. Update `README.md` template/kernel badges and "Kernel Version" in §14.
+3. Add/update the `[X.Y.Z]` section in `CHANGELOG.md`.
+4. Update `docs/ROADMAP.md` frontmatter `last_updated` and H1 `(vX.Y.Z)`.
+5. If needed, update `docs/KERNEL_SNAPSHOT.md`.
+6. Run:
+
+   ```bash
+   nix develop
+   cargo xtask docs-check
+   cargo xtask selftest
+   ```
+
+If docs-check or selftest fail, fix the misalignment before tagging.
+
 ---
 
 ## 4. How to work on changes

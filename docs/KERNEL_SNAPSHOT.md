@@ -1,10 +1,10 @@
-# Kernel Snapshot v3.3.3
+# Kernel Snapshot v3.3.4
 
-**Date:** 2025-11-26 | **Version:** v3.3.3-kernel
+**Date:** 2025-11-30 | **Version:** v3.3.4-kernel
 
 ## Executive Summary
 
-This is the frozen kernel baseline (v3.3.3-kernel) for the Rust-as-Spec platform template. All 65 acceptance criteria pass. All 8 selftest gates pass. Day-0 commands work as documented. This is a stable, forkable baseline.
+This is the frozen kernel baseline (v3.3.4-kernel) for the Rust-as-Spec platform template. All acceptance criteria pass. All 10 selftest gates pass. Day-0 commands work as documented. This is a stable, forkable baseline.
 
 **Note:** "Selftest green" means the template meets its own specifications. It does not mean every use case has been validated in production. See [ROADMAP.md](./ROADMAP.md) for known gaps.
 
@@ -19,7 +19,7 @@ This is the frozen kernel baseline (v3.3.3-kernel) for the Rust-as-Spec platform
 | **Non-kernel ACs** | 29 | All passing |
 | **Selftest Gates** | 8 | All passing |
 
-### Key Kernel Contracts (v3.3.3)
+### Key Kernel Contracts (v3.3.4)
 
 **Philosophy & Governance:**
 
@@ -186,7 +186,7 @@ See `docs/feature_status_notes.md` for details on the @ci-only testing pattern.
 
 ## Fork Readiness
 
-The template is ready to fork. Services inheriting from v3.3.3-kernel get:
+The template is ready to fork. Services inheriting from v3.3.4-kernel get:
 
 - Runtime, APIs, and UI that pass their ACs
 - DevEx tooling for agents and humans
@@ -200,7 +200,7 @@ The template is ready to fork. Services inheriting from v3.3.3-kernel get:
 - Tag signing not configured (manual GPG setup required - documented in `docs/how-to/setup-tag-signing.md`)
 - Template not yet validated by a second service
 
-**Recently completed (v3.3.3 polish):**
+**Recently completed (v3.3.4 polish):**
 
 **Documentation:**
 
@@ -233,7 +233,7 @@ The first real fork will likely discover friction. Capture it in `FRICTION_LOG.m
 
 ---
 
-## Kernel v3.3.3 Closure
+## Kernel v3.3.4 Closure
 
 **Status:** Frozen baseline. Feature-complete for 1.0.
 
@@ -249,7 +249,7 @@ See `docs/reference/doc-sources.md` for how generated and hand-authored docs are
 
 ✅ **AI-native workflows enabled** – Agents and IDPs have first-class contracts: `/platform/*` APIs, CLI JSON output, task hints, flow guidance.
 
-### What's NOT in v3.3.3
+### What's NOT in v3.3.4
 
 **Intentionally out of scope:**
 
@@ -287,7 +287,7 @@ Further kernel evolution will be driven by:
 
 File issues with `refs: AC-XXX` tags to feed findings back. See [`ROADMAP.md`](./ROADMAP.md) for the forward plan.
 
-### Using v3.3.3
+### Using v3.3.4
 
 - **If you're forking:** Start here. Follow [`docs/how-to/FIRST_FORK.md`](./how-to/FIRST_FORK.md).
 - **If you're contributing to kernel:** Code is frozen. New features go to v3.4.0 planning track.

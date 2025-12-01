@@ -1,6 +1,6 @@
-# Template Version: v3.3.3
+# Template Version: v3.3.4
 # Schema: spec_ledger.yaml v1.0
-# Last Updated: 2025-11-27
+# Last Updated: 2025-11-30
 
 Feature: Developer Experience Commands
   As a developer

@@ -1,6 +1,6 @@
-# Template Version: v3.3.3
+# Template Version: v3.3.4
 # Schema: spec_ledger.yaml v1.0
-# Last Updated: 2025-11-26
+# Last Updated: 2025-11-30
 
 @philosophy @docs
 Feature: Template Philosophy Documentation
