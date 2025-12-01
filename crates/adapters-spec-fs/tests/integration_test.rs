@@ -1,3 +1,5 @@
+//! Integration tests for the FsGovernanceRepository adapter.
+
 use adapters_spec_fs::FsGovernanceRepository;
 use business_core::governance::{GovernanceRepository, TaskId, TaskStatus};
 use std::fs;

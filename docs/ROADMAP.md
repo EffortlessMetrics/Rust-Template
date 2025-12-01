@@ -336,6 +336,103 @@ Only a few items remain - all now have documentation or are external dependencie
 
 ---
 
+## 5A. Adoption Phases (Build-Out Track)
+
+> **Scope:** These phases happen **in forks and platform infrastructure**, not in this kernel repo. Kernel improvements are batched at phase gates based on demand, not speculation.
+
+### Phase 1: Fork Usage Baseline
+
+**Goal:** Test kernel invariants in real service environment
+
+**Activities:**
+
+- Fork template into new service using `v3.3.5-kernel` tag
+- Run `nix develop && cargo xtask doctor && cargo xtask selftest` to validate baseline
+- Wire in service identity via `specs/service_metadata.yaml`
+- Add domain stories/REQs/ACs to `specs/spec_ledger.yaml`
+- Capture friction in fork's `FRICTION_LOG.md` and surface via `/platform/friction` API
+- Use `docs/how-to/report-fork-feedback.md` to report kernel issues upstream
+
+**Success Criteria:**
+
+- Selftest green on every PR in fork repo
+- Friction systematically logged and categorized
+- Service builds and runs with template governance intact
+
+### Phase 2: IDP Tile Integration
+
+**Goal:** Surface governance and docs health in developer portal
+
+**Activities:**
+
+- Build **Governance Health tile** using `/platform/status` endpoint
+  - Show AC pass/fail counts, policy status, selftest gate results
+- Build **Docs Health tile** using `/platform/docs/index` endpoint
+  - Show doc types, coverage, staleness, missing entries
+- (Optional) Add **Task/Hints tile** using `/platform/agent/hints` endpoint
+  - Surface prioritized work items for teams and agents
+- Reference `docs/explanation/json-contracts.md` for JSON schema contracts
+- Validate tile data against fork services (Phase 1 outputs)
+
+**Success Criteria:**
+
+- Template-based services visible in IDP with health metrics
+- Teams can see governance drift in real-time
+- Documentation health surfaced without manual audits
+
+### Phase 3: Governed Agent Pilot
+
+**Goal:** Validate kernel is truly agent-friendly
+
+**Activities:**
+
+- Deploy Claude Code agents to 2-3 fork repos from Phase 1
+- Use Skills: `bootstrap-dev-env`, `governed-feature-dev`, `governed-maintenance`
+- Agent workflow loop:
+  1. Query `/platform/agent/hints` for prioritized tasks
+  2. Generate context bundle via `cargo xtask bundle <task_name>`
+  3. Edit code/tests/docs within bundle scope
+  4. Validate with `cargo xtask test-ac <AC_ID>`
+  5. Gate on `cargo xtask selftest` before PR
+- Require AC/REQ/Doc invariants green (`docs-check` + `selftest`)
+- Capture agent friction separately from human developer friction
+
+**Success Criteria:**
+
+- Agents productive in 2-3 real service repos without human intervention
+- Agent-generated PRs pass selftest on first attempt >80% of the time
+- Clear friction log distinguishing agent vs. human developer pain points
+
+### Phase 4: Kernel vNext (Demand-Driven)
+
+**Goal:** Batch real feedback into next kernel version
+
+**Activities:**
+
+- Review friction logs from Phases 1-3 (fork usage + IDP + agents)
+- Categorize feedback:
+  - **Kernel fixes:** gaps in `spec_ledger.yaml`, broken contracts, missing flows
+  - **Soft → hard promotions:** checks validated in real usage, ready to gate
+  - **JSON contract refinements:** IDP/agent usage reveals schema gaps
+  - **Out-of-scope:** fork-specific needs, not generalizable
+- Promote soft checks to hard gates after validation (e.g., `docs-check` strictness)
+- Refine JSON contracts based on IDP tile and agent integration patterns
+- Implement versioning engine refactor if `release-prepare` friction is systematic
+- Add new patterns discovered in forks (e.g., common service types, IAC extensions)
+
+**Success Criteria:**
+
+- v3.4.0 (or v4.0.0) released with changes **driven by friction**, not speculation
+- All promoted hard gates have evidence from ≥2 fork repos
+- JSON contracts validated by real IDP/agent consumers
+- Kernel changelog clearly attributes improvements to fork feedback
+
+---
+
+**Note:** These phases are **adoption-driven** and happen outside this kernel repository. Kernel improvements are batched at phase gates (especially Phase 4) rather than landed speculatively. The v3.3.5 kernel is complete; validation and evolution happen through real usage.
+
+---
+
 ## 6. Recommended Path (For Adopters)
 
 > **Scope note:** This section describes what happens **in forks**, not in this repo.

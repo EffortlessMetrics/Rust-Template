@@ -18,7 +18,7 @@ last_updated: 2025-12-01
 
 ## Executive Summary
 
-This is the frozen kernel baseline (v3.3.4-kernel) for the Rust-as-Spec platform template. All kernel acceptance criteria pass. All selftest gates pass. Day-0 commands work as documented. This is a stable, forkable baseline.
+This is the frozen kernel baseline (v3.3.5-kernel) for the Rust-as-Spec platform template. All kernel acceptance criteria pass. All selftest gates pass. Day-0 commands work as documented. This is a stable, forkable baseline.
 
 **Note:** "Selftest green" means the template meets its own specifications. It does not mean every use case has been validated in production. See [ROADMAP.md](./ROADMAP.md) for known gaps.
 
@@ -42,7 +42,7 @@ cargo xtask selftest     # Full governance validation
 
 ---
 
-### Key Kernel Contracts (v3.3.4)
+### Key Kernel Contracts (v3.3.5)
 
 **Philosophy & Governance:**
 
@@ -108,9 +108,13 @@ These REQs encode the template's opinionated stance. They define *how* the platf
 - Platform introspection APIs:
   - `/platform/graph` - Full governance graph (REQ/AC/test/doc relationships)
   - `/platform/devex/flows` - Canonical DevEx flows and commands
-  - `/platform/docs/index` - Documentation inventory
+  - `/platform/docs/index` - Documentation inventory (with doc health info)
   - `/platform/schema` - OpenAPI contract
   - `/platform/status` - Governance health metrics (includes policy status)
+- JSON contracts & schemas:
+  - CLI commands support `--json` output for AI/IDP integration
+  - HTTP endpoints return structured JSON conforming to documented schemas
+  - Reference: `docs/explanation/json-contracts.md` for CLI and HTTP specifications
 - Task management APIs:
   - `/platform/tasks` - Task listing with filters (status, requirement)
   - `/platform/tasks/{id}/status` - Update task status via HTTP
@@ -168,7 +172,7 @@ These REQs encode the template's opinionated stance. They define *how* the platf
   - `task-update` - Update task fields (status, title, owner)
 - Release management:
   - `release-prepare` - Bump versions, update changelog
-  - `release-bundle` - Generate release evidence with AC deltas
+  - `release-bundle` - Generate release evidence with AC deltas (creates `release_evidence/vX.Y.Z.md` and `release_evidence/kernel_contract.vX.Y.Z.json`)
   - `release-verify` - Full release validation (selftest + audit + docs-check)
 - Operational:
   - `audit` - Security audit (cargo-audit + cargo-deny)
@@ -184,6 +188,20 @@ These REQs encode the template's opinionated stance. They define *how* the platf
 - Policy tests via conftest
 - Pre-commit hooks and markdown hygiene
 - AC/ADR bidirectional mapping
+- Document type contract validation:
+  - Enforces 11 doc_type classifications (how_to, explanation, design_doc, reference, status, adr, guide, impl_plan, requirements_doc, ci_workflow)
+  - Structural expectations per doc_type (frontmatter, required fields)
+  - Validated by `cargo xtask docs-check`
+  - Reference: `docs/reference/doc-sources.md` §6.5
+- Agents governance:
+  - Agents defined in `.claude/agents/*.md` with governed YAML frontmatter
+  - Validated by `cargo xtask agents-lint` for name format, descriptions, tools, model policy, skill references
+  - Template: `docs/AGENTS_TEMPLATE.md`, governance rules: `docs/AGENTS_GOVERNANCE.md`
+- Skills as governed artifacts:
+  - `.claude/skills/*/SKILL.md` are governed workflow recipes with frontmatter validation
+  - Validated by `cargo xtask skills-lint` and formatted by `cargo xtask skills-fmt`
+  - Five recommended skills: bootstrap-dev-env, governed-feature-dev, governed-maintenance, governed-release, governed-governance-debug
+  - Template: `docs/SKILLS_TEMPLATE.md`, governance rules: `docs/SKILLS_GOVERNANCE.md`
 
 ---
 
@@ -207,7 +225,7 @@ cargo run -p app-http    # Listening on :8080
 
 ## Fork Readiness
 
-The template is ready to fork. Services inheriting from v3.3.4-kernel get:
+The template is ready to fork. Services inheriting from v3.3.5-kernel get:
 
 - Runtime, APIs, and UI that pass their ACs
 - DevEx tooling for agents and humans
@@ -221,7 +239,7 @@ The template is ready to fork. Services inheriting from v3.3.4-kernel get:
 - Tag signing not configured (manual GPG setup required - documented in `docs/how-to/setup-tag-signing.md`)
 - Template not yet validated by a second service
 
-**Recently completed (v3.3.4 polish):**
+**Recently completed (v3.3.5 polish):**
 
 **Documentation:**
 
@@ -234,6 +252,7 @@ The template is ready to fork. Services inheriting from v3.3.4-kernel get:
 - ✅ CI workflows reference (`docs/reference/ci-workflows.md`)
 - ✅ Branch protection setup (`docs/how-to/setup-branch-protection.md`)
 - ✅ Tag signing setup (`docs/how-to/setup-tag-signing.md`)
+- ✅ Safe doc change workflow (`docs/how-to/change-docs-safely.md`)
 
 **Operational Tooling:**
 
@@ -254,7 +273,7 @@ The first real fork will likely discover friction. Capture it in `FRICTION_LOG.m
 
 ---
 
-## Kernel v3.3.4 Closure
+## Kernel v3.3.5 Closure
 
 **Status:** Frozen baseline. Feature-complete for 1.0.
 
@@ -270,7 +289,7 @@ See `docs/reference/doc-sources.md` for how generated and hand-authored docs are
 
 ✅ **AI-native workflows enabled** – Agents and IDPs have first-class contracts: `/platform/*` APIs, CLI JSON output, task hints, flow guidance.
 
-### What's NOT in v3.3.4
+### What's NOT in v3.3.5
 
 **Intentionally out of scope:**
 
@@ -308,7 +327,7 @@ Further kernel evolution will be driven by:
 
 File issues with `refs: AC-XXX` tags to feed findings back. See [`ROADMAP.md`](./ROADMAP.md) for the forward plan.
 
-### Using v3.3.4
+### Using v3.3.5
 
 - **If you're forking:** Start here. Follow [`docs/how-to/FIRST_FORK.md`](./how-to/FIRST_FORK.md).
 - **If you're contributing to kernel:** Code is frozen. New features go to v3.4.0 planning track.
