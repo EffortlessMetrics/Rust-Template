@@ -176,6 +176,69 @@ pipeline {
 
 ---
 
+## Debugging Environment Detection
+
+Use `cargo xtask env-mode` to see how xtask detects your environment:
+
+```bash
+$ cargo xtask env-mode
+
+Environment Mode
+  Mode: interactive
+
+Detection Flags
+  is_ci:            false
+  is_noninteractive: false
+  is_low_resources: false
+  should_skip_bdd:  false
+
+Raw Environment Variables
+  CI=               (unset)
+  GITHUB_ACTIONS=   (unset)
+  XTASK_NONINTERACTIVE= (unset)
+  XTASK_LOW_RESOURCES=  (unset)
+  XTASK_SKIP_BDD=       (unset)
+  IN_NIX_SHELL=         "1"
+```
+
+With CI variables set:
+
+```bash
+$ CI=1 XTASK_LOW_RESOURCES=1 cargo xtask env-mode
+
+Environment Mode
+  Mode: CI (low-resources)
+
+Detection Flags
+  is_ci:            true
+  is_noninteractive: true
+  is_low_resources: true
+  should_skip_bdd:  true
+```
+
+For machine-readable output:
+
+```bash
+$ cargo xtask env-mode --json
+```
+
+### Environment Mode Matrix
+
+| Variables Set | Mode | BDD Skipped? |
+|--------------|------|--------------|
+| (none) | `interactive` | No |
+| `CI=1` | `CI` | No |
+| `XTASK_NONINTERACTIVE=1` | `non-interactive` | No |
+| `XTASK_LOW_RESOURCES=1` | `low-resources` | Yes |
+| `CI=1 XTASK_LOW_RESOURCES=1` | `CI (low-resources)` | Yes |
+| `XTASK_SKIP_BDD=1` | `interactive` | Yes |
+
+> **Note:** `XTASK_SKIP_BDD=1` only affects the `should_skip_bdd` flag; it does
+> not change the reported mode. The mode remains `interactive` unless other
+> environment variables (`CI`, `XTASK_NONINTERACTIVE`, `XTASK_LOW_RESOURCES`) are set.
+
+---
+
 ## Commands and Their CI Behavior
 
 | Command | CI Detection | Non-Interactive | Notes |
@@ -186,6 +249,7 @@ pipeline {
 | `ac-status` | ✅ | ✅ | Generates report silently |
 | `docs-check` | ✅ | ✅ | Full validation, no prompts |
 | `bundle` | ✅ | ✅ | Generates bundles silently |
+| `env-mode` | ✅ | ✅ | Debug env detection (--json for CI) |
 
 All commands:
 - **Never prompt** for input when `CI` or `XTASK_NONINTERACTIVE` is set

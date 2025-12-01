@@ -566,6 +566,14 @@ enum Commands {
         json: bool,
     },
 
+    /// Show environment detection mode (CI, noninteractive, low-resources)
+    #[command(next_help_heading = "ℹ️ Status & Metadata")]
+    EnvMode {
+        /// Output in JSON format
+        #[arg(long)]
+        json: bool,
+    },
+
     // ============================================================================
     // IDP INTEGRATION (Machine-readable snapshots for IDPs)
     // ============================================================================
@@ -772,6 +780,9 @@ fn main() -> Result<()> {
         Commands::Version { json } => {
             commands::version::run(commands::version::VersionArgs { json })
         }
+        Commands::EnvMode { json } => {
+            commands::env_mode::run(commands::env_mode::EnvModeArgs { json })
+        }
         Commands::IdpSnapshot { output, pretty } => {
             commands::idp_snapshot::run(commands::idp_snapshot::IdpSnapshotArgs { output, pretty })
         }
@@ -888,6 +899,7 @@ pub fn all_command_names() -> Vec<&'static str> {
         "doctor",
         "docs-check",
         "docs-frontmatter-sync",
+        "env-mode",
         "spellcheck",
         "dev-up",
         "fmt-all",
