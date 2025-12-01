@@ -200,7 +200,7 @@ async fn agent_hints(
                 task_id,
                 title: hint.title.clone(),
                 owner: definition.owner.clone().unwrap_or_else(|| "unassigned".to_string()),
-                labels: definition.labels.clone(),
+                labels: hint.tags.clone(), // Mirror tags for legacy BDD/UI compatibility
                 requirement_ids: vec![definition.requirement.clone()],
                 ac_ids: definition.acs.clone(),
                 recommended_sequence,

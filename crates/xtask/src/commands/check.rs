@@ -98,6 +98,8 @@ pub fn run_with_options(options: CheckOptions) -> Result<()> {
 }
 
 fn run_change_aware_bdd(base_ref: &str, changed_files: &[String], plan: BddPlan) -> Result<()> {
+    use crate::commands::bdd::{self, BddOptions};
+
     match plan {
         BddPlan::None { reason } => {
             println!("Skipping acceptance tests ({reason}).");
@@ -111,15 +113,9 @@ fn run_change_aware_bdd(base_ref: &str, changed_files: &[String], plan: BddPlan)
                     println!("  - {}", file);
                 }
             }
-            let mut cmd = crate::cargo_cmd("test", &["-p", "acceptance", "--test", "acceptance"]);
-            // Exclude @ci-only scenarios unless in CI to avoid recursive selftest
-            let is_ci = std::env::var("CI").is_ok()
-                || std::env::var("GITHUB_ACTIONS").is_ok()
-                || std::env::var("GITLAB_CI").is_ok();
-            if !is_ci {
-                cmd.env("CUCUMBER_TAG_EXPRESSION", "not @ci-only");
-            }
-            crate::run_cmd(&mut cmd)?;
+            // Use bdd::run_with_options which properly detects [BDD-PASS] marker
+            // instead of trusting raw cargo test exit code (which can be 101 spuriously)
+            bdd::run_with_options(BddOptions { tag_expression: None, verbose: true })?;
             println!("acceptance tests were run");
             Ok(())
         }
@@ -138,15 +134,16 @@ fn run_change_aware_bdd(base_ref: &str, changed_files: &[String], plan: BddPlan)
                 }
             }
 
-            let mut cmd = crate::cargo_cmd("test", &["-p", "acceptance", "--test", "acceptance"]);
             // Exclude @ci-only scenarios unless in CI to avoid recursive selftest
             let is_ci = std::env::var("CI").is_ok()
                 || std::env::var("GITHUB_ACTIONS").is_ok()
                 || std::env::var("GITLAB_CI").is_ok();
             let final_expr =
                 if is_ci { expr.clone() } else { format!("({}) and not @ci-only", expr) };
-            cmd.env("CUCUMBER_TAG_EXPRESSION", &final_expr);
-            crate::run_cmd(&mut cmd)?;
+
+            // Use bdd::run_with_options which properly detects [BDD-PASS] marker
+            // instead of trusting raw cargo test exit code (which can be 101 spuriously)
+            bdd::run_with_options(BddOptions { tag_expression: Some(final_expr), verbose: true })?;
             println!("acceptance tests were run for: {}", expr);
             Ok(())
         }
