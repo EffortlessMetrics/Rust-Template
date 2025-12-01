@@ -108,6 +108,35 @@ pub fn run() -> Result<()> {
         }
     }
 
+    // Check Doc type contracts (Slice D)
+    // Note: This is a soft check (warning) to encourage gradual improvement.
+    // See docs/reference/doc-sources.md Section 6.5 for the contract table.
+    print!("Doc type contracts... ");
+    {
+        let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        let root = manifest_dir.parent().expect("workspace root").parent().expect("repo root");
+        let index_path = root.join("specs/doc_index.yaml");
+        if index_path.exists() {
+            match crate::docs_index::load_doc_index(&index_path) {
+                Ok(index) => match validate_doc_types(&index) {
+                    Ok(_) => println!("{}", "✓ Valid".green()),
+                    Err(e) => {
+                        println!("{}", "⚠ Warnings".yellow());
+                        eprintln!("  [WARN] {}", e);
+                        // Soft check: don't increment issues count
+                    }
+                },
+                Err(e) => {
+                    println!("{}", "⚠ Skipped".yellow());
+                    eprintln!("  [WARN] Could not load doc_index: {}", e);
+                }
+            }
+        } else {
+            println!("{}", "⚠ Skipped".yellow());
+            eprintln!("  [WARN] specs/doc_index.yaml not found");
+        }
+    }
+
     // Check Skills definitions
     print!("Skills definitions... ");
     match crate::commands::skills::run_lint() {
@@ -947,6 +976,130 @@ fn validate_kernel_req_doc_coverage() -> Result<()> {
             "Kernel REQ doc coverage: {} kernel requirement(s) have no documentation",
             missing_docs.len()
         );
+    }
+
+    Ok(())
+}
+
+/// Validate doc_type contracts for each document in the index.
+/// Each doc_type has minimal expectations for what references it should contain.
+/// This is a soft check (warnings only) to encourage gradual improvement.
+///
+/// See docs/reference/doc-sources.md Section 6.5 for the full contract table.
+fn validate_doc_types(index: &crate::docs_index::DocIndex) -> Result<()> {
+    let mut issues = Vec::new();
+
+    for doc in &index.docs {
+        // Normalize doc_type: treat "how-to" as "how_to"
+        let doc_type = doc.doc_type.replace('-', "_");
+
+        match doc_type.as_str() {
+            "how_to" => {
+                // Step-by-step runbooks: requirements or acs must be non-empty
+                if doc.requirements.is_empty() && doc.acs.is_empty() {
+                    issues.push(format!(
+                        "how_to '{}' ({}) should reference at least one requirement or AC",
+                        doc.id, doc.file
+                    ));
+                }
+            }
+            "explanation" => {
+                // Conceptual background: stories or requirements must be non-empty
+                if doc.stories.is_empty() && doc.requirements.is_empty() {
+                    issues.push(format!(
+                        "explanation '{}' ({}) should reference at least one story or requirement",
+                        doc.id, doc.file
+                    ));
+                }
+            }
+            "design_doc" => {
+                // Architecture / decisions: requirements must be non-empty
+                if doc.requirements.is_empty() {
+                    issues.push(format!(
+                        "design_doc '{}' ({}) should reference at least one requirement",
+                        doc.id, doc.file
+                    ));
+                }
+            }
+            "reference" => {
+                // Commands / APIs / schemas: should reference ≥1 REQ or AC
+                if doc.requirements.is_empty() && doc.acs.is_empty() {
+                    issues.push(format!(
+                        "reference '{}' ({}) should reference at least one requirement or AC",
+                        doc.id, doc.file
+                    ));
+                }
+            }
+            "status" => {
+                // Snapshots / roadmaps: requirements and acs must be non-empty
+                if doc.requirements.is_empty() || doc.acs.is_empty() {
+                    issues.push(format!(
+                        "status '{}' ({}) should reference both requirements and ACs",
+                        doc.id, doc.file
+                    ));
+                }
+            }
+            "adr" => {
+                // Architecture decision record: requirements must be non-empty
+                if doc.requirements.is_empty() {
+                    issues.push(format!(
+                        "adr '{}' ({}) should reference at least one requirement",
+                        doc.id, doc.file
+                    ));
+                }
+            }
+            "guide" => {
+                // User-facing documentation: requirements or acs should be non-empty
+                if doc.requirements.is_empty() && doc.acs.is_empty() {
+                    issues.push(format!(
+                        "guide '{}' ({}) should reference at least one requirement or AC",
+                        doc.id, doc.file
+                    ));
+                }
+            }
+            "impl_plan" => {
+                // Implementation plan: requirements and acs must be non-empty
+                if doc.requirements.is_empty() || doc.acs.is_empty() {
+                    issues.push(format!(
+                        "impl_plan '{}' ({}) should reference both requirements and ACs",
+                        doc.id, doc.file
+                    ));
+                }
+            }
+            "requirements_doc" => {
+                // Requirements specification: requirements must be non-empty
+                if doc.requirements.is_empty() {
+                    issues.push(format!(
+                        "requirements_doc '{}' ({}) should reference at least one requirement",
+                        doc.id, doc.file
+                    ));
+                }
+            }
+            "ci_workflow" => {
+                // CI workflow YAML: no validation (YAML files, not markdown)
+            }
+            _ => {
+                // Unknown doc_type: warn about it
+                issues.push(format!(
+                    "Unknown doc_type '{}' for doc '{}' ({})",
+                    doc.doc_type, doc.id, doc.file
+                ));
+            }
+        }
+    }
+
+    if !issues.is_empty() {
+        eprintln!();
+        eprintln!("{}", "Doc type contract warnings:".yellow().bold());
+        for issue in &issues {
+            eprintln!("  ⚠ {}", issue);
+        }
+        eprintln!();
+        eprintln!("{}", "To fix:".bold());
+        eprintln!("  • Add missing requirements/acs/stories in frontmatter + doc_index.yaml");
+        eprintln!("  • Or adjust doc_type if the doc was misclassified");
+        eprintln!("  • See: docs/reference/doc-sources.md Section 6.5");
+        anyhow::bail!("Doc type contracts: {} warning(s)", issues.len());
     }
 
     Ok(())

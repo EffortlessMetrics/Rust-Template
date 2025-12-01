@@ -109,6 +109,7 @@ This section documents the **code-enforced invariants** that keep docs in sync w
 | **Feature status header (AC-PLT-010 extension)** | `docs/feature_status.md` | Header must contain Template Version matching spec_ledger |
 | **ADR structure** | `docs/adr/ADR-*.md` | ADR format and numbering validated |
 | **Kernel REQs must have docs** | `specs/spec_ledger.yaml`, `specs/doc_index.yaml` | Every REQ with `must_have_ac: true` (or containing such ACs) must appear in `requirements:` for at least one doc (currently soft warning) |
+| **Doc type contracts** | `specs/doc_index.yaml` | Each doc_type must satisfy minimal reference expectations (see Section 6.5) (soft warning) |
 | **Skills definitions** | `.claude/skills/*/SKILL.md` | skills-lint validates format, descriptions, tools, and no secrets |
 
 ### 6.2. Invariants enforced by `cargo xtask ac-status`
@@ -152,3 +153,26 @@ When you change docs, follow this pattern:
 1. Edit `.claude/skills/*/SKILL.md` or `.claude/agents/*.md`
 2. Run `cargo xtask skills-lint` or `cargo xtask agents-lint`
 3. Run `cargo xtask docs-check` to verify
+
+### 6.5. Doc type contracts
+
+Each `doc_type` carries light structural expectations. These are enforced as **soft checks** by `cargo xtask docs-check`:
+
+| doc_type          | Purpose                      | Minimal expectations                          |
+|-------------------|------------------------------|-----------------------------------------------|
+| `how_to`          | Step-by-step runbooks        | `requirements` or `acs` must be non-empty     |
+| `explanation`     | Conceptual background        | `stories` or `requirements` must be non-empty |
+| `design_doc`      | Architecture / decisions     | `requirements` must be non-empty              |
+| `reference`       | Commands / APIs / schemas    | Should reference ≥1 REQ or AC                 |
+| `status`          | Snapshots / roadmaps         | `requirements` and `acs` must be non-empty    |
+| `adr`             | Architecture decision record | `requirements` must be non-empty              |
+| `guide`           | User-facing documentation    | `requirements` or `acs` should be non-empty   |
+| `impl_plan`       | Implementation plan          | `requirements` and `acs` must be non-empty    |
+| `requirements_doc`| Requirements specification   | `requirements` must be non-empty              |
+| `ci_workflow`     | CI workflow YAML             | No frontmatter validation (YAML file)         |
+
+**Note:** Use `how_to` (underscore), not `how-to` (hyphen), for consistency.
+
+When a doc type contract is violated, `docs-check` emits a warning. To fix:
+- Add the missing `requirements` / `acs` / `stories` in frontmatter + `doc_index.yaml`, or
+- Adjust `doc_type` if the doc was misclassified
