@@ -109,7 +109,7 @@ pub fn run() -> Result<()> {
 
     // Check CI environment
     print!("CI mode... ");
-    if std::env::var("CI").is_ok() {
+    if crate::env::is_ci() {
         println!("{} Running in CI", "✓".green());
     } else {
         println!("{} Local development", "✓".green());
@@ -117,7 +117,7 @@ pub fn run() -> Result<()> {
 
     // Check low-resource mode
     print!("XTASK_LOW_RESOURCES... ");
-    if std::env::var("XTASK_LOW_RESOURCES").is_ok() {
+    if crate::env::is_low_resources() {
         println!("{} Enabled (reduced parallelism)", "✓".green());
     } else {
         println!("{} Not set (using full resources)", "✓".green());

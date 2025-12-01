@@ -1,0 +1,97 @@
+# Canonical CI workflow for Rust-as-Spec template forks
+# Copy this to your fork's .github/workflows/ directory
+#
+# This workflow demonstrates the recommended CI configuration for
+# services built on the Rust-as-Spec Platform Cell template.
+#
+# Environment Variables:
+#   CI=1                    - Standard CI detection (set by GitHub Actions)
+#   XTASK_NONINTERACTIVE=1  - Suppress all prompts
+#   XTASK_LOW_RESOURCES=1   - Optional: for constrained runners
+#
+# See: docs/how-to/run-in-ci.md for detailed configuration options
+
+name: Rust-as-Spec Kernel CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  CARGO_TERM_COLOR: always
+  # CI=1 is automatically set by GitHub Actions
+
+jobs:
+  # Tier-1: Full governance validation in Nix devshell
+  kernel-ci-tier1:
+    name: Kernel CI (Tier-1 Nix)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@v14
+
+      - name: Setup Nix cache
+        uses: DeterminateSystems/magic-nix-cache-action@v8
+
+      - name: Run kernel selftest
+        run: |
+          nix develop -c bash -lc '
+            export XTASK_NONINTERACTIVE=1
+            cargo xtask ci-local
+          '
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-tier1
+          path: |
+            target/junit/
+            target/ac_report.json
+          retention-days: 7
+
+  # Tier-2: Basic validation without Nix (Windows/macOS native)
+  kernel-ci-tier2:
+    name: Kernel CI (Tier-2 Native)
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: dtolnay/rust-action@stable
+
+      - name: Run basic checks
+        shell: bash
+        run: |
+          export XTASK_NONINTERACTIVE=1
+          cargo xtask check
+
+  # Optional: Low-resource mode for constrained environments
+  kernel-ci-low-resources:
+    name: Kernel CI (Low Resources)
+    runs-on: ubuntu-latest
+    if: false  # Enable by changing to 'true' if needed
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@v14
+
+      - name: Run with low resources
+        run: |
+          nix develop -c bash -lc '
+            export XTASK_NONINTERACTIVE=1
+            export XTASK_LOW_RESOURCES=1
+            cargo xtask selftest
+          '

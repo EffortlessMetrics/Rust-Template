@@ -656,6 +656,34 @@ fn get_platform_endpoints() -> Vec<EndpointSchema> {
             response_type: "CoverageResponse".to_string(),
         },
         EndpointSchema {
+            path: "/platform/idp/snapshot".to_string(),
+            method: "GET".to_string(),
+            description: "Get IDP-ready governance snapshot for portal integration".to_string(),
+            request_type: None,
+            response_type: "IdpSnapshot".to_string(),
+        },
+        EndpointSchema {
+            path: "/platform/questions".to_string(),
+            method: "GET".to_string(),
+            description: "Get design questions and ambiguities".to_string(),
+            request_type: None,
+            response_type: "QuestionsResponse".to_string(),
+        },
+        EndpointSchema {
+            path: "/platform/friction".to_string(),
+            method: "GET".to_string(),
+            description: "Get development friction log entries".to_string(),
+            request_type: None,
+            response_type: "FrictionResponse".to_string(),
+        },
+        EndpointSchema {
+            path: "/platform/forks".to_string(),
+            method: "GET".to_string(),
+            description: "Get registered fork information".to_string(),
+            request_type: None,
+            response_type: "ForksResponse".to_string(),
+        },
+        EndpointSchema {
             path: "/ui".to_string(),
             method: "GET".to_string(),
             description: "Platform dashboard UI".to_string(),
@@ -734,5 +762,6 @@ mod tests {
         assert!(paths.contains(&"/platform/graph"));
         assert!(paths.contains(&"/platform/schema"));
         assert!(paths.contains(&"/platform/tasks"));
+        assert!(paths.contains(&"/platform/idp/snapshot"));
     }
 }

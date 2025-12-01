@@ -235,15 +235,20 @@ Only a few items remain - all now have documentation or are external dependencie
 |------|--------|-------|
 | **`lazy-trees` Nix warning** | Cosmetic noise in output | Deprecated Nix 2.30+ setting in Determinate installer config. Documented in TROUBLESHOOTING.md with fix instructions. Safe to ignore. |
 
-### 4.4 v3.4.0 Completed
+### 4.4 v3.4.0 – IDP-Ready Kernel
 
-| Item | Description | Notes |
-|------|-------------|-------|
-| **Docs-as-Code v3** | Validate `doc_index.yaml` entries match document frontmatter | `AC-PLT-DOC-INDEX-FRONTMATTER` — bidirectional sync validation |
-| **Feature-status invariants** | Light checks that `feature_status.md` references correct version | Extension to `AC-PLT-010` — validates version metadata in generated file |
-| **Example fork CI** | `examples/fork-customization/` validated and demonstrates fork extensibility in CI | `AC-TPL-EXAMPLE-FORK-BUILDS` wired and passing — `.github/workflows/ci-example-fork.yml` |
+| Item | Description | Status |
+|------|-------------|--------|
+| **IDP Snapshot Contract** | `cargo xtask idp-snapshot` + `/platform/idp/snapshot` emit stable JSON | ✅ Complete |
+| **Platform Schema** | `specs/platform_schema.yaml` defines all endpoint responses | ✅ Complete |
+| **Docs-as-Code v3** | Bidirectional `doc_index.yaml` ↔ front-matter sync | ✅ Complete |
+| **Feature-status invariants** | `feature_status.md` header matches spec_ledger version | ✅ Complete |
+| **Centralized Env Helpers** | `crate::env::is_ci()`, `is_noninteractive()` reduce duplication | ✅ Complete |
+| **Example fork CI** | `examples/fork-customization/` with CI template | ✅ Complete |
 
-> **v3.4.0 kernel closure:** All governance surface items wired into `specs/spec_ledger.yaml` and CI. Feature-status invariants extend `AC-PLT-010`. Example fork validation demonstrates template fork-readiness.
+> **v3.4.0 kernel closure:** IDP-ready contracts frozen. All governance surface items wired into `specs/spec_ledger.yaml` and CI. Platform schema published. Environment helpers centralized.
+
+See [v3.4.0-plan.md](v3.4.0-plan.md) for full scope and verification checklist.
 
 ---
 

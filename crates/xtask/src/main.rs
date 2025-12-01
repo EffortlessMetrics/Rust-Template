@@ -8,6 +8,7 @@ use std::time::Duration;
 mod commands;
 mod devex;
 mod docs_index;
+pub mod env;
 mod validation;
 
 /// Verbosity level for command output

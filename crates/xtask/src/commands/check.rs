@@ -1,6 +1,7 @@
 use crate::commands::test_changed::{
     BddPlan, bdd_plan_from_changes, format_tag_expression, get_changed_files,
 };
+use crate::env::{is_ci, should_skip_bdd};
 use anyhow::Result;
 use colored::Colorize;
 use std::env;
@@ -41,8 +42,7 @@ pub fn run() -> Result<()> {
 /// Run all checks with explicit options (used by selftest to relax fmt on Tier-2/low-resource)
 pub fn run_with_options(options: CheckOptions) -> Result<()> {
     let low_resource_mode = options.low_resource_mode;
-    let skip_bdd_env = env::var("XTASK_SKIP_BDD").unwrap_or_default() == "1";
-    let skip_bdd = low_resource_mode || skip_bdd_env;
+    let skip_bdd = should_skip_bdd();
 
     if options.skip_fmt {
         let reason = options.fmt_skip_reason.unwrap_or("Tier-2 or low-resource mode");
@@ -131,11 +131,8 @@ fn run_change_aware_bdd(base_ref: &str, changed_files: &[String], plan: BddPlan)
             }
 
             // Exclude @ci-only scenarios unless in CI to avoid recursive selftest
-            let is_ci = std::env::var("CI").is_ok()
-                || std::env::var("GITHUB_ACTIONS").is_ok()
-                || std::env::var("GITLAB_CI").is_ok();
             let final_expr =
-                if is_ci { expr.clone() } else { format!("({}) and not @ci-only", expr) };
+                if is_ci() { expr.clone() } else { format!("({}) and not @ci-only", expr) };
 
             // Use bdd::run_with_options which properly detects [BDD-PASS] marker
             // instead of trusting raw cargo test exit code (which can be 101 spuriously)

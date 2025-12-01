@@ -124,9 +124,7 @@ pub fn run_for_junit(junit_path: &std::path::Path) -> Result<()> {
 pub fn run_with_options(options: BddOptions) -> Result<()> {
     let mut cmd = crate::cargo_cmd("test", &["-p", "acceptance", "--test", "acceptance"]);
 
-    let in_ci = std::env::var("CI").is_ok()
-        || std::env::var("GITHUB_ACTIONS").is_ok()
-        || std::env::var("GITLAB_CI").is_ok();
+    let in_ci = crate::env::is_ci();
 
     // Determine tag expression: explicit option > env var > default
     if let Some(ref expr) = options.tag_expression {

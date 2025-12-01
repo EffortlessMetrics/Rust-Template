@@ -258,6 +258,60 @@ Historical and current planning documents:
 
 ---
 
+## Docs Governance
+
+Documentation is governed by contracts enforced through `cargo xtask docs-check`.
+
+### Docs Governance Quickstart
+
+When updating documentation:
+
+1. **Update `specs/doc_index.yaml`** if adding/moving/renaming docs
+2. **Sync front-matter** with doc_index entries:
+   ```bash
+   cargo xtask docs-frontmatter-sync
+   ```
+3. **Validate governance**:
+   ```bash
+   cargo xtask docs-check
+   ```
+
+### Key Invariants
+
+| Invariant | Enforced By | AC |
+|-----------|-------------|-----|
+| **Version alignment** | `docs-check` | AC-PLT-009 |
+| **Feature status header** | `docs-check` | AC-PLT-010 |
+| **Doc index ↔ front-matter sync** | `docs-check` | AC-PLT-DOC-INDEX-FRONTMATTER |
+| **ADR format** | `adr-check` | — |
+| **Skills format** | `skills-lint` | AC-TPL-SKILLS-LINT |
+
+### Version Authority
+
+The canonical version is `specs/spec_ledger.yaml → metadata.template_version`.
+
+These files are validated against it:
+- README.md, CLAUDE.md, ROADMAP.md
+- KERNEL_SNAPSHOT.md, TEMPLATE-CONTRACTS.md
+- service_metadata.yaml, doc_index.yaml
+- CHANGELOG.md
+
+### Cutting a New Version
+
+```bash
+cargo xtask release-prepare X.Y.Z    # Update all version-bearing files
+cargo xtask ac-status                 # Regenerate feature_status.md
+cargo xtask docs-check                # Validate governance
+cargo xtask selftest                  # Full validation
+```
+
+### Reference
+
+- **[doc-sources.md](reference/doc-sources.md)** - Complete governance specification
+- **[TEMPLATE-CONTRACTS.md](explanation/TEMPLATE-CONTRACTS.md)** - Template versioning contracts
+
+---
+
 ## Troubleshooting
 
 - **[TROUBLESHOOTING.md](TROUBLESHOOTING.md)** - Comprehensive troubleshooting guide (FAQ format)
