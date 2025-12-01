@@ -1,7 +1,7 @@
-service_id: rust-template
-display_name: Rust-as-Spec Platform Cell
-description: Template for per-service AI-governed platform cells built in Rust
-template_version: v3.3.4
+service_id: test-service
+display_name: Test Service
+description: A test service
+template_version: v3.3.3
 ownership:
   team: plat-governance
   email: platform-governance@example.com

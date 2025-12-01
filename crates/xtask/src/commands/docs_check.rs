@@ -4,15 +4,30 @@ use serde::Deserialize;
 use std::fs;
 use std::path::PathBuf;
 
+/// Version alignment result for a single file
+#[derive(Debug)]
+struct VersionCheck {
+    file: &'static str,
+    expected: String,
+    found: String,
+    pattern: &'static str,
+}
+
+impl VersionCheck {
+    fn is_ok(&self) -> bool {
+        self.expected == self.found
+    }
+}
+
 pub fn run() -> Result<()> {
     println!("{}", "📚 Checking documentation consistency...".blue().bold());
     println!();
 
     let mut issues = 0;
 
-    // Check version alignment
+    // Check version alignment (enhanced Docs-as-Code v2)
     print!("Version alignment... ");
-    match check_version_alignment() {
+    match check_version_alignment_v2() {
         Ok(_) => println!("{}", "✓ Consistent".green()),
         Err(e) => {
             println!("{}", "✗ Mismatch".red());
@@ -111,57 +126,82 @@ pub fn run() -> Result<()> {
     Ok(())
 }
 
-fn check_version_alignment() -> Result<()> {
-    // Extract versions from key files
-    let readme_version = extract_version_from_readme()?;
-    let ledger_version = extract_version_from_ledger()?;
-    let claude_version = extract_version_from_claude()?;
-
-    // Always log what we found for BDD test verification
-    eprintln!("  README version: {}", readme_version);
-    eprintln!("  spec_ledger version: {}", ledger_version);
-    if claude_version != "unknown" {
-        eprintln!("  CLAUDE version: {}", claude_version);
+/// Docs-as-Code v2: Comprehensive version alignment check
+///
+/// Treats `specs/spec_ledger.yaml.metadata.template_version` as the canonical version,
+/// and all other files as consumers that must match.
+fn check_version_alignment_v2() -> Result<()> {
+    // Step 1: Extract canonical version from spec_ledger
+    let canonical_version = extract_version_from_ledger()?;
+    if canonical_version == "unknown" {
+        anyhow::bail!("Could not extract template_version from specs/spec_ledger.yaml");
     }
 
-    // CLAUDE.md version is optional (returns "unknown" if not present)
-    // Only check README vs spec_ledger as mandatory
-    if readme_version != ledger_version {
-        anyhow::bail!(
-            "Version mismatch: README={}, spec_ledger={}",
-            readme_version,
-            ledger_version
+    eprintln!("  Canonical version (spec_ledger): {}", canonical_version);
+
+    // Step 2: Check all consumer files against the canonical version
+    let checks = vec![
+        check_readme_version(&canonical_version),
+        check_claude_version(&canonical_version),
+        check_roadmap_version(&canonical_version),
+        check_kernel_snapshot_version(&canonical_version),
+        check_template_contracts_version(&canonical_version),
+        check_service_metadata_version(&canonical_version),
+        check_doc_index_version(&canonical_version),
+        check_changelog_version(&canonical_version),
+    ];
+
+    let mut mismatches: Vec<VersionCheck> = Vec::new();
+
+    for check in checks {
+        match check {
+            Ok(vc) => {
+                if vc.is_ok() {
+                    eprintln!("  {} version: {} ✓", vc.file, vc.found);
+                } else {
+                    eprintln!("  {} version: {} (expected {}) ✗", vc.file, vc.found, vc.expected);
+                    mismatches.push(vc);
+                }
+            }
+            Err(e) => {
+                // File doesn't exist or couldn't be parsed - that's OK for optional files
+                eprintln!("  {} skipped: {}", e, "(optional or missing)".dimmed());
+            }
+        }
+    }
+
+    if !mismatches.is_empty() {
+        eprintln!();
+        eprintln!("{}", "Version mismatches found:".yellow().bold());
+        for m in &mismatches {
+            eprintln!(
+                "  • {} has '{}', expected '{}' (pattern: {})",
+                m.file.cyan(),
+                m.found.red(),
+                m.expected.green(),
+                m.pattern.dimmed()
+            );
+        }
+        eprintln!();
+        eprintln!("{}", "To fix:".bold());
+        eprintln!(
+            "  1. Update the canonical version: {}",
+            "specs/spec_ledger.yaml → metadata.template_version".cyan()
         );
-    }
+        eprintln!("  2. Or run: {} to bump all files", "cargo xtask release-prepare X.Y.Z".cyan());
+        eprintln!("  3. Commit changes and verify: {}", "cargo xtask selftest".cyan());
 
-    // If CLAUDE has a version, it must match
-    if claude_version != "unknown" && readme_version != claude_version {
         anyhow::bail!(
-            "Version mismatch: README={}, spec_ledger={}, CLAUDE={}",
-            readme_version,
-            ledger_version,
-            claude_version
+            "Version alignment failed: {} file(s) out of sync with spec_ledger (v{})",
+            mismatches.len(),
+            canonical_version
         );
     }
 
     Ok(())
 }
 
-fn extract_version_from_readme() -> Result<String> {
-    let content = fs::read_to_string("README.md")?;
-    // Look for "# Rust-as-Spec Platform Cell (vX.Y.Z)" or "# Rust Spec-as-Code Template (vX.Y.Z)"
-    for line in content.lines() {
-        if (line.starts_with("# Rust-as-Spec Platform Cell")
-            || line.starts_with("# Rust Spec-as-Code Template"))
-            && let Some(start) = line.find("(v")
-            && let Some(end) = line[start..].find(')')
-        {
-            return Ok(line[start + 2..start + end].to_string());
-        }
-    }
-    Ok("unknown".to_string())
-}
-
+/// Extract canonical version from spec_ledger.yaml
 fn extract_version_from_ledger() -> Result<String> {
     let content = fs::read_to_string("specs/spec_ledger.yaml")?;
     for line in content.lines() {
@@ -174,17 +214,273 @@ fn extract_version_from_ledger() -> Result<String> {
     Ok("unknown".to_string())
 }
 
-fn extract_version_from_claude() -> Result<String> {
-    let content = fs::read_to_string("CLAUDE.md")?;
-    // Look for "**Template Version:** vX.Y.Z"
+/// Check README.md H1: `# ... (vX.Y.Z)` or badge line
+fn check_readme_version(canonical: &str) -> Result<VersionCheck> {
+    let content = fs::read_to_string("README.md")?;
+
+    // Look for version in H1 or badge line
     for line in content.lines() {
-        if line.contains("Template Version")
-            && let Some(version) = line.split('v').nth(1)
+        // H1 pattern: # Something (vX.Y.Z)
+        if line.starts_with('#')
+            && !line.starts_with("##")
+            && let Some(start) = line.find("(v")
+            && let Some(end) = line[start..].find(')')
         {
-            return Ok(version.split_whitespace().next().unwrap_or("unknown").to_string());
+            let found = line[start + 2..start + end].to_string();
+            return Ok(VersionCheck {
+                file: "README.md",
+                expected: canonical.to_string(),
+                found,
+                pattern: "H1: # ... (vX.Y.Z)",
+            });
+        }
+        // Badge line pattern: **Template Version:** vX.Y.Z
+        if line.contains("Template Version")
+            && line.contains('v')
+            && let Some(version) = extract_version_after_v(line)
+        {
+            return Ok(VersionCheck {
+                file: "README.md",
+                expected: canonical.to_string(),
+                found: version,
+                pattern: "**Template Version:** vX.Y.Z",
+            });
         }
     }
-    Ok("unknown".to_string())
+
+    Ok(VersionCheck {
+        file: "README.md",
+        expected: canonical.to_string(),
+        found: "unknown".to_string(),
+        pattern: "H1 or Template Version line",
+    })
+}
+
+/// Check CLAUDE.md: `**Template Version:** vX.Y.Z` or H1
+fn check_claude_version(canonical: &str) -> Result<VersionCheck> {
+    let content = fs::read_to_string("CLAUDE.md")?;
+
+    for line in content.lines() {
+        // H1 pattern: # ... (vX.Y.Z)
+        if line.starts_with("# ")
+            && let Some(start) = line.find("(v")
+            && let Some(end) = line[start..].find(')')
+        {
+            let found = line[start + 2..start + end].to_string();
+            return Ok(VersionCheck {
+                file: "CLAUDE.md",
+                expected: canonical.to_string(),
+                found,
+                pattern: "H1: # ... (vX.Y.Z)",
+            });
+        }
+        // Template Version line
+        if line.contains("Template Version")
+            && line.contains('v')
+            && let Some(version) = extract_version_after_v(line)
+        {
+            return Ok(VersionCheck {
+                file: "CLAUDE.md",
+                expected: canonical.to_string(),
+                found: version,
+                pattern: "**Template Version:** vX.Y.Z",
+            });
+        }
+    }
+
+    Ok(VersionCheck {
+        file: "CLAUDE.md",
+        expected: canonical.to_string(),
+        found: "unknown".to_string(),
+        pattern: "H1 or Template Version line",
+    })
+}
+
+/// Check docs/ROADMAP.md: H1 with `(vX.Y.Z)`
+fn check_roadmap_version(canonical: &str) -> Result<VersionCheck> {
+    let content = fs::read_to_string("docs/ROADMAP.md")?;
+
+    for line in content.lines() {
+        // H1 pattern: # Roadmap: ... (vX.Y.Z)
+        if line.starts_with("# ")
+            && let Some(start) = line.find("(v")
+            && let Some(end) = line[start..].find(')')
+        {
+            let found = line[start + 2..start + end].to_string();
+            return Ok(VersionCheck {
+                file: "docs/ROADMAP.md",
+                expected: canonical.to_string(),
+                found,
+                pattern: "H1: # ... (vX.Y.Z)",
+            });
+        }
+    }
+
+    Ok(VersionCheck {
+        file: "docs/ROADMAP.md",
+        expected: canonical.to_string(),
+        found: "unknown".to_string(),
+        pattern: "H1: # ... (vX.Y.Z)",
+    })
+}
+
+/// Check docs/KERNEL_SNAPSHOT.md: H1 `# Kernel Snapshot vX.Y.Z`
+fn check_kernel_snapshot_version(canonical: &str) -> Result<VersionCheck> {
+    let content = fs::read_to_string("docs/KERNEL_SNAPSHOT.md")?;
+
+    for line in content.lines() {
+        // H1 pattern: # Kernel Snapshot vX.Y.Z
+        if line.starts_with("# Kernel Snapshot")
+            && let Some(version) = extract_version_after_v(line)
+        {
+            return Ok(VersionCheck {
+                file: "docs/KERNEL_SNAPSHOT.md",
+                expected: canonical.to_string(),
+                found: version,
+                pattern: "H1: # Kernel Snapshot vX.Y.Z",
+            });
+        }
+    }
+
+    Ok(VersionCheck {
+        file: "docs/KERNEL_SNAPSHOT.md",
+        expected: canonical.to_string(),
+        found: "unknown".to_string(),
+        pattern: "H1: # Kernel Snapshot vX.Y.Z",
+    })
+}
+
+/// Check docs/explanation/TEMPLATE-CONTRACTS.md: `**Template Version:** vX.Y.Z`
+fn check_template_contracts_version(canonical: &str) -> Result<VersionCheck> {
+    let content = fs::read_to_string("docs/explanation/TEMPLATE-CONTRACTS.md")?;
+
+    for line in content.lines() {
+        if line.contains("Template Version")
+            && line.contains('v')
+            && let Some(version) = extract_version_after_v(line)
+        {
+            return Ok(VersionCheck {
+                file: "docs/explanation/TEMPLATE-CONTRACTS.md",
+                expected: canonical.to_string(),
+                found: version,
+                pattern: "**Template Version:** vX.Y.Z",
+            });
+        }
+    }
+
+    Ok(VersionCheck {
+        file: "docs/explanation/TEMPLATE-CONTRACTS.md",
+        expected: canonical.to_string(),
+        found: "unknown".to_string(),
+        pattern: "**Template Version:** vX.Y.Z",
+    })
+}
+
+/// Check specs/service_metadata.yaml: `template_version: vX.Y.Z`
+fn check_service_metadata_version(canonical: &str) -> Result<VersionCheck> {
+    let content = fs::read_to_string("specs/service_metadata.yaml")?;
+
+    for line in content.lines() {
+        if line.trim().starts_with("template_version:")
+            && let Some(value) = line.split(':').nth(1)
+        {
+            let found = value.trim().trim_matches('"').trim_start_matches('v').to_string();
+            return Ok(VersionCheck {
+                file: "specs/service_metadata.yaml",
+                expected: canonical.to_string(),
+                found,
+                pattern: "template_version: vX.Y.Z",
+            });
+        }
+    }
+
+    Ok(VersionCheck {
+        file: "specs/service_metadata.yaml",
+        expected: canonical.to_string(),
+        found: "unknown".to_string(),
+        pattern: "template_version: vX.Y.Z",
+    })
+}
+
+/// Check specs/doc_index.yaml: `template_version: "X.Y.Z"`
+fn check_doc_index_version(canonical: &str) -> Result<VersionCheck> {
+    let content = fs::read_to_string("specs/doc_index.yaml")?;
+
+    for line in content.lines() {
+        if line.trim().starts_with("template_version:")
+            && let Some(value) = line.split(':').nth(1)
+        {
+            let found = value.trim().trim_matches('"').to_string();
+            return Ok(VersionCheck {
+                file: "specs/doc_index.yaml",
+                expected: canonical.to_string(),
+                found,
+                pattern: "template_version: \"X.Y.Z\"",
+            });
+        }
+    }
+
+    Ok(VersionCheck {
+        file: "specs/doc_index.yaml",
+        expected: canonical.to_string(),
+        found: "unknown".to_string(),
+        pattern: "template_version: \"X.Y.Z\"",
+    })
+}
+
+/// Check CHANGELOG.md: First version section after [Unreleased] should be `## [X.Y.Z]`
+fn check_changelog_version(canonical: &str) -> Result<VersionCheck> {
+    let content = fs::read_to_string("CHANGELOG.md")?;
+
+    let mut found_unreleased = false;
+    for line in content.lines() {
+        // Skip until we find [Unreleased]
+        if line.contains("[Unreleased]") {
+            found_unreleased = true;
+            continue;
+        }
+
+        // Look for the first version heading after [Unreleased]
+        if found_unreleased && line.starts_with("## [") {
+            // Extract version from ## [X.Y.Z] - YYYY-MM-DD
+            if let Some(start) = line.find('[')
+                && let Some(end) = line[start..].find(']')
+            {
+                let found = line[start + 1..start + end].to_string();
+                return Ok(VersionCheck {
+                    file: "CHANGELOG.md",
+                    expected: canonical.to_string(),
+                    found,
+                    pattern: "## [X.Y.Z] - YYYY-MM-DD (first after [Unreleased])",
+                });
+            }
+        }
+    }
+
+    Ok(VersionCheck {
+        file: "CHANGELOG.md",
+        expected: canonical.to_string(),
+        found: "unknown".to_string(),
+        pattern: "## [X.Y.Z] (first section after [Unreleased])",
+    })
+}
+
+/// Helper: Extract version number after 'v' (e.g., "v3.3.4" -> "3.3.4")
+fn extract_version_after_v(line: &str) -> Option<String> {
+    // Find 'v' followed by digits
+    let bytes = line.as_bytes();
+    for (i, &b) in bytes.iter().enumerate() {
+        if b == b'v' && i + 1 < bytes.len() && bytes[i + 1].is_ascii_digit() {
+            // Found vX.Y.Z pattern
+            let rest = &line[i + 1..];
+            let version: String =
+                rest.chars().take_while(|c| c.is_ascii_digit() || *c == '.').collect();
+            if !version.is_empty() {
+                return Some(version);
+            }
+        }
+    }
+    None
 }
 
 fn check_ac_status_clean() -> Result<()> {
