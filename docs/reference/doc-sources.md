@@ -93,3 +93,61 @@ Agents should prefer:
 
 * `cargo xtask ac-status --json` as the machine contract view.
 * `docs/feature_status.md` and `docs/KERNEL_SNAPSHOT.md` as human-oriented summaries.
+
+---
+
+## 6. Docs-as-Code Invariants
+
+This section documents the **code-enforced invariants** that keep docs in sync with specs. When in doubt about what's enforced, look here.
+
+### 6.1. Invariants enforced by `cargo xtask docs-check`
+
+| Invariant | Files Affected | What's Checked |
+|-----------|----------------|----------------|
+| **Version alignment (AC-PLT-009)** | README, CLAUDE, ROADMAP, KERNEL_SNAPSHOT, TEMPLATE-CONTRACTS, service_metadata, doc_index, CHANGELOG | `specs/spec_ledger.yaml → metadata.template_version` must match all versioned docs |
+| **Doc index ↔ frontmatter sync (AC-PLT-DOC-INDEX-FRONTMATTER)** | All indexed docs in `specs/doc_index.yaml` | Every indexed doc's frontmatter must match doc_index; every doc with frontmatter must appear in the index |
+| **Feature status header (AC-PLT-010 extension)** | `docs/feature_status.md` | Header must contain Template Version matching spec_ledger |
+| **ADR structure** | `docs/adr/ADR-*.md` | ADR format and numbering validated |
+| **Skills definitions** | `.claude/skills/*/SKILL.md` | skills-lint validates format, descriptions, tools, and no secrets |
+
+### 6.2. Invariants enforced by `cargo xtask ac-status`
+
+| Invariant | What's Checked |
+|-----------|----------------|
+| **AC → test mapping** | Every AC in spec_ledger must have test coverage (BDD or unit) |
+| **feature_status.md generation** | File is regenerated from spec_ledger + test results |
+| **AC counts** | Total, passing, failing, unknown counts are computed from source |
+
+### 6.3. Invariants enforced by `cargo xtask selftest`
+
+Selftest runs docs-check as one of its gates. It also validates:
+
+* Graph invariants (REQ → AC → test → doc)
+* Policy tests via conftest
+* BDD scenario execution
+* Unit test execution
+
+### 6.4. Doc maintenance runbook
+
+When you change docs, follow this pattern:
+
+**Changing versioned docs (README, ROADMAP, KERNEL_SNAPSHOT, etc.):**
+1. Update `specs/spec_ledger.yaml → metadata.template_version` first
+2. Run `cargo xtask release-prepare X.Y.Z` to bump all files
+3. Run `cargo xtask docs-check` to verify alignment
+
+**Adding/modifying indexed docs:**
+1. Add frontmatter with required fields (`id`, `doc_type`, `stories`, `requirements`, `acs`, `adrs`)
+2. Add entry to `specs/doc_index.yaml` with matching values
+3. Run `cargo xtask docs-check` to verify sync
+
+**Changing AC classifications or soft AC docs:**
+1. Update `specs/spec_ledger.yaml` (AC definitions, `must_have_ac` flags)
+2. Update `docs/feature_status_notes.md` with reasoning
+3. Run `cargo xtask ac-status` to regenerate feature_status.md
+4. Run `cargo xtask selftest` to verify governance
+
+**Changing Skills or Agents:**
+1. Edit `.claude/skills/*/SKILL.md` or `.claude/agents/*.md`
+2. Run `cargo xtask skills-lint` or `cargo xtask agents-lint`
+3. Run `cargo xtask docs-check` to verify

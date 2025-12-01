@@ -375,6 +375,16 @@ docs:
     acs: [AC-PLT-009, AC-PLT-010]
     adrs: [ADR-0005]
 
+  # Kernel Snapshot (Release Baseline)
+  - id: SNAPSHOT-TPL-KERNEL-001
+    file: docs/KERNEL_SNAPSHOT.md
+    title: "Kernel Snapshot v3.3.4"
+    doc_type: status
+    stories: [US-TPL-PLT-001]
+    requirements: [REQ-PLT-DOCS-CONSISTENCY, REQ-TPL-OPINIONATED-DEFAULTS]
+    acs: [AC-PLT-009, AC-PLT-010, AC-TPL-OPINIONS-DOCUMENTED]
+    adrs: [ADR-0005]
+
   # Supply Chain Hardening Explanation
   - id: EXPLANATION-TPL-SUPPLY-CHAIN-001
     file: docs/explanation/supply-chain-hardening.md
