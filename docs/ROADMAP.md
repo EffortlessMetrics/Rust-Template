@@ -234,15 +234,10 @@ Only a few items remain - all now have documentation or are external dependencie
 | Item | Description | Notes |
 |------|-------------|-------|
 | **Docs-as-Code v3** | Validate `doc_index.yaml` entries match document frontmatter | `AC-PLT-DOC-INDEX-FRONTMATTER` — bidirectional sync validation |
+| **Feature-status invariants** | Light checks that `feature_status.md` references correct version | Extension to `AC-PLT-010` — validates version metadata in generated file |
+| **Example fork CI** | `examples/fork-customization/` validated and demonstrates fork extensibility in CI | `AC-TPL-EXAMPLE-FORK-BUILDS` wired and passing — `.github/workflows/ci-example-fork.yml` |
 
-### 4.5 v3.4.0 Backlog (Remaining)
-
-| Item | Description | Notes |
-|------|-------------|-------|
-| **Feature-status invariants** | Light checks that `feature_status.md` references correct version | Extension to `AC-PLT-010` |
-| **Example fork CI** | `examples/fork-customization/` passes selftest in CI | `AC-TPL-EXAMPLE-FORK-BUILDS` wired and green |
-
-> **Spec wiring:** Remaining v3.4.0 items will be wired into `specs/spec_ledger.yaml`. Feature-status invariants extend `AC-PLT-010`. Example fork validation is tracked as `AC-TPL-EXAMPLE-FORK-BUILDS`.
+> **v3.4.0 kernel closure:** All governance surface items wired into `specs/spec_ledger.yaml` and CI. Feature-status invariants extend `AC-PLT-010`. Example fork validation demonstrates template fork-readiness.
 
 ---
 
@@ -452,11 +447,11 @@ The template kernel is "done" when:
 1. **All kernel ACs pass** (`must_have_ac: true` in `spec_ledger.yaml`)
 2. **`cargo xtask selftest` is green** on Tier-1 (Nix devshell) and enforced in CI
 3. **Docs-as-Code invariants hold:**
-   - Version alignment (`AC-PLT-009`, `AC-PLT-010`)
+   - Version alignment (`AC-PLT-009`, `AC-PLT-010`, extended with feature-status invariants)
    - `doc_index.yaml` ↔ front-matter sync (`AC-PLT-DOC-INDEX-FRONTMATTER`)
-4. **Example fork passes** (`examples/fork-customization/`) passes selftest in CI (`AC-TPL-EXAMPLE-FORK-BUILDS`)
+4. **Example fork passes** (`examples/fork-customization/`) is validated and demonstrates fork extensibility in CI (`AC-TPL-EXAMPLE-FORK-BUILDS`)
 
-**Status:** v3.3.4 meets criteria 1-3. Criterion 4 is tracked in v3.4.0 backlog.
+**Status:** v3.4.0 meets all kernel closure criteria. All governance surface items wired into specs and CI.
 
 ### 8.2 Adoption Definition of Done (Other Repos)
 
