@@ -57,6 +57,10 @@ pub fn run() -> Result<()> {
         Err(e) => {
             println!("{}", "✗ Out of sync".red());
             eprintln!("  {}", e);
+            eprintln!();
+            eprintln!("{}", "To fix AC status consistency:".bold());
+            eprintln!("  1. Run {} to regenerate", "cargo xtask ac-status".cyan());
+            eprintln!("  2. Commit the updated docs/feature_status.md");
             issues += 1;
         }
     }
@@ -92,6 +96,11 @@ pub fn run() -> Result<()> {
         Err(e) => {
             println!("{}", "✗ Issues found".red());
             eprintln!("  {}", e);
+            eprintln!();
+            eprintln!("{}", "To fix Feature Status invariants:".bold());
+            eprintln!("  1. Run {} to regenerate", "cargo xtask ac-status".cyan());
+            eprintln!("  2. Verify the header contains 'Template Version: X.Y.Z'");
+            eprintln!("  3. Commit the updated docs/feature_status.md");
             issues += 1;
         }
     }
@@ -103,6 +112,12 @@ pub fn run() -> Result<()> {
         Err(e) => {
             println!("{}", "✗ Violations found".red());
             eprintln!("  {}", e);
+            eprintln!();
+            eprintln!("{}", "To fix doc policy violations:".bold());
+            eprintln!("  1. Review policies in {}", "specs/doc_policies.yaml".cyan());
+            eprintln!("  2. Register docs in {} with required tags", "specs/doc_index.yaml".cyan());
+            eprintln!("  3. Verify doc types and references align with policy rules");
+            eprintln!("  See: {}", "docs/reference/doc-sources.md".dimmed());
             issues += 1;
         }
     }
@@ -157,6 +172,12 @@ pub fn run() -> Result<()> {
         Err(e) => {
             println!("{}", "✗ Issues found".red());
             eprintln!("  {}", e);
+            eprintln!();
+            eprintln!("{}", "To fix Skills definitions:".bold());
+            eprintln!("  1. Run {} to auto-format", "cargo xtask skills-fmt".cyan());
+            eprintln!("  2. Or edit {} directly", ".claude/skills/*/SKILL.md".cyan());
+            eprintln!("  3. Verify skill names, descriptions, and tools");
+            eprintln!("  See: {}", "docs/SKILLS_GOVERNANCE.md".dimmed());
             issues += 1;
         }
     }
@@ -193,6 +214,14 @@ pub fn run() -> Result<()> {
         Err(e) => {
             println!("{}", "✗ Violations found".red());
             eprintln!("  {}", e);
+            eprintln!();
+            eprintln!("{}", "To fix service policy violations:".bold());
+            eprintln!("  1. Review policies in {}", "specs/service_policies.yaml".cyan());
+            eprintln!("  2. Ensure required docs (runbooks, etc.) exist");
+            eprintln!(
+                "  3. Update {} to declare service requirements",
+                "specs/service_metadata.yaml".cyan()
+            );
             issues += 1;
         }
     }

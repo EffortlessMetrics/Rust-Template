@@ -1,0 +1,36 @@
+# Port.io Sync Workflow
+# Syncs governance data to Port.io catalog on schedule and push
+
+name: Port.io Sync
+
+on:
+  schedule:
+    - cron: '0 * * * *'  # Every hour
+  push:
+    branches: [main]
+    paths:
+      - 'specs/**'
+      - 'docs/**'
+  workflow_dispatch:  # Manual trigger
+
+env:
+  PLATFORM_URL: ${{ secrets.PLATFORM_URL }}
+  PORT_CLIENT_ID: ${{ secrets.PORT_CLIENT_ID }}
+  PORT_CLIENT_SECRET: ${{ secrets.PORT_CLIENT_SECRET }}
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Sync to Port.io
+        run: python3 examples/port-integration/sync_to_port.py --verbose

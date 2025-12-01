@@ -316,7 +316,7 @@ tasks:
     requirement: REQ-TPL-ADOPTION-IDP
     acs:
       - AC-TPL-IDP-SNAPSHOT
-    status: in_progress
+    status: done
     owner: agent
     labels: [adoption, idp, backstage, integration, p1]
     summary: >
@@ -540,7 +540,7 @@ tasks:
     acs:
       - AC-TPL-AGENT-HINTS-SCHEMA
       - AC-TPL-CLI-JSON-OUTPUT
-    status: todo
+    status: done
     owner: agent
     labels: [platform, idp, schema, p1]
     summary: >
@@ -579,7 +579,7 @@ tasks:
     title: "Harden Port.io integration with sync script and demo"
     requirement: REQ-TPL-AI-IDP-COMPAT
     acs: []
-    status: todo
+    status: done
     owner: agent
     labels: [platform, idp, port-io, p2]
     summary: >
@@ -599,7 +599,7 @@ tasks:
     title: "Document non-interactive and CI expectations"
     requirement: REQ-PLT-DEVEX-CONTRACT
     acs: []
-    status: todo
+    status: done
     owner: agent
     labels: [dx, ci, docs, p2]
     summary: >

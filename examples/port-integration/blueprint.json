@@ -1,0 +1,100 @@
+{
+  "identifier": "rust-template-service",
+  "title": "Rust-as-Spec Service",
+  "description": "Platform cell following Rust-as-Spec governance model",
+  "icon": "Rust",
+  "schema": {
+    "properties": {
+      "service_id": {
+        "title": "Service ID",
+        "type": "string",
+        "description": "Unique service identifier from service_metadata.yaml"
+      },
+      "template_version": {
+        "title": "Template Version",
+        "type": "string",
+        "description": "Platform cell template version (SemVer)"
+      },
+      "display_name": {
+        "title": "Display Name",
+        "type": "string",
+        "description": "Human-readable service name"
+      },
+      "description": {
+        "title": "Description",
+        "type": "string",
+        "description": "Service description"
+      },
+      "governance_passing": {
+        "title": "Governance Passing",
+        "type": "boolean",
+        "description": "Whether all governance checks pass"
+      },
+      "ac_coverage_percent": {
+        "title": "AC Coverage %",
+        "type": "number",
+        "description": "Percentage of ACs with passing tests"
+      },
+      "ac_total": {
+        "title": "Total ACs",
+        "type": "number",
+        "description": "Total acceptance criteria count"
+      },
+      "ac_passing": {
+        "title": "Passing ACs",
+        "type": "number",
+        "description": "Number of ACs with passing tests"
+      },
+      "ac_failing": {
+        "title": "Failing ACs",
+        "type": "number",
+        "description": "Number of ACs with failing tests"
+      },
+      "docs_total": {
+        "title": "Total Docs",
+        "type": "number",
+        "description": "Total indexed documents"
+      },
+      "docs_valid": {
+        "title": "Valid Docs",
+        "type": "number",
+        "description": "Documents passing validation"
+      },
+      "docs_with_issues": {
+        "title": "Docs with Issues",
+        "type": "number",
+        "description": "Documents with validation issues"
+      },
+      "tasks_pending": {
+        "title": "Pending Tasks",
+        "type": "number",
+        "description": "Number of todo tasks"
+      },
+      "tasks_in_progress": {
+        "title": "In-Progress Tasks",
+        "type": "number",
+        "description": "Number of in-progress tasks"
+      },
+      "friction_count": {
+        "title": "Friction Entries",
+        "type": "number",
+        "description": "Open friction log entries"
+      },
+      "platform_url": {
+        "title": "Platform URL",
+        "type": "string",
+        "format": "url",
+        "description": "Base URL for platform endpoints"
+      },
+      "last_synced": {
+        "title": "Last Synced",
+        "type": "string",
+        "format": "date-time",
+        "description": "Timestamp of last sync"
+      }
+    },
+    "required": ["service_id", "template_version"]
+  },
+  "calculationProperties": {},
+  "relations": {}
+}

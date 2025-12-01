@@ -727,3 +727,62 @@ Feature: Developer Experience Commands
     And the file "/tmp/idp-test.json" should exist
     And the file should contain valid JSON
 
+  # Docs Governance Scenarios (Lane 1 hardening)
+  @AC-PLT-009
+  Scenario: docs-check validates version alignment across all consumer files
+    When I run "cargo xtask docs-check"
+    Then the output should contain "Version alignment"
+    And the output should verify "README.md"
+    And the output should verify "CLAUDE.md"
+    And the output should verify "spec_ledger.yaml"
+
+  @AC-PLT-009
+  Scenario: docs-check provides actionable fix hints on version mismatch
+    When I run "cargo xtask docs-check"
+    And version mismatches are detected
+    Then the output should contain "To fix"
+    And the output should contain "release-prepare"
+
+  @AC-PLT-010
+  Scenario: docs-check validates AC status regeneration
+    When I run "cargo xtask docs-check"
+    Then the output should contain "AC status consistency"
+    And the output should indicate sync status
+
+  @AC-PLT-010
+  Scenario: docs-check provides fix hints for AC status out of sync
+    When I run "cargo xtask docs-check"
+    And AC status is out of sync
+    Then the output should contain "cargo xtask ac-status"
+
+  @AC-PLT-DOC-INDEX-FRONTMATTER
+  Scenario: docs-check validates bidirectional front-matter alignment
+    When I run "cargo xtask docs-check"
+    Then the output should contain "Doc index & front-matter"
+    And the check should validate both index-to-doc and doc-to-index
+
+  @AC-PLT-DOC-INDEX-FRONTMATTER
+  Scenario: docs-check provides fix hints for front-matter issues
+    When I run "cargo xtask docs-check"
+    And front-matter mismatches are detected
+    Then the output should contain "docs-frontmatter-sync"
+    And the output should explain bidirectional alignment
+
+  @AC-PLT-009
+  Scenario: docs-check validates doc policies
+    When I run "cargo xtask docs-check"
+    Then the output should contain "Doc policies"
+    And policy violations should provide actionable hints
+
+  @AC-PLT-009
+  Scenario: docs-check validates Skills definitions
+    When I run "cargo xtask docs-check"
+    Then the output should contain "Skills definitions"
+    And skill issues should suggest "skills-fmt"
+
+  @AC-PLT-009
+  Scenario: docs-check validates Service policies
+    When I run "cargo xtask docs-check"
+    Then the output should contain "Service policies"
+    And service policy issues should reference service_metadata.yaml
+
