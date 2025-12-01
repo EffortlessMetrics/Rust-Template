@@ -49,6 +49,22 @@ Non-kernel requirements and ACs (with `must_have_ac: false` or `tags: [future]`)
 
 ---
 
+## Kernel Contracts at a Glance
+
+This table summarizes the key kernel contract areas for quick reference:
+
+| Area | Requirement | ACs / IDs | Enforced by |
+|------|-------------|-----------|-------------|
+| Docs-as-Code | REQ-PLT-DOCS-CONSISTENCY | AC-PLT-009, AC-PLT-010, AC-PLT-DOC-INDEX-FRONTMATTER | `cargo xtask docs-check` |
+| BDD harness | REQ-TPL-BDD-HARNESS | AC-TPL-BDD-EXIT-CODES | `cargo xtask bdd`, `selftest` |
+| Bundles | REQ-TPL-BUNDLE-CONTRACT | AC-TPL-BUNDLE-MANIFEST, AC-TPL-BUNDLE-MANIFEST-LINKED, AC-TPL-BUNDLE-MINIMAL-SCOPE | `cargo xtask bundle`, `selftest` |
+| Agent surfaces | REQ-TPL-AGENT-INTERFACE | AC-TPL-AGENT-HINTS-SCHEMA, AC-TPL-CLI-JSON-CORE, AC-TPL-CLI-JSON-OUTPUT | `/platform/*`, `suggest-next` |
+| Example fork | REQ-TPL-EXAMPLE-FORK-CONTRACT | AC-TPL-EXAMPLE-FORK-BUILDS | `ci-example-fork.yml` workflow |
+
+For the full contract definitions, see the sections below and `specs/spec_ledger.yaml`.
+
+---
+
 ## AC-to-Test Traceability Pattern
 
 The template enforces bidirectional traceability between Acceptance Criteria and their tests.
