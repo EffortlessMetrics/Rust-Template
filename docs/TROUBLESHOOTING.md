@@ -226,6 +226,40 @@ nix develop
 
 ---
 
+### Q: Nix devshell: rustc/libz.so.1 / sccache error
+
+**Symptom:**
+```bash
+$ nix develop -c cargo xtask ac-status
+error while loading shared libraries: libz.so.1: cannot open shared object file
+```
+
+Or xtask commands that shell out to `cargo` may hang or fail before tests run, leaving `target/junit/acceptance.xml` empty.
+
+**Cause:** `sccache` (the RUSTC_WRAPPER) is unable to find `libz.so.1` when invoked via `nix develop -c`. This is a Nix environment composition issue where certain libraries aren't correctly propagated to subprocesses.
+
+**Impact:** JUnit report generation fails silently, causing `ac-status` and `docs/feature_status.md` to show stale or incorrect data.
+
+**Workaround (Option 1):** Run xtask as if already inside Nix shell
+```bash
+# Inside nix develop, or with environment simulated:
+IN_NIX_SHELL=1 RUSTC_WRAPPER="" ./target/release/xtask ac-status
+```
+
+**Workaround (Option 2):** Disable sccache for the session
+```bash
+RUSTC_WRAPPER="" cargo xtask ac-status
+```
+
+**Workaround (Option 3):** Use low-resource mode
+```bash
+XTASK_LOW_RESOURCES=1 cargo xtask ac-status
+```
+
+**Note:** This is an environment-level issue; it does not reflect kernel correctness but may need coordination with your Nix/tooling setup. See `FRICTION_LOG.md` for tracking.
+
+---
+
 ## Build Failures
 
 ### Q: "failed to remove xtask.exe" (os error 5) on Windows
@@ -1514,4 +1548,4 @@ cargo xtask ac-coverage
 
 ---
 
-**Last Updated:** 2025-11-30 (v3.3.4)
+**Last Updated:** 2025-12-01 (v3.3.4)

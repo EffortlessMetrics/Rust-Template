@@ -65,6 +65,10 @@ cargo xtask ac-status
 # must show all kernel ACs passing
 ```
 
+> **Note:** `ac-status` will automatically run the BDD acceptance suite if the configured
+> JUnit file (`target/junit/acceptance.xml`) is missing or empty, so you normally do not
+> need a separate "generate reports" step to refresh `docs/feature_status.md`.
+
 ### Docs authority
 
 - `specs/doc_index.yaml` <-> document front-matter

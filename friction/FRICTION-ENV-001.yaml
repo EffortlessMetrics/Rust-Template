@@ -1,0 +1,59 @@
+# Friction Entry: Nix devshell sccache/libz.so.1 breaks xtask JUnit generation
+# Created by agent at 2025-12-01
+# Status: open
+
+id: FRICTION-ENV-001
+date: "2025-12-01"
+category: tooling
+severity: medium
+summary: "Nix devshell rustc/libz.so.1 issue breaks xtask wrapper and JUnit generation"
+
+description: |
+  When running xtask commands via `nix develop -c`, the sccache rustc wrapper fails
+  to find libz.so.1. This causes cargo invocations (particularly the BDD acceptance
+  tests) to silently fail, leaving `target/junit/acceptance.xml` empty.
+
+  The root cause appears to be Nix environment composition: certain libraries
+  aren't correctly propagated to subprocesses when using `nix develop -c` versus
+  being inside an interactive `nix develop` shell.
+
+  Error message:
+  ```
+  error while loading shared libraries: libz.so.1: cannot open shared object file
+  ```
+
+expected_behavior: |
+  Running `nix develop -c cargo xtask ac-status` should work identically to
+  running `cargo xtask ac-status` from inside an interactive `nix develop` shell.
+  The JUnit report should be generated correctly regardless of invocation method.
+
+workaround: |
+  Several workarounds exist:
+  1. Run inside interactive nix develop shell instead of using -c flag
+  2. Disable sccache: `RUSTC_WRAPPER="" cargo xtask ac-status`
+  3. Simulate in-shell environment: `IN_NIX_SHELL=1 RUSTC_WRAPPER="" ./target/release/xtask ac-status`
+  4. Use low-resource mode: `XTASK_LOW_RESOURCES=1 cargo xtask ac-status`
+
+impact: |
+  - JUnit report generation fails silently when using `nix develop -c`
+  - `ac-status` shows stale or incorrect data
+  - `docs/feature_status.md` may become out of sync
+  - CI pipelines using `nix develop -c` pattern may be affected
+  - Confusing for developers who expect -c and interactive shell to behave identically
+
+context:
+  discovered_by: agent
+  phase: "maintenance"
+  commands_involved:
+    - "nix develop -c cargo xtask ac-status"
+    - "nix develop -c sccache rustc -vV"
+  files_involved:
+    - "target/junit/acceptance.xml"
+    - "docs/feature_status.md"
+
+status: open
+
+related_items:
+  adrs: []
+  issues: []
+  tasks: []
