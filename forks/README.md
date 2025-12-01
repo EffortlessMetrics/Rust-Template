@@ -41,7 +41,7 @@ cargo xtask fork-list --domain ml
 cargo xtask fork-register \
   --name "My Fork Name" \
   --domain "my-domain" \
-  --kernel-version "v3.3.3" \
+  --kernel-version "vX.Y.Z" \
   --maintainer-name "Your Name" \
   --maintainer-contact "you@example.com" \
   --status "experimental" \
@@ -52,7 +52,7 @@ cargo xtask fork-register \
 **Required fields:**
 - `--name`: Human-readable fork name
 - `--domain`: Knowledge domain or purpose (e.g., "rust-sdk", "python-ml", "knowledge-hub")
-- `--kernel-version`: Which kernel version this fork is based on (e.g., "v3.3.3")
+- `--kernel-version`: Which kernel version this fork is based on (e.g., "v3.3.4")
 
 **Optional fields:**
 - `--url`: Repository URL (may be private/omitted)

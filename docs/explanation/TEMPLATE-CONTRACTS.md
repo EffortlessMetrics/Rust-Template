@@ -820,14 +820,24 @@ fn test_name() {
 
 #### AC-PLT-009: Docs-Check Version Alignment
 **Contract:**
-- `cargo xtask docs-check` validates version alignment across `spec_ledger.yaml`, `README.md`, `CLAUDE.md`
+- `cargo xtask docs-check` validates version alignment across `spec_ledger.yaml` (canonical) and 8 consumer files
+
+**Consumer Files Validated:**
+1. `README.md` – H1 `(vX.Y.Z)` + Template Version badge
+2. `CLAUDE.md` – H1 `(vX.Y.Z)` + Template Version line
+3. `docs/ROADMAP.md` – H1 `(vX.Y.Z)`
+4. `docs/KERNEL_SNAPSHOT.md` – H1 `vX.Y.Z`
+5. `docs/explanation/TEMPLATE-CONTRACTS.md` – Template Version badge
+6. `specs/service_metadata.yaml` – `template_version` field
+7. `specs/doc_index.yaml` – `template_version` field
+8. `CHANGELOG.md` – First `## [X.Y.Z]` section after `[Unreleased]`
 
 **BDD Test:** `@AC-PLT-009`
 
 **How to Maintain:**
-- Parse version from all sources
-- Fail if versions don't match
-- Provide clear guidance for fixing mismatches
+- All versions must match `spec_ledger.yaml.metadata.template_version`
+- Fail with detailed mismatch report showing file, expected, found, pattern
+- Provide guidance to run `cargo xtask release-prepare X.Y.Z` for auto-update
 
 ---
 
@@ -851,18 +861,26 @@ fn test_name() {
 
 `cargo xtask docs-check` enforces that these sources agree on version and kernel state:
 
-- `specs/spec_ledger.yaml` → `metadata.template_version`
-- `README.md` → Template Version / Kernel Baseline badges
-- `docs/ROADMAP.md` → frontmatter `last_updated` + H1 `(vX.Y.Z)`
-- `CHANGELOG.md` → latest `[X.Y.Z]` entry
+**Canonical Source:**
+- `specs/spec_ledger.yaml` → `metadata.template_version` (single source of truth)
+
+**Consumer Files (8 total):**
+- `README.md` → Template Version badge + Kernel Version section
+- `CLAUDE.md` → H1 title with version
+- `docs/ROADMAP.md` → H1 title with version
+- `docs/KERNEL_SNAPSHOT.md` → H1 with kernel version
+- `docs/explanation/TEMPLATE-CONTRACTS.md` → Template Version badge
+- `specs/service_metadata.yaml` → `template_version` field
+- `specs/doc_index.yaml` → `template_version` field
+- `CHANGELOG.md` → latest `[X.Y.Z]` entry after `[Unreleased]`
 
 **On version bumps:**
 
-1. Update `spec_ledger.yaml` metadata.
-2. Update README badges and "Kernel Version" section.
+1. Update `spec_ledger.yaml` metadata (or use `cargo xtask release-prepare X.Y.Z`).
+2. All 8 consumer files will be validated by `docs-check`.
 3. Add or update the `[X.Y.Z]` section in `CHANGELOG.md`.
-4. Update `docs/ROADMAP.md` frontmatter + title to the new version.
-5. Run `cargo xtask docs-check && cargo xtask selftest`.
+4. Run `cargo xtask docs-check && cargo xtask selftest`.
+5. Use `cargo xtask version --json` to verify the canonical version.
 
 ---
 
@@ -983,6 +1001,36 @@ fn test_name() {
 - Check selftest status
 - Surface high-priority tasks
 - Provide clear dashboard output
+
+---
+
+#### Version Command (Canonical Version Source)
+**Contract:**
+- `cargo xtask version` displays human-readable kernel version information
+- `cargo xtask version --json` provides stable machine-readable JSON output for IDP/agent consumption
+
+**JSON Schema:**
+```json
+{
+  "kernel_version": "3.3.4",       // Required: From spec_ledger.yaml metadata.template_version
+  "kernel_tag": "v3.3.4-kernel",   // Required: Git tag format for this kernel
+  "schema_version": "1.0",         // Required: Schema version from metadata.schema_version
+  "spec_ledger_path": "specs/spec_ledger.yaml",  // Required: Path to canonical spec
+  "description": "Rust-as-Spec Platform Cell",   // Required: From metadata.description
+  "service_id": "rust-template",   // Optional: From service_metadata.yaml
+  "last_updated": "2025-11-30"     // Optional: From metadata.last_updated
+}
+```
+
+**Why:**
+- Provides a stable, machine-readable version endpoint for IDP integrations, CI, and agents
+- Single source of truth: always reads from `spec_ledger.yaml` (canonical version authority)
+- Part of Docs-as-Code v2: enables tooling to derive version from centralized tracking
+
+**How to Maintain:**
+- JSON shape is covered by unit tests in `crates/xtask/src/commands/version.rs`
+- Any changes to required fields require test updates and documentation
+- Optional fields use `#[serde(skip_serializing_if = "Option::is_none")]` for clean output
 
 ---
 
