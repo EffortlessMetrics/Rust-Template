@@ -49,6 +49,23 @@ export PORT_CLIENT_SECRET="your-client-secret"
 python3 sync_to_port.py
 ```
 
+### 2b. Offline Testing (No Port Credentials)
+
+To test the IDP integration without Port.io credentials:
+
+```bash
+# Start the platform service
+cargo run -p app-http &
+
+# Run in dump-only mode (no Port.io auth required)
+PLATFORM_URL="http://localhost:8080" python3 sync_to_port.py --dump-only
+```
+
+This will:
+1. Fetch governance data from `/platform/idp/snapshot` and `/platform/status`
+2. Transform it to the Port.io entity format
+3. Print the entity JSON that would be synced (without actually calling Port.io)
+
 ### 3. View in Port.io
 
 Navigate to your Port.io catalog to see the synced service entity with:
