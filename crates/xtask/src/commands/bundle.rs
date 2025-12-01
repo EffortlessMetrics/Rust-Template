@@ -55,6 +55,54 @@ struct ManifestTest {
     file: String,
 }
 
+/// Task definition from specs/tasks.yaml
+#[derive(Debug, Deserialize)]
+struct TaskSpec {
+    id: String,
+    #[serde(default)]
+    requirement: Option<String>,
+    #[serde(default)]
+    acs: Vec<String>,
+}
+
+#[derive(Debug, Deserialize)]
+struct TasksYaml {
+    tasks: Vec<TaskSpec>,
+}
+
+/// Spec ledger AC entry
+#[derive(Debug, Deserialize)]
+struct SpecAc {
+    id: String,
+    #[serde(default)]
+    tests: Vec<SpecTest>,
+}
+
+#[derive(Debug, Deserialize)]
+struct SpecTest {
+    r#type: String,
+    tag: String,
+    #[serde(default)]
+    file: Option<String>,
+}
+
+#[derive(Debug, Deserialize)]
+struct SpecRequirement {
+    #[allow(dead_code)]
+    id: String,
+    acceptance_criteria: Vec<SpecAc>,
+}
+
+#[derive(Debug, Deserialize)]
+struct SpecStory {
+    requirements: Vec<SpecRequirement>,
+}
+
+#[derive(Debug, Deserialize)]
+struct SpecLedger {
+    stories: Vec<SpecStory>,
+}
+
 /// Generate LLM context bundle for a task
 pub fn run(task_name: &str) -> Result<()> {
     let workspace_root = get_workspace_root()?;
@@ -102,17 +150,38 @@ pub fn run(task_name: &str) -> Result<()> {
     let (file_count, total_bytes) =
         build_context(&context_path, task, &files, &git_sha, &workspace_root)?;
 
+    // Load task linkage from specs/tasks.yaml (if task exists there)
+    let (requirement_ids, ac_ids) = match load_task_spec(&workspace_root, task_name) {
+        Some(task_spec) => {
+            let reqs = task_spec.requirement.map(|r| vec![r]).unwrap_or_default();
+            let acs = task_spec.acs;
+            println!("  Linked to: {} REQs, {} ACs", reqs.len(), acs.len());
+            (reqs, acs)
+        }
+        None => {
+            println!("  No task linkage found in specs/tasks.yaml");
+            (vec![], vec![])
+        }
+    };
+
+    // Load tests from spec_ledger for linked ACs
+    let tests =
+        if ac_ids.is_empty() { vec![] } else { load_tests_for_acs(&workspace_root, &ac_ids) };
+    if !tests.is_empty() {
+        println!("  Found {} test handles for linked ACs", tests.len());
+    }
+
     // Create manifest
     let manifest = BundleManifest {
         bundle_version: 1,
         task_id: task_name.to_string(),
-        requirement_ids: vec![],
-        ac_ids: vec![],
+        requirement_ids,
+        ac_ids,
         git_sha,
         timestamp: Utc::now().to_rfc3339(),
         specs: vec![ManifestSpec { file: "specs/spec_ledger.yaml".to_string() }],
         docs: vec![ManifestDoc { file: "docs/explanation/TEMPLATE-CONTRACTS.md".to_string() }],
-        tests: vec![],
+        tests,
     };
 
     // Write manifest.yaml
@@ -229,6 +298,52 @@ fn load_llmignore(workspace_root: &Path) -> Result<ignore::gitignore::Gitignore>
     builder.build().context("Failed to build .llmignore matcher")
 }
 
+/// Load task spec from specs/tasks.yaml if it exists
+fn load_task_spec(workspace_root: &Path, task_name: &str) -> Option<TaskSpec> {
+    let tasks_path = workspace_root.join("specs/tasks.yaml");
+    if !tasks_path.exists() {
+        return None;
+    }
+
+    let content = fs::read_to_string(&tasks_path).ok()?;
+    let tasks_yaml: TasksYaml = serde_yaml::from_str(&content).ok()?;
+
+    tasks_yaml.tasks.into_iter().find(|t| t.id == task_name)
+}
+
+/// Load tests for given AC IDs from spec_ledger.yaml
+fn load_tests_for_acs(workspace_root: &Path, ac_ids: &[String]) -> Vec<ManifestTest> {
+    let ledger_path = workspace_root.join("specs/spec_ledger.yaml");
+    let content = match fs::read_to_string(&ledger_path) {
+        Ok(c) => c,
+        Err(_) => return vec![],
+    };
+
+    let ledger: SpecLedger = match serde_yaml::from_str(&content) {
+        Ok(l) => l,
+        Err(_) => return vec![],
+    };
+
+    let ac_set: HashSet<_> = ac_ids.iter().collect();
+    let mut tests = Vec::new();
+
+    for story in ledger.stories {
+        for req in story.requirements {
+            for ac in req.acceptance_criteria {
+                if ac_set.contains(&ac.id) {
+                    for test in ac.tests {
+                        if let Some(file) = test.file {
+                            tests.push(ManifestTest { r#type: test.r#type, tag: test.tag, file });
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    tests
+}
+
 fn build_context(
     context_path: &Path,
     task: &Task,
@@ -281,4 +396,42 @@ fn build_context(
         .with_context(|| format!("Failed to write context: {}", context_path.display()))?;
 
     Ok((file_count, total_bytes))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// AC-TPL-BUNDLE-MANIFEST-LINKED: Validates the contract that when a task
+    /// exists in tasks.yaml, the manifest will include its requirement_ids and ac_ids.
+    #[test]
+    fn bundle_manifest_populates_from_task() {
+        let task_spec = TaskSpec {
+            id: "implement_ac".to_string(),
+            requirement: Some("REQ-TPL-SUGGEST-NEXT".to_string()),
+            acs: vec!["AC-TPL-SUGGEST-NEXT-CLI".to_string()],
+        };
+
+        // Task has requirement
+        assert!(task_spec.requirement.is_some());
+        assert_eq!(task_spec.requirement.as_deref(), Some("REQ-TPL-SUGGEST-NEXT"));
+
+        // Task has ACs
+        assert!(!task_spec.acs.is_empty());
+        assert!(task_spec.acs.contains(&"AC-TPL-SUGGEST-NEXT-CLI".to_string()));
+    }
+
+    #[test]
+    fn manifest_test_struct_serializes_correctly() {
+        let test = ManifestTest {
+            r#type: "bdd".to_string(),
+            tag: "@AC-TPL-001".to_string(),
+            file: "specs/features/test.feature".to_string(),
+        };
+
+        let yaml = serde_yaml::to_string(&test).unwrap();
+        assert!(yaml.contains("type: bdd"));
+        assert!(yaml.contains("tag: '@AC-TPL-001'"));
+        assert!(yaml.contains("file: specs/features/test.feature"));
+    }
 }

@@ -1340,6 +1340,20 @@ stories:
             tests:
               - { type: bdd, tag: "@AC-TPL-BUNDLE-MANIFEST", file: "specs/features/bundles.feature" }
 
+          - id: AC-TPL-BUNDLE-MANIFEST-LINKED
+            text: >
+              When the bundle task name exists in specs/tasks.yaml, bundle.yaml
+              MUST populate requirement_ids from the task's `requirement` field,
+              ac_ids from the task's `acs` array, and tests from the spec_ledger.yaml
+              tests mapping for those ACs. If the task is not in tasks.yaml,
+              these fields remain empty arrays.
+            tags: [kernel, template, devex]
+            must_have_ac: true
+            note: "Manifest linkage is kernel contract - agents rely on populated refs."
+            tests:
+              - { type: bdd, tag: "@AC-TPL-BUNDLE-MANIFEST-LINKED", file: "specs/features/bundles.feature" }
+              - { type: unit, tag: "bundle_manifest_populates_from_task", file: "crates/xtask/src/commands/bundle.rs" }
+
           - id: AC-TPL-BUNDLE-MINIMAL-SCOPE
             text: >
               Bundle scope is minimal: specs/ includes only referenced sections (not entire

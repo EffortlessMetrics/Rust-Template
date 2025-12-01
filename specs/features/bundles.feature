@@ -41,3 +41,29 @@ Feature: LLM Bundle Structure
     And "bundle/implement_ac/context.md" should contain "# LLM Context Bundle"
     And "bundle/implement_ac/context.md" should contain "# FILE:"
     And "bundle/implement_ac/context.md" should contain "spec_ledger.yaml"
+
+  @AC-TPL-BUNDLE-MANIFEST-LINKED
+  Scenario: Manifest populates requirement and AC IDs from tasks.yaml
+    Given I am in the actual workspace
+    When I run "cargo xtask bundle implement_ac"
+    Then the command should succeed
+    And "bundle/implement_ac/bundle.yaml" should contain "requirement_ids:"
+    And "bundle/implement_ac/bundle.yaml" should contain "REQ-TPL-SUGGEST-NEXT"
+    And "bundle/implement_ac/bundle.yaml" should contain "ac_ids:"
+    And "bundle/implement_ac/bundle.yaml" should contain "AC-TPL-SUGGEST-NEXT-CLI"
+
+  @AC-TPL-BUNDLE-MANIFEST-LINKED
+  Scenario: Manifest populates tests from spec_ledger for linked ACs
+    Given I am in the actual workspace
+    When I run "cargo xtask bundle implement_ac"
+    Then the command should succeed
+    And "bundle/implement_ac/bundle.yaml" should contain "tests:"
+    And "bundle/implement_ac/bundle.yaml" should contain "type:"
+    And "bundle/implement_ac/bundle.yaml" should contain "tag:"
+
+  @AC-TPL-BUNDLE-MANIFEST
+  Scenario: Manifest includes bundle_version 1 for current schema
+    Given I am in the actual workspace
+    When I run "cargo xtask bundle implement_ac"
+    Then the command should succeed
+    And "bundle/implement_ac/bundle.yaml" should contain "bundle_version: 1"
