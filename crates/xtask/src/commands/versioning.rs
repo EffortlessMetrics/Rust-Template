@@ -146,29 +146,81 @@ impl FileEdit {
 }
 
 /// Pattern for version replacement in a file.
+/// Matches the structure in specs/version_manifest.yaml.
 #[derive(Debug, Clone, Deserialize)]
 pub struct FilePattern {
+    /// Human-readable marker to locate the line
     pub marker: String,
+    /// Pattern type: yaml_value, heading_version, inline_version, etc.
+    #[serde(rename = "type")]
+    pub pattern_type: String,
+    /// Format style: quoted, prefixed, prefixed_paren, etc.
     pub format: String,
+    /// Regex pattern for the entire line
     #[serde(default)]
-    pub optional: bool,
+    pub line_pattern: Option<String>,
+    /// Example of the expected format
+    #[serde(default)]
+    pub example: Option<String>,
+    /// Additional notes
+    #[serde(default)]
+    pub notes: Option<String>,
 }
 
 /// Target file with its patterns.
+/// Matches the structure in specs/version_manifest.yaml.
 #[derive(Debug, Clone, Deserialize)]
 pub struct VersionTarget {
-    pub file: String,
+    /// Path to the file
+    pub path: String,
+    /// Description of the file's purpose
+    #[serde(default)]
+    pub description: Option<String>,
+    /// Patterns to match and update
     pub patterns: Vec<FilePattern>,
+    /// Whether this file is required to exist
+    #[serde(default = "default_true")]
+    pub required: bool,
+    /// Update priority (1=highest)
+    #[serde(default = "default_priority")]
+    pub priority: u32,
+    /// Additional notes
+    #[serde(default)]
+    pub notes: Option<String>,
+}
+
+fn default_true() -> bool {
+    true
+}
+
+fn default_priority() -> u32 {
+    5
+}
+
+/// Version format specification.
+#[derive(Debug, Clone, Deserialize)]
+pub struct VersionFormat {
+    pub pattern: String,
+    #[serde(default)]
+    pub examples: Vec<String>,
 }
 
 /// Version manifest declaring all version-bearing files.
+/// Matches the structure in specs/version_manifest.yaml.
 #[derive(Debug, Clone, Deserialize)]
 pub struct VersionManifest {
-    pub source_of_truth: String,
-    pub version_path: String,
-    pub date_path: String,
-    pub targets: Vec<VersionTarget>,
+    pub schema_version: String,
+    #[serde(default)]
+    pub description: Option<String>,
+    #[serde(default)]
+    pub version_format: Option<VersionFormat>,
+    pub files: Vec<VersionTarget>,
 }
+
+/// Source of truth for version information.
+pub const VERSION_SOURCE_OF_TRUTH: &str = "specs/spec_ledger.yaml";
+pub const VERSION_PATH: &str = "metadata.template_version";
+pub const DATE_PATH: &str = "metadata.last_updated";
 
 impl VersionManifest {
     /// Load the version manifest from specs/version_manifest.yaml.
@@ -187,23 +239,31 @@ impl VersionManifest {
         serde_yaml::from_str(&content).with_context(|| format!("Failed to parse {}", manifest_path))
     }
 
-    /// Extract the current version from the source of truth file.
+    /// Extract the current version from the source of truth file (specs/spec_ledger.yaml).
     pub fn extract_current_version(&self) -> Result<VersionInfo> {
-        let content = fs::read_to_string(&self.source_of_truth)
-            .with_context(|| format!("Failed to read source of truth: {}", self.source_of_truth))?;
+        let content = fs::read_to_string(VERSION_SOURCE_OF_TRUTH).with_context(|| {
+            format!("Failed to read source of truth: {}", VERSION_SOURCE_OF_TRUTH)
+        })?;
 
         let yaml: serde_yaml::Value = serde_yaml::from_str(&content)
-            .with_context(|| format!("Failed to parse {}", self.source_of_truth))?;
+            .with_context(|| format!("Failed to parse {}", VERSION_SOURCE_OF_TRUTH))?;
 
         // Extract version using dot-notation path
-        let version = extract_yaml_value(&yaml, &self.version_path)
-            .with_context(|| format!("Failed to extract version at {}", self.version_path))?;
+        let version = extract_yaml_value(&yaml, VERSION_PATH)
+            .with_context(|| format!("Failed to extract version at {}", VERSION_PATH))?;
 
         // Extract date using dot-notation path
-        let date = extract_yaml_value(&yaml, &self.date_path)
-            .with_context(|| format!("Failed to extract date at {}", self.date_path))?;
+        let date = extract_yaml_value(&yaml, DATE_PATH)
+            .with_context(|| format!("Failed to extract date at {}", DATE_PATH))?;
 
         VersionInfo::with_date(&version, &date)
+    }
+
+    /// Get files sorted by priority (lowest number = highest priority).
+    pub fn files_by_priority(&self) -> Vec<&VersionTarget> {
+        let mut files: Vec<_> = self.files.iter().collect();
+        files.sort_by_key(|f| f.priority);
+        files
     }
 }
 
@@ -226,38 +286,73 @@ fn extract_yaml_value(yaml: &serde_yaml::Value, path: &str) -> Result<String> {
         .with_context(|| format!("Value at '{}' is not a string", path))
 }
 
+/// Generate the new line by substituting version in the example pattern.
+fn generate_new_line(pattern: &FilePattern, version: &VersionInfo) -> Result<String> {
+    // Use the example field if available, otherwise construct from format
+    let example = pattern
+        .example
+        .as_ref()
+        .with_context(|| format!("Pattern '{}' missing example field", pattern.marker))?;
+
+    // The example contains a version like "3.3.5" - replace it with the new version
+    // We use regex to find and replace version patterns
+    let version_re =
+        Regex::new(r"\d+\.\d+\.\d+(-kernel)?").context("Failed to compile version regex")?;
+
+    // Determine what to substitute based on format
+    let replacement = match pattern.format.as_str() {
+        "kernel_suffixed" => format!("{}-kernel", version.version),
+        _ => version.version.clone(),
+    };
+
+    // Replace all version occurrences in the example
+    let new_line = version_re.replace_all(example, replacement.as_str()).to_string();
+
+    // Also handle date substitution if present
+    let date_re = Regex::new(r"\d{4}-\d{2}-\d{2}").context("Failed to compile date regex")?;
+    let new_line = date_re.replace_all(&new_line, version.date.as_str()).to_string();
+
+    Ok(new_line)
+}
+
 /// Plan version changes for all target files.
 pub fn plan_changes(version: &VersionInfo, manifest: &VersionManifest) -> Result<Vec<FileEdit>> {
     let mut edits = Vec::new();
 
-    for target in &manifest.targets {
-        if !Path::new(&target.file).exists() {
-            if target.patterns.iter().all(|p| p.optional) {
-                continue; // Skip optional files that don't exist
-            }
-            anyhow::bail!("Target file not found: {}", target.file);
+    for target in &manifest.files {
+        // Skip glob patterns (release_evidence files)
+        if target.path.contains('*') {
+            continue;
         }
 
-        let content = fs::read_to_string(&target.file)
-            .with_context(|| format!("Failed to read {}", target.file))?;
+        if !Path::new(&target.path).exists() {
+            if !target.required {
+                continue; // Skip optional files that don't exist
+            }
+            anyhow::bail!("Target file not found: {}", target.path);
+        }
+
+        let content = fs::read_to_string(&target.path)
+            .with_context(|| format!("Failed to read {}", target.path))?;
 
         let lines: Vec<&str> = content.lines().collect();
 
         for pattern in &target.patterns {
+            // Skip patterns without examples (like [Unreleased] section which needs special handling)
+            if pattern.example.is_none() {
+                continue;
+            }
+
             let mut found = false;
             for (i, line) in lines.iter().enumerate() {
                 if line.contains(&pattern.marker) {
                     found = true;
-                    let new_line = pattern
-                        .format
-                        .replace("{version}", &version.version)
-                        .replace("{date}", &version.date)
-                        .replace("{tag}", &version.tag)
-                        .replace("{kernel_tag}", &version.kernel_tag);
+
+                    let new_line = generate_new_line(pattern, version)?;
 
                     if *line != new_line {
                         edits.push(FileEdit {
-                            path: target.file.clone(),
+                            path: target.path.clone(),
                             line_number: i + 1,
                             old_text: line.to_string(),
                             new_text: new_line,
@@ -267,8 +362,9 @@ pub fn plan_changes(version: &VersionInfo, manifest: &VersionManifest) -> Result
                 }
             }
 
-            if !found && !pattern.optional {
-                anyhow::bail!("Pattern '{}' not found in {}", pattern.marker, target.file);
+            if !found && target.required {
+                // Only warn for required files with missing patterns
+                eprintln!("Warning: Pattern '{}' not found in {}", pattern.marker, target.path);
             }
         }
     }

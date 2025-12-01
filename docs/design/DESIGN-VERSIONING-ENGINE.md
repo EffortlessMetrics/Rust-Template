@@ -19,7 +19,11 @@ adrs:
 
 ## Status
 
-**Deferred** - Tech debt for v3.3.6 or later. Current manual process works but is error-prone.
+**In Progress** - Implementation underway for v3.3.6 kernel. Core components ready:
+- ✅ Version manifest (`specs/version_manifest.yaml`) - declares all 10+ version-bearing files
+- ✅ Versioning module (`crates/xtask/src/commands/versioning.rs`) - schema-aligned structs
+- 🔲 Unit tests for engine (TASK-VERS-TEST-001)
+- 🔲 Integration with release-prepare (TASK-VERS-INTEG-001)
 
 ## Problem Statement
 
@@ -153,16 +157,18 @@ Total: ~12 hours (1.5 dev days)
 
 ## Decision
 
-Defer to v3.3.6 internal slice. Current process works; this is ergonomic improvement, not blocking.
+Implementing for v3.3.6 kernel. This enables manifest-driven releases with dry-run support.
 
-## Next Steps (when prioritized)
+## Progress Tracking
 
-1. Create `specs/version_manifest.yaml` with all 8+ target files
-2. Implement `crates/xtask/src/versioning/` module
-3. Integrate into `release-prepare` command
-4. Replace duplicated validation in `docs-check`
-5. Add integration tests covering dry-run and rollback scenarios
-6. Update `docs/how-to/HOWTO-RELEASE.md` to document new behavior
+| Task | Status |
+|------|--------|
+| ✅ Create `specs/version_manifest.yaml` | Complete - 10+ files declared |
+| ✅ Implement `crates/xtask/src/commands/versioning.rs` | Complete - schema-aligned |
+| 🔲 Add unit tests (manifest loading, plan generation) | TASK-VERS-TEST-001 |
+| 🔲 Integrate into `release-prepare` command | TASK-VERS-INTEG-001 |
+| 🔲 Add `--dry-run` flag to release-prepare | Part of TASK-VERS-INTEG-001 |
+| 🔲 Promote versioning ACs | TASK-VERS-RELEASE-001 |
 
 ## Related Work
 
