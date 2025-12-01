@@ -18,7 +18,7 @@ import os
 import sys
 import json
 import argparse
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 
 try:
@@ -101,7 +101,7 @@ def transform_to_port_entity(snapshot: dict, status: dict) -> dict:
             "tasks_in_progress": task_hints.get("total_in_progress", 0),
             "friction_count": task_hints.get("friction_count", 0),
             "platform_url": PLATFORM_URL,
-            "last_synced": datetime.utcnow().isoformat() + "Z"
+            "last_synced": datetime.now(tz=timezone.utc).isoformat()
         }
     }
 
@@ -130,11 +130,13 @@ def main():
     parser = argparse.ArgumentParser(description="Sync platform data to Port.io")
     parser.add_argument("--verbose", "-v", action="store_true", help="Verbose output")
     parser.add_argument("--force", "-f", action="store_true", help="Force full sync")
+    parser.add_argument("--dump-only", "-d", action="store_true",
+                        help="Fetch from platform and dump entity JSON (no Port sync)")
     args = parser.parse_args()
 
     try:
         # Fetch platform data
-        if args.verbose:
+        if args.verbose or args.dump_only:
             print(f"Fetching from {PLATFORM_URL}...")
 
         snapshot = fetch_idp_snapshot()
@@ -147,8 +149,13 @@ def main():
         # Transform to Port.io format
         entity = transform_to_port_entity(snapshot, status)
 
-        if args.verbose:
+        if args.verbose or args.dump_only:
             print(f"Entity: {json.dumps(entity, indent=2)}")
+
+        # If dump-only, exit without syncing
+        if args.dump_only:
+            print(f"\n--dump-only mode: would sync entity '{entity['identifier']}' to Port.io")
+            return 0
 
         # Sync to Port.io
         print(f"Syncing {entity['identifier']} to Port.io...")
