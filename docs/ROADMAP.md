@@ -69,7 +69,7 @@ To fork from v3.3.4, start with `docs/how-to/FIRST_FORK.md`.
 
 ---
 
-## 2. Current State (v3.3.4)
+## 2. Current State (v3.3.5)
 
 The kernel has reached a stable, forkable baseline. All acceptance criteria pass, all selftest gates pass.
 
@@ -436,7 +436,7 @@ Only a few items remain - all now have documentation or are external dependencie
 ## 6. Recommended Path (For Adopters)
 
 > **Scope note:** This section describes what happens **in forks**, not in this repo.
-> The kernel (v3.3.4) is complete. Validation happens when you use it.
+> The kernel (v3.3.5) is complete. Validation happens when you use it.
 
 **Option C (Validate) is recommended** for these reasons:
 
@@ -559,12 +559,12 @@ The template is "production ready" when:
 3. **Platform teams can integrate it** via documented APIs and artifacts
 4. **New teams can onboard in < 1 hour** with written docs alone
 
-> This is evaluated in forks, not in this repository. Until adoption criteria are met, v3.3.4 remains a stable baseline suitable for early adopters who accept some friction.
+> This is evaluated in forks, not in this repository. Until adoption criteria are met, v3.3.5 remains a stable baseline suitable for early adopters who accept some friction.
 
 ---
 
 ## 9. Summary
 
-**v3.3.4** is a stable, selftest-green kernel. All **kernel ACs** (`must_have_ac: true`) pass; non-kernel ACs are tracked as soft gates and may be failing or unknown without blocking selftest. But "selftest green" and "ready for production" are different bars. The gaps are documented above.
+**v3.3.5** is a stable, selftest-green kernel. All **kernel ACs** (`must_have_ac: true`) pass; non-kernel ACs are tracked as soft gates and may be failing or unknown without blocking selftest. But "selftest green" and "ready for production" are different bars. The gaps are documented above.
 
 The recommended path: fork immediately, capture friction, fix what matters, document what you learned. Don't try to anticipate every need—let real usage tell you what's missing.

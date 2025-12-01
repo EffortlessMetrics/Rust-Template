@@ -132,6 +132,9 @@ Auto-generated AC status from acceptance (BDD) and unit tests.
 | AC-TPL-TASKS-CREATE-CLI | US-TPL-PLT-001 | REQ-TPL-PLATFORM-TASKS | [PASS] pass | 1 / 1 |
 | AC-TPL-TASKS-HTTP | US-TPL-PLT-001 | REQ-TPL-PLATFORM-TASKS | [PASS] pass | 1 / 1 |
 | AC-TPL-TASKS-UPDATE-CLI | US-TPL-PLT-001 | REQ-TPL-PLATFORM-TASKS | [PASS] pass | 1 / 1 |
+| AC-TPL-VERSION-ATOMIC | US-TPL-PLT-001 | REQ-TPL-VERSIONING-ENGINE | [UNKNOWN] unknown | 0 / 0 |
+| AC-TPL-VERSION-DRYRUN | US-TPL-PLT-001 | REQ-TPL-VERSIONING-ENGINE | [UNKNOWN] unknown | 0 / 0 |
+| AC-TPL-VERSION-MANIFEST | US-TPL-PLT-001 | REQ-TPL-VERSIONING-ENGINE | [UNKNOWN] unknown | 0 / 0 |
 | AC-TPL-XTASK-NONINTERACTIVE | US-TPL-PLT-001 | REQ-TPL-AUTOMATION-BEHAVIOUR | [PASS] pass | 1 / 1 |
 | AC-TPL-XTASK-SPEC-ROOT | US-TPL-PLT-001 | REQ-PLT-DEVEX-CONTRACT | [PASS] pass | 1 / 1 |
 
@@ -140,6 +143,9 @@ Auto-generated AC status from acceptance (BDD) and unit tests.
 *(This list SHOULD be empty in this repo. If anything appears here, it's a bug.)*
 
 - AC-TPL-BUNDLE-MINIMAL-SCOPE: Bundle scope is minimal: specs/ includes only referenced sections (not entire spec_ledger), docs/ includes only docs mentioned in ACs/tests, src/ is optional and narrowly scoped (crate-specific). As a guardrail, a single bundle MUST NOT exceed a configurable size and file-count threshold (default: 300 KiB / 64 files) unless explicitly overridden via BUNDLE_MAX_BYTES / BUNDLE_MAX_FILES.
+- AC-TPL-VERSION-ATOMIC: Version updates are atomic with rollback on failure, ensuring no partial state if any file update fails
+- AC-TPL-VERSION-DRYRUN: `cargo xtask version-update X.Y.Z --dry-run` shows all changes before applying them, listing each file and the old→new version
+- AC-TPL-VERSION-MANIFEST: Version locations declared in a manifest file (e.g., specs/version_manifest.yaml) listing all files and extraction patterns
 
 ## Meta / CI-only ACs (Not Executed Locally)
 
