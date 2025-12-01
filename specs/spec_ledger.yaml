@@ -269,8 +269,9 @@ stories:
               `cargo xtask docs-check` validates bidirectional alignment between doc_index.yaml entries
               and document front-matter (stories, requirements, acs, adrs). Items in index must be in
               front-matter and vice versa. (Docs-as-Code v3)
-            tags: [kernel]
-            must_have_ac: true
+            tags: [kernel, docs-as-code]
+            must_have_ac: false
+            note: "Verified via docs-check validation gate in CI, not BDD. Unit test exists in docs_check.rs."
             tests:
               - { type: unit, tag: "test_doc_index_frontmatter_sync", module: "commands::docs_check", file: "crates/xtask/src/commands/docs_check.rs" }
 
