@@ -1,6 +1,6 @@
-# CLAUDE.md – Rust-as-Spec Platform Cell (v3.3.4)
+# CLAUDE.md – Rust-as-Spec Platform Cell (v3.3.5)
 
-**Template Version:** v3.3.4
+**Template Version:** v3.3.5
 
 You are an autonomous engineer working **inside** a Rust-as-Spec platform cell.
 

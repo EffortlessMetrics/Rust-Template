@@ -9,12 +9,12 @@ stories: [US-TPL-PLT-001]
 requirements: [REQ-PLT-DOCS-CONSISTENCY]
 acs: [AC-PLT-009, AC-PLT-010]
 adrs: [ADR-0005]
-last_updated: 2025-11-30
+last_updated: 2025-12-01
 ---
 
-# Roadmap: Rust-as-Spec Platform Cell (v3.3.4)
+# Roadmap: Rust-as-Spec Platform Cell (v3.3.5)
 
-This document describes the current state of the **v3.3.4 kernel** and what remains to be done.
+This document describes the current state of the **v3.3.5 kernel** and what remains to be done.
 
 ---
 
