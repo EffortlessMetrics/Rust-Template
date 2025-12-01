@@ -235,3 +235,41 @@ For kernel maintainers:
 - **Gates that matter:** `docs-check`, `selftest`, `ac-status`
 
 If all three are green, the template is healthy. Everything else (forks, pilots, Knowledge Hub) happens in other repos.
+
+---
+
+## 7. Kernel mental model
+
+For the high-level system architecture, see `docs/explanation/architecture.md` and `docs/explanation/TEMPLATE-CONTRACTS.md`.
+
+In brief:
+
+- **Specs layer**: `spec_ledger.yaml`, `tasks.yaml`, `devex_flows.yaml` define contracts.
+- **Runtime layer**: `spec-runtime` crate loads and validates specs.
+- **Surfaces**: `xtask` (CLI), `app-http` (HTTP + `/platform/*` APIs), `/ui` (web dashboard).
+
+Key contracts are enforced by `selftest` and documented in `TEMPLATE-CONTRACTS.md`.
+
+---
+
+## 8. Handover checklist (for the next maintainer)
+
+You're in good shape if you can answer "yes" to:
+
+- [ ] I can run `nix develop` + `cargo xtask kernel-status` and interpret the output.
+- [ ] I know that `specs/spec_ledger.yaml` is the **canonical version** and governance source.
+- [ ] I know `docs-check` enforces:
+  - version alignment,
+  - doc_index ↔ frontmatter sync,
+  - feature_status header invariants.
+- [ ] I know `selftest` enforces:
+  - kernel AC health,
+  - devex & graph invariants,
+  - policy tests,
+  - BDD harness semantics (via `bdd::is_bdd_success`).
+- [ ] I know how to add/change ACs in `spec_ledger.yaml` and wire appropriate tests.
+- [ ] I know how to bump the template_version safely and tag a new `vX.Y.Z-kernel`.
+- [ ] I know where this maintainer runbook is: `docs/how-to/maintain-kernel.md`.
+- [ ] I know how to keep VS Code / rust-analyzer in sync with Nix (`nix develop && code .`).
+
+If all of that is true, you can take this over without tripping invisible wires.
