@@ -574,6 +574,7 @@ Feature: Developer Experience Commands
     And "specs/service_metadata.yaml" should contain "description: A test service"
     And "README.md" should contain "# Test Service"
     And "README.md" should contain "A test service"
+    And "CLAUDE.md" should contain "# CLAUDE.md – Test Service"
     And the output should contain "Service initialization complete"
     And I clean up the service-init test files
 
@@ -601,6 +602,7 @@ Feature: Developer Experience Commands
     And "specs/service_metadata.yaml" should contain "description: A new test service"
     And "README.md" should contain "# My New Service"
     And "README.md" should contain "A new test service"
+    And "CLAUDE.md" should contain "# CLAUDE.md – My New Service"
     And I clean up the service-init test files
 
   @AC-PLT-021

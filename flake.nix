@@ -33,6 +33,8 @@
           pkgs.cargo-audit
           pkgs.cargo-deny
           pkgs.cargo-nextest
+          pkgs.protobuf
+          pkgs.cargo-llvm-cov
           pkgs.zlib  # Required for rustc/sccache on systems without zlib1g
         ];
         buildInputs = [ pkgs.zlib ];  # Also in buildInputs for linker visibility

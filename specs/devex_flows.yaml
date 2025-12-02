@@ -71,6 +71,15 @@ commands:
       contributing_flow: false
       claude_golden_path: true
 
+  service-init:
+    category: onboarding
+    summary: "Initialize service branding (ID, name, description in metadata, README, CLAUDE.md)"
+    required: true
+    docs:
+      readme_table: true
+      contributing_flow: false
+      claude_golden_path: true
+
   # Design & AC
   adr-new:
     category: design_ac

@@ -55,6 +55,7 @@ async fn given_task_exists(world: &mut World, task_id: String, status_str: Strin
             depends_on: Vec::new(),
         }],
     );
+    world.reload_app();
 }
 
 #[given(expr = r#"the following tasks exist in {string}:"#)]
@@ -142,6 +143,7 @@ async fn given_tasks_exist(world: &mut World, file: String, step: &cucumber::ghe
     }
 
     ensure_tasks_file(&tasks_path, tasks);
+    world.reload_app();
 }
 
 #[when(regex = r#"^I send a POST request to "([^"]+)" with body:$"#)]

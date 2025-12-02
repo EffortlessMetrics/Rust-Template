@@ -50,7 +50,10 @@ pub fn run(args: ServiceInitArgs) -> Result<()> {
     // 2. Update README.md
     update_readme(&args, &mut changes)?;
 
-    // 3. Optionally append to fork_registry.yaml
+    // 3. Update CLAUDE.md
+    update_claude(&args, &mut changes)?;
+
+    // 4. Optionally append to fork_registry.yaml
     if args.register_fork {
         update_fork_registry(&args, &mut changes)?;
     }
@@ -236,6 +239,79 @@ fn update_readme(args: &ServiceInitArgs, changes: &mut Vec<String>) -> Result<()
         changes.push(format!("Updated {}", readme_path.display()));
     } else {
         changes.push(format!("No changes needed in {}", readme_path.display()));
+    }
+
+    Ok(())
+}
+
+fn update_claude(args: &ServiceInitArgs, changes: &mut Vec<String>) -> Result<()> {
+    let claude_path = Path::new("CLAUDE.md");
+
+    if !claude_path.exists() {
+        anyhow::bail!("CLAUDE.md not found at {}", claude_path.display());
+    }
+
+    let content = fs::read_to_string(claude_path).context("Failed to read CLAUDE.md")?;
+
+    let lines: Vec<&str> = content.lines().collect();
+
+    if lines.is_empty() {
+        anyhow::bail!("CLAUDE.md is empty");
+    }
+
+    // Find the first markdown heading (title)
+    let mut title_line_idx = None;
+    for (idx, line) in lines.iter().enumerate() {
+        if line.starts_with("# ") {
+            title_line_idx = Some(idx);
+            break;
+        }
+    }
+
+    let title_line_idx = title_line_idx
+        .ok_or_else(|| anyhow::anyhow!("Could not find title (# heading) in CLAUDE.md"))?;
+
+    // Check if changes are needed (idempotency)
+    let current_title = lines[title_line_idx].trim_start_matches("# ").trim();
+
+    // Extract version info from title if it exists (e.g., "Title (v3.3.3)")
+    let version_suffix = if current_title.contains('(') && current_title.contains(')') {
+        // Find the last opening parenthesis
+        if let Some(pos) = current_title.rfind('(') {
+            format!(" {}", &current_title[pos..])
+        } else {
+            String::new()
+        }
+    } else {
+        String::new()
+    };
+
+    let new_title = format!("# CLAUDE.md – {}{}", args.name, version_suffix);
+
+    if lines[title_line_idx] != new_title {
+        // We need to reconstruct the content with owned strings
+        let mut final_lines: Vec<String> = Vec::new();
+        for (idx, line) in lines.iter().enumerate() {
+            if idx == title_line_idx {
+                final_lines.push(new_title.clone());
+            } else {
+                final_lines.push(line.to_string());
+            }
+        }
+
+        let updated_content = final_lines.join("\n");
+        // Preserve trailing newline if original had one
+        let final_content = if content.ends_with('\n') {
+            format!("{}\n", updated_content)
+        } else {
+            updated_content
+        };
+
+        fs::write(claude_path, final_content).context("Failed to write CLAUDE.md")?;
+
+        changes.push(format!("Updated {}", claude_path.display()));
+    } else {
+        changes.push(format!("No changes needed in {}", claude_path.display()));
     }
 
     Ok(())
