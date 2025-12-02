@@ -393,7 +393,15 @@
     "YAML",
     "yourorg",
     "zipkin",
-    "Zpbxae"
+    "Zpbxae",
+    "mkdocs",
+    "protoc",
+    "trufflesecurity",
+    "trufflehog",
+    "Protoc",
+    "modversion",
+    "mergeable",
+    "rescope"
   ],
   "flagWords": [],
   "ignorePaths": [

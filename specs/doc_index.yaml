@@ -699,6 +699,18 @@ docs:
       - AC-PLT-020
     adrs: [ADR-0002, ADR-0005, ADR-0017]
 
+  # CI Infrastructure Issues TODO
+  - id: GUIDE-CI-ISSUES-TODO
+    file: docs/CI_ISSUES_TODO.md
+    title: "CI Infrastructure Issues - GitHub Issue Templates"
+    doc_type: reference
+    stories: [US-TPL-PLT-001]
+    requirements:
+      - REQ-PLT-DEVEX-CONTRACT
+      - REQ-PLT-SECURITY-GOVERNANCE
+    acs: []
+    adrs: []
+
   # Template Customization How-To Guide
   - id: GUIDE-TPL-OVERRIDE-001
     file: docs/how-to/change-template-opinion.md
