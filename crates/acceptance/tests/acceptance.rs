@@ -164,8 +164,8 @@ async fn main() {
     // when all tests pass. This is critical for run_cmd() which captures output.
     println!("\n[BDD-PASS] All non-@wip scenarios passed");
 
-    // Explicitly exit 0 to override any summarized writer exit behavior
-    std::process::exit(0);
+    // Return normally to allow writer destructors to flush buffers
+    // (JUnit XML output requires clean shutdown to write file)
 }
 
 fn parse_simple_tag_list(expr: &str) -> Vec<String> {
