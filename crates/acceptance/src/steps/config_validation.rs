@@ -1,17 +1,16 @@
 use crate::World;
 use cucumber::{gherkin::Step, given, then, when};
-use std::path::Path;
 
 #[given(regex = r#"^the config file "([^"]+)" contains:$"#)]
-async fn given_config_file(_world: &mut World, rel_path: String, step: &Step) {
+async fn given_config_file(world: &mut World, rel_path: String, step: &Step) {
     let content = step
         .docstring
         .as_ref()
         .cloned()
         .unwrap_or_else(|| panic!("Config content must be provided for {}", rel_path));
 
-    let root = std::env::var("SPEC_ROOT").unwrap_or_else(|_| ".".to_string());
-    let target = Path::new(&root).join(rel_path);
+    let root = world.spec_root();
+    let target = root.join(rel_path);
 
     if let Some(parent) = target.parent() {
         std::fs::create_dir_all(parent).expect("Failed to create parent directory for config");
@@ -22,9 +21,9 @@ async fn given_config_file(_world: &mut World, rel_path: String, step: &Step) {
 
 #[when("I validate the configuration against the schema")]
 async fn when_validate_config(world: &mut World) {
-    let root = std::env::var("SPEC_ROOT").unwrap_or_else(|_| ".".to_string());
-    let schema_path = Path::new(&root).join("specs/config_schema.yaml");
-    let config_path = Path::new(&root).join("config/local.yaml");
+    let root = world.spec_root();
+    let schema_path = root.join("specs/config_schema.yaml");
+    let config_path = root.join("config/local.yaml");
 
     match spec_runtime::validate_config(&schema_path, &config_path) {
         Ok(_) => {

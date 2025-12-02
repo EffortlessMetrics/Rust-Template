@@ -14,6 +14,9 @@ pub struct ServiceInitArgs {
     pub register_fork: bool,
 }
 
+/// Service metadata structure for service_metadata.yaml.
+/// Future: Used when implementing service metadata persistence and validation.
+/// See TASK-DX-SERVICE-METADATA for planned metadata features.
 #[derive(Debug, Serialize, Deserialize)]
 #[allow(dead_code)]
 struct ServiceMetadata {

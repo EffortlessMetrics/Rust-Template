@@ -135,11 +135,10 @@ impl Default for World {
                 .expect("Failed to copy workspace forks into temp dir");
         }
 
-        // Make the spec root discoverable for app-http/xtask consumers.
-        // SAFETY: Updating process environment here is confined to the test runner setup.
-        unsafe {
-            std::env::set_var("SPEC_ROOT", temp_dir.path());
-        }
+        // NOTE: We do NOT set SPEC_ROOT globally here to enable parallel test execution.
+        // Each scenario's World has its own isolated temp_dir accessible via world.spec_root().
+        // Steps that spawn child processes (like xtask) explicitly set SPEC_ROOT via cmd.env()
+        // to ensure they use the correct isolated directory.
 
         let governance_repo =
             std::sync::Arc::new(adapters_spec_fs::FsGovernanceRepository::new(specs_dir));
@@ -180,6 +179,11 @@ pub struct CommandOutput {
 impl World {
     pub fn new() -> Self {
         Self::default()
+    }
+
+    /// Get the spec root path for this test world (isolated per scenario)
+    pub fn spec_root(&self) -> &Path {
+        self._temp_dir.path()
     }
 
     /// Get immutable reference to xtask context

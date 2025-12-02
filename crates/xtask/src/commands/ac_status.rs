@@ -158,6 +158,9 @@ struct Story {
 #[derive(Debug, Deserialize)]
 struct Requirement {
     id: String,
+    /// Tags for categorizing requirements (e.g., @tier1, @security).
+    /// Future: Used for filtering ACs by tag in `cargo xtask ac-list --tag <TAG>`.
+    /// See TASK-DX-AC-FILTERING for planned tag-based AC queries.
     #[serde(default)]
     #[allow(dead_code)]
     tags: Vec<String>,
@@ -659,6 +662,10 @@ fn parse_features(features_dir: &Path) -> Result<HashMap<String, Scenario>> {
     Ok(scenarios)
 }
 
+/// Normalize JUnit testcase names for scenario matching.
+/// Future: Used if we switch back to JUnit-based AC status (currently using Cucumber JSON).
+/// Kept as infrastructure for fallback parsing path.
+/// Remove #[allow] once parsing strategy is finalized.
 #[allow(dead_code)]
 fn normalize_testcase_name(name: &str) -> String {
     // Extract scenario name from JUnit testcase name
@@ -673,6 +680,10 @@ fn normalize_testcase_name(name: &str) -> String {
     name.to_string()
 }
 
+/// Parse JUnit XML and extract AC test results using scenario metadata.
+/// Future: Fallback parser for systems without Cucumber JSON support.
+/// Currently superseded by parse_junit_with_scenarios() from ac_parsing module.
+/// Remove #[allow] once deprecated in favor of unified parsing path.
 #[allow(dead_code)]
 fn parse_junit(
     junit_path: &Path,

@@ -1,44 +1,97 @@
+//! Developer experience flows and xtask command specifications.
+//!
+//! This module defines the structure of `devex_flows.yaml`, which describes
+//! developer workflows, xtask commands, and their documentation requirements.
+
 use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::Path;
 
+/// Developer experience flows specification.
+///
+/// Root structure for `specs/devex_flows.yaml`, containing command and flow definitions.
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct DevExFlows {
+    /// Schema version for devex_flows.yaml.
     pub schema_version: String,
+    /// Template version this spec is compatible with.
     pub template_version: String,
+    /// Map of command IDs to command specifications (e.g., "check", "selftest").
     pub commands: HashMap<String, CommandSpec>,
+    /// Map of flow IDs to flow specifications (e.g., "onboarding", "feature-dev").
     pub flows: HashMap<String, FlowSpec>,
 }
 
+/// Specification for an individual xtask command.
+///
+/// Describes a single command's category, summary, required status, and documentation needs.
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct CommandSpec {
+    /// Command category (e.g., "onboarding", "design_ac", "security").
     pub category: String,
+    /// Brief summary of what the command does.
     pub summary: String,
+    /// Whether this command is required for the template to function.
     pub required: bool,
+    /// Documentation requirements for this command.
     #[serde(default)]
     pub docs: DocsRequirement,
 }
 
+/// Documentation requirements for a command.
+///
+/// Specifies which documentation artifacts should include this command.
 #[derive(Debug, Default, Deserialize, Serialize, Clone)]
 pub struct DocsRequirement {
+    /// Should appear in README command table.
     #[serde(default)]
     pub readme_table: bool,
+    /// Should appear in CONTRIBUTING flow section.
     #[serde(default)]
     pub contributing_flow: bool,
+    /// Should appear in CLAUDE.md golden path.
     #[serde(default)]
     pub claude_golden_path: bool,
 }
 
+/// Specification for a developer workflow.
+///
+/// Describes a multi-step workflow composed of commands.
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct FlowSpec {
+    /// Human-readable name of the flow.
     pub name: String,
+    /// Description of what this flow accomplishes.
     pub description: String,
+    /// Whether this flow is required for the template.
     pub required: bool,
+    /// List of documents where this flow is described.
     pub documented_in: Vec<String>,
+    /// Ordered list of command IDs that comprise this flow.
     pub steps: Vec<String>,
 }
 
+/// Load developer experience flows from a YAML file.
+///
+/// # Arguments
+///
+/// * `path` - Path to `devex_flows.yaml`
+///
+/// # Returns
+///
+/// Returns a parsed [`DevExFlows`] instance.
+///
+/// # Errors
+///
+/// Returns an error if the file is missing, unreadable, or malformed YAML.
+///
+/// # Example
+///
+/// ```ignore
+/// let flows = load_devex_flows(Path::new("specs/devex_flows.yaml"))?;
+/// println!("Loaded {} commands", flows.commands.len());
+/// ```
 pub fn load_devex_flows(path: &Path) -> Result<DevExFlows> {
     let content = std::fs::read_to_string(path)
         .with_context(|| format!("Failed to read devex flows: {}", path.display()))?;

@@ -63,6 +63,9 @@ struct Ledger {
 
 #[derive(Debug, Deserialize)]
 struct Story {
+    /// Story ID from spec_ledger.yaml.
+    /// Future: Used for filtering and reporting in spec query features.
+    /// See TASK-DX-SPEC-QUERY for planned query and filtering commands.
     #[allow(dead_code)]
     id: String,
     requirements: Vec<Requirement>,
@@ -71,6 +74,9 @@ struct Story {
 #[derive(Debug, Deserialize)]
 struct Requirement {
     id: String,
+    /// Tags for categorizing requirements (e.g., @tier1, @security).
+    /// Future: Used for filtering ACs by tag in `cargo xtask ac-list --tag <TAG>`.
+    /// See TASK-DX-AC-FILTERING for planned tag-based AC queries.
     #[serde(default)]
     #[allow(dead_code)]
     tags: Vec<String>,
@@ -80,6 +86,9 @@ struct Requirement {
 #[derive(Debug, Deserialize)]
 struct AcceptanceCriteria {
     id: String,
+    /// Human-readable AC description text.
+    /// Future: Used in `cargo xtask ac-show <AC_ID>` for detailed AC display.
+    /// Currently only ID is needed for mapping ACs to tests.
     #[allow(dead_code)]
     text: String,
 }
@@ -255,6 +264,9 @@ struct CucumberReport(Vec<CucumberFeature>);
 
 #[derive(Debug, Deserialize)]
 struct CucumberFeature {
+    /// Feature name from BDD .feature file.
+    /// Future: Used in enhanced coverage reports to group scenarios by feature.
+    /// See TASK-DX-BDD-REPORTING for planned BDD report improvements.
     #[allow(dead_code)]
     name: String,
     uri: String,
@@ -267,6 +279,9 @@ struct CucumberElement {
     #[serde(rename = "type")]
     element_type: String,
     tags: Vec<CucumberTag>,
+    /// Line number in .feature file where scenario starts.
+    /// Future: Used for generating clickable links in IDE integration.
+    /// See TASK-DX-IDE-INTEGRATION for planned editor jump-to-definition features.
     #[allow(dead_code)]
     line: Option<u32>,
     steps: Vec<CucumberStep>,
@@ -275,6 +290,8 @@ struct CucumberElement {
 #[derive(Debug, Deserialize)]
 struct CucumberTag {
     name: String,
+    /// Line number where tag appears in .feature file.
+    /// Future: Used for IDE integration and precise source mapping.
     #[serde(default)]
     #[allow(dead_code)]
     line: Option<u32>,
@@ -282,10 +299,16 @@ struct CucumberTag {
 
 #[derive(Debug, Deserialize)]
 struct CucumberStep {
+    /// Step keyword (Given/When/Then/And/But).
+    /// Future: Used in detailed BDD failure reports showing which step failed.
     #[allow(dead_code)]
     keyword: String,
+    /// Step description text.
+    /// Future: Used in BDD failure output to show exact failing step.
     #[allow(dead_code)]
     name: String,
+    /// Line number of step in .feature file.
+    /// Future: Used for IDE integration to jump to failing step.
     #[allow(dead_code)]
     line: Option<u32>,
     result: CucumberStepResult,
@@ -294,9 +317,14 @@ struct CucumberStep {
 #[derive(Debug, Deserialize)]
 struct CucumberStepResult {
     status: String,
+    /// Step execution duration in nanoseconds.
+    /// Future: Used in performance regression detection for slow BDD scenarios.
+    /// See TASK-DX-PERF-TRACKING for planned test performance monitoring.
     #[serde(default)]
     #[allow(dead_code)]
     duration: Option<u64>, // nanoseconds
+    /// Error message if step failed.
+    /// Future: Used in detailed failure reports with root cause analysis.
     #[serde(default)]
     #[allow(dead_code)]
     error_message: Option<String>,

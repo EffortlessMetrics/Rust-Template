@@ -136,6 +136,15 @@ commands:
       contributing_flow: true
       claude_golden_path: true
 
+  coverage:
+    category: security
+    summary: "Test coverage analysis with tarpaulin (baseline: 65%)"
+    required: false
+    docs:
+      readme_table: true
+      contributing_flow: false
+      claude_golden_path: true
+
   sbom-local:
     category: security
     summary: "Generate local SPDX SBOM"
@@ -144,6 +153,25 @@ commands:
       readme_table: false
       contributing_flow: false
       claude_golden_path: true
+
+  # Build Metrics
+  build-time-capture:
+    category: infrastructure
+    summary: "Capture build time metrics (clean release build)"
+    required: false
+    docs:
+      readme_table: false
+      contributing_flow: false
+      claude_golden_path: false
+
+  build-time-compare:
+    category: infrastructure
+    summary: "Compare two build time metric files"
+    required: false
+    docs:
+      readme_table: false
+      contributing_flow: false
+      claude_golden_path: false
 
   # Release
   release-prepare:
