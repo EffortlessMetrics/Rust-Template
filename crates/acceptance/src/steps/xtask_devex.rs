@@ -2386,17 +2386,23 @@ async fn when_run_service_init(world: &mut World, id: String, name: String, desc
     // Backup current files for restoration after test
     let metadata_path = root.join("specs/service_metadata.yaml");
     let readme_path = root.join("README.md");
+    let claude_path = root.join("CLAUDE.md");
     let metadata_backup_path = root.join("specs/.service_metadata.yaml.bak");
     let readme_backup_path = root.join(".README.md.bak");
+    let claude_backup_path = root.join(".CLAUDE.md.bak");
 
     let had_metadata = metadata_path.exists();
     let had_readme = readme_path.exists();
+    let had_claude = claude_path.exists();
 
     if had_metadata {
         let _ = fs::copy(&metadata_path, &metadata_backup_path);
     }
     if had_readme {
         let _ = fs::copy(&readme_path, &readme_backup_path);
+    }
+    if had_claude {
+        let _ = fs::copy(&claude_path, &claude_backup_path);
     }
 
     // Store backup paths in world state for cleanup during teardown
@@ -2411,11 +2417,19 @@ async fn when_run_service_init(world: &mut World, id: String, name: String, desc
     world
         .xtask_context_mut()
         .env
+        .insert("SERVICE_INIT_CLAUDE_BACKUP".to_string(), claude_backup_path.display().to_string());
+    world
+        .xtask_context_mut()
+        .env
         .insert("SERVICE_INIT_HAD_METADATA".to_string(), had_metadata.to_string());
     world
         .xtask_context_mut()
         .env
         .insert("SERVICE_INIT_HAD_README".to_string(), had_readme.to_string());
+    world
+        .xtask_context_mut()
+        .env
+        .insert("SERVICE_INIT_HAD_CLAUDE".to_string(), had_claude.to_string());
 
     // Set test_repo_path to actual workspace root so command runs there
     world.xtask_context_mut().test_repo_path = Some(root.clone());
@@ -2521,12 +2535,12 @@ async fn then_cleanup_service_init(world: &mut World) {
     let root = actual_workspace_root();
 
     // Restore backed-up files if they exist
-    if let (Some(metadata_backup), Some(readme_backup)) =
-        (ctx.env.get("SERVICE_INIT_METADATA_BACKUP"), ctx.env.get("SERVICE_INIT_README_BACKUP"))
-    {
-        let metadata_backup_path = std::path::Path::new(metadata_backup);
-        let readme_backup_path = std::path::Path::new(readme_backup);
+    let metadata_backup = ctx.env.get("SERVICE_INIT_METADATA_BACKUP");
+    let readme_backup = ctx.env.get("SERVICE_INIT_README_BACKUP");
+    let claude_backup = ctx.env.get("SERVICE_INIT_CLAUDE_BACKUP");
 
+    if let Some(metadata_backup) = metadata_backup {
+        let metadata_backup_path = std::path::Path::new(metadata_backup);
         if let Some(had_metadata) = ctx.env.get("SERVICE_INIT_HAD_METADATA")
             && had_metadata == "true"
             && metadata_backup_path.exists()
@@ -2534,7 +2548,10 @@ async fn then_cleanup_service_init(world: &mut World) {
             let target = metadata_backup_path.parent().unwrap().join("service_metadata.yaml");
             let _ = fs::rename(metadata_backup_path, &target);
         }
+    }
 
+    if let Some(readme_backup) = readme_backup {
+        let readme_backup_path = std::path::Path::new(readme_backup);
         if let Some(had_readme) = ctx.env.get("SERVICE_INIT_HAD_README")
             && had_readme == "true"
             && readme_backup_path.exists()
@@ -2544,10 +2561,21 @@ async fn then_cleanup_service_init(world: &mut World) {
         }
     }
 
+    if let Some(claude_backup) = claude_backup {
+        let claude_backup_path = std::path::Path::new(claude_backup);
+        if let Some(had_claude) = ctx.env.get("SERVICE_INIT_HAD_CLAUDE")
+            && had_claude == "true"
+            && claude_backup_path.exists()
+        {
+            let target = claude_backup_path.parent().unwrap().join("CLAUDE.md");
+            let _ = fs::rename(claude_backup_path, &target);
+        }
+    }
+
     // Fallback: Use git to restore any modified files to ensure clean state
     let _ = Command::new("git")
         .current_dir(&root)
-        .args(["checkout", "HEAD", "specs/service_metadata.yaml", "README.md"])
+        .args(["checkout", "HEAD", "specs/service_metadata.yaml", "README.md", "CLAUDE.md"])
         .output();
 }
 
@@ -2568,17 +2596,23 @@ async fn given_service_init_custom_identity(world: &mut World) {
     // Backup current files for restoration after test
     let metadata_path = root.join("specs/service_metadata.yaml");
     let readme_path = root.join("README.md");
+    let claude_path = root.join("CLAUDE.md");
     let metadata_backup_path = root.join("specs/.service_metadata.yaml.bak");
     let readme_backup_path = root.join(".README.md.bak");
+    let claude_backup_path = root.join(".CLAUDE.md.bak");
 
     let had_metadata = metadata_path.exists();
     let had_readme = readme_path.exists();
+    let had_claude = claude_path.exists();
 
     if had_metadata {
         let _ = fs::copy(&metadata_path, &metadata_backup_path);
     }
     if had_readme {
         let _ = fs::copy(&readme_path, &readme_backup_path);
+    }
+    if had_claude {
+        let _ = fs::copy(&claude_path, &claude_backup_path);
     }
 
     // Store backup paths and flags for cleanup
@@ -2588,8 +2622,11 @@ async fn given_service_init_custom_identity(world: &mut World) {
     );
     ctx.env
         .insert("SERVICE_INIT_README_BACKUP".to_string(), readme_backup_path.display().to_string());
+    ctx.env
+        .insert("SERVICE_INIT_CLAUDE_BACKUP".to_string(), claude_backup_path.display().to_string());
     ctx.env.insert("SERVICE_INIT_HAD_METADATA".to_string(), had_metadata.to_string());
     ctx.env.insert("SERVICE_INIT_HAD_README".to_string(), had_readme.to_string());
+    ctx.env.insert("SERVICE_INIT_HAD_CLAUDE".to_string(), had_claude.to_string());
 
     // Set test_repo_path to actual workspace root so later steps check the right location
     ctx.test_repo_path = Some(root.clone());
@@ -2797,4 +2834,92 @@ async fn then_json_includes_field(world: &mut World, field_name: String) {
         field_name,
         serde_json::to_string_pretty(&json).unwrap()
     );
+}
+
+// ============================================================================
+// AC-PLT-ENV-ABI-CHECK: Environment ABI Detection BDD Steps
+// ============================================================================
+
+#[then(regex = r#"^the output should mention either "([^"]+)" or "([^"]+)"$"#)]
+async fn then_output_mentions_either(world: &mut World, option1: String, option2: String) {
+    let ctx = world.xtask_context();
+    let output = ctx.last_command_output.as_ref().expect("No command output");
+
+    let has_option1 = output.contains(&option1);
+    let has_option2 = output.contains(&option2);
+
+    assert!(
+        has_option1 || has_option2,
+        "Output should mention either '{}' or '{}'\nActual output:\n{}",
+        option1,
+        option2,
+        output
+    );
+}
+
+#[then("the output should show ABI check result")]
+async fn then_output_shows_abi_check_result(world: &mut World) {
+    let ctx = world.xtask_context();
+    let output = ctx.last_command_output.as_ref().expect("No command output");
+
+    // Check for ABI check result indicators
+    let has_abi_result = output.contains("✓")
+        || output.contains("✓")
+        || output.contains("compatible")
+        || output.contains("incompatible")
+        || output.contains("OK")
+        || output.contains("WARN")
+        || output.contains("ERROR");
+
+    assert!(
+        has_abi_result,
+        "Output should show ABI check result (with ✓, compatible/incompatible status, or similar)\nActual output:\n{}",
+        output
+    );
+}
+
+#[then("the output should show glibc status")]
+async fn then_output_shows_glibc_status(world: &mut World) {
+    let ctx = world.xtask_context();
+    let output = ctx.last_command_output.as_ref().expect("No command output");
+
+    // Check for glibc status indicators - version numbers or status messages
+    let has_glibc_status = output.contains("glibc")
+        && (output.contains("version")
+            || output.contains("2.")
+            || output.contains("compatible")
+            || output.contains("incompatible")
+            || output.contains("available")
+            || output.contains("✓")
+            || output.contains("✓"));
+
+    assert!(
+        has_glibc_status,
+        "Output should show glibc status (version info or status indicator)\nActual output:\n{}",
+        output
+    );
+}
+
+#[then(regex = r#"^if warnings exist then output should mention "([^"]+)"$"#)]
+async fn then_if_warnings_exist_mention(world: &mut World, text: String) {
+    let ctx = world.xtask_context();
+    let output = ctx.last_command_output.as_ref().expect("No command output");
+
+    // Check if warnings exist
+    let has_warnings = output.contains("warning")
+        || output.contains("Warning")
+        || output.contains("WARNING")
+        || output.contains("⚠")
+        || output.contains("warn");
+
+    // If warnings exist, check if the text is mentioned
+    if has_warnings {
+        assert!(
+            output.contains(&text),
+            "Output has warnings, but should mention '{}'\nActual output:\n{}",
+            text,
+            output
+        );
+    }
+    // If no warnings, the step passes (conditional is false)
 }
