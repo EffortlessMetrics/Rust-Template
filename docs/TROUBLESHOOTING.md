@@ -237,11 +237,41 @@ error while loading shared libraries: libz.so.1: cannot open shared object file
 
 Or xtask commands that shell out to `cargo` may hang or fail before tests run, leaving `target/junit/acceptance.xml` empty.
 
-**Cause:** `sccache` (the RUSTC_WRAPPER) is unable to find `libz.so.1` when invoked via `nix develop -c`. This is a Nix environment composition issue where certain libraries aren't correctly propagated to subprocesses.
+**Cause:** The Nix devshell does not include `pkgs.zlib` or does not export `LD_LIBRARY_PATH` correctly. This is a Nix environment configuration issue, not a Windows/WSL limitation. It can affect any system (Linux, macOS, WSL2) if the flake.nix is misconfigured.
 
-**Impact:** JUnit report generation fails silently, causing `ac-status` and `docs/feature_status.md` to show stale or incorrect data.
+**Impact:** Rustc and sccache fail to load libz.so.1 at runtime. JUnit report generation may fail silently, causing `ac-status` and `docs/feature_status.md` to show stale or incorrect data.
 
-**Workaround (Option 1):** Run xtask as if already inside Nix shell
+**Fix (Recommended):** Update `flake.nix` to include zlib in the devshell
+
+Add `pkgs.zlib` to both `packages` and `buildInputs`, and export `LD_LIBRARY_PATH`:
+
+```nix
+devShells = forAllSystems ({ pkgs, rust, ... }: {
+  default = pkgs.mkShell {
+    packages = [
+      rust
+      pkgs.zlib  # Required for rustc/sccache dynamic linking
+      # ... other packages ...
+    ];
+    buildInputs = [ pkgs.zlib ];
+    shellHook = ''
+      export PATH="$PWD/.tools/bin:$PATH"
+      export LD_LIBRARY_PATH="${pkgs.lib.makeLibraryPath [ pkgs.zlib ]}:$LD_LIBRARY_PATH"
+      echo "DevShell ready — try: just checks"
+    '';
+  };
+});
+```
+
+Then run:
+```bash
+nix flake update
+cargo xtask check  # Should now pass
+```
+
+**See also:** `docs/how-to/nix-environment-issues.md` for detailed explanation and additional context.
+
+**Workaround (Option 1 - if flake.nix fix is not possible):** Run xtask as if already inside Nix shell
 ```bash
 # Inside nix develop, or with environment simulated:
 IN_NIX_SHELL=1 RUSTC_WRAPPER="" ./target/release/xtask ac-status
@@ -257,7 +287,7 @@ RUSTC_WRAPPER="" cargo xtask ac-status
 XTASK_LOW_RESOURCES=1 cargo xtask ac-status
 ```
 
-**Note:** This is an environment-level issue; it does not reflect kernel correctness but may need coordination with your Nix/tooling setup. See `FRICTION_LOG.md` for tracking.
+**Note:** The fix via flake.nix is the recommended permanent solution. The workarounds are temporary measures while the environment is being corrected.
 
 ---
 

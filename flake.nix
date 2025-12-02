@@ -33,9 +33,12 @@
           pkgs.cargo-audit
           pkgs.cargo-deny
           pkgs.cargo-nextest
+          pkgs.zlib  # Required for rustc/sccache on systems without zlib1g
         ];
+        buildInputs = [ pkgs.zlib ];  # Also in buildInputs for linker visibility
         shellHook = ''
           export PATH="$PWD/.tools/bin:$PATH"
+          export LD_LIBRARY_PATH="${pkgs.lib.makeLibraryPath [ pkgs.zlib ]}:$LD_LIBRARY_PATH"
           echo "DevShell ready — try: just checks"
         '';
       };
