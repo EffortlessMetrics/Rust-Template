@@ -156,37 +156,39 @@ When you change docs, follow this pattern:
 
 ### 6.4.1 Example: docs-check catching README version drift <!-- doclint:disable orphan-version -->
 
-If `README.md` claims `Template Version: vA.B.C` but `specs/spec_ledger.yaml` has a different `template_version` (say `X.Y.Z`), the `cargo xtask docs-check` "Version alignment" gate will catch it:
+If `README.md` claims `Template Version: vX.Y.Z` but `specs/spec_ledger.yaml` has a different `template_version` (say `X.Y.W`), the `cargo xtask docs-check` "Version alignment" gate will catch it:
 
 ```text
 📚 Checking documentation consistency...
 
-  Canonical version (spec_ledger): X.Y.Z
-  README.md version: A.B.C (expected X.Y.Z) ✗
+  Canonical version (specs/spec_ledger.yaml): X.Y.W
+  README.md version: X.Y.Z (expected X.Y.W) ✗
   ...
 
 Version mismatches found:
-  • README.md has 'A.B.C', expected 'X.Y.Z' (pattern: H1: # ... (vX.Y.Z))
+  • README.md has 'X.Y.Z', expected 'X.Y.W' (pattern: H1: # ... (vX.Y.Z))
 
 To fix:
   1. Update the canonical version: specs/spec_ledger.yaml → metadata.template_version
-  2. Or run: cargo xtask release-prepare X.Y.Z to bump all files
+  2. Or run: cargo xtask release-prepare X.Y.W to bump all files
   3. Commit changes and verify: cargo xtask selftest
+
+Error: Version alignment failed: 1 file(s) out of sync with specs/spec_ledger.yaml (vX.Y.W)
 Version alignment... ✗ Mismatch
 ```
 
 **Typical fix paths:**
 
 1. **You made a mistake (not actually releasing a new version):**
-   - Revert README.md back to the canonical version from spec_ledger.yaml
+   - Revert README.md back to the canonical version from `specs/spec_ledger.yaml`
    - Run `cargo xtask docs-check` to verify alignment
 
 2. **You're doing a proper version bump:**
    - Update `specs/spec_ledger.yaml → metadata.template_version` to the new version
-   - Run `cargo xtask release-prepare <VERSION>` to apply changes consistently to all versioned files
+   - Run `cargo xtask release-prepare X.Y.Z` to apply changes consistently to all versioned files
    - Run `cargo xtask docs-check` and `cargo xtask selftest` to verify
 
-This demonstrates the governance principle: **the spec_ledger is the source of truth** for the template version. All other versioned files must agree with it.
+This demonstrates the governance principle: **`specs/spec_ledger.yaml` is THE source of truth** for the template version. All other versioned files (README.md, CLAUDE.md, ROADMAP.md, etc.) must agree with it—they are derived views, not independent sources.
 
 ### 6.5. Doc type contracts
 
