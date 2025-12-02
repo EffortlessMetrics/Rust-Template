@@ -1,12 +1,143 @@
 use anyhow::Result;
 use colored::Colorize;
 use regex::Regex;
+use serde::{Deserialize, Serialize};
+use std::collections::BTreeMap;
 use std::fs;
 use std::path::Path;
 use walkdir::WalkDir;
 
 const AGENTS_DIR: &str = ".claude/agents";
 const SKILLS_DIR: &str = ".claude/skills";
+
+#[derive(Debug, Serialize, Deserialize)]
+struct AgentFrontmatter {
+    name: String,
+    description: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    tools: Option<Vec<String>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    model: Option<String>,
+    #[serde(rename = "permissionMode", skip_serializing_if = "Option::is_none")]
+    permission_mode: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    skills: Option<Vec<String>>,
+    #[serde(flatten)]
+    extra: BTreeMap<String, serde_yaml::Value>,
+}
+
+pub fn run_fmt() -> Result<()> {
+    let root = std::env::current_dir()?;
+    let agents_path = root.join(AGENTS_DIR);
+
+    if !agents_path.exists() {
+        return Ok(());
+    }
+
+    let mut changed = false;
+
+    for entry in WalkDir::new(&agents_path).min_depth(1).max_depth(1) {
+        let entry = entry?;
+        if !entry.file_type().is_file() {
+            continue;
+        }
+
+        let path = entry.path();
+        if path.extension().map(|e| e.to_str()) != Some(Some("md")) {
+            continue;
+        }
+
+        let slug = path.file_stem().unwrap_or_default().to_string_lossy().to_string();
+
+        if format_agent(&slug, path)? {
+            println!("formatted {}", path.display());
+            changed = true;
+        }
+    }
+
+    if changed {
+        // Return error to signal pre-commit that files were modified
+        std::process::exit(1);
+    }
+
+    Ok(())
+}
+
+fn format_agent(slug: &str, path: &Path) -> Result<bool> {
+    let content = fs::read_to_string(path)?;
+    let (fm_str, body) = match split_frontmatter(&content) {
+        Some((f, b)) => (f, b),
+        None => {
+            // Synthesize minimal frontmatter
+            let fm = AgentFrontmatter {
+                name: slug.to_string(),
+                description: format!("Agent for {}. Please update description.", slug),
+                tools: None,
+                model: None,
+                permission_mode: None,
+                skills: None,
+                extra: BTreeMap::new(),
+            };
+            let fm_str = serde_yaml::to_string(&fm)?;
+            let new_content = format!("---\n{}---\n\n{}", fm_str, content.trim_start());
+            fs::write(path, new_content)?;
+            return Ok(true);
+        }
+    };
+
+    // Parse existing frontmatter to preserve values
+    // Use a BTreeMap to preserve everything, then reconstruct
+    let mut fm_map: BTreeMap<String, serde_yaml::Value> = match serde_yaml::from_str(fm_str) {
+        Ok(map) => map,
+        Err(_) => return Ok(false), // Let lint catch invalid YAML
+    };
+
+    // Ensure required fields
+    if !fm_map.contains_key("name") {
+        fm_map.insert("name".to_string(), serde_yaml::Value::String(slug.to_string()));
+    }
+    if !fm_map.contains_key("description") {
+        fm_map.insert(
+            "description".to_string(),
+            serde_yaml::Value::String(format!("Agent for {}. Please update description.", slug)),
+        );
+    }
+
+    // Reconstruct with specific order: name, description, tools, model, permissionMode, skills
+    let mut ordered_map = serde_yaml::Mapping::new();
+
+    // Helper to move key from source to target
+    let mut move_key = |key: &str| {
+        if let Some(val) = fm_map.remove(key) {
+            ordered_map.insert(serde_yaml::Value::String(key.to_string()), val);
+        }
+    };
+
+    move_key("name");
+    move_key("description");
+    move_key("tools");
+    move_key("model");
+    move_key("permissionMode");
+    move_key("skills");
+
+    // Add remaining keys
+    for (k, v) in fm_map {
+        ordered_map.insert(serde_yaml::Value::String(k), v);
+    }
+
+    let new_fm_str = serde_yaml::to_string(&ordered_map)?;
+
+    // Normalize body: ensure exactly one blank line after frontmatter
+    let body = body.trim_start();
+    let new_content = format!("---\n{}---\n\n{}", new_fm_str, body);
+
+    if new_content != content {
+        fs::write(path, new_content)?;
+        return Ok(true);
+    }
+
+    Ok(false)
+}
 
 pub fn run_lint() -> Result<()> {
     let root = std::env::current_dir()?;

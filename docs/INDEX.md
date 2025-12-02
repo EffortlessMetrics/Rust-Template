@@ -70,9 +70,13 @@ New to this repository? Start here:
 - **[Add Governance to Existing Repo](how-to/add-governance-to-existing-repo.md)** - Brownfield adoption (complete guide)
 - **[Create New Service from Template](how-to/new-service-from-template.md)** - Greenfield instantiation
 - **[Pre-Fork Checklist](how-to/pre-fork-checklist.md)** - Before forking this template
-- **[Change Template Opinions in Your Fork](how-to/change-template-opinion.md)** - Override or relax template opinions safely
-- **[Report Fork Feedback](how-to/report-fork-feedback.md)** - How to report issues and improvements
 - **[Second Service LLM Sanity Check](how-to/second-service-llm-sanity.md)** - Validating second service with LLM assistance
+
+### Fork Customization (Complete Guide)
+- **[First Fork Guide](how-to/FIRST_FORK.md)** - Complete first-time fork setup (20 min)
+- **[Change Template Opinions](how-to/change-template-opinion.md)** - Override or relax template defaults safely (with worked examples)
+- **[Reconcile Kernel Updates](how-to/reconcile-kernel-updates.md)** - Pull upstream fixes without losing customizations
+- **[Report Fork Feedback](how-to/report-fork-feedback.md)** - How to report issues and improvements
 
 ### Development Workflows
 - **[Add Acceptance Criterion](how-to/add-acceptance-criterion.md)** - Creating new ACs in the spec ledger

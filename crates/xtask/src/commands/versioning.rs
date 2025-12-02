@@ -51,12 +51,12 @@ impl Version {
     }
 
     /// Convert to git tag format (vX.Y.Z).
-    pub fn to_tag(&self) -> String {
+    pub fn to_tag(self) -> String {
         format!("v{}.{}.{}", self.major, self.minor, self.patch)
     }
 
     /// Convert to kernel tag format (vX.Y.Z-kernel).
-    pub fn to_kernel_tag(&self) -> String {
+    pub fn to_kernel_tag(self) -> String {
         format!("v{}.{}.{}-kernel", self.major, self.minor, self.patch)
     }
 }
@@ -108,6 +108,9 @@ impl VersionInfo {
     }
 
     /// Create VersionInfo with a specific date.
+    /// Future: Used when implementing retroactive version updates for historical releases.
+    /// Currently only used in tests. See TASK-DX-VERSION-HISTORY for version history features.
+    #[allow(dead_code)]
     pub fn with_date(version_str: &str, date: &str) -> Result<Self> {
         let version = Version::parse(version_str)?;
         Ok(Self {
@@ -135,7 +138,10 @@ pub struct FilePattern {
     /// Human-readable marker to locate the line
     pub marker: String,
     /// Pattern type: yaml_value, heading_version, inline_version, etc.
+    /// Future: Used when implementing pattern-based version replacement strategies.
+    /// See AC-KERN-VERSION-UPDATE for version update automation requirements.
     #[serde(rename = "type")]
+    #[allow(dead_code)]
     pub pattern_type: String,
     /// Format style: quoted, prefixed, prefixed_paren, etc.
     pub format: String,
@@ -145,8 +151,10 @@ pub struct FilePattern {
     /// Example of the expected format
     #[serde(default)]
     pub example: Option<String>,
-    /// Additional notes
+    /// Additional notes about the pattern.
+    /// Future: Displayed in version manifest validation errors for better UX.
     #[serde(default)]
+    #[allow(dead_code)]
     pub notes: Option<String>,
 }
 
@@ -156,19 +164,26 @@ pub struct FilePattern {
 pub struct VersionTarget {
     /// Path to the file
     pub path: String,
-    /// Description of the file's purpose
+    /// Description of the file's purpose.
+    /// Future: Displayed in version update UI and validation reports.
     #[serde(default)]
+    #[allow(dead_code)]
     pub description: Option<String>,
     /// Patterns to match and update
     pub patterns: Vec<FilePattern>,
     /// Whether this file is required to exist
     #[serde(default = "default_true")]
     pub required: bool,
-    /// Update priority (1=highest)
+    /// Update priority (1=highest).
+    /// Future: Used when implementing ordered version updates across files.
+    /// See TASK-DX-VERSION-ORDERING for version update sequencing.
     #[serde(default = "default_priority")]
+    #[allow(dead_code)]
     pub priority: u32,
-    /// Additional notes
+    /// Additional notes about this file.
+    /// Future: Displayed in version update reports and validation errors.
     #[serde(default)]
+    #[allow(dead_code)]
     pub notes: Option<String>,
 }
 
@@ -181,10 +196,18 @@ fn default_priority() -> u32 {
 }
 
 /// Version format specification.
+/// Future: Used when implementing custom version formats and validation.
+/// See TASK-DX-VERSION-FORMATS for planned version format features.
 #[derive(Debug, Clone, Deserialize)]
 pub struct VersionFormat {
+    /// Regex pattern for valid version strings.
+    /// Future: Used in version validation and custom format support.
+    #[allow(dead_code)]
     pub pattern: String,
+    /// Example version strings matching this format.
+    /// Future: Displayed in version validation error messages.
     #[serde(default)]
+    #[allow(dead_code)]
     pub examples: Vec<String>,
 }
 
@@ -192,10 +215,20 @@ pub struct VersionFormat {
 /// Matches the structure in specs/version_manifest.yaml.
 #[derive(Debug, Clone, Deserialize)]
 pub struct VersionManifest {
+    /// Schema version for version manifest format.
+    /// Future: Used for version manifest migration and compatibility checks.
+    #[allow(dead_code)]
     pub schema_version: String,
+    /// Human-readable description of the version manifest.
+    /// Future: Displayed in version manifest validation reports.
     #[serde(default)]
+    #[allow(dead_code)]
     pub description: Option<String>,
+    /// Custom version format specification.
+    /// Future: Enables custom version formats beyond semantic versioning.
+    /// See TASK-DX-VERSION-FORMATS for custom format support.
     #[serde(default)]
+    #[allow(dead_code)]
     pub version_format: Option<VersionFormat>,
     pub files: Vec<VersionTarget>,
 }

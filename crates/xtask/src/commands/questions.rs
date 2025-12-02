@@ -82,7 +82,9 @@ pub struct QuestionStats {
 }
 
 impl Question {
-    /// Create a new question with current timestamp
+    /// Create a new question with current timestamp.
+    /// Future: Used when implementing agent-driven question capture in flows.
+    /// See TASK-DX-QUESTION-CAPTURE for planned question automation.
     #[allow(dead_code)]
     pub fn new(
         id: String,
@@ -115,7 +117,9 @@ impl Question {
         }
     }
 
-    /// Save question to YAML file in questions/ directory
+    /// Save question to YAML file in questions/ directory.
+    /// Future: Used when implementing agent-driven question capture in flows.
+    /// See TASK-DX-QUESTION-CAPTURE for planned question automation.
     #[allow(dead_code)]
     pub fn save(&self) -> Result<PathBuf> {
         let questions_dir = Path::new("questions");
@@ -222,7 +226,9 @@ struct QuestionStatsJson {
     obsolete: usize,
 }
 
-/// List questions filtered by status
+/// List questions filtered by status.
+/// Future: Exposed via `cargo xtask questions-list` CLI command.
+/// See TASK-DX-QUESTIONS-CLI for planned questions management commands.
 #[allow(dead_code)]
 pub fn list_questions(status_filter: Option<&str>, json: bool) -> Result<()> {
     let questions = load_all_questions()?;
@@ -301,7 +307,9 @@ pub fn list_questions(status_filter: Option<&str>, json: bool) -> Result<()> {
     Ok(())
 }
 
-/// Get next question ID for a given flow category
+/// Get next question ID for a given flow category.
+/// Future: Used when implementing agent-driven question capture in flows.
+/// See TASK-DX-QUESTION-CAPTURE for planned question automation.
 #[allow(dead_code)]
 pub fn get_next_question_id(category: &str) -> Result<usize> {
     let questions = load_all_questions()?;
@@ -318,7 +326,9 @@ pub fn get_next_question_id(category: &str) -> Result<usize> {
     Ok(max_id + 1)
 }
 
-/// Emit a question artifact from a flow
+/// Emit a question artifact from a flow.
+/// Future: Used when implementing agent-driven question capture in flows.
+/// See TASK-DX-QUESTION-CAPTURE for planned question automation.
 #[allow(dead_code)]
 pub fn emit_question(question: Question) -> Result<()> {
     let filepath = question.save()?;

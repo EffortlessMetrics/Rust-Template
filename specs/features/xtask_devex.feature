@@ -65,19 +65,67 @@ Feature: Developer Experience Commands
     And the output should contain "Recommendations"
 
   @AC-PLT-ENV-ABI-CHECK
-  Scenario: doctor detects ABI compatibility and reports status
+  Scenario: doctor shows structured environment sections
     Given I am in a clean workspace
     When I run "cargo xtask doctor"
     Then the command should succeed
-    And the output should contain "Rust"
-    And the output should mention ABI or toolchain status
+    And the output should contain "Environment:"
+    And the output should contain "ABI Compatibility:"
+    And the output should contain "Build Configuration:"
+    And the output should contain "Required Tools:"
+
+  @AC-PLT-ENV-ABI-CHECK
+  Scenario: doctor detects environment type
+    Given I am in a clean workspace
+    When I run "cargo xtask doctor"
+    Then the command should succeed
+    And the output should contain "Environment type"
+    And the output should mention either "Nix devshell" or "Native"
+
+  @AC-PLT-ENV-ABI-CHECK
+  Scenario: doctor checks toolchain ABI compatibility
+    Given I am in a clean workspace
+    When I run "cargo xtask doctor"
+    Then the command should succeed
+    And the output should contain "Toolchain ABI"
+    And the output should show ABI check result
+
+  @AC-PLT-ENV-ABI-CHECK
+  Scenario: doctor checks glibc version on Linux
+    Given I am in a clean workspace
+    When I run "cargo xtask doctor"
+    Then the command should succeed
+    And the output should contain "glibc compatibility"
+    And the output should show glibc status
+
+  @AC-PLT-ENV-ABI-CHECK
+  Scenario: doctor checks libz.so.1 availability
+    Given I am in a clean workspace
+    When I run "cargo xtask doctor"
+    Then the command should succeed
+    And the output should contain "libz.so.1 available"
 
   @AC-PLT-ENV-SCCACHE-WARN
-  Scenario: doctor provides workaround guidance for sccache issues
+  Scenario: doctor reports sccache status
+    Given I am in a clean workspace
+    When I run "cargo xtask doctor"
+    Then the command should succeed
+    And the output should contain "sccache status"
+
+  @AC-PLT-ENV-SCCACHE-WARN
+  Scenario: doctor provides TROUBLESHOOTING.md reference when warnings found
     Given I am in a clean workspace
     When I run "cargo xtask doctor"
     Then the command should succeed
     And the output should contain "Recommendations"
+    And if warnings exist then output should mention "TROUBLESHOOTING.md"
+
+  @AC-PLT-ENV-ABI-CHECK
+  Scenario: doctor reports exit code status
+    Given I am in a clean workspace
+    When I run "cargo xtask doctor"
+    Then the command should succeed
+    And the output should contain "Exit code:"
 
   @AC-PLT-002
   Scenario: help-flows renders DevEx flows grouped by category

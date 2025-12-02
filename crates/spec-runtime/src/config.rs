@@ -1,3 +1,8 @@
+//! Configuration schema validation and runtime config management.
+//!
+//! This module provides schema-driven configuration validation, ensuring that config files
+//! conform to a defined schema before being used by the application.
+
 use anyhow::{Context, Result, anyhow, bail};
 use serde::Deserialize;
 use serde_yaml::Value;
@@ -5,11 +10,19 @@ use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
 
+/// A validated configuration instance with typed fields and merged settings/secrets.
+///
+/// This is the result of validating a config file against a schema. All required
+/// fields have been checked, types validated, and defaults applied.
 #[derive(Debug, Clone, PartialEq)]
 pub struct ValidatedConfig {
+    /// Optional environment identifier (e.g., "local", "dev", "prod").
     pub env: Option<String>,
+    /// HTTP server port (defaults to 8080 if not specified).
     pub http_port: u16,
+    /// Application settings as key-value pairs (merged from schema + config).
     pub settings: HashMap<String, Value>,
+    /// Application secrets as string key-value pairs.
     pub secrets: HashMap<String, String>,
 }
 
@@ -55,7 +68,37 @@ fn required_true() -> bool {
     true
 }
 
-/// Validate a concrete config file against the schema. Returns a typed, merged view.
+/// Validate a configuration file against a schema.
+///
+/// This function reads both the schema and config files, validates that all required
+/// fields are present, checks types, applies defaults, and returns a merged [`ValidatedConfig`].
+///
+/// # Arguments
+///
+/// * `schema_path` - Path to the config schema YAML file (e.g., `specs/config_schema.yaml`)
+/// * `config_path` - Path to the config YAML file (e.g., `config/local.yaml`)
+///
+/// # Returns
+///
+/// Returns a [`ValidatedConfig`] with all settings and secrets validated and merged.
+///
+/// # Errors
+///
+/// Returns an error if:
+/// - Either file is missing or malformed YAML
+/// - Required fields are missing
+/// - Field types don't match the schema
+/// - Environment validation fails
+///
+/// # Example
+///
+/// ```ignore
+/// let config = validate_config(
+///     Path::new("specs/config_schema.yaml"),
+///     Path::new("config/local.yaml")
+/// )?;
+/// println!("HTTP port: {}", config.http_port);
+/// ```
 pub fn validate_config(schema_path: &Path, config_path: &Path) -> Result<ValidatedConfig> {
     if !schema_path.exists() {
         bail!("Config schema not found at {}", schema_path.display());

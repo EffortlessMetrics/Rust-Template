@@ -12,10 +12,10 @@ tonic = { version = "0.14.2", features = ["transport"] }
 tonic-prost = "0.14.2"
 prost = "0.14.1"
 prost-types = "0.14.1"
-tokio = { version = "1.48.0", features = ["macros", "rt-multi-thread", "sync"] }
+tokio = { version = "1.48.0", features = ["macros", "rt-multi-thread", "sync", "time"] }
 model = { path = "../model" }
 business-core = { path = "../business-core" }
-tracing = "0.1.41"
+tracing = { workspace = true }
 uuid = "1.18.1"
 
 [build-dependencies]

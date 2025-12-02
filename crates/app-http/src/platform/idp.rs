@@ -202,8 +202,6 @@ fn generate_snapshot(root: &std::path::Path) -> anyhow::Result<IdpSnapshot> {
     // Determine overall governance status
     let status = if ac_coverage.failing > 0 {
         "degraded".to_string()
-    } else if ac_coverage.passing > 0 && ac_coverage.unknown == 0 {
-        "healthy".to_string()
     } else {
         "healthy".to_string() // No failures is still healthy
     };

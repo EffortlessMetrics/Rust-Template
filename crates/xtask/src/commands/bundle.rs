@@ -88,6 +88,9 @@ struct SpecTest {
 
 #[derive(Debug, Deserialize)]
 struct SpecRequirement {
+    /// Requirement ID from spec_ledger.yaml.
+    /// Currently only used for deserialization; ID not needed in bundle generation.
+    /// Future: Used in bundle metadata and dependency tracking.
     #[allow(dead_code)]
     id: String,
     acceptance_criteria: Vec<SpecAc>,

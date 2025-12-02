@@ -9,8 +9,21 @@ pub fn run() -> Result<()> {
     let mut issues = 0;
     let mut warnings = 0;
 
+    // Environment Section: Detect Nix vs native, rustc version, sccache status
+    println!("{}", "Environment:".bold());
+
+    // Detect environment type (Nix devshell vs native)
+    print!("  Environment type... ");
+    let in_nix_shell = std::env::var("IN_NIX_SHELL").is_ok();
+    if in_nix_shell {
+        println!("{} {}", "✓".green(), "Nix devshell".dimmed());
+    } else {
+        println!("{} {}", "⚠".yellow(), "Native (Nix recommended)".dimmed());
+        warnings += 1;
+    }
+
     // Check Rust version
-    print!("Rust toolchain... ");
+    print!("  Rust toolchain... ");
     match check_rust_version() {
         Ok(version) => println!("{} {}", "✓".green(), version.dimmed()),
         Err(e) => {
@@ -19,8 +32,23 @@ pub fn run() -> Result<()> {
         }
     }
 
+    // Check sccache health
+    print!("  sccache status... ");
+    match check_sccache_health() {
+        Ok(msg) => println!("{} {}", "✓".green(), msg.dimmed()),
+        Err(warning) => {
+            println!("{} {}", "⚠".yellow(), warning);
+            warnings += 1;
+        }
+    }
+
+    println!();
+
+    // ABI Compatibility Section: Detect mismatches between system and Nix rustc
+    println!("{}", "ABI Compatibility:".bold());
+
     // Check ABI consistency (system rustc vs Nix rustc)
-    print!("Toolchain ABI consistency... ");
+    print!("  Toolchain ABI... ");
     match check_abi_consistency() {
         Ok(msg) => println!("{} {}", "✓".green(), msg.dimmed()),
         Err(warning) => {
@@ -29,8 +57,33 @@ pub fn run() -> Result<()> {
         }
     }
 
+    // Check glibc version compatibility (Linux only)
+    print!("  glibc compatibility... ");
+    match check_glibc_compatibility() {
+        Ok(msg) => println!("{} {}", "✓".green(), msg.dimmed()),
+        Err(warning) => {
+            println!("{} {}", "⚠".yellow(), warning);
+            warnings += 1;
+        }
+    }
+
+    // Check libz.so.1 availability (common sccache issue)
+    print!("  libz.so.1 available... ");
+    match check_libz_availability() {
+        Ok(msg) => println!("{} {}", "✓".green(), msg.dimmed()),
+        Err(warning) => {
+            println!("{} {}", "⚠".yellow(), warning);
+            warnings += 1;
+        }
+    }
+
+    println!();
+
+    // Build Configuration Section
+    println!("{}", "Build Configuration:".bold());
+
     // Check Cargo version
-    print!("Cargo... ");
+    print!("  Cargo... ");
     match which::which("cargo") {
         Ok(_) => {
             let output = Command::new("cargo").arg("--version").output()?;
@@ -43,8 +96,37 @@ pub fn run() -> Result<()> {
         }
     }
 
+    // Check Rust edition
+    print!("  Rust edition... ");
+    if std::fs::read_to_string("Cargo.toml")?.contains("edition = \"2024\"") {
+        println!("{} 2024", "✓".green());
+    } else {
+        println!("{} Unexpected edition", "⚠".yellow());
+        warnings += 1;
+    }
+
+    // Check CI/Low-resource modes
+    print!("  CI mode... ");
+    if crate::env::is_ci() {
+        println!("{} Running in CI", "✓".green());
+    } else {
+        println!("{} Local development", "✓".green());
+    }
+
+    print!("  XTASK_LOW_RESOURCES... ");
+    if crate::env::is_low_resources() {
+        println!("{} Enabled (reduced parallelism)", "✓".green());
+    } else {
+        println!("{} Not set (using full resources)", "✓".green());
+    }
+
+    println!();
+
+    // Required Tools Section
+    println!("{}", "Required Tools:".bold());
+
     // Check Nix
-    print!("Nix... ");
+    print!("  Nix... ");
     match which::which("nix") {
         Ok(_) => {
             let output = Command::new("nix").args(["--version"]).output()?;
@@ -58,7 +140,7 @@ pub fn run() -> Result<()> {
     }
 
     // Check conftest (policy tests)
-    print!("conftest (policy tests)... ");
+    print!("  conftest (policy tests)... ");
     match which::which("conftest") {
         Ok(_) => {
             let output = Command::new("conftest").args(["--version"]).output()?;
@@ -71,18 +153,8 @@ pub fn run() -> Result<()> {
         }
     }
 
-    // Check cargo-hakari
-    print!("cargo-hakari... ");
-    let has_cargo_hakari = which::which("cargo-hakari").is_ok();
-    if has_cargo_hakari {
-        println!("{} Installed", "✓".green());
-    } else {
-        println!("{} Not found (optional, install: cargo install cargo-hakari)", "⚠".yellow());
-        warnings += 1;
-    }
-
     // Check git
-    print!("git... ");
+    print!("  git... ");
     match which::which("git") {
         Ok(_) => {
             let output = Command::new("git").args(["--version"]).output()?;
@@ -96,56 +168,31 @@ pub fn run() -> Result<()> {
     }
 
     println!();
-    println!("{}", "Environment Checks:".bold());
 
-    // Check if inside Nix shell
-    print!("IN_NIX_SHELL... ");
-    if std::env::var("IN_NIX_SHELL").is_ok() {
-        println!("{} Running in Nix devshell", "✓".green());
+    // Optional Tools Section
+    println!("{}", "Optional Tools:".bold());
+
+    // Check cargo-hakari
+    print!("  cargo-hakari... ");
+    let has_cargo_hakari = which::which("cargo-hakari").is_ok();
+    if has_cargo_hakari {
+        println!("{} Installed", "✓".green());
     } else {
-        println!("{} Not in Nix shell (run: nix develop)", "⚠".yellow());
+        println!("{} Not found (install: cargo install cargo-hakari)", "⚠".yellow());
         warnings += 1;
     }
 
-    // Check CI environment
-    print!("CI mode... ");
-    if crate::env::is_ci() {
-        println!("{} Running in CI", "✓".green());
-    } else {
-        println!("{} Local development", "✓".green());
-    }
-
-    // Check low-resource mode
-    print!("XTASK_LOW_RESOURCES... ");
-    if crate::env::is_low_resources() {
-        println!("{} Enabled (reduced parallelism)", "✓".green());
-    } else {
-        println!("{} Not set (using full resources)", "✓".green());
-    }
-
-    // Check sccache health
-    print!("sccache health... ");
-    match check_sccache_health() {
-        Ok(msg) => println!("{} {}", "✓".green(), msg.dimmed()),
-        Err(warning) => {
-            println!("{} {}", "⚠".yellow(), warning);
-            warnings += 1;
-        }
-    }
-
-    // Check Rust edition
-    print!("Rust edition... ");
-    if std::fs::read_to_string("Cargo.toml")?.contains("edition = \"2024\"") {
-        println!("{} 2024", "✓".green());
-    } else {
-        println!("{} Unexpected edition", "⚠".yellow());
-        warnings += 1;
-    }
-
-    // Summary with next steps
+    // Summary with next steps and exit codes
     println!();
     if issues == 0 && warnings == 0 {
         println!("{}", "✓ Environment checks passed!".green().bold());
+        println!();
+        println!("{}", "Recommendations:".bold());
+        println!("  • Fast dev loop:  {}", "cargo xtask check".cyan());
+        println!("  • Before pushing: {}", "cargo xtask selftest".cyan());
+        println!("  • See all flows:  {}", "cargo xtask help-flows".cyan());
+        println!();
+        println!("{}", "Exit code: 0 (all checks passed)".dimmed());
     } else {
         if issues > 0 {
             println!("{} {} critical issue(s) found", "✗".red().bold(), issues);
@@ -153,29 +200,28 @@ pub fn run() -> Result<()> {
         if warnings > 0 {
             println!("{}", "⚠ Environment functional with warnings".yellow().bold());
         }
-    }
 
-    // Always show recommendations section
-    println!();
-    println!("{}", "Recommendations:".bold());
+        // Always show recommendations section when there are issues or warnings
+        println!();
+        println!("{}", "Recommendations:".bold());
 
-    if issues == 0 && warnings == 0 {
-        println!("  • Fast dev loop:  {}", "cargo xtask check".cyan());
-        println!("  • Before pushing: {}", "cargo xtask selftest".cyan());
-        println!("  • See all flows:  {}", "cargo xtask help-flows".cyan());
-    } else {
         if !has_cargo_hakari {
             println!("  • Install hakari: {}", "cargo install cargo-hakari".dimmed());
         }
-        if std::env::var("IN_NIX_SHELL").is_err() {
+        if !in_nix_shell {
             println!("  • Enter Nix shell: {}", "nix develop".cyan());
             println!("    {}", "(Provides hermetic tools + policy tests)".dimmed());
         }
         println!("  • View flows: {}", "cargo xtask help-flows".cyan());
-    }
+        println!("  • Troubleshooting: {}", "docs/TROUBLESHOOTING.md".dimmed());
 
-    if issues > 0 {
-        anyhow::bail!("{} critical environment issue(s)", issues);
+        println!();
+        if issues > 0 {
+            println!("{}", "Exit code: 1 (critical issues found)".dimmed());
+            anyhow::bail!("{} critical environment issue(s)", issues);
+        } else {
+            println!("{}", "Exit code: 0 (warnings only, functional)".dimmed());
+        }
     }
 
     Ok(())
@@ -285,6 +331,71 @@ fn check_sccache_health() -> Result<String, String> {
                     e
                 )),
             }
+        }
+    }
+}
+
+fn check_glibc_compatibility() -> Result<String, String> {
+    // Only relevant on Linux
+    #[cfg(not(target_os = "linux"))]
+    {
+        return Ok("N/A (not Linux)".to_string());
+    }
+
+    #[cfg(target_os = "linux")]
+    {
+        // Check if we can read glibc version
+        let output = Command::new("ldd")
+            .arg("--version")
+            .output()
+            .map_err(|e| format!("Failed to check glibc: {}", e))?;
+
+        let version_output = String::from_utf8_lossy(&output.stdout);
+
+        // Extract glibc version from output like "ldd (GNU libc) 2.35"
+        if let Some(line) = version_output.lines().next() {
+            if line.contains("GNU libc") || line.contains("GLIBC") {
+                // Extract version number
+                let parts: Vec<&str> = line.split_whitespace().collect();
+                if let Some(version) = parts.last() {
+                    Ok(format!("glibc {}", version))
+                } else {
+                    Ok("glibc detected".to_string())
+                }
+            } else {
+                Err("Non-glibc libc detected (e.g., musl). May cause compatibility issues."
+                    .to_string())
+            }
+        } else {
+            Err("Could not determine glibc version".to_string())
+        }
+    }
+}
+
+fn check_libz_availability() -> Result<String, String> {
+    // Only relevant on Linux
+    #[cfg(not(target_os = "linux"))]
+    {
+        return Ok("N/A (not Linux)".to_string());
+    }
+
+    #[cfg(target_os = "linux")]
+    {
+        // Check if libz.so.1 is available (common sccache dependency issue)
+        let output = Command::new("ldconfig")
+            .args(["-p"])
+            .output()
+            .map_err(|e| format!("Failed to check libz: {}", e))?;
+
+        let libs = String::from_utf8_lossy(&output.stdout);
+
+        if libs.contains("libz.so.1") {
+            Ok("libz.so.1 found".to_string())
+        } else {
+            Err("libz.so.1 not found. This may cause sccache errors.\n      \
+                 Fix: Install zlib (e.g., 'apt install zlib1g' on Ubuntu)\n      \
+                 See: docs/TROUBLESHOOTING.md §sccache"
+                .to_string())
         }
     }
 }

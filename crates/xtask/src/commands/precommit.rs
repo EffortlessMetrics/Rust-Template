@@ -149,6 +149,27 @@ fn run_skills_lint_if_changed() -> Result<()> {
     Ok(())
 }
 
+fn stage_agent_docs_if_modified() -> Result<()> {
+    let out = Command::new("git")
+        .args(["diff", "--name-only", "--", ".claude/agents"])
+        .output()
+        .context("failed to run git diff for agents")?;
+
+    let changed = String::from_utf8_lossy(&out.stdout);
+    let files: Vec<&str> = changed.lines().map(str::trim).filter(|p| !p.is_empty()).collect();
+
+    if files.is_empty() {
+        return Ok(());
+    }
+
+    println!("{} Staging formatted Agents:", "✓".green());
+    for f in &files {
+        println!("  - {}", f);
+        Command::new("git").args(["add", f]).status()?;
+    }
+    Ok(())
+}
+
 fn run_agents_lint_if_changed() -> Result<()> {
     // Check if any Agents-related files have changed (both staged and unstaged)
     let paths_to_check = [
@@ -188,7 +209,19 @@ fn run_agents_lint_if_changed() -> Result<()> {
         return Ok(());
     }
 
-    // Run agents lint (with errors causing failure)
+    // Run Agents format first
+    match crate::commands::agents::run_fmt() {
+        Ok(_) => {}
+        Err(_) => {
+            // Agents fmt exits with code 1 if files were modified, which is expected
+            println!("{} Agents format applied (files were modified)", "✓".green());
+        }
+    }
+
+    // Auto-stage any formatted agent files
+    stage_agent_docs_if_modified()?;
+
+    // Then run lint (with errors causing failure)
     match crate::commands::agents::run_lint() {
         Ok(_) => {
             println!("{} Agents governance check passed", "✓".green());
