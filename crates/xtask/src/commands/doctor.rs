@@ -238,7 +238,7 @@ fn check_abi_consistency() -> Result<String, String> {
 
 fn extract_version_number(version_output: &str) -> String {
     // Extract version number from "rustc X.Y.Z (hash date)" format
-    version_output.trim().split_whitespace().nth(1).unwrap_or("unknown").to_string()
+    version_output.split_whitespace().nth(1).unwrap_or("unknown").to_string()
 }
 
 fn check_sccache_health() -> Result<String, String> {
@@ -269,11 +269,10 @@ fn check_sccache_health() -> Result<String, String> {
                         // sccache command failed, check for libz.so.1 error
                         let stderr = String::from_utf8_lossy(&output.stderr);
                         if stderr.contains("libz.so.1") {
-                            Err(format!(
-                                "sccache libz.so.1 error detected\n      \
+                            Err("sccache libz.so.1 error detected\n      \
                                 Workaround: unset RUSTC_WRAPPER=\"\" in current shell\n      \
                                 See: docs/TROUBLESHOOTING.md §sccache"
-                            ))
+                                .to_string())
                         } else {
                             Err(format!("sccache failed: {}", stderr.trim()))
                         }

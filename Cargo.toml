@@ -11,7 +11,7 @@ homepage = "https://github.com/effortlessmetrics/rust-as-spec"
 repository = "https://github.com/effortlessmetrics/rust-as-spec"
 authors = ["EffortlessSteven"]
 documentation = "https://docs.rs/as-spec"
-version = "3.3.4"
+version = "3.3.6"
 
 [workspace.lints.rust]
 unused = { level = "deny", priority = -1 }

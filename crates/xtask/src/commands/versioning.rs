@@ -24,11 +24,6 @@ pub struct Version {
 }
 
 impl Version {
-    /// Create a new Version.
-    pub fn new(major: u32, minor: u32, patch: u32) -> Self {
-        Self { major, minor, patch }
-    }
-
     /// Parse a version string in X.Y.Z format.
     pub fn parse(s: &str) -> Result<Self> {
         let s = s.trim();
@@ -90,11 +85,6 @@ impl Ord for Version {
     }
 }
 
-/// Validate a version string format and return the parsed Version.
-pub fn validate_version_format(version: &str) -> Result<Version> {
-    Version::parse(version)
-}
-
 /// Complete version information including tags and date.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct VersionInfo {
@@ -136,13 +126,6 @@ pub struct FileEdit {
     pub line_number: usize,
     pub old_text: String,
     pub new_text: String,
-}
-
-impl FileEdit {
-    /// Format a preview of this edit for dry-run display.
-    pub fn format_preview(&self) -> String {
-        format!("{}:{}\n  - {}\n  + {}", self.path, self.line_number, self.old_text, self.new_text)
-    }
 }
 
 /// Pattern for version replacement in a file.
@@ -217,11 +200,6 @@ pub struct VersionManifest {
     pub files: Vec<VersionTarget>,
 }
 
-/// Source of truth for version information.
-pub const VERSION_SOURCE_OF_TRUTH: &str = "specs/spec_ledger.yaml";
-pub const VERSION_PATH: &str = "metadata.template_version";
-pub const DATE_PATH: &str = "metadata.last_updated";
-
 impl VersionManifest {
     /// Load the version manifest from specs/version_manifest.yaml.
     /// Searches from repo root (determined via CARGO_MANIFEST_DIR for xtask).
@@ -257,52 +235,6 @@ impl VersionManifest {
         serde_yaml::from_str(&content)
             .with_context(|| format!("Failed to parse {}", manifest_path.display()))
     }
-
-    /// Extract the current version from the source of truth file (specs/spec_ledger.yaml).
-    pub fn extract_current_version(&self) -> Result<VersionInfo> {
-        let content = fs::read_to_string(VERSION_SOURCE_OF_TRUTH).with_context(|| {
-            format!("Failed to read source of truth: {}", VERSION_SOURCE_OF_TRUTH)
-        })?;
-
-        let yaml: serde_yaml::Value = serde_yaml::from_str(&content)
-            .with_context(|| format!("Failed to parse {}", VERSION_SOURCE_OF_TRUTH))?;
-
-        // Extract version using dot-notation path
-        let version = extract_yaml_value(&yaml, VERSION_PATH)
-            .with_context(|| format!("Failed to extract version at {}", VERSION_PATH))?;
-
-        // Extract date using dot-notation path
-        let date = extract_yaml_value(&yaml, DATE_PATH)
-            .with_context(|| format!("Failed to extract date at {}", DATE_PATH))?;
-
-        VersionInfo::with_date(&version, &date)
-    }
-
-    /// Get files sorted by priority (lowest number = highest priority).
-    pub fn files_by_priority(&self) -> Vec<&VersionTarget> {
-        let mut files: Vec<_> = self.files.iter().collect();
-        files.sort_by_key(|f| f.priority);
-        files
-    }
-}
-
-/// Extract a value from YAML using dot-notation path (e.g., "metadata.template_version").
-fn extract_yaml_value(yaml: &serde_yaml::Value, path: &str) -> Result<String> {
-    // Handle optional JSONPath-style prefix
-    let path = path.strip_prefix("$.").unwrap_or(path);
-
-    let parts: Vec<&str> = path.split('.').collect();
-    let mut current = yaml;
-
-    for part in parts {
-        current =
-            current.get(part).with_context(|| format!("Key '{}' not found in YAML path", part))?;
-    }
-
-    current
-        .as_str()
-        .map(|s| s.to_string())
-        .with_context(|| format!("Value at '{}' is not a string", path))
 }
 
 /// Generate the new line by substituting version in the example pattern.
@@ -525,28 +457,28 @@ mod tests {
 
     #[test]
     fn test_version_to_string() {
-        let v = Version::new(3, 3, 5);
+        let v = Version::parse("3.3.5").unwrap();
         assert_eq!(v.to_string(), "3.3.5");
     }
 
     #[test]
     fn test_version_to_tag() {
-        let v = Version::new(3, 3, 5);
+        let v = Version::parse("3.3.5").unwrap();
         assert_eq!(v.to_tag(), "v3.3.5");
     }
 
     #[test]
     fn test_version_to_kernel_tag() {
-        let v = Version::new(3, 3, 5);
+        let v = Version::parse("3.3.5").unwrap();
         assert_eq!(v.to_kernel_tag(), "v3.3.5-kernel");
     }
 
     #[test]
     fn test_version_comparison() {
-        let v1 = Version::new(1, 0, 0);
-        let v2 = Version::new(2, 0, 0);
-        let v3 = Version::new(1, 1, 0);
-        let v4 = Version::new(1, 0, 1);
+        let v1 = Version::parse("1.0.0").unwrap();
+        let v2 = Version::parse("2.0.0").unwrap();
+        let v3 = Version::parse("1.1.0").unwrap();
+        let v4 = Version::parse("1.0.1").unwrap();
 
         assert!(v1 < v2);
         assert!(v1 < v3);
@@ -571,20 +503,6 @@ mod tests {
         assert_eq!(info.date, "2025-12-01");
     }
 
-    #[test]
-    fn test_file_edit_preview() {
-        let edit = FileEdit {
-            path: "README.md".to_string(),
-            line_number: 5,
-            old_text: "version: 3.3.5".to_string(),
-            new_text: "version: 3.3.6".to_string(),
-        };
-        let preview = edit.format_preview();
-        assert!(preview.contains("README.md:5"));
-        assert!(preview.contains("3.3.5"));
-        assert!(preview.contains("3.3.6"));
-    }
-
     // === A2 Tests: Manifest Loading, Plan Generation, Apply Changes ===
 
     #[test]
@@ -601,24 +519,6 @@ mod tests {
         // Check that spec_ledger.yaml is in the files list
         let has_spec_ledger = manifest.files.iter().any(|f| f.path.contains("spec_ledger.yaml"));
         assert!(has_spec_ledger, "Manifest should include spec_ledger.yaml");
-    }
-
-    #[test]
-    fn test_manifest_files_by_priority() {
-        let manifest = VersionManifest::load().expect("Should load manifest");
-        let sorted = manifest.files_by_priority();
-
-        // Priority 1 files should come first
-        assert!(!sorted.is_empty());
-        assert_eq!(sorted[0].priority, 1, "First file should be priority 1");
-
-        // Check ordering is correct (lower priority number = higher priority)
-        for i in 1..sorted.len() {
-            assert!(
-                sorted[i].priority >= sorted[i - 1].priority,
-                "Files should be sorted by priority ascending"
-            );
-        }
     }
 
     #[test]
