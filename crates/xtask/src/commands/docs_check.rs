@@ -800,13 +800,13 @@ pub(crate) fn validate_doc_index() -> Result<()> {
             }
 
             // Check if this file has front-matter
-            if let Ok(content) = fs::read_to_string(&path) {
-                if let Ok(fm) = parse_front_matter(&content) {
-                    errors.push(format!(
-                        "Doc '{}' ({}) has front-matter but is not registered in doc_index.yaml",
-                        fm.id, rel_path
-                    ));
-                }
+            if let Ok(content) = fs::read_to_string(&path)
+                && let Ok(fm) = parse_front_matter(&content)
+            {
+                errors.push(format!(
+                    "Doc '{}' ({}) has front-matter but is not registered in doc_index.yaml",
+                    fm.id, rel_path
+                ));
             }
         }
     }
@@ -1305,10 +1305,10 @@ fn check_orphaned_versions() -> Result<()> {
             let relative_path = file_path.strip_prefix(root).ok().and_then(|p| p.to_str());
 
             // Skip files that are explicitly excluded
-            if let Some(rel) = relative_path {
-                if skip_files.iter().any(|skip| rel == *skip) {
-                    continue;
-                }
+            if let Some(rel) = relative_path
+                && skip_files.contains(&rel)
+            {
+                continue;
             }
 
             // Skip files covered by manifest
