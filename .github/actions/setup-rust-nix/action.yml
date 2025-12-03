@@ -42,15 +42,27 @@ runs:
       if: inputs.enable-sccache == 'true'
       shell: bash
       run: |
-        # Filter out devshell welcome message from sccache path
-        SCCACHE_PATH=$(nix develop -c which sccache 2>/dev/null | grep -v "DevShell ready" | tail -1)
-        if [ -n "$SCCACHE_PATH" ] && [ -x "$SCCACHE_PATH" ]; then
-          echo "RUSTC_WRAPPER=$SCCACHE_PATH" >> $GITHUB_ENV
-          echo "SCCACHE_GHA_ENABLED=1" >> $GITHUB_ENV
-          echo "CARGO_INCREMENTAL=0" >> $GITHUB_ENV
-          nix develop -c sccache --start-server || true
+        # Try to get sccache path from nix develop, filtering out devshell welcome message
+        # Allow failure since sccache is optional optimization
+        set +e
+        SCCACHE_OUTPUT=$(nix develop -c which sccache 2>&1)
+        SCCACHE_EXIT=$?
+        set -e
+
+        if [ $SCCACHE_EXIT -eq 0 ]; then
+          SCCACHE_PATH=$(echo "$SCCACHE_OUTPUT" | grep -v "DevShell ready" | grep -v "^$" | tail -1)
+          if [ -n "$SCCACHE_PATH" ] && [ -f "$SCCACHE_PATH" ]; then
+            echo "Found sccache at: $SCCACHE_PATH"
+            echo "RUSTC_WRAPPER=$SCCACHE_PATH" >> $GITHUB_ENV
+            echo "SCCACHE_GHA_ENABLED=1" >> $GITHUB_ENV
+            echo "CARGO_INCREMENTAL=0" >> $GITHUB_ENV
+            nix develop -c sccache --start-server || true
+          else
+            echo "Warning: sccache path invalid or not found, skipping"
+          fi
         else
-          echo "Warning: sccache not found, skipping RUSTC_WRAPPER setup"
+          echo "Warning: nix develop failed (exit $SCCACHE_EXIT), skipping sccache setup"
+          echo "Output was: $SCCACHE_OUTPUT"
         fi
 
     - name: Show sccache stats (pre-build)
