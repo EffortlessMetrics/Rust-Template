@@ -7,6 +7,7 @@ resolver = "2"
 edition = "2024"
 rust-version = "1.89.0"
 license = "Apache-2.0 OR MIT"
+publish = false  # Workspace crates are private/internal
 homepage = "https://github.com/effortlessmetrics/rust-as-spec"
 repository = "https://github.com/effortlessmetrics/rust-as-spec"
 authors = ["EffortlessSteven"]

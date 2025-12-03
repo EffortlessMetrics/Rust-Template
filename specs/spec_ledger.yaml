@@ -886,6 +886,16 @@ stories:
               # BDD for full selftest integration (CI-only)
               - { type: bdd, tag: "@AC-TPL-GRAPH-SELFTEST", file: "specs/features/graph_invariants.feature" }
 
+          - id: AC-TPL-GRAPH-INVARIANTS
+            text: >
+              Graph invariants (requirements have ACs, ACs have tests, commands
+              are reachable) are enforced together as a cohesive governance check.
+            tags: [kernel, ci-only]
+            must_have_ac: false
+            note: "Consolidated BDD coverage via selftest. Marked ci-only to avoid recursive selftest in local runs; validated in CI."
+            tests:
+              - { type: bdd, tag: "@AC-TPL-GRAPH-INVARIANTS", file: "specs/features/graph_invariants.feature" }
+
       - id: REQ-TPL-PLATFORM-UI
         title: "Platform Web UI"
         tags: [platform, devex, ui]

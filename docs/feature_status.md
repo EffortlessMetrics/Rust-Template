@@ -88,6 +88,7 @@ Auto-generated AC status from acceptance (BDD) and unit tests.
 | AC-TPL-GOV-WRITE-TASK-STATUS-200 | US-TPL-PLATFORM-V3 | REQ-TPL-GOV-WRITE-001 | [PASS] pass | 1 / 1 |
 | AC-TPL-GRAPH-AC-HAS-TEST | US-TPL-PLT-001 | REQ-TPL-GRAPH-INVARIANTS | [PASS] pass | 1 / 1 |
 | AC-TPL-GRAPH-COMMAND-REACHABLE | US-TPL-PLT-001 | REQ-TPL-GRAPH-INVARIANTS | [PASS] pass | 1 / 1 |
+| AC-TPL-GRAPH-INVARIANTS | US-TPL-PLT-001 | REQ-TPL-GRAPH-INVARIANTS | [UNKNOWN] unknown | 0 / 1 |
 | AC-TPL-GRAPH-MERMAID | US-TPL-PLT-001 | REQ-TPL-GRAPH-VISUALIZATION | [PASS] pass | 2 / 2 |
 | AC-TPL-GRAPH-REQ-HAS-AC | US-TPL-PLT-001 | REQ-TPL-GRAPH-INVARIANTS | [PASS] pass | 1 / 1 |
 | AC-TPL-GRAPH-SELFTEST | US-TPL-PLT-001 | REQ-TPL-GRAPH-INVARIANTS | [PASS] pass | 3 / 4 |
@@ -160,6 +161,7 @@ validated in CI, not by local selftest:
 - AC-TPL-AGENTS-SKILLS-REFERENCES – Agent 'skills' entries MUST reference existing Skills in .claude/skills/* or be omitted. agents-lint MUST error if an agent declares a Skill that does not exist.
 - AC-TPL-AGENTS-TOOLS-PERMISSION-SAFETY – Agent tools and permissionMode MUST follow least-privilege and explicitness principles. agents-lint MUST error on invalid permissionMode values and warn on broad tool grants (e.g., full Bash + Edit + Write) without justification.
 - AC-TPL-EXAMPLE-FORK-BUILDS – `examples/fork-customization/` is validated and demonstrates fork extensibility patterns in CI, proving template provides a working foundation for forked services.
+- AC-TPL-GRAPH-INVARIANTS – Graph invariants (requirements have ACs, ACs have tests, commands are reachable) are enforced together as a cohesive governance check.
 - AC-TPL-SKILLS-ALLOWED-TOOLS-SAFETY – Skill allowed-tools MUST follow least-privilege principle. skills-lint must warn if read-only Skill includes Write/Edit, or if unscoped Bash is used without justification. No hardcoded secrets in SKILL.md or supporting files.
 - AC-TPL-SKILLS-DESCRIPTION-QUALITY – Skill descriptions MUST include both WHAT (capability) and WHEN (triggers/context), use third-person voice, and max 1024 characters. skills-lint must warn if description omits "when to use" triggers.
 - AC-TPL-SKILLS-FLOW-MAPPING – Skill descriptions MUST reference at least one devex_flows entry or xtask command. Anti-pattern detection: warn if Skill name suggests it wraps single command (e.g., skill-check) instead of workflow. Lint rule: description must mention workflow scope.
