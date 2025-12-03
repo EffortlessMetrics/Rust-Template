@@ -2,16 +2,18 @@ use std::sync::Arc;
 
 use tonic::{Request, Response, Status, transport::Server};
 pub mod task {
-    tonic::include_proto!("task");
+    pub mod v1 {
+        tonic::include_proto!("task.v1");
+    }
 }
 
 use business_core::ports::TaskRepository;
 use business_core::use_cases;
 use model::{Task as ModelTask, TaskStatus};
 use prost_types::Timestamp;
-use task::{
-    CreateTaskRequest, CreateTaskResponse, GetTaskRequest, ListTasksRequest, ListTasksResponse,
-    Task as ProtoTask, UpdateTaskStatusRequest,
+use task::v1::{
+    CreateTaskRequest, CreateTaskResponse, GetTaskRequest, GetTaskResponse, ListTasksRequest,
+    ListTasksResponse, Task as ProtoTask, UpdateStatusRequest, UpdateStatusResponse,
     task_service_server::{TaskService, TaskServiceServer},
 };
 
@@ -41,12 +43,12 @@ impl TaskService for TaskServiceImpl {
     async fn get_task(
         &self,
         request: Request<GetTaskRequest>,
-    ) -> Result<Response<ProtoTask>, Status> {
+    ) -> Result<Response<GetTaskResponse>, Status> {
         let id = request.into_inner().id;
         let task = use_cases::get_task(&*self.repo, id).await.map_err(Status::internal)?;
         let proto_task =
             task.map(|t| model_task_to_proto(&t)).ok_or(Status::not_found("task not found"))?;
-        Ok(Response::new(proto_task))
+        Ok(Response::new(GetTaskResponse { task: Some(proto_task) }))
     }
 
     async fn list_tasks(
@@ -60,8 +62,8 @@ impl TaskService for TaskServiceImpl {
 
     async fn update_status(
         &self,
-        request: Request<UpdateTaskStatusRequest>,
-    ) -> Result<Response<ProtoTask>, Status> {
+        request: Request<UpdateStatusRequest>,
+    ) -> Result<Response<UpdateStatusResponse>, Status> {
         let inner = request.into_inner();
         let id = inner.id;
         let status = parse_task_status(&inner.status)?;
@@ -70,7 +72,7 @@ impl TaskService for TaskServiceImpl {
             .map_err(Status::internal)?;
         let proto_task =
             task.map(|t| model_task_to_proto(&t)).ok_or(Status::not_found("task not found"))?;
-        Ok(Response::new(proto_task))
+        Ok(Response::new(UpdateStatusResponse { task: Some(proto_task) }))
     }
 }
 
