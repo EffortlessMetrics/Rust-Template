@@ -40,7 +40,9 @@
         ++ pkgs.lib.optionals (!pkgs.stdenv.isDarwin) [
           pkgs.cargo-llvm-cov
         ];
-        buildInputs = [ pkgs.zlib ];  # Also in buildInputs for linker visibility
+        buildInputs = [ pkgs.zlib ]  # Also in buildInputs for linker visibility
+          # libiconv is needed on Darwin for linking (macOS doesn't include it in system libs)
+          ++ pkgs.lib.optionals pkgs.stdenv.isDarwin [ pkgs.libiconv ];
         shellHook = ''
           # Prefer user cargo-installed tools (cargo-audit, cargo-deny, etc.)
           export PATH="$HOME/.cargo/bin:$PWD/.tools/bin:$PATH"
