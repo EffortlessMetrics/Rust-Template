@@ -68,4 +68,4 @@ jobs:
           exit 1
 
       - name: Lint
-        run: nix develop -c npx -y @redocly/cli@1.21.0 lint -c redocly.yaml specs/openapi/openapi.yaml
+        run: nix develop -c npx -y @redocly/cli@1.21.0 lint --config redocly.yaml specs/openapi/openapi.yaml

@@ -276,7 +276,7 @@ testcontainers = "0.25.2"          # For integration tests
 **Key Files:**
 - `src/lib.rs`: Service implementation
 - `build.rs`: Compile `.proto` files at build time
-- `/specs/proto/task.proto`: Protobuf schema
+- `/specs/proto/task/v1/task.proto`: Protobuf schema
 
 **Example Implementation:**
 
@@ -312,9 +312,9 @@ impl TaskService for TaskServiceImpl {
 **Proto Schema:**
 
 ```protobuf
-// specs/proto/task.proto
+// specs/proto/task/v1/task.proto
 syntax = "proto3";
-package task;
+package task.v1;
 
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/uuid.proto";
@@ -338,7 +338,7 @@ service TaskService {
 ```rust
 // crates/adapters-grpc/build.rs
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    tonic_build::compile_protos("../../../specs/proto/task.proto")?;
+    tonic_build::compile_protos("../../../specs/proto/task/v1/task.proto")?;
     Ok(())
 }
 ```
@@ -957,7 +957,9 @@ specs/db/
 
 ```
 specs/proto/
-├── task.proto
+├── task/
+│   └── v1/
+│       └── task.proto
 └── payments/
     └── v1/
         └── refund.proto
@@ -965,7 +967,7 @@ specs/proto/
 
 **Workflow:**
 1. Edit `.proto` file in `specs/proto/`
-2. Adapter's `build.rs` compiles it: `tonic_build::compile_protos("specs/proto/task.proto")`
+2. Adapter's `build.rs` compiles it: `tonic_build::compile_protos("specs/proto/task/v1/task.proto")`
 3. Generated Rust code is checked into `target/` (gitignored) or committed
 
 **Example:**
@@ -973,7 +975,7 @@ specs/proto/
 ```rust
 // crates/adapters-grpc/build.rs
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    tonic_build::compile_protos("../../../specs/proto/task.proto")?;
+    tonic_build::compile_protos("../../../specs/proto/task/v1/task.proto")?;
     Ok(())
 }
 ```
