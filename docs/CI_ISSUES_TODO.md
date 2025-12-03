@@ -4,6 +4,7 @@ doc_type: reference
 stories: [US-TPL-PLT-001]
 requirements: [REQ-PLT-DEVEX-CONTRACT, REQ-PLT-SECURITY-GOVERNANCE]
 ---
+<!-- doclint:disable orphan-version -->
 # CI Infrastructure Issues - GitHub Issue Templates
 
 **Document ID:** `GUIDE-CI-ISSUES-TODO`

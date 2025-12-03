@@ -1,17 +1,12 @@
-<!-- doclint:disable orphan-version -->
 ---
 id: GUIDE-TPL-NIX-ENV-ISSUES
-title: Nix Environment Issues & Solutions
 doc_type: guide
-status: published
-audience: developers
-tags: [nix, environment, troubleshooting, devshell, libz]
-stories: [US-TPL-DEVEX-001]
-requirements: [REQ-PLT-DEVEX-CONTRACT, REQ-PLT-ENV-DIAGNOSTICS]
-acs: [AC-PLT-015, AC-PLT-016]
-adrs: [ADR-0005]
-last_updated: 2025-12-02
+stories: [US-TPL-PLT-001]
+requirements: [REQ-PLT-ONBOARDING, REQ-PLT-ENV-DIAGNOSTICS]
+acs: [AC-PLT-ENV-CHECK, AC-PLT-ENV-ABI-CHECK]
+adrs: [ADR-0002]
 ---
+<!-- doclint:disable orphan-version -->
 
 # Nix Environment Issues & Solutions
 

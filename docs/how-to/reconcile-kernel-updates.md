@@ -1,17 +1,11 @@
-<!-- doclint:disable orphan-version -->
 ---
 id: GUIDE-TPL-RECONCILE-001
-title: Reconcile Kernel Updates in Your Fork
 doc_type: how-to
-status: published
-audience: maintainers, platform-engineers, fork-owners
-tags: [fork, maintenance, kernel, upstream, sync]
 stories: [US-TPL-PLT-001]
-requirements: [REQ-TPL-OVERRIDE-PATH, REQ-TPL-EXAMPLE-FORK]
-acs: [AC-TPL-OVERRIDE-DOC, AC-TPL-OVERRIDE-TRACEABLE]
-adrs: [ADR-0005]
-last_updated: 2025-12-02
+requirements: [REQ-PLT-KERNEL-UPGRADES]
+adrs: [ADR-0005, ADR-0006]
 ---
+<!-- doclint:disable orphan-version -->
 
 # Reconcile Kernel Updates in Your Fork
 

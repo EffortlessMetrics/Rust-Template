@@ -1,3 +1,4 @@
+<!-- doclint:disable orphan-version -->
 # Test Coverage Tracking and Build Time Baseline Infrastructure
 
 **Implementation Date:** 2025-12-01

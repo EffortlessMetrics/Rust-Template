@@ -1,3 +1,4 @@
+<!-- doclint:disable orphan-version -->
 # Plan: AC-PLT-021 - service-init Command
 
 **Date:** 2025-12-02

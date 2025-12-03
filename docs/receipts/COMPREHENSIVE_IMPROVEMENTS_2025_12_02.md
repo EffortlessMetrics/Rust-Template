@@ -1,3 +1,4 @@
+<!-- doclint:disable orphan-version -->
 # Comprehensive Rust-as-Spec Platform Cell Improvements (v3.3.6 → v3.4.0 Prep)
 **Date**: December 1-2, 2025
 **Scope**: 18 major improvements across governance, code quality, performance, and documentation
