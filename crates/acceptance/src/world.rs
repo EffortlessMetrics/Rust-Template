@@ -30,6 +30,10 @@ pub struct World {
     pub cli_stderr: String,
     /// Parsed JSON output from CLI command
     pub cli_json_output: Option<serde_json::Value>,
+    /// Per-scenario platform auth mode (for isolation from parallel scenarios)
+    pub platform_auth_mode: Option<String>,
+    /// Per-scenario platform auth token (for isolation from parallel scenarios)
+    pub platform_auth_token: Option<String>,
 }
 
 /// Context for xtask command execution
@@ -58,12 +62,9 @@ impl Default for World {
         let specs_dir = temp_dir.path().join("specs");
         fs::create_dir_all(&specs_dir).expect("Failed to create temp specs directory");
 
-        // Reset auth-related env vars so scenarios start from a known state
-        // SAFETY: Test runner is single-threaded here; resetting env vars is scoped to the test process.
-        unsafe {
-            std::env::remove_var("PLATFORM_AUTH_MODE");
-            std::env::remove_var("PLATFORM_AUTH_TOKEN");
-        }
+        // NOTE: Auth env vars are NOT reset here to avoid races between parallel scenarios.
+        // Each World stores its own platform_auth_* fields, and reload_app() sets env vars
+        // from those fields just before creating the app. This provides per-scenario isolation.
 
         // Seed temp specs with a copy of the workspace specs so endpoints can operate
         let workspace_root =
@@ -156,6 +157,8 @@ impl Default for World {
             cli_stdout: String::new(),
             cli_stderr: String::new(),
             cli_json_output: None,
+            platform_auth_mode: None,
+            platform_auth_token: None,
         }
     }
 }
@@ -196,13 +199,46 @@ impl World {
         &mut self.xtask_context
     }
 
-    /// Rebuild the application router after mutating environment variables.
+    /// Rebuild the application router using World's isolated auth configuration.
+    ///
+    /// This method sets env vars from World's platform_auth_* fields before creating
+    /// the app, ensuring isolation between parallel scenarios. The env vars are
+    /// process-global but this is safe because:
+    /// 1. The actual auth config is stored in World (per-scenario)
+    /// 2. We set env vars just before creating the app
+    /// 3. The app copies the config at creation time
     pub fn reload_app(&mut self) {
+        // Set env vars from World's isolated auth config before creating app.
+        // This ensures the app picks up this scenario's auth configuration
+        // regardless of what other parallel scenarios have done.
+        // SAFETY: Tests mutate process env in a single-threaded-per-scenario manner.
+        unsafe {
+            if let Some(ref mode) = self.platform_auth_mode {
+                std::env::set_var("PLATFORM_AUTH_MODE", mode);
+            } else {
+                std::env::remove_var("PLATFORM_AUTH_MODE");
+            }
+            if let Some(ref token) = self.platform_auth_token {
+                std::env::set_var("PLATFORM_AUTH_TOKEN", token);
+            } else {
+                std::env::remove_var("PLATFORM_AUTH_TOKEN");
+            }
+        }
+
         let specs_dir = self._temp_dir.path().join("specs");
         let governance_repo =
             std::sync::Arc::new(adapters_spec_fs::FsGovernanceRepository::new(specs_dir));
         self.app =
             app_http::app_with_workspace_root(governance_repo, self._temp_dir.path().to_path_buf());
+    }
+
+    /// Set platform auth configuration for this scenario.
+    ///
+    /// This stores the auth config in the World so subsequent reload_app() calls
+    /// will use it, providing isolation between parallel scenarios.
+    pub fn set_platform_auth(&mut self, mode: Option<String>, token: Option<String>) {
+        self.platform_auth_mode = mode;
+        self.platform_auth_token = token;
     }
 }
 
