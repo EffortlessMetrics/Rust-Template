@@ -3,21 +3,18 @@ use cucumber::{given, then};
 
 #[given(regex = r#"^platform auth mode is "([^"]+)" with token "([^"]+)"$"#)]
 async fn given_platform_auth_mode(world: &mut World, mode: String, token: String) {
-    // SAFETY: Tests mutate process env in a single-threaded runner to configure the app instance.
-    unsafe {
-        std::env::set_var("PLATFORM_AUTH_MODE", &mode);
-        std::env::set_var("PLATFORM_AUTH_TOKEN", &token);
-    }
+    // Store auth config in World for isolation between parallel scenarios.
+    // reload_app() will apply these settings via env vars just before creating the app.
+    world.set_platform_auth(Some(mode), Some(token));
     world.reload_app();
 }
 
-#[given(r#"^platform auth mode is "basic" without a token$"#)]
+#[given(regex = r#"^platform auth mode is "basic" without a token$"#)]
 async fn given_basic_auth_without_token(world: &mut World) {
-    // SAFETY: Tests mutate process env in a single-threaded runner to configure the app instance.
-    unsafe {
-        std::env::set_var("PLATFORM_AUTH_MODE", "basic");
-        std::env::remove_var("PLATFORM_AUTH_TOKEN");
-    }
+    // Store auth config in World for isolation between parallel scenarios.
+    // reload_app() will apply these settings via env vars just before creating the app.
+    // Use empty string for token to explicitly indicate "no token" (prevents fallback to config).
+    world.set_platform_auth(Some("basic".to_string()), Some(String::new()));
     world.reload_app();
 }
 

@@ -426,7 +426,7 @@ async fn then_json_not_contains_task(world: &mut World, task_id: String) {
     );
 }
 
-#[then(regex = r#"^the response body should contain "([^"]+)"$"#)]
+#[then(regex = r#"^the response body should contain ['"](.+)['"]$"#)]
 async fn then_body_contains(world: &mut World, needle: String) {
     let response = world.last_response.as_ref().expect("response should exist");
     assert!(
