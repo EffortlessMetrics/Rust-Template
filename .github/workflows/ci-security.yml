@@ -9,9 +9,11 @@ concurrency:
 
 jobs:
   codeql:
+    # Skip for forks (limited token access)
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    permissions: { contents: read, security-events: write }
+    permissions: { actions: read, contents: read, security-events: write }
     steps:
       - uses: actions/checkout@v4
         with: { fetch-depth: 0 }
@@ -19,17 +21,30 @@ jobs:
         with: { languages: rust }
       - uses: github/codeql-action/analyze@v3
   secrets:
+    # Skip for forks (org secrets not available)
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions: { contents: read }
     steps:
       - uses: actions/checkout@v4
       - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
   deps:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     permissions: { contents: read }
     steps:
       - uses: actions/checkout@v4
       - uses: cachix/install-nix-action@v27
-      - run: nix develop -c cargo xtask audit
+      # Install latest audit tools (support Cargo.lock v4 + edition 2024)
+      # These need to be newer than nixpkgs versions for Cargo.lock v4 + edition 2024
+      - name: Install audit tooling
+        run: |
+          cargo install cargo-audit --locked
+          cargo install cargo-deny --locked
+          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+      - name: Run dependency audit
+        run: nix develop -c cargo xtask audit

@@ -8,7 +8,12 @@ on:
       - 'crates/acceptance/**'
       - '.github/workflows/ci-ac.yml'
 
-permissions: { contents: read }
+# Permissions for JUnit publisher action (publish-unit-test-result-action)
+permissions:
+  actions: read
+  checks: write
+  contents: read
+  pull-requests: write
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -38,9 +43,12 @@ jobs:
         if: always()
         run: nix develop -c cargo run -p xtask -- ac-status
 
-      - if: always()
+      - name: Publish BDD JUnit results
+        if: always()
         uses: EnricoMi/publish-unit-test-result-action@v2
-        with: { files: target/junit/**/*.xml }
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          files: target/junit/**/*.xml
       - name: Show sccache stats
         if: always()
         run: nix develop -c sccache --show-stats || true

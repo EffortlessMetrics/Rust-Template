@@ -1,9 +1,30 @@
 [advisories]
 yanked = "deny"
+# Ignore RUSTSEC-2023-0071 (rsa Marvin Attack) - transitive from sqlx-mysql, no fix available.
+# The vulnerability requires timing side-channel access; acceptable for this template.
+# See ADR-0007 for dependency security policy.
+ignore = ["RUSTSEC-2023-0071"]
 
 [licenses]
-allow = ["Apache-2.0", "MIT", "BSD-3-Clause", "BSD-2-Clause", "Unicode-DFS-2016"]
+# Standard permissive licenses plus commonly-used compatible licenses
+allow = [
+    "Apache-2.0",
+    "MIT",
+    "BSD-3-Clause",
+    "BSD-2-Clause",
+    "Unicode-DFS-2016",
+    "Unicode-3.0",          # Unicode License v3 (icu_* crates)
+    "MPL-2.0",              # Mozilla Public License (colored crate)
+    "Zlib",                 # zlib License (foldhash crate)
+    "ISC",                  # ISC License (common in crypto crates)
+    "CC0-1.0",              # Public domain dedication
+    "BlueOak-1.0.0",        # Blue Oak Model License (synthez/cucumber)
+    "CDLA-Permissive-2.0",  # Community Data License Agreement (webpki-roots)
+]
+# Ignore unlicensed workspace/path crates (they are marked publish = false)
+private = { ignore = true }
 
 [bans]
 multiple-versions = "warn"
-wildcards = "deny"
+# Allow wildcard deps for path dependencies (workspace crates)
+wildcards = "allow"

@@ -279,7 +279,7 @@ Feature: Agent Hints API
     And the first hint "status" should equal "in_progress"
     And the first hint "owner" should equal "team-backend"
 
-  @AC-TPL-AGENT-HINTS-SCHEMA @AC-TPL-AGENT-HINTS
+  @AC-TPL-AGENT-HINTS-SCHEMA
   Scenario: HTTP hints include all required schema fields
     Given the following tasks exist in "specs/tasks.yaml":
       | id                | title                     | status      | requirement           |

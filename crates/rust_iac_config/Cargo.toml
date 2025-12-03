@@ -5,6 +5,7 @@ authors = ["Steven Zimmerman <git@effortlesssteven.com>"]
 edition.workspace = true
 license.workspace = true
 rust-version.workspace = true
+publish.workspace = true
 description = "YAML-based infrastructure configuration library for Rust IaC projects with validation rules"
 repository = "https://github.com/EffortlessMetrics/Rust-Template"
 homepage = "https://github.com/EffortlessMetrics/Rust-Template"

@@ -30,8 +30,8 @@
           pkgs.conftest
           pkgs.kubectl
           pkgs.kustomize
-          pkgs.cargo-audit
-          pkgs.cargo-deny
+          # cargo-audit and cargo-deny are installed via `cargo install` for lockfile v4 + edition 2024 support
+          # Run: cargo install --locked cargo-audit cargo-deny
           pkgs.cargo-nextest
           pkgs.protobuf
           pkgs.cargo-llvm-cov
@@ -39,7 +39,8 @@
         ];
         buildInputs = [ pkgs.zlib ];  # Also in buildInputs for linker visibility
         shellHook = ''
-          export PATH="$PWD/.tools/bin:$PATH"
+          # Prefer user cargo-installed tools (cargo-audit, cargo-deny, etc.)
+          export PATH="$HOME/.cargo/bin:$PWD/.tools/bin:$PATH"
           export LD_LIBRARY_PATH="${pkgs.lib.makeLibraryPath [ pkgs.zlib ]}:$LD_LIBRARY_PATH"
           echo "DevShell ready — try: just checks"
         '';
