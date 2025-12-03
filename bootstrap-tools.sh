@@ -44,10 +44,24 @@ case "$OS" in Linux) os="linux" ;; Darwin) os="darwin" ;; *) echo "Unsupported O
 case "$ARCH" in x86_64|amd64) arch="amd64" ;; arm64|aarch64) arch="arm64" ;; *) echo "Unsupported ARCH: $ARCH" >&2; exit 1 ;; esac
 
 install_oasdiff() {
-  local v="2.19.1"; local tarball="oasdiff_${v}_${os}_${arch}.tar.gz"
-  local url="https://github.com/Tufin/oasdiff/releases/download/v${v}/${tarball}"
+  # OAS diff CLI (oasdiff)
+  # Releases: https://github.com/oasdiff/oasdiff/releases
+  # Asset pattern: oasdiff_<version>_<os>_<arch>.tar.gz
+  # Note: darwin arm64 uses universal build: oasdiff_<v>_darwin_all.tar.gz
+  local v="${OASDIFF_VERSION:-1.11.7}"
+
+  # Map arch for oasdiff assets
+  local oas_arch="$arch"
+  if [ "$os" = "darwin" ] && [ "$arch" = "arm64" ]; then
+    oas_arch="all"  # oasdiff uses universal binary for darwin arm64
+  fi
+
+  local tarball="oasdiff_${v}_${os}_${oas_arch}.tar.gz"
+  local url="https://github.com/oasdiff/oasdiff/releases/download/v${v}/${tarball}"
+
   if ! [ -x "$BIN/oasdiff" ]; then
-    curl -fsSL "$url" | tar -xz -C "$BIN" oasdiff
+    echo "Installing oasdiff ${v} from ${url}..."
+    curl -sSfL "$url" | tar -xz -C "$BIN" oasdiff
     chmod +x "$BIN/oasdiff"
     sha_check "$BIN/oasdiff" "oasdiff"
   fi
