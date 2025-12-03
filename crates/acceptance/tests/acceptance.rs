@@ -32,18 +32,8 @@ async fn main() {
     let junit_dir = workspace_root.join("target/junit");
     let junit_path = junit_dir.join("acceptance.xml");
 
-    // Support environment variable for JSON output path (default: target/ac_report.json)
-    let json_path = std::env::var("AC_REPORT_JSON")
-        .map(std::path::PathBuf::from)
-        .unwrap_or_else(|_| workspace_root.join("target/ac_report.json"));
-
     // Ensure target/junit directory exists
     std::fs::create_dir_all(&junit_dir).unwrap_or(());
-
-    // Ensure JSON parent directory exists
-    if let Some(parent) = json_path.parent() {
-        let _ = std::fs::create_dir_all(parent);
-    }
 
     // Ensure xtask binary is built before running tests (to avoid Windows file locking)
     let xtask_binary = if cfg!(windows) {
@@ -59,11 +49,9 @@ async fn main() {
         std::process::exit(1);
     }
 
-    // Create output files (fall back to null device if creation fails)
+    // Create JUnit output file (fall back to null device if creation fails)
     let junit_file =
         File::create(&junit_path).unwrap_or_else(|_| std::fs::File::create(NULL_DEVICE).unwrap());
-    let json_file =
-        File::create(&json_path).unwrap_or_else(|_| std::fs::File::create(NULL_DEVICE).unwrap());
 
     let raw_tag_expr = std::env::var("CUCUMBER_TAG_EXPRESSION").ok();
     let tag_expression: Option<TagOperation> =
@@ -87,10 +75,9 @@ async fn main() {
             })
         })
         .with_writer(
-            writer::Basic::stdout().summarized().tee::<World, _>(
-                writer::JUnit::new(junit_file, 0)
-                    .tee::<World, _>(writer::Json::for_tee(json_file).normalized()),
-            ),
+            // Note: JSON writer removed due to timing panic in parallel scenarios
+            // (cucumber-rs issue with SystemTime duration computation)
+            writer::Basic::stdout().summarized().tee::<World, _>(writer::JUnit::new(junit_file, 0)),
         )
         .filter_run(
             features_path.to_str().unwrap_or("specs/features"),
