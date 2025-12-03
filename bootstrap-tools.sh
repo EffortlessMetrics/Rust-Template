@@ -63,10 +63,12 @@ install_buf() {
   fi
 }
 install_atlas() {
-  local v="0.21.1"; local bin="atlas-${os}-${arch}"
-  local url="https://github.com/ariga/atlas/releases/download/v${v}/${bin}"
+  # Atlas binaries are served from release.ariga.io, not GitHub releases
+  # URL format: https://release.ariga.io/atlas/atlas-{os}-{arch}-{version}
+  local v="${ATLAS_VERSION:-latest}"
+  local url="https://release.ariga.io/atlas/atlas-${os}-${arch}-${v}"
   if ! [ -x "$BIN/atlas" ]; then
-    curl -sSL "$url" -o "$BIN/atlas"; chmod +x "$BIN/atlas"; sha_check "$BIN/atlas" "atlas"
+    curl -sSfL "$url" -o "$BIN/atlas"; chmod +x "$BIN/atlas"; sha_check "$BIN/atlas" "atlas"
   fi
 }
 install_oasdiff; install_buf; install_atlas
