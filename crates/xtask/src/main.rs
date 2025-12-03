@@ -964,6 +964,8 @@ pub fn all_command_names() -> Vec<&'static str> {
         "agents-lint",
         "status",
         "suggest-next",
+        "task-create",
+        "task-update",
         "tasks-list",
         "test-ac",
         "test-changed",

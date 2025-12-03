@@ -25,8 +25,12 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install Nix
-        uses: cachix/install-nix-action@v27
+      - name: Setup Rust + Nix environment
+        uses: ./.github/actions/setup-rust-nix
 
       - name: Run policy tests
         run: nix develop -c cargo run -p xtask -- policy-test
+
+      - name: Show sccache stats
+        if: always()
+        uses: ./.github/actions/sccache-stats

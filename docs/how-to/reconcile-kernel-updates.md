@@ -1,3 +1,4 @@
+<!-- doclint:disable orphan-version -->
 ---
 id: GUIDE-TPL-RECONCILE-001
 title: Reconcile Kernel Updates in Your Fork
