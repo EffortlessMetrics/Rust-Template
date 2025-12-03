@@ -23,6 +23,11 @@ jobs:
       - name: Setup Rust + Nix environment
         uses: ./.github/actions/setup-rust-nix
 
+      # Build xtask to target/debug/ first - required by acceptance tests
+      # (llvm-cov uses target/llvm-cov-target/ which won't have the binary)
+      - name: Pre-build xtask for acceptance tests
+        run: nix develop -c cargo build -p xtask
+
       - name: Run coverage (JSON)
         env: { RUSTC_WRAPPER: "", CARGO_INCREMENTAL: "0" }
         run: nix develop -c cargo llvm-cov --workspace --json --output-path cov.json
