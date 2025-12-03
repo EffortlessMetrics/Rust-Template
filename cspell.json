@@ -22,6 +22,7 @@
     "anchore",
     "anyhow",
     "app-http",
+    "fenix",
     "appuser",
     "architecting",
     "Autoscaler",
