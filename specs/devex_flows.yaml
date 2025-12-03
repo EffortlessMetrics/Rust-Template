@@ -328,7 +328,7 @@ flows:
     description: "Validate environment, discover workflows, reach first green check"
     required: true
     documented_in: ["CONTRIBUTING.md", "CLAUDE.md", "README.md"]
-    steps: ["dev-up", "status", "selftest"]
+    steps: ["dev-up", "service-init", "status", "selftest"]
 
   onboarding_manual:
     name: "Manual onboarding (step-by-step)"

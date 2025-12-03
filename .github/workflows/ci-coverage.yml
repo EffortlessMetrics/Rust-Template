@@ -19,18 +19,14 @@ jobs:
     permissions: { contents: read }
     steps:
       - uses: actions/checkout@v4
-      - uses: cachix/install-nix-action@v27
 
-      - name: Enable sccache
-        run: |
-          echo "RUSTC_WRAPPER=$(nix develop -c which sccache)" >> $GITHUB_ENV
-          echo "SCCACHE_GHA_ENABLED=1" >> $GITHUB_ENV
-          echo "CARGO_INCREMENTAL=0" >> $GITHUB_ENV
-          nix develop -c sccache --start-server || true
+      - name: Setup Rust + Nix environment
+        uses: ./.github/actions/setup-rust-nix
 
       - name: Run coverage (JSON)
         env: { RUSTC_WRAPPER: "", CARGO_INCREMENTAL: "0" }
         run: nix develop -c cargo llvm-cov --workspace --json --output-path cov.json
+
       - name: Enforce floor (60%)
         run: |
           nix develop -c bash -c '
@@ -38,5 +34,13 @@ jobs:
             echo "coverage=${PCT}%"
             test "${PCT}" -ge 60
           '
+
+      - name: Show sccache stats
+        if: always()
+        uses: ./.github/actions/sccache-stats
+
       - uses: actions/upload-artifact@v4
-        with: { name: cov-json, path: cov.json }
+        with:
+          name: coverage-report-${{ github.sha }}
+          path: cov.json
+          if-no-files-found: error

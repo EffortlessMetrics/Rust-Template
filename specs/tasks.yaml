@@ -761,3 +761,16 @@ tasks:
   summary: New platform task
   recommended_flows: []
   depends_on: []
+- id: TASK-TEST-001
+  title: Test task
+  requirement: REQ-TPL-HEALTH
+  acs: []
+  status: Todo
+  owner: null
+  labels: []
+  docs:
+    design: []
+    plan: []
+  summary: Test task
+  recommended_flows: []
+  depends_on: []

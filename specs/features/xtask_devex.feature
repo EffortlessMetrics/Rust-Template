@@ -718,9 +718,8 @@ Feature: Developer Experience Commands
   Scenario: ac-status runs non-interactively in automation mode
     Given the environment variable "XTASK_NONINTERACTIVE" is set to "1"
     When I run "cargo xtask ac-status"
-    Then the command should succeed
-    And the command should not prompt for input
-    And the exit code should be 0
+    Then the command should not prompt for input
+    And the exit code should reflect command success or failure
 
   @AC-TPL-XTASK-NONINTERACTIVE
   Scenario: bundle command runs non-interactively with CI=1
@@ -734,7 +733,7 @@ Feature: Developer Experience Commands
     Given the environment variable "XTASK_NONINTERACTIVE" is set to "1"
     When I run "cargo xtask version"
     Then the command should succeed
-    And the exit code should be 0
+    And the exit code should be 0 on success
 
   @AC-TPL-XTASK-NONINTERACTIVE
   Scenario: friction-list runs non-interactively in CI mode

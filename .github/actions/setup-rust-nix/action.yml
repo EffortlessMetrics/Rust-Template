@@ -1,0 +1,57 @@
+name: 'Setup Rust with Nix and caching'
+description: 'Sets up Nix development environment with Rust, rust-cache, and sccache'
+inputs:
+  enable-sccache:
+    description: 'Enable sccache for compilation caching'
+    required: false
+    default: 'true'
+  enable-rust-cache:
+    description: 'Enable rust-cache for dependency caching'
+    required: false
+    default: 'true'
+  nix-installer:
+    description: 'Nix installer action to use'
+    required: false
+    default: 'cachix'
+outputs:
+  cache-hit:
+    description: 'Whether rust-cache had a cache hit'
+    value: ${{ steps.rust-cache.outputs.cache-hit }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Setup Rust cache
+      if: inputs.enable-rust-cache == 'true'
+      id: rust-cache
+      uses: Swatinem/rust-cache@v2
+      shell: bash
+
+    - name: Install Nix (cachix)
+      if: inputs.nix-installer == 'cachix'
+      uses: cachix/install-nix-action@v27
+      shell: bash
+
+    - name: Install Nix (determinate)
+      if: inputs.nix-installer == 'determinate'
+      uses: DeterminateSystems/nix-installer-action@v9
+      shell: bash
+
+    - name: Configure Nix cache
+      if: inputs.nix-installer == 'determinate'
+      uses: DeterminateSystems/magic-nix-cache-action@v2
+      shell: bash
+
+    - name: Enable sccache
+      if: inputs.enable-sccache == 'true'
+      shell: bash
+      run: |
+        echo "RUSTC_WRAPPER=$(nix develop -c which sccache)" >> $GITHUB_ENV
+        echo "SCCACHE_GHA_ENABLED=1" >> $GITHUB_ENV
+        echo "CARGO_INCREMENTAL=0" >> $GITHUB_ENV
+        nix develop -c sccache --start-server || true
+
+    - name: Show sccache stats (pre-build)
+      if: inputs.enable-sccache == 'true'
+      shell: bash
+      run: nix develop -c sccache --show-stats || true

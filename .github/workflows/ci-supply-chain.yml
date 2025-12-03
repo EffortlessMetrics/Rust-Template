@@ -22,14 +22,17 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Setup Nix
-        uses: DeterminateSystems/nix-installer-action@v9
-
-      - name: Configure Nix cache
-        uses: DeterminateSystems/magic-nix-cache-action@v2
+      - name: Setup Rust + Nix environment (with Determinate Systems)
+        uses: ./.github/actions/setup-rust-nix
+        with:
+          nix-installer: determinate
 
       - name: Build release artifacts
         run: nix develop -c cargo build --workspace --release
+
+      - name: Show sccache stats
+        if: always()
+        uses: ./.github/actions/sccache-stats
 
       - name: Create source tarball
         id: tarball

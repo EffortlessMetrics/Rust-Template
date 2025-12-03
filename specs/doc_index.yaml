@@ -293,6 +293,26 @@ docs:
     acs: [AC-PLT-008, AC-PLT-011, AC-PLT-012]
     adrs: [ADR-0005, ADR-0006]
 
+  # Nix Environment Issues
+  - id: GUIDE-TPL-NIX-ENV-ISSUES
+    file: docs/how-to/nix-environment-issues.md
+    title: "Nix Environment Issues & Solutions"
+    doc_type: guide
+    stories: [US-TPL-PLT-001]
+    requirements: [REQ-PLT-ONBOARDING, REQ-PLT-ENV-DIAGNOSTICS]
+    acs: [AC-PLT-ENV-CHECK, AC-PLT-ENV-ABI-CHECK]
+    adrs: [ADR-0002]
+
+  # Reconcile Kernel Updates
+  - id: GUIDE-TPL-RECONCILE-001
+    file: docs/how-to/reconcile-kernel-updates.md
+    title: "Reconcile Kernel Updates in Your Fork"
+    doc_type: how-to
+    stories: [US-TPL-PLT-001]
+    requirements: [REQ-PLT-KERNEL-UPGRADES]
+    acs: []
+    adrs: [ADR-0005, ADR-0006]
+
   # ADR-0016: IDP Tile Architecture and JSON Contracts
   - id: ADR-0016
     file: docs/adr/0016-idp-tiles-json-contracts.md

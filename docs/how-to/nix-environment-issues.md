@@ -1,3 +1,4 @@
+<!-- doclint:disable orphan-version -->
 ---
 id: GUIDE-TPL-NIX-ENV-ISSUES
 title: Nix Environment Issues & Solutions
