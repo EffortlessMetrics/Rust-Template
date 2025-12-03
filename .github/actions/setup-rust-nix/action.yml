@@ -25,22 +25,18 @@ runs:
       if: inputs.enable-rust-cache == 'true'
       id: rust-cache
       uses: Swatinem/rust-cache@v2
-      shell: bash
 
     - name: Install Nix (cachix)
       if: inputs.nix-installer == 'cachix'
       uses: cachix/install-nix-action@v27
-      shell: bash
 
     - name: Install Nix (determinate)
       if: inputs.nix-installer == 'determinate'
       uses: DeterminateSystems/nix-installer-action@v9
-      shell: bash
 
     - name: Configure Nix cache
       if: inputs.nix-installer == 'determinate'
       uses: DeterminateSystems/magic-nix-cache-action@v2
-      shell: bash
 
     - name: Enable sccache
       if: inputs.enable-sccache == 'true'
