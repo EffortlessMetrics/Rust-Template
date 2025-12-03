@@ -42,10 +42,16 @@ runs:
       if: inputs.enable-sccache == 'true'
       shell: bash
       run: |
-        echo "RUSTC_WRAPPER=$(nix develop -c which sccache)" >> $GITHUB_ENV
-        echo "SCCACHE_GHA_ENABLED=1" >> $GITHUB_ENV
-        echo "CARGO_INCREMENTAL=0" >> $GITHUB_ENV
-        nix develop -c sccache --start-server || true
+        # Filter out devshell welcome message from sccache path
+        SCCACHE_PATH=$(nix develop -c which sccache 2>/dev/null | grep -v "DevShell ready" | tail -1)
+        if [ -n "$SCCACHE_PATH" ] && [ -x "$SCCACHE_PATH" ]; then
+          echo "RUSTC_WRAPPER=$SCCACHE_PATH" >> $GITHUB_ENV
+          echo "SCCACHE_GHA_ENABLED=1" >> $GITHUB_ENV
+          echo "CARGO_INCREMENTAL=0" >> $GITHUB_ENV
+          nix develop -c sccache --start-server || true
+        else
+          echo "Warning: sccache not found, skipping RUSTC_WRAPPER setup"
+        fi
 
     - name: Show sccache stats (pre-build)
       if: inputs.enable-sccache == 'true'
