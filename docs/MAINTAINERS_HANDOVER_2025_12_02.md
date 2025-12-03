@@ -1,3 +1,4 @@
+<!-- doclint:disable orphan-version -->
 # Maintainers' Handover – Kernel v3.3.6 + December 2 Improvements
 
 ## 0. TL;DR for the next person

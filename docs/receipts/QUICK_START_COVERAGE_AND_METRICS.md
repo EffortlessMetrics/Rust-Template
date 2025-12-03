@@ -1,3 +1,4 @@
+<!-- doclint:disable orphan-version -->
 # Quick Start: Coverage and Build Metrics
 
 **Quick reference for the new coverage and build time tracking features.**

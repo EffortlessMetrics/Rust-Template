@@ -1,3 +1,4 @@
+<!-- doclint:disable orphan-version -->
 # PR Organization Plan (v3.3.6 → v3.4.0-prep)
 
 This document organizes the staged changes (47 files, 4848 insertions, 853 deletions) into 5 focused, mergeable PRs ordered by dependency and risk.

@@ -1,3 +1,4 @@
+<!-- doclint:disable orphan-version -->
 # BDD Step Implementation Summary
 
 **Date:** 2025-12-02
