@@ -1,0 +1,14 @@
+title = "Rust-Template gitleaks config"
+
+[allowlist]
+description = "Ignore redacted example secrets used in docs/tests"
+
+# Files that intentionally contain 'REDACTED' example tokens for documentation/testing
+paths = [
+  "crates/xtask/src/commands/skills.rs",
+  "crates/xtask/src/commands/agents.rs",
+  "docs/AGENTS_VALIDATION.md",
+  "docs/how-to/integrate-idp-or-agent.md",
+  "POLICY_EXAMPLES.md",
+  "policy/testdata/k8s_secrets_literal_api_key.json",
+]
