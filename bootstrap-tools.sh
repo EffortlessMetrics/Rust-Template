@@ -9,7 +9,7 @@ local ck="scripts/tools.sha256"
 if [ -f "$ck" ]; then
   local expect
   expect=$(awk -v k="$key" '$1==k {print $2}' "$ck" | head -n1)
-  if [ -n "${expect:-}" ]:
+  if [ -n "${expect:-}" ]; then
     if command -v sha256sum >/dev/null 2>&1; then
       echo "${expect}  ${file}" | sha256sum -c -
     else
