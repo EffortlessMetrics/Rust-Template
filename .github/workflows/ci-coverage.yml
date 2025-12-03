@@ -28,10 +28,10 @@ jobs:
       - name: Pre-build xtask for acceptance tests
         run: nix develop -c cargo build -p xtask
 
-      - name: Run coverage (enforce minimum 60%)
+      - name: Run coverage (report only - selftest owns the policy)
         env: { RUSTC_WRAPPER: "", CARGO_INCREMENTAL: "0" }
         run: |
-          nix develop -c cargo llvm-cov --workspace --all-features --fail-under-lines 60 --lcov --output-path lcov.info
+          nix develop -c cargo llvm-cov --workspace --all-features --lcov --output-path lcov.info
           nix develop -c cargo llvm-cov --workspace --all-features --json --output-path cov.json
 
       - name: Show sccache stats

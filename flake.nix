@@ -34,8 +34,11 @@
           # Run: cargo install --locked cargo-audit cargo-deny
           pkgs.cargo-nextest
           pkgs.protobuf
-          pkgs.cargo-llvm-cov
           pkgs.zlib  # Required for rustc/sccache on systems without zlib1g
+        ]
+        # cargo-llvm-cov is marked broken on Darwin in nixpkgs; include only on Linux
+        ++ pkgs.lib.optionals (!pkgs.stdenv.isDarwin) [
+          pkgs.cargo-llvm-cov
         ];
         buildInputs = [ pkgs.zlib ];  # Also in buildInputs for linker visibility
         shellHook = ''
