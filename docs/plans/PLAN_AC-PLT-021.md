@@ -2,8 +2,21 @@
 # Plan: AC-PLT-021 - service-init Command
 
 **Date:** 2025-12-02
-**Status:** Ready for Implementation
+**Updated:** 2025-12-03
+**Status:** In Progress (scenarios parked as @wip)
 **Related ACs:** AC-PLT-021
+
+## Current Status (2025-12-03)
+
+**Scenarios are `@wip` to unblock JUnit/kernel health.**
+
+The 3 service-init BDD scenarios fail due to **shared workspace race conditions** under parallel test execution. They are temporarily marked `@wip` while we implement proper test isolation.
+
+**Root cause:** All scenarios modify the same files (`service_metadata.yaml`, `README.md`, `CLAUDE.md`) in the real workspace. Under parallel execution, they race and see each other's writes.
+
+**Proposed fix:** Sandbox workspace per `World` instance - copy identity files to temp dir and run service-init against that sandbox.
+
+---
 
 ## Scope
 
