@@ -39,10 +39,14 @@ jobs:
       - name: Enable sccache (Linux/macOS)
         if: runner.os != 'Windows'
         run: |
-          echo "RUSTC_WRAPPER=$(nix develop -c which sccache)" >> $GITHUB_ENV
-          echo "SCCACHE_GHA_ENABLED=1" >> $GITHUB_ENV
-          echo "CARGO_INCREMENTAL=0" >> $GITHUB_ENV
-          nix develop -c sccache --start-server || true
+          if nix develop -c sh -c 'command -v sccache >/dev/null 2>&1'; then
+            echo "RUSTC_WRAPPER=sccache" >> $GITHUB_ENV
+            echo "SCCACHE_GHA_ENABLED=1" >> $GITHUB_ENV
+            echo "CARGO_INCREMENTAL=0" >> $GITHUB_ENV
+            nix develop -c sccache --start-server || true
+          else
+            echo "Warning: sccache not found in nix devshell, skipping"
+          fi
 
       # Tier 1: Full selftest in Nix devshell (Linux/macOS)
       - name: Run template self-test suite (Tier 1 - Nix)
