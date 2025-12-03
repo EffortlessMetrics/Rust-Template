@@ -11,7 +11,7 @@
       f rec {
         inherit system;
         pkgs = import nixpkgs { inherit system; overlays = [ fenix.overlays.default ]; };
-        rust = pkgs.fenix.stable.withComponents [ "cargo" "clippy" "rustfmt" "rust-src" "rust-analyzer" ];
+        rust = pkgs.fenix.stable.withComponents [ "cargo" "clippy" "rustfmt" "rust-src" "rust-analyzer" "llvm-tools-preview" ];
       });
   in {
     devShells = forAllSystems ({ pkgs, rust, ... }: {

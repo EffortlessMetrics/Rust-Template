@@ -42,27 +42,17 @@ runs:
       if: inputs.enable-sccache == 'true'
       shell: bash
       run: |
-        # Try to get sccache path from nix develop, filtering out devshell welcome message
-        # Allow failure since sccache is optional optimization
-        set +e
-        SCCACHE_OUTPUT=$(nix develop -c which sccache 2>&1)
-        SCCACHE_EXIT=$?
-        set -e
-
-        if [ $SCCACHE_EXIT -eq 0 ]; then
-          SCCACHE_PATH=$(echo "$SCCACHE_OUTPUT" | grep -v "DevShell ready" | grep -v "^$" | tail -1)
-          if [ -n "$SCCACHE_PATH" ] && [ -f "$SCCACHE_PATH" ]; then
-            echo "Found sccache at: $SCCACHE_PATH"
-            echo "RUSTC_WRAPPER=$SCCACHE_PATH" >> $GITHUB_ENV
-            echo "SCCACHE_GHA_ENABLED=1" >> $GITHUB_ENV
-            echo "CARGO_INCREMENTAL=0" >> $GITHUB_ENV
-            nix develop -c sccache --start-server || true
-          else
-            echo "Warning: sccache path invalid or not found, skipping"
-          fi
+        # sccache is on PATH inside nix develop, so we just use the name directly.
+        # This avoids issues with devshell welcome messages polluting path resolution.
+        # Verify sccache is actually available before enabling.
+        if nix develop -c sh -c 'command -v sccache >/dev/null 2>&1'; then
+          echo "sccache found in nix devshell, enabling"
+          echo "RUSTC_WRAPPER=sccache" >> $GITHUB_ENV
+          echo "SCCACHE_GHA_ENABLED=1" >> $GITHUB_ENV
+          echo "CARGO_INCREMENTAL=0" >> $GITHUB_ENV
+          nix develop -c sccache --start-server || true
         else
-          echo "Warning: nix develop failed (exit $SCCACHE_EXIT), skipping sccache setup"
-          echo "Output was: $SCCACHE_OUTPUT"
+          echo "Warning: sccache not found in nix devshell, skipping"
         fi
 
     - name: Show sccache stats (pre-build)
