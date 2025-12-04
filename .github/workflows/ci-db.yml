@@ -24,5 +24,5 @@ jobs:
       - uses: cachix/install-nix-action@v31
       - run: nix develop -c ./bootstrap-tools.sh
 
-      - run: nix develop -c ./.tools/bin/atlas schema diff --dev-url "sqlite://file?mode=memory&_fk=1" --from file://specs/db/atlas/migrations --to file://specs/db/atlas/schema.hcl
+      - run: nix develop -c ./.tools/bin/atlas schema diff --from file://specs/db/atlas/migrations --to file://specs/db/atlas/schema.hcl
       - run: nix develop -c ./.tools/bin/atlas migrate lint --dir file://specs/db/atlas/migrations --dev-url "sqlite://file?mode=memory&_fk=1"

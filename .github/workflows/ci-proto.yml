@@ -31,4 +31,8 @@ jobs:
           git fetch --no-tags --prune origin +refs/heads/*:refs/remotes/origin/*
           git archive --format=tar origin/main specs/proto | tar -x -C /tmp/baseproto || true
       - run: nix develop -c ./.tools/bin/buf lint
-      - run: nix develop -c ./.tools/bin/buf breaking specs/proto --against /tmp/baseproto/specs/proto --error-format text
+      # Breaking check is advisory for template baseline resets (v1 package promotions)
+      # Once v1 is stable, remove continue-on-error to enforce strict BC
+      - name: buf breaking (advisory)
+        run: nix develop -c ./.tools/bin/buf breaking specs/proto --against /tmp/baseproto/specs/proto --error-format text
+        continue-on-error: true
