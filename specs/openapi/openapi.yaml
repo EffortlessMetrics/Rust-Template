@@ -21,6 +21,10 @@ info:
     name: Apache-2.0
     url: https://www.apache.org/licenses/LICENSE-2.0
 
+servers:
+  - url: http://localhost:8080
+    description: Local development server
+
 security:
   - ApiKeyAuth: []
 
@@ -75,6 +79,7 @@ paths:
   # Example Domain Endpoint - Adapt or replace
   /refunds:
     post:
+      summary: Create a refund
       operationId: createRefund
       requestBody:
         required: true

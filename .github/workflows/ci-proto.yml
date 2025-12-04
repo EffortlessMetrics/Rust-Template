@@ -31,4 +31,4 @@ jobs:
           git fetch --no-tags --prune origin +refs/heads/*:refs/remotes/origin/*
           git archive --format=tar origin/main specs/proto | tar -x -C /tmp/baseproto || true
       - run: nix develop -c ./.tools/bin/buf lint
-      - run: nix develop -c ./.tools/bin/buf breaking specs/proto --against "file:///tmp/baseproto/specs/proto" --error-format text
+      - run: nix develop -c ./.tools/bin/buf breaking specs/proto --against /tmp/baseproto/specs/proto --error-format text
