@@ -9,9 +9,6 @@
 
 import React, { useEffect, useState } from 'react';
 import {
-  Card,
-  CardContent,
-  CardHeader,
   Divider,
   LinearProgress,
   makeStyles,
@@ -20,11 +17,9 @@ import {
   Box,
   Grid,
 } from '@material-ui/core';
-import {
-  CheckCircle as CheckIcon,
-  Error as ErrorIcon,
-  Warning as WarningIcon,
-} from '@material-ui/icons';
+import CheckIcon from '@material-ui/icons/CheckCircle';
+import ErrorIcon from '@material-ui/icons/Error';
+import WarningIcon from '@material-ui/icons/Warning';
 import { InfoCard, Progress } from '@backstage/core-components';
 import { PlatformClient, PlatformStatus, PlatformAPIError } from '../api/PlatformClient';
 
@@ -59,6 +54,22 @@ const useStyles = makeStyles(theme => ({
     color: theme.palette.success.main,
   },
 }));
+
+/**
+ * PolicyChip - displays a policy validation status badge
+ */
+const PolicyChip: React.FC<{ label: string; valid: boolean }> = ({ label, valid }) => {
+  const classes = useStyles();
+  return (
+    <Chip
+      size="small"
+      label={label}
+      icon={valid ? <CheckIcon /> : <ErrorIcon />}
+      color={valid ? 'primary' : 'secondary'}
+      className={classes.statusChip}
+    />
+  );
+};
 
 interface GovernanceHealthCardProps {
   /**
@@ -124,6 +135,7 @@ export const GovernanceHealthCard: React.FC<GovernanceHealthCardProps> = ({
       const intervalId = setInterval(fetchStatus, refreshInterval);
       return () => clearInterval(intervalId);
     }
+    return undefined;
   }, [baseUrl, refreshInterval]);
 
   if (loading) {
@@ -277,21 +289,5 @@ export const GovernanceHealthCard: React.FC<GovernanceHealthCardProps> = ({
         </Typography>
       </Box>
     </InfoCard>
-  );
-};
-
-/**
- * PolicyChip - displays a policy validation status badge
- */
-const PolicyChip: React.FC<{ label: string; valid: boolean }> = ({ label, valid }) => {
-  const classes = useStyles();
-  return (
-    <Chip
-      size="small"
-      label={label}
-      icon={valid ? <CheckIcon /> : <ErrorIcon />}
-      color={valid ? 'primary' : 'secondary'}
-      className={classes.statusChip}
-    />
   );
 };

@@ -18,12 +18,9 @@ import {
   ListItemText,
   Chip,
 } from '@material-ui/core';
-import {
-  Description as DocIcon,
-  CheckCircle as CheckIcon,
-  Warning as WarningIcon,
-  Error as ErrorIcon,
-} from '@material-ui/icons';
+import CheckIcon from '@material-ui/icons/CheckCircle';
+import WarningIcon from '@material-ui/icons/Warning';
+import ErrorIcon from '@material-ui/icons/Error';
 import { InfoCard, Progress } from '@backstage/core-components';
 import { PlatformClient, DocsIndex, PlatformAPIError } from '../api/PlatformClient';
 
@@ -63,6 +60,37 @@ const useStyles = makeStyles(theme => ({
     marginRight: theme.spacing(1),
   },
 }));
+
+/**
+ * DocTypeItem - displays a single document type count
+ */
+const DocTypeItem: React.FC<{ label: string; count: number; icon: string }> = ({
+  label,
+  count,
+  icon,
+}) => {
+  const classes = useStyles();
+
+  return (
+    <ListItem className={classes.typeItem}>
+      <ListItemText
+        primary={
+          <Box display="flex" justifyContent="space-between" alignItems="center">
+            <Box display="flex" alignItems="center">
+              <span style={{ marginRight: 8 }}>{icon}</span>
+              <Typography variant="body2">{label}</Typography>
+            </Box>
+            <Chip
+              label={count}
+              size="small"
+              color={count > 0 ? 'primary' : 'default'}
+            />
+          </Box>
+        }
+      />
+    </ListItem>
+  );
+};
 
 interface DocsHealthCardProps {
   /**
@@ -128,6 +156,7 @@ export const DocsHealthCard: React.FC<DocsHealthCardProps> = ({
       const intervalId = setInterval(fetchDocs, refreshInterval);
       return () => clearInterval(intervalId);
     }
+    return undefined;
   }, [baseUrl, refreshInterval]);
 
   if (loading) {
@@ -279,36 +308,5 @@ export const DocsHealthCard: React.FC<DocsHealthCardProps> = ({
         </Box>
       )}
     </InfoCard>
-  );
-};
-
-/**
- * DocTypeItem - displays a single document type count
- */
-const DocTypeItem: React.FC<{ label: string; count: number; icon: string }> = ({
-  label,
-  count,
-  icon,
-}) => {
-  const classes = useStyles();
-
-  return (
-    <ListItem className={classes.typeItem}>
-      <ListItemText
-        primary={
-          <Box display="flex" justifyContent="space-between" alignItems="center">
-            <Box display="flex" alignItems="center">
-              <span style={{ marginRight: 8 }}>{icon}</span>
-              <Typography variant="body2">{label}</Typography>
-            </Box>
-            <Chip
-              label={count}
-              size="small"
-              color={count > 0 ? 'primary' : 'default'}
-            />
-          </Box>
-        }
-      />
-    </ListItem>
   );
 };
