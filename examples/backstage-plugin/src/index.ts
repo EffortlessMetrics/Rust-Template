@@ -12,11 +12,15 @@ export { DocsHealthCard } from './components/DocsHealthCard';
 export { PlatformClient, createBackstageClient } from './api/PlatformClient';
 export type {
   PlatformStatus,
-  GovernanceHealth,
-  PolicyStatus,
-  ACCoverage,
+  ServiceInfo,
+  GovernanceInfo,
+  ConfigInfo,
+  LedgerCounts,
+  PoliciesInfo,
+  FrictionInfo,
+  QuestionsInfo,
   DocsIndex,
   DocsSummary,
   DocumentEntry,
-  PlatformAPIError,
+  DocType,
 } from './api/PlatformClient';

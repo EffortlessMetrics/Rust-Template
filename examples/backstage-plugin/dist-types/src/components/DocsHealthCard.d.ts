@@ -29,7 +29,7 @@ interface DocsHealthCardProps {
  *
  * Example usage:
  *   <DocsHealthCard />
- *   <DocsHealthCard baseUrl="http://localhost:8080" refreshInterval={120000} />
+ *   <DocsHealthCard baseUrl="http://localhost:9090" refreshInterval={120000} />
  */
 export declare const DocsHealthCard: React.FC<DocsHealthCardProps>;
 export {};

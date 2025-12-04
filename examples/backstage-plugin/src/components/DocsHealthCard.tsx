@@ -7,7 +7,7 @@
  * Shows total docs, health status, and breakdown by document type.
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import {
   makeStyles,
   Typography,
@@ -22,7 +22,7 @@ import CheckIcon from '@material-ui/icons/CheckCircle';
 import WarningIcon from '@material-ui/icons/Warning';
 import ErrorIcon from '@material-ui/icons/Error';
 import { InfoCard, Progress } from '@backstage/core-components';
-import { PlatformClient, DocsIndex, PlatformAPIError } from '../api/PlatformClient';
+import { PlatformClient, DocsIndex, PlatformAPIError, DocumentEntry } from '../api/PlatformClient';
 
 const useStyles = makeStyles(theme => ({
   metric: {
@@ -60,6 +60,33 @@ const useStyles = makeStyles(theme => ({
     marginRight: theme.spacing(1),
   },
 }));
+
+/**
+ * Compute document type counts from docs array
+ */
+function computeTypeCounts(docs: DocumentEntry[]): Record<string, number> {
+  const counts: Record<string, number> = {
+    adr: 0,
+    design_doc: 0,
+    'how-to': 0,
+    how_to: 0,
+    explanation: 0,
+    reference: 0,
+    guide: 0,
+    impl_plan: 0,
+    ci_workflow: 0,
+    requirements_doc: 0,
+    status: 0,
+  };
+
+  for (const doc of docs) {
+    if (doc.doc_type in counts) {
+      counts[doc.doc_type]++;
+    }
+  }
+
+  return counts;
+}
 
 /**
  * DocTypeItem - displays a single document type count
@@ -116,14 +143,14 @@ interface DocsHealthCardProps {
  *
  * Example usage:
  *   <DocsHealthCard />
- *   <DocsHealthCard baseUrl="http://localhost:8080" refreshInterval={120000} />
+ *   <DocsHealthCard baseUrl="http://localhost:9090" refreshInterval={120000} />
  */
 export const DocsHealthCard: React.FC<DocsHealthCardProps> = ({
   baseUrl = '/api/proxy/rust-spec-platform',
   refreshInterval = 60000,
 }) => {
   const classes = useStyles();
-  const [docs, setDocs] = useState<DocsIndex | null>(null);
+  const [docsData, setDocsData] = useState<DocsIndex | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -133,7 +160,7 @@ export const DocsHealthCard: React.FC<DocsHealthCardProps> = ({
     const fetchDocs = async () => {
       try {
         const data = await client.getDocsIndex();
-        setDocs(data);
+        setDocsData(data);
         setError(null);
       } catch (err) {
         if (err instanceof PlatformAPIError) {
@@ -159,6 +186,12 @@ export const DocsHealthCard: React.FC<DocsHealthCardProps> = ({
     return undefined;
   }, [baseUrl, refreshInterval]);
 
+  // Compute type counts from docs array
+  const typeCounts = useMemo(() => {
+    if (!docsData) return null;
+    return computeTypeCounts(docsData.docs);
+  }, [docsData]);
+
   if (loading) {
     return (
       <InfoCard title="Documentation Health">
@@ -182,7 +215,7 @@ export const DocsHealthCard: React.FC<DocsHealthCardProps> = ({
     );
   }
 
-  if (!docs) {
+  if (!docsData || !typeCounts) {
     return (
       <InfoCard title="Documentation Health">
         <Typography>No data available</Typography>
@@ -190,7 +223,7 @@ export const DocsHealthCard: React.FC<DocsHealthCardProps> = ({
     );
   }
 
-  const { summary } = docs;
+  const { summary, template_version } = docsData;
   const healthPercentage = summary.total > 0
     ? ((summary.valid / summary.total) * 100).toFixed(1)
     : '0.0';
@@ -255,28 +288,38 @@ export const DocsHealthCard: React.FC<DocsHealthCardProps> = ({
         <List className={classes.typeList}>
           <DocTypeItem
             label="Architecture Decision Records"
-            count={summary.by_type.adr}
+            count={typeCounts.adr}
             icon="📋"
           />
           <DocTypeItem
             label="Design Documents"
-            count={summary.by_type.design}
+            count={typeCounts.design_doc}
             icon="🎨"
           />
           <DocTypeItem
             label="How-To Guides"
-            count={summary.by_type['how-to']}
+            count={typeCounts['how-to'] + typeCounts.how_to}
             icon="📖"
           />
           <DocTypeItem
+            label="Guides"
+            count={typeCounts.guide}
+            icon="📘"
+          />
+          <DocTypeItem
             label="Explanation"
-            count={summary.by_type.explanation}
+            count={typeCounts.explanation}
             icon="💡"
           />
           <DocTypeItem
             label="Reference"
-            count={summary.by_type.reference}
+            count={typeCounts.reference}
             icon="📚"
+          />
+          <DocTypeItem
+            label="CI Workflows"
+            count={typeCounts.ci_workflow}
+            icon="⚙️"
           />
         </List>
       </Box>
@@ -307,6 +350,13 @@ export const DocsHealthCard: React.FC<DocsHealthCardProps> = ({
           </Box>
         </Box>
       )}
+
+      {/* Footer */}
+      <Box mt={2}>
+        <Typography variant="caption" color="textSecondary">
+          Template v{template_version}
+        </Typography>
+      </Box>
     </InfoCard>
   );
 };

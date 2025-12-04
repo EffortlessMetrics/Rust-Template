@@ -4,6 +4,8 @@
  * EXAMPLE QUALITY - NOT PRODUCTION READY
  *
  * This client provides typed access to the platform's governance APIs.
+ * Types are derived from actual API responses (validated 2025-12-04).
+ *
  * In production, add:
  * - Authentication/authorization
  * - Retry logic and exponential backoff
@@ -13,65 +15,190 @@
  * - Comprehensive error handling
  */
 
+// =============================================================================
+// /platform/status types
+// =============================================================================
+
 /**
- * AC Coverage metrics
+ * Service metadata
  */
-export interface ACCoverage {
+export interface ServiceInfo {
+  service_id: string;
+  template_version: string;
+  display_name: string;
+  description: string;
+  links: Record<string, string>;
+  tags: string[];
+}
+
+/**
+ * Governance ledger counts
+ */
+export interface LedgerCounts {
+  stories: number;
+  requirements: number;
+  acs: number;
+}
+
+/**
+ * DevEx command/flow counts
+ */
+export interface DevExCounts {
+  commands: number;
+  flows: number;
+}
+
+/**
+ * Documentation summary in status
+ */
+export interface DocsCounts {
   total: number;
-  passing: number;
-  failing: number;
-  pending: number;
-  percentage: number;
+  design: number;
+  doc_type_issues: number;
+}
+
+/**
+ * Task counts
+ */
+export interface TasksCounts {
+  total: number;
+}
+
+/**
+ * Question summary entry
+ */
+export interface QuestionSummary {
+  id: string;
+  summary: string;
+  flow: string;
+}
+
+/**
+ * Questions tracking
+ */
+export interface QuestionsInfo {
+  open: number;
+  answered: number;
+  resolved: number;
+  total: number;
+  top_open: QuestionSummary[];
+}
+
+/**
+ * Friction log entry summary
+ */
+export interface FrictionSummary {
+  id: string;
+  date: string;
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  summary: string;
+  category: string;
+}
+
+/**
+ * Friction tracking
+ */
+export interface FrictionInfo {
+  total: number;
+  open: number;
+  by_severity: {
+    low: number;
+    medium: number;
+    high: number;
+    critical: number;
+  };
+  recent: FrictionSummary[];
+}
+
+/**
+ * Fork tracking
+ */
+export interface ForksInfo {
+  total: number;
+  ids: string[];
 }
 
 /**
  * Policy enforcement status
  */
-export interface PolicyStatus {
-  skills_valid: boolean;
-  agents_valid: boolean;
-  adrs_valid: boolean;
-  specs_valid: boolean;
-  bdd_valid: boolean;
+export interface PoliciesInfo {
+  status: 'pass' | 'fail';
 }
 
 /**
- * Governance health metrics
+ * Full governance health metrics from /platform/status
  */
-export interface GovernanceHealth {
-  ac_coverage: ACCoverage;
-  policy_status: PolicyStatus;
-  selftest_passing: boolean;
-  last_validated: string;
+export interface GovernanceInfo {
+  ledger: LedgerCounts;
+  devex: DevExCounts;
+  docs: DocsCounts;
+  tasks: TasksCounts;
+  questions: QuestionsInfo;
+  friction: FrictionInfo;
+  forks: ForksInfo;
+  policies: PoliciesInfo;
+}
+
+/**
+ * Auth configuration
+ */
+export interface AuthConfig {
+  mode: 'open' | 'token' | 'oidc';
+  token_present: boolean;
+}
+
+/**
+ * Runtime configuration (from /platform/status)
+ */
+export interface ConfigInfo {
+  env: string;
+  http_port: number;
+  settings: Record<string, unknown>;
+  secrets_redacted: Record<string, string>;
+  auth: AuthConfig;
 }
 
 /**
  * Platform status response from /platform/status
  */
 export interface PlatformStatus {
-  status: string;
-  version: string;
-  governance: GovernanceHealth;
-  auth_mode: string;
-  metadata: {
-    template_version: string;
-    schema_version: string;
-    last_updated: string;
-  };
+  service: ServiceInfo;
+  governance: GovernanceInfo;
+  config: ConfigInfo;
 }
 
+// =============================================================================
+// /platform/docs/index types
+// =============================================================================
+
 /**
- * Individual document entry
+ * Document type enumeration
+ */
+export type DocType =
+  | 'adr'
+  | 'design_doc'
+  | 'impl_plan'
+  | 'requirements_doc'
+  | 'guide'
+  | 'how-to'
+  | 'how_to'
+  | 'explanation'
+  | 'reference'
+  | 'ci_workflow'
+  | 'status';
+
+/**
+ * Individual document entry from /platform/docs/index
  */
 export interface DocumentEntry {
   id: string;
-  type: 'adr' | 'design' | 'how-to' | 'explanation' | 'reference';
-  title: string;
-  path: string;
-  status: 'valid' | 'has_issues';
-  issues?: string[];
-  linked_reqs?: string[];
-  linked_acs?: string[];
+  file: string;
+  doc_type: DocType;
+  stories: string[];
+  requirements: string[];
+  acs: string[];
+  adrs: string[];
+  doc_type_valid: boolean;
 }
 
 /**
@@ -81,22 +208,21 @@ export interface DocsSummary {
   total: number;
   valid: number;
   with_issues: number;
-  by_type: {
-    adr: number;
-    design: number;
-    'how-to': number;
-    explanation: number;
-    reference: number;
-  };
 }
 
 /**
  * Documentation index response from /platform/docs/index
  */
 export interface DocsIndex {
+  schema_version: string;
+  template_version: string;
+  docs: DocumentEntry[];
   summary: DocsSummary;
-  documents: DocumentEntry[];
 }
+
+// =============================================================================
+// Error handling
+// =============================================================================
 
 /**
  * API Error with context
@@ -111,6 +237,10 @@ export class PlatformAPIError extends Error {
     this.name = 'PlatformAPIError';
   }
 }
+
+// =============================================================================
+// Client implementation
+// =============================================================================
 
 /**
  * Client for Rust-as-Spec Platform APIs
@@ -142,7 +272,7 @@ export class PlatformClient {
       const response = await fetch(url, {
         signal: controller.signal,
         headers: {
-          'Accept': 'application/json',
+          Accept: 'application/json',
         },
       });
 
@@ -176,11 +306,7 @@ export class PlatformClient {
         );
       }
 
-      throw new PlatformAPIError(
-        'Unknown error occurred',
-        undefined,
-        endpoint,
-      );
+      throw new PlatformAPIError('Unknown error occurred', undefined, endpoint);
     } finally {
       clearTimeout(timeoutId);
     }
@@ -191,7 +317,7 @@ export class PlatformClient {
    *
    * Fetches from /platform/status endpoint
    *
-   * @returns Platform status including governance health, AC coverage, and policy status
+   * @returns Platform status including service info, governance metrics, and config
    * @throws PlatformAPIError on network errors, timeouts, or non-200 responses
    */
   async getStatus(): Promise<PlatformStatus> {
@@ -222,6 +348,42 @@ export class PlatformClient {
     } catch {
       return false;
     }
+  }
+
+  // =========================================================================
+  // Convenience accessors (derived from actual API structure)
+  // =========================================================================
+
+  /**
+   * Get AC count from status
+   */
+  async getACCount(): Promise<number> {
+    const status = await this.getStatus();
+    return status.governance.ledger.acs;
+  }
+
+  /**
+   * Get policy pass/fail status
+   */
+  async getPolicyStatus(): Promise<'pass' | 'fail'> {
+    const status = await this.getStatus();
+    return status.governance.policies.status;
+  }
+
+  /**
+   * Get template version
+   */
+  async getTemplateVersion(): Promise<string> {
+    const status = await this.getStatus();
+    return status.service.template_version;
+  }
+
+  /**
+   * Get open friction issues
+   */
+  async getOpenFrictionCount(): Promise<number> {
+    const status = await this.getStatus();
+    return status.governance.friction.open;
   }
 }
 
