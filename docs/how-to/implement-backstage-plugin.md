@@ -6,7 +6,7 @@ stories: [US-TPL-PLT-001]
 requirements: [REQ-TPL-PLATFORM-INTROSPECTION, REQ-TPL-AI-IDP-COMPAT]
 acs: [AC-TPL-CLI-JSON-CORE, AC-TPL-CLI-JSON-OUTPUT]
 adrs: [ADR-0016]
-last_updated: 2025-12-01
+last_updated: 2025-12-04
 ---
 <!-- doclint:disable orphan-version -->
 
@@ -818,6 +818,74 @@ Export from `src/index.ts` and add to your home page or entity page.
 - **ADR-0016**: [docs/adr/0016-idp-tiles-json-contracts.md](../adr/0016-idp-tiles-json-contracts.md) - IDP tile architecture decision
 - **Platform API**: [AGENT_GUIDE.md](../AGENT_GUIDE.md) - Platform API usage guide
 - **Backstage Docs**: [backstage.io/docs](https://backstage.io/docs) - Official Backstage documentation
+
+---
+
+## TypeScript Configuration Standards
+
+The example Backstage plugin in `examples/backstage-plugin/` follows modern TypeScript best practices. Any TypeScript code in this template must adhere to these standards:
+
+### Required Settings
+
+```json
+{
+  "compilerOptions": {
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "moduleDetection": "force",
+    "strict": true
+  }
+}
+```
+
+### Prohibited Patterns
+
+- **No deprecated moduleResolution**: Never use `"moduleResolution": "node10"` or `"moduleResolution": "node"`. These are legacy values.
+- **No ignoreDeprecations**: Never use `ignoreDeprecations` flags. They mask migration warnings and lead to future breakage.
+
+### Build Scripts
+
+The plugin's `package.json` includes these scripts:
+
+| Script | Purpose |
+|--------|---------|
+| `tsc:types` | Generate declaration files to `dist-types/` |
+| `tsc:check` | Type-check without emitting |
+| `check` | Run `tsc --noEmit` + lint (pre-commit validation) |
+| `build` | Generate types, then run backstage-cli build |
+
+### CI Enforcement
+
+TypeScript configuration is validated in CI via `./scripts/validate-ts-config.sh`. This script:
+
+1. Scans all `tsconfig.json` files in the repo
+2. Fails on deprecated `moduleResolution` values
+3. Fails on `ignoreDeprecations` flags
+4. Warns on non-NodeNext resolution (advisory)
+
+Run locally to validate:
+
+```bash
+./scripts/validate-ts-config.sh
+```
+
+### Extending Third-Party Configs
+
+When extending configs like `@backstage/cli/config/tsconfig.json`, override any deprecated settings:
+
+```json
+{
+  "extends": "@backstage/cli/config/tsconfig.json",
+  "compilerOptions": {
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "emitDeclarationOnly": false,
+    "types": ["node"]
+  }
+}
+```
+
+The example plugin demonstrates this pattern. See `examples/backstage-plugin/tsconfig.json` for the full configuration.
 
 ---
 
