@@ -9,7 +9,7 @@ stories: [US-TPL-PLT-001]
 requirements: [REQ-PLT-DOCS-CONSISTENCY]
 acs: [AC-PLT-009, AC-PLT-010]
 adrs: [ADR-0005]
-last_updated: 2025-11-30
+last_updated: 2025-12-04
 ---
 
 # Documentation Index
@@ -289,6 +289,7 @@ When updating documentation:
 | **Doc index ↔ front-matter sync** | `docs-check` | AC-PLT-DOC-INDEX-FRONTMATTER |
 | **ADR format** | `adr-check` | — |
 | **Skills format** | `skills-lint` | AC-TPL-SKILLS-LINT |
+| **TypeScript config** | `validate-ts-config.sh` (CI) | — |
 
 ### Version Authority
 
