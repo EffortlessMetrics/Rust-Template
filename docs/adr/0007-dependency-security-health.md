@@ -122,6 +122,29 @@ cargo xtask release-verify
 - **`ci-security.yml`**: CI enforcement
 - **`docs/explanation/supply-chain-hardening.md`**: End-to-end security docs
 
+## Appendix: Current Advisory Ignores
+
+The following advisories are explicitly ignored in `deny.toml` and `.cargo/audit.toml`:
+
+### RUSTSEC-2023-0071 (rsa Marvin Attack)
+
+- **Crate:** `rsa 0.9.9`
+- **Severity:** Medium (5.9)
+- **Status:** No fix available
+- **Reason:** Transitive dependency from `sqlx-mysql`. The Marvin Attack requires timing side-channel access to exploit. For this template's use case (typical web services), the risk is acceptable. When a fix is released, we will update.
+
+### RUSTSEC-2021-0046 (telemetry)
+
+- **Crate:** `telemetry` (local workspace crate)
+- **Status:** FALSE POSITIVE
+- **Reason:** Our local `telemetry` crate shares a name with an unrelated published crate. Our crate does not contain the vulnerable code.
+
+### RUSTSEC-2020-0140 (model)
+
+- **Crate:** `model` (local workspace crate)
+- **Status:** FALSE POSITIVE
+- **Reason:** Our local `model` crate shares a name with an unrelated published crate. Our crate does not contain the vulnerable code.
+
 ## References
 
 - [RustSec Advisory Database](https://rustsec.org/)

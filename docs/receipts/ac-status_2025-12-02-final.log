@@ -1,0 +1,13 @@
+warning: unknown setting 'lazy-trees'
+warning: Git tree '/home/steven/code/Rust/Rust-Template' is dirty
+DevShell ready — try: just checks
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 3.37s
+     Running `target/debug/xtask ac-status`
+Parsing ledger: specs/spec_ledger.yaml
+  Found 112 ACs
+JUnit file `target/junit/acceptance.xml` is empty - running BDD suite to regenerate...
+✓ Acceptance tests passed
+JUnit output: target/junit/acceptance.xml
+Error: Acceptance JUnit file `target/junit/acceptance.xml` is still empty after running BDD.
+This indicates the BDD tests could not be run successfully.
+Check that the acceptance test harness is configured correctly.

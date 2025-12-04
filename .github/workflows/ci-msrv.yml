@@ -15,6 +15,7 @@ jobs:
     permissions: { contents: read }
     steps:
       - uses: actions/checkout@v4
+
       - name: Extract MSRV from workspace Cargo.toml
         id: msrv
         run: |
@@ -22,9 +23,26 @@ jobs:
           test -n "$v" || (echo "No rust-version found" && exit 1)
           echo "msrv=$v" >> $GITHUB_OUTPUT
 
+      - name: Setup Rust cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          key: msrv-${{ steps.msrv.outputs.msrv }}
+
       - name: Toolchain = ${{ steps.msrv.outputs.msrv }}
         uses: dtolnay/rust-toolchain@master
         with:
           toolchain: ${{ steps.msrv.outputs.msrv }}
           components: clippy,rustfmt
-      - run: cargo +${{ steps.msrv.outputs.msrv }} build --workspace
+
+      # protoc is required for adapters-grpc
+      - name: Install protoc
+        uses: arduino/setup-protoc@v3
+        with:
+          version: "27.x"
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build with MSRV
+        run: cargo +${{ steps.msrv.outputs.msrv }} build --workspace
+
+      - name: Test with MSRV
+        run: cargo +${{ steps.msrv.outputs.msrv }} test --workspace

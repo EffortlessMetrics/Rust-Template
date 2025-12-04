@@ -1,6 +1,6 @@
 use adapters_grpc::spawn;
-use adapters_grpc::task::task_service_client::TaskServiceClient;
-use adapters_grpc::task::{CreateTaskRequest, GetTaskRequest, ListTasksRequest};
+use adapters_grpc::task::v1::task_service_client::TaskServiceClient;
+use adapters_grpc::task::v1::{CreateTaskRequest, GetTaskRequest, ListTasksRequest};
 use async_trait::async_trait;
 use business_core::ports::TaskRepository;
 use model::{Task, TaskStatus};
@@ -93,9 +93,10 @@ async fn test_grpc_service_create_task() {
     let get_request = GetTaskRequest { id: task_id.clone() };
 
     let get_response = client.get_task(get_request).await.expect("Failed to get task").into_inner();
+    let fetched_task = get_response.task.expect("No task in get response");
 
-    assert_eq!(get_response.id, task_id);
-    assert_eq!(get_response.title, "gRPC smoke test task");
+    assert_eq!(fetched_task.id, task_id);
+    assert_eq!(fetched_task.title, "gRPC smoke test task");
 
     // Test 3: List tasks
     let list_request = ListTasksRequest {};

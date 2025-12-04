@@ -55,6 +55,7 @@ async fn given_task_exists(world: &mut World, task_id: String, status_str: Strin
             depends_on: Vec::new(),
         }],
     );
+    world.reload_app();
 }
 
 #[given(expr = r#"the following tasks exist in {string}:"#)]
@@ -142,6 +143,7 @@ async fn given_tasks_exist(world: &mut World, file: String, step: &cucumber::ghe
     }
 
     ensure_tasks_file(&tasks_path, tasks);
+    world.reload_app();
 }
 
 #[when(regex = r#"^I send a POST request to "([^"]+)" with body:$"#)]
@@ -208,12 +210,12 @@ async fn then_task_status(world: &mut World, task_id: String, expected_status_st
 
 #[then(regex = r#"^task "([^"]+)" should exist with title "([^"]+)" and requirement "([^"]+)"$"#)]
 async fn then_task_exists_with_title_and_req(
-    _world: &mut World,
+    world: &mut World,
     task_id: String,
     title: String,
     requirement: String,
 ) {
-    let tasks = load_tasks_from_spec_root();
+    let tasks = load_tasks_from_spec_root(world);
     let task = find_task(&tasks, &task_id);
     assert_eq!(task.title, title, "Task {} should have title {}", task_id, title);
     assert_eq!(
@@ -224,8 +226,8 @@ async fn then_task_exists_with_title_and_req(
 }
 
 #[then(regex = r#"^task "([^"]+)" should have status "([^"]+)" in tasks.yaml$"#)]
-async fn then_task_status_in_yaml(_world: &mut World, task_id: String, expected_status: String) {
-    let tasks = load_tasks_from_spec_root();
+async fn then_task_status_in_yaml(world: &mut World, task_id: String, expected_status: String) {
+    let tasks = load_tasks_from_spec_root(world);
     let task = find_task(&tasks, &task_id);
     assert_eq!(
         task.status, expected_status,
@@ -235,8 +237,8 @@ async fn then_task_status_in_yaml(_world: &mut World, task_id: String, expected_
 }
 
 #[then(regex = r#"^task "([^"]+)" should have owner "([^"]+)"$"#)]
-async fn then_task_owner_in_yaml(_world: &mut World, task_id: String, expected_owner: String) {
-    let tasks = load_tasks_from_spec_root();
+async fn then_task_owner_in_yaml(world: &mut World, task_id: String, expected_owner: String) {
+    let tasks = load_tasks_from_spec_root(world);
     let task = find_task(&tasks, &task_id);
     assert_eq!(
         task.owner.as_deref(),
@@ -248,8 +250,8 @@ async fn then_task_owner_in_yaml(_world: &mut World, task_id: String, expected_o
 }
 
 #[then(regex = r#"^task "([^"]+)" should have title "([^"]+)"$"#)]
-async fn then_task_title_in_yaml(_world: &mut World, task_id: String, expected_title: String) {
-    let tasks = load_tasks_from_spec_root();
+async fn then_task_title_in_yaml(world: &mut World, task_id: String, expected_title: String) {
+    let tasks = load_tasks_from_spec_root(world);
     let task = find_task(&tasks, &task_id);
     assert_eq!(task.title, expected_title, "Task {} should have title {}", task_id, expected_title);
 }
@@ -266,9 +268,9 @@ fn parse_status(status_str: &str) -> (TaskStatus, String) {
     }
 }
 
-fn load_tasks_from_spec_root() -> TasksSpec {
-    let root = std::env::var("SPEC_ROOT").unwrap_or_else(|_| ".".to_string());
-    let path = Path::new(&root).join("specs/tasks.yaml");
+fn load_tasks_from_spec_root(world: &World) -> TasksSpec {
+    let root = world.spec_root();
+    let path = root.join("specs/tasks.yaml");
     spec_runtime::load_tasks(&path).expect("Failed to load tasks.yaml")
 }
 
@@ -424,7 +426,7 @@ async fn then_json_not_contains_task(world: &mut World, task_id: String) {
     );
 }
 
-#[then(regex = r#"^the response body should contain "([^"]+)"$"#)]
+#[then(regex = r#"^the response body should contain ['"](.+)['"]$"#)]
 async fn then_body_contains(world: &mut World, needle: String) {
     let response = world.last_response.as_ref().expect("response should exist");
     assert!(

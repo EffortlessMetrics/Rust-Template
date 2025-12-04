@@ -17,6 +17,16 @@ info:
   x-template-version: "2.3.0"
   x-schema-version: "1.0"
   x-last-updated: "2025-11-17"
+  license:
+    name: Apache-2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0
+
+servers:
+  - url: http://localhost:8080
+    description: Local development server
+
+security:
+  - ApiKeyAuth: []
 
 paths:
   # Template Core - Keep these in your service
@@ -36,6 +46,12 @@ paths:
                 properties:
                   status: { type: string, enum: [ok], description: "Health status" }
                   service: { type: string, description: "Service name" }
+        "400":
+          description: Invalid health check request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
   /version:
     get:
@@ -53,10 +69,17 @@ paths:
                 properties:
                   version: { type: string, description: "Service version from Cargo.toml" }
                   gitSha: { type: string, description: "Git commit SHA" }
+        "400":
+          description: Invalid version request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
   # Example Domain Endpoint - Adapt or replace
   /refunds:
     post:
+      summary: Create a refund
       operationId: createRefund
       requestBody:
         required: true
@@ -95,6 +118,11 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
 
 components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
   schemas:
     ErrorResponse:
       type: object

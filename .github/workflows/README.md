@@ -407,7 +407,7 @@ jobs:
         uses: Swatinem/rust-cache@v2
 
       - name: Install Nix
-        uses: cachix/install-nix-action@v27
+        uses: cachix/install-nix-action@v31
 
       - name: Run your command
         run: nix develop -c cargo run -p xtask -- your-command

@@ -15,13 +15,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: Swatinem/rust-cache@v2
-      - uses: cachix/install-nix-action@v27
+      - uses: cachix/install-nix-action@v31
       - name: Enable sccache
         run: |
-          echo "RUSTC_WRAPPER=$(nix develop -c which sccache)" >> $GITHUB_ENV
-          echo "SCCACHE_GHA_ENABLED=1" >> $GITHUB_ENV
-          echo "CARGO_INCREMENTAL=0" >> $GITHUB_ENV
-          nix develop -c sccache --start-server || true
+          if nix develop -c sh -c 'command -v sccache >/dev/null 2>&1'; then
+            echo "RUSTC_WRAPPER=sccache" >> $GITHUB_ENV
+            echo "SCCACHE_GHA_ENABLED=1" >> $GITHUB_ENV
+            echo "CARGO_INCREMENTAL=0" >> $GITHUB_ENV
+            nix develop -c sccache --start-server || true
+          else
+            echo "Warning: sccache not found in nix devshell, skipping"
+          fi
       - name: Run checks via xtask
         run: nix develop -c cargo run -p xtask -- check
       - name: Show sccache stats

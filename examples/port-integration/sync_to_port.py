@@ -120,8 +120,8 @@ def upsert_entity(token: str, entity: dict, verbose: bool = False) -> dict:
     )
 
     if verbose:
-        print(f"Port.io response: {response.status_code}")
-        print(json.dumps(response.json(), indent=2))
+        print(f"Port.io response: {response.status_code}", file=sys.stderr)
+        print(json.dumps(response.json(), indent=2), file=sys.stderr)
 
     response.raise_for_status()
     return response.json()
@@ -137,46 +137,48 @@ def main():
     try:
         # Fetch platform data
         if args.verbose or args.dump_only:
-            print(f"Fetching from {PLATFORM_URL}...")
+            print(f"Fetching from {PLATFORM_URL}...", file=sys.stderr)
 
         snapshot = fetch_idp_snapshot()
         status = fetch_status()
 
         if args.verbose:
-            print(f"Template version: {snapshot.get('template_version')}")
-            print(f"Governance: {snapshot.get('governance_health', {}).get('status')}")
+            print(f"Template version: {snapshot.get('template_version')}", file=sys.stderr)
+            print(f"Governance: {snapshot.get('governance_health', {}).get('status')}", file=sys.stderr)
 
         # Transform to Port.io format
         entity = transform_to_port_entity(snapshot, status)
 
-        if args.verbose or args.dump_only:
-            print(f"Entity: {json.dumps(entity, indent=2)}")
-
-        # If dump-only, exit without syncing
+        # If dump-only, print pure JSON to stdout (pipeable to jq)
         if args.dump_only:
-            print(f"\n--dump-only mode: would sync entity '{entity['identifier']}' to Port.io")
+            print(json.dumps(entity, indent=2))
+            print(f"--dump-only mode: entity '{entity['identifier']}' dumped to stdout.", file=sys.stderr)
             return 0
 
+        # Verbose mode: log entity to stderr
+        if args.verbose:
+            print(f"Entity: {json.dumps(entity, indent=2)}", file=sys.stderr)
+
         # Sync to Port.io
-        print(f"Syncing {entity['identifier']} to Port.io...")
+        print(f"Syncing {entity['identifier']}' to Port.io...", file=sys.stderr)
         token = get_port_token()
         result = upsert_entity(token, entity, args.verbose)
 
-        print(f"Success! Entity synced: {result.get('entity', {}).get('identifier')}")
+        print(f"Success! Entity synced: {result.get('entity', {}).get('identifier')}", file=sys.stderr)
         return 0
 
     except requests.exceptions.ConnectionError as e:
-        print(f"Error: Could not connect to platform at {PLATFORM_URL}")
-        print(f"  Ensure the service is running: cargo run -p app-http")
+        print(f"Error: Could not connect to platform at {PLATFORM_URL}", file=sys.stderr)
+        print(f"  Ensure the service is running: cargo run -p app-http", file=sys.stderr)
         return 1
     except requests.exceptions.HTTPError as e:
-        print(f"Error: HTTP {e.response.status_code}: {e.response.text}")
+        print(f"Error: HTTP {e.response.status_code}: {e.response.text}", file=sys.stderr)
         return 1
     except ValueError as e:
-        print(f"Error: {e}")
+        print(f"Error: {e}", file=sys.stderr)
         return 1
     except Exception as e:
-        print(f"Error: {e}")
+        print(f"Error: {e}", file=sys.stderr)
         return 1
 
 if __name__ == "__main__":
