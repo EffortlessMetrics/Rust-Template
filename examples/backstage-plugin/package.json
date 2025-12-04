@@ -15,7 +15,10 @@
     "role": "frontend-plugin"
   },
   "scripts": {
-    "build": "backstage-cli package build",
+    "tsc:types": "tsc --declaration --emitDeclarationOnly --outDir dist-types",
+    "tsc:check": "tsc --noEmit",
+    "build": "pnpm tsc:types && backstage-cli package build",
+    "check": "tsc --noEmit && pnpm lint",
     "lint": "backstage-cli package lint",
     "test": "backstage-cli package test",
     "clean": "backstage-cli package clean",

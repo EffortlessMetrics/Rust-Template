@@ -3,6 +3,7 @@
   "compilerOptions": {
     "target": "ES2020",
     "module": "NodeNext",
+    "moduleDetection": "force",
     "lib": ["ES2020", "DOM"],
     "jsx": "react",
     "declaration": true,

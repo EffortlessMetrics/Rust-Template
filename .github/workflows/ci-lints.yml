@@ -8,6 +8,15 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  ts-config-lints:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions: { contents: read }
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate TypeScript config standards
+        run: ./scripts/validate-ts-config.sh
+
   rust-lints:
     runs-on: ubuntu-latest
     timeout-minutes: 25
