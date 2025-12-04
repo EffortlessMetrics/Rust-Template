@@ -4,7 +4,7 @@
  * EXAMPLE QUALITY - NOT PRODUCTION READY
  *
  * Displays governance health metrics from /platform/status endpoint.
- * Shows AC coverage, policy status, and selftest gate health.
+ * Shows ledger counts, policy status, friction, and questions.
  */
 import React from 'react';
 interface GovernanceHealthCardProps {
@@ -22,14 +22,15 @@ interface GovernanceHealthCardProps {
  * GovernanceHealthCard displays real-time governance metrics
  *
  * Features:
- * - AC coverage with progress bar
- * - Policy enforcement status badges
- * - Selftest gate indicator
+ * - Ledger counts (stories, requirements, ACs)
+ * - Policy enforcement status
+ * - Friction tracking
+ * - Open questions
  * - Auto-refresh capability
  *
  * Example usage:
  *   <GovernanceHealthCard />
- *   <GovernanceHealthCard baseUrl="http://localhost:8080" refreshInterval={60000} />
+ *   <GovernanceHealthCard baseUrl="http://localhost:9090" refreshInterval={60000} />
  */
 export declare const GovernanceHealthCard: React.FC<GovernanceHealthCardProps>;
 export {};

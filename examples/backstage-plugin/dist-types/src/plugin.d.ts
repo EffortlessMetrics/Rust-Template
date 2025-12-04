@@ -19,5 +19,5 @@ export { DocsHealthCard } from './components/DocsHealthCard';
  * Export API client for custom integrations
  */
 export { PlatformClient } from './api/PlatformClient';
-export type { PlatformStatus, GovernanceHealth, PolicyStatus, ACCoverage, DocsIndex, DocsSummary, DocumentEntry, } from './api/PlatformClient';
+export type { PlatformStatus, ServiceInfo, GovernanceInfo, ConfigInfo, DocsIndex, DocsSummary, DocumentEntry, } from './api/PlatformClient';
 //# sourceMappingURL=plugin.d.ts.map

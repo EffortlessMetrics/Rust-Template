@@ -28,9 +28,9 @@ export { DocsHealthCard } from './components/DocsHealthCard';
 export { PlatformClient } from './api/PlatformClient';
 export type {
   PlatformStatus,
-  GovernanceHealth,
-  PolicyStatus,
-  ACCoverage,
+  ServiceInfo,
+  GovernanceInfo,
+  ConfigInfo,
   DocsIndex,
   DocsSummary,
   DocumentEntry,

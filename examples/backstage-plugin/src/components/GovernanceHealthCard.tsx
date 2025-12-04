@@ -4,13 +4,12 @@
  * EXAMPLE QUALITY - NOT PRODUCTION READY
  *
  * Displays governance health metrics from /platform/status endpoint.
- * Shows AC coverage, policy status, and selftest gate health.
+ * Shows ledger counts, policy status, friction, and questions.
  */
 
 import React, { useEffect, useState } from 'react';
 import {
   Divider,
-  LinearProgress,
   makeStyles,
   Typography,
   Chip,
@@ -30,16 +29,22 @@ const useStyles = makeStyles(theme => ({
     gap: theme.spacing(1),
     marginBottom: theme.spacing(2),
   },
-  coverageBar: {
-    height: 10,
-    borderRadius: 5,
-    marginTop: theme.spacing(1),
-    marginBottom: theme.spacing(0.5),
-  },
   metric: {
     display: 'flex',
     justifyContent: 'space-between',
     marginBottom: theme.spacing(1),
+  },
+  metricBox: {
+    textAlign: 'center',
+    padding: theme.spacing(1),
+  },
+  metricValue: {
+    fontSize: '1.5rem',
+    fontWeight: 'bold',
+  },
+  metricLabel: {
+    color: theme.palette.text.secondary,
+    fontSize: '0.75rem',
   },
   statusChip: {
     margin: theme.spacing(0.5),
@@ -53,19 +58,29 @@ const useStyles = makeStyles(theme => ({
   successText: {
     color: theme.palette.success.main,
   },
+  frictionItem: {
+    padding: theme.spacing(1),
+    marginBottom: theme.spacing(1),
+    borderRadius: 4,
+    backgroundColor: 'rgba(0, 0, 0, 0.02)',
+  },
 }));
 
 /**
- * PolicyChip - displays a policy validation status badge
+ * StatusChip - displays a status badge
  */
-const PolicyChip: React.FC<{ label: string; valid: boolean }> = ({ label, valid }) => {
+const StatusChip: React.FC<{ label: string; status: 'pass' | 'fail' }> = ({
+  label,
+  status,
+}) => {
   const classes = useStyles();
+  const isPass = status === 'pass';
   return (
     <Chip
       size="small"
       label={label}
-      icon={valid ? <CheckIcon /> : <ErrorIcon />}
-      color={valid ? 'primary' : 'secondary'}
+      icon={isPass ? <CheckIcon /> : <ErrorIcon />}
+      color={isPass ? 'primary' : 'secondary'}
       className={classes.statusChip}
     />
   );
@@ -88,14 +103,15 @@ interface GovernanceHealthCardProps {
  * GovernanceHealthCard displays real-time governance metrics
  *
  * Features:
- * - AC coverage with progress bar
- * - Policy enforcement status badges
- * - Selftest gate indicator
+ * - Ledger counts (stories, requirements, ACs)
+ * - Policy enforcement status
+ * - Friction tracking
+ * - Open questions
  * - Auto-refresh capability
  *
  * Example usage:
  *   <GovernanceHealthCard />
- *   <GovernanceHealthCard baseUrl="http://localhost:8080" refreshInterval={60000} />
+ *   <GovernanceHealthCard baseUrl="http://localhost:9090" refreshInterval={60000} />
  */
 export const GovernanceHealthCard: React.FC<GovernanceHealthCardProps> = ({
   baseUrl = '/api/proxy/rust-spec-platform',
@@ -154,8 +170,8 @@ export const GovernanceHealthCard: React.FC<GovernanceHealthCardProps> = ({
           <Typography className={classes.errorText}>{error}</Typography>
         </Box>
         <Typography variant="body2" color="textSecondary">
-          Unable to fetch governance status. Check that the platform service is running
-          and accessible.
+          Unable to fetch governance status. Check that the platform service is
+          running and accessible.
         </Typography>
       </InfoCard>
     );
@@ -169,11 +185,14 @@ export const GovernanceHealthCard: React.FC<GovernanceHealthCardProps> = ({
     );
   }
 
-  const { governance } = status;
-  const { ac_coverage, policy_status, selftest_passing } = governance;
+  const { service, governance } = status;
+  const { ledger, policies, friction, questions } = governance;
 
-  // Determine overall health status
-  const isHealthy = selftest_passing && ac_coverage.percentage >= 80;
+  // Determine overall health status based on policies and friction
+  const isPolicyPassing = policies.status === 'pass';
+  const hasCriticalFriction = friction.by_severity.critical > 0;
+  const isHealthy = isPolicyPassing && !hasCriticalFriction;
+
   const healthIcon = isHealthy ? (
     <CheckIcon className={classes.successText} />
   ) : (
@@ -194,49 +213,39 @@ export const GovernanceHealthCard: React.FC<GovernanceHealthCardProps> = ({
 
       <Divider />
 
-      {/* AC Coverage Section */}
+      {/* Ledger Counts Section */}
       <Box mt={2}>
         <Typography variant="subtitle2" gutterBottom>
-          Acceptance Criteria Coverage
+          Governance Ledger
         </Typography>
-        <LinearProgress
-          variant="determinate"
-          value={ac_coverage.percentage}
-          className={classes.coverageBar}
-          color={ac_coverage.percentage >= 80 ? 'primary' : 'secondary'}
-        />
-        <Typography variant="caption" color="textSecondary">
-          {ac_coverage.percentage.toFixed(1)}% ({ac_coverage.passing}/{ac_coverage.total} passing)
-        </Typography>
-
-        <Box mt={1}>
-          <Grid container spacing={1}>
-            <Grid item xs={4}>
-              <Typography variant="caption" color="textSecondary">
-                Passing
+        <Grid container spacing={2}>
+          <Grid item xs={4}>
+            <Box className={classes.metricBox}>
+              <Typography className={classes.metricValue}>
+                {ledger.stories}
               </Typography>
-              <Typography variant="body2" className={classes.successText}>
-                {ac_coverage.passing}
-              </Typography>
-            </Grid>
-            <Grid item xs={4}>
-              <Typography variant="caption" color="textSecondary">
-                Failing
-              </Typography>
-              <Typography variant="body2" className={classes.errorText}>
-                {ac_coverage.failing}
-              </Typography>
-            </Grid>
-            <Grid item xs={4}>
-              <Typography variant="caption" color="textSecondary">
-                Pending
-              </Typography>
-              <Typography variant="body2" className={classes.warningText}>
-                {ac_coverage.pending}
-              </Typography>
-            </Grid>
+              <Typography className={classes.metricLabel}>Stories</Typography>
+            </Box>
           </Grid>
-        </Box>
+          <Grid item xs={4}>
+            <Box className={classes.metricBox}>
+              <Typography className={classes.metricValue}>
+                {ledger.requirements}
+              </Typography>
+              <Typography className={classes.metricLabel}>
+                Requirements
+              </Typography>
+            </Box>
+          </Grid>
+          <Grid item xs={4}>
+            <Box className={classes.metricBox}>
+              <Typography className={classes.metricValue}>
+                {ledger.acs}
+              </Typography>
+              <Typography className={classes.metricLabel}>ACs</Typography>
+            </Box>
+          </Grid>
+        </Grid>
       </Box>
 
       <Divider style={{ marginTop: 16, marginBottom: 16 }} />
@@ -247,45 +256,92 @@ export const GovernanceHealthCard: React.FC<GovernanceHealthCardProps> = ({
           Policy Enforcement
         </Typography>
         <Box display="flex" flexWrap="wrap" mt={1}>
-          <PolicyChip label="Skills" valid={policy_status.skills_valid} />
-          <PolicyChip label="Agents" valid={policy_status.agents_valid} />
-          <PolicyChip label="ADRs" valid={policy_status.adrs_valid} />
-          <PolicyChip label="Specs" valid={policy_status.specs_valid} />
-          <PolicyChip label="BDD" valid={policy_status.bdd_valid} />
+          <StatusChip label="Policies" status={policies.status} />
         </Box>
       </Box>
 
       <Divider style={{ marginTop: 16, marginBottom: 16 }} />
 
-      {/* Selftest Gate Section */}
+      {/* Friction Summary Section */}
       <Box>
         <Typography variant="subtitle2" gutterBottom>
-          Selftest Gate
+          Friction ({friction.open} open)
         </Typography>
-        <Box display="flex" alignItems="center" mt={1}>
-          {selftest_passing ? (
-            <>
-              <CheckIcon fontSize="small" className={classes.successText} />
-              <Typography variant="body2" style={{ marginLeft: 8 }}>
-                Passing
+        <Grid container spacing={1}>
+          <Grid item xs={3}>
+            <Chip
+              size="small"
+              label={`${friction.by_severity.critical} critical`}
+              color={friction.by_severity.critical > 0 ? 'secondary' : 'default'}
+            />
+          </Grid>
+          <Grid item xs={3}>
+            <Chip
+              size="small"
+              label={`${friction.by_severity.high} high`}
+              color={friction.by_severity.high > 0 ? 'secondary' : 'default'}
+            />
+          </Grid>
+          <Grid item xs={3}>
+            <Chip
+              size="small"
+              label={`${friction.by_severity.medium} med`}
+              color={friction.by_severity.medium > 0 ? 'primary' : 'default'}
+            />
+          </Grid>
+          <Grid item xs={3}>
+            <Chip size="small" label={`${friction.by_severity.low} low`} />
+          </Grid>
+        </Grid>
+
+        {friction.recent.length > 0 && (
+          <Box mt={2}>
+            <Typography variant="caption" color="textSecondary">
+              Recent friction:
+            </Typography>
+            {friction.recent.slice(0, 2).map(f => (
+              <Box key={f.id} className={classes.frictionItem}>
+                <Typography variant="body2">
+                  <strong>{f.id}</strong>: {f.summary}
+                </Typography>
+                <Typography variant="caption" color="textSecondary">
+                  {f.severity} - {f.category}
+                </Typography>
+              </Box>
+            ))}
+          </Box>
+        )}
+      </Box>
+
+      <Divider style={{ marginTop: 16, marginBottom: 16 }} />
+
+      {/* Questions Section */}
+      <Box>
+        <Typography variant="subtitle2" gutterBottom>
+          Open Questions ({questions.open})
+        </Typography>
+        {questions.top_open.length > 0 ? (
+          questions.top_open.slice(0, 2).map(q => (
+            <Box key={q.id} className={classes.frictionItem}>
+              <Typography variant="body2">
+                <strong>{q.id}</strong>: {q.summary}
               </Typography>
-            </>
-          ) : (
-            <>
-              <ErrorIcon fontSize="small" className={classes.errorText} />
-              <Typography variant="body2" style={{ marginLeft: 8 }}>
-                Failing
+              <Typography variant="caption" color="textSecondary">
+                Flow: {q.flow}
               </Typography>
-            </>
-          )}
-        </Box>
+            </Box>
+          ))
+        ) : (
+          <Typography variant="body2" color="textSecondary">
+            No open questions
+          </Typography>
+        )}
       </Box>
 
       {/* Metadata Footer */}
       <Box mt={2}>
         <Typography variant="caption" color="textSecondary">
-          Template v{status.metadata.template_version} • Last updated:{' '}
-          {new Date(governance.last_validated).toLocaleString()}
+          {service.display_name} - Template {service.template_version}
         </Typography>
       </Box>
     </InfoCard>
