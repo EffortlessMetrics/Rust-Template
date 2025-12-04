@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [ main ]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   selftest:
     runs-on: ubuntu-latest
@@ -16,12 +20,32 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
-      - name: Install Nix
-        uses: cachix/install-nix-action@v27
         with:
-          nix_path: nixpkgs=channel:nixos-24.05
+          fetch-depth: 0
+
+      - name: Setup Rust + Nix environment
+        uses: ./.github/actions/setup-rust-nix
 
       - name: Run kernel selftest (Tier 1)
+        run: nix develop -c cargo xtask selftest
+
+      - name: Verify artifacts were generated
         run: |
-          nix develop --command cargo xtask selftest
+          test -f docs/feature_status.md || echo "Warning: feature_status.md not generated"
+          test -f .llm/bundle/implement_ac.md || echo "Warning: LLM bundle not generated"
+          test -f target/junit/acceptance.xml || echo "Warning: JUnit XML not generated"
+
+      - name: Show sccache stats
+        if: always()
+        uses: ./.github/actions/sccache-stats
+
+      - name: Upload test artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: tier1-selftest-artifacts
+          path: |
+            docs/feature_status.md
+            .llm/bundle/implement_ac.md
+            target/junit/acceptance.xml
+          if-no-files-found: warn

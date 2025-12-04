@@ -1,0 +1,8 @@
+name: 'Show sccache statistics'
+description: 'Display sccache compilation cache statistics'
+runs:
+  using: 'composite'
+  steps:
+    - name: Show sccache stats
+      shell: bash
+      run: nix develop -c sccache --show-stats || true

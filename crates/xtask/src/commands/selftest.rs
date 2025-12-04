@@ -30,7 +30,9 @@ impl SelftestResults {
     }
 }
 
-/// Run full template self-test suite
+/// Run full template self-test suite with default verbosity.
+/// Future: Used as library entry point for programmatic selftest invocation.
+/// See AC-KERN-SELFTEST for selftest infrastructure requirements.
 #[allow(dead_code)]
 pub fn run() -> Result<()> {
     run_with_verbosity(crate::Verbosity::Normal)
@@ -65,7 +67,7 @@ pub fn run_with_verbosity(verbosity: crate::Verbosity) -> Result<()> {
     let mut results = SelftestResults::new();
 
     // Step 1: Core checks
-    println!("{}", "[1/9] Running core checks (fmt, clippy, tests)...".blue());
+    println!("{}", "[1/11] Running core checks (fmt, clippy, tests)...".blue());
     let step_start = Instant::now();
     let core_ok = match crate::commands::check::run_with_options(
         crate::commands::check::CheckOptions::from_env(),
@@ -88,7 +90,7 @@ pub fn run_with_verbosity(verbosity: crate::Verbosity) -> Result<()> {
     println!();
 
     // Step 2: Skills governance lint
-    println!("{}", "[2/9] Checking Skills governance...".blue());
+    println!("{}", "[2/11] Checking Skills governance...".blue());
     let step_start = Instant::now();
     let skills_ok = if Path::new(".claude/skills").exists() {
         match crate::commands::skills::run_lint() {
@@ -118,7 +120,7 @@ pub fn run_with_verbosity(verbosity: crate::Verbosity) -> Result<()> {
     println!();
 
     // Step 3: Agents governance lint
-    println!("{}", "[3/10] Checking Agents governance...".blue());
+    println!("{}", "[3/11] Checking Agents governance...".blue());
     let step_start = Instant::now();
     let agents_ok = if Path::new(".claude/agents").exists() {
         match crate::commands::agents::run_lint() {
@@ -148,7 +150,7 @@ pub fn run_with_verbosity(verbosity: crate::Verbosity) -> Result<()> {
     println!();
 
     // Step 4: BDD acceptance tests
-    println!("{}", "[4/10] Running BDD acceptance tests...".blue());
+    println!("{}", "[4/11] Running BDD acceptance tests...".blue());
     let bdd_ok = if skip_bdd {
         println!(
             "  {} Skipping BDD tests because XTASK_SKIP_BDD=1 (avoid recursion in harness)",
@@ -186,7 +188,7 @@ pub fn run_with_verbosity(verbosity: crate::Verbosity) -> Result<()> {
     println!();
 
     // Step 5: AC status mapping & ADR references
-    println!("{}", "[5/10] Running AC status mapping & ADR references...".blue());
+    println!("{}", "[5/11] Running AC status mapping & ADR references...".blue());
     let step_start = Instant::now();
 
     let mut mapping_ok = true;
@@ -229,7 +231,7 @@ pub fn run_with_verbosity(verbosity: crate::Verbosity) -> Result<()> {
     println!();
 
     // Step 6: LLM context bundler
-    println!("{}", "[6/10] Testing LLM context bundler...".blue());
+    println!("{}", "[6/11] Testing LLM context bundler...".blue());
     let step_start = Instant::now();
     let bundler_ok = match crate::commands::bundle::run("implement_ac") {
         Ok(_) => {
@@ -257,7 +259,7 @@ pub fn run_with_verbosity(verbosity: crate::Verbosity) -> Result<()> {
     println!();
 
     // Step 7: Policy tests (if conftest available)
-    println!("{}", "[7/10] Running policy tests...".blue());
+    println!("{}", "[7/11] Running policy tests...".blue());
     let step_start = Instant::now();
     let policy_ok = if low_resource_mode {
         // Skip policy tests in low-resource mode as they can be resource-intensive
@@ -330,7 +332,7 @@ pub fn run_with_verbosity(verbosity: crate::Verbosity) -> Result<()> {
     );
     println!();
     // Step 8: DevEx contract
-    println!("{}", "[8/10] Checking DevEx contract...".blue());
+    println!("{}", "[8/11] Checking DevEx contract...".blue());
     let step_start = Instant::now();
     let devex_ok = match run_devex_contract(verbosity) {
         Ok(_) => {
@@ -359,7 +361,7 @@ pub fn run_with_verbosity(verbosity: crate::Verbosity) -> Result<()> {
     println!();
 
     // Step 9: Graph invariants
-    println!("{}", "[9/10] Checking governance graph invariants...".blue());
+    println!("{}", "[9/11] Checking governance graph invariants...".blue());
     let step_start = Instant::now();
     let graph_ok = match crate::commands::graph_export::run_graph_invariants(verbosity.as_u8()) {
         Ok(_) => {
@@ -387,7 +389,7 @@ pub fn run_with_verbosity(verbosity: crate::Verbosity) -> Result<()> {
     println!();
 
     // Step 10: AC coverage
-    println!("{}", "[10/10] Checking AC coverage for v3.0 kernel...".blue());
+    println!("{}", "[10/11] Checking AC coverage for v3.0 kernel...".blue());
     let step_start = Instant::now();
     let coverage_ok = match run_ac_coverage_check(verbosity) {
         Ok(_) => {
@@ -406,6 +408,44 @@ pub fn run_with_verbosity(verbosity: crate::Verbosity) -> Result<()> {
         }
     };
     results.push("AC coverage", coverage_ok, Some("Run `cargo xtask ac-coverage` for details"));
+    println!();
+
+    // Step 11: Test coverage (soft gate - advisory only)
+    println!("{}", "[11/11] Checking test coverage (advisory)...".blue());
+    let step_start = Instant::now();
+    let test_coverage_ok = if low_resource_mode {
+        println!("  {} Test coverage skipped (low-resource mode)", "⚠".yellow());
+        true
+    } else {
+        match crate::commands::coverage::run() {
+            Ok(_) => {
+                let elapsed = step_start.elapsed();
+                if verbosity.is_verbose() {
+                    println!(
+                        "  {} Test coverage target met ({:.2}s)",
+                        "✓".green(),
+                        elapsed.as_secs_f64()
+                    );
+                } else {
+                    println!("  {} Test coverage target met", "✓".green());
+                }
+                true
+            }
+            Err(e) => {
+                // Soft gate: warn but don't fail selftest
+                println!("  {} Test coverage below baseline (advisory)", "⚠".yellow());
+                if verbosity.is_verbose() {
+                    eprintln!("{}", e);
+                }
+                println!(
+                    "  💡 Hint: Run {} for detailed coverage report",
+                    "cargo xtask coverage".cyan()
+                );
+                true // Don't fail selftest on coverage
+            }
+        }
+    };
+    results.push("Test coverage", test_coverage_ok, Some("Run `cargo xtask coverage` for details"));
     println!();
 
     // Print summary
@@ -541,6 +581,8 @@ fn run_ac_coverage_check(verbosity: crate::Verbosity) -> Result<()> {
 
     #[derive(Debug, Deserialize)]
     struct Story {
+        /// Story ID from spec_ledger.yaml.
+        /// Currently only used for deserialization; ID not needed in selftest validation.
         #[allow(dead_code)]
         id: String,
         requirements: Vec<Requirement>,
@@ -561,6 +603,8 @@ fn run_ac_coverage_check(verbosity: crate::Verbosity) -> Result<()> {
     #[derive(Debug, Deserialize)]
     struct AcceptanceCriteria {
         id: String,
+        /// AC description text.
+        /// Currently not used in selftest validation; only ID and must_have_ac flag matter.
         #[serde(default)]
         #[allow(dead_code)]
         text: String,

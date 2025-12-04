@@ -360,6 +360,10 @@ enum Commands {
     #[command(next_help_heading = "🏛️ Governance Artifacts")]
     SkillsLint,
 
+    /// Format Claude Code agents (.claude/agents/*.md)
+    #[command(next_help_heading = "🏛️ Governance Artifacts")]
+    AgentsFmt,
+
     /// Lint Claude Code agents (.claude/agents/*.md)
     #[command(next_help_heading = "🏛️ Governance Artifacts")]
     AgentsLint,
@@ -495,6 +499,28 @@ enum Commands {
     /// Test Rego policies with conftest (OPA policy verification)
     #[command(next_help_heading = "🔐 Security & Policy")]
     PolicyTest,
+
+    /// Run test coverage analysis with tarpaulin (baseline: 65%)
+    #[command(next_help_heading = "🔐 Security & Policy")]
+    Coverage,
+
+    // ============================================================================
+    // BUILD METRICS (Build time tracking & analysis)
+    // ============================================================================
+    /// Capture build time metrics (clean release build)
+    #[command(next_help_heading = "📊 Build Metrics")]
+    BuildTimeCapture,
+
+    /// Compare two build time metric files
+    #[command(next_help_heading = "📊 Build Metrics")]
+    BuildTimeCompare {
+        /// Path to baseline metrics file
+        #[arg(long)]
+        baseline: String,
+        /// Path to current metrics file
+        #[arg(long)]
+        current: String,
+    },
 
     // ============================================================================
     // LLM/AGENT SUPPORT (Bundles, hints, workflows)
@@ -646,6 +672,11 @@ fn main() -> Result<()> {
         Commands::Bdd => commands::bdd::run(),
         Commands::Bundle { task } => commands::bundle::run(&task),
         Commands::Audit => commands::audit::run(),
+        Commands::Coverage => commands::coverage::run(),
+        Commands::BuildTimeCapture => commands::build_time::run_capture(),
+        Commands::BuildTimeCompare { baseline, current } => {
+            commands::build_time::run_compare(&baseline, &current)
+        }
         Commands::Clean => commands::clean::run(),
         Commands::CiLocal => commands::ci_local::run(),
         Commands::Deploy { env } => commands::deploy::run(&env),
@@ -773,6 +804,7 @@ fn main() -> Result<()> {
         Commands::DevUp => commands::dev_up::run(),
         Commands::SkillsFmt => commands::skills::run_fmt(),
         Commands::SkillsLint => commands::skills::run_lint(),
+        Commands::AgentsFmt => commands::agents::run_fmt(),
         Commands::AgentsLint => commands::agents::run_lint(),
         Commands::TestChanged { base, plan_only } => {
             commands::test_changed::run(commands::test_changed::TestChangedArgs { base, plan_only })
@@ -891,9 +923,12 @@ pub fn all_command_names() -> Vec<&'static str> {
         "check",
         "precommit",
         "bdd",
+        "build-time-capture",
+        "build-time-compare",
         "bundle",
         "clean",
         "ci-local",
+        "coverage",
         "deploy",
         "audit",
         "doctor",
@@ -925,9 +960,12 @@ pub fn all_command_names() -> Vec<&'static str> {
         "kernel-status",
         "skills-fmt",
         "skills-lint",
+        "agents-fmt",
         "agents-lint",
         "status",
         "suggest-next",
+        "task-create",
+        "task-update",
         "tasks-list",
         "test-ac",
         "test-changed",

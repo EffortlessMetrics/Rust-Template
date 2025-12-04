@@ -1,8 +1,7 @@
 ---
 name: example-agent
-description: >
-  Example agent for testing agents governance.
-  Use this as a reference when creating new agents.
+description: |
+  Example agent for testing agents governance. Use this as a reference when creating new agents.
 tools: Read, Grep, Glob
 model: sonnet
 permissionMode: default

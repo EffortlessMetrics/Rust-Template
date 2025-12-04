@@ -1,1 +1,1 @@
-{ "no-unnamed-features": "error" }
+{ "no-unnamed-features": "on" }

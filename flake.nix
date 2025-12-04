@@ -11,7 +11,7 @@
       f rec {
         inherit system;
         pkgs = import nixpkgs { inherit system; overlays = [ fenix.overlays.default ]; };
-        rust = pkgs.fenix.stable.withComponents [ "cargo" "clippy" "rustfmt" "rust-src" "rust-analyzer" ];
+        rust = pkgs.fenix.stable.withComponents [ "cargo" "clippy" "rustfmt" "rust-src" "rust-analyzer" "llvm-tools-preview" ];
       });
   in {
     devShells = forAllSystems ({ pkgs, rust, ... }: {
@@ -30,12 +30,23 @@
           pkgs.conftest
           pkgs.kubectl
           pkgs.kustomize
-          pkgs.cargo-audit
-          pkgs.cargo-deny
+          # cargo-audit and cargo-deny are installed via `cargo install` for lockfile v4 + edition 2024 support
+          # Run: cargo install --locked cargo-audit cargo-deny
           pkgs.cargo-nextest
+          pkgs.protobuf
+          pkgs.zlib  # Required for rustc/sccache on systems without zlib1g
+        ]
+        # cargo-llvm-cov is marked broken on Darwin in nixpkgs; include only on Linux
+        ++ pkgs.lib.optionals (!pkgs.stdenv.isDarwin) [
+          pkgs.cargo-llvm-cov
         ];
+        buildInputs = [ pkgs.zlib ]  # Also in buildInputs for linker visibility
+          # libiconv is needed on Darwin for linking (macOS doesn't include it in system libs)
+          ++ pkgs.lib.optionals pkgs.stdenv.isDarwin [ pkgs.libiconv ];
         shellHook = ''
-          export PATH="$PWD/.tools/bin:$PATH"
+          # Prefer user cargo-installed tools (cargo-audit, cargo-deny, etc.)
+          export PATH="$HOME/.cargo/bin:$PWD/.tools/bin:$PATH"
+          export LD_LIBRARY_PATH="${pkgs.lib.makeLibraryPath [ pkgs.zlib ]}:$LD_LIBRARY_PATH"
           echo "DevShell ready — try: just checks"
         '';
       };

@@ -17,26 +17,29 @@ jobs:
     permissions: { contents: read }
     steps:
       - uses: actions/checkout@v4
-      - uses: cachix/install-nix-action@v27
+      - uses: cachix/install-nix-action@v31
       - name: Gherkin Lint (pinned)
-        env: { GHERKIN_LINT_VERSION: "9.0.0" }
+        # Note: gherkin-lint 9.0.0 doesn't exist on npm; using 4.2.4 (latest stable)
+        env: { GHERKIN_LINT_VERSION: "4.2.4" }
         run: |
           nix develop -c npx -y "gherkin-lint@${GHERKIN_LINT_VERSION:-latest}" -c .gherkin-lintrc specs/features
-      - name: Require exactly one @AC-#### tag per Scenario
+      - name: Require exactly one @AC-... tag per Scenario
         run: |
           python3 - <<'PY'
           import re, sys, pathlib
           ok=True
+          # Match @AC-XXX where XXX is alphanumeric with hyphens (e.g. @AC-TPL-001, @AC-TPL-PLATFORM-UI-DASHBOARD)
+          ac_pattern = r'@AC-[A-Z0-9][-A-Z0-9]*'
           for f in pathlib.Path("specs/features").rglob("*.feature"):
               lines=f.read_text().splitlines()
               for i,l in enumerate(lines):
                   if re.match(r'^\s*Scenario(?: Outline)?:', l):
                       j=i-1; acs=[]
                       while j>=0 and lines[j].lstrip().startswith("@"):
-                          acs += re.findall(r'@AC-\d+', lines[j])
+                          acs += re.findall(ac_pattern, lines[j])
                           j-=1
                       if len(acs) != 1:
-                          print(f"{f}: Scenario at line {i+1} must have exactly one @AC-#### tag (found {len(acs)}: {acs})")
+                          print(f"{f}: Scenario at line {i+1} must have exactly one @AC-... tag (found {len(acs)}: {acs})")
                           ok=False
           sys.exit(0 if ok else 1)
           PY

@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package task;
+package task.v1;
 
 import "google/protobuf/timestamp.proto";
 
@@ -23,20 +23,28 @@ message GetTaskRequest {
   string id = 1;  // UUID as string
 }
 
+message GetTaskResponse {
+  Task task = 1;
+}
+
 message ListTasksRequest {}
 
 message ListTasksResponse {
   repeated Task tasks = 1;
 }
 
-message UpdateTaskStatusRequest {
+message UpdateStatusRequest {
   string id = 1;  // UUID as string
   string status = 2;
 }
 
+message UpdateStatusResponse {
+  Task task = 1;
+}
+
 service TaskService {
   rpc CreateTask(CreateTaskRequest) returns (CreateTaskResponse);
-  rpc GetTask(GetTaskRequest) returns (Task);
+  rpc GetTask(GetTaskRequest) returns (GetTaskResponse);
   rpc ListTasks(ListTasksRequest) returns (ListTasksResponse);
-  rpc UpdateStatus(UpdateTaskStatusRequest) returns (Task);
+  rpc UpdateStatus(UpdateStatusRequest) returns (UpdateStatusResponse);
 }

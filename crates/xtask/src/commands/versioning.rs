@@ -24,11 +24,6 @@ pub struct Version {
 }
 
 impl Version {
-    /// Create a new Version.
-    pub fn new(major: u32, minor: u32, patch: u32) -> Self {
-        Self { major, minor, patch }
-    }
-
     /// Parse a version string in X.Y.Z format.
     pub fn parse(s: &str) -> Result<Self> {
         let s = s.trim();
@@ -56,12 +51,12 @@ impl Version {
     }
 
     /// Convert to git tag format (vX.Y.Z).
-    pub fn to_tag(&self) -> String {
+    pub fn to_tag(self) -> String {
         format!("v{}.{}.{}", self.major, self.minor, self.patch)
     }
 
     /// Convert to kernel tag format (vX.Y.Z-kernel).
-    pub fn to_kernel_tag(&self) -> String {
+    pub fn to_kernel_tag(self) -> String {
         format!("v{}.{}.{}-kernel", self.major, self.minor, self.patch)
     }
 }
@@ -90,11 +85,6 @@ impl Ord for Version {
     }
 }
 
-/// Validate a version string format and return the parsed Version.
-pub fn validate_version_format(version: &str) -> Result<Version> {
-    Version::parse(version)
-}
-
 /// Complete version information including tags and date.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct VersionInfo {
@@ -118,6 +108,9 @@ impl VersionInfo {
     }
 
     /// Create VersionInfo with a specific date.
+    /// Future: Used when implementing retroactive version updates for historical releases.
+    /// Currently only used in tests. See TASK-DX-VERSION-HISTORY for version history features.
+    #[allow(dead_code)]
     pub fn with_date(version_str: &str, date: &str) -> Result<Self> {
         let version = Version::parse(version_str)?;
         Ok(Self {
@@ -138,13 +131,6 @@ pub struct FileEdit {
     pub new_text: String,
 }
 
-impl FileEdit {
-    /// Format a preview of this edit for dry-run display.
-    pub fn format_preview(&self) -> String {
-        format!("{}:{}\n  - {}\n  + {}", self.path, self.line_number, self.old_text, self.new_text)
-    }
-}
-
 /// Pattern for version replacement in a file.
 /// Matches the structure in specs/version_manifest.yaml.
 #[derive(Debug, Clone, Deserialize)]
@@ -152,7 +138,10 @@ pub struct FilePattern {
     /// Human-readable marker to locate the line
     pub marker: String,
     /// Pattern type: yaml_value, heading_version, inline_version, etc.
+    /// Future: Used when implementing pattern-based version replacement strategies.
+    /// See AC-KERN-VERSION-UPDATE for version update automation requirements.
     #[serde(rename = "type")]
+    #[allow(dead_code)]
     pub pattern_type: String,
     /// Format style: quoted, prefixed, prefixed_paren, etc.
     pub format: String,
@@ -162,8 +151,10 @@ pub struct FilePattern {
     /// Example of the expected format
     #[serde(default)]
     pub example: Option<String>,
-    /// Additional notes
+    /// Additional notes about the pattern.
+    /// Future: Displayed in version manifest validation errors for better UX.
     #[serde(default)]
+    #[allow(dead_code)]
     pub notes: Option<String>,
 }
 
@@ -173,19 +164,26 @@ pub struct FilePattern {
 pub struct VersionTarget {
     /// Path to the file
     pub path: String,
-    /// Description of the file's purpose
+    /// Description of the file's purpose.
+    /// Future: Displayed in version update UI and validation reports.
     #[serde(default)]
+    #[allow(dead_code)]
     pub description: Option<String>,
     /// Patterns to match and update
     pub patterns: Vec<FilePattern>,
     /// Whether this file is required to exist
     #[serde(default = "default_true")]
     pub required: bool,
-    /// Update priority (1=highest)
+    /// Update priority (1=highest).
+    /// Future: Used when implementing ordered version updates across files.
+    /// See TASK-DX-VERSION-ORDERING for version update sequencing.
     #[serde(default = "default_priority")]
+    #[allow(dead_code)]
     pub priority: u32,
-    /// Additional notes
+    /// Additional notes about this file.
+    /// Future: Displayed in version update reports and validation errors.
     #[serde(default)]
+    #[allow(dead_code)]
     pub notes: Option<String>,
 }
 
@@ -198,10 +196,18 @@ fn default_priority() -> u32 {
 }
 
 /// Version format specification.
+/// Future: Used when implementing custom version formats and validation.
+/// See TASK-DX-VERSION-FORMATS for planned version format features.
 #[derive(Debug, Clone, Deserialize)]
 pub struct VersionFormat {
+    /// Regex pattern for valid version strings.
+    /// Future: Used in version validation and custom format support.
+    #[allow(dead_code)]
     pub pattern: String,
+    /// Example version strings matching this format.
+    /// Future: Displayed in version validation error messages.
     #[serde(default)]
+    #[allow(dead_code)]
     pub examples: Vec<String>,
 }
 
@@ -209,18 +215,23 @@ pub struct VersionFormat {
 /// Matches the structure in specs/version_manifest.yaml.
 #[derive(Debug, Clone, Deserialize)]
 pub struct VersionManifest {
+    /// Schema version for version manifest format.
+    /// Future: Used for version manifest migration and compatibility checks.
+    #[allow(dead_code)]
     pub schema_version: String,
+    /// Human-readable description of the version manifest.
+    /// Future: Displayed in version manifest validation reports.
     #[serde(default)]
+    #[allow(dead_code)]
     pub description: Option<String>,
+    /// Custom version format specification.
+    /// Future: Enables custom version formats beyond semantic versioning.
+    /// See TASK-DX-VERSION-FORMATS for custom format support.
     #[serde(default)]
+    #[allow(dead_code)]
     pub version_format: Option<VersionFormat>,
     pub files: Vec<VersionTarget>,
 }
-
-/// Source of truth for version information.
-pub const VERSION_SOURCE_OF_TRUTH: &str = "specs/spec_ledger.yaml";
-pub const VERSION_PATH: &str = "metadata.template_version";
-pub const DATE_PATH: &str = "metadata.last_updated";
 
 impl VersionManifest {
     /// Load the version manifest from specs/version_manifest.yaml.
@@ -257,52 +268,6 @@ impl VersionManifest {
         serde_yaml::from_str(&content)
             .with_context(|| format!("Failed to parse {}", manifest_path.display()))
     }
-
-    /// Extract the current version from the source of truth file (specs/spec_ledger.yaml).
-    pub fn extract_current_version(&self) -> Result<VersionInfo> {
-        let content = fs::read_to_string(VERSION_SOURCE_OF_TRUTH).with_context(|| {
-            format!("Failed to read source of truth: {}", VERSION_SOURCE_OF_TRUTH)
-        })?;
-
-        let yaml: serde_yaml::Value = serde_yaml::from_str(&content)
-            .with_context(|| format!("Failed to parse {}", VERSION_SOURCE_OF_TRUTH))?;
-
-        // Extract version using dot-notation path
-        let version = extract_yaml_value(&yaml, VERSION_PATH)
-            .with_context(|| format!("Failed to extract version at {}", VERSION_PATH))?;
-
-        // Extract date using dot-notation path
-        let date = extract_yaml_value(&yaml, DATE_PATH)
-            .with_context(|| format!("Failed to extract date at {}", DATE_PATH))?;
-
-        VersionInfo::with_date(&version, &date)
-    }
-
-    /// Get files sorted by priority (lowest number = highest priority).
-    pub fn files_by_priority(&self) -> Vec<&VersionTarget> {
-        let mut files: Vec<_> = self.files.iter().collect();
-        files.sort_by_key(|f| f.priority);
-        files
-    }
-}
-
-/// Extract a value from YAML using dot-notation path (e.g., "metadata.template_version").
-fn extract_yaml_value(yaml: &serde_yaml::Value, path: &str) -> Result<String> {
-    // Handle optional JSONPath-style prefix
-    let path = path.strip_prefix("$.").unwrap_or(path);
-
-    let parts: Vec<&str> = path.split('.').collect();
-    let mut current = yaml;
-
-    for part in parts {
-        current =
-            current.get(part).with_context(|| format!("Key '{}' not found in YAML path", part))?;
-    }
-
-    current
-        .as_str()
-        .map(|s| s.to_string())
-        .with_context(|| format!("Value at '{}' is not a string", path))
 }
 
 /// Generate the new line by substituting version in the example pattern.
@@ -525,28 +490,28 @@ mod tests {
 
     #[test]
     fn test_version_to_string() {
-        let v = Version::new(3, 3, 5);
+        let v = Version::parse("3.3.5").unwrap();
         assert_eq!(v.to_string(), "3.3.5");
     }
 
     #[test]
     fn test_version_to_tag() {
-        let v = Version::new(3, 3, 5);
+        let v = Version::parse("3.3.5").unwrap();
         assert_eq!(v.to_tag(), "v3.3.5");
     }
 
     #[test]
     fn test_version_to_kernel_tag() {
-        let v = Version::new(3, 3, 5);
+        let v = Version::parse("3.3.5").unwrap();
         assert_eq!(v.to_kernel_tag(), "v3.3.5-kernel");
     }
 
     #[test]
     fn test_version_comparison() {
-        let v1 = Version::new(1, 0, 0);
-        let v2 = Version::new(2, 0, 0);
-        let v3 = Version::new(1, 1, 0);
-        let v4 = Version::new(1, 0, 1);
+        let v1 = Version::parse("1.0.0").unwrap();
+        let v2 = Version::parse("2.0.0").unwrap();
+        let v3 = Version::parse("1.1.0").unwrap();
+        let v4 = Version::parse("1.0.1").unwrap();
 
         assert!(v1 < v2);
         assert!(v1 < v3);
@@ -571,20 +536,6 @@ mod tests {
         assert_eq!(info.date, "2025-12-01");
     }
 
-    #[test]
-    fn test_file_edit_preview() {
-        let edit = FileEdit {
-            path: "README.md".to_string(),
-            line_number: 5,
-            old_text: "version: 3.3.5".to_string(),
-            new_text: "version: 3.3.6".to_string(),
-        };
-        let preview = edit.format_preview();
-        assert!(preview.contains("README.md:5"));
-        assert!(preview.contains("3.3.5"));
-        assert!(preview.contains("3.3.6"));
-    }
-
     // === A2 Tests: Manifest Loading, Plan Generation, Apply Changes ===
 
     #[test]
@@ -601,24 +552,6 @@ mod tests {
         // Check that spec_ledger.yaml is in the files list
         let has_spec_ledger = manifest.files.iter().any(|f| f.path.contains("spec_ledger.yaml"));
         assert!(has_spec_ledger, "Manifest should include spec_ledger.yaml");
-    }
-
-    #[test]
-    fn test_manifest_files_by_priority() {
-        let manifest = VersionManifest::load().expect("Should load manifest");
-        let sorted = manifest.files_by_priority();
-
-        // Priority 1 files should come first
-        assert!(!sorted.is_empty());
-        assert_eq!(sorted[0].priority, 1, "First file should be priority 1");
-
-        // Check ordering is correct (lower priority number = higher priority)
-        for i in 1..sorted.len() {
-            assert!(
-                sorted[i].priority >= sorted[i - 1].priority,
-                "Files should be sorted by priority ascending"
-            );
-        }
     }
 
     #[test]

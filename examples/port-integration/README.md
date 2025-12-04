@@ -64,7 +64,27 @@ PLATFORM_URL="http://localhost:8080" python3 sync_to_port.py --dump-only
 This will:
 1. Fetch governance data from `/platform/idp/snapshot` and `/platform/status`
 2. Transform it to the Port.io entity format
-3. Print the entity JSON that would be synced (without actually calling Port.io)
+3. Print the entity JSON to stdout (status messages go to stderr)
+
+### 2c. Capturing JSON for Parsing
+
+The `--dump-only` flag outputs pure JSON to stdout, making it easy to pipe to `jq` or other tools:
+
+```bash
+# Extract pure JSON to file
+python3 sync_to_port.py --dump-only 2>/dev/null > entity.json
+
+# Parse with jq
+python3 sync_to_port.py --dump-only 2>/dev/null | jq '.properties'
+
+# Get specific fields
+python3 sync_to_port.py --dump-only 2>/dev/null | jq '.properties.ac_coverage_percent'
+
+# See status messages alongside (both streams visible)
+python3 sync_to_port.py --dump-only
+```
+
+**Note:** Status messages like "Fetching from..." go to stderr, so `2>/dev/null` silences them for pure JSON output.
 
 ### 3. View in Port.io
 

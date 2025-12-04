@@ -7,11 +7,12 @@ resolver = "2"
 edition = "2024"
 rust-version = "1.89.0"
 license = "Apache-2.0 OR MIT"
+publish = false  # Workspace crates are private/internal
 homepage = "https://github.com/effortlessmetrics/rust-as-spec"
 repository = "https://github.com/effortlessmetrics/rust-as-spec"
 authors = ["EffortlessSteven"]
 documentation = "https://docs.rs/as-spec"
-version = "3.3.4"
+version = "3.3.6"
 
 [workspace.lints.rust]
 unused = { level = "deny", priority = -1 }
@@ -39,3 +40,21 @@ prometheus = "0.14.0"
 [profile.release]
 lto = "thin"
 codegen-units = 1
+
+# Development profile optimizations for faster builds
+[profile.dev]
+# Reduce debuginfo for faster linking
+debug = 1
+# Use default codegen-units (256) for parallelism
+
+# Test profile optimizations
+[profile.test]
+# Minimal debug info for tests
+debug = 1
+# Inherit most settings from dev
+
+# Custom profile for faster dev builds with some optimization
+[profile.dev-opt]
+inherits = "dev"
+opt-level = 1
+debug = 1

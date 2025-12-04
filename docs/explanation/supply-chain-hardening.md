@@ -701,6 +701,63 @@ See [`docs/how-to/setup-tag-signing.md`](../how-to/setup-tag-signing.md) for GPG
 
 ---
 
+## Local Security Tooling Setup
+
+### Audit Tools (cargo-audit, cargo-deny)
+
+The security audit tools (`cargo-audit`, `cargo-deny`) are **not** provided by the Nix devShell. Instead, they are installed via `cargo install` and picked up from `~/.cargo/bin`.
+
+**Why this approach?**
+
+The nixpkgs versions of these tools (from `nixos-24.05`) don't understand:
+- Cargo.lock v4 format (introduced in Rust 1.78)
+- Rust edition 2024
+
+Installing via `cargo install` ensures you get recent versions that work with modern Rust projects.
+
+**First-time setup:**
+
+```bash
+# Option 1: Use the just recipe (recommended)
+just audit-tools
+
+# Option 2: Manual installation
+nix develop -c cargo install --locked cargo-audit cargo-deny
+```
+
+**Running audits:**
+
+```bash
+# Via just
+just audit
+
+# Via xtask
+nix develop -c cargo xtask audit
+```
+
+**How it works:**
+
+The `flake.nix` shellHook sets PATH precedence so `~/.cargo/bin` comes first:
+
+```nix
+shellHook = ''
+  export PATH="$HOME/.cargo/bin:$PWD/.tools/bin:$PATH"
+'';
+```
+
+This means:
+- Inside `nix develop`, cargo-installed tools take precedence over Nix-provided tools
+- CI uses the same approach (see `.github/workflows/ci-security.yml`)
+- Local and CI behavior are aligned
+
+**Configuration files:**
+
+- `deny.toml` — cargo-deny configuration (licenses, advisories, sources)
+- `.cargo/audit.toml` — cargo-audit configuration (ignored advisories)
+- `docs/adr/0007-dependency-security-health.md` — rationale for ignored advisories
+
+---
+
 ## FAQ
 
 ### Q: Do I need to verify provenance every time I use the template?

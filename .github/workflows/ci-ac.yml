@@ -8,7 +8,12 @@ on:
       - 'crates/acceptance/**'
       - '.github/workflows/ci-ac.yml'
 
-permissions: { contents: read }
+# Permissions for JUnit publisher action (publish-unit-test-result-action)
+permissions:
+  actions: read
+  checks: write
+  contents: read
+  pull-requests: write
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -20,13 +25,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: Swatinem/rust-cache@v2
-      - uses: cachix/install-nix-action@v27
+      - uses: cachix/install-nix-action@v31
       - name: Enable sccache
         run: |
-          echo "RUSTC_WRAPPER=$(nix develop -c which sccache)" >> $GITHUB_ENV
-          echo "SCCACHE_GHA_ENABLED=1" >> $GITHUB_ENV
-          echo "CARGO_INCREMENTAL=0" >> $GITHUB_ENV
-          nix develop -c sccache --start-server || true
+          if nix develop -c sh -c 'command -v sccache >/dev/null 2>&1'; then
+            echo "RUSTC_WRAPPER=sccache" >> $GITHUB_ENV
+            echo "SCCACHE_GHA_ENABLED=1" >> $GITHUB_ENV
+            echo "CARGO_INCREMENTAL=0" >> $GITHUB_ENV
+            nix develop -c sccache --start-server || true
+          else
+            echo "Warning: sccache not found in nix devshell, skipping"
+          fi
       - name: Run BDD tests via xtask
         run: nix develop -c cargo run -p xtask -- bdd
 
@@ -34,9 +43,12 @@ jobs:
         if: always()
         run: nix develop -c cargo run -p xtask -- ac-status
 
-      - if: always()
+      - name: Publish BDD JUnit results
+        if: always()
         uses: EnricoMi/publish-unit-test-result-action@v2
-        with: { files: target/junit/**/*.xml }
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          files: target/junit/**/*.xml
       - name: Show sccache stats
         if: always()
         run: nix develop -c sccache --show-stats || true
@@ -49,7 +61,7 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
-      - uses: cachix/install-nix-action@v27
+      - uses: cachix/install-nix-action@v31
       - name: AC Coverage Policy
         run: |
           nix develop -c bash -c 'yq -o=json specs/spec_ledger.yaml | conftest test -p policy/ledger.rego -'

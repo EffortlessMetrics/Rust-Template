@@ -1,6 +1,14 @@
 bootstrap:
 	nix develop -c ./bootstrap-tools.sh
 
+# Install audit tools (cargo-audit, cargo-deny) - run once per machine
+audit-tools:
+	nix develop -c cargo install --locked cargo-audit cargo-deny
+
+# Run security audit (requires audit-tools)
+audit:
+	nix develop -c cargo xtask audit
+
 check:
 	cargo xtask check
 

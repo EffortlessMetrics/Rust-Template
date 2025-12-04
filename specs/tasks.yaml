@@ -1,658 +1,776 @@
-schema_version: "1.0"
-template_version: "3.3.6"
-
+schema_version: '1.0'
+template_version: 3.3.6
 tasks:
-  - id: TASK-TPL-IMPLEMENT-AC-001
-    title: "Implement ACs for Platform Introspection API"
-    requirement: REQ-TPL-PLATFORM-INTROSPECTION
-    acs:
-      - AC-TPL-PLATFORM-GRAPH
-      - AC-TPL-PLATFORM-DEVEX
-      - AC-TPL-PLATFORM-DOCS
-    status: open
-    owner: team-platform
-    labels: [platform, devex, ac_first]
-    summary: "Implement platform introspection APIs"
-    recommended_flows: ["ac_first"]
-    docs:
-      design:
-        - DESIGN-TPL-PLATFORM-INTROSPECTION-001
-      plan: []
-
-  - id: TASK-TPL-STATUS-CLI-001
-    title: "Implement CLI governance status dashboard"
-    requirement: REQ-PLT-STATUS-CLI
-    acs:
-      - AC-PLT-017
-    status: in_progress
-    owner: agent
-    labels: [platform, devex, observability]
-    summary: "Implement `cargo xtask status` command to display governance health, task counts, and next steps"
-    recommended_flows: ["ac_first"]
-    docs:
-      design: []
-      plan: []
-
-  - id: implement_ac
-    title: "Implement Acceptance Criterion"
-    requirement: REQ-TPL-SUGGEST-NEXT
-    acs: [AC-TPL-SUGGEST-NEXT-CLI]
-    status: "in_progress"
-    owner: "steven"
-    labels: ["feature", "devex"]
-    summary: "Implement a new feature starting from an AC"
-    recommended_flows: ["ac_first"]
-    docs:
-      design: ["docs/design/platform-devex.md"]
-      plan: ["docs/plans/phase-3.md"]
-
-  - id: TASK-TPL-FIX-AUDIT-001
-    title: "Fix cargo-audit / cargo-deny findings and keep audit clean"
-    requirement: REQ-PLT-SECURITY-GOVERNANCE
-    acs:
-      - AC-PLT-006
-      - AC-PLT-007
-    status: open
-    owner: team-platform
-    labels: [security, dependencies, audit]
-    summary: "Resolve security vulnerabilities and policy violations"
-    recommended_flows: ["dependency_change"]
-    docs:
-      design: []
-      plan: []
-
-  - id: TASK-TPL-GOV-WRITE-001
-    title: "Implement FsGovernanceRepository and Task Status Persistence"
-    requirement: REQ-TPL-GOV-WRITE-001
-    acs:
-      - AC-TPL-GOV-WRITE-TASK-STATUS-200
-    status: open
-    owner: team-platform
-    labels: [platform, governance, v3]
-    summary: "Implement the write-side governance repository to persist task status changes."
-    recommended_flows: ["ac_first"]
-    depends_on:
-      - TASK-TPL-SKILLS-TOOLING-001
-      - TASK-TPL-REL-BUNDLE-3-1-0
-    docs:
-      design: []
-      plan: []
-
-  - id: TASK-TPL-REL-BUNDLE-3-1-0
-    title: "Implement release-bundle command"
-    requirement: REQ-TPL-REL-BUNDLE
-    acs:
-      - AC-TPL-REL-EVIDENCE
-      - AC-TPL-REL-CHANGELOG
-    status: done
-    owner: agent
-    labels: [platform, release, devex]
-    summary: "Implement `cargo xtask release-bundle X.Y.Z` that generates structured evidence bundles for releases with tasks, specs, git history, and governance status."
-    recommended_flows: ["ac_first"]
-    docs:
-      design: []
-      plan: []
-
-  - id: TASK-TPL-SKILLS-ALIGN-001
-    title: "Align Skills with AGENT_SKILLS.md guidance"
-    requirement: REQ-TPL-SKILLS-GUIDE
-    acs:
-      - AC-TPL-SKILLS-ALIGN-001
-    status: done
-    owner: agent
-    labels: [platform, agent, docs, skills]
-    summary: >
-      Refactor .claude/skills/* to match the 5 recommended Skills
-      (bootstrap-dev-env, governed-feature-dev, governed-maintenance,
-      governed-release, governed-governance-debug) and ensure SKILL.md
-      files follow documented templates with proper frontmatter, workflow
-      references to devex_flows.yaml, and comprehensive guidance.
-    recommended_flows: ["ac_first"]
-    docs:
-      design: ["docs/AGENT_SKILLS.md"]
-      plan: []
-
-  - id: TASK-TPL-SKILLS-TOOLING-001
-    title: "Port Skills tooling from Python to Rust xtask commands"
-    requirement: REQ-TPL-SKILLS-TOOLING
-    acs:
-      - AC-TPL-SKILLS-FMT
-      - AC-TPL-SKILLS-LINT
-    status: done
-    owner: agent
-    labels: [platform, agent, devex]
-    summary: >
-      Implement skills-fmt and skills-lint as xtask commands and integrate them
-      into pre-commit and selftest/docs-check flows. Replace Python scripts with
-      Rust-native commands to eliminate external dependencies and improve integration.
-    recommended_flows: ["ac_first"]
-    depends_on:
-      - TASK-TPL-SKILLS-ALIGN-001
-    docs:
-      design: []
-      plan: []
-
-  # Versioning Engine Track
-  - id: TASK-VERS-ENGINE-001
-    title: "Introduce versioning module in xtask"
-    requirement: REQ-TPL-VERSIONING-ENGINE
-    acs:
-      - AC-TPL-VERSION-MODULE
-    status: done
-    owner: agent
-    labels: [platform, versioning, release, p0]
-    summary: >
-      Create a dedicated versioning module in xtask that encapsulates all version
-      manipulation logic. This provides a single source of truth for version parsing,
-      validation, and updates across all release commands.
-    recommended_flows: ["ac_first"]
-    docs:
-      design: [DESIGN-TPL-VERSIONING-ENGINE-001]
-      plan: []
-
-  - id: TASK-VERS-ENGINE-002
-    title: "Wire spec-ledger as single source of version"
-    requirement: REQ-TPL-VERSIONING-ENGINE
-    acs:
-      - AC-TPL-VERSION-SOURCE
-    status: done
-    owner: agent
-    labels: [platform, versioning, release, p0]
-    summary: >
-      Make specs/spec_ledger.yaml the canonical source of template version.
-      All xtask commands (release-prepare, release-bundle, etc.) should read
-      version from spec_ledger.yaml instead of hardcoded values or multiple sources.
-    recommended_flows: ["ac_first"]
-    depends_on:
-      - TASK-VERS-ENGINE-001
-    docs:
-      design: [DESIGN-TPL-VERSIONING-ENGINE-001]
-      plan: []
-
-  - id: TASK-VERS-ENGINE-003
-    title: "Manifest-driven updates for all version-bearing files"
-    requirement: REQ-TPL-VERSIONING-ENGINE
-    acs:
-      - AC-TPL-VERSION-MANIFEST
-    status: done
-    owner: agent
-    labels: [platform, versioning, release, p0]
-    summary: >
-      Define a version manifest (YAML or embedded in spec_ledger) that lists all
-      files requiring version updates (Cargo.toml, pyproject.toml, CLAUDE.md, etc.).
-      The versioning engine reads this manifest and applies updates atomically.
-    recommended_flows: ["ac_first"]
-    depends_on:
-      - TASK-VERS-ENGINE-002
-    docs:
-      design: [DESIGN-TPL-VERSIONING-ENGINE-001]
-      plan: []
-
-  - id: TASK-VERS-ENGINE-004
-    title: "Dry-run and atomicity for release-prepare"
-    requirement: REQ-TPL-VERSIONING-ENGINE
-    acs:
-      - AC-TPL-VERSION-DRYRUN
-      - AC-TPL-VERSION-ATOMIC
-    status: done
-    owner: agent
-    labels: [platform, versioning, release, p0]
-    summary: >
-      Add --dry-run flag to release-prepare that shows what would be changed without
-      writing files. Ensure all file updates are atomic (write to temp, then rename)
-      to prevent partial state on errors.
-    recommended_flows: ["ac_first"]
-    depends_on:
-      - TASK-VERS-ENGINE-003
-    docs:
-      design: [DESIGN-TPL-VERSIONING-ENGINE-001]
-      plan: []
-
-  # Versioning Engine Hardening (v3.3.6 prep)
-  - id: TASK-VERS-VALIDATE-001
-    title: "Align versioning spec ↔ manifest ↔ code"
-    requirement: REQ-TPL-VERSIONING-ENGINE
-    acs:
-      - AC-TPL-VERSION-MANIFEST
-    status: done
-    owner: agent
-    labels: [platform, versioning, release, v336, p0]
-    summary: >
-      Ensure REQ-TPL-VERSIONING-ENGINE and its ACs describe exactly what versioning.rs does.
-      Verify AC IDs match implementation (AC-TPL-VERSION-MANIFEST, AC-TPL-VERSION-DRYRUN,
-      AC-TPL-VERSION-ATOMIC). Confirm version_manifest.yaml covers all version-bearing files
-      with simple, deterministic patterns.
-    recommended_flows: ["ac_first"]
-    depends_on:
-      - TASK-VERS-ENGINE-003
-    docs:
-      design: [DESIGN-TPL-VERSIONING-ENGINE-001]
-      plan: []
-
-  - id: TASK-VERS-TEST-001
-    title: "Unit tests for versioning engine manifest + atomicity"
-    requirement: REQ-TPL-VERSIONING-ENGINE
-    acs:
-      - AC-TPL-VERSION-MANIFEST
-      - AC-TPL-VERSION-ATOMIC
-    status: done
-    owner: agent
-    labels: [platform, versioning, testing, v336, p0]
-    summary: >
-      Add unit tests for VersionEngine using temp dirs with fixture files.
-      Test cases: manifest load + plan + apply yields expected content; dry-run leaves files
-      unchanged; atomic failure (injected error) leaves no partial state. Tag tests with ACs.
-    recommended_flows: ["ac_first"]
-    depends_on:
-      - TASK-VERS-VALIDATE-001
-    docs:
-      design: [DESIGN-TPL-VERSIONING-ENGINE-001]
-      plan: []
-
-  - id: TASK-VERS-INTEG-001
-    title: "Integrate VersionEngine into release-prepare"
-    requirement: REQ-TPL-VERSIONING-ENGINE
-    acs:
-      - AC-TPL-VERSION-MANIFEST
-      - AC-TPL-VERSION-DRYRUN
-      - AC-TPL-VERSION-ATOMIC
-    status: done
-    owner: agent
-    labels: [platform, versioning, release, v336, p0]
-    summary: >
-      Replace manual file edits in release-prepare with VersionEngine calls:
-      VersionInfo::from_args_and_spec_ledger, VersionEngine::plan_changes,
-      VersionEngine::apply_changes. Add --dry-run support. docs-check version alignment
-      should pass by only editing spec_ledger and running release-prepare.
-    recommended_flows: ["ac_first"]
-    depends_on:
-      - TASK-VERS-TEST-001
-    docs:
-      design: [DESIGN-TPL-VERSIONING-ENGINE-001]
-      plan: []
-
-  - id: TASK-VERS-RELEASE-001
-    title: "Promote versioning ACs and prepare v3.3.6"
-    requirement: REQ-TPL-VERSIONING-ENGINE
-    acs:
-      - AC-TPL-VERSION-MANIFEST
-      - AC-TPL-VERSION-DRYRUN
-      - AC-TPL-VERSION-ATOMIC
-    status: done
-    owner: agent
-    labels: [platform, versioning, release, v336, milestone]
-    summary: >
-      Remove "deferred" notes on REQ-TPL-VERSIONING-ENGINE in spec_ledger.
-      Mark ACs as must_have_ac: true. Update CHANGELOG.md preview for v3.3.6.
-      Update ROADMAP.md with "Kernel v3.3.6: Versioning engine live".
-      Verify selftest green and feature_status shows versioning ACs as [PASS].
-    recommended_flows: ["governed_release"]
-    depends_on:
-      - TASK-VERS-INTEG-001
-    docs:
-      design: [DESIGN-TPL-VERSIONING-ENGINE-001]
-      plan: []
-
-  # Adoption Track
-  - id: TASK-ADOPT-FORKS-001
-    title: "Template sanity acceptance for first fork"
-    requirement: REQ-TPL-ADOPTION-FORKS
-    acs:
-      - AC-TPL-FORK-SANITY
-    status: in_progress
-    owner: agent
-    labels: [adoption, template, devex, p1]
-    summary: >
-      Define and implement sanity checks for first-time template adopters.
-      Ensure cargo xtask doctor, kernel-smoke, and basic selftest pass cleanly
-      on fresh fork. Document common fork customization points.
-    recommended_flows: ["ac_first"]
-    docs:
-      design: []
-      plan: []
-
-  - id: TASK-ADOPT-IDP-001
-    title: "Add xtask idp-snapshot to emit tile JSON"
-    requirement: REQ-TPL-ADOPTION-IDP
-    acs:
-      - AC-TPL-IDP-SNAPSHOT
-    status: done
-    owner: agent
-    labels: [adoption, idp, backstage, integration, p1]
-    summary: >
-      Implement cargo xtask idp-snapshot command that emits JSON suitable for
-      IDP tile consumption. Include governance health, AC coverage, task counts,
-      recent activity, and metadata conforming to common IDP catalog schemas.
-    recommended_flows: ["ac_first"]
-    docs:
-      design: []
-      plan: []
-
-  - id: TASK-ADOPT-IDP-002
-    title: "Ship minimal Backstage demo plugin in examples/"
-    requirement: REQ-TPL-ADOPTION-IDP
-    acs:
-      - AC-TPL-IDP-DEMO
-    status: in_progress
-    owner: agent
-    labels: [adoption, idp, backstage, example, p1]
-    summary: >
-      Create a minimal Backstage frontend plugin in examples/backstage-plugin/
-      that consumes the idp-snapshot JSON and displays governance tiles.
-      Include setup instructions and screenshots in docs.
-    recommended_flows: ["ac_first"]
-    depends_on:
-      - TASK-ADOPT-IDP-001
-    docs:
-      design: []
-      plan: []
-
-  - id: TASK-ADOPT-AGENTS-001
-    title: "Happy-path agent pilot harness"
-    requirement: REQ-TPL-ADOPTION-AGENTS
-    acs:
-      - AC-TPL-AGENT-PILOT
-    status: in_progress
-    owner: agent
-    labels: [adoption, agents, devex, pilot, p1]
-    summary: >
-      Build a pilot harness for testing agent workflows end-to-end.
-      Include scripts/agent-pilot.sh that runs bootstrap-dev-env, governed-feature-dev,
-      and governed-release Skills in sequence, capturing output and validating state.
-    recommended_flows: ["ac_first"]
-    docs:
-      design: []
-      plan: []
-
-  # DX Track
-  - id: TASK-DX-TOOLING-001
-    title: "xtask doctor lint for rust-analyzer ABI risk"
-    requirement: REQ-TPL-DX-TOOLING
-    acs:
-      - AC-TPL-DOCTOR-ABI
-    status: in_progress
-    owner: agent
-    labels: [dx, tooling, devex, p2]
-    summary: >
-      Add rust-analyzer ABI compatibility check to cargo xtask doctor.
-      Detect mismatched rustc versions between system and Nix shell, warn about
-      stale rust-analyzer caches, and recommend mitigation steps.
-    recommended_flows: ["ac_first"]
-    docs:
-      design: []
-      plan: []
-
-  - id: TASK-DX-LINT-001
-    title: "Decide markdownlint policy level"
-    requirement: REQ-TPL-DX-LINT
-    acs:
-      - AC-TPL-MDLINT-POLICY
-    status: in_progress
-    owner: agent
-    labels: [dx, lint, docs, policy, p2]
-    summary: >
-      Define and document markdownlint policy for the template.
-      Decide whether to run as hard gate (precommit/selftest) or soft warning
-      (docs-check). Add .markdownlint.json config and integrate with xtask.
-    recommended_flows: ["ac_first"]
-    docs:
-      design: []
-      plan: []
-
-  - id: TASK-DX-SPELL-001
-    title: "Extract dictionary governance into a short note"
-    requirement: REQ-TPL-DX-SPELL
-    acs:
-      - AC-TPL-SPELL-DOC
-    status: in_progress
-    owner: agent
-    labels: [dx, spellcheck, docs, governance, p2]
-    summary: >
-      Document cspell dictionary governance in docs/how-to/spellcheck.md.
-      Cover when to add words, how to keep cspell.yaml tidy, and policy for
-      technical jargon vs. typos. Link from CLAUDE.md and xtask help-flows.
-    recommended_flows: ["ac_first"]
-    docs:
-      design: []
-      plan: []
-
-  # Environment Diagnostics Track
-  - id: TASK-ENV-DIAG-001
-    title: "Spec and AC alignment for environment diagnostics"
-    requirement: REQ-PLT-ENV-DIAGNOSTICS
-    acs:
-      - AC-PLT-ENV-ABI-CHECK
-    status: todo
-    owner: agent
-    labels: [dx, environment, diagnostics, p2]
-    summary: >
-      Ensure REQ-PLT-ENV-DIAGNOSTICS and its ACs accurately describe what
-      cargo xtask doctor does for environment checks. Verify ABI mismatch
-      detection is spec-aligned and documented.
-    recommended_flows: ["ac_first"]
-    docs:
-      design: []
-      plan: []
-
-  - id: TASK-ENV-DIAG-002
-    title: "Expand doctor BDD coverage for environment checks"
-    requirement: REQ-PLT-ENV-DIAGNOSTICS
-    acs:
-      - AC-PLT-ENV-ABI-CHECK
-      - AC-PLT-ENV-SCCACHE-WARN
-    status: todo
-    owner: agent
-    labels: [dx, environment, testing, p2]
-    summary: >
-      Add BDD scenarios for doctor environment diagnostics including ABI
-      compatibility warnings and sccache/libz issue detection. Ensure
-      TROUBLESHOOTING.md references are surfaced in output.
-    recommended_flows: ["ac_first"]
-    depends_on:
-      - TASK-ENV-DIAG-001
-    docs:
-      design: []
-      plan: []
-
-  - id: TASK-ENV-DIAG-003
-    title: "Document environment diagnostics in MISSING_MANUAL.md"
-    requirement: REQ-PLT-ENV-DIAGNOSTICS
-    acs: []
-    status: todo
-    owner: agent
-    labels: [dx, docs, environment, p3]
-    summary: >
-      Add a "Doctor & Environment Diagnostics" section to MISSING_MANUAL.md
-      explaining the distinction between template failures and environment
-      issues, with references to TROUBLESHOOTING.md sections.
-    recommended_flows: ["ac_first"]
-    depends_on:
-      - TASK-ENV-DIAG-002
-    docs:
-      design: []
-      plan: []
-
-  # Docs Automation Hardening Track (E1-E3)
-  - id: TASK-DOCS-MANIFEST-EXTEND-001
-    title: "Extend version manifest to cover all version-bearing files"
-    requirement: REQ-TPL-VERSIONING-ENGINE
-    acs:
-      - AC-TPL-VERSION-MANIFEST
-      - AC-TPL-VERSION-ATOMIC
-    status: todo
-    owner: agent
-    labels: [platform, versioning, docs, p1]
-    summary: >
-      Inventory all vX.Y.Z occurrences in repo. For each intentional versioned
-      field (specs/tasks.yaml version, docs/feature_status.md header, AGENT_SKILLS),
-      add or refine an entry in specs/version_manifest.yaml. Remove or generalize
-      accidental/duplicated version prose. Extend versioning.rs tests for new patterns.
-    recommended_flows: ["ac_first"]
-    depends_on:
-      - TASK-VERS-RELEASE-001
-    docs:
-      design: [DESIGN-TPL-VERSIONING-ENGINE-001]
-      plan: []
-
-  - id: TASK-DOCS-FM-GATE-001
-    title: "Wire docs-frontmatter-sync into docs-check as a first-class gate"
-    requirement: REQ-PLT-DOCS-CONSISTENCY
-    acs:
-      - AC-PLT-009
-      - AC-PLT-010
-    status: done
-    owner: agent
-    labels: [platform, docs, governance, p1]
-    summary: >
-      Make docs-frontmatter-sync a mandatory gate in docs-check. docs-check should
-      fail if any doc front-matter doesn't match specs/doc_index.yaml. Add BDD
-      scenarios for FM mismatch detection. Document that docs-frontmatter-sync --fix
-      is the only supported way to touch front-matter.
-    recommended_flows: ["ac_first"]
-    docs:
-      design: []
-      plan: []
-
-  - id: TASK-DOCS-ORPHAN-LINT-001
-    title: "Make orphaned version lint actionable with suppression support"
-    requirement: REQ-TPL-VERSIONING-ENGINE
-    acs:
-      - AC-TPL-VERSION-MANIFEST
-    status: done
-    owner: agent
-    labels: [platform, docs, lint, p2]
-    summary: >
-      Extend docs-check orphan version lint to: (1) read all regexes from
-      version_manifest.yaml and treat matches as "owned", (2) emit DOC_ORPHANED_VERSION
-      for remaining vX.Y.Z matches with line pointers, (3) support inline suppression
-      comments (<!-- doclint:disable orphan-version -->). Add test suite for clean/orphan/suppressed cases.
-    recommended_flows: ["ac_first"]
-    depends_on:
-      - TASK-DOCS-MANIFEST-EXTEND-001
-    docs:
-      design: []
-      plan: []
-
-  # IDP Contract and Schema Track
-  - id: TASK-IDP-SCHEMA-001
-    title: "Define IDP snapshot schema in specs/platform_schema.yaml"
-    requirement: REQ-TPL-PLATFORM-INTROSPECTION
-    acs:
-      - AC-TPL-AGENT-HINTS-SCHEMA
-      - AC-TPL-CLI-JSON-OUTPUT
-    status: done
-    owner: agent
-    labels: [platform, idp, schema, p1]
-    summary: >
-      Extract current idp.rs response shape into specs/platform_schema.yaml
-      under paths:/platform/idp/snapshot. Add schema_version field to payload.
-      Add BDD scenarios for schema validation. Add idp_api.rs test that validates
-      response against JSON schema.
-    recommended_flows: ["ac_first"]
-    depends_on:
-      - TASK-ADOPT-IDP-001
-    docs:
-      design: [DESIGN-TPL-IDP-TILES-001]
-      plan: []
-
-  - id: TASK-IDP-BACKSTAGE-HARDEN-001
-    title: "Harden Backstage plugin packaging and documentation"
-    requirement: REQ-TPL-AI-IDP-COMPAT
-    acs:
-      - AC-TPL-IDP-DEMO
-    status: todo
-    owner: agent
-    labels: [platform, idp, backstage, p2]
-    summary: >
-      Extract Backstage plugin into examples/backstage-plugin/ with its own
-      package.json and README. Document configuration (base URL, auth, deployment).
-      Add short runbook docs/how-to/connect-backstage-to-idp-tiles.md with screenshots.
-    recommended_flows: ["ac_first"]
-    depends_on:
-      - TASK-IDP-SCHEMA-001
-      - TASK-ADOPT-IDP-002
-    docs:
-      design: [DESIGN-TPL-IDP-TILES-001]
-      plan: []
-
-  - id: TASK-IDP-PORT-HARDEN-001
-    title: "Harden Port.io integration with sync script and demo"
-    requirement: REQ-TPL-AI-IDP-COMPAT
-    acs: []
-    status: done
-    owner: agent
-    labels: [platform, idp, port-io, p2]
-    summary: >
-      Move Port.io sync script and YAML into examples/port-integration/.
-      Ensure sync is incremental and idempotent. Add cargo xtask idp-demo or
-      make idp-demo that generates payload for local testing. Document how
-      to point a real Port workspace at the endpoint.
-    recommended_flows: ["ac_first"]
-    depends_on:
-      - TASK-IDP-SCHEMA-001
-    docs:
-      design: [DESIGN-TPL-IDP-TILES-001]
-      plan: []
-
-  # Environment and CI Expectations Track
-  - id: TASK-ENV-NONINT-001
-    title: "Document non-interactive and CI expectations"
-    requirement: REQ-PLT-DEVEX-CONTRACT
-    acs: []
-    status: done
-    owner: agent
-    labels: [dx, ci, docs, p2]
-    summary: >
-      Create docs/how-to/run-in-ci.md describing required env vars
-      (CI, XTASK_NONINTERACTIVE, XTASK_LOW_RESOURCES) and their effects.
-      Add BDD scenarios verifying doctor/check/selftest never prompt in CI.
-      Consider making missing XTASK_NONINTERACTIVE in CI a warning.
-    recommended_flows: ["ac_first"]
-    depends_on:
-      - TASK-ENV-DIAG-002
-    docs:
-      design: []
-      plan: []
-
-  # Cross-Repo Adoption Track
-  - id: TASK-XORG-FORK-ADOPT-001
-    title: "Apply docs automation stack to examples/fork-*"
-    requirement: REQ-TPL-ADOPTION-FORKS
-    acs:
-      - AC-TPL-FORK-SANITY
-    status: todo
-    owner: agent
-    labels: [adoption, forks, integration, p2]
-    summary: >
-      In examples/fork-*, add minimal specs/spec_ledger.yaml, specs/doc_index.yaml,
-      docs/ skeleton. Wire CI to call cargo xtask selftest via kernel ci-template.
-      Use idp-snapshot and docs-frontmatter-sync from kernel. Record friction.
-    recommended_flows: ["ac_first"]
-    depends_on:
-      - TASK-DOCS-FM-GATE-001
-      - TASK-IDP-SCHEMA-001
-    docs:
-      design: []
-      plan: []
-
-  # Release Planning Track
-  - id: TASK-REL-340-PLAN-001
-    title: "Define 3.4.0 IDP-ready kernel release scope"
-    requirement: REQ-PLT-RELEASE-SAFETY
-    acs: []
-    status: todo
-    owner: agent
-    labels: [release, planning, milestone, p2]
-    summary: >
-      Define what makes 3.4.0 "IDP-ready": idp-snapshot contract frozen,
-      docs automation mandatory in docs-check, env diagnostics ACs green.
-      Add "Kernel v3.4.0 – IDP & Docs Automation" section to docs/ROADMAP.md.
-      Prepare release_evidence template for IDP schema snapshot and doctor output.
-    recommended_flows: ["governed_release"]
-    depends_on:
-      - TASK-IDP-SCHEMA-001
-      - TASK-DOCS-FM-GATE-001
-      - TASK-ENV-DIAG-002
-    docs:
-      design: []
-      plan: []
+- id: TASK-TPL-IMPLEMENT-AC-001
+  title: Implement ACs for Platform Introspection API
+  requirement: REQ-TPL-PLATFORM-INTROSPECTION
+  acs:
+  - AC-TPL-PLATFORM-GRAPH
+  - AC-TPL-PLATFORM-DEVEX
+  - AC-TPL-PLATFORM-DOCS
+  status: open
+  owner: team-platform
+  labels:
+  - platform
+  - devex
+  - ac_first
+  docs:
+    design:
+    - DESIGN-TPL-PLATFORM-INTROSPECTION-001
+    plan: []
+  summary: Implement platform introspection APIs
+  recommended_flows:
+  - ac_first
+  depends_on: []
+- id: TASK-TPL-STATUS-CLI-001
+  title: Implement CLI governance status dashboard
+  requirement: REQ-PLT-STATUS-CLI
+  acs:
+  - AC-PLT-017
+  status: in_progress
+  owner: agent
+  labels:
+  - platform
+  - devex
+  - observability
+  docs:
+    design: []
+    plan: []
+  summary: Implement `cargo xtask status` command to display governance health, task counts, and next steps
+  recommended_flows:
+  - ac_first
+  depends_on: []
+- id: implement_ac
+  title: Implement Acceptance Criterion
+  requirement: REQ-TPL-SUGGEST-NEXT
+  acs:
+  - AC-TPL-SUGGEST-NEXT-CLI
+  status: in_progress
+  owner: steven
+  labels:
+  - feature
+  - devex
+  docs:
+    design:
+    - docs/design/platform-devex.md
+    plan:
+    - docs/plans/phase-3.md
+  summary: Implement a new feature starting from an AC
+  recommended_flows:
+  - ac_first
+  depends_on: []
+- id: TASK-TPL-FIX-AUDIT-001
+  title: Fix cargo-audit / cargo-deny findings and keep audit clean
+  requirement: REQ-PLT-SECURITY-GOVERNANCE
+  acs:
+  - AC-PLT-006
+  - AC-PLT-007
+  status: open
+  owner: team-platform
+  labels:
+  - security
+  - dependencies
+  - audit
+  docs:
+    design: []
+    plan: []
+  summary: Resolve security vulnerabilities and policy violations
+  recommended_flows:
+  - dependency_change
+  depends_on: []
+- id: TASK-TPL-GOV-WRITE-001
+  title: Implement FsGovernanceRepository and Task Status Persistence
+  requirement: REQ-TPL-GOV-WRITE-001
+  acs:
+  - AC-TPL-GOV-WRITE-TASK-STATUS-200
+  status: open
+  owner: team-platform
+  labels:
+  - platform
+  - governance
+  - v3
+  docs:
+    design: []
+    plan: []
+  summary: Implement the write-side governance repository to persist task status changes.
+  recommended_flows:
+  - ac_first
+  depends_on:
+  - TASK-TPL-SKILLS-TOOLING-001
+  - TASK-TPL-REL-BUNDLE-3-1-0
+- id: TASK-TPL-REL-BUNDLE-3-1-0
+  title: Implement release-bundle command
+  requirement: REQ-TPL-REL-BUNDLE
+  acs:
+  - AC-TPL-REL-EVIDENCE
+  - AC-TPL-REL-CHANGELOG
+  status: done
+  owner: agent
+  labels:
+  - platform
+  - release
+  - devex
+  docs:
+    design: []
+    plan: []
+  summary: Implement `cargo xtask release-bundle X.Y.Z` that generates structured evidence bundles for releases with tasks, specs, git history, and governance status.
+  recommended_flows:
+  - ac_first
+  depends_on: []
+- id: TASK-TPL-SKILLS-ALIGN-001
+  title: Align Skills with AGENT_SKILLS.md guidance
+  requirement: REQ-TPL-SKILLS-GUIDE
+  acs:
+  - AC-TPL-SKILLS-ALIGN-001
+  status: done
+  owner: agent
+  labels:
+  - platform
+  - agent
+  - docs
+  - skills
+  docs:
+    design:
+    - docs/AGENT_SKILLS.md
+    plan: []
+  summary: |
+    Refactor .claude/skills/* to match the 5 recommended Skills (bootstrap-dev-env, governed-feature-dev, governed-maintenance, governed-release, governed-governance-debug) and ensure SKILL.md files follow documented templates with proper frontmatter, workflow references to devex_flows.yaml, and comprehensive guidance.
+  recommended_flows:
+  - ac_first
+  depends_on: []
+- id: TASK-TPL-SKILLS-TOOLING-001
+  title: Port Skills tooling from Python to Rust xtask commands
+  requirement: REQ-TPL-SKILLS-TOOLING
+  acs:
+  - AC-TPL-SKILLS-FMT
+  - AC-TPL-SKILLS-LINT
+  status: done
+  owner: agent
+  labels:
+  - platform
+  - agent
+  - devex
+  docs:
+    design: []
+    plan: []
+  summary: |
+    Implement skills-fmt and skills-lint as xtask commands and integrate them into pre-commit and selftest/docs-check flows. Replace Python scripts with Rust-native commands to eliminate external dependencies and improve integration.
+  recommended_flows:
+  - ac_first
+  depends_on:
+  - TASK-TPL-SKILLS-ALIGN-001
+- id: TASK-VERS-ENGINE-001
+  title: Introduce versioning module in xtask
+  requirement: REQ-TPL-VERSIONING-ENGINE
+  acs:
+  - AC-TPL-VERSION-MODULE
+  status: done
+  owner: agent
+  labels:
+  - platform
+  - versioning
+  - release
+  - p0
+  docs:
+    design:
+    - DESIGN-TPL-VERSIONING-ENGINE-001
+    plan: []
+  summary: |
+    Create a dedicated versioning module in xtask that encapsulates all version manipulation logic. This provides a single source of truth for version parsing, validation, and updates across all release commands.
+  recommended_flows:
+  - ac_first
+  depends_on: []
+- id: TASK-VERS-ENGINE-002
+  title: Wire spec-ledger as single source of version
+  requirement: REQ-TPL-VERSIONING-ENGINE
+  acs:
+  - AC-TPL-VERSION-SOURCE
+  status: done
+  owner: agent
+  labels:
+  - platform
+  - versioning
+  - release
+  - p0
+  docs:
+    design:
+    - DESIGN-TPL-VERSIONING-ENGINE-001
+    plan: []
+  summary: |
+    Make specs/spec_ledger.yaml the canonical source of template version. All xtask commands (release-prepare, release-bundle, etc.) should read version from spec_ledger.yaml instead of hardcoded values or multiple sources.
+  recommended_flows:
+  - ac_first
+  depends_on:
+  - TASK-VERS-ENGINE-001
+- id: TASK-VERS-ENGINE-003
+  title: Manifest-driven updates for all version-bearing files
+  requirement: REQ-TPL-VERSIONING-ENGINE
+  acs:
+  - AC-TPL-VERSION-MANIFEST
+  status: done
+  owner: agent
+  labels:
+  - platform
+  - versioning
+  - release
+  - p0
+  docs:
+    design:
+    - DESIGN-TPL-VERSIONING-ENGINE-001
+    plan: []
+  summary: |
+    Define a version manifest (YAML or embedded in spec_ledger) that lists all files requiring version updates (Cargo.toml, pyproject.toml, CLAUDE.md, etc.). The versioning engine reads this manifest and applies updates atomically.
+  recommended_flows:
+  - ac_first
+  depends_on:
+  - TASK-VERS-ENGINE-002
+- id: TASK-VERS-ENGINE-004
+  title: Dry-run and atomicity for release-prepare
+  requirement: REQ-TPL-VERSIONING-ENGINE
+  acs:
+  - AC-TPL-VERSION-DRYRUN
+  - AC-TPL-VERSION-ATOMIC
+  status: done
+  owner: agent
+  labels:
+  - platform
+  - versioning
+  - release
+  - p0
+  docs:
+    design:
+    - DESIGN-TPL-VERSIONING-ENGINE-001
+    plan: []
+  summary: |
+    Add --dry-run flag to release-prepare that shows what would be changed without writing files. Ensure all file updates are atomic (write to temp, then rename) to prevent partial state on errors.
+  recommended_flows:
+  - ac_first
+  depends_on:
+  - TASK-VERS-ENGINE-003
+- id: TASK-VERS-VALIDATE-001
+  title: Align versioning spec ↔ manifest ↔ code
+  requirement: REQ-TPL-VERSIONING-ENGINE
+  acs:
+  - AC-TPL-VERSION-MANIFEST
+  status: done
+  owner: agent
+  labels:
+  - platform
+  - versioning
+  - release
+  - v336
+  - p0
+  docs:
+    design:
+    - DESIGN-TPL-VERSIONING-ENGINE-001
+    plan: []
+  summary: |
+    Ensure REQ-TPL-VERSIONING-ENGINE and its ACs describe exactly what versioning.rs does. Verify AC IDs match implementation (AC-TPL-VERSION-MANIFEST, AC-TPL-VERSION-DRYRUN, AC-TPL-VERSION-ATOMIC). Confirm version_manifest.yaml covers all version-bearing files with simple, deterministic patterns.
+  recommended_flows:
+  - ac_first
+  depends_on:
+  - TASK-VERS-ENGINE-003
+- id: TASK-VERS-TEST-001
+  title: Unit tests for versioning engine manifest + atomicity
+  requirement: REQ-TPL-VERSIONING-ENGINE
+  acs:
+  - AC-TPL-VERSION-MANIFEST
+  - AC-TPL-VERSION-ATOMIC
+  status: done
+  owner: agent
+  labels:
+  - platform
+  - versioning
+  - testing
+  - v336
+  - p0
+  docs:
+    design:
+    - DESIGN-TPL-VERSIONING-ENGINE-001
+    plan: []
+  summary: |
+    Add unit tests for VersionEngine using temp dirs with fixture files. Test cases: manifest load + plan + apply yields expected content; dry-run leaves files unchanged; atomic failure (injected error) leaves no partial state. Tag tests with ACs.
+  recommended_flows:
+  - ac_first
+  depends_on:
+  - TASK-VERS-VALIDATE-001
+- id: TASK-VERS-INTEG-001
+  title: Integrate VersionEngine into release-prepare
+  requirement: REQ-TPL-VERSIONING-ENGINE
+  acs:
+  - AC-TPL-VERSION-MANIFEST
+  - AC-TPL-VERSION-DRYRUN
+  - AC-TPL-VERSION-ATOMIC
+  status: done
+  owner: agent
+  labels:
+  - platform
+  - versioning
+  - release
+  - v336
+  - p0
+  docs:
+    design:
+    - DESIGN-TPL-VERSIONING-ENGINE-001
+    plan: []
+  summary: |
+    Replace manual file edits in release-prepare with VersionEngine calls: VersionInfo::from_args_and_spec_ledger, VersionEngine::plan_changes, VersionEngine::apply_changes. Add --dry-run support. docs-check version alignment should pass by only editing spec_ledger and running release-prepare.
+  recommended_flows:
+  - ac_first
+  depends_on:
+  - TASK-VERS-TEST-001
+- id: TASK-VERS-RELEASE-001
+  title: Promote versioning ACs and prepare v3.3.6
+  requirement: REQ-TPL-VERSIONING-ENGINE
+  acs:
+  - AC-TPL-VERSION-MANIFEST
+  - AC-TPL-VERSION-DRYRUN
+  - AC-TPL-VERSION-ATOMIC
+  status: done
+  owner: agent
+  labels:
+  - platform
+  - versioning
+  - release
+  - v336
+  - milestone
+  docs:
+    design:
+    - DESIGN-TPL-VERSIONING-ENGINE-001
+    plan: []
+  summary: |
+    Remove "deferred" notes on REQ-TPL-VERSIONING-ENGINE in spec_ledger. Mark ACs as must_have_ac: true. Update CHANGELOG.md preview for v3.3.6. Update ROADMAP.md with "Kernel v3.3.6: Versioning engine live". Verify selftest green and feature_status shows versioning ACs as [PASS].
+  recommended_flows:
+  - governed_release
+  depends_on:
+  - TASK-VERS-INTEG-001
+- id: TASK-ADOPT-FORKS-001
+  title: Template sanity acceptance for first fork
+  requirement: REQ-TPL-ADOPTION-FORKS
+  acs:
+  - AC-TPL-FORK-SANITY
+  status: in_progress
+  owner: agent
+  labels:
+  - adoption
+  - template
+  - devex
+  - p1
+  docs:
+    design: []
+    plan: []
+  summary: |
+    Define and implement sanity checks for first-time template adopters. Ensure cargo xtask doctor, kernel-smoke, and basic selftest pass cleanly on fresh fork. Document common fork customization points.
+  recommended_flows:
+  - ac_first
+  depends_on: []
+- id: TASK-ADOPT-IDP-001
+  title: Add xtask idp-snapshot to emit tile JSON
+  requirement: REQ-TPL-ADOPTION-IDP
+  acs:
+  - AC-TPL-IDP-SNAPSHOT
+  status: done
+  owner: agent
+  labels:
+  - adoption
+  - idp
+  - backstage
+  - integration
+  - p1
+  docs:
+    design: []
+    plan: []
+  summary: |
+    Implement cargo xtask idp-snapshot command that emits JSON suitable for IDP tile consumption. Include governance health, AC coverage, task counts, recent activity, and metadata conforming to common IDP catalog schemas.
+  recommended_flows:
+  - ac_first
+  depends_on: []
+- id: TASK-ADOPT-IDP-002
+  title: Ship minimal Backstage demo plugin in examples/
+  requirement: REQ-TPL-ADOPTION-IDP
+  acs:
+  - AC-TPL-IDP-DEMO
+  status: in_progress
+  owner: agent
+  labels:
+  - adoption
+  - idp
+  - backstage
+  - example
+  - p1
+  docs:
+    design: []
+    plan: []
+  summary: |
+    Create a minimal Backstage frontend plugin in examples/backstage-plugin/ that consumes the idp-snapshot JSON and displays governance tiles. Include setup instructions and screenshots in docs.
+  recommended_flows:
+  - ac_first
+  depends_on:
+  - TASK-ADOPT-IDP-001
+- id: TASK-ADOPT-AGENTS-001
+  title: Happy-path agent pilot harness
+  requirement: REQ-TPL-ADOPTION-AGENTS
+  acs:
+  - AC-TPL-AGENT-PILOT
+  status: in_progress
+  owner: agent
+  labels:
+  - adoption
+  - agents
+  - devex
+  - pilot
+  - p1
+  docs:
+    design: []
+    plan: []
+  summary: |
+    Build a pilot harness for testing agent workflows end-to-end. Include scripts/agent-pilot.sh that runs bootstrap-dev-env, governed-feature-dev, and governed-release Skills in sequence, capturing output and validating state.
+  recommended_flows:
+  - ac_first
+  depends_on: []
+- id: TASK-DX-TOOLING-001
+  title: xtask doctor lint for rust-analyzer ABI risk
+  requirement: REQ-TPL-DX-TOOLING
+  acs:
+  - AC-TPL-DOCTOR-ABI
+  status: in_progress
+  owner: agent
+  labels:
+  - dx
+  - tooling
+  - devex
+  - p2
+  docs:
+    design: []
+    plan: []
+  summary: |
+    Add rust-analyzer ABI compatibility check to cargo xtask doctor. Detect mismatched rustc versions between system and Nix shell, warn about stale rust-analyzer caches, and recommend mitigation steps.
+  recommended_flows:
+  - ac_first
+  depends_on: []
+- id: TASK-DX-LINT-001
+  title: Decide markdownlint policy level
+  requirement: REQ-TPL-DX-LINT
+  acs:
+  - AC-TPL-MDLINT-POLICY
+  status: in_progress
+  owner: agent
+  labels:
+  - dx
+  - lint
+  - docs
+  - policy
+  - p2
+  docs:
+    design: []
+    plan: []
+  summary: |
+    Define and document markdownlint policy for the template. Decide whether to run as hard gate (precommit/selftest) or soft warning (docs-check). Add .markdownlint.json config and integrate with xtask.
+  recommended_flows:
+  - ac_first
+  depends_on: []
+- id: TASK-DX-SPELL-001
+  title: Extract dictionary governance into a short note
+  requirement: REQ-TPL-DX-SPELL
+  acs:
+  - AC-TPL-SPELL-DOC
+  status: in_progress
+  owner: agent
+  labels:
+  - dx
+  - spellcheck
+  - docs
+  - governance
+  - p2
+  docs:
+    design: []
+    plan: []
+  summary: |
+    Document cspell dictionary governance in docs/how-to/spellcheck.md. Cover when to add words, how to keep cspell.yaml tidy, and policy for technical jargon vs. typos. Link from CLAUDE.md and xtask help-flows.
+  recommended_flows:
+  - ac_first
+  depends_on: []
+- id: TASK-ENV-DIAG-001
+  title: Spec and AC alignment for environment diagnostics
+  requirement: REQ-PLT-ENV-DIAGNOSTICS
+  acs:
+  - AC-PLT-ENV-ABI-CHECK
+  status: done
+  owner: agent
+  labels:
+  - dx
+  - environment
+  - diagnostics
+  - p2
+  docs:
+    design: []
+    plan: []
+  summary: |
+    Ensure REQ-PLT-ENV-DIAGNOSTICS and its ACs accurately describe what cargo xtask doctor does for environment checks. Verify ABI mismatch detection is spec-aligned and documented.
+  recommended_flows:
+  - ac_first
+  depends_on: []
+- id: TASK-ENV-DIAG-002
+  title: Expand doctor BDD coverage for environment checks
+  requirement: REQ-PLT-ENV-DIAGNOSTICS
+  acs:
+  - AC-PLT-ENV-ABI-CHECK
+  - AC-PLT-ENV-SCCACHE-WARN
+  status: done
+  owner: agent
+  labels:
+  - dx
+  - environment
+  - testing
+  - p2
+  docs:
+    design: []
+    plan: []
+  summary: |
+    Add BDD scenarios for doctor environment diagnostics including ABI compatibility warnings and sccache/libz issue detection. Ensure TROUBLESHOOTING.md references are surfaced in output.
+  recommended_flows:
+  - ac_first
+  depends_on:
+  - TASK-ENV-DIAG-001
+- id: TASK-ENV-DIAG-003
+  title: Document environment diagnostics in MISSING_MANUAL.md
+  requirement: REQ-PLT-ENV-DIAGNOSTICS
+  acs: []
+  status: todo
+  owner: agent
+  labels:
+  - dx
+  - docs
+  - environment
+  - p3
+  docs:
+    design: []
+    plan: []
+  summary: |
+    Add a "Doctor & Environment Diagnostics" section to MISSING_MANUAL.md explaining the distinction between template failures and environment issues, with references to TROUBLESHOOTING.md sections.
+  recommended_flows:
+  - ac_first
+  depends_on:
+  - TASK-ENV-DIAG-002
+- id: TASK-DOCS-MANIFEST-EXTEND-001
+  title: Extend version manifest to cover all version-bearing files
+  requirement: REQ-TPL-VERSIONING-ENGINE
+  acs:
+  - AC-TPL-VERSION-MANIFEST
+  - AC-TPL-VERSION-ATOMIC
+  status: todo
+  owner: agent
+  labels:
+  - platform
+  - versioning
+  - docs
+  - p1
+  docs:
+    design:
+    - DESIGN-TPL-VERSIONING-ENGINE-001
+    plan: []
+  summary: |
+    Inventory all vX.Y.Z occurrences in repo. For each intentional versioned field (specs/tasks.yaml version, docs/feature_status.md header, AGENT_SKILLS), add or refine an entry in specs/version_manifest.yaml. Remove or generalize accidental/duplicated version prose. Extend versioning.rs tests for new patterns.
+  recommended_flows:
+  - ac_first
+  depends_on:
+  - TASK-VERS-RELEASE-001
+- id: TASK-DOCS-FM-GATE-001
+  title: Wire docs-frontmatter-sync into docs-check as a first-class gate
+  requirement: REQ-PLT-DOCS-CONSISTENCY
+  acs:
+  - AC-PLT-009
+  - AC-PLT-010
+  status: done
+  owner: agent
+  labels:
+  - platform
+  - docs
+  - governance
+  - p1
+  docs:
+    design: []
+    plan: []
+  summary: |
+    Make docs-frontmatter-sync a mandatory gate in docs-check. docs-check should fail if any doc front-matter doesn't match specs/doc_index.yaml. Add BDD scenarios for FM mismatch detection. Document that docs-frontmatter-sync --fix is the only supported way to touch front-matter.
+  recommended_flows:
+  - ac_first
+  depends_on: []
+- id: TASK-DOCS-ORPHAN-LINT-001
+  title: Make orphaned version lint actionable with suppression support
+  requirement: REQ-TPL-VERSIONING-ENGINE
+  acs:
+  - AC-TPL-VERSION-MANIFEST
+  status: done
+  owner: agent
+  labels:
+  - platform
+  - docs
+  - lint
+  - p2
+  docs:
+    design: []
+    plan: []
+  summary: |
+    Extend docs-check orphan version lint to: (1) read all regexes from version_manifest.yaml and treat matches as "owned", (2) emit DOC_ORPHANED_VERSION for remaining vX.Y.Z matches with line pointers, (3) support inline suppression comments (<!-- doclint:disable orphan-version -->). Add test suite for clean/orphan/suppressed cases.
+  recommended_flows:
+  - ac_first
+  depends_on:
+  - TASK-DOCS-MANIFEST-EXTEND-001
+- id: TASK-IDP-SCHEMA-001
+  title: Define IDP snapshot schema in specs/platform_schema.yaml
+  requirement: REQ-TPL-PLATFORM-INTROSPECTION
+  acs:
+  - AC-TPL-AGENT-HINTS-SCHEMA
+  - AC-TPL-CLI-JSON-OUTPUT
+  status: done
+  owner: agent
+  labels:
+  - platform
+  - idp
+  - schema
+  - p1
+  docs:
+    design:
+    - DESIGN-TPL-IDP-TILES-001
+    plan: []
+  summary: |
+    Extract current idp.rs response shape into specs/platform_schema.yaml under paths:/platform/idp/snapshot. Add schema_version field to payload. Add BDD scenarios for schema validation. Add idp_api.rs test that validates response against JSON schema.
+  recommended_flows:
+  - ac_first
+  depends_on:
+  - TASK-ADOPT-IDP-001
+- id: TASK-IDP-BACKSTAGE-HARDEN-001
+  title: Harden Backstage plugin packaging and documentation
+  requirement: REQ-TPL-AI-IDP-COMPAT
+  acs:
+  - AC-TPL-IDP-DEMO
+  status: todo
+  owner: agent
+  labels:
+  - platform
+  - idp
+  - backstage
+  - p2
+  docs:
+    design:
+    - DESIGN-TPL-IDP-TILES-001
+    plan: []
+  summary: |
+    Extract Backstage plugin into examples/backstage-plugin/ with its own package.json and README. Document configuration (base URL, auth, deployment). Add short runbook docs/how-to/connect-backstage-to-idp-tiles.md with screenshots.
+  recommended_flows:
+  - ac_first
+  depends_on:
+  - TASK-IDP-SCHEMA-001
+  - TASK-ADOPT-IDP-002
+- id: TASK-IDP-PORT-HARDEN-001
+  title: Harden Port.io integration with sync script and demo
+  requirement: REQ-TPL-AI-IDP-COMPAT
+  acs: []
+  status: done
+  owner: agent
+  labels:
+  - platform
+  - idp
+  - port-io
+  - p2
+  docs:
+    design:
+    - DESIGN-TPL-IDP-TILES-001
+    plan: []
+  summary: |
+    Move Port.io sync script and YAML into examples/port-integration/. Ensure sync is incremental and idempotent. Add cargo xtask idp-demo or make idp-demo that generates payload for local testing. Document how to point a real Port workspace at the endpoint.
+  recommended_flows:
+  - ac_first
+  depends_on:
+  - TASK-IDP-SCHEMA-001
+- id: TASK-ENV-NONINT-001
+  title: Document non-interactive and CI expectations
+  requirement: REQ-PLT-DEVEX-CONTRACT
+  acs: []
+  status: done
+  owner: agent
+  labels:
+  - dx
+  - ci
+  - docs
+  - p2
+  docs:
+    design: []
+    plan: []
+  summary: |
+    Create docs/how-to/run-in-ci.md describing required env vars (CI, XTASK_NONINTERACTIVE, XTASK_LOW_RESOURCES) and their effects. Add BDD scenarios verifying doctor/check/selftest never prompt in CI. Consider making missing XTASK_NONINTERACTIVE in CI a warning.
+  recommended_flows:
+  - ac_first
+  depends_on:
+  - TASK-ENV-DIAG-002
+- id: TASK-XORG-FORK-ADOPT-001
+  title: Apply docs automation stack to examples/fork-*
+  requirement: REQ-TPL-ADOPTION-FORKS
+  acs:
+  - AC-TPL-FORK-SANITY
+  status: todo
+  owner: agent
+  labels:
+  - adoption
+  - forks
+  - integration
+  - p2
+  docs:
+    design: []
+    plan: []
+  summary: |
+    In examples/fork-*, add minimal specs/spec_ledger.yaml, specs/doc_index.yaml, docs/ skeleton. Wire CI to call cargo xtask selftest via kernel ci-template. Use idp-snapshot and docs-frontmatter-sync from kernel. Record friction.
+  recommended_flows:
+  - ac_first
+  depends_on:
+  - TASK-DOCS-FM-GATE-001
+  - TASK-IDP-SCHEMA-001
+- id: TASK-REL-340-PLAN-001
+  title: Define 3.4.0 IDP-ready kernel release scope
+  requirement: REQ-PLT-RELEASE-SAFETY
+  acs: []
+  status: todo
+  owner: agent
+  labels:
+  - release
+  - planning
+  - milestone
+  - p2
+  docs:
+    design: []
+    plan: []
+  summary: |
+    Define what makes 3.4.0 "IDP-ready": idp-snapshot contract frozen, docs automation mandatory in docs-check, env diagnostics ACs green. Add "Kernel v3.4.0 – IDP & Docs Automation" section to docs/ROADMAP.md. Prepare release_evidence template for IDP schema snapshot and doctor output.
+  recommended_flows:
+  - governed_release
+  depends_on:
+  - TASK-IDP-SCHEMA-001
+  - TASK-DOCS-FM-GATE-001
+  - TASK-ENV-DIAG-002
+- id: TASK-NEW-001
+  title: New platform task
+  requirement: REQ-TPL-PLATFORM-INTROSPECTION
+  acs: []
+  status: Todo
+  owner: null
+  labels: []
+  docs:
+    design: []
+    plan: []
+  summary: New platform task
+  recommended_flows: []
+  depends_on: []
+- id: TASK-TEST-001
+  title: Test task
+  requirement: REQ-TPL-HEALTH
+  acs: []
+  status: Todo
+  owner: null
+  labels: []
+  docs:
+    design: []
+    plan: []
+  summary: Test task
+  recommended_flows: []
+  depends_on: []

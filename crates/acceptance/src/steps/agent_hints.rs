@@ -52,6 +52,9 @@ async fn when_run_command(world: &mut World, command: String) {
     // Set SPEC_ROOT to the temp directory so the command finds the test specs
     cmd.env("SPEC_ROOT", root_path);
 
+    // Bypass xtask's automatic Nix wrapper since the temp directory has no flake.nix
+    cmd.env("IN_NIX_SHELL", "1");
+
     // Execute the command
     let output = cmd.output().expect("Failed to execute command");
 
