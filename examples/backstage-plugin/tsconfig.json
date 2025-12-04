@@ -2,7 +2,7 @@
   "extends": "@backstage/cli/config/tsconfig.json",
   "compilerOptions": {
     "target": "ES2020",
-    "module": "ESNext",
+    "module": "NodeNext",
     "lib": ["ES2020", "DOM"],
     "jsx": "react",
     "declaration": true,
@@ -14,7 +14,7 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
-    "moduleResolution": "node16",
+    "moduleResolution": "nodenext",
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": false
