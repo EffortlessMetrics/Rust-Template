@@ -26,6 +26,8 @@ Complete reference for all `xtask` CLI commands.
 - [quickstart](#xtask-quickstart) - First-run validation
 - [selftest](#xtask-selftest) - Comprehensive 11-step validation suite
 - [idp-check](#xtask-idp-check) - Validate IDP/portal integration surface
+- [contracts-check](#xtask-contracts-check) - Validate governed facts match docs
+- [contracts-fmt](#xtask-contracts-fmt) - Sync governed facts to docs
 
 ---
 
@@ -1510,6 +1512,212 @@ Runs focused validation for IDP/portal integration:
 
 ---
 
+## Contracts Governance
+
+### xtask contracts-check
+
+Validate that governed facts in documentation match their sources.
+
+#### Usage
+
+```bash
+cargo run -p xtask -- contracts-check
+```
+
+#### What It Does
+
+Validates governed facts against their sources:
+
+1. **Computes facts** from code and specs:
+   - Selftest step count (from `[N/M]` patterns in `selftest.rs`)
+   - AC counts by classification (kernel/template/meta from `spec_ledger.yaml`)
+   - Platform endpoints (from `openapi.yaml`)
+   - Required checks (from `devex_flows.yaml`)
+
+2. **Loads patterns** from `specs/contracts_manifest.yaml`
+
+3. **Scans documentation** for patterns that contain governed numbers
+
+4. **Reports drift** if any documented numbers don't match computed values
+
+#### Exit Codes
+
+- `0`: All documented facts match sources
+- Non-zero: Drift detected (documented value differs from source)
+
+#### When to Use
+
+- **Before PR merge**: Ensure docs are synchronized
+- **After changing selftest steps**: Verify step counts are updated
+- **After AC changes**: Verify AC counts are updated
+- **In CI**: Automated drift detection
+
+#### Example Output
+
+```
+📋 Checking contract governance...
+
+Computed facts from source:
+  • Selftest steps: 11
+  • AC counts: total=116, kernel=61, template=37, meta=18
+  • Platform endpoints: 15
+  • Required checks: 4
+
+✓ All contract facts are synchronized
+```
+
+**When drift is detected:**
+
+```
+📋 Checking contract governance...
+
+Computed facts from source:
+  • Selftest steps: 11
+  • AC counts: total=116, kernel=61, template=37, meta=18
+
+Contract drift detected:
+
+README.md:42
+  Contract: selftest_step_count
+  - An 10-step selftest gate
+  + An 11-step selftest gate
+
+Error: contracts-check found 1 edit(s) across 1 file(s). Run `cargo xtask contracts-fmt` to fix.
+```
+
+#### Common Issues
+
+**Drift after adding selftest step:**
+- You added a step to `selftest.rs` but didn't update docs
+- Run `cargo xtask contracts-fmt` to auto-fix
+
+**AC count mismatch:**
+- You changed ACs in `spec_ledger.yaml` but `feature_status_notes.md` is stale
+- Run `cargo xtask contracts-fmt` to auto-fix
+
+**Pattern not matching:**
+- The regex in `contracts_manifest.yaml` doesn't match the doc format
+- Update the regex or adjust the documentation format
+
+---
+
+### xtask contracts-fmt
+
+Synchronize governed facts from sources to documentation.
+
+#### Usage
+
+```bash
+cargo run -p xtask -- contracts-fmt
+```
+
+#### What It Does
+
+Updates documentation to match computed facts:
+
+1. **Computes current values** from sources (same as `contracts-check`)
+2. **Loads patterns** from `specs/contracts_manifest.yaml`
+3. **Applies edits** to each file where documented values differ
+4. **Reports changes** made
+
+This is the "fix" command that pairs with `contracts-check`.
+
+#### Exit Codes
+
+- `0`: All files updated successfully (or no changes needed)
+- Non-zero: Failed to apply edits
+
+#### When to Use
+
+- **After selftest step changes**: Update all step count references
+- **After AC changes**: Update all AC count references
+- **Before commits**: Auto-fix drift as part of workflow
+- **In pre-commit hooks**: Automatic synchronization
+
+#### Example Output
+
+**When no changes needed:**
+
+```
+📋 Synchronizing contract facts...
+
+Computed facts from source:
+  • Selftest steps: 11
+  • AC counts: total=116, kernel=61, template=37, meta=18
+  • Platform endpoints: 15
+  • Required checks: 4
+
+✓ All contract facts are synchronized
+```
+
+**When changes are applied:**
+
+```
+📋 Synchronizing contract facts...
+
+Computed facts from source:
+  • Selftest steps: 11
+  • AC counts: total=116, kernel=61, template=37, meta=18
+
+  ✓ README.md
+  ✓ docs/feature_status_notes.md
+
+✓ Applied 2 contract updates
+```
+
+#### How Patterns Work
+
+Patterns are defined in `specs/contracts_manifest.yaml`:
+
+```yaml
+contracts:
+  selftest_step_count:
+    source: "crates/xtask/src/commands/selftest.rs"
+    description: "Number of steps in the selftest governance gate"
+    patterns:
+      - file: "README.md"
+        regex: '(\d+)-step selftest gate'
+        template: "{n}-step selftest gate"
+```
+
+- **regex**: Pattern to find the current value (capture group extracts number)
+- **template**: Replacement text with `{n}` substituted
+
+#### Configuration
+
+Edit `specs/contracts_manifest.yaml` to add new patterns:
+
+```yaml
+contracts:
+  my_fact:
+    source: "path/to/source/file"
+    description: "What this fact represents"
+    patterns:
+      - file: "docs/some-doc.md"
+        regex: 'has (\d+) widgets'
+        template: "has {n} widgets"
+        required: false  # Don't fail if file doesn't exist
+```
+
+#### Common Issues
+
+**Pattern doesn't match:**
+- Regex is too strict or doc format changed
+- Test regex against the actual line in the file
+- Update `contracts_manifest.yaml` pattern
+
+**Write permission denied:**
+- Ensure documentation files are writable
+- Check git isn't locking the files
+
+#### Notes
+
+- **Idempotent**: Safe to run multiple times
+- **Atomic writes**: Uses temp file + rename to avoid partial writes
+- **Part of docs-check**: `cargo xtask docs-check` runs `contracts-check` internally
+
+---
+
 ## Command Comparison
 
 | Command | Speed | Coverage | Use Case |
@@ -1522,6 +1730,8 @@ Runs focused validation for IDP/portal integration:
 | `quickstart` | Medium | Basic validation | First run |
 | `selftest` | Slow | Comprehensive | CI, releases |
 | `idp-check` | Medium | IDP surface | After API changes |
+| `contracts-check` | Fast | Doc governance | Before PR merge |
+| `contracts-fmt` | Fast | Doc sync | After selftest changes |
 
 ---
 

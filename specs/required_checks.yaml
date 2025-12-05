@@ -1,0 +1,86 @@
+# Required CI Status Checks
+# Schema Version: 1.0
+# Purpose: Canonical list of required GitHub status checks for main branch protection.
+#
+# This file is the single source of truth for which CI checks must pass before merging.
+# The list is consumed by:
+# - Branch protection configuration (see ci-workflows.md for gh CLI commands)
+# - docs/reference/ci-workflows.md "Required Status Checks" section
+# - crates/xtask/src/contracts.rs `compute_required_checks()`
+#
+# To add/remove a required check:
+# 1. Update this file
+# 2. Run `cargo xtask contracts-fmt` to sync documentation
+# 3. Update branch protection settings in GitHub
+
+schema_version: "1.0"
+
+# Critical checks - must pass for any merge to main
+# These are blocking; failures prevent merging
+required_checks:
+  - name: selftest
+    workflow: tier1-selftest.yml
+    description: "Full governance validation (11 steps)"
+
+  - name: rust-lints
+    workflow: ci-lints.yml
+    description: "Rust code quality (fmt, clippy, deny)"
+
+  - name: ts-config-lints
+    workflow: ci-lints.yml
+    description: "TypeScript config governance"
+
+  - name: openapi
+    workflow: ci-openapi.yml
+    description: "OpenAPI schema validation and breaking change detection"
+
+  - name: bdd
+    workflow: ci-ac.yml
+    description: "BDD acceptance tests"
+
+  - name: codeql
+    workflow: ci-security.yml
+    description: "GitHub CodeQL security analysis"
+
+  - name: secrets
+    workflow: ci-security.yml
+    description: "Secret scanning (trufflehog, gitleaks)"
+
+  - name: deps
+    workflow: ci-security.yml
+    description: "Dependency audit (cargo-deny, cargo-audit)"
+
+# Recommended checks - strongly encouraged but may be optional
+# Valuable for feedback but not strictly required for merge
+recommended_checks:
+  - name: policy-tests
+    workflow: policy-test.yml
+    description: "OPA/Rego policy validation"
+
+  - name: coverage
+    workflow: ci-coverage.yml
+    description: "Test coverage floor enforcement (60%)"
+
+# Conditional checks - only run when specific paths change
+# These provide targeted validation for specialized domains
+conditional_checks:
+  - name: lint
+    workflow: ci-gherkin.yml
+    paths: ["specs/features/**"]
+    description: "Gherkin syntax validation"
+
+  - name: proto
+    workflow: ci-proto.yml
+    paths: ["**/*.proto"]
+    description: "Protobuf schema validation"
+
+  - name: db
+    workflow: ci-db.yml
+    paths: ["migrations/**"]
+    description: "Database migration validation"
+
+# Notes for maintainers:
+# - The `name` field corresponds to the GitHub status check name
+# - The `workflow` field indicates which workflow file creates the check
+# - Keep this list synchronized with actual branch protection settings
+# - See docs/reference/ci-workflows.md for detailed workflow documentation

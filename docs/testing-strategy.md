@@ -412,7 +412,7 @@ error: failed to remove C:\...\target\debug\xtask.exe: os error 5 (Access is den
 **Validation contract:**
 * If selftest passes on Tier-1 locally, it WILL pass in CI
 * Tier-2 is suitable for development, Tier-1 required for final validation
-* All merged code has passed strict 8-step validation on Tier-1
+* All merged code has passed the full selftest validation on Tier-1
 
 ---
 

@@ -19,6 +19,20 @@ As of v3.3.6 (December 2025 update):
 
 ---
 
+## How These Counts Are Classified
+
+- **Kernel ACs** - REQ and AC both have `must_have_ac: true`.
+- **Template ACs** - AC has `must_have_ac: false` and is not marked as meta.
+- **Meta/CI-only ACs** - AC has `must_have_ac: false` and either:
+  - at least one test with `type: ci`, or
+  - tags that include `harness` or `example`.
+
+These counts are computed from `specs/spec_ledger.yaml` by `ContractsSnapshot` in
+`crates/xtask/src/contracts.rs` and kept in sync with this document by
+`cargo xtask contracts-fmt`. See `specs/contracts_manifest.yaml` for the patterns.
+
+---
+
 ## 1. AC Coverage Summary
 
 ### Kernel ACs: All Passing

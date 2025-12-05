@@ -529,5 +529,5 @@ The four-phase pipeline (Spec → Loader → Enforce → Introspect) provides a 
 - [ROADMAP.md](file:///home/steven/code/Rust/Rust-Template/docs/ROADMAP.md) - Strategic direction and pilot plan
 - [ADR-0004](file:///home/steven/code/Rust/Rust-Template/docs/adr/0004-platform-introspection-contract.md) - Platform introspection API design
 - [ADR-0006](file:///home/steven/code/Rust/Rust-Template/docs/adr/0006-graph-first-governance.md) - Graph-based governance rationale
-- [Selftest Command](file:///home/steven/code/Rust/Rust-Template/crates/xtask/src/commands/selftest.rs) - Implementation of 7-step validation
+- [Selftest Command](file:///home/steven/code/Rust/Rust-Template/crates/xtask/src/commands/selftest.rs) - Implementation of the selftest governance gate
 - [Spec Runtime](file:///home/steven/code/Rust/Rust-Template/crates/spec-runtime) - Core loaders and graph logic

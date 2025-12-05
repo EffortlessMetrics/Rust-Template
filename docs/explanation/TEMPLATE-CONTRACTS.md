@@ -1368,16 +1368,19 @@ tests:
 
 ## Selftest Enforcement
 
-The `cargo xtask selftest` command validates all kernel contracts through 8 steps:
+The `cargo xtask selftest` command validates all kernel contracts through 11 steps:
 
 1. **Core checks**: fmt, clippy, tests (AC-PLT-003)
-2. **BDD acceptance tests**: Run all `@AC-*` scenarios
-3. **AC/ADR mapping**: AC status and ADR reference validation
-4. **LLM bundler**: Test context bundle generation
-5. **Policy tests**: Run conftest on all Rego policies
-6. **DevEx contract**: Validate required commands exist (AC-PLT-015)
-7. **Graph invariants**: Validate governance graph structure (AC-TPL-GRAPH-SELFTEST)
-8. **AC coverage**: Ensure all kernel ACs (must_have_ac=true) are passing (AC-PLT-019)
+2. **Skills governance**: Validate SKILL.md structure and policies
+3. **Agents governance**: Validate agent definitions and policies
+4. **BDD acceptance tests**: Run all `@AC-*` scenarios
+5. **AC/ADR mapping**: AC status and ADR reference validation
+6. **LLM bundler**: Test context bundle generation
+7. **Policy tests**: Run conftest on all Rego policies
+8. **DevEx contract**: Validate required commands exist (AC-PLT-015)
+9. **Graph invariants**: Validate governance graph structure (AC-TPL-GRAPH-SELFTEST)
+10. **AC coverage**: Ensure all kernel ACs (must_have_ac=true) are passing (AC-PLT-019)
+11. **Test coverage**: Advisory check for test coverage floor
 
 ### BDD Harness Behaviour (AC-TPL-BDD-EXIT-CODES)
 
