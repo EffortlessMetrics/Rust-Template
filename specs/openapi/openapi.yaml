@@ -104,6 +104,16 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PlatformStatus'
+        "500":
+          description: Internal server error (e.g., failed to load spec ledger)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Failed to load governance data"
 
   /platform/docs/index:
     get:
@@ -122,6 +132,16 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/DocsIndex'
+        "500":
+          description: Internal server error (e.g., failed to load doc index)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Failed to load documentation index"
 
   # Example Domain Endpoint - Adapt or replace
   /refunds:
