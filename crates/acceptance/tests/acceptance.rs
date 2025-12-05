@@ -49,7 +49,11 @@ async fn main() {
         std::process::exit(1);
     }
 
-    // Create JUnit output file (fall back to null device if creation fails)
+    // Create JUnit output file
+    // NOTE: Due to a known issue in cucumber-rs 0.21.1, the JUnit writer buffers all output
+    // and only writes on drop. Since cucumber's exit methods call std::process::exit(),
+    // destructors don't run and the file remains empty. This is tracked as tech debt.
+    // The ac-status command has graceful degradation for this case.
     let junit_file =
         File::create(&junit_path).unwrap_or_else(|_| std::fs::File::create(NULL_DEVICE).unwrap());
 
@@ -61,12 +65,9 @@ async fn main() {
     // Clone for use in the filter closure
     let raw_tag_expr_for_filter = raw_tag_expr.clone();
 
-    // Triple output: console + JUnit + JSON
-    // Using filter_run instead of filter_run_and_exit to explicitly control exit codes.
+    // Use filter_run_and_exit with JUnit writer
+    // The JUnit file may be empty due to the cucumber-rs exit() issue documented above
     World::cucumber()
-        // Run scenarios sequentially to avoid JUnit writer timing panic
-        // (cucumber-rs issue with SystemTime duration computation in parallel scenarios)
-        // TODO: Restore parallelism once upstream fix is available
         .max_concurrent_scenarios(1)
         .before(|_feature, _rule, _scenario, world| {
             Box::pin(async move {
@@ -74,11 +75,12 @@ async fn main() {
             })
         })
         .with_writer(
-            // Note: JSON writer removed due to timing panic in parallel scenarios
-            // (cucumber-rs issue with SystemTime duration computation)
-            writer::Basic::stdout().summarized().tee::<World, _>(writer::JUnit::new(junit_file, 0)),
+            writer::Basic::stdout()
+                .summarized()
+                .tee::<World, _>(writer::JUnit::for_tee(junit_file, 0))
+                .normalized(),
         )
-        .filter_run(
+        .filter_run_and_exit(
             features_path.to_str().unwrap_or("specs/features"),
             move |feature, rule, scenario| {
                 let tags: Vec<String> = feature
@@ -133,25 +135,6 @@ async fn main() {
             },
         )
         .await;
-
-    // AC-TPL-BDD-EXIT-CODES: Exit code semantics.
-    //
-    // Exit semantics:
-    // - Exit 0: All non-@wip scenarios passed (skipped scenarios are OK)
-    // - Exit 1: At least one non-@wip scenario failed
-    //
-    // Implementation note:
-    // Cucumber step failures cause panics that propagate up. By using `filter_run`
-    // instead of `filter_run_and_exit`, cucumber returns after running scenarios.
-    // If we reach here without panic, all executed scenarios passed (skipped are OK).
-    //
-    // IMPORTANT: The summarized writer may call exit() internally in non-TTY mode.
-    // To ensure consistent exit behavior regardless of TTY, we explicitly exit 0
-    // when all tests pass. This is critical for run_cmd() which captures output.
-    println!("\n[BDD-PASS] All non-@wip scenarios passed");
-
-    // Return normally to allow writer destructors to flush buffers
-    // (JUnit XML output requires clean shutdown to write file)
 }
 
 fn parse_simple_tag_list(expr: &str) -> Vec<String> {
