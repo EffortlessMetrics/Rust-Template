@@ -213,28 +213,24 @@ fn compute_platform_endpoints(repo_root: &Path) -> Result<Vec<String>> {
     Ok(endpoints)
 }
 
-/// Extract required commands from devex_flows.yaml.
+/// Extract required CI checks from specs/required_checks.yaml.
 fn compute_required_checks(repo_root: &Path) -> Result<Vec<String>> {
-    let devex_path = repo_root.join("specs/devex_flows.yaml");
-    if !devex_path.exists() {
+    let checks_path = repo_root.join("specs/required_checks.yaml");
+    if !checks_path.exists() {
         return Ok(vec![]);
     }
 
-    let content = fs::read_to_string(&devex_path)?;
+    let content = fs::read_to_string(&checks_path)?;
     let spec: serde_yaml::Value =
-        serde_yaml::from_str(&content).context("Failed to parse devex_flows.yaml")?;
+        serde_yaml::from_str(&content).context("Failed to parse required_checks.yaml")?;
 
     let mut checks = Vec::new();
 
-    // Extract commands where required: true
-    if let Some(commands) = spec.get("commands").and_then(|c| c.as_mapping()) {
-        for (name, cmd) in commands {
-            if let Some(required) = cmd.get("required").and_then(|r| r.as_bool()) {
-                if required {
-                    if let Some(name_str) = name.as_str() {
-                        checks.push(name_str.to_string());
-                    }
-                }
+    // Extract required_checks names
+    if let Some(required) = spec.get("required_checks").and_then(|c| c.as_sequence()) {
+        for check in required {
+            if let Some(name) = check.get("name").and_then(|n| n.as_str()) {
+                checks.push(name.to_string());
             }
         }
     }

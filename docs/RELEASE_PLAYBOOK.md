@@ -427,6 +427,7 @@ Quick sanity checks before any kernel release:
 
 - [ ] `cargo xtask selftest` passes
 - [ ] `cargo xtask docs-check` passes
+- [ ] `cargo xtask contracts-check` passes (docs match selftest steps + AC counts)
 - [ ] `cargo xtask idp-check` passes (OpenAPI + TS consumer + config)
 
 ### Pre-Release Checklist
@@ -440,6 +441,7 @@ Quick sanity checks before any kernel release:
 - [ ] `cargo test --workspace` passes
 - [ ] `cargo run -p xtask -- selftest` passes
 - [ ] `cargo run -p xtask -- docs-check` passes
+- [ ] `cargo run -p xtask -- contracts-check` passes (docs match selftest + ledger)
 - [ ] `cargo run -p xtask -- idp-check` passes (OpenAPI + TS consumer + config)
 - [ ] Feature flag matrix tested (if applicable)
 - [ ] How-to guides created (if new features)

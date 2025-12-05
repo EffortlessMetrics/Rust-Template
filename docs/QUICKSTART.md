@@ -256,7 +256,7 @@ cargo xtask help-flows                # Available flows
 
 **Spec Ledger:** `specs/spec_ledger.yaml` - Stories → Requirements → ACs → Tests → Docs. Single source of truth.
 
-**Selftest:** `cargo xtask selftest` - 8-step validation (code quality + BDD + policies + graph integrity). Must be green before merge.
+**Selftest:** `cargo xtask selftest` - 11-step validation (code quality + BDD + policies + graph integrity). Must be green before merge.
 
 **Platform APIs:** `http://localhost:8080/platform/*` - `/status` (health), `/graph` (REQ/AC/Doc graph), `/tasks` (work items), `/agent/hints` (prioritized suggestions).
 
