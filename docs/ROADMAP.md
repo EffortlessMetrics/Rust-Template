@@ -236,20 +236,29 @@ Only a few items remain - all now have documentation or are external dependencie
 |------|--------|-------|
 | **`lazy-trees` Nix warning** | Cosmetic noise in output | Deprecated Nix 2.30+ setting in Determinate installer config. Documented in TROUBLESHOOTING.md with fix instructions. Safe to ignore. |
 
-### 4.4 v3.4.0 – IDP-Ready Kernel
+### 4.4 v3.4.0 – Planned (Future Kernel Closure)
+
+> **Note:** v3.4.0 is the *next planned* kernel closure. The current frozen baseline is `v3.3.6-kernel`.
+> Items below represent future work driven by fork friction, not work completed in this kernel.
 
 | Item | Description | Status |
 |------|-------------|--------|
-| **IDP Snapshot Contract** | `cargo xtask idp-snapshot` + `/platform/idp/snapshot` emit stable JSON | ✅ Complete |
-| **Platform Schema** | `specs/platform_schema.yaml` defines all endpoint responses | ✅ Complete |
-| **Docs-as-Code v3** | Bidirectional `doc_index.yaml` ↔ front-matter sync | ✅ Complete |
-| **Feature-status invariants** | `feature_status.md` header matches spec_ledger version | ✅ Complete |
-| **Centralized Env Helpers** | `crate::env::is_ci()`, `is_noninteractive()` reduce duplication | ✅ Complete |
-| **Example fork CI** | `examples/fork-customization/` with CI template | ✅ Complete |
+| **Multi-service orchestration** | Cross-service governance coordination | 🔜 Planned |
+| **Advanced policy packs** | PCI-DSS, HIPAA compliance templates | 🔜 Planned |
+| **Fleet-wide Backstage integration** | Plugin reading `/platform/*` from multiple services | 🔜 Planned |
 
-> **v3.4.0 kernel closure:** IDP-ready contracts frozen. All governance surface items wired into `specs/spec_ledger.yaml` and CI. Platform schema published. Environment helpers centralized.
+Items completed in v3.3.6 (now part of the frozen kernel):
 
-See [v3.4.0-plan.md](v3.4.0-plan.md) for full scope and verification checklist.
+| Item | Description | Status |
+|------|-------------|--------|
+| **IDP Snapshot Contract** | `cargo xtask idp-snapshot` + `/platform/idp/snapshot` emit stable JSON | ✅ In v3.3.6 |
+| **Platform Schema** | `specs/platform_schema.yaml` defines all endpoint responses | ✅ In v3.3.6 |
+| **Docs-as-Code v3** | Bidirectional `doc_index.yaml` ↔ front-matter sync | ✅ In v3.3.6 |
+| **Feature-status invariants** | `feature_status.md` header matches spec_ledger version | ✅ In v3.3.6 |
+| **Centralized Env Helpers** | `crate::env::is_ci()`, `is_noninteractive()` reduce duplication | ✅ In v3.3.6 |
+| **Example fork CI** | `examples/fork-customization/` with CI template | ✅ In v3.3.6 |
+
+See [v3.4.0-plan.md](v3.4.0-plan.md) for scope when v3.4.0 work begins.
 
 ---
 
@@ -358,7 +367,7 @@ See [v3.4.0-plan.md](v3.4.0-plan.md) for full scope and verification checklist.
 
 **Activities:**
 
-- Fork template into new service using `v3.3.5-kernel` tag
+- Fork template into new service using `v3.3.6-kernel` tag
 - Run `nix develop && cargo xtask doctor && cargo xtask selftest` to validate baseline
 - Wire in service identity via `specs/service_metadata.yaml`
 - Add domain stories/REQs/ACs to `specs/spec_ledger.yaml`
@@ -441,7 +450,7 @@ See [v3.4.0-plan.md](v3.4.0-plan.md) for full scope and verification checklist.
 
 ---
 
-**Note:** These phases are **adoption-driven** and happen outside this kernel repository. Kernel improvements are batched at phase gates (especially Phase 4) rather than landed speculatively. The v3.3.5 kernel is complete; validation and evolution happen through real usage.
+**Note:** These phases are **adoption-driven** and happen outside this kernel repository. Kernel improvements are batched at phase gates (especially Phase 4) rather than landed speculatively. The v3.3.6-kernel is complete; validation and evolution happen through real usage.
 
 ---
 
@@ -560,7 +569,7 @@ The template kernel is "done" when:
    - `doc_index.yaml` ↔ front-matter sync (`AC-PLT-DOC-INDEX-FRONTMATTER`)
 4. **Example fork passes** (`examples/fork-customization/`) is validated and demonstrates fork extensibility in CI (`AC-TPL-EXAMPLE-FORK-BUILDS`)
 
-**Status:** v3.4.0 meets all kernel closure criteria. All governance surface items wired into specs and CI.
+**Status:** v3.3.6-kernel is the current IDP-ready closure. All governance surface items wired into specs and CI.
 
 ### 8.2 Adoption Definition of Done (Other Repos)
 
@@ -571,12 +580,12 @@ The template is "production ready" when:
 3. **Platform teams can integrate it** via documented APIs and artifacts
 4. **New teams can onboard in < 1 hour** with written docs alone
 
-> This is evaluated in forks, not in this repository. Until adoption criteria are met, v3.3.5 remains a stable baseline suitable for early adopters who accept some friction.
+> This is evaluated in forks, not in this repository. Until adoption criteria are met, v3.3.6-kernel remains a stable baseline suitable for early adopters who accept some friction.
 
 ---
 
 ## 9. Summary
 
-**v3.3.5** is a stable, selftest-green kernel. All **kernel ACs** (`must_have_ac: true`) pass; non-kernel ACs are tracked as soft gates and may be failing or unknown without blocking selftest. But "selftest green" and "ready for production" are different bars. The gaps are documented above.
+**v3.3.6-kernel** is a stable, selftest-green kernel. All **kernel ACs** (`must_have_ac: true`) pass; non-kernel ACs are tracked as soft gates and may be failing or unknown without blocking selftest. But "selftest green" and "ready for production" are different bars. The gaps are documented above.
 
 The recommended path: fork immediately, capture friction, fix what matters, document what you learned. Don't try to anticipate every need—let real usage tell you what's missing.

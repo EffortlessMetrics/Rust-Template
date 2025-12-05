@@ -4,6 +4,40 @@
 
 This is a minimal reference implementation showing how to integrate the Rust-as-Spec platform with Spotify Backstage.
 
+## Quick Integration (3 Steps)
+
+This plugin is a **reference consumer**, not the contract itself. Integrate it into your Backstage app:
+
+**1. Add the plugin to your app:**
+
+```bash
+# From your Backstage app directory
+cp -r /path/to/Rust-Template/examples/backstage-plugin packages/rust-spec-platform
+cd packages/rust-spec-platform && pnpm install
+```
+
+**2. Register the plugin** (`packages/app/src/plugins.ts`):
+
+```typescript
+export { rustSpecPlatformPlugin } from '@internal/rust-spec-platform';
+```
+
+**3. Add cards to EntityPage** (`packages/app/src/components/catalog/EntityPage.tsx`):
+
+```typescript
+import { GovernanceHealthCard, DocsHealthCard } from '@internal/rust-spec-platform';
+
+// In your entity overview section:
+<Grid item md={6}>
+  <GovernanceHealthCard />
+</Grid>
+<Grid item md={6}>
+  <DocsHealthCard />
+</Grid>
+```
+
+> **Important:** This plugin is a *reference consumer*, not the spec. The Rust kernel and OpenAPI schema are the source of truth. If they disagree, update this plugin to match the kernel.
+
 ## What This Example Shows
 
 This plugin demonstrates:
