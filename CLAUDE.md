@@ -24,7 +24,7 @@ Operate with this mindset:
 - **Flows and skills are your playbook** – `.claude/skills/*.md` describe the governed patterns you follow.
 - **Platform APIs are your telemetry** – `/platform/*` endpoints give you real-time state visibility.
 - **xtask is your control surface** – commands for every workflow, from onboarding to release.
-- **Selftest is your referee** – 10-step governance gate that decides what's acceptable.
+- **Selftest is your referee** – 11-step governance gate that decides what's acceptable.
 - **Friction log is your feedback** – capture DevEx issues as they arise; don't accumulate pain.
 
 You can make decisions locally. When something is unclear, you:
