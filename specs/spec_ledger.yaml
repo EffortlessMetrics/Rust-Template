@@ -652,6 +652,7 @@ stories:
           JSON responses matching the schemas defined in specs/openapi/openapi.yaml.
           This ensures IDP dashboards and TypeScript consumers can rely on stable types.
         docs:
+          - docs/design/platform-api-contract.md
           - docs/reference/platform_api_contract.md
         acceptance_criteria:
           - id: AC-TPL-PLATFORM-STATUS-CONTRACT
@@ -1540,6 +1541,7 @@ stories:
           deprecated moduleResolution values and ignoreDeprecations flags. This ensures
           consumers like the Backstage plugin use modern TS patterns validated by CI.
         docs:
+          - docs/design/ts-config-governance.md
           - docs/reference/invariants_index.md
         acceptance_criteria:
           - id: AC-TPL-TS-CONFIG-VALIDATION

@@ -16,6 +16,8 @@ last_updated: 2025-12-01
 
 This document describes the current state of the **v3.3.6 kernel** and what remains to be done.
 
+> For the conceptual model behind Rust-as-Spec, see [`docs/explanation/rust-as-spec-overview.md`](explanation/rust-as-spec-overview.md).
+
 ---
 
 ## Philosophy: Opinionated Defaults
@@ -30,6 +32,10 @@ The template takes strong positions on:
 2. **CI Gate**: `cargo xtask selftest` must pass. Governance validation is non-negotiable.
 3. **Governance Artifacts**: Questions, friction, and forks are first-class, queryable data exposed via APIs.
 4. **Agent Surfaces**: `/platform/*` endpoints, context bundles, and `--json` CLI outputs for LLM workflows.
+
+Slow is smooth, smooth is fast.
+
+This template is designed to work with long-running agents which work best with well documented consistent interfaces with Schema Gravity.
 
 ### Why Opinions Matter
 
