@@ -2,6 +2,10 @@
 
 This document explains the layered architecture of the Rust-as-Spec platform cell.
 
+> **See also:**
+> - [Rust-as-Spec Overview](rust-as-spec-overview.md) – The conceptual model and four-phase pipeline
+> - [Template Contracts](TEMPLATE-CONTRACTS.md) – Kernel guarantees and extension points
+
 ## Rust-as-Spec Pipeline
 
 The core flow of the template can be summarized in one diagram:

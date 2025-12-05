@@ -6,6 +6,10 @@ This template demonstrates a **specification-driven architecture** where runtime
 
 The core insight: **if specs are machine-readable and type-checked, then the gap between "what we documented" and "what we built" becomes a compile error, not a documentation bug.**
 
+> **See also:**
+> - [Template Architecture](template-architecture.md) – The layered architecture and planes
+> - [Template Contracts](TEMPLATE-CONTRACTS.md) – Kernel guarantees and extension points
+
 ---
 
 ## The Four-Phase Pipeline
