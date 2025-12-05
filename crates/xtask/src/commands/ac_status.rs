@@ -770,16 +770,49 @@ fn parse_junit(
 }
 
 fn print_summary(acs: &HashMap<String, Ac>) -> Result<()> {
-    let passing = acs.values().filter(|ac| ac.status == AcStatus::Pass).count();
-    let failing = acs.values().filter(|ac| ac.status == AcStatus::Fail).count();
-    let unknown = acs.values().filter(|ac| ac.status == AcStatus::Unknown).count();
+    // Compute totals from all ACs
+    let total_acs = acs.len();
+    let total_passing = acs.values().filter(|ac| ac.status == AcStatus::Pass).count();
+    let total_failing = acs.values().filter(|ac| ac.status == AcStatus::Fail).count();
+    let total_unknown = acs.values().filter(|ac| ac.status == AcStatus::Unknown).count();
+    let coverage_percent =
+        if total_acs > 0 { (total_passing as f64 / total_acs as f64) * 100.0 } else { 0.0 };
+
+    // Count by known prefixes for breakdown
+    let kernel_count = acs.values().filter(|ac| ac.id.starts_with("AC-KERN-")).count();
+    let template_count = acs.values().filter(|ac| ac.id.starts_with("AC-TPL-")).count();
+    let platform_count = acs.values().filter(|ac| ac.id.starts_with("AC-PLT-")).count();
+    let other_count = total_acs - kernel_count - template_count - platform_count;
 
     println!("AC Status Summary:");
-    println!("  {} {} passing", AcStatus::Pass.icon(), passing);
-    println!("  {} {} failing", AcStatus::Fail.icon(), failing);
-    println!("  {} {} unknown (no mapped tests)", AcStatus::Unknown.icon(), unknown);
 
-    if failing > 0 {
+    // Build breakdown string dynamically (only include non-zero categories)
+    let mut breakdown_parts = Vec::new();
+    if kernel_count > 0 {
+        breakdown_parts.push(format!("{} kernel", kernel_count));
+    }
+    if template_count > 0 {
+        breakdown_parts.push(format!("{} template", template_count));
+    }
+    if platform_count > 0 {
+        breakdown_parts.push(format!("{} platform", platform_count));
+    }
+    if other_count > 0 {
+        breakdown_parts.push(format!("{} other", other_count));
+    }
+
+    if breakdown_parts.is_empty() {
+        println!("  Ledger: {} ACs", total_acs);
+    } else {
+        println!("  Ledger: {} ACs ({})", total_acs, breakdown_parts.join(", "));
+    }
+
+    println!("  Coverage: {:.2}% (passing ACs)", coverage_percent);
+    println!("  {} {} passing", AcStatus::Pass.icon(), total_passing);
+    println!("  {} {} failing", AcStatus::Fail.icon(), total_failing);
+    println!("  {} {} unknown (no mapped tests)", AcStatus::Unknown.icon(), total_unknown);
+
+    if total_failing > 0 {
         anyhow::bail!("One or more ACs failed");
     }
 
