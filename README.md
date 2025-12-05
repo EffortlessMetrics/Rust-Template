@@ -4,6 +4,10 @@
 
 **A governed Rust service template where specs, tests, docs, policies, and infra all agree – and the repo can prove it.**
 
+> **Rust-as-Spec** means this service runs as a *governed kernel*:
+> `specs/spec_ledger.yaml`, tests, docs, and policies all describe the same behaviour, and a single `cargo xtask selftest` gate plus `/platform/*` APIs prove that they still agree.
+> See [Rust-as-Spec Overview](docs/explanation/rust-as-spec-overview.md) for the full concept.
+
 > **Using this as a template?** Start here:
 > - **[Quick Start Guide](docs/QUICKSTART.md) – Get productive in 15 minutes** ⚡
 > - **[Pre-Fork Checklist](docs/how-to/pre-fork-checklist.md) – Validate before forking** ✓
@@ -696,7 +700,7 @@ Technical references and command documentation:
 
 ## 14. Current Status & Roadmap
 
-**Kernel Version:** v3.3.3 (see [KERNEL_SNAPSHOT.md](docs/KERNEL_SNAPSHOT.md) for what you inherit)
+**Kernel Version:** v3.3.6-kernel (see [KERNEL_SNAPSHOT.md](docs/KERNEL_SNAPSHOT.md) for what you inherit)
 
 **AC Health:** See:
 

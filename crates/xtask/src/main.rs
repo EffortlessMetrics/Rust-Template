@@ -613,6 +613,10 @@ enum Commands {
         #[arg(long)]
         pretty: bool,
     },
+
+    /// Validate IDP integration surface (OpenAPI lint + Backstage plugin checks)
+    #[command(next_help_heading = "🔌 IDP Integration")]
+    IdpCheck,
 }
 
 fn main() -> Result<()> {
@@ -818,6 +822,7 @@ fn main() -> Result<()> {
         Commands::IdpSnapshot { output, pretty } => {
             commands::idp_snapshot::run(commands::idp_snapshot::IdpSnapshotArgs { output, pretty })
         }
+        Commands::IdpCheck => commands::idp_check::run(),
     }
 }
 
@@ -946,6 +951,7 @@ pub fn all_command_names() -> Vec<&'static str> {
         "questions-list",
         "questions-new",
         "hakari",
+        "idp-check",
         "idp-snapshot",
         "install-hooks",
         "migrate",

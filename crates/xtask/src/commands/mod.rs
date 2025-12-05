@@ -29,6 +29,7 @@ pub mod friction;
 pub mod graph_export;
 pub mod hakari;
 pub mod help_flows;
+pub mod idp_check;
 pub mod idp_snapshot;
 pub mod install_hooks;
 pub mod kernel_smoke;
