@@ -61,6 +61,10 @@ recommended_checks:
     workflow: ci-coverage.yml
     description: "Test coverage floor enforcement (60%)"
 
+  - name: ui-contract
+    workflow: tier1-selftest.yml
+    description: "UI contract validation (data-uiid anchors match specs/ui_contract.yaml)"
+
 # Conditional checks - only run when specific paths change
 # These provide targeted validation for specialized domains
 conditional_checks:
