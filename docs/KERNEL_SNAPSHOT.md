@@ -24,6 +24,10 @@ This is the frozen kernel baseline (v3.3.6-kernel) for the Rust-as-Spec platform
 
 - **Manifest-driven versioning** – `specs/version_manifest.yaml` + versioning engine ensures all version-bearing files are updated atomically via `release-prepare`
 - **Versioning ACs enforced** – `AC-TPL-VERSION-MANIFEST`, `AC-TPL-VERSION-DRYRUN`, `AC-TPL-VERSION-ATOMIC` are now kernel contracts
+- **IDP-ready platform contract** – `/platform/status` and `/platform/docs/index` are stable, documented kernel contracts
+- **OpenAPI spec** – `specs/openapi/openapi.yaml` includes platform schemas (`PlatformStatus`, `DocsIndex`) with 500 error responses
+- **TypeScript configuration governance** – `scripts/validate-ts-config.sh` + CI job enforce modern TS standards
+- **Backstage reference consumer** – `examples/backstage-plugin/` demonstrates IDP integration patterns
 
 **Note:** "Selftest green" means the template meets its own specifications. It does not mean every use case has been validated in production. See [ROADMAP.md](./ROADMAP.md) for known gaps.
 
@@ -67,6 +71,14 @@ cargo xtask selftest     # Full governance validation
 - AC-PLT-015: Platform introspection endpoints (/platform/status, /graph, /docs/index)
 - AC-PLT-019: Task management via HTTP (GET /tasks, PATCH /tasks/{id}/status)
 - AC-TPL-PLATFORM-GOVERNANCE-APIS: Governance APIs (/friction, /questions, /forks)
+- AC-TPL-PLATFORM-SCHEMA: Machine-readable OpenAPI contract at /platform/schema
+
+**IDP Integration:**
+
+- `/platform/status` returns `PlatformStatus` JSON matching OpenAPI schema
+- `/platform/docs/index` returns `DocsIndex` JSON matching OpenAPI schema
+- `examples/backstage-plugin/` provides a TypeScript reference consumer
+- Contract details: `docs/reference/platform_api_contract.md`
 
 ### Kernel vs Template Defaults
 

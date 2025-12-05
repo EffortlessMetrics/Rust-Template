@@ -101,6 +101,7 @@ The kernel has reached a stable, forkable baseline. All acceptance criteria pass
 - Platform UI dashboard with graph visualization and flows view
 - Configuration validation and IAC alignment (Docker Compose, Kubernetes, Terraform)
 - Task lifecycle and governance write operations
+- **IDP-ready contract**: The `/platform/*` contract is documented in [`docs/reference/platform_api_contract.md`](reference/platform_api_contract.md) and surfaced in OpenAPI. Reference consumer: [`examples/backstage-plugin/`](../examples/backstage-plugin/)
 
 **DevEx CLI:**
 

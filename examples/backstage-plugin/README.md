@@ -260,9 +260,19 @@ See full API documentation:
 3. Clear browser cache
 4. Check backend service logs
 
+## Contract Reference
+
+This plugin is a **consumer** of the Rust-as-Spec kernel's platform API contract. The source of truth is:
+
+- **[`docs/reference/platform_api_contract.md`](../../docs/reference/platform_api_contract.md)** – Full contract documentation
+- **[`specs/openapi/openapi.yaml`](../../specs/openapi/openapi.yaml)** – OpenAPI schema with `PlatformStatus` and `DocsIndex` definitions
+
+TypeScript types in `src/api/PlatformClient.ts` are aligned with these schemas. When the kernel updates its contract, the plugin types should be updated to match.
+
 ## Further Reading
 
 - [Backstage Plugin Development](https://backstage.io/docs/plugins/)
+- [Platform API Contract](../../docs/reference/platform_api_contract.md) – Source of truth for API shapes
 - [Rust-as-Spec Platform APIs](../../docs/AGENT_GUIDE.md)
 - [Governance Model](../../docs/explanation/TEMPLATE-CONTRACTS.md)
 

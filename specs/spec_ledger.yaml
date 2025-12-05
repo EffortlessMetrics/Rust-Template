@@ -643,6 +643,38 @@ stories:
             tests:
               - { type: bdd, tag: "@AC-TPL-PLATFORM-SCHEMA", file: "specs/features/platform_schema.feature" }
 
+      - id: REQ-TPL-PLATFORM-CONTRACT
+        title: "Platform APIs expose a stable, documented governance contract"
+        tags: [platform, api, idp]
+        must_have_ac: false
+        description: >
+          Platform endpoints (/platform/status, /platform/docs/index) MUST return
+          JSON responses matching the schemas defined in specs/openapi/openapi.yaml.
+          This ensures IDP dashboards and TypeScript consumers can rely on stable types.
+        docs:
+          - docs/reference/platform_api_contract.md
+        acceptance_criteria:
+          - id: AC-TPL-PLATFORM-STATUS-CONTRACT
+            text: >
+              /platform/status returns a JSON object matching the PlatformStatus
+              schema in specs/openapi/openapi.yaml, including service, governance,
+              and optional config sections.
+            tags: [template, idp]
+            must_have_ac: false
+            note: "Contract validated via OpenAPI schema and TypeScript consumer tests in examples/backstage-plugin."
+            tests:
+              - { type: ci, tag: "openapi_lint_platform_status", workflow: "ci-openapi.yml" }
+
+          - id: AC-TPL-PLATFORM-DOCS-CONTRACT
+            text: >
+              /platform/docs/index returns a JSON object matching the DocsIndex
+              schema in specs/openapi/openapi.yaml, including summary and docs array.
+            tags: [template, idp]
+            must_have_ac: false
+            note: "Contract validated via OpenAPI schema and TypeScript consumer tests in examples/backstage-plugin."
+            tests:
+              - { type: ci, tag: "openapi_lint_docs_index", workflow: "ci-openapi.yml" }
+
       - id: REQ-TPL-METADATA-CONSISTENT
         title: "Platform metadata is coherent and exposed"
         tags: [platform, docs, metadata]
@@ -1498,6 +1530,28 @@ stories:
             note: "Soft warning implemented; size thresholds guard against 'dump everything into the bundle' regressions."
             tests:
               - { type: unit, tag: "bundle_scope_audit", file: "crates/xtask/src/commands/bundle.rs" }
+
+      - id: REQ-TPL-TS-CONFIG-GOVERNANCE
+        title: "TypeScript configurations follow modern, enforceable standards"
+        tags: [platform, devex, typescript]
+        must_have_ac: false
+        description: >
+          TypeScript configurations in the repository (tsconfig.json files) MUST avoid
+          deprecated moduleResolution values and ignoreDeprecations flags. This ensures
+          consumers like the Backstage plugin use modern TS patterns validated by CI.
+        docs:
+          - docs/reference/invariants_index.md
+        acceptance_criteria:
+          - id: AC-TPL-TS-CONFIG-VALIDATION
+            text: >
+              All tsconfig.json files avoid deprecated moduleResolution values
+              (node, node10) and ignoreDeprecations flags; violations are caught
+              by scripts/validate-ts-config.sh and the ts-config-lints CI job.
+            tags: [template, typescript]
+            must_have_ac: false
+            note: "CI gate for TypeScript configuration health. Non-kernel (Rust-focused template)."
+            tests:
+              - { type: ci, tag: "ts-config-lints", workflow: "ci-lints.yml" }
 
   - id: US-TPL-PLATFORM-V3
     title: "The Recursive Platform"
