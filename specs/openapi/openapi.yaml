@@ -14,6 +14,7 @@ info:
     **Platform Introspection Endpoints** (Governance visibility):
     - /platform/status - Governance health, ledger counts, policy status
     - /platform/docs/index - Documentation inventory with validation
+    - /platform/ui/contract - Governed UI contract (screens, regions, data-uiid anchors)
 
   x-template-version: "3.3.6"
   x-schema-version: "1.0"
@@ -139,6 +140,39 @@ paths:
                   error:
                     type: string
                     example: "Failed to load documentation index"
+
+  /platform/ui/contract:
+    get:
+      summary: UI contract specification
+      description: |
+        Returns the governed UI contract defining screens, regions, and stable
+        `data-uiid` anchors. Agents and external tools can rely on these anchors
+        for consistent DOM element identification across releases.
+
+        The contract is validated by `cargo xtask ui-contract-check` which verifies:
+        - All region IDs are unique within a screen
+        - All `data-uiid` attributes in HTML match the contract
+        - Route definitions correspond to actual endpoints
+      operationId: getUiContract
+      tags: [platform]
+      security: []
+      responses:
+        "200":
+          description: UI contract retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UiContract'
+        "500":
+          description: Internal server error (e.g., failed to load UI contract)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Failed to load UI contract"
 
 components:
   securitySchemes:
@@ -534,3 +568,76 @@ components:
           type: integer
           minimum: 0
           description: "Documents with issues"
+
+    # ==========================================================================
+    # UI Contract Schemas
+    # ==========================================================================
+
+    UiContract:
+      type: object
+      description: "Governed UI contract specification defining screens and stable DOM anchors"
+      required: [schema_version, template_version, screens]
+      properties:
+        schema_version:
+          type: string
+          description: "Schema version of the UI contract"
+          example: "1.0"
+        template_version:
+          type: string
+          description: "Template version"
+          example: "v3.3.6"
+        screens:
+          type: array
+          items:
+            $ref: '#/components/schemas/UiScreen'
+          description: "UI screen definitions"
+        region_kinds:
+          type: object
+          additionalProperties:
+            type: string
+          description: "Semantic region kind definitions (e.g., header, navigation, panel)"
+
+    UiScreen:
+      type: object
+      description: "A UI screen definition with routes and regions"
+      required: [id, route, description, regions]
+      properties:
+        id:
+          type: string
+          description: "Unique screen identifier"
+          example: "platform_dashboard"
+        route:
+          type: string
+          description: "Primary route for the screen"
+          example: "/"
+        aliases:
+          type: array
+          items:
+            type: string
+          description: "Alternative routes that serve the same screen"
+          example: ["/ui"]
+        description:
+          type: string
+          description: "Human-readable description of the screen's purpose"
+        regions:
+          type: array
+          items:
+            $ref: '#/components/schemas/UiRegion'
+          description: "Regions (sections) within the screen"
+
+    UiRegion:
+      type: object
+      description: "A region within a UI screen, mapped to data-uiid attribute"
+      required: [id, kind, description]
+      properties:
+        id:
+          type: string
+          description: "Unique region ID, used as data-uiid attribute"
+          example: "dashboard.health"
+        kind:
+          type: string
+          description: "Semantic kind: header, navigation, panel, visualization, controls, table"
+          example: "panel"
+        description:
+          type: string
+          description: "Human-readable description of the region's content"
