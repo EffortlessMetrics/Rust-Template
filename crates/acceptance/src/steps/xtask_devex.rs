@@ -768,6 +768,8 @@ async fn then_file_path_exists(world: &mut World, file_path: String) {
     );
 }
 
+// Support both Then and And-after-Given (which becomes Given) contexts
+#[given(regex = r#"^"([^"]+)" should contain "(.+)"$"#)]
 #[then(regex = r#"^"([^"]+)" should contain "(.+)"$"#)]
 async fn then_file_path_contains(world: &mut World, file_path: String, expected: String) {
     // Unescape the expected string if it came from feature file with escaped quotes
@@ -1712,7 +1714,17 @@ async fn execute_command(world: &mut World, command: &str, env_vars: &[(&str, &s
                 content.push_str(&format!("export XTASK_LOW_RESOURCES={}\n", val));
             }
             content.push_str("cargo run -p xtask -- precommit\n");
-            let _ = fs::write(&hook_path, content);
+            let _ = fs::write(&hook_path, &content);
+            // Make hook executable on Unix (matching install_hooks.rs behavior)
+            #[cfg(unix)]
+            {
+                use std::os::unix::fs::PermissionsExt;
+                if let Ok(metadata) = fs::metadata(&hook_path) {
+                    let mut perms = metadata.permissions();
+                    perms.set_mode(0o755);
+                    let _ = fs::set_permissions(&hook_path, perms);
+                }
+            }
             world.xtask_context_mut().last_command_output = Some(
                 "Installed .git/hooks/pre-commit\ncargo run -p xtask -- precommit".to_string(),
             );
@@ -1751,6 +1763,16 @@ async fn execute_command(world: &mut World, command: &str, env_vars: &[(&str, &s
                 let _ = fs::create_dir_all(parent);
             }
             let _ = fs::write(&hook_path, "#!/usr/bin/env bash\ncargo run -p xtask -- precommit\n");
+            // Make hook executable on Unix
+            #[cfg(unix)]
+            {
+                use std::os::unix::fs::PermissionsExt;
+                if let Ok(metadata) = fs::metadata(&hook_path) {
+                    let mut perms = metadata.permissions();
+                    perms.set_mode(0o755);
+                    let _ = fs::set_permissions(&hook_path, perms);
+                }
+            }
 
             world.xtask_context_mut().last_command_output = Some(
                 "Pre-commit hooks\nDocker status: ok\ngovernance check\nlow-resource mode\nNext steps\ncargo run -p app-http\nhttp://localhost:8080/ui\ndev-up complete"

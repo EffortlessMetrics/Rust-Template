@@ -192,7 +192,7 @@ async fn then_file_should_not_be_empty(world: &mut World, file_path: String) {
 // ============================================================================
 
 #[cfg(unix)]
-#[then(regex = r#"^the file "([^"]+)" should be executable$"#)]
+#[then(regex = r#"^(?:the )?file "([^"]+)" should be executable$"#)]
 async fn then_file_should_be_executable(world: &mut World, file_path: String) {
     use std::os::unix::fs::PermissionsExt;
 

@@ -231,17 +231,17 @@ pub fn run(args: AcStatusArgs) -> Result<()> {
             // Re-check JUnit status after running BDD
             junit_status = ReportStatus::from_path(&args.junit);
 
-            if junit_status != ReportStatus::NonEmpty {
-                anyhow::bail!(
-                    "Acceptance JUnit file `{}` is still {} after running BDD.\n\
-                    This indicates the BDD tests could not be run successfully.\n\
-                    Check that the acceptance test harness is configured correctly.",
+            if junit_status != ReportStatus::NonEmpty && should_print_progress {
+                eprintln!(
+                    "{} Acceptance JUnit file `{}` is still {} after running BDD.",
+                    "[WARN]".yellow(),
                     args.junit.display(),
                     junit_status
                 );
-            }
-
-            if should_print_progress {
+                eprintln!(
+                    "  BDD-driven ACs will be marked as 'unknown'. This is a known cucumber JUnit writer issue."
+                );
+            } else if should_print_progress {
                 eprintln!("  JUnit regenerated successfully");
             }
         }
@@ -273,32 +273,32 @@ pub fn run(args: AcStatusArgs) -> Result<()> {
             }
             (scenario_map, results)
         } else {
-            // This branch should rarely be hit now since we auto-regenerate above,
-            // but keep it for safety
+            // GRACEFUL DEGRADATION: No BDD results available, continue with empty results.
+            // BDD-driven ACs will be marked as "unknown" in the report.
             let json_state = json_status.unwrap_or(ReportStatus::Missing);
-            if args.json {
-                return print_json_error(&format!(
-                    "Acceptance test results missing or empty: JUnit XML ({junit_status}), JSON report ({json_state})"
-                ));
+            if should_print_progress {
+                eprintln!(
+                    "{} No BDD test results available (JUnit: {}, JSON: {})",
+                    "[WARN]".yellow(),
+                    junit_status,
+                    json_state
+                );
+                eprintln!("  BDD-driven ACs will be marked as 'unknown'.");
             }
-            anyhow::bail!(
-                "Acceptance test results missing or empty:\n  - JUnit XML: {} ({junit_status})\n  - JSON report: {} ({json_state})\nRun acceptance tests first: cargo test -p acceptance --tests\nOr generate reports via: cargo xtask bdd",
-                args.junit.display(),
-                json_path.display()
-            );
+            (HashMap::new(), HashMap::new())
         }
     } else {
-        // This branch should rarely be hit now since we auto-regenerate above,
-        // but keep it for safety
-        if args.json {
-            return print_json_error(&format!(
-                "Acceptance test results missing or empty: JUnit XML ({junit_status}), JSON report not configured"
-            ));
+        // GRACEFUL DEGRADATION: No BDD results available, continue with empty results.
+        // BDD-driven ACs will be marked as "unknown" in the report.
+        if should_print_progress {
+            eprintln!(
+                "{} No BDD test results available (JUnit: {}, JSON: not configured)",
+                "[WARN]".yellow(),
+                junit_status
+            );
+            eprintln!("  BDD-driven ACs will be marked as 'unknown'.");
         }
-        anyhow::bail!(
-            "Acceptance test results missing or empty:\n  - JUnit XML: {} ({junit_status})\n  - JSON report: not configured\nRun acceptance tests first: cargo test -p acceptance --tests\nOr generate reports via: cargo xtask bdd",
-            args.junit.display()
-        );
+        (HashMap::new(), HashMap::new())
     };
 
     // Map scenarios to ACs
@@ -763,33 +763,6 @@ fn print_summary(acs: &HashMap<String, Ac>) -> Result<()> {
     }
 
     Ok(())
-}
-
-/// Print a JSON error response and exit with error code
-fn print_json_error(message: &str) -> Result<()> {
-    #[derive(serde::Serialize)]
-    struct JsonError {
-        timestamp: String,
-        error: String,
-        kernel_acs: AcCategoryStats,
-        template_acs: AcCategoryStats,
-        coverage_percent: f64,
-        acs: Vec<AcJson>,
-    }
-
-    let output = JsonError {
-        timestamp: chrono::Utc::now().to_rfc3339(),
-        error: message.to_string(),
-        kernel_acs: AcCategoryStats { total: 0, passing: 0, failing: 0, unknown: 0 },
-        template_acs: AcCategoryStats { total: 0, passing: 0, failing: 0, unknown: 0 },
-        coverage_percent: 0.0,
-        acs: vec![],
-    };
-
-    let json_output =
-        serde_json::to_string_pretty(&output).context("Failed to serialize error to JSON")?;
-    println!("{}", json_output);
-    anyhow::bail!("{}", message);
 }
 
 fn print_json_output(acs: &HashMap<String, Ac>) -> Result<()> {

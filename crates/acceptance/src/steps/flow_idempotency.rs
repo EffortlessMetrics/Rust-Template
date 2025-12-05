@@ -173,6 +173,15 @@ async fn when_run_again_and_capture(world: &mut World, command: String) {
     world.xtask_context_mut().env.insert("IDEMPOTENCY_SECOND_OUTPUT".to_string(), output);
 }
 
+#[when(regex = r#"^I run "([^"]+)" again$"#)]
+async fn when_run_again(world: &mut World, command: String) {
+    let (stdout, stderr, status) = run_xtask_command(world, &command);
+
+    let output = format!("{}\n{}", stdout, stderr);
+    world.xtask_context_mut().last_command_output = Some(output.clone());
+    world.xtask_context_mut().last_command_status = Some(status);
+}
+
 #[when(regex = r#"^I run "([^"]+)" with "([^"]+)" and capture the output$"#)]
 async fn when_run_with_env_and_capture(world: &mut World, command: String, env_var: String) {
     let parts: Vec<&str> = env_var.split('=').collect();
