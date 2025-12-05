@@ -1,0 +1,17 @@
+{
+  // Recommended VS Code extensions for this workspace
+  "recommendations": [
+    "fill-labs.dependi",
+    "ms-vscode-remote.remote-wsl",
+    "rust-lang.rust-analyzer",
+    "tamasfe.even-better-toml",
+    "ms-azuretools.vscode-docker",
+    "streetsidesoftware.code-spell-checker",
+    "redhat.vscode-yaml",
+    "vadimcn.vscode-lldb",
+    "eamodio.gitlens",
+    "EditorConfig.EditorConfig",
+    "esbenp.prettier-vscode"
+  ],
+  "unwantedRecommendations": []
+}
