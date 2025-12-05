@@ -95,11 +95,11 @@ files:
   - path: "README.md"
     description: "Repository README with multiple version references"
     patterns:
-      - marker: "# Test Service (v"
+      - marker: "# Rust-as-Spec Platform Cell (v"
         type: heading_version
         format: "prefixed_paren"  # (v3.3.5)
-        line_pattern: "^# Test Service \\(v[\\d.]+.*\\)$"
-        example: "# Test Service (v3.3.5)"
+        line_pattern: "^# Rust-as-Spec Platform Cell \\(v[\\d.]+.*\\)$"
+        example: "# Rust-as-Spec Platform Cell (v3.3.5)"
       - marker: "**Template Version:**"
         type: inline_version
         format: "prefixed"  # v3.3.5

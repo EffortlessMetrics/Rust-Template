@@ -29,10 +29,10 @@ describe('PlatformClient', () => {
     it('should parse a complete status response', async () => {
       const mockStatus: PlatformStatus = {
         service: {
-          service_id: 'test-service',
+          service_id: 'template-service',
           template_version: '3.3.6',
-          display_name: 'Test Service',
-          description: 'A test service',
+          display_name: 'Rust-as-Spec Template Service',
+          description: 'Default instance of the Rust-as-Spec platform cell',
           links: { repo: 'https://github.com/example/repo' },
           tags: ['rust', 'platform'],
         },
