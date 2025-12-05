@@ -79,15 +79,29 @@ contracts:
         required: false
 
   # ============================================================================
-  # KERNEL AC COUNT
+  # AC COUNTS BY CLASSIFICATION
   # ============================================================================
   # Source: specs/spec_ledger.yaml
-  # Count of ACs where both requirement and AC have must_have_ac=true
-  kernel_ac_count:
+  # Classification rules:
+  # - kernel: Both REQ and AC have must_have_ac=true
+  # - template: AC has must_have_ac=false AND is NOT meta
+  # - meta: AC has must_have_ac=false AND has type:ci tests OR tags contain harness/example
+
+  # Total AC count (all ACs regardless of classification)
+  ac_total:
+    source: "specs/spec_ledger.yaml"
+    description: "Total count of all ACs in the spec ledger"
+    patterns:
+      - file: "docs/feature_status_notes.md"
+        regex: '\*\*Total ACs:\*\* (\d+)'
+        template: "**Total ACs:** {n}"
+        required: false
+
+  # Kernel AC count (must_have_ac=true on both REQ and AC)
+  ac_kernel:
     source: "specs/spec_ledger.yaml"
     description: "Count of kernel ACs (must_have_ac=true)"
     patterns:
-      # feature_status_notes.md - summary counts
       - file: "docs/feature_status_notes.md"
         regex: '\*\*Kernel ACs \(must_have_ac: true\):\*\* (\d+)'
         template: "**Kernel ACs (must_have_ac: true):** {n}"
@@ -97,6 +111,32 @@ contracts:
         regex: 'All (\d+) kernel ACs'
         template: "All {n} kernel ACs"
         required: false
+
+  # Template AC count (must_have_ac=false, not meta)
+  ac_template:
+    source: "specs/spec_ledger.yaml"
+    description: "Count of template ACs (must_have_ac=false, not meta/CI-only)"
+    patterns:
+      - file: "docs/feature_status_notes.md"
+        regex: '\*\*Template ACs \(must_have_ac: false\):\*\* (\d+)'
+        template: "**Template ACs (must_have_ac: false):** {n}"
+        required: false
+
+  # Meta/CI-only AC count (CI tests or harness/example tags)
+  ac_meta:
+    source: "specs/spec_ledger.yaml"
+    description: "Count of meta/CI-only ACs (type:ci tests or harness/example tags)"
+    patterns:
+      - file: "docs/feature_status_notes.md"
+        regex: '\*\*Meta/CI-only ACs:\*\* (\d+)'
+        template: "**Meta/CI-only ACs:** {n}"
+        required: false
+
+  # Legacy alias for backwards compatibility (use ac_kernel instead)
+  kernel_ac_count:
+    source: "specs/spec_ledger.yaml"
+    description: "[DEPRECATED] Use ac_kernel instead. Count of kernel ACs."
+    patterns: []  # Empty - no patterns, just kept for legacy code compatibility
 
 # Validation settings
 validation:
