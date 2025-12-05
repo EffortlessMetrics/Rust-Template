@@ -1,0 +1,126 @@
+# Contracts Manifest for Documentation Governance
+# Schema Version: 1.0
+# Purpose: Declares governed facts and where they appear in documentation.
+#
+# This manifest works with `cargo xtask contracts-fmt` and `contracts-check`
+# to ensure documentation numbers stay synchronized with their source of truth.
+#
+# When selftest steps change from 10→11 or kernel AC count changes,
+# running `contracts-fmt` updates all documented references automatically.
+
+schema_version: "1.0"
+description: "Governed facts manifest - ensures doc numbers match code/specs"
+
+contracts:
+  # ============================================================================
+  # SELFTEST STEP COUNT
+  # ============================================================================
+  # Source: crates/xtask/src/commands/selftest.rs
+  # The step count is derived from [N/M] patterns in selftest.rs
+  selftest_step_count:
+    source: "crates/xtask/src/commands/selftest.rs"
+    description: "Number of steps in the selftest governance gate"
+    patterns:
+      # README.md - main repo description
+      - file: "README.md"
+        regex: '(\d+)-step selftest gate'
+        template: "{n}-step selftest gate"
+
+      # CLAUDE.md - agent instructions
+      - file: "CLAUDE.md"
+        regex: '(\d+)-step governance gate'
+        template: "{n}-step governance gate"
+
+      # QUICKSTART.md - governance validation reference
+      - file: "docs/QUICKSTART.md"
+        regex: '(\d+)-step governance validation'
+        template: "{n}-step governance validation"
+
+      # template-architecture.md - architecture explanation
+      - file: "docs/explanation/template-architecture.md"
+        regex: 'the (\d+)-step governance validation'
+        template: "the {n}-step governance validation"
+
+      # run-agent-pilot.md - agent pilot guide
+      - file: "docs/how-to/run-agent-pilot.md"
+        regex: '\((\d+)-step governance gate\)'
+        template: "({n}-step governance gate)"
+
+      # xtask-commands.md - command reference
+      - file: "docs/reference/xtask-commands.md"
+        regex: '(\d+)-step validation'
+        template: "{n}-step validation"
+        required: false
+
+      # ROADMAP.md - gates pass indicator
+      - file: "docs/ROADMAP.md"
+        regex: '(\d+)/\d+ gates'
+        template: "{n}/{n} gates"
+
+      # Skills files - optional, may have different phrasing
+      - file: ".claude/skills/governed-feature-dev/SKILL.md"
+        regex: 'passes \((\d+)/(\d+) steps\)'
+        template: "passes ({n}/{n} steps)"
+        required: false
+
+      - file: ".claude/skills/governed-release/SKILL.md"
+        regex: 'passes \((\d+)/(\d+) steps\)'
+        template: "passes ({n}/{n} steps)"
+        required: false
+
+      - file: ".claude/skills/governed-maintenance/SKILL.md"
+        regex: 'passes \((\d+)/(\d+) steps\)'
+        template: "passes ({n}/{n} steps)"
+        required: false
+
+      - file: ".claude/skills/governed-governance-debug/SKILL.md"
+        regex: 'passes \((\d+)/(\d+) steps\)'
+        template: "passes ({n}/{n} steps)"
+        required: false
+
+  # ============================================================================
+  # KERNEL AC COUNT
+  # ============================================================================
+  # Source: specs/spec_ledger.yaml
+  # Count of ACs where both requirement and AC have must_have_ac=true
+  kernel_ac_count:
+    source: "specs/spec_ledger.yaml"
+    description: "Count of kernel ACs (must_have_ac=true)"
+    patterns:
+      # feature_status_notes.md - summary counts
+      - file: "docs/feature_status_notes.md"
+        regex: '\*\*Kernel ACs \(must_have_ac: true\):\*\* (\d+)'
+        template: "**Kernel ACs (must_have_ac: true):** {n}"
+        required: false
+
+      - file: "docs/feature_status_notes.md"
+        regex: 'All (\d+) kernel ACs'
+        template: "All {n} kernel ACs"
+        required: false
+
+# Validation settings
+validation:
+  # Fail if a required pattern doesn't match in the file
+  strict_patterns: true
+
+  # Whether to warn about numbers that look like contract values but aren't in manifest
+  detect_orphans: false
+
+# Notes for maintainers
+notes: |
+  This manifest is used by `cargo xtask contracts-fmt` to update all documentation
+  references when governed facts change.
+
+  Pattern format:
+  - `regex`: Pattern to find the current value (use capturing groups for numbers)
+  - `template`: Replacement pattern using {n} for the computed value
+
+  Adding new patterns:
+  1. Identify the file and exact line format
+  2. Write a regex that captures the number
+  3. Write a template that substitutes {n}
+  4. Test with `cargo xtask contracts-check`
+
+  Suppressing false positives:
+  - Mark patterns as `required: false` if the file may not exist
+  - Historical documents can use `<!-- doclint:disable contracts -->` (future)

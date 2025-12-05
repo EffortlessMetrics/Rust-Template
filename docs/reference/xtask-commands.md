@@ -24,7 +24,7 @@ Complete reference for all `xtask` CLI commands.
 - [skills-fmt](#xtask-skills-fmt) - Normalize SKILL.md files
 - [skills-lint](#xtask-skills-lint) - Validate Skills definitions
 - [quickstart](#xtask-quickstart) - First-run validation
-- [selftest](#xtask-selftest) - Comprehensive 7-step validation suite
+- [selftest](#xtask-selftest) - Comprehensive 11-step validation suite
 - [idp-check](#xtask-idp-check) - Validate IDP/portal integration surface
 
 ---

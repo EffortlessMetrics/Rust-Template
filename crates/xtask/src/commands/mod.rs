@@ -15,6 +15,7 @@ pub mod check;
 pub mod ci_local;
 pub mod clean;
 pub mod config_validate;
+pub mod contracts;
 pub mod coverage;
 pub mod deploy;
 pub mod design_new;

@@ -24,7 +24,7 @@ As of v3.3.6 (December 2025 update):
 
 ### Kernel ACs: All Passing
 
-All 52 kernel ACs (`must_have_ac: true`) are passing:
+All 61 kernel ACs (`must_have_ac: true`) are passing:
 - DevEx commands (doctor, check, selftest, ci-local)
 - Platform APIs (/status, /graph, /docs, governance endpoints)
 - UI, graph invariants, config validation, auth

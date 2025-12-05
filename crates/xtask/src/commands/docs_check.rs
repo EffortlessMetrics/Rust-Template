@@ -193,6 +193,21 @@ pub fn run() -> Result<()> {
         }
     }
 
+    // Check contract facts synchronization (selftest steps, kernel AC count, etc.)
+    print!("Contract facts... ");
+    match crate::commands::contracts::check() {
+        Ok(_) => println!("{}", "✓ Synchronized".green()),
+        Err(e) => {
+            println!("{}", "✗ Drift detected".red());
+            eprintln!("  {}", e);
+            eprintln!();
+            eprintln!("{}", "To fix contract drift:".bold());
+            eprintln!("  1. Run {} to synchronize", "cargo xtask contracts-fmt".cyan());
+            eprintln!("  2. Commit the updated documentation");
+            issues += 1;
+        }
+    }
+
     println!();
     if issues == 0 {
         println!("{} Documentation is consistent", "✓".green().bold());

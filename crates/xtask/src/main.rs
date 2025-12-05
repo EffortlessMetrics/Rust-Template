@@ -6,6 +6,7 @@ use std::thread;
 use std::time::Duration;
 
 mod commands;
+mod contracts;
 mod devex;
 mod docs_index;
 pub mod env;
@@ -222,6 +223,14 @@ enum Commands {
     /// Run spellcheck across docs/specs
     #[command(next_help_heading = "📚 Design & Documentation")]
     Spellcheck,
+
+    /// Check that governed facts in docs match their sources (selftest steps, kernel AC count, etc.)
+    #[command(next_help_heading = "📚 Design & Documentation")]
+    ContractsCheck,
+
+    /// Synchronize governed facts from code/specs to docs
+    #[command(next_help_heading = "📚 Design & Documentation")]
+    ContractsFmt,
 
     // ============================================================================
     // GOVERNANCE ARTIFACTS (Friction log, questions, forks, skills)
@@ -697,6 +706,8 @@ fn main() -> Result<()> {
         Commands::DocsCheck => commands::docs_check::run(),
         Commands::DocsFrontmatterSync { fix } => commands::docs_frontmatter_sync::run(fix),
         Commands::Spellcheck => commands::spellcheck::run_with_default_targets(),
+        Commands::ContractsCheck => commands::contracts::check(),
+        Commands::ContractsFmt => commands::contracts::fmt(),
         Commands::GraphExport { format, check } => {
             commands::graph_export::run(commands::graph_export::GraphExportArgs { format, check })
         }
@@ -933,6 +944,8 @@ pub fn all_command_names() -> Vec<&'static str> {
         "bundle",
         "clean",
         "ci-local",
+        "contracts-check",
+        "contracts-fmt",
         "coverage",
         "deploy",
         "audit",
