@@ -1,38 +1,85 @@
 # Test Service (v3.3.6)
 
+> **TL;DR:** A governed Rust service template where specs, tests, docs, policies, and CI all agree — and the repo can prove it.
+
+## What This Is
+
+A **governed Rust template** with:
+
+- **A running platform app** — HTTP service with `/platform/*` introspection APIs
+- **A heavy `xtask` CLI** — commands for every workflow, from onboarding to release
+- **Specs as source of truth** — `spec_ledger.yaml`, BDD features, and policies all describe the same behavior
+- **An 11-step selftest gate** — one command validates everything: `cargo xtask selftest`
+- **LLM/agent-first design** — bundles, Skills, Agents, and `/platform/agent/hints` for autonomous workflows
+
+**Architecture at a glance:**
+
+```text
+┌──────────────────────────────────────────────────────────────────┐
+│  Specs (YAML + Gherkin)                                          │
+│    spec_ledger.yaml → REQs → ACs → tests → docs                  │
+│    devex_flows.yaml → commands + workflows                       │
+│    config_schema.yaml → configuration contract                   │
+└───────────────────────────┬──────────────────────────────────────┘
+                            │
+┌───────────────────────────▼──────────────────────────────────────┐
+│  Runtime (Rust HTTP App)                                         │
+│    /platform/status  — governance health                         │
+│    /platform/graph   — full REQ/AC/test/doc graph                │
+│    /platform/tasks   — work items                                │
+│    /platform/agent/hints — what to do next                       │
+│    /ui               — dashboard showing same state as CI        │
+└───────────────────────────┬──────────────────────────────────────┘
+                            │
+┌───────────────────────────▼──────────────────────────────────────┐
+│  Enforcement (xtask CLI + CI)                                    │
+│    cargo xtask selftest — 11-step governance gate                │
+│    cargo xtask ac-status — AC → test → status mapping            │
+│    cargo xtask contracts-check — keeps docs in sync              │
+└──────────────────────────────────────────────────────────────────┘
+```
+
+## Try It in 60 Seconds
+
+```bash
+nix develop                    # Enter dev shell (hermetic environment)
+cargo xtask dev-up             # One-command setup + validation
+cargo xtask selftest           # Run full 11-step governance gate
+cargo run -p app-http          # Start service at http://localhost:8080
+```
+
+Then:
+- Visit http://localhost:8080/ui for the governance dashboard
+- `curl http://localhost:8080/platform/status` for health JSON
+- `curl http://localhost:8080/platform/graph` for the full governance graph
+
+## Kernel Stability
+
+**This repo is the kernel template.** After v3.3.x, changes are limited to:
+
+- Bug fixes in existing behavior
+- Security/compatibility updates
+- Explicit kernel contract extensions (with ADR + version bump)
+
+Forks inherit the kernel as-is and extend with domain-specific specs, ACs, and code.
+
+**Verification:** `cargo xtask selftest` passes all 11 steps → kernel contracts intact.
+
+---
+
 **Template Version:** v3.3.6 | **Kernel Baseline:** [v3.3.6-kernel](./docs/KERNEL_SNAPSHOT.md)
 
-**A governed Rust service template where specs, tests, docs, policies, and infra all agree – and the repo can prove it.**
-
-> **Rust-as-Spec** means this service runs as a *governed kernel*:
-> `specs/spec_ledger.yaml`, tests, docs, and policies all describe the same behaviour, and a single `cargo xtask selftest` gate plus `/platform/*` APIs prove that they still agree.
-> See [Rust-as-Spec Overview](docs/explanation/rust-as-spec-overview.md) for the full concept.
-
 > **Using this as a template?** Start here:
-> - **[Quick Start Guide](docs/QUICKSTART.md) – Get productive in 15 minutes** ⚡
-> - **[Pre-Fork Checklist](docs/how-to/pre-fork-checklist.md) – Validate before forking** ✓
+> - **[Quick Start Guide](docs/QUICKSTART.md) – Get productive in 15 minutes**
+> - **[Pre-Fork Checklist](docs/how-to/pre-fork-checklist.md) – Validate before forking**
 > - [Kernel snapshot](docs/KERNEL_SNAPSHOT.md) – what you're inheriting
 > - [New service guide](docs/how-to/new-service-from-template.md) – step-by-step setup
 > - [Troubleshooting Guide](docs/TROUBLESHOOTING.md) – when things go wrong
 > - Run `cargo xtask kernel-smoke` after cloning – it should be green
 
-A test service
-
-- **Schema-driven specs** (`specs/spec_ledger.yaml`, `specs/config_schema.yaml`)
-- **BDD-backed acceptance criteria** (Cucumber + Rust)
-- **A 10-step selftest gate** (`cargo xtask selftest`)
-- **Introspection APIs** under `/platform/*`
-- **A Web UI** at `/ui` that shows the same governance state CI enforces
-
-Use it when you want a Rust service that:
-
-- **Explains itself** through specs and schemas
-- Is **safe for humans and agents to work inside autonomously**
-- **Stays governed over time** by design, not by habit
-
 ---
 
-## 1. Who this is for
+## 1. Who This Is For
 
 Use this template if:
 
@@ -49,53 +96,26 @@ Don’t use this if:
 
 ---
 
-## 2. Quick Start
 
-**For humans getting oriented:**
-```bash
-nix develop                    # Enter the dev shell (installs all tools)
-cargo xtask doctor             # Check your environment
-cargo xtask selftest           # Run full governance validation
-cargo run -p app-http          # Start the service (http://localhost:8080)
-```
+## 2. What You Get
 
-Visit http://localhost:8080/ui to see the governance dashboard.
-
-**For agents working autonomously:**
-```bash
-cargo xtask help-flows         # Discover available flows and commands
-cargo xtask ac-status          # View AC health
-cargo xtask bundle implement_ac # Generate LLM context (task from .llm/contextpack.yaml)
-```
-
-See:
-- [QUICKSTART.md](./docs/QUICKSTART.md) for a 15-minute onboarding guide
-- [CLAUDE.md](./CLAUDE.md) for the full agent guide
-- [docs/how-to/new-service-from-template.md](./docs/how-to/new-service-from-template.md) to fork this template
-- [examples/fork-customization](./examples/fork-customization/) for sample customization files
-- [TROUBLESHOOTING.md](./docs/TROUBLESHOOTING.md) if you encounter problems
-
----
-
-## 3. What you actually get
-
-### 3.1 Specs and governance as code
+### 2.1 Specs and governance as code
 
 - `specs/spec_ledger.yaml` – stories → requirements → acceptance criteria (ACs) → tests → docs.
 - `specs/config_schema.yaml` – configuration schema for the service.
 - `specs/devex_flows.yaml` – developer workflows (flows + commands).
 - `specs/tasks.yaml` – work items the platform can surface via CLI and HTTP.
 
-### 3.2 Verification
+### 2.2 Verification
 
 - **BDD (Cucumber + Rust)** for platform and DevEx behaviour.
 - **Unit tests** for spec runtime, graph invariants, config validation, etc.
 - `cargo xtask ac-status` – computes AC → test → status mapping and writes:
   - `docs/feature_status.md` – **AC health dashboard**, auto-generated.
 
-### 3.3 Enforcement
+### 2.3 Enforcement
 
-- `cargo xtask selftest` – the **single mandatory CI gate** (10 steps):
+- `cargo xtask selftest` – the **single mandatory CI gate** (11 steps):
   1. Core checks (fmt, clippy, unit tests)
   2. Skills governance lint
   3. Agents governance lint
@@ -109,7 +129,7 @@ See:
 
 If selftest is red, the service is **not** in a governed state.
 
-### 3.4 Introspection surfaces
+### 2.4 Introspection surfaces
 
 - **HTTP APIs (`/platform/*`):**
   - `/platform/status` – governance health, policy status, auth mode, metadata.
@@ -130,7 +150,7 @@ If the UI shows it, CI enforces it.
 
 ---
 
-## 4. High-level architecture
+## 3. High-Level Architecture
 
 The pipeline is:
 
@@ -168,9 +188,9 @@ Under the hood:
 
 ---
 
-## 5. Detailed Setup Guide
+## 4. Detailed Setup Guide
 
-### 5.1 Prerequisites
+### 4.1 Prerequisites
 
 **Required:** [Nix with flakes](https://nixos.org/download.html) (Tier-1, recommended for exact CI parity)
 
@@ -178,7 +198,7 @@ Under the hood:
 
 **Note:** You can develop without Nix (Tier-2), but policy tests and exact CI parity require it. See [docs/reference/environment.md](docs/reference/environment.md) for detailed setup by platform and tier.
 
-### 5.2 Getting up and running (5 minutes)
+### 4.2 Getting up and running (5 minutes)
 
 ```bash
 # Clone the template
@@ -228,7 +248,7 @@ cargo run -p app-http
 
 ---
 
-## 6. Platform support
+## 5. Platform Support
 
 | Platform | Tier | Environment  | Selftest | Notes                                      |
 | -------- | ---- | ------------ | -------- | ------------------------------------------ |
@@ -244,9 +264,9 @@ For detailed setup by platform and troubleshooting, see **[docs/reference/enviro
 
 ---
 
-## 7. Governance model in practice
+## 6. Governance Model in Practice
 
-### 7.1 Spec ledger
+### 6.1 Spec ledger
 
 `specs/spec_ledger.yaml` is the core artifact:
 
@@ -273,7 +293,7 @@ Example fragment:
         - { type: bdd, tag: "@AC-TPL-PLATFORM-AUTH-BASIC", file: "specs/features/platform_security.feature" }
 ```
 
-### 7.2 AC status and coverage
+### 6.2 AC status and coverage
 
 To see current coverage:
 
@@ -289,9 +309,9 @@ Kernel ACs must be `[PASS]`. Non-kernel or template-only ACs may be `[UNKNOWN]` 
 
 ---
 
-## 8. Platform APIs and auth
+## 7. Platform APIs and Auth
 
-### 8.1 Auth modes
+### 7.1 Auth modes
 
 Auth is applied once at the `/platform/*` router:
 
@@ -313,7 +333,7 @@ export PLATFORM_AUTH_MODE=basic
 export PLATFORM_AUTH_TOKEN="some-long-random-secret"
 ```
 
-### 8.2 Key endpoints
+### 7.2 Key endpoints
 
 **Core governance and discovery:**
 
@@ -392,11 +412,11 @@ curl http://localhost:8080/platform/forks/{name}
 
 ---
 
-## 9. Developer workflows (xtask)
+## 8. Developer Workflows (xtask)
 
 Everything runs through the `xtask` binary. It's designed to be friendly for humans and agents.
 
-### 9.1 Onboarding & sanity
+### 8.1 Onboarding & sanity
 
 ```bash
 # Environment sanity check
@@ -405,14 +425,14 @@ cargo xtask doctor
 # Quick code quality check (fmt, clippy, unit tests)
 cargo xtask check
 
-# Full governance gate (Tier-1) – includes all 10 selftest steps
+# Full governance gate (Tier-1) – includes all 11 selftest steps
 cargo xtask selftest
 
 # Local precommit gate (what CI enforces before merge)
 cargo xtask precommit
 ```
 
-### 9.2 Governance-specific checks
+### 8.2 Governance-specific checks
 
 ```bash
 # Validate and lint Skills (name format, descriptions, allowed-tools safety, no secrets)
@@ -434,7 +454,7 @@ cargo xtask ac-status
 cargo xtask ac-coverage
 ```
 
-### 9.3 AC-first feature development
+### 8.3 AC-first feature development
 
 ```bash
 # 1. Create a new AC (requires both --story and --requirement)
@@ -463,7 +483,7 @@ cargo xtask ac-status
 cargo xtask selftest
 ```
 
-### 9.4 Selective testing
+### 8.4 Selective testing
 
 ```bash
 # Test only what changed vs origin/main (fast loop)
@@ -482,7 +502,7 @@ cargo xtask tasks-list
 cargo xtask help-flows
 ```
 
-### 9.5 Releases
+### 8.5 Releases
 
 ```bash
 # Build a local SBOM
@@ -498,7 +518,7 @@ cargo xtask release-bundle 3.3.1
 
 ---
 
-## 10. LLM / agent ergonomics
+## 9. LLM / Agent Ergonomics
 
 This repo is designed so that an agent can act as a **real teammate**, not a glorified autocomplete:
 
@@ -557,9 +577,9 @@ For details, see:
 
 ---
 
-## 11. Adoption patterns
+## 10. Adoption Patterns
 
-### 11.1 Greenfield: new service
+### 10.1 Greenfield: new service
 
 - Clone this template into a new repo.
 - Follow the [Pre-Fork Checklist](./docs/how-to/pre-fork-checklist.md) to validate your environment.
@@ -569,7 +589,7 @@ For details, see:
 - Keep the platform kernel as-is; build your business logic in new crates or modules.
 - Use `selftest` as the gate from day one.
 
-### 11.2 Brownfield: existing repo
+### 10.2 Brownfield: existing repo
 
 See [docs/how-to/add-governance-to-existing-repo.md](./docs/how-to/add-governance-to-existing-repo.md).
 
@@ -582,7 +602,7 @@ High-level flow:
 
 ---
 
-## 12. Relationship to portals/IDPs
+## 11. Relationship to Portals/IDPs
 
 This template is **not** a portal. It is the **per-service kernel** that a portal/IDP can rely on.
 
@@ -602,11 +622,11 @@ The integration surface is:
 
 ---
 
-## 13. Documentation Guide
+## 12. Documentation Guide
 
 Documentation is organized by audience and purpose:
 
-### 13.1 Getting Started (New Users)
+### 12.1 Getting Started (New Users)
 
 Start here if you're using this template for the first time:
 
@@ -617,7 +637,7 @@ Start here if you're using this template for the first time:
 - [Kernel snapshot](docs/KERNEL_SNAPSHOT.md) – What you're inheriting from the template
 - **[Troubleshooting Guide](docs/TROUBLESHOOTING.md)** – Solutions for common problems
 
-### 13.2 Daily Development (Contributors)
+### 12.2 Daily Development (Contributors)
 
 Use these guides while working in the codebase:
 
@@ -639,7 +659,7 @@ Use these guides while working in the codebase:
 - [AGENTS_TEMPLATE.md](docs/AGENTS_TEMPLATE.md) – Copy-paste template for creating new Agents
 - [AGENTS_VALIDATION.md](docs/AGENTS_VALIDATION.md) – Agent validation rules reference
 
-### 13.3 Platform Setup (Maintainers)
+### 12.3 Platform Setup (Maintainers)
 
 Use these guides to configure the production environment:
 
@@ -651,7 +671,7 @@ Use these guides to configure the production environment:
 - [Supply Chain Hardening](docs/explanation/supply-chain-hardening.md) – Security best practices
 - [Integrate with IDP or Agent](docs/how-to/integrate-idp-or-agent.md) – Use `/platform/*` APIs with Backstage, Port.io, or LLM agents
 
-### 13.4 Understanding the System (Architecture)
+### 12.4 Understanding the System (Architecture)
 
 Read these to understand how the template works:
 
@@ -675,7 +695,7 @@ Read these to understand how the template works:
 - [ADR-0021: Claude Code Agents Governance](docs/adr/0021-claude-code-agents-governance.md)
 - [ADR-0022: Platform Metadata and Test Isolation](docs/adr/0022-platform-metadata-and-test-isolation.md)
 
-### 13.5 Process & Planning
+### 12.5 Process & Planning
 
 Roadmaps, ADRs, and planning documents:
 
@@ -685,7 +705,7 @@ Roadmaps, ADRs, and planning documents:
 - [ADR Index](docs/adr/README.md) – Architecture decision records
 - [Release Playbook](docs/RELEASE_PLAYBOOK.md) – How to cut releases
 
-### 13.6 Reference Material
+### 12.6 Reference Material
 
 Technical references and command documentation:
 
@@ -698,7 +718,7 @@ Technical references and command documentation:
 
 ---
 
-## 14. Current Status & Roadmap
+## 13. Current Status & Roadmap
 
 **Kernel Version:** v3.3.6-kernel (see [KERNEL_SNAPSHOT.md](docs/KERNEL_SNAPSHOT.md) for what you inherit)
 
@@ -711,7 +731,7 @@ Technical references and command documentation:
 
 ---
 
-## 15. License
+## 14. License
 
 This template is dual-licensed:
 
