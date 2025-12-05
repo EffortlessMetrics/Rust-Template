@@ -4,7 +4,7 @@ title: Add a New HTTP Endpoint
 doc_type: how-to
 status: published
 audience: developers
-tags: [axum, http, onboarding, hello-world]
+tags: [axum, http, onboarding, platform]
 stories: [US-TPL-001]
 requirements: [REQ-PLT-ONBOARDING]
 acs: []
@@ -71,79 +71,55 @@ That's it. You've added an endpoint using normal Axum patterns. No specs, no BDD
 
 ---
 
-## Full Example: Add GET /refunds/:id
+## Full Example: GET /platform/debug/info (Real Endpoint)
 
-A more complete example showing path parameters, DTOs, and error handling.
+This endpoint actually exists in the template—try it right now:
 
-### Step 1: Add response DTO
+```bash
+cargo run -p app-http &
+curl http://localhost:8080/platform/debug/info
+# -> {"kernel_version":"0.1.0","template_version":"v3.3.6"}
+```
 
-In `crates/app-http/src/lib.rs`, add a response struct:
+Here's the real implementation in `crates/app-http/src/platform.rs`:
+
+### The DTO
 
 ```rust
 #[derive(Debug, Serialize)]
-struct RefundResponse {
-    refund_id: String,
-    order_id: String,
-    amount_cents: u64,
-    status: String,
+struct DebugInfo {
+    kernel_version: String,
+    template_version: String,
 }
 ```
 
-### Step 2: Add handler
+### The handler
 
 ```rust
-/// Get refund by ID
-#[instrument]
-async fn get_refund(
-    Path(refund_id): Path<String>,
-) -> Result<Json<RefundResponse>, AppError> {
-    info!(refund_id = %refund_id, "Fetching refund");
+async fn debug_info(State(state): State<AppState>) -> Json<DebugInfo> {
+    let root = &state.workspace_root;
 
-    // Validation: must start with REF-
-    if !refund_id.starts_with("REF-") {
-        return Err(AppError::validation_error(
-            ErrorCode::InvalidFormat,
-            "Refund ID must start with REF-"
-        ).with_context("refund_id", refund_id));
-    }
+    let template_version = load_service_metadata(&root.join("specs/service_metadata.yaml"))
+        .ok()
+        .and_then(|m| m.template_version)
+        .unwrap_or_else(|| "unknown".to_string());
 
-    // In real code, you'd call into business-core here
-    Ok(Json(RefundResponse {
-        refund_id: refund_id.clone(),
-        order_id: "ORD-123".to_string(),
-        amount_cents: 5000,
-        status: "completed".to_string(),
-    }))
+    Json(DebugInfo {
+        kernel_version: env!("CARGO_PKG_VERSION").to_string(),
+        template_version,
+    })
 }
 ```
 
-### Step 3: Add import and route
-
-At the top of `lib.rs`, ensure `Path` is imported:
+### The route (in the platform router)
 
 ```rust
-use axum::extract::Path;
+.route("/debug/info", get(debug_info))
 ```
 
-In `build_router()`:
-
-```rust
-.route("/refunds/:id", get(get_refund))
-```
-
-### Step 4: Test
-
-```bash
-cargo run -p app-http
-
-# Valid refund ID
-curl http://localhost:8080/refunds/REF-12345
-# -> {"refund_id":"REF-12345","order_id":"ORD-123",...}
-
-# Invalid format
-curl http://localhost:8080/refunds/INVALID
-# -> {"error":{"code":"INVALID_FORMAT",...}}
-```
+> **Note:** This is a platform-native endpoint. The kernel surfaces (`/platform/*`) are
+> real contracts you maintain. For domain-specific endpoints (orders, invoices, etc.),
+> follow the same pattern but under your own path prefix.
 
 ---
 
@@ -260,42 +236,36 @@ Edit `specs/spec_ledger.yaml`:
 
 ```yaml
 stories:
-  - id: US-MYSERV-001
-    title: "Refund Management"
+  - id: US-PLT-DEBUG
+    title: "Platform Debug Endpoints"
     requirements:
-      - id: REQ-MYSERV-REFUNDS
-        title: "Refund Retrieval API"
-        tags: [api, core]
+      - id: REQ-PLT-DEBUG-INFO
+        title: "Debug Info API"
+        tags: [api, platform, debug]
         must_have_ac: false  # Start as non-kernel
         acceptance_criteria:
-          - id: AC-MYSERV-REFUND-GET
-            text: "GET /refunds/:id returns 200 with refund details for valid IDs"
+          - id: AC-PLT-DEBUG-INFO
+            text: "GET /platform/debug/info returns 200 with kernel version and metadata"
             tags: [api]
             must_have_ac: false
             tests:
-              - { type: bdd, tag: "@AC-MYSERV-REFUND-GET", file: "specs/features/refunds.feature" }
+              - { type: bdd, tag: "@AC-PLT-DEBUG-INFO", file: "specs/features/platform_debug.feature" }
 ```
 
 ### Step 2: Add BDD scenario
 
-Create `specs/features/refunds.feature`:
+Create `specs/features/platform_debug.feature`:
 
 ```gherkin
-Feature: Refund API
+Feature: Platform Debug API
 
-  @AC-MYSERV-REFUND-GET
-  Scenario: Get refund by valid ID
+  @AC-PLT-DEBUG-INFO
+  Scenario: Get debug info
     Given the platform HTTP server is running
-    When I GET "/refunds/REF-12345"
+    When I GET "/platform/debug/info"
     Then the response status is 200
-    And the JSON body has field "refund_id" equal to "REF-12345"
-
-  @AC-MYSERV-REFUND-GET
-  Scenario: Get refund with invalid ID format
-    Given the platform HTTP server is running
-    When I GET "/refunds/INVALID"
-    Then the response status is 400
-    And the JSON body has field "error.code" equal to "INVALID_FORMAT"
+    And the JSON body has field "kernel_version"
+    And the JSON body has field "template_version"
 ```
 
 ### Step 3: Add OpenAPI schema (optional but recommended)
@@ -304,27 +274,28 @@ Edit `specs/openapi/openapi.yaml`:
 
 ```yaml
 paths:
-  /refunds/{id}:
+  /platform/debug/info:
     get:
-      summary: Get refund by ID
-      operationId: getRefund
-      tags: [refunds]
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-            pattern: "^REF-"
+      summary: Platform debug info
+      operationId: getDebugInfo
+      tags: [platform]
       responses:
         "200":
-          description: Refund details
+          description: Debug information
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/RefundResponse"
-        "400":
-          $ref: "#/components/responses/ValidationError"
+                type: object
+                required: [kernel_version, template_version]
+                properties:
+                  kernel_version:
+                    type: string
+                    description: "Kernel crate version"
+                  template_version:
+                    type: string
+                    description: "Template version used to create this service"
+        "500":
+          $ref: "#/components/responses/InternalError"
 ```
 
 ### Step 4: Run governance checks
@@ -359,7 +330,7 @@ mod tests {
 
 ### Integration test (full HTTP stack)
 
-Create `crates/app-http/tests/refunds_test.rs`:
+Create `crates/app-http/tests/platform_debug_test.rs`:
 
 ```rust
 use axum::body::Body;
@@ -367,13 +338,13 @@ use axum::http::{Request, StatusCode};
 use tower::ServiceExt;
 
 #[tokio::test]
-async fn test_get_refund_valid_id() {
+async fn test_debug_info_returns_kernel_version() {
     let app = app_http::app(/* governance_repo */);
 
     let response = app
         .oneshot(
             Request::builder()
-                .uri("/refunds/REF-123")
+                .uri("/platform/debug/info")
                 .body(Body::empty())
                 .unwrap(),
         )

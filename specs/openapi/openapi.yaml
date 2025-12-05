@@ -143,7 +143,13 @@ paths:
                     type: string
                     example: "Failed to load documentation index"
 
-  # Example Domain Endpoint - Adapt or replace
+  # ==========================================================================
+  # EXAMPLE DOMAIN ENDPOINT
+  # This endpoint is NOT part of the kernel. It's a reference example showing
+  # how to structure domain-specific API endpoints. In your fork:
+  #   - Delete or replace this endpoint with your actual business domain
+  #   - The canonical contract for the kernel is under /platform/*
+  # ==========================================================================
   /refunds:
     post:
       summary: Create a refund

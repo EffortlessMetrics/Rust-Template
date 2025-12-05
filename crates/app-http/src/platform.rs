@@ -22,6 +22,7 @@ mod ui;
 pub fn router(state: AppState) -> Router<AppState> {
     Router::new()
         // API routes
+        .route("/debug/info", get(debug_info))
         .route("/graph", get(get_graph))
         .route("/schema", get(get_schema))
         .route("/schema/{name}", get(get_schema_by_name_handler))
@@ -248,6 +249,32 @@ fn settings_as_json(
 
 fn redacted_secrets(secrets: &HashMap<String, String>) -> HashMap<String, String> {
     secrets.keys().map(|k| (k.clone(), "[REDACTED]".to_string())).collect()
+}
+
+// ============================================================================
+// Debug/Info endpoint - matches docs/how-to/add-http-endpoint.md example
+// ============================================================================
+
+/// Debug info response DTO
+#[derive(Debug, Serialize)]
+struct DebugInfo {
+    kernel_version: String,
+    template_version: String,
+}
+
+/// Platform debug info endpoint
+///
+/// Returns basic kernel and template version information.
+/// Documented in docs/how-to/add-http-endpoint.md as a canonical example.
+async fn debug_info(State(state): State<AppState>) -> Json<DebugInfo> {
+    let root = &state.workspace_root;
+
+    let template_version = load_service_metadata(&root.join("specs/service_metadata.yaml"))
+        .ok()
+        .and_then(|m| m.template_version)
+        .unwrap_or_else(|| "unknown".to_string());
+
+    Json(DebugInfo { kernel_version: env!("CARGO_PKG_VERSION").to_string(), template_version })
 }
 
 async fn get_graph(State(state): State<AppState>) -> Json<spec_runtime::Graph> {

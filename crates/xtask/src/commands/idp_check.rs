@@ -28,7 +28,7 @@ pub fn run() -> Result<()> {
     std::io::Write::flush(&mut std::io::stdout()).ok();
     let plugin_dir = std::path::Path::new("examples/backstage-plugin");
     let plugin_result = if !plugin_dir.exists() {
-        CheckResult::Skip("directory not found".to_string())
+        CheckResult::Skip("examples/backstage-plugin not present".to_string())
     } else {
         match run_plugin_checks(plugin_dir) {
             Ok(_) => CheckResult::Pass,
@@ -57,6 +57,14 @@ pub fn run() -> Result<()> {
         for (name, result) in &skipped {
             if let CheckResult::Skip(reason) = result {
                 println!("  {} {} skipped ({})", "⚠".yellow(), name, reason.dimmed());
+                // Provide friendly guidance for common skip scenarios
+                if *name == "Backstage plugin" && reason.contains("not present") {
+                    println!(
+                        "    {}",
+                        "This is fine if you're not using the reference Backstage plugin yet."
+                            .dimmed()
+                    );
+                }
             }
         }
     }
