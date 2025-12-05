@@ -9,7 +9,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-(empty)
+### Added
+
+**IDP Integration:**
+
+- **`cargo xtask idp-check`** – Validates IDP consumer surface with three checks:
+  - OpenAPI lint via Redocly CLI
+  - Backstage plugin type checks and tests
+  - TypeScript configuration validation (no deprecated moduleResolution)
+- **Platform API contract** – `/platform/status`, `/platform/docs/index`, and other introspection endpoints documented in OpenAPI + reference Backstage plugin
+- **TypeScript configuration governance** – `scripts/validate-ts-config.sh` enforces modern TypeScript best practices (NodeNext module resolution, no ignoreDeprecations)
+
+**Documentation:**
+
+- **Day-0/Day-1 quick-start box** in README.md – Prominent commands for new clones and daily iteration
+- **Cross-linked core docs** – "See also" blocks linking rust-as-spec-overview, template-architecture, and TEMPLATE-CONTRACTS
+- **Naming clarification** – README now establishes "Test Service" as the reference "Rust-as-Spec platform cell"
+
+### Changed
+
+- **idp-check UX** – Compact one-screen summary with `[1/3]`, `[2/3]`, `[3/3]` progress indicators and graceful degradation when tools/directories are missing
 
 ## [3.3.6] - 2025-12-01
 

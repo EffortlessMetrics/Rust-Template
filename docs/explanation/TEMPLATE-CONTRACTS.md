@@ -25,6 +25,10 @@ last_updated: 2025-12-01
 **Schema Version:** spec_ledger.yaml v1.0
 **Last Updated:** 2025-12-01
 
+> **See also:**
+> - [Rust-as-Spec Overview](rust-as-spec-overview.md) – The conceptual model and four-phase pipeline
+> - [Template Architecture](template-architecture.md) – The layered architecture and planes
+
 ---
 
 ## TL;DR: What You Must Preserve When Forking

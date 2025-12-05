@@ -421,6 +421,14 @@ git push origin main --tags
 
 ## Checklists
 
+### Pre-Release Kernel Checklist
+
+Quick sanity checks before any kernel release:
+
+- [ ] `cargo xtask selftest` passes
+- [ ] `cargo xtask docs-check` passes
+- [ ] `cargo xtask idp-check` passes (OpenAPI + TS consumer + config)
+
 ### Pre-Release Checklist
 
 - [ ] Plan document created (`docs/vX.Y.Z-plan.md`)
@@ -431,6 +439,8 @@ git push origin main --tags
 - [ ] `cargo clippy --all-targets --all-features -- -D warnings` passes
 - [ ] `cargo test --workspace` passes
 - [ ] `cargo run -p xtask -- selftest` passes
+- [ ] `cargo run -p xtask -- docs-check` passes
+- [ ] `cargo run -p xtask -- idp-check` passes (OpenAPI + TS consumer + config)
 - [ ] Feature flag matrix tested (if applicable)
 - [ ] How-to guides created (if new features)
 - [ ] Crate READMEs updated (if applicable)
