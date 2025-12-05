@@ -78,7 +78,7 @@ This endpoint actually exists in the template—try it right now:
 ```bash
 cargo run -p app-http &
 curl http://localhost:8080/platform/debug/info
-# -> {"kernel_version":"0.1.0","template_version":"v3.3.6"}
+# -> {"kernel_version":"0.1.0","template_version":"v3.3.6"} # doclint:disable orphan-version
 ```
 
 Here's the real implementation in `crates/app-http/src/platform.rs`:
