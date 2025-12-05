@@ -28,6 +28,7 @@ Complete reference for all `xtask` CLI commands.
 - [idp-check](#xtask-idp-check) - Validate IDP/portal integration surface
 - [contracts-check](#xtask-contracts-check) - Validate governed facts match docs
 - [contracts-fmt](#xtask-contracts-fmt) - Sync governed facts to docs
+- [ui-contract-check](#xtask-ui-contract-check) - Validate UI contract and DOM anchors
 
 ---
 
@@ -1718,6 +1719,155 @@ contracts:
 
 ---
 
+### xtask ui-contract-check
+
+Validate UI contract specification and DOM anchors.
+
+#### Usage
+
+```bash
+cargo run -p xtask -- ui-contract-check
+```
+
+#### What It Does
+
+Validates the UI contract system end-to-end:
+
+1. **YAML Parse**: Loads `specs/ui_contract.yaml` and verifies structure
+2. **Schema Validation**: Checks unique screen IDs, unique region IDs per screen, required fields
+3. **Region Kind Refs**: Verifies all regions reference defined kinds in `region_kinds`
+4. **DOM Validation**: Runs integration tests to verify HTML has matching `data-uiid` attributes
+
+#### Exit Codes
+
+- `0`: All UI contract checks passed
+- Non-zero: One or more checks failed
+
+#### When to Use
+
+- **After changing `/ui` pages**: Verify DOM still matches contract
+- **After editing `ui_contract.yaml`**: Validate contract structure
+- **In CI**: Part of selftest step 9 (Governance graph & UI)
+- **Before releases**: Ensure UI contract is synchronized
+
+#### Example Output
+
+```
+🎨 Validating UI contract...
+
+  [1/4] UI contract YAML ✓
+  [2/4] Schema validation ✓
+  [3/4] Region kind refs ✓
+  [4/4] DOM validation tests ✓
+
+UI contract validation PASSED
+```
+
+**When validation fails:**
+
+```
+🎨 Validating UI contract...
+
+  [1/4] UI contract YAML ✓
+  [2/4] Schema validation ✓
+  [3/4] Region kind refs ✓
+  [4/4] DOM validation tests ✗
+
+UI contract validation FAILED
+
+  ✗ DOM validation: Dashboard is missing data-uiid attributes for regions: ["dashboard.metrics"]
+
+Fix the contract (specs/ui_contract.yaml) or HTML templates to match.
+```
+
+#### UI Contract Structure
+
+The contract is defined in `specs/ui_contract.yaml`:
+
+```yaml
+schema_version: "1.0"
+template_version: "v3.3.6"
+
+screens:
+  - id: platform_dashboard
+    route: "/"
+    aliases: ["/ui"]
+    description: "Primary governance dashboard"
+    regions:
+      - id: "dashboard.health"
+        kind: "panel"
+        description: "Health metrics grid"
+      - id: "dashboard.nav"
+        kind: "navigation"
+        description: "Main navigation bar"
+
+region_kinds:
+  panel: "Grouped content section"
+  navigation: "Links to other screens"
+```
+
+#### DOM Anchors
+
+HTML templates must include `data-uiid` attributes matching contract regions:
+
+```rust
+// In Maud templates
+div data-uiid="dashboard.health" { /* content */ }
+div data-uiid="dashboard.nav" { /* content */ }
+```
+
+The validation tests verify:
+- Every region in the contract has a matching DOM element
+- Routes are reachable (return 200 OK)
+- Region IDs are unique per screen
+
+#### API Endpoint
+
+The contract is also exposed via HTTP at `/platform/ui/contract`:
+
+```bash
+curl http://localhost:8080/platform/ui/contract | jq
+```
+
+Returns the same structure as `specs/ui_contract.yaml` as JSON.
+
+#### Integration with Selftest
+
+This check runs as part of **step 9 (Governance graph & UI)** in selftest:
+
+```
+[9/11] Checking governance graph & UI contract...
+  ✓ Graph invariants satisfied
+  ✓ UI contract validation PASSED
+```
+
+#### Common Issues
+
+**Missing data-uiid in HTML:**
+- Add `data-uiid="region.id"` attribute to the appropriate element
+- Check that region ID matches exactly (case-sensitive)
+
+**Region kind not defined:**
+- Add the kind to `region_kinds` map in `ui_contract.yaml`
+- Or use an existing kind like `panel`, `header`, `navigation`
+
+**Duplicate region ID:**
+- Region IDs must be unique within each screen
+- Use dot notation: `screen.region` for clarity
+
+**Route not reachable:**
+- Ensure the route is defined in `app-http` router
+- Check for typos in the `route` field
+
+#### Notes
+
+- **Governance artifact**: UI contract is a first-class governed spec
+- **Agent-friendly**: `/platform/ui/contract` endpoint enables programmatic access
+- **Testing**: DOM tests in `crates/app-http/tests/ui_contract_dom.rs`
+- **Part of selftest**: Integrated into step 9 governance check
+
+---
+
 ## Command Comparison
 
 | Command | Speed | Coverage | Use Case |
@@ -1732,6 +1882,7 @@ contracts:
 | `idp-check` | Medium | IDP surface | After API changes |
 | `contracts-check` | Fast | Doc governance | Before PR merge |
 | `contracts-fmt` | Fast | Doc sync | After selftest changes |
+| `ui-contract-check` | Medium | UI contract + DOM | After UI changes |
 
 ---
 

@@ -360,32 +360,44 @@ pub fn run_with_verbosity(verbosity: crate::Verbosity) -> Result<()> {
     );
     println!();
 
-    // Step 9: Graph invariants
-    println!("{}", "[9/11] Checking governance graph invariants...".blue());
+    // Step 9: Graph invariants + UI contract
+    println!("{}", "[9/11] Checking governance graph & UI contract...".blue());
     let step_start = Instant::now();
-    let graph_ok = match crate::commands::graph_export::run_graph_invariants(verbosity.as_u8()) {
+    let mut governance_ok = true;
+
+    // 9a: Graph invariants
+    match crate::commands::graph_export::run_graph_invariants(verbosity.as_u8()) {
         Ok(_) => {
-            let elapsed = step_start.elapsed();
-            if verbosity.is_verbose() {
-                println!(
-                    "  {} Graph invariants satisfied ({:.2}s)",
-                    "✓".green(),
-                    elapsed.as_secs_f64()
-                );
-            } else {
-                println!("  {} Graph invariants satisfied", "✓".green());
-            }
-            true
+            println!("  {} Graph invariants satisfied", "✓".green());
         }
         Err(e) => {
-            // The error message from run_graph_invariants already includes the violations list
-            // but we want to format the header nicely
             eprintln!("  {} Graph invariants failed:", "✗".red());
             eprintln!("{}", e);
-            false
+            governance_ok = false;
         }
-    };
-    results.push("Graph invariants", graph_ok, Some("Check governance graph for violations"));
+    }
+
+    // 9b: UI contract check (YAML structure + DOM validation)
+    match crate::commands::ui_contract_check::run_check() {
+        Ok(_) => {
+            // run_check already prints success message
+        }
+        Err(e) => {
+            eprintln!("  {} UI contract check failed: {}", "✗".red(), e);
+            governance_ok = false;
+        }
+    }
+
+    let elapsed = step_start.elapsed();
+    if verbosity.is_verbose() && governance_ok {
+        println!("  {} Step 9 completed ({:.2}s)", "✓".green(), elapsed.as_secs_f64());
+    }
+
+    results.push(
+        "Governance graph & UI",
+        governance_ok,
+        Some("Run `cargo xtask graph-export --check` or `cargo xtask ui-contract-check`"),
+    );
     println!();
 
     // Step 10: AC coverage
@@ -973,7 +985,7 @@ mod tests {
             "LLM bundler",
             "Policy tests",
             "DevEx contract",
-            "Graph invariants",
+            "Governance graph & UI",
             "AC coverage",
             "Test coverage",
         ];
@@ -995,8 +1007,8 @@ mod tests {
             "DevEx contract step should be present"
         );
         assert!(
-            expected_steps.contains(&"Graph invariants"),
-            "Graph invariants step should be present"
+            expected_steps.contains(&"Governance graph & UI"),
+            "Governance graph & UI step should be present"
         );
         assert!(expected_steps.contains(&"AC coverage"), "AC coverage step should be present");
     }

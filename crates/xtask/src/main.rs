@@ -232,6 +232,10 @@ enum Commands {
     #[command(next_help_heading = "📚 Design & Documentation")]
     ContractsFmt,
 
+    /// Validate UI contract (specs/ui_contract.yaml) and DOM anchors
+    #[command(next_help_heading = "📚 Design & Documentation")]
+    UiContractCheck,
+
     // ============================================================================
     // GOVERNANCE ARTIFACTS (Friction log, questions, forks, skills)
     // ============================================================================
@@ -708,6 +712,7 @@ fn main() -> Result<()> {
         Commands::Spellcheck => commands::spellcheck::run_with_default_targets(),
         Commands::ContractsCheck => commands::contracts::check(),
         Commands::ContractsFmt => commands::contracts::fmt(),
+        Commands::UiContractCheck => commands::ui_contract_check::run(),
         Commands::GraphExport { format, check } => {
             commands::graph_export::run(commands::graph_export::GraphExportArgs { format, check })
         }
@@ -988,6 +993,7 @@ pub fn all_command_names() -> Vec<&'static str> {
         "tasks-list",
         "test-ac",
         "test-changed",
+        "ui-contract-check",
         "service-descriptor",
         "service-init",
         "config-validate",

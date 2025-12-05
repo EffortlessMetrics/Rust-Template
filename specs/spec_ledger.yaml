@@ -967,6 +967,19 @@ stories:
             tests:
               - { type: bdd, tag: "@AC-TPL-PLATFORM-UI-FLOWS", file: "specs/features/platform_ui.feature" }
 
+          - id: AC-TPL-PLATFORM-UI-CONTRACT
+            text: >
+              The platform provides a governed UI contract (specs/ui_contract.yaml) defining
+              screens and regions, a /platform/ui/contract endpoint exposing the contract as JSON,
+              and data-uiid attributes in HTML matching the contract. The cargo xtask ui-contract-check
+              command validates YAML structure and DOM anchors, and selftest includes this check.
+            tags: [kernel]
+            must_have_ac: true
+            tests:
+              - { type: unit, tag: "test_real_contract_passes", module: "commands::ui_contract_check::tests", file: "crates/xtask/src/commands/ui_contract_check.rs" }
+              - { type: integration, tag: "test_full_contract_coverage", file: "crates/app-http/tests/ui_contract_dom.rs" }
+              - { type: integration, tag: "test_get_ui_contract", file: "crates/app-http/tests/ui_contract_api.rs" }
+
       - id: REQ-TPL-PLATFORM-TASKS
         title: "Platform Tasks Surfacing"
         tags: [platform, devex, structural]
