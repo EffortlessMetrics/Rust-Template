@@ -113,6 +113,7 @@ Auto-generated AC status from acceptance (BDD) and unit tests.
 | AC-TPL-PLATFORM-GRAPH | US-TPL-PLT-001 | REQ-TPL-PLATFORM-INTROSPECTION | [PASS] pass | 1 / 1 |
 | AC-TPL-PLATFORM-SCHEMA | US-TPL-PLT-001 | REQ-TPL-PLATFORM-SCHEMA | [PASS] pass | 1 / 1 |
 | AC-TPL-PLATFORM-STATUS-CONTRACT | US-TPL-PLT-001 | REQ-TPL-PLATFORM-CONTRACT | [UNKNOWN] unknown | 0 / 0 |
+| AC-TPL-PLATFORM-UI-CONTRACT | US-TPL-PLT-001 | REQ-TPL-PLATFORM-UI | [UNKNOWN] unknown | 0 / 3 |
 | AC-TPL-PLATFORM-UI-DASHBOARD | US-TPL-PLT-001 | REQ-TPL-PLATFORM-UI | [PASS] pass | 1 / 1 |
 | AC-TPL-PLATFORM-UI-FLOWS | US-TPL-PLT-001 | REQ-TPL-PLATFORM-UI | [PASS] pass | 1 / 1 |
 | AC-TPL-PLATFORM-UI-GRAPH | US-TPL-PLT-001 | REQ-TPL-PLATFORM-UI | [PASS] pass | 1 / 1 |
@@ -150,7 +151,7 @@ Auto-generated AC status from acceptance (BDD) and unit tests.
 
 *(This list SHOULD be empty in this repo. If anything appears here, it's a bug.)*
 
-- *(none)*
+- AC-TPL-PLATFORM-UI-CONTRACT: The platform provides a governed UI contract (specs/ui_contract.yaml) defining screens and regions, a /platform/ui/contract endpoint exposing the contract as JSON, and data-uiid attributes in HTML matching the contract. The cargo xtask ui-contract-check command validates YAML structure and DOM anchors, and selftest includes this check.
 
 ## Meta / CI-only ACs (Not Executed Locally)
 
