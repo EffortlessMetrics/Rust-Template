@@ -25,6 +25,7 @@ Complete reference for all `xtask` CLI commands.
 - [skills-lint](#xtask-skills-lint) - Validate Skills definitions
 - [quickstart](#xtask-quickstart) - First-run validation
 - [selftest](#xtask-selftest) - Comprehensive 7-step validation suite
+- [idp-check](#xtask-idp-check) - Validate IDP/portal integration surface
 
 ---
 
@@ -1446,6 +1447,69 @@ Used in `.github/workflows/ci-template-selftest.yml`:
 
 ---
 
+## IDP / Portal Integration
+
+### xtask idp-check
+
+Validate IDP integration surface (OpenAPI lint + Backstage plugin checks).
+
+#### Usage
+
+```bash
+cargo run -p xtask -- idp-check
+
+# Verbose output
+cargo run -p xtask -- idp-check -v
+```
+
+#### What It Does
+
+Runs focused validation for IDP/portal integration:
+
+1. **OpenAPI lint**: Runs Redocly linting on `specs/openapi/openapi.yaml`
+2. **Backstage plugin checks**: Runs `pnpm run check` in `examples/backstage-plugin/`
+3. **TypeScript config validation**: Validates tsconfig.json against governance rules
+4. **PlatformClient tests**: Runs TypeScript tests for API contract compliance
+
+#### Exit Codes
+
+- `0`: All IDP checks passed
+- Non-zero: One or more checks failed
+
+#### When to Use
+
+- **After OpenAPI changes**: Verify schema is still valid and TypeScript types compile
+- **After platform endpoint changes**: Ensure Backstage plugin still type-checks
+- **Before releases**: Validate the IDP surface is healthy
+- **During Backstage integration work**: Quick feedback loop
+
+#### Example Output
+
+```
+🔍 Validating IDP integration surface...
+
+[1/3] Running OpenAPI lint...
+  ✓ specs/openapi/openapi.yaml valid
+
+[2/3] Running Backstage plugin checks...
+  ✓ TypeScript compilation passed
+  ✓ Type tests passed
+
+[3/3] Validating TypeScript config...
+  ✓ No deprecated moduleResolution
+  ✓ No ignoreDeprecations flags
+
+✓ IDP surface validation passed
+```
+
+#### Notes
+
+- **Non-kernel**: This is an ergonomic helper for IDP integration, not a kernel requirement
+- **Requires pnpm**: Backstage plugin checks need pnpm installed
+- **Complements selftest**: Use `selftest` for full governance; use `idp-check` for focused IDP validation
+
+---
+
 ## Command Comparison
 
 | Command | Speed | Coverage | Use Case |
@@ -1457,6 +1521,7 @@ Used in `.github/workflows/ci-template-selftest.yml`:
 | `bundle` | Fast | Context gen | Before LLM use |
 | `quickstart` | Medium | Basic validation | First run |
 | `selftest` | Slow | Comprehensive | CI, releases |
+| `idp-check` | Medium | IDP surface | After API changes |
 
 ---
 

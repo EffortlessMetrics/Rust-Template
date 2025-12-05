@@ -942,6 +942,26 @@ docs:
     acs: [AC-TPL-BUNDLE-MINIMAL-SCOPE]
     adrs: []
 
+  # Platform API Contract (IDP/Backstage integration)
+  - id: DESIGN-TPL-PLATFORM-API-CONTRACT-001
+    file: docs/design/platform-api-contract.md
+    title: "Platform API Contract"
+    doc_type: design_doc
+    stories: [US-TPL-PLT-001]
+    requirements: [REQ-TPL-PLATFORM-CONTRACT]
+    acs: [AC-TPL-PLATFORM-STATUS-CONTRACT, AC-TPL-DOCS-INDEX-CONTRACT]
+    adrs: [ADR-0001, ADR-0005]
+
+  # TypeScript Configuration Governance
+  - id: DESIGN-TPL-TS-CONFIG-GOVERNANCE-001
+    file: docs/design/ts-config-governance.md
+    title: "TypeScript Configuration Governance"
+    doc_type: design_doc
+    stories: [US-TPL-PLT-001]
+    requirements: [REQ-TPL-TS-CONFIG-GOVERNANCE]
+    acs: [AC-TPL-TS-CONFIG-VALIDATION]
+    adrs: [ADR-0005]
+
   # First Fork Runbook
   - id: GUIDE-TPL-FIRST-FORK-001
     file: docs/how-to/FIRST_FORK.md
