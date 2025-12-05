@@ -574,18 +574,18 @@ mod tests {
     #[test]
     fn test_generate_new_line_heading_version() {
         let pattern = FilePattern {
-            marker: "# Test Service (v".to_string(),
+            marker: "# Rust-as-Spec Platform Cell (v".to_string(),
             pattern_type: "heading_version".to_string(),
             format: "prefixed_paren".to_string(),
             line_pattern: None,
-            example: Some("# Test Service (v3.3.5)".to_string()),
+            example: Some("# Rust-as-Spec Platform Cell (v3.3.5)".to_string()),
             notes: None,
         };
 
         let version = VersionInfo::with_date("3.3.6", "2025-12-01").unwrap();
         let new_line = generate_new_line(&pattern, &version).unwrap();
 
-        assert_eq!(new_line, "# Test Service (v3.3.6)");
+        assert_eq!(new_line, "# Rust-as-Spec Platform Cell (v3.3.6)");
     }
 
     #[test]
@@ -636,7 +636,7 @@ mod tests {
         // Create a test file
         let readme_path = temp_path.join("README.md");
         let mut readme = fs::File::create(&readme_path).expect("Failed to create README");
-        writeln!(readme, "# Test Service (v3.3.5)").expect("Failed to write");
+        writeln!(readme, "# Rust-as-Spec Platform Cell (v3.3.5)").expect("Failed to write");
         writeln!(readme, "Some content").expect("Failed to write");
         writeln!(readme, "**Template Version:** v3.3.5").expect("Failed to write");
 
@@ -650,11 +650,11 @@ mod tests {
                 description: Some("Test README".to_string()),
                 patterns: vec![
                     FilePattern {
-                        marker: "# Test Service (v".to_string(),
+                        marker: "# Rust-as-Spec Platform Cell (v".to_string(),
                         pattern_type: "heading_version".to_string(),
                         format: "prefixed_paren".to_string(),
                         line_pattern: None,
-                        example: Some("# Test Service (v3.3.5)".to_string()),
+                        example: Some("# Rust-as-Spec Platform Cell (v3.3.5)".to_string()),
                         notes: None,
                     },
                     FilePattern {

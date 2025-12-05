@@ -24,7 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Day-0/Day-1 quick-start box** in README.md – Prominent commands for new clones and daily iteration
 - **Cross-linked core docs** – "See also" blocks linking rust-as-spec-overview, template-architecture, and TEMPLATE-CONTRACTS
-- **Naming clarification** – README now establishes "Test Service" as the reference "Rust-as-Spec platform cell"
+- **Kernel identity established** – README and docs now center "Rust-as-Spec Platform Cell" as the kernel identity; default instance is "template-service" (forks rename this)
 
 ### Changed
 

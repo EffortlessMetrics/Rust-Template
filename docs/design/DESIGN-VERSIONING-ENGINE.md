@@ -54,8 +54,8 @@ date_path: $.metadata.last_updated
 targets:
   - file: README.md
     patterns:
-      - marker: "# Test Service"
-        format: "# Test Service (v{version})"
+      - marker: "# Rust-as-Spec Platform Cell"
+        format: "# Rust-as-Spec Platform Cell (v{version})"
       - marker: "Current Template Version"
         format: "**Current Template Version:** v{version}"
 

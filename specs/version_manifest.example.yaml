@@ -12,8 +12,8 @@ targets:
   # Update README.md
   - file: README.md
     patterns:
-      - marker: "# Test Service"
-        format: "# Test Service (v{version})"
+      - marker: "# Rust-as-Spec Platform Cell"
+        format: "# Rust-as-Spec Platform Cell (v{version})"
         optional: false
       - marker: "Current Template Version"
         format: "**Current Template Version:** v{version}"
