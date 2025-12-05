@@ -22,6 +22,7 @@ dependencies = [
  "http-body-util",
  "md5",
  "regex",
+ "serde",
  "serde_json",
  "serde_yaml_ng",
  "shell-words",

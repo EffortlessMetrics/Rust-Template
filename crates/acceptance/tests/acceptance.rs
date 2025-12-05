@@ -1,4 +1,4 @@
-use acceptance::World;
+use acceptance::{AcCoverageWriter, World};
 use cucumber::{World as _, WriterExt, tag::Ext as _, writer};
 use gherkin::tagexpr::TagOperation;
 use std::fs::File;
@@ -31,9 +31,12 @@ async fn main() {
     let features_path = workspace_root.join("specs/features");
     let junit_dir = workspace_root.join("target/junit");
     let junit_path = junit_dir.join("acceptance.xml");
+    let coverage_dir = workspace_root.join("target/ac");
+    let coverage_path = coverage_dir.join("coverage.jsonl");
 
-    // Ensure target/junit directory exists
+    // Ensure target/junit and target/ac directories exist
     std::fs::create_dir_all(&junit_dir).unwrap_or(());
+    std::fs::create_dir_all(&coverage_dir).unwrap_or(());
 
     // Ensure xtask binary is built before running tests (to avoid Windows file locking)
     let xtask_binary = if cfg!(windows) {
@@ -57,6 +60,12 @@ async fn main() {
     let junit_file =
         File::create(&junit_path).unwrap_or_else(|_| std::fs::File::create(NULL_DEVICE).unwrap());
 
+    // Create AC coverage writer - this streams results as JSONL and flushes immediately,
+    // so it's resilient to cucumber's exit() behavior. This is the primary source of truth
+    // for AC coverage, replacing the unreliable JUnit path.
+    let coverage_writer = AcCoverageWriter::<World>::new(&coverage_path)
+        .expect("Failed to create AC coverage writer");
+
     let raw_tag_expr = std::env::var("CUCUMBER_TAG_EXPRESSION").ok();
     let tag_expression: Option<TagOperation> =
         raw_tag_expr.as_deref().and_then(|expr| expr.parse::<TagOperation>().ok());
@@ -65,8 +74,10 @@ async fn main() {
     // Clone for use in the filter closure
     let raw_tag_expr_for_filter = raw_tag_expr.clone();
 
-    // Use filter_run_and_exit with JUnit writer
-    // The JUnit file may be empty due to the cucumber-rs exit() issue documented above
+    // Use filter_run_and_exit with coverage and JUnit writers
+    // The JUnit file may be empty due to the cucumber-rs exit() issue documented above.
+    // The AC coverage writer (JSONL) is the reliable primary source - it flushes on each
+    // scenario completion, so results are captured even if cucumber calls exit().
     World::cucumber()
         .max_concurrent_scenarios(1)
         .before(|_feature, _rule, _scenario, world| {
@@ -77,7 +88,8 @@ async fn main() {
         .with_writer(
             writer::Basic::stdout()
                 .summarized()
-                .tee::<World, _>(writer::JUnit::for_tee(junit_file, 0))
+                .tee::<World, _>(coverage_writer.discard_stats_writes()) // AC coverage (primary, reliable)
+                .tee::<World, _>(writer::JUnit::for_tee(junit_file, 0)) // JUnit (best-effort)
                 .normalized(),
         )
         .filter_run_and_exit(

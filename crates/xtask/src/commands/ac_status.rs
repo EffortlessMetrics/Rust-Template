@@ -13,14 +13,15 @@ use walkdir::WalkDir;
 
 use super::ac_parsing::{
     AC_PATTERN_WITH_AT, AcStatus, SCENARIO_PATTERN, Scenario, TAG_PATTERN,
-    TESTCASE_SCENARIO_PATTERN, TESTCASE_SUFFIX_PATTERN, parse_cucumber_json_with_scenarios,
-    parse_features_with_metadata, parse_junit_with_scenarios,
+    TESTCASE_SCENARIO_PATTERN, TESTCASE_SUFFIX_PATTERN, parse_ac_coverage,
+    parse_cucumber_json_with_scenarios, parse_features_with_metadata, parse_junit_with_scenarios,
 };
 
 #[derive(Debug, Clone)]
 pub struct AcStatusArgs {
     pub ledger: PathBuf,
     pub features_dir: PathBuf,
+    pub coverage: PathBuf,
     pub junit: PathBuf,
     pub json_report: Option<PathBuf>,
     pub output: PathBuf,
@@ -34,6 +35,7 @@ impl Default for AcStatusArgs {
         Self {
             ledger: PathBuf::from("specs/spec_ledger.yaml"),
             features_dir: PathBuf::from("specs/features"),
+            coverage: PathBuf::from("target/ac/coverage.jsonl"),
             junit: PathBuf::from("target/junit/acceptance.xml"),
             json_report: Some(PathBuf::from("target/ac_report.json")),
             output: PathBuf::from("docs/feature_status.md"),
@@ -199,70 +201,87 @@ pub fn run(args: AcStatusArgs) -> Result<()> {
         eprintln!("  Found {} ACs", acs.len());
     }
 
-    // Check JUnit status and auto-regenerate if missing/empty
+    // Check all report sources
+    let mut coverage_status = ReportStatus::from_path(&args.coverage);
     let mut junit_status = ReportStatus::from_path(&args.junit);
     let json_status = args.json_report.as_ref().map(|p| ReportStatus::from_path(p));
 
-    // AUTO-REGENERATION: If JUnit is missing/empty and JSON is also missing/empty,
-    // run BDD tests to generate the JUnit file before proceeding.
+    // AUTO-REGENERATION: If all sources are missing/empty, run BDD tests to generate them.
     // Skip auto-regeneration if XTASK_SKIP_BDD=1 is set (to avoid nested BDD runs)
     // or if XTASK_NO_REGEN=1 is set explicitly
     let skip_regen =
         std::env::var("XTASK_SKIP_BDD").is_ok() || std::env::var("XTASK_NO_REGEN").is_ok();
 
-    if junit_status != ReportStatus::NonEmpty && !skip_regen {
-        let json_available = json_status == Some(ReportStatus::NonEmpty);
+    let has_any_results = coverage_status == ReportStatus::NonEmpty
+        || junit_status == ReportStatus::NonEmpty
+        || json_status == Some(ReportStatus::NonEmpty);
 
-        if !json_available {
-            // No usable test results - run BDD to generate them
-            if should_print_progress {
+    if !has_any_results && !skip_regen {
+        // No usable test results - run BDD to generate them
+        if should_print_progress {
+            eprintln!(
+                "No BDD results found (coverage: {}, JUnit: {}) - running BDD suite...",
+                coverage_status, junit_status
+            );
+        }
+
+        // Run BDD tests - this will write to both coverage.jsonl and acceptance.xml
+        // We ignore errors here because BDD tests may fail, but we still want
+        // to parse the output for AC status
+        let _ = super::bdd::run_for_junit(&args.junit);
+
+        // Re-check status after running BDD
+        coverage_status = ReportStatus::from_path(&args.coverage);
+        junit_status = ReportStatus::from_path(&args.junit);
+
+        if coverage_status != ReportStatus::NonEmpty && should_print_progress {
+            if junit_status != ReportStatus::NonEmpty {
                 eprintln!(
-                    "JUnit file `{}` is {} - running BDD suite to regenerate...",
-                    args.junit.display(),
-                    junit_status
-                );
-            }
-
-            // Run BDD tests - this will write to target/junit/acceptance.xml
-            // We ignore errors here because BDD tests may fail, but we still want
-            // to parse the JUnit output for AC status
-            let _ = super::bdd::run_for_junit(&args.junit);
-
-            // Re-check JUnit status after running BDD
-            junit_status = ReportStatus::from_path(&args.junit);
-
-            if junit_status != ReportStatus::NonEmpty && should_print_progress {
-                eprintln!(
-                    "{} Acceptance JUnit file `{}` is still {} after running BDD.",
+                    "{} Coverage file `{}` is still {} after running BDD.",
                     "[WARN]".yellow(),
-                    args.junit.display(),
-                    junit_status
+                    args.coverage.display(),
+                    coverage_status
                 );
-                eprintln!(
-                    "  BDD-driven ACs will be marked as 'unknown'. This is a known cucumber JUnit writer issue."
-                );
-            } else if should_print_progress {
-                eprintln!("  JUnit regenerated successfully");
+                eprintln!("  BDD-driven ACs will be marked as 'unknown'.");
+            } else {
+                eprintln!("  Using JUnit fallback (coverage file not available)");
             }
+        } else if should_print_progress {
+            eprintln!("  BDD results regenerated successfully");
         }
     }
 
-    // PRIMARY PATH: JUnit XML + feature file parsing
-    // JUnit is now the preferred path as it's more stable and consistent.
+    // PRIMARY PATH: AC Coverage JSONL (streams results, resilient to exit())
+    // The coverage.jsonl file is the preferred source as it flushes on each
+    // scenario completion and doesn't rely on Drop semantics.
     //
-    // FALLBACK PATH: Structured JSON report from acceptance tests
-    // The Cucumber JSON format is available as a fallback option.
-    let (scenarios, bdd_results) = if junit_status == ReportStatus::NonEmpty {
+    // FALLBACK PATHS:
+    // 1. JUnit XML + feature file parsing (legacy, may be empty on exit())
+    // 2. Structured JSON report from acceptance tests
+    let (scenarios, bdd_results) = if coverage_status == ReportStatus::NonEmpty {
         if should_print_progress {
-            eprintln!("Parsing JUnit results (primary path): {}", args.junit.display());
+            eprintln!("Parsing AC coverage (primary path): {}", args.coverage.display());
+        }
+        let (scenario_map, results) = parse_ac_coverage(&args.coverage)?;
+        if should_print_progress {
+            eprintln!("  Found {} scenarios", scenario_map.len());
+            eprintln!("  Found results for {} ACs", results.len());
+        }
+        (scenario_map, results)
+    } else if junit_status == ReportStatus::NonEmpty {
+        if should_print_progress {
+            eprintln!(
+                "Coverage not found ({}); falling back to JUnit: {}",
+                coverage_status,
+                args.junit.display()
+            );
         }
         fallback_to_junit(&args, should_print_progress)?
     } else if let Some(json_path) = &args.json_report {
         if json_status == Some(ReportStatus::NonEmpty) {
             if should_print_progress {
                 eprintln!(
-                    "JUnit not found or empty ({}); falling back to JSON report: {}",
-                    junit_status,
+                    "Coverage and JUnit not found; falling back to JSON report: {}",
                     json_path.display()
                 );
             }
@@ -278,8 +297,9 @@ pub fn run(args: AcStatusArgs) -> Result<()> {
             let json_state = json_status.unwrap_or(ReportStatus::Missing);
             if should_print_progress {
                 eprintln!(
-                    "{} No BDD test results available (JUnit: {}, JSON: {})",
+                    "{} No BDD test results available (coverage: {}, JUnit: {}, JSON: {})",
                     "[WARN]".yellow(),
+                    coverage_status,
                     junit_status,
                     json_state
                 );
@@ -292,8 +312,9 @@ pub fn run(args: AcStatusArgs) -> Result<()> {
         // BDD-driven ACs will be marked as "unknown" in the report.
         if should_print_progress {
             eprintln!(
-                "{} No BDD test results available (JUnit: {}, JSON: not configured)",
+                "{} No BDD test results available (coverage: {}, JUnit: {}, JSON: not configured)",
                 "[WARN]".yellow(),
+                coverage_status,
                 junit_status
             );
             eprintln!("  BDD-driven ACs will be marked as 'unknown'.");
