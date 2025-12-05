@@ -1,11 +1,9 @@
 use axum::{
-    Router,
     extract::{Extension, Json},
     response::IntoResponse,
-    routing::{get, post},
+    Router,
 };
 use serde::{Deserialize, Serialize};
-use tower_http::trace::TraceLayer;
 use tracing::{info, instrument};
 
 // Public modules
@@ -14,6 +12,7 @@ pub mod errors;
 pub mod metrics;
 pub mod middleware;
 pub mod platform;
+pub mod router;
 pub mod security;
 pub mod tasks;
 
@@ -58,7 +57,7 @@ pub fn app(governance_repo: Arc<dyn GovernanceRepository>) -> Router {
     let workspace_root = resolve_workspace_root();
     let config = load_validated_config(&workspace_root);
     let app_state = AppState::with_config(governance_repo, workspace_root, config);
-    build_router(app_state)
+    router::build_router(app_state)
 }
 
 /// Create the application router with an explicit workspace root.
@@ -68,57 +67,12 @@ pub fn app_with_workspace_root(
     workspace_root: PathBuf,
 ) -> Router {
     let config = load_validated_config(&workspace_root);
-    build_router(AppState::with_config(governance_repo, workspace_root, config))
+    router::build_router(AppState::with_config(governance_repo, workspace_root, config))
 }
 
 /// Create an application router from an already-constructed state (e.g., when main has validated config).
 pub fn app_with_state(app_state: AppState) -> Router {
-    build_router(app_state)
-}
-
-fn build_router(app_state: AppState) -> Router {
-    let auth_state = app_state.clone();
-    let platform_state = app_state.clone();
-    let platform_router = Router::new()
-        .with_state(platform_state.clone())
-        .merge(platform::router(platform_state.clone()))
-        .route("/tasks/{id}/status", post(tasks::update_task_status))
-        .layer(axum::middleware::from_fn_with_state(auth_state, middleware::platform_auth_guard))
-        .with_state(platform_state.clone());
-
-    let tasks_router =
-        Router::new().with_state(app_state.clone()).route("/ui/tasks", get(tasks::tasks_ui));
-
-    let agent_router = agent::router(app_state.clone());
-
-    Router::new()
-        // Template core endpoints - keep these
-        .route("/health", get(health))
-        .route("/version", get(version))
-        .route("/metrics", get(metrics::metrics_handler))
-        .route("/api/echo", post(echo)) // For demonstrating error handling in tests
-        // Platform introspection endpoints
-        .nest("/platform", platform_router)
-        // Platform UI routes (at root level)
-        .merge(platform::ui_router(platform_state))
-        // Merge domain endpoints
-        .merge(tasks_router)
-        .merge(agent_router)
-        // Middleware layers (applied in reverse order - bottom to top)
-        .layer(axum::middleware::from_fn(metrics::metrics_middleware))
-        .layer(axum::middleware::from_fn(middleware::request_id_middleware))
-        .layer(
-            // Configure TraceLayer to include request_id field
-            TraceLayer::new_for_http().make_span_with(|request: &axum::extract::Request| {
-                tracing::info_span!(
-                    "http_request",
-                    method = %request.method(),
-                    uri = %request.uri(),
-                    request_id = tracing::field::Empty, // Will be filled by request_id middleware
-                )
-            }),
-        )
-        .with_state(app_state)
+    router::build_router(app_state)
 }
 
 // ============================================================================
@@ -292,7 +246,12 @@ pub fn resolve_workspace_root() -> PathBuf {
         return PathBuf::from(root);
     }
 
-    PathBuf::from(env!("CARGO_MANIFEST_DIR")).parent().unwrap().parent().unwrap().to_path_buf()
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .expect("Failed to get parent of CARGO_MANIFEST_DIR")
+        .parent()
+        .expect("Failed to get grandparent of CARGO_MANIFEST_DIR")
+        .to_path_buf()
 }
 
 fn load_validated_config(workspace_root: &Path) -> Option<spec_runtime::ValidatedConfig> {

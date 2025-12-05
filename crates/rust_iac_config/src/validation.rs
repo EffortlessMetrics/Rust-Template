@@ -67,12 +67,12 @@ mod tests {
 
     #[test]
     fn test_validate_required_directories() {
-        let temp_dir = TempDir::new().unwrap();
+        let temp_dir = TempDir::new().expect("Failed to create temp dir");
         let workspace_root = temp_dir.path();
 
         // Create one required directory but not the other
         let specs_dir = workspace_root.join("specs");
-        std::fs::create_dir(&specs_dir).unwrap();
+        std::fs::create_dir(&specs_dir).expect("Failed to create specs dir");
 
         let config = IaCConfig {
             project: ProjectInfo {
@@ -100,7 +100,7 @@ mod tests {
 
     #[test]
     fn test_validate_required_files() {
-        let temp_dir = TempDir::new().unwrap();
+        let temp_dir = TempDir::new().expect("Failed to create temp dir");
         let workspace_root = temp_dir.path();
 
         let config = IaCConfig {
@@ -129,15 +129,15 @@ mod tests {
 
     #[test]
     fn test_validate_all_requirements_met() {
-        let temp_dir = TempDir::new().unwrap();
+        let temp_dir = TempDir::new().expect("Failed to create temp dir");
         let workspace_root = temp_dir.path();
 
         // Create required directory and file
         let specs_dir = workspace_root.join("specs");
-        std::fs::create_dir(&specs_dir).unwrap();
+        std::fs::create_dir(&specs_dir).expect("Failed to create specs dir");
 
         let readme_path = workspace_root.join("README.md");
-        std::fs::write(&readme_path, "# Test Project").unwrap();
+        std::fs::write(&readme_path, "# Test Project").expect("Failed to write README");
 
         let config = IaCConfig {
             project: ProjectInfo {

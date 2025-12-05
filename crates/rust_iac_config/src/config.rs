@@ -322,7 +322,7 @@ mod tests {
         let yaml = r#"
 name: test-project
 "#;
-        let info: ProjectInfo = serde_yaml::from_str(yaml).unwrap();
+        let info: ProjectInfo = serde_yaml::from_str(yaml).expect("Failed to parse YAML");
         assert_eq!(info.workspace_root, PathBuf::from("."));
     }
 
