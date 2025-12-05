@@ -45,13 +45,15 @@ Where the "how" lives:
 - `crates/spec-runtime/` - Runtime governance graph and introspection
 - `crates/acceptance/` - BDD step definitions
 
+> **Note:** This repo ships only the **platform kernel** (`/platform/*` endpoints) and examples. Domain-specific HTTP APIs (orders, invoices, tasks) live in your forks, not here. See [template-foundation-vs-examples.md](template-foundation-vs-examples.md).
+
 ### 3. Policy Plane
 
 Where enforcement lives:
 
 - `policy/*.rego` - OPA/Rego policies for ledger, features, privacy
 - `.github/workflows/` - CI workflows enforcing gates
-- `cargo xtask selftest` - The 10-step governance validation
+- `cargo xtask selftest` - The 11-step governance validation
 
 ### 4. Tooling and LLM Plane
 

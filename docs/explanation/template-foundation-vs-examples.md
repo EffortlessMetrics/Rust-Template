@@ -17,7 +17,7 @@ These are capabilities that **every service needs**, regardless of domain. They 
 - `GET /platform/docs/index` - Documentation inventory with validation
 - `GET /platform/tasks` - Task list for agent consumption
 - `GET /platform/agent/hints` - Prioritized work suggestions for agents
-- `GET /platform/debug/info` - Development debug information
+- `GET /platform/debug/info` - Development debug information (convenience; not in OpenAPI)
 
 **Specs:**
 - **Ledger**: `US-TPL-*` with `AC-TPL-*` and `AC-PLT-*`

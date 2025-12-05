@@ -959,11 +959,11 @@ mod tests {
         assert!(result.required_count > 0, "Should have at least some required commands");
     }
 
-    /// AC-PLT-019: selftest displays condensed summary with 10 steps
+    /// AC-PLT-019: selftest displays condensed summary with 11 steps
     /// This test verifies the step structure and naming.
     #[test]
-    fn selftest_summary_has_ten_steps() {
-        // The selftest runs 10 steps - verify the structure
+    fn selftest_summary_has_eleven_steps() {
+        // The selftest runs 11 steps - verify the structure
         let expected_steps = [
             "Core checks",
             "Skills governance",
@@ -975,10 +975,11 @@ mod tests {
             "DevEx contract",
             "Graph invariants",
             "AC coverage",
+            "Test coverage",
         ];
 
-        // Verify we have exactly 10 steps
-        assert_eq!(expected_steps.len(), 10, "Selftest should have exactly 10 steps");
+        // Verify we have exactly 11 steps
+        assert_eq!(expected_steps.len(), 11, "Selftest should have exactly 11 steps");
 
         // Verify key governance steps are present
         assert!(

@@ -32,7 +32,7 @@ This document specifies the data contracts and integration patterns for surfacin
 **Display:**
 - Traffic light indicator (green/yellow/red)
 - "Kernel ACs: 61/61 pass"
-- "Selftest: ✓ 10/10"
+- "Selftest: ✓ 11/11"
 
 **Cache TTL:** 5 minutes
 

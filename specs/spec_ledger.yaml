@@ -479,13 +479,13 @@ stories:
               - { type: integration, tag: "@AC-PLT-016", file: "specs/features/xtask_devex.feature" }
 
           - id: AC-PLT-019
-            text: "`cargo xtask selftest` displays a condensed summary with clear pass/fail indicators for all 10 steps"
+            text: "`cargo xtask selftest` displays a condensed summary with clear pass/fail indicators for all 11 steps"
             tags: [kernel]
             must_have_ac: true
             note: "Unit tests verify summary structure and status tracking; BDD @ci-only to avoid recursive selftest."
             adr: ADR-0017
             tests:
-              - { type: unit, tag: "selftest_summary_has_ten_steps", module: "commands::selftest::tests::selftest_summary_has_ten_steps", file: "crates/xtask/src/commands/selftest.rs" }
+              - { type: unit, tag: "selftest_summary_has_eleven_steps", module: "commands::selftest::tests::selftest_summary_has_eleven_steps", file: "crates/xtask/src/commands/selftest.rs" }
               - { type: unit, tag: "selftest_results_track_status", module: "commands::selftest::tests::selftest_results_track_status", file: "crates/xtask/src/commands/selftest.rs" }
               - { type: integration, tag: "@AC-PLT-019", file: "specs/features/xtask_devex.feature" }
 

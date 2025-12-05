@@ -38,7 +38,7 @@ A governed agent pilot is a controlled experiment where an autonomous AI agent w
 **What makes it "governed"?**
 
 - The agent cannot break out of AC-defined contracts
-- All changes must pass `cargo xtask selftest` (10-step governance gate)
+- All changes must pass `cargo xtask selftest` (11-step governance gate)
 - Platform APIs (`/platform/agent/hints`, `/platform/graph`) provide structured context
 - BDD tests and AC-to-test mappings enforce traceability
 - ADRs, issues, and friction logs capture ambiguity and decisions
@@ -107,7 +107,7 @@ This guide uses **Claude Code** as the reference agent, but the patterns work wi
 
 - **AC-first development:** Everything flows from acceptance criteria in `specs/spec_ledger.yaml`
 - **BDD as contract:** Gherkin scenarios tagged with `@AC-XXX` define expected behavior
-- **Selftest as gate:** 10-step validation that checks specs, tests, docs, policies
+- **Selftest as gate:** 11-step validation that checks specs, tests, docs, policies
 - **Platform APIs as telemetry:** JSON endpoints providing governance state
 - **Bundles as context:** Curated file sets for focused work
 
