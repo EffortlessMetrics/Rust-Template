@@ -1023,3 +1023,23 @@ docs:
     acs: []
     adrs: []
 
+  # Axum Mental Map
+  - id: EXPLAIN-TPL-AXUM-MAP-001
+    file: docs/explanation/axum-mental-map.md
+    title: "Axum Mental Map for the Rust-as-Spec Platform Cell"
+    doc_type: explanation
+    stories: [US-TPL-001]
+    requirements: [REQ-PLT-ONBOARDING]
+    acs: []
+    adrs: [ADR-0001]
+
+  # Add HTTP Endpoint How-To
+  - id: HOWTO-TPL-ADD-ENDPOINT-001
+    file: docs/how-to/add-http-endpoint.md
+    title: "Add a New HTTP Endpoint"
+    doc_type: how-to
+    stories: [US-TPL-001]
+    requirements: [REQ-PLT-ONBOARDING]
+    acs: []
+    adrs: [ADR-0001]
+
