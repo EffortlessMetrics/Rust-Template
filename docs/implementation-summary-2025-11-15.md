@@ -136,11 +136,11 @@ Acceptance Tests → Cucumber JSON → xtask ac-status → Feature Status Report
 
 **Enhanced Error Handling:**
 ```rust
-AppError::validation_error(ErrorCode::InvalidAmount, "Amount must be positive")
-    .with_context("field", "amount_cents")
-    .with_context("value", amount)
-    .with_ac_id("AC-REFUND-001")
-    .with_feature_id("FT-REFUND-CREATION")
+AppError::validation_error(ErrorCode::InvalidRequest, "Task ID is required")
+    .with_context("field", "task_id")
+    .with_context("value", task_id)
+    .with_ac_id("AC-PLT-TASKS-001")
+    .with_feature_id("FT-PLATFORM-TASKS")
 ```
 
 **Features:**

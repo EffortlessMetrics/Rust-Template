@@ -306,34 +306,34 @@ Based on Cucumber's JSON format and the needs of `xtask ac-status`, here's a pro
       ]
     },
     {
-      "name": "Refunds",
-      "uri": "specs/features/refund.feature",
+      "name": "Platform Tasks",
+      "uri": "specs/features/platform_tasks.feature",
       "tags": [],
       "scenarios": [
         {
-          "name": "Create a refund",
+          "name": "List platform tasks",
           "line": 3,
-          "tags": ["@smoke", "@AC-123"],
+          "tags": ["@smoke", "@AC-PLT-TASKS-001"],
           "status": "passed",
           "duration_ns": 4500983,
           "steps": [
             {
               "keyword": "Given",
-              "name": "an order \"ORD-1\" totalling 5000 cents",
+              "name": "the service is running",
               "line": 4,
               "status": "passed",
               "duration_ns": 1500327
             },
             {
               "keyword": "When",
-              "name": "I POST /refunds with { \"orderId\": \"ORD-1\", \"amountCents\": 5000 }",
+              "name": "I GET /platform/tasks",
               "line": 5,
               "status": "passed",
               "duration_ns": 2000328
             },
             {
               "keyword": "Then",
-              "name": "I receive 201 with a \"refundId\"",
+              "name": "I receive 200 with a tasks array",
               "line": 6,
               "status": "passed",
               "duration_ns": 1000328

@@ -1,1 +1,17 @@
-type Refund { id: ID!, orderId: ID!, amountCents: Int! }
+# GraphQL Schema - Rust-as-Spec Platform Cell
+#
+# This schema is a placeholder for GraphQL API development.
+# Add your domain types and queries here following GraphQL best practices.
+#
+# Note: This template focuses on REST/platform APIs. GraphQL support
+# is scaffolded but not actively used in the kernel.
+
+type Query {
+  # Platform health check
+  health: HealthStatus!
+}
+
+type HealthStatus {
+  status: String!
+  service: String!
+}

@@ -22,20 +22,20 @@
 //! use crate::errors::{AppError, ErrorCode};
 //!
 //! // Simple error
-//! return Err(AppError::bad_request("Invalid amount"));
+//! return Err(AppError::bad_request("Invalid input"));
 //!
 //! // Error with code and context
 //! return Err(AppError::validation_error(
-//!     ErrorCode::InvalidAmount,
-//!     "Amount must be greater than 0"
-//! ).with_context("amount_cents", payload.amount_cents));
+//!     ErrorCode::InvalidFormat,
+//!     "Task ID must match pattern TASK-\\d+"
+//! ).with_context("task_id", payload.task_id));
 //!
 //! // Error with AC/Feature tracking
 //! return Err(AppError::business_logic_error(
-//!     ErrorCode::RefundNotEligible,
-//!     "Order not eligible for refund"
-//! ).with_ac_id("AC-123")
-//!   .with_feature_id("FT-456"));
+//!     ErrorCode::ResourceNotFound,
+//!     "Task not found"
+//! ).with_ac_id("AC-TPL-001")
+//!   .with_feature_id("FT-TASKS"));
 //! ```
 
 use axum::{
@@ -68,9 +68,9 @@ pub enum ErrorCode {
     Unauthorized,
 
     // Business logic errors (4xx)
-    RefundNotEligible,
-    OrderNotFound,
-    InsufficientFunds,
+    ResourceNotFound,
+    InvalidState,
+    Conflict,
     DuplicateRequest,
 
     // System errors (5xx)
@@ -89,9 +89,9 @@ impl std::fmt::Display for ErrorCode {
             ErrorCode::MissingField => write!(f, "MISSING_FIELD"),
             ErrorCode::InvalidFormat => write!(f, "INVALID_FORMAT"),
             ErrorCode::Unauthorized => write!(f, "UNAUTHORIZED"),
-            ErrorCode::RefundNotEligible => write!(f, "REFUND_NOT_ELIGIBLE"),
-            ErrorCode::OrderNotFound => write!(f, "ORDER_NOT_FOUND"),
-            ErrorCode::InsufficientFunds => write!(f, "INSUFFICIENT_FUNDS"),
+            ErrorCode::ResourceNotFound => write!(f, "RESOURCE_NOT_FOUND"),
+            ErrorCode::InvalidState => write!(f, "INVALID_STATE"),
+            ErrorCode::Conflict => write!(f, "CONFLICT"),
             ErrorCode::DuplicateRequest => write!(f, "DUPLICATE_REQUEST"),
             ErrorCode::InternalError => write!(f, "INTERNAL_ERROR"),
             ErrorCode::ServiceUnavailable => write!(f, "SERVICE_UNAVAILABLE"),
@@ -160,7 +160,7 @@ impl AppError {
 
     /// Create a not found error (404)
     pub fn not_found(message: impl Into<String>) -> Self {
-        Self::new(StatusCode::NOT_FOUND, ErrorCode::OrderNotFound, message)
+        Self::new(StatusCode::NOT_FOUND, ErrorCode::ResourceNotFound, message)
     }
 
     /// Create an internal server error (500)
@@ -322,7 +322,7 @@ mod tests {
     #[test]
     fn test_error_code_display() {
         assert_eq!(ErrorCode::InvalidAmount.to_string(), "INVALID_AMOUNT");
-        assert_eq!(ErrorCode::RefundNotEligible.to_string(), "REFUND_NOT_ELIGIBLE");
+        assert_eq!(ErrorCode::ResourceNotFound.to_string(), "RESOURCE_NOT_FOUND");
     }
 
     #[test]
@@ -346,12 +346,12 @@ mod tests {
     #[test]
     fn test_error_with_ac_and_feature() {
         let error =
-            AppError::business_logic_error(ErrorCode::RefundNotEligible, "Order not refundable")
-                .with_ac_id("AC-123")
-                .with_feature_id("FT-456");
+            AppError::business_logic_error(ErrorCode::InvalidState, "Task cannot be updated")
+                .with_ac_id("AC-TPL-001")
+                .with_feature_id("FT-TASKS");
 
-        assert_eq!(error.ac_id, Some("AC-123".to_string()));
-        assert_eq!(error.feature_id, Some("FT-456".to_string()));
+        assert_eq!(error.ac_id, Some("AC-TPL-001".to_string()));
+        assert_eq!(error.feature_id, Some("FT-TASKS".to_string()));
     }
 
     #[test]

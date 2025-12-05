@@ -80,11 +80,11 @@ cargo run -p xtask -- bundle implement_ac
 
 # Paste bundle into LLM with prompt:
 "Here is our ledger, specs, features, and core code.
-Implement behavior to satisfy AC-123: 'Customer can view refund status'.
+Implement behavior to satisfy AC-PLT-TASKS-001: 'Platform lists tasks with status'.
 Show me the diffs you'd make to:
 1. specs/spec_ledger.yaml
 2. specs/features/*.feature
-3. crates/core/src/*.rs
+3. crates/business-core/src/*.rs
 4. crates/acceptance/src/steps/*.rs"
 ```
 
@@ -103,7 +103,7 @@ What's the likely cause and how should I fix it?"
 cargo run -p xtask -- bundle implement_feature
 
 # Ask:
-"Show me all ACs related to the refunds feature and their current implementation status."
+"Show me all ACs related to the platform tasks feature and their current implementation status."
 ```
 
 ### ❌ **Bad Use Cases**
@@ -132,9 +132,9 @@ LLMs can hallucinate. Before applying changes:
 > "Fix this code"
 
 **Good prompt:**
-> "AC-123 requires that refund status is returned in the response.
-> Current code at crates/core/src/refunds.rs:42 doesn't include status.
-> Show me the minimal diff to add status field to RefundResponse."
+> "AC-PLT-TASKS-001 requires that task status is returned in the response.
+> Current code at crates/business-core/src/tasks.rs:42 doesn't include status.
+> Show me the minimal diff to add status field to TaskResponse."
 
 ### 3. **Don't let LLMs invent governance artifacts**
 
@@ -404,7 +404,7 @@ And here's my spec_ledger.yaml entry:
 
 ```yaml
 - id: AC-NOTIF-001
-  text: "Customer receives email when refund is approved"
+  text: "User receives notification when task is assigned"
   # Missing tests array!
 ```
 
@@ -430,7 +430,7 @@ Context from bundle:
 > **Correct Structure:**
 > ```yaml
 > - id: AC-NOTIF-001
->   text: "Customer receives email when refund is approved"
+>   text: "User receives notification when task is assigned"
 >   tests:
 >     - type: bdd
 >       tag: "@AC-NOTIF-001"
@@ -457,7 +457,7 @@ vim specs/spec_ledger.yaml
 Update to:
 ```yaml
 - id: AC-NOTIF-001
-  text: "Customer receives email when refund is approved"
+  text: "User receives notification when task is assigned"
   tests:
     - type: bdd
       tag: "@AC-NOTIF-001"
