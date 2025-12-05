@@ -3,7 +3,6 @@ target/
 **/*.rs.bk
 .DS_Store
 .idea/
-.vscode/
 .env
 sbom.json
 *.sig

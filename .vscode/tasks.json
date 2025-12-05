@@ -1,0 +1,125 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "kernel: smoke",
+      "type": "shell",
+      "command": "cargo",
+      "args": ["xtask", "kernel-smoke"],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": ["$rustc"]
+    },
+    {
+      "label": "kernel: selftest",
+      "type": "shell",
+      "command": "cargo",
+      "args": ["xtask", "selftest"],
+      "group": "test",
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      },
+      "problemMatcher": ["$rustc"]
+    },
+    {
+      "label": "dev: check",
+      "type": "shell",
+      "command": "cargo",
+      "args": ["xtask", "check"],
+      "group": "build",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": ["$rustc"]
+    },
+    {
+      "label": "dev: test-changed",
+      "type": "shell",
+      "command": "cargo",
+      "args": ["xtask", "test-changed"],
+      "group": "test",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": ["$rustc"]
+    },
+    {
+      "label": "dev: doctor",
+      "type": "shell",
+      "command": "cargo",
+      "args": ["xtask", "doctor"],
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "agent: bundle",
+      "type": "shell",
+      "command": "cargo",
+      "args": ["xtask", "bundle", "implement_ac"],
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "xtask: bdd",
+      "type": "shell",
+      "command": "cargo",
+      "args": ["xtask", "bdd"],
+      "group": "test",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": ["$rustc"]
+    },
+    {
+      "label": "xtask: policy-test",
+      "type": "shell",
+      "command": "cargo",
+      "args": ["xtask", "policy-test"],
+      "group": "test",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "xtask: ac-status",
+      "type": "shell",
+      "command": "cargo",
+      "args": ["xtask", "ac-status"],
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "run: app-http",
+      "type": "shell",
+      "command": "cargo",
+      "args": ["run", "-p", "app-http"],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      },
+      "problemMatcher": ["$rustc"],
+      "isBackground": true
+    }
+  ]
+}

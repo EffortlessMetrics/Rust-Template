@@ -1,0 +1,74 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Debug app-http",
+      "cargo": {
+        "args": ["build", "-p", "app-http", "--bin=app-http"],
+        "filter": {
+          "name": "app-http",
+          "kind": "bin"
+        }
+      },
+      "args": [],
+      "cwd": "${workspaceFolder}",
+      "preLaunchTask": "kernel: smoke",
+      "env": {
+        "RUST_LOG": "info",
+        "RUST_BACKTRACE": "1"
+      }
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Run app-http",
+      "cargo": {
+        "args": ["run", "-p", "app-http", "--bin=app-http"],
+        "filter": {
+          "name": "app-http",
+          "kind": "bin"
+        }
+      },
+      "args": [],
+      "cwd": "${workspaceFolder}",
+      "preLaunchTask": "kernel: smoke",
+      "env": {
+        "RUST_LOG": "info"
+      }
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Debug unit tests",
+      "cargo": {
+        "args": ["test", "--no-run", "--lib"],
+        "filter": {
+          "kind": "lib"
+        }
+      },
+      "args": [],
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "RUST_BACKTRACE": "1"
+      }
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Debug current test",
+      "cargo": {
+        "args": ["test", "--no-run"],
+        "filter": {
+          "kind": "lib"
+        }
+      },
+      "args": ["${selectedText}"],
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "RUST_BACKTRACE": "1"
+      }
+    }
+  ]
+}
