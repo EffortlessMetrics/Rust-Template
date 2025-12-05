@@ -1,179 +1,148 @@
-# How-to: Add a New HTTP Endpoint
+---
+id: HOWTO-TPL-ADD-ENDPOINT-001
+title: Add a New HTTP Endpoint
+doc_type: how-to
+status: published
+audience: developers
+tags: [axum, http, onboarding, hello-world]
+stories: [US-TPL-001]
+requirements: [REQ-PLT-ONBOARDING]
+acs: []
+adrs: [ADR-0001]
+last_updated: 2025-12-05
+---
 
-**Time:** 15 minutes
-**Prerequisites:** Template running, basic Rust knowledge
+# How to Add a New HTTP Endpoint
 
-This guide shows you how to add a new HTTP endpoint following template patterns.
+**Time:** 10-15 minutes
+**Prerequisites:** Template running, basic Rust/Axum knowledge
+
+This guide shows you how to add HTTP endpoints to the Rust-as-Spec platform cell.
+
+> **Already know Axum?** See the [Axum Mental Map](../explanation/axum-mental-map.md) for a quick
+> orientation to where things live in this repo.
 
 ---
 
-## Example: Add GET /refunds/:id endpoint
+## Quick Start: Add GET /hello
 
-We'll add an endpoint to retrieve a refund by ID.
+This is the simplest possible example—add a handler, wire it, done.
 
-### Step 1: Add Route Handler
+### Step 1: Add handler to lib.rs
 
-**File:** `crates/app-http/src/main.rs`
-
-Add the handler function:
+Open `crates/app-http/src/lib.rs` and add a handler function near the other handlers:
 
 ```rust
-/// Get refund by ID endpoint
+/// Simple hello endpoint
 #[instrument]
-async fn get_refund(
-    Path(refund_id): Path<String>,
-) -> Result<Json<GetRefundResponse>, AppError> {
-    info!(refund_id = %refund_id, "Fetching refund");
-
-    // Call domain logic (in real system, this would query DB)
-    // For now, simulate found vs not found
-    if refund_id.starts_with("REF-") {
-        Ok(Json(GetRefundResponse {
-            refund_id: refund_id.clone(),
-            order_id: "ORD-123".to_string(),
-            amount_cents: 5000,
-            status: "completed".to_string(),
-            created_at: chrono::Utc::now().to_rfc3339(),
-        }))
-    } else {
-        Err(AppError::NotFound(format!("Refund {} not found", refund_id)))
-    }
+async fn hello() -> impl IntoResponse {
+    Json(serde_json::json!({
+        "message": "Hello from Rust-as-Spec!"
+    }))
 }
 ```
 
-### Step 2: Add Response DTO
+### Step 2: Wire it into the router
 
-Add the DTO after `CreateRefundResponse`:
+In the same file, find `build_router()` and add the route:
+
+```rust
+fn build_router(app_state: AppState) -> Router {
+    // ... existing code ...
+
+    Router::new()
+        .route("/health", get(health))
+        .route("/version", get(version))
+        .route("/hello", get(hello))  // <-- Add this line
+        // ... rest of routes ...
+}
+```
+
+### Step 3: Test it
+
+```bash
+cargo run -p app-http
+# In another terminal:
+curl http://localhost:8080/hello
+# -> {"message":"Hello from Rust-as-Spec!"}
+```
+
+That's it. You've added an endpoint using normal Axum patterns. No specs, no BDD, no governance—yet.
+
+---
+
+## Full Example: Add GET /refunds/:id
+
+A more complete example showing path parameters, DTOs, and error handling.
+
+### Step 1: Add response DTO
+
+In `crates/app-http/src/lib.rs`, add a response struct:
 
 ```rust
 #[derive(Debug, Serialize)]
-struct GetRefundResponse {
+struct RefundResponse {
     refund_id: String,
     order_id: String,
     amount_cents: u64,
     status: String,
-    created_at: String,
 }
 ```
 
-### Step 3: Add Error Variant
-
-Update the `AppError` enum:
+### Step 2: Add handler
 
 ```rust
-#[derive(Debug)]
-enum AppError {
-    BadRequest(String),
-    NotFound(String),  // ← Add this
-    InternalError(String),
-}
+/// Get refund by ID
+#[instrument]
+async fn get_refund(
+    Path(refund_id): Path<String>,
+) -> Result<Json<RefundResponse>, AppError> {
+    info!(refund_id = %refund_id, "Fetching refund");
 
-impl IntoResponse for AppError {
-    fn into_response(self) -> Response {
-        let (status, message) = match self {
-            AppError::BadRequest(msg) => (StatusCode::BAD_REQUEST, msg),
-            AppError::NotFound(msg) => (StatusCode::NOT_FOUND, msg),  // ← Add this
-            AppError::InternalError(msg) => (StatusCode::INTERNAL_SERVER_ERROR, msg),
-        };
-
-        let body = Json(serde_json::json!({
-            "error": message
-        }));
-
-        (status, body).into_response()
+    // Validation: must start with REF-
+    if !refund_id.starts_with("REF-") {
+        return Err(AppError::validation_error(
+            ErrorCode::InvalidFormat,
+            "Refund ID must start with REF-"
+        ).with_context("refund_id", refund_id));
     }
+
+    // In real code, you'd call into business-core here
+    Ok(Json(RefundResponse {
+        refund_id: refund_id.clone(),
+        order_id: "ORD-123".to_string(),
+        amount_cents: 5000,
+        status: "completed".to_string(),
+    }))
 }
 ```
 
-### Step 4: Add Import
+### Step 3: Add import and route
 
-At the top of the file, add to imports:
-
-```rust
-use axum::{
-    extract::{Json, Path},  // ← Add Path
-    // ... rest
-};
-```
-
-### Step 5: Register Route
-
-In the `main()` function, add the route:
+At the top of `lib.rs`, ensure `Path` is imported:
 
 ```rust
-let app = Router::new()
-    .route("/health", get(health))
-    .route("/refunds", post(create_refund))
-    .route("/refunds/:id", get(get_refund))  // ← Add this
-    .layer(TraceLayer::new_for_http());
+use axum::extract::Path;
 ```
 
-### Step 6: Validate
+In `build_router()`:
 
-Run checks:
-```bash
-cargo run -p xtask -- check
+```rust
+.route("/refunds/:id", get(get_refund))
 ```
 
-Start the server:
+### Step 4: Test
+
 ```bash
 cargo run -p app-http
-```
 
-Test the endpoint:
-```bash
-# Should return refund
+# Valid refund ID
 curl http://localhost:8080/refunds/REF-12345
+# -> {"refund_id":"REF-12345","order_id":"ORD-123",...}
 
-# Should return 404
+# Invalid format
 curl http://localhost:8080/refunds/INVALID
-```
-
----
-
-## Pattern Summary
-
-When adding HTTP endpoints, follow this pattern:
-
-### 1. Handler Signature
-
-```rust
-#[instrument(skip(payload))]  // ← Add tracing
-async fn my_handler(
-    Path(id): Path<String>,      // Path parameters
-    Json(req): Json<MyRequest>,  // Request body
-) -> Result<Json<MyResponse>, AppError> {  // Response or error
-    // Handler logic
-}
-```
-
-### 2. DTOs
-
-```rust
-#[derive(Debug, Deserialize)]  // ← For requests
-struct MyRequest {
-    field: String,
-}
-
-#[derive(Debug, Serialize)]  // ← For responses
-struct MyResponse {
-    result: String,
-}
-```
-
-### 3. Error Handling
-
-- Use `AppError` variants for different HTTP status codes
-- Convert domain errors to `AppError`
-- Let Axum's `IntoResponse` handle the rest
-
-### 4. Routing
-
-```rust
-Router::new()
-    .route("/path", get(handler))     // GET
-    .route("/path", post(handler))    // POST
-    .route("/path/:id", get(handler)) // Path param
+# -> {"error":{"code":"INVALID_FORMAT",...}}
 ```
 
 ---
@@ -184,17 +153,57 @@ Router::new()
 
 ```rust
 use axum::extract::Query;
-use serde::Deserialize;
 
-#[derive(Deserialize)]
+#[derive(Debug, Deserialize)]
 struct Pagination {
     page: Option<u32>,
     per_page: Option<u32>,
 }
 
-async fn list_refunds(Query(pagination): Query<Pagination>) -> Result<...> {
+#[instrument(skip(pagination))]
+async fn list_items(Query(pagination): Query<Pagination>) -> impl IntoResponse {
     let page = pagination.page.unwrap_or(1);
     let per_page = pagination.per_page.unwrap_or(20);
+    // ...
+}
+```
+
+### Request Body
+
+```rust
+#[derive(Debug, Deserialize)]
+struct CreateItemRequest {
+    name: String,
+    #[serde(default)]
+    tags: Vec<String>,
+}
+
+#[instrument(skip(payload))]
+async fn create_item(
+    Json(payload): Json<CreateItemRequest>,
+) -> Result<impl IntoResponse, AppError> {
+    // Validate
+    if payload.name.is_empty() {
+        return Err(AppError::validation_error(
+            ErrorCode::MissingField,
+            "Name is required"
+        ).with_context("field", "name"));
+    }
+    // ...
+}
+```
+
+### Using AppState
+
+```rust
+use axum::extract::State;
+
+#[instrument(skip(state))]
+async fn get_status(
+    State(state): State<AppState>,
+) -> impl IntoResponse {
+    // Access state.governance_repo, state.config, etc.
+    let config = state.config.as_ref();
     // ...
 }
 ```
@@ -204,88 +213,162 @@ async fn list_refunds(Query(pagination): Query<Pagination>) -> Result<...> {
 ```rust
 use axum::http::HeaderMap;
 
-async fn my_handler(headers: HeaderMap) -> Result<...> {
+async fn my_handler(headers: HeaderMap) -> impl IntoResponse {
     if let Some(auth) = headers.get("authorization") {
-        // Validate auth
+        // Handle auth
     }
     // ...
 }
 ```
 
-### Middleware
+---
+
+## Error Handling
+
+Use `AppError` from `crates/app-http/src/errors.rs`:
 
 ```rust
-use tower::ServiceBuilder;
-use tower_http::timeout::TimeoutLayer;
-use std::time::Duration;
+use crate::errors::{AppError, ErrorCode};
 
-let app = Router::new()
-    .route("/slow", get(slow_handler))
-    .layer(
-        ServiceBuilder::new()
-            .layer(TimeoutLayer::new(Duration::from_secs(10)))
-            .layer(TraceLayer::new_for_http())
-    );
+async fn my_handler() -> Result<Json<Response>, AppError> {
+    // Validation error (400)
+    Err(AppError::validation_error(ErrorCode::MissingField, "Field X is required")
+        .with_context("field", "x"))
+
+    // Not found (404)
+    Err(AppError::not_found("Item", "item-123"))
+
+    // Internal error (500)
+    Err(AppError::internal("Database connection failed"))
+}
 ```
 
----
-
-## Best Practices
-
-### ✅ DO:
-
-- **Use `#[instrument]`** on all handlers for tracing
-- **Keep handlers thin** - delegate to core domain logic
-- **Validate inputs** in handler, business logic in core
-- **Use strong types** - leverage Axum's extractors
-- **Add integration tests** for endpoints
-
-### ❌ DON'T:
-
-- **Don't put business logic in handlers** - handlers translate, core decides
-- **Don't ignore errors** - propagate with `?` or convert to AppError
-- **Don't skip validation** - validate early at HTTP boundary
-- **Don't bypass observability** - always use `#[instrument]`
+The error response follows the template's error envelope format (AC-TPL-003).
 
 ---
 
-## Testing Your Endpoint
+## Promote to Governed Contract
 
-### Unit Test (if handler has logic)
+If your endpoint is just a scratch/debug endpoint, you can stop here.
+
+If you want it to be part of the **real platform contract** (documented, tested, versioned),
+follow these additional steps:
+
+### Step 1: Add REQ and AC to spec_ledger.yaml
+
+Edit `specs/spec_ledger.yaml`:
+
+```yaml
+stories:
+  - id: US-MYSERV-001
+    title: "Refund Management"
+    requirements:
+      - id: REQ-MYSERV-REFUNDS
+        title: "Refund Retrieval API"
+        tags: [api, core]
+        must_have_ac: false  # Start as non-kernel
+        acceptance_criteria:
+          - id: AC-MYSERV-REFUND-GET
+            text: "GET /refunds/:id returns 200 with refund details for valid IDs"
+            tags: [api]
+            must_have_ac: false
+            tests:
+              - { type: bdd, tag: "@AC-MYSERV-REFUND-GET", file: "specs/features/refunds.feature" }
+```
+
+### Step 2: Add BDD scenario
+
+Create `specs/features/refunds.feature`:
+
+```gherkin
+Feature: Refund API
+
+  @AC-MYSERV-REFUND-GET
+  Scenario: Get refund by valid ID
+    Given the platform HTTP server is running
+    When I GET "/refunds/REF-12345"
+    Then the response status is 200
+    And the JSON body has field "refund_id" equal to "REF-12345"
+
+  @AC-MYSERV-REFUND-GET
+  Scenario: Get refund with invalid ID format
+    Given the platform HTTP server is running
+    When I GET "/refunds/INVALID"
+    Then the response status is 400
+    And the JSON body has field "error.code" equal to "INVALID_FORMAT"
+```
+
+### Step 3: Add OpenAPI schema (optional but recommended)
+
+Edit `specs/openapi/openapi.yaml`:
+
+```yaml
+paths:
+  /refunds/{id}:
+    get:
+      summary: Get refund by ID
+      operationId: getRefund
+      tags: [refunds]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: "^REF-"
+      responses:
+        "200":
+          description: Refund details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RefundResponse"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+```
+
+### Step 4: Run governance checks
+
+```bash
+cargo xtask ac-status      # See your AC in the list
+cargo xtask bdd            # Run BDD scenarios
+cargo xtask selftest       # Full governance check
+cargo xtask idp-check      # Validate OpenAPI + TS consumer
+```
+
+If all gates are green, your endpoint is now governed.
+
+---
+
+## Testing
+
+### Unit test (handler logic)
 
 ```rust
 #[cfg(test)]
 mod tests {
-    use super::*
-
-;
+    use super::*;
 
     #[tokio::test]
-    async fn test_get_refund_found() {
-        let response = get_refund(Path("REF-123".to_string())).await;
-        assert!(response.is_ok());
-    }
-
-    #[tokio::test]
-    async fn test_get_refund_not_found() {
-        let response = get_refund(Path("INVALID".to_string())).await;
-        assert!(response.is_err());
+    async fn test_hello_returns_message() {
+        let response = hello().await;
+        // Assert on response
     }
 }
 ```
 
-### Integration Test
+### Integration test (full HTTP stack)
 
-Create `crates/app-http/tests/integration_test.rs`:
+Create `crates/app-http/tests/refunds_test.rs`:
 
 ```rust
 use axum::body::Body;
 use axum::http::{Request, StatusCode};
-use tower::ServiceExt; // for `oneshot`
+use tower::ServiceExt;
 
 #[tokio::test]
-async fn test_get_refund_endpoint() {
-    let app = app_http::app();
+async fn test_get_refund_valid_id() {
+    let app = app_http::app(/* governance_repo */);
 
     let response = app
         .oneshot(
@@ -303,18 +386,40 @@ async fn test_get_refund_endpoint() {
 
 ---
 
-## Next Steps
+## Best Practices
 
-- **Add to BDD scenario:** Map endpoint to an AC with Gherkin test
-- **Update API docs:** Document in OpenAPI/Proto if you're using them
-- **Add to feature flag:** If endpoint should be gradual rollout
-- **Monitor in production:** Ensure tracing captures key metrics
+### DO
+
+- Use `#[instrument]` on all handlers for tracing
+- Keep handlers thin—delegate to `business-core` for logic
+- Validate inputs early at the HTTP boundary
+- Use strong types with Axum extractors
+- Add integration tests for important endpoints
+
+### DON'T
+
+- Put business logic in handlers—handlers translate, core decides
+- Ignore errors—propagate with `?` or convert to `AppError`
+- Skip validation—validate at HTTP boundary, not deep in core
+- Bypass observability—always use `#[instrument]`
 
 ---
 
-## Related Guides
+## Summary
 
-- `docs/tutorials/first-ac-change.md` - AC-first workflow
-- `docs/explanation/architecture.md` - Hexagonal architecture details
-- `TEMPLATE_API.md` - xtask commands reference
+For new developers:
 
+1. **Start with Axum**: add a handler in `lib.rs`, wire it in `build_router()`, test it.
+2. **When it matters**: add REQ/AC to `spec_ledger.yaml`, write BDD scenarios, update OpenAPI.
+3. **Run the gates**: `ac-status`, `selftest`, `idp-check`.
+
+That's Rust-as-Spec in action: you never lose the simplicity of "add an Axum handler",
+but you always have a path to turn it into a **provable contract** when you're ready.
+
+---
+
+## Related Docs
+
+- [Axum Mental Map](../explanation/axum-mental-map.md) – where things live in this repo
+- [Architecture overview](../explanation/architecture.md) – hexagonal architecture explained
+- [First AC change tutorial](../tutorials/first-ac-change.md) – full AC-first workflow
