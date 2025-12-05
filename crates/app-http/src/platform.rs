@@ -285,11 +285,13 @@ async fn get_graph(State(state): State<AppState>) -> Json<spec_runtime::Graph> {
     Json(graph)
 }
 
-async fn get_devex_flows(State(state): State<AppState>) -> Json<serde_json::Value> {
+async fn get_devex_flows(State(state): State<AppState>) -> Result<Json<serde_json::Value>, AppError> {
     let root = &state.workspace_root;
     let devex = spec_runtime::load_devex_flows(&root.join("specs/devex_flows.yaml"))
-        .expect("Failed to load devex flows");
-    Json(serde_json::to_value(devex).unwrap())
+        .map_err(|e| AppError::internal_error(format!("Failed to load devex flows: {}", e)))?;
+    let json_value = serde_json::to_value(devex)
+        .map_err(|e| AppError::internal_error(format!("Failed to serialize devex flows: {}", e)))?;
+    Ok(Json(json_value))
 }
 
 /// Response for /platform/docs/index with health info

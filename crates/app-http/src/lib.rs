@@ -292,7 +292,12 @@ pub fn resolve_workspace_root() -> PathBuf {
         return PathBuf::from(root);
     }
 
-    PathBuf::from(env!("CARGO_MANIFEST_DIR")).parent().unwrap().parent().unwrap().to_path_buf()
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .expect("Failed to get parent of CARGO_MANIFEST_DIR")
+        .parent()
+        .expect("Failed to get grandparent of CARGO_MANIFEST_DIR")
+        .to_path_buf()
 }
 
 fn load_validated_config(workspace_root: &Path) -> Option<spec_runtime::ValidatedConfig> {

@@ -192,10 +192,12 @@ fn get_workspace_version() -> Result<String> {
     let cargo_toml = fs::read_to_string("Cargo.toml").context("Failed to read Cargo.toml")?;
 
     for line in cargo_toml.lines() {
-        if line.contains("version = ") && !line.starts_with('#') {
-            if let Some(version) = line.split('"').nth(1) {
-                return Ok(version.to_string());
-            }
+        if !line.contains("version = ") || line.starts_with('#') {
+            continue;
+        }
+
+        if let Some(version) = line.split('"').nth(1) {
+            return Ok(version.to_string());
         }
     }
 

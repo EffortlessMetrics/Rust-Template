@@ -214,7 +214,7 @@ fn plan_contract_edits(
                 if let Some(caps) = re.captures(line) {
                     // Extract the current number from the match
                     let current_value =
-                        caps.get(1).map(|m| m.as_str().parse::<usize>().ok()).flatten();
+                        caps.get(1).and_then(|m| m.as_str().parse::<usize>().ok());
 
                     // If the number differs from expected, plan an edit
                     if current_value != Some(value) {
