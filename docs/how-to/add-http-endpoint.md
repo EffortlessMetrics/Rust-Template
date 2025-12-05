@@ -117,9 +117,10 @@ async fn debug_info(State(state): State<AppState>) -> Json<DebugInfo> {
 .route("/debug/info", get(debug_info))
 ```
 
-> **Note:** This is a platform-native endpoint. The kernel surfaces (`/platform/*`) are
-> real contracts you maintain. For domain-specific endpoints (orders, invoices, etc.),
-> follow the same pattern but under your own path prefix.
+> **Note:** `/platform/debug/info` is a **convenience endpoint** for development—it's
+> not in OpenAPI and has no AC. Most `/platform/*` endpoints (like `/platform/status`)
+> are contracted and appear in OpenAPI. This one exists purely for quick debugging.
+> For domain-specific endpoints, follow the same pattern but under your own path prefix.
 
 ---
 

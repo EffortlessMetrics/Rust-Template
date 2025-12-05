@@ -261,7 +261,7 @@ The generic CRUD handler appears to be legacy code from an earlier template vers
 - Tests run: `cargo xtask ac-tests AC-EXAMPLE-001` → pass
 - AC status: NotStarted → Passing
 - Code review: Agent self-review (aligned with existing patterns)
-- Selftest result: Pass (all 10 steps)
+- Selftest result: Pass (all 11 steps)
 
 **Open Questions:**
 

@@ -90,7 +90,7 @@ The platform uses a tiered validation approach based on the environment:
 ### Tier 1: Linux/macOS + Nix (Canonical)
 
 **Environment:** Ubuntu/macOS with Nix development shell
-**Status:** Full `cargo xtask selftest` runs (all 7 steps)
+**Status:** Full `cargo xtask selftest` runs (all 11 steps)
 **Runtime:** 10-20 minutes with warm cache
 **Use Case:** Required gate for merging to `main`
 
@@ -200,16 +200,22 @@ After selftest runs, the workflow verifies that generated artifacts (like `featu
 
 ### Code Quality Workflows
 
-#### `ci-lints.yml` - Rust Code Quality
-**Purpose:** Fast linting and formatting checks
+#### `ci-lints.yml` - Code Quality (Rust + TypeScript Config)
+**Purpose:** Fast linting, formatting, and config governance checks
 **Triggers:** Pull requests (excluding docs changes)
 **Runtime:** 3-5 minutes (warm cache)
 **Blocks Merges:** ✅ Yes (required check)
 
-**What it runs:**
-```bash
-cargo xtask check  # Runs fmt, clippy, and tests
-```
+**Two Jobs:**
+
+1. **`ts-config-lints`** - TypeScript config standards validation
+   - Runs `./scripts/validate-ts-config.sh`
+   - Ensures TypeScript configs in `examples/backstage-plugin/` follow standards
+   - Required for IDP integration consistency
+
+2. **`rust-lints`** - Rust code quality
+   - Runs `cargo xtask check` (fmt, clippy, tests)
+   - All clippy warnings are errors
 
 **Path Filters:**
 ```yaml
@@ -220,6 +226,7 @@ paths-ignore: ['**/*.md', 'docs/**']
 - Code is not formatted with `rustfmt`
 - Clippy warnings (all warnings are errors)
 - Unit tests fail
+- TypeScript config doesn't meet standards
 
 **How to fix:**
 ```bash
@@ -231,6 +238,9 @@ cargo clippy --fix --allow-dirty
 
 # Run tests
 cargo test
+
+# Validate TS configs
+./scripts/validate-ts-config.sh
 ```
 
 ---
@@ -750,7 +760,9 @@ Configure these in **Settings → Branches → Branch protection rules** for the
 These checks are **mandatory** and will block merges if they fail:
 
 - ✅ **`selftest`** (from `tier1-selftest.yml`) - Full governance validation
-- ✅ **`rust-lints`** (from `ci-lints.yml`) - Code quality gate
+- ✅ **`rust-lints`** (from `ci-lints.yml`) - Rust code quality gate
+- ✅ **`ts-config-lints`** (from `ci-lints.yml`) - TypeScript config governance
+- ✅ **`openapi`** (from `ci-openapi.yml`) - OpenAPI schema validation and breaking change detection
 - ✅ **`bdd`** (from `ci-ac.yml`) - BDD acceptance tests
 - ✅ **`codeql`** (from `ci-security.yml`) - Security analysis
 - ✅ **`secrets`** (from `ci-security.yml`) - Secret scanning
@@ -768,7 +780,6 @@ These checks provide valuable feedback but might be made optional for some workf
 These checks only run when specific file types are modified:
 
 - 🔀 **`lint`** (from `ci-gherkin.yml`) - Gherkin validation (when `specs/features/**` changes)
-- 🔀 **`openapi`** (from `ci-openapi.yml`) - API schema validation (when API specs change)
 - 🔀 **`proto`** (from `ci-proto.yml`) - Protobuf validation (when `.proto` files change)
 - 🔀 **`db`** (from `ci-db.yml`) - Database migrations (when migrations change)
 
@@ -778,7 +789,7 @@ These checks only run when specific file types are modified:
 # Using GitHub CLI
 gh api repos/:owner/:repo/branches/main/protection \
   --method PUT \
-  --field required_status_checks='{"strict":true,"contexts":["selftest","rust-lints","bdd","codeql","secrets","deps"]}'
+  --field required_status_checks='{"strict":true,"contexts":["selftest","rust-lints","ts-config-lints","openapi","bdd","codeql","secrets","deps"]}'
 ```
 
 Or configure via web UI:

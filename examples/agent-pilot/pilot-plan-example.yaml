@@ -99,13 +99,13 @@ phases:
     description: >
       Run full governance validation, assess outcomes, and document learnings.
     commands:
-      - "cargo xtask selftest"  # Full 10-step governance gate
+      - "cargo xtask selftest"  # Full 11-step governance gate
       - "cargo xtask ac-status"  # Verify AC status unchanged (should still be Passing)
       - "ls -la friction-entries/"  # Check friction captured
       - "ls -la adrs/"  # Check if any design decisions documented
       - "# Document findings in pilot-notes.md"
     checkpoints:
-      - "Selftest passes (all 10 steps)"
+      - "Selftest passes (all 11 steps)"
       - "AC-TPL-001 status unchanged (still Passing)"
       - "At least one friction entry exists (demonstrates capture workflow)"
       - "Pilot notes documented with clear summary"

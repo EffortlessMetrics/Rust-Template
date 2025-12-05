@@ -35,6 +35,32 @@ All responses are JSON. No database required—same data CI validates.
 
 ---
 
+## The Contract
+
+**What you integrate against:**
+
+1. **`/platform/*` HTTP endpoints** – All platform APIs live under this path. The endpoints listed above are the kernel contract; their response schemas are stable.
+2. **OpenAPI spec** – Machine-readable contract at `/platform/schema` and in `specs/openapi/openapi.yaml`. Use this for codegen.
+3. **CLI JSON mode** – All xtask commands support `--json` for scripting (`cargo xtask status --json`, etc.).
+
+**Reference implementation:**
+
+The Backstage plugin in [`examples/backstage-plugin/`](../../examples/backstage-plugin/) demonstrates:
+
+- TypeScript types generated from OpenAPI (see `src/types/PlatformClient.ts`)
+- React components consuming `/platform/status` and `/platform/docs/index`
+- Wiring into Backstage catalog EntityPage
+
+**After changing `/platform/*` or OpenAPI:**
+
+```bash
+cargo xtask idp-check   # Validate OpenAPI + TypeScript client alignment
+```
+
+This ensures your schema, Rust handlers, and TypeScript types stay in sync.
+
+---
+
 ## Recipe 1: Portal Widget (Service Health)
 
 **Goal:** Show "governance health" in Backstage, Port.io, or custom portal.

@@ -69,7 +69,7 @@ This closure is enforced:
 
 - Git tag: `v3.3.4-kernel` marks the frozen baseline
 - `ROADMAP.md` updated to reflect closure
-- Selftest gates expanded to 10 steps
+- Selftest gates expanded to 11 steps
 
 To fork from v3.3.4, start with `docs/how-to/FIRST_FORK.md`.
 
@@ -91,7 +91,7 @@ The kernel has reached a stable, forkable baseline. All acceptance criteria pass
 |--------|-------|
 | **Kernel ACs** | All passing (see `docs/feature_status_notes.md` for current count) |
 | **Non-kernel ACs** | Soft gates (tracked, not enforced) |
-| **Selftest Gates** | 10/10 passing |
+| **Selftest Gates** | 11/11 passing |
 | **Policy Tests** | 22/22 passing |
 | **BDD Scenarios** | 170+ passing |
 
@@ -138,7 +138,7 @@ The kernel has reached a stable, forkable baseline. All acceptance criteria pass
 ```bash
 nix develop
 cargo xtask doctor         # Environment validated
-cargo xtask selftest       # 10/10 gates pass
+cargo xtask selftest       # 11/11 gates pass
 cargo xtask ac-status      # All kernel ACs PASS
 cargo run -p app-http      # Listening on :8080
 ```

@@ -33,7 +33,7 @@ The template enforces these opinions through contracts in `specs/spec_ledger.yam
    - **Why:** Eliminates "works on my machine" by making the environment reproducible
 
 2. **CI Gate: `cargo xtask selftest` Required**
-   - All PRs must pass an 8-step governance validation
+   - All PRs must pass an 11-step governance validation
    - Includes: code quality, BDD scenarios, policy tests, graph integrity
    - Selftest passing means "governed and ready to review"
    - **Why:** Prevents drift between specs, tests, docs, and code
@@ -77,6 +77,8 @@ For step-by-step guidance, see:
 
 - **First fork**: `docs/how-to/FIRST_FORK.md` – one-page runbook for getting from zero to forked in 20 minutes
 - **Change an opinion**: `docs/how-to/change-template-opinion.md` – the recommended override path
+- **Just add an endpoint**: `docs/how-to/add-http-endpoint.md` – the fast path for Axum developers who want to add routes
+- **Axum developers**: `docs/explanation/axum-mental-map.md` – how standard Axum patterns map to this template
 - **Modify an AC**: `docs/how-to/change-acceptance-criterion.md` – day-2 contract changes (update, demote, remove ACs)
 - **Choose your opinionation level**: `docs/how-to/pre-fork-checklist.md` → Phase 5 – decide what's kernel vs optional *before* customizing
 - **Add your AC**: `docs/how-to/add-acceptance-criterion.md`
