@@ -113,7 +113,13 @@ fn fmt_impl(repo_root: &Path, dry_run: bool) -> Result<()> {
 
     println!("Computed facts from source:");
     println!("  • Selftest steps: {}", snapshot.selftest_step_count);
-    println!("  • Kernel ACs: {}", snapshot.kernel_ac_count);
+    println!(
+        "  • AC counts: total={}, kernel={}, template={}, meta={}",
+        snapshot.ac_counts.total,
+        snapshot.ac_counts.kernel,
+        snapshot.ac_counts.template,
+        snapshot.ac_counts.meta
+    );
     println!("  • Platform endpoints: {}", snapshot.platform_endpoints.len());
     println!("  • Required checks: {}", snapshot.required_checks.len());
     println!();
@@ -179,7 +185,13 @@ fn plan_contract_edits(
         // Get the value for this contract
         let value = match contract_name.as_str() {
             "selftest_step_count" => snapshot.selftest_step_count,
-            "kernel_ac_count" => snapshot.kernel_ac_count,
+            // Legacy name (deprecated, kept for compatibility)
+            "kernel_ac_count" => snapshot.ac_counts.kernel,
+            // New AC count contracts
+            "ac_total" => snapshot.ac_counts.total,
+            "ac_kernel" => snapshot.ac_counts.kernel,
+            "ac_template" => snapshot.ac_counts.template,
+            "ac_meta" => snapshot.ac_counts.meta,
             _ => continue, // Skip unknown contracts
         };
 
@@ -311,10 +323,12 @@ stories:
 
     #[test]
     fn test_plan_edits_with_matching_content() {
+        use crate::contracts::AcCounts;
+
         // When content already matches, should produce no edits
         let snapshot = ContractsSnapshot {
             selftest_step_count: 11,
-            kernel_ac_count: 61,
+            ac_counts: AcCounts { total: 105, kernel: 61, template: 27, meta: 17 },
             platform_endpoints: vec![],
             required_checks: vec![],
         };
@@ -342,10 +356,12 @@ contracts:
 
     #[test]
     fn test_plan_edits_with_outdated_content() {
+        use crate::contracts::AcCounts;
+
         // When content is outdated, should produce edit
         let snapshot = ContractsSnapshot {
             selftest_step_count: 11,
-            kernel_ac_count: 61,
+            ac_counts: AcCounts { total: 105, kernel: 61, template: 27, meta: 17 },
             platform_endpoints: vec![],
             required_checks: vec![],
         };

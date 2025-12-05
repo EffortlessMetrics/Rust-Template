@@ -10,11 +10,10 @@
 ## Executive Summary
 
 As of v3.3.6 (December 2025 update):
-- **Total ACs:** 105
+- **Total ACs:** 116
 - **Kernel ACs (must_have_ac: true):** 61 (all passing)
-- **Template ACs (must_have_ac: false):** 44
-  - **Passing:** 27
-  - **Unknown:** 17 (intentionally soft)
+- **Template ACs (must_have_ac: false):** 37
+- **Meta/CI-only ACs:** 18 (CI tests, harness, or example tags)
 
 **Status:** The template is at "LLM-native Rust cell 1.0" state. All kernel ACs pass. The 17 remaining UNKNOWN ACs are intentionally soft contracts (`must_have_ac: false`) covering governance documentation, guidance policies, and meta/CI-only contracts that aren't exercised in local selftest.
 
