@@ -33,6 +33,7 @@ pub fn router(state: AppState) -> Router<AppState> {
         .route("/tasks", get(get_tasks))
         .route("/tasks/suggest-next", get(get_suggest_next))
         .route("/tasks/graph", get(get_task_graph))
+        .route("/ui/contract", get(get_ui_contract))
         .merge(friction::router())
         .merge(questions::router())
         .merge(forks::router())
@@ -1108,4 +1109,22 @@ async fn get_task_graph(
     };
 
     Ok(Json(response))
+}
+
+/// UI Contract endpoint - returns the governed UI surface definitions.
+///
+/// Returns the UI contract specification which defines screens, regions,
+/// and stable `data-uiid` identifiers that agents, tests, and consumers
+/// can rely on.
+async fn get_ui_contract(
+    State(state): State<AppState>,
+) -> Result<Json<spec_runtime::UiContract>, AppError> {
+    let root = &state.workspace_root;
+    spec_runtime::load_ui_contract(&root.join("specs/ui_contract.yaml")).map(Json).map_err(|err| {
+        AppError::new(
+            StatusCode::INTERNAL_SERVER_ERROR,
+            ErrorCode::InternalError,
+            format!("Failed to load UI contract: {}", err),
+        )
+    })
 }

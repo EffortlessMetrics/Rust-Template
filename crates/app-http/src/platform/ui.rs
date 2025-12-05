@@ -6,7 +6,13 @@ use super::config_summary;
 use crate::AppState;
 
 /// Shared layout for all UI pages
-fn layout(title: &str, metadata: &Option<ServiceMetadata>, content: Markup) -> Markup {
+/// - `page_id`: prefix for data-uiid attributes (e.g., "dashboard", "graph", "flows", "coverage")
+fn layout(
+    title: &str,
+    page_id: &str,
+    metadata: &Option<ServiceMetadata>,
+    content: Markup,
+) -> Markup {
     let service_name = metadata
         .as_ref()
         .and_then(|m| m.display_name.as_deref())
@@ -139,13 +145,13 @@ fn layout(title: &str, metadata: &Option<ServiceMetadata>, content: Markup) -> M
                 }
             }
             body {
-                header {
+                header data-uiid=(format!("{}.header", page_id)) {
                     .container {
                         h1 { (service_name) }
                         p { (service_tagline) }
                     }
                 }
-                nav .container {
+                nav .container data-uiid=(format!("{}.nav", page_id)) {
                     a href="/" { "Dashboard" }
                     a href="/ui/graph" { "Graph" }
                     a href="/ui/flows" { "Flows & Tasks" }
@@ -247,7 +253,7 @@ pub async fn dashboard(State(state): State<AppState>) -> Html<String> {
             }
 
             html! {
-                .card {
+                .card data-uiid="dashboard.health" {
                     h2 { "Platform Health" }
                     .metrics {
                         .metric {
@@ -287,7 +293,7 @@ pub async fn dashboard(State(state): State<AppState>) -> Html<String> {
                     }
                 }
 
-                .card {
+                .card data-uiid="dashboard.ac_coverage" {
                     h2 { "AC Coverage" }
                     .stats style="display: flex; gap: 1.5rem; margin: 1rem 0; flex-wrap: wrap;" {
                         span style="color: #155724; font-size: 1.1rem; font-weight: 500;" {
@@ -308,7 +314,7 @@ pub async fn dashboard(State(state): State<AppState>) -> Html<String> {
                 }
 
                 @if let Some(cfg) = config.clone() {
-                    .card {
+                    .card data-uiid="dashboard.config" {
                         h2 { "Runtime Config (redacted)" }
                         p style="margin-bottom: 0.75rem; color: #555;" {
                             "Config values are rendered for visibility without leaking secrets; tokens are never shown."
@@ -352,7 +358,7 @@ pub async fn dashboard(State(state): State<AppState>) -> Html<String> {
                     }
                 }
 
-                .card {
+                .card data-uiid="dashboard.contracts" {
                     h2 { "Governance Contracts" }
                     p { "All governance checks are enforced via " code { "cargo xtask selftest" } ":" }
                     ul style="margin: 1rem 0 0 2rem;" {
@@ -366,7 +372,7 @@ pub async fn dashboard(State(state): State<AppState>) -> Html<String> {
                     }
                 }
 
-                .card {
+                .card data-uiid="dashboard.links" {
                     h2 { "Quick Links" }
                     ul style="margin: 1rem 0 0 2rem;" {
                         li { a href="/ui/graph" { "View Governance Graph" } " - Visual map of stories, requirements, and ACs" }
@@ -387,7 +393,7 @@ pub async fn dashboard(State(state): State<AppState>) -> Html<String> {
         }
     };
 
-    Html(layout("Dashboard", &metadata, content).into_string())
+    Html(layout("Dashboard", "dashboard", &metadata, content).into_string())
 }
 
 /// Graph visualization page
@@ -401,7 +407,7 @@ pub async fn graph_view(State(state): State<AppState>) -> Html<String> {
                 let mermaid_diagram = graph.to_mermaid();
 
                 html! {
-                    .card {
+                    .card data-uiid="graph.diagram" {
                         h2 { "Governance Graph" }
                         p style="margin-bottom: 1rem;" {
                             "This graph shows the relationships between stories, requirements, acceptance criteria, "
@@ -432,7 +438,7 @@ pub async fn graph_view(State(state): State<AppState>) -> Html<String> {
         }
     };
 
-    Html(layout("Graph", &metadata, content).into_string())
+    Html(layout("Graph", "graph", &metadata, content).into_string())
 }
 
 /// Flows and tasks page
@@ -446,7 +452,7 @@ pub async fn flows_view(State(state): State<AppState>) -> Html<String> {
     let content = match (flows_result, tasks_result) {
         (Ok(devex), Ok(tasks_spec)) => {
             html! {
-                .card {
+                .card data-uiid="flows.devex" {
                     h2 { "DevEx Flows" }
                     p style="margin-bottom: 1rem;" {
                         "Developer experience flows define common workflows for working with this repository."
@@ -467,7 +473,7 @@ pub async fn flows_view(State(state): State<AppState>) -> Html<String> {
                     }
                 }
 
-                .card {
+                .card data-uiid="flows.tasks" {
                     h2 { "Tasks" }
                     p style="margin-bottom: 1rem;" {
                         "Tasks represent concrete work items with recommended flows and suggested sequences."
@@ -504,7 +510,7 @@ pub async fn flows_view(State(state): State<AppState>) -> Html<String> {
         }
     };
 
-    Html(layout("Flows & Tasks", &metadata, content).into_string())
+    Html(layout("Flows & Tasks", "flows", &metadata, content).into_string())
 }
 
 /// Coverage details page
@@ -693,7 +699,7 @@ pub async fn coverage_view(State(state): State<AppState>) -> Html<String> {
             "#
         }
 
-        .card {
+        .card data-uiid="coverage.summary" {
             h2 { "AC Coverage Summary" }
             .metrics {
                 .metric style="border-left-color: #155724;" {
@@ -717,7 +723,7 @@ pub async fn coverage_view(State(state): State<AppState>) -> Html<String> {
 
         .card {
             h2 { "Acceptance Criteria Coverage" }
-            .filter-controls {
+            .filter-controls data-uiid="coverage.filters" {
                 button #filter-all.filter-btn onclick="filterData('all')" { "All" }
                 button #filter-passing.filter-btn onclick="filterData('passing')" { "Passing" }
                 button #filter-failing.filter-btn onclick="filterData('failing')" { "Failing" }
@@ -726,7 +732,7 @@ pub async fn coverage_view(State(state): State<AppState>) -> Html<String> {
                     oninput="searchData()";
             }
 
-            #table-container {
+            #table-container data-uiid="coverage.table" {
                 table .coverage-table {
                     thead {
                         tr {
@@ -750,5 +756,5 @@ pub async fn coverage_view(State(state): State<AppState>) -> Html<String> {
         }
     };
 
-    Html(layout("AC Coverage", &metadata, content).into_string())
+    Html(layout("AC Coverage", "coverage", &metadata, content).into_string())
 }

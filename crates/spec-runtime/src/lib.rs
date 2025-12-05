@@ -54,6 +54,8 @@ pub mod schema;
 pub mod service_metadata;
 /// Task management and sequencing.
 pub mod tasks;
+/// UI contract for governed platform UI surfaces.
+pub mod ui_contract;
 
 pub use config::{ValidatedConfig, validate_config};
 pub use devex::{DevExFlows, load_devex_flows};
@@ -69,6 +71,7 @@ pub use schema::{
 };
 pub use service_metadata::{ServiceMetadata, load_service_metadata};
 pub use tasks::*;
+pub use ui_contract::{Region, Screen, UiContract, load_ui_contract};
 
 /// Load all governance specs from the workspace root.
 ///
