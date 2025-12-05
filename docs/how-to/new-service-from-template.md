@@ -45,15 +45,14 @@ cd myservice
 
 Edit these files with your service identity:
 
-**`service_metadata.yaml`** (create if missing):
+**`specs/service_metadata.yaml`** (update from template defaults):
 
 ```yaml
-service_id: "knowledge-hub"
-name: "Knowledge Hub"
+service_id: "knowledge-hub"                    # Was: template-service
+display_name: "Knowledge Hub"                  # Was: Rust-as-Spec Template Service
 description: "Central repository for domain knowledge and entity definitions"
-tags: [platform, knowledge-base, core]
-version: "0.1.0"
-owner_team: "platform"
+template_version: v3.3.6                       # Keep as-is for traceability
+# Keep ownership, lifecycle, links, tags - update as needed for your team
 ```
 
 **`README.md`** – Update header and service description:
