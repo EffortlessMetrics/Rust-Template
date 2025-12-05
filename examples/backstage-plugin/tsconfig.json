@@ -20,7 +20,7 @@
     "isolatedModules": true,
     "noEmit": false,
     "emitDeclarationOnly": false,
-    "types": ["node"]
+    "types": ["node", "jest"]
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]

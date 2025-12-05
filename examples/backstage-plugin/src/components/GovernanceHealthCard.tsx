@@ -69,12 +69,27 @@ const useStyles = makeStyles(theme => ({
 /**
  * StatusChip - displays a status badge
  */
-const StatusChip: React.FC<{ label: string; status: 'pass' | 'fail' }> = ({
+const StatusChip: React.FC<{ label: string; status: 'pass' | 'fail' | 'unknown' }> = ({
   label,
   status,
 }) => {
   const classes = useStyles();
   const isPass = status === 'pass';
+  const isUnknown = status === 'unknown';
+
+  // Unknown status uses warning icon and default color
+  if (isUnknown) {
+    return (
+      <Chip
+        size="small"
+        label={`${label} (unknown)`}
+        icon={<WarningIcon />}
+        color="default"
+        className={classes.statusChip}
+      />
+    );
+  }
+
   return (
     <Chip
       size="small"
@@ -341,7 +356,7 @@ export const GovernanceHealthCard: React.FC<GovernanceHealthCardProps> = ({
       {/* Metadata Footer */}
       <Box mt={2}>
         <Typography variant="caption" color="textSecondary">
-          {service.display_name} - Template {service.template_version}
+          {service.display_name ?? service.service_id} - Template {service.template_version}
         </Typography>
       </Box>
     </InfoCard>

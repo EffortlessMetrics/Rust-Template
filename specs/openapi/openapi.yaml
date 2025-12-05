@@ -3,7 +3,7 @@ info:
   title: Service API
   version: 1.0.0
   description: |
-    Template-based service API (Template v2.3.0).
+    Template-based service API (Template v3.3.6).
 
     **Template Core Endpoints** (Keep these):
     - /health - Health check (AC-TPL-001)
@@ -11,10 +11,14 @@ info:
     - /metrics - Prometheus metrics (AC-TPL-007)
     - Error envelope - Standardized errors (AC-TPL-003, AC-TPL-004)
 
+    **Platform Introspection Endpoints** (Governance visibility):
+    - /platform/status - Governance health, ledger counts, policy status
+    - /platform/docs/index - Documentation inventory with validation
+
     **Domain Endpoints** (Replace with your service):
     - /refunds - Example domain endpoint to adapt or remove
 
-  x-template-version: "2.3.0"
+  x-template-version: "3.3.6"
   x-schema-version: "1.0"
   x-last-updated: "2025-11-17"
   license:
@@ -75,6 +79,49 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+
+  # ==========================================================================
+  # Platform Introspection Endpoints
+  # These endpoints provide governance visibility for internal developer portals
+  # ==========================================================================
+
+  /platform/status:
+    get:
+      summary: Platform governance status
+      description: |
+        Returns comprehensive governance status including service metadata,
+        ledger counts, DevEx metrics, friction tracking, and policy status.
+
+        This is the primary endpoint for Backstage and other developer portal
+        integrations to understand governance health.
+      operationId: getPlatformStatus
+      tags: [platform]
+      security: []  # Platform endpoints may have separate auth
+      responses:
+        "200":
+          description: Platform status retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformStatus'
+
+  /platform/docs/index:
+    get:
+      summary: Documentation inventory
+      description: |
+        Returns the complete documentation inventory with health validation.
+        Each document includes its type, linked stories/requirements/ACs,
+        and whether it passes doc-type contract validation.
+      operationId: getDocsIndex
+      tags: [platform]
+      security: []
+      responses:
+        "200":
+          description: Documentation index retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocsIndex'
 
   # Example Domain Endpoint - Adapt or replace
   /refunds:
@@ -137,3 +184,377 @@ components:
         requestId:
           type: string
           description: "X-Request-ID for log correlation"
+
+    # ==========================================================================
+    # Platform Status Schemas
+    # ==========================================================================
+
+    PlatformStatus:
+      type: object
+      description: "Complete platform governance status"
+      required: [service, governance]
+      properties:
+        service:
+          $ref: '#/components/schemas/ServiceInfo'
+        governance:
+          $ref: '#/components/schemas/GovernanceInfo'
+        config:
+          description: "Runtime configuration (may be absent if no config loaded)"
+          $ref: '#/components/schemas/ConfigInfo'
+
+    ServiceInfo:
+      type: object
+      description: "Service metadata"
+      required: [service_id, template_version, links, tags]
+      properties:
+        service_id:
+          type: string
+          description: "Unique service identifier"
+        template_version:
+          type: string
+          description: "Template version used to create this service"
+        display_name:
+          type: string
+          description: "Human-readable service name (optional)"
+        description:
+          type: string
+          description: "Service description (optional)"
+        links:
+          type: object
+          additionalProperties:
+            type: string
+          description: "Related links (repo, docs, etc.)"
+        tags:
+          type: array
+          items:
+            type: string
+          description: "Service tags for categorization"
+
+    GovernanceInfo:
+      type: object
+      description: "Full governance health metrics"
+      required: [ledger, devex, docs, tasks, questions, friction, forks, policies]
+      properties:
+        ledger:
+          $ref: '#/components/schemas/LedgerCounts'
+        devex:
+          $ref: '#/components/schemas/DevExCounts'
+        docs:
+          $ref: '#/components/schemas/DocsCounts'
+        tasks:
+          $ref: '#/components/schemas/TasksCounts'
+        questions:
+          $ref: '#/components/schemas/QuestionsInfo'
+        friction:
+          $ref: '#/components/schemas/FrictionInfo'
+        forks:
+          $ref: '#/components/schemas/ForksInfo'
+        policies:
+          $ref: '#/components/schemas/PoliciesInfo'
+
+    LedgerCounts:
+      type: object
+      description: "Governance ledger counts"
+      required: [stories, requirements, acs]
+      properties:
+        stories:
+          type: integer
+          minimum: 0
+          description: "Number of user stories"
+        requirements:
+          type: integer
+          minimum: 0
+          description: "Number of requirements"
+        acs:
+          type: integer
+          minimum: 0
+          description: "Number of acceptance criteria"
+
+    DevExCounts:
+      type: object
+      description: "Developer experience metrics"
+      required: [commands, flows]
+      properties:
+        commands:
+          type: integer
+          minimum: 0
+          description: "Number of xtask commands"
+        flows:
+          type: integer
+          minimum: 0
+          description: "Number of DevEx flows"
+
+    DocsCounts:
+      type: object
+      description: "Documentation summary"
+      required: [total, design, doc_type_issues]
+      properties:
+        total:
+          type: integer
+          minimum: 0
+          description: "Total number of documents"
+        design:
+          type: integer
+          minimum: 0
+          description: "Number of design documents"
+        doc_type_issues:
+          type: integer
+          minimum: 0
+          description: "Documents with doc-type validation issues"
+
+    TasksCounts:
+      type: object
+      description: "Task counts"
+      required: [total]
+      properties:
+        total:
+          type: integer
+          minimum: 0
+          description: "Total number of tasks"
+
+    QuestionsInfo:
+      type: object
+      description: "Question tracking"
+      required: [open, answered, resolved, total, top_open]
+      properties:
+        open:
+          type: integer
+          minimum: 0
+          description: "Open questions"
+        answered:
+          type: integer
+          minimum: 0
+          description: "Answered questions"
+        resolved:
+          type: integer
+          minimum: 0
+          description: "Resolved questions"
+        total:
+          type: integer
+          minimum: 0
+          description: "Total questions"
+        top_open:
+          type: array
+          items:
+            $ref: '#/components/schemas/QuestionSummary'
+          description: "Top open questions (max 3)"
+
+    QuestionSummary:
+      type: object
+      description: "Question summary entry"
+      required: [id, summary, flow]
+      properties:
+        id:
+          type: string
+          description: "Question ID"
+        summary:
+          type: string
+          description: "Question summary"
+        flow:
+          type: string
+          description: "Associated DevEx flow"
+
+    FrictionInfo:
+      type: object
+      description: "Friction log tracking"
+      required: [total, open, by_severity, recent]
+      properties:
+        total:
+          type: integer
+          minimum: 0
+          description: "Total friction entries"
+        open:
+          type: integer
+          minimum: 0
+          description: "Open friction issues"
+        by_severity:
+          $ref: '#/components/schemas/SeverityCounts'
+        recent:
+          type: array
+          items:
+            $ref: '#/components/schemas/FrictionSummary'
+          description: "Recent friction entries (max 5)"
+
+    SeverityCounts:
+      type: object
+      description: "Friction counts by severity"
+      required: [low, medium, high, critical]
+      properties:
+        low:
+          type: integer
+          minimum: 0
+        medium:
+          type: integer
+          minimum: 0
+        high:
+          type: integer
+          minimum: 0
+        critical:
+          type: integer
+          minimum: 0
+
+    FrictionSummary:
+      type: object
+      description: "Friction log entry summary"
+      required: [id, date, severity, summary, category]
+      properties:
+        id:
+          type: string
+          description: "Friction entry ID"
+        date:
+          type: string
+          description: "Date of friction entry"
+        severity:
+          type: string
+          enum: [low, medium, high, critical]
+          description: "Severity level"
+        summary:
+          type: string
+          description: "Brief description"
+        category:
+          type: string
+          description: "Friction category"
+
+    ForksInfo:
+      type: object
+      description: "Fork tracking"
+      required: [total, ids]
+      properties:
+        total:
+          type: integer
+          minimum: 0
+          description: "Number of forks"
+        ids:
+          type: array
+          items:
+            type: string
+          description: "Fork IDs"
+
+    PoliciesInfo:
+      type: object
+      description: "Policy enforcement status"
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [pass, fail, unknown]
+          description: "Overall policy status ('unknown' if not yet evaluated)"
+
+    ConfigInfo:
+      type: object
+      description: "Runtime configuration summary"
+      required: [http_port, settings, secrets_redacted, auth]
+      properties:
+        env:
+          type: string
+          description: "Environment name (optional)"
+        http_port:
+          type: integer
+          description: "HTTP server port"
+        settings:
+          type: object
+          additionalProperties: true
+          description: "Non-secret configuration settings"
+        secrets_redacted:
+          type: object
+          additionalProperties:
+            type: string
+          description: "Secret keys with redacted values"
+        auth:
+          $ref: '#/components/schemas/AuthConfig'
+
+    AuthConfig:
+      type: object
+      description: "Authentication configuration"
+      required: [mode, token_present]
+      properties:
+        mode:
+          type: string
+          enum: [open, token, oidc]
+          description: "Authentication mode"
+        token_present:
+          type: boolean
+          description: "Whether an auth token is configured"
+
+    # ==========================================================================
+    # Documentation Index Schemas
+    # ==========================================================================
+
+    DocsIndex:
+      type: object
+      description: "Documentation inventory response"
+      required: [schema_version, template_version, docs, summary]
+      properties:
+        schema_version:
+          type: string
+          description: "Schema version of the docs index"
+        template_version:
+          type: string
+          description: "Template version"
+        docs:
+          type: array
+          items:
+            $ref: '#/components/schemas/DocumentEntry'
+          description: "All documents in the inventory"
+        summary:
+          $ref: '#/components/schemas/DocsSummary'
+
+    DocumentEntry:
+      type: object
+      description: "Individual document entry"
+      required: [id, file, doc_type, stories, requirements, acs, adrs, doc_type_valid]
+      properties:
+        id:
+          type: string
+          description: "Document ID"
+        file:
+          type: string
+          description: "File path"
+        doc_type:
+          type: string
+          enum: [adr, design_doc, impl_plan, requirements_doc, guide, how-to, how_to, explanation, reference, ci_workflow, status]
+          description: "Document type"
+        stories:
+          type: array
+          items:
+            type: string
+          description: "Linked user stories"
+        requirements:
+          type: array
+          items:
+            type: string
+          description: "Linked requirements"
+        acs:
+          type: array
+          items:
+            type: string
+          description: "Linked acceptance criteria"
+        adrs:
+          type: array
+          items:
+            type: string
+          description: "Linked ADRs"
+        doc_type_valid:
+          type: boolean
+          description: "Whether doc passes type-contract validation"
+        doc_type_issue:
+          type: string
+          description: "Issue description if validation fails (optional)"
+
+    DocsSummary:
+      type: object
+      description: "Documentation health summary"
+      required: [total, valid, with_issues]
+      properties:
+        total:
+          type: integer
+          minimum: 0
+          description: "Total documents"
+        valid:
+          type: integer
+          minimum: 0
+          description: "Documents passing validation"
+        with_issues:
+          type: integer
+          minimum: 0
+          description: "Documents with issues"
