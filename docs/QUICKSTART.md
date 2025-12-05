@@ -139,7 +139,7 @@ cargo xtask test-ac AC-PLT-001  # Test specific AC
 
 **Before PR** (full validation):
 ```bash
-cargo xtask selftest        # 8-step governance validation (10-20 min)
+cargo xtask selftest        # 11-step governance validation (10-20 min)
 ```
 
 **Validation ladder:** `check` → `test-changed` → `test-ac` → `selftest`

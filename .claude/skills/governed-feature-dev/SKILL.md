@@ -242,7 +242,7 @@ Feature is complete when:
 - ✅ BDD scenario exists with matching `@AC-ID` tag
 - ✅ Code implements the behavior
 - ✅ `cargo xtask bdd` passes
-- ✅ `cargo xtask selftest` passes (7/7 steps)
+- ✅ `cargo xtask selftest` passes (11/11 steps)
 - ✅ Task status = Done
 - ✅ No new policy violations
 
