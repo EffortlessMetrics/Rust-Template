@@ -21,12 +21,15 @@
 
 /**
  * Service metadata
+ *
+ * Note: display_name and description are optional in the Rust kernel
+ * (Option<String> with skip_serializing_if) so they may be absent from the JSON.
  */
 export interface ServiceInfo {
   service_id: string;
   template_version: string;
-  display_name: string;
-  description: string;
+  display_name?: string;
+  description?: string;
   links: Record<string, string>;
   tags: string[];
 }
@@ -120,9 +123,11 @@ export interface ForksInfo {
 
 /**
  * Policy enforcement status
+ *
+ * Note: status can be 'unknown' when policy-test hasn't run or failed to parse.
  */
 export interface PoliciesInfo {
-  status: 'pass' | 'fail';
+  status: 'pass' | 'fail' | 'unknown';
 }
 
 /**
@@ -149,9 +154,11 @@ export interface AuthConfig {
 
 /**
  * Runtime configuration (from /platform/status)
+ *
+ * Note: env is optional in the Rust kernel (Option<String>).
  */
 export interface ConfigInfo {
-  env: string;
+  env?: string;
   http_port: number;
   settings: Record<string, unknown>;
   secrets_redacted: Record<string, string>;
@@ -160,11 +167,14 @@ export interface ConfigInfo {
 
 /**
  * Platform status response from /platform/status
+ *
+ * Note: config is optional in the Rust kernel (Option<ConfigSummary> with skip_serializing_if).
+ * It may be absent if no validated config was loaded.
  */
 export interface PlatformStatus {
   service: ServiceInfo;
   governance: GovernanceInfo;
-  config: ConfigInfo;
+  config?: ConfigInfo;
 }
 
 // =============================================================================
@@ -363,9 +373,9 @@ export class PlatformClient {
   }
 
   /**
-   * Get policy pass/fail status
+   * Get policy pass/fail/unknown status
    */
-  async getPolicyStatus(): Promise<'pass' | 'fail'> {
+  async getPolicyStatus(): Promise<'pass' | 'fail' | 'unknown'> {
     const status = await this.getStatus();
     return status.governance.policies.status;
   }
