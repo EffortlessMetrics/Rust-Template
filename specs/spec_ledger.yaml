@@ -1530,7 +1530,7 @@ stories:
             must_have_ac: false
             note: "Soft warning implemented; size thresholds guard against 'dump everything into the bundle' regressions."
             tests:
-              - { type: unit, tag: "bundle_scope_audit", file: "crates/xtask/src/commands/bundle.rs" }
+              - { type: unit, tag: "bundle_scope_audit", module: "commands::bundle::tests::bundle_scope_audit", file: "crates/xtask/src/commands/bundle.rs" }
 
       - id: REQ-TPL-TS-CONFIG-GOVERNANCE
         title: "TypeScript configurations follow modern, enforceable standards"

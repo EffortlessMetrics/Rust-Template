@@ -76,7 +76,7 @@ Auto-generated AC status from acceptance (BDD) and unit tests.
 | AC-TPL-BUNDLE-LAYOUT | US-TPL-PLT-001 | REQ-TPL-BUNDLE-CONTRACT | [PASS] pass | 1 / 1 |
 | AC-TPL-BUNDLE-MANIFEST | US-TPL-PLT-001 | REQ-TPL-BUNDLE-CONTRACT | [PASS] pass | 1 / 1 |
 | AC-TPL-BUNDLE-MANIFEST-LINKED | US-TPL-PLT-001 | REQ-TPL-BUNDLE-CONTRACT | [PASS] pass | 1 / 2 |
-| AC-TPL-BUNDLE-MINIMAL-SCOPE | US-TPL-PLT-001 | REQ-TPL-BUNDLE-CONTRACT | [UNKNOWN] unknown | 0 / 1 |
+| AC-TPL-BUNDLE-MINIMAL-SCOPE | US-TPL-PLT-001 | REQ-TPL-BUNDLE-CONTRACT | [PASS] pass | 1 / 1 |
 | AC-TPL-CLI-JSON-CORE | US-TPL-PHILOSOPHY-001 | REQ-TPL-AI-IDP-COMPAT | [PASS] pass | 3 / 3 |
 | AC-TPL-CLI-JSON-OUTPUT | US-TPL-PLT-001 | REQ-PLT-DEVEX-CONTRACT | [PASS] pass | 1 / 1 |
 | AC-TPL-CONFIG-VALIDATION | US-TPL-PLT-001 | REQ-TPL-CONFIG-INTEGRITY | [PASS] pass | 2 / 2 |
@@ -150,7 +150,7 @@ Auto-generated AC status from acceptance (BDD) and unit tests.
 
 *(This list SHOULD be empty in this repo. If anything appears here, it's a bug.)*
 
-- AC-TPL-BUNDLE-MINIMAL-SCOPE: Bundle scope is minimal: specs/ includes only referenced sections (not entire spec_ledger), docs/ includes only docs mentioned in ACs/tests, src/ is optional and narrowly scoped (crate-specific). As a guardrail, a single bundle MUST NOT exceed a configurable size and file-count threshold (default: 300 KiB / 64 files) unless explicitly overridden via BUNDLE_MAX_BYTES / BUNDLE_MAX_FILES.
+- *(none)*
 
 ## Meta / CI-only ACs (Not Executed Locally)
 
