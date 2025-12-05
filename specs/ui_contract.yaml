@@ -1,0 +1,125 @@
+# UI Contract Specification
+# Version: 1.0.0
+# Purpose: Governed contract for Platform UI screens and regions
+#
+# This file defines the UI surfaces that agents, tests, and consumers can rely on.
+# Each region ID maps to a `data-uiid` attribute in the rendered HTML.
+#
+# Validation: `cargo xtask ui-contract-check` verifies:
+#   1. All uiid values are unique within a screen
+#   2. All referenced routes exist in the application
+#   3. Browser tests can assert DOM elements match this contract
+
+schema_version: "1.0"
+template_version: "v3.3.6"
+
+screens:
+  # Main Dashboard - governance health overview
+  - id: platform_dashboard
+    route: "/"
+    aliases: ["/ui"]
+    description: "Primary governance dashboard showing platform health, AC coverage, config, and quick navigation"
+
+    regions:
+      - id: "dashboard.header"
+        kind: "header"
+        description: "Service name, tagline, and template version"
+
+      - id: "dashboard.nav"
+        kind: "navigation"
+        description: "Main navigation bar with links to all screens and API endpoints"
+
+      - id: "dashboard.health"
+        kind: "panel"
+        description: "Platform Health metrics grid: stories, requirements, ACs, commands, flows, tasks, docs, policies"
+
+      - id: "dashboard.ac_coverage"
+        kind: "panel"
+        description: "AC Coverage summary: passing, failing, unknown counts with link to details"
+
+      - id: "dashboard.config"
+        kind: "panel"
+        description: "Runtime Config (redacted): environment, HTTP port, auth mode, settings, secrets"
+
+      - id: "dashboard.contracts"
+        kind: "panel"
+        description: "Governance Contracts checklist: core checks, BDD, AC status, bundler, policies, devex, graph"
+
+      - id: "dashboard.links"
+        kind: "panel"
+        description: "Quick Links: navigation to graph view, flows, and JSON APIs"
+
+  # Governance Graph - visual dependency map
+  - id: governance_graph
+    route: "/ui/graph"
+    description: "Mermaid visualization of stories → requirements → ACs → tests → docs relationships"
+
+    regions:
+      - id: "graph.header"
+        kind: "header"
+        description: "Service name and tagline"
+
+      - id: "graph.nav"
+        kind: "navigation"
+        description: "Main navigation bar"
+
+      - id: "graph.diagram"
+        kind: "visualization"
+        description: "Mermaid governance graph showing the full traceability chain"
+
+  # Flows & Tasks - developer workflows and work items
+  - id: flows_tasks
+    route: "/ui/flows"
+    description: "Developer experience flows with xtask commands and concrete work items"
+
+    regions:
+      - id: "flows.header"
+        kind: "header"
+        description: "Service name and tagline"
+
+      - id: "flows.nav"
+        kind: "navigation"
+        description: "Main navigation bar"
+
+      - id: "flows.devex"
+        kind: "panel"
+        description: "DevEx Flows: named workflows with expandable step lists"
+
+      - id: "flows.tasks"
+        kind: "panel"
+        description: "Tasks: work items with status, requirement, and suggested sequences"
+
+  # AC Coverage - detailed acceptance criteria status
+  - id: ac_coverage
+    route: "/ui/coverage"
+    description: "Interactive AC coverage view with filtering and search"
+
+    regions:
+      - id: "coverage.header"
+        kind: "header"
+        description: "Service name and tagline"
+
+      - id: "coverage.nav"
+        kind: "navigation"
+        description: "Main navigation bar"
+
+      - id: "coverage.summary"
+        kind: "panel"
+        description: "AC Coverage Summary metrics: passing, failing, unknown, total counts"
+
+      - id: "coverage.filters"
+        kind: "controls"
+        description: "Filter controls: All/Passing/Failing/Unknown buttons and search box"
+
+      - id: "coverage.table"
+        kind: "table"
+        description: "AC Coverage table: AC ID, Title, Status, Story, Requirement, Scenarios"
+
+# Region kinds (for semantic understanding)
+region_kinds:
+  header: "Top-level branding and title area"
+  navigation: "Links to other screens and external resources"
+  panel: "Grouped content section with heading"
+  visualization: "Interactive or rendered diagram/chart"
+  controls: "User input elements (buttons, filters, search)"
+  table: "Tabular data display"
