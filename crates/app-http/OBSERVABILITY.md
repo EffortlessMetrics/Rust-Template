@@ -111,13 +111,13 @@ return Err(AppError::validation_error(
 // Error with full context
 return Err(
     AppError::validation_error(
-        ErrorCode::InvalidAmount,
-        "Amount must be greater than 0"
+        ErrorCode::InvalidRequest,
+        "Task ID is required"
     )
-    .with_context("field", "amount_cents")
-    .with_context("value", payload.amount_cents)
-    .with_ac_id("AC-REFUND-001")
-    .with_feature_id("FT-REFUND-CREATION")
+    .with_context("field", "task_id")
+    .with_context("value", task_id)
+    .with_ac_id("AC-PLT-TASKS-001")
+    .with_feature_id("FT-PLATFORM-TASKS")
 );
 ```
 
@@ -134,21 +134,21 @@ return Err(
 
 ```json
 {
-  "code": "INVALID_AMOUNT",
-  "message": "Amount must be greater than 0",
-  "ac_id": "AC-REFUND-001",
-  "feature_id": "FT-REFUND-CREATION"
+  "code": "INVALID_REQUEST",
+  "message": "Task ID is required",
+  "ac_id": "AC-PLT-TASKS-001",
+  "feature_id": "FT-PLATFORM-TASKS"
 }
 ```
 
 ### Log Output
 
 ```
-WARN http_error: error_code=INVALID_AMOUNT status_code=400
-  message="Amount must be greater than 0"
-  context={"field": "amount_cents", "value": 0}
-  ac_id="AC-REFUND-001"
-  feature_id="FT-REFUND-CREATION"
+WARN http_error: error_code=INVALID_REQUEST status_code=400
+  message="Task ID is required"
+  context={"field": "task_id"}
+  ac_id="AC-PLT-TASKS-001"
+  feature_id="FT-PLATFORM-TASKS"
   request_id="550e8400-e29b-41d4-a716-446655440000"
 ```
 
@@ -156,29 +156,25 @@ WARN http_error: error_code=INVALID_AMOUNT status_code=400
 
 ### Handler Instrumentation
 
-The `create_refund` handler demonstrates best practices:
+The platform handlers demonstrate best practices:
 
 ```rust
 #[instrument(
-    skip(_request_id, payload),
-    fields(
-        order_id = %payload.order_id,
-        amount_cents = payload.amount_cents,
-    )
+    skip(_request_id),
+    fields(task_id = %task_id)
 )]
-async fn create_refund(
+async fn get_task(
     Extension(_request_id): Extension<RequestId>,
-    Json(payload): Json<CreateRefundRequest>,
-) -> Result<(StatusCode, Json<CreateRefundResponse>), AppError> {
-    info!("Processing refund creation request");
+    Path(task_id): Path<String>,
+) -> Result<Json<TaskResponse>, AppError> {
+    info!("Fetching task");
 
     // ... validation with detailed errors ...
 
     info!(
-        refund_id = %refund.id,
-        order_id = %payload.order_id,
-        amount_cents = payload.amount_cents,
-        "Refund created successfully"
+        task_id = %task.id,
+        status = %task.status,
+        "Task retrieved successfully"
     );
 
     Ok(response)
@@ -219,23 +215,22 @@ The implementation includes stubbed locations for metrics:
 ### Request Latency
 
 ```rust
-// In refund handler
-// let _timer = metrics::histogram!("refund_creation_duration_seconds").start_timer();
+// In handler
+// let _timer = metrics::histogram!("request_duration_seconds").start_timer();
 ```
 
 ### Validation Errors
 
 ```rust
 // In validation logic
-// metrics::counter!("refund_validation_errors_total", "field" => "amount").increment(1);
+// metrics::counter!("request_validation_errors_total", "field" => "task_id").increment(1);
 ```
 
 ### Business Metrics
 
 ```rust
 // In successful path
-// metrics::counter!("refunds_created_total", "status" => "success").increment(1);
-// metrics::histogram!("refund_amount_cents").record(payload.amount_cents as f64);
+// metrics::counter!("tasks_retrieved_total", "status" => "success").increment(1);
 ```
 
 ## Complete Observability Story
@@ -243,45 +238,44 @@ The implementation includes stubbed locations for metrics:
 ### 1. Request Arrives
 
 ```
-[INFO] http_request: method=POST uri=/refunds request_id=550e8400-...
+[INFO] http_request: method=GET uri=/platform/tasks/TASK-001 request_id=550e8400-...
 ```
 
 ### 2. Handler Processing
 
 ```
-[INFO] create_refund: request_id=550e8400-... order_id=ORD-123 amount_cents=1000
-  Processing refund creation request
+[INFO] get_task: request_id=550e8400-... task_id=TASK-001
+  Fetching task
 ```
 
 ### 3. Validation Failure (Example)
 
 ```
-[WARN] http_error: request_id=550e8400-... error_code=INVALID_AMOUNT status_code=400
-  message="Amount must be greater than 0"
-  context={"field": "amount_cents", "value": 0}
-  ac_id="AC-REFUND-001"
-  feature_id="FT-REFUND-CREATION"
+[WARN] http_error: request_id=550e8400-... error_code=INVALID_REQUEST status_code=400
+  message="Task ID is required"
+  context={"field": "task_id"}
+  ac_id="AC-PLT-TASKS-001"
+  feature_id="FT-PLATFORM-TASKS"
 ```
 
-### 4. Successful Creation
+### 4. Successful Response
 
 ```
-[INFO] create_refund: request_id=550e8400-... refund_id=REF-789 order_id=ORD-123 amount_cents=1000
-  Refund created successfully
+[INFO] get_task: request_id=550e8400-... task_id=TASK-001 status=Todo
+  Task retrieved successfully
 ```
 
 ### 5. Response
 
 ```
-HTTP/1.1 201 Created
+HTTP/1.1 200 OK
 X-Request-ID: 550e8400-e29b-41d4-a716-446655440000
 Content-Type: application/json
 
 {
-  "refundId": "REF-789",
-  "orderId": "ORD-123",
-  "amountCents": 1000,
-  "status": "pending"
+  "taskId": "TASK-001",
+  "title": "Implement feature",
+  "status": "Todo"
 }
 ```
 
@@ -301,17 +295,17 @@ error_code="INVALID_AMOUNT"
 
 ### Find errors for an AC
 ```
-ac_id="AC-REFUND-001"
+ac_id="AC-PLT-TASKS-001"
 ```
 
 ### Find errors for a feature
 ```
-feature_id="FT-REFUND-CREATION"
+feature_id="FT-PLATFORM-TASKS"
 ```
 
 ### Find slow requests (with metrics)
 ```
-refund_creation_duration_seconds > 1.0
+request_duration_seconds > 1.0
 ```
 
 ## Adding Metrics
@@ -390,17 +384,13 @@ curl -v -H "X-Request-ID: my-test-id" http://localhost:8080/health
 ### Test Error Responses
 
 ```bash
-# Trigger validation error
-curl -X POST http://localhost:8080/refunds \
-  -H "Content-Type: application/json" \
-  -d '{"orderId": "ORD-123", "amountCents": 0}'
+# Test platform endpoints
+curl http://localhost:8080/platform/status | jq
 
 # Response:
 {
-  "code": "INVALID_AMOUNT",
-  "message": "Amount must be greater than 0",
-  "ac_id": "AC-REFUND-001",
-  "feature_id": "FT-REFUND-CREATION"
+  "service": { "service_id": "template-service", ... },
+  "governance": { "ledger": { "stories": 5, ... }, ... }
 }
 ```
 

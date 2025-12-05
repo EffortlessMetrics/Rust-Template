@@ -1,4 +1,4 @@
 environments:
-  dev: { refunds_v2: 100 }
-  staging: { refunds_v2: 50 }
-  prod: { refunds_v2: 0 }
+  dev: { platform_v2: 100 }
+  staging: { platform_v2: 50 }
+  prod: { platform_v2: 0 }

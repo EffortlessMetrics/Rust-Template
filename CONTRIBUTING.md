@@ -298,7 +298,7 @@ Use topic branches:
 
 Example:
 
-* `feat/app-http-refund-api`
+* `feat/app-http-tasks-api`
 * `fix/policy-k8s-envfrom`
 * `docs/llm-workflow-clarifications`
 
@@ -306,7 +306,7 @@ Example:
 
 Short, imperative subject:
 
-* `feat(app-http): add refund endpoint`
+* `feat(app-http): add tasks endpoint`
 * `fix(policy): avoid var shadowing in envFrom rule`
 * `docs: clarify Nix-first dev workflow`
 

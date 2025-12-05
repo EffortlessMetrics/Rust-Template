@@ -864,12 +864,12 @@ Connect your existing tests to acceptance criteria for traceability.
 
 List 5-10 core capabilities your service provides:
 
-Example for a payment service:
-- Process payments
-- Refund transactions
-- Check transaction status
-- Validate payment methods
-- Handle webhooks
+Example for a task management service:
+- Create tasks
+- Update task status
+- List tasks by status
+- Assign tasks to users
+- Track task history
 
 ### 6.2: Create ACs for Each
 
@@ -877,26 +877,26 @@ Update `specs/spec_ledger.yaml`:
 
 ```yaml
 stories:
-  - id: US-PAYMENTS-001
-    title: "Payment Processing"
+  - id: US-TASKS-001
+    title: "Task Management"
     requirements:
-      - id: REQ-PAY-PROCESS
-        title: "Process Payment Requests"
+      - id: REQ-TASK-CRUD
+        title: "Task CRUD Operations"
         acceptance_criteria:
-          - id: AC-PAY-001
-            text: "Service accepts valid payment requests and returns transaction ID"
-            tests: [{ type: unit, path: "crates/core/tests/payments.rs::test_process_payment" }]
+          - id: AC-TASK-001
+            text: "Service accepts valid task creation requests and returns task ID"
+            tests: [{ type: unit, path: "crates/core/tests/tasks.rs::test_create_task" }]
 
-          - id: AC-PAY-002
-            text: "Service rejects invalid payment amounts"
-            tests: [{ type: unit, path: "crates/core/tests/payments.rs::test_invalid_amount" }]
+          - id: AC-TASK-002
+            text: "Service rejects tasks with missing required fields"
+            tests: [{ type: unit, path: "crates/core/tests/tasks.rs::test_invalid_task" }]
 
-      - id: REQ-PAY-REFUND
-        title: "Refund Processed Payments"
+      - id: REQ-TASK-STATUS
+        title: "Task Status Management"
         acceptance_criteria:
-          - id: AC-PAY-003
-            text: "Service can refund completed transactions"
-            tests: [{ type: unit, path: "crates/core/tests/refunds.rs::test_full_refund" }]
+          - id: AC-TASK-003
+            text: "Service can update task status through valid transitions"
+            tests: [{ type: unit, path: "crates/core/tests/tasks.rs::test_status_transition" }]
 ```
 
 ### 6.3: Generate Status Report

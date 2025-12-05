@@ -74,7 +74,7 @@ impl AppError {
 - Integrated request ID middleware into router
 - Enhanced `TraceLayer` to create spans with `request_id` field
 - Updated `health` handler to accept and demonstrate `RequestId` extension
-- Completely rewrote `create_refund` handler with:
+- Demonstrated patterns in platform handlers with:
   - Request ID extraction
   - Enhanced validation with detailed error context
   - AC ID and Feature ID tracking
@@ -88,12 +88,12 @@ impl AppError {
 
 **Before**:
 ```rust
-#[instrument(skip(payload))]
-async fn create_refund(
-    Json(payload): Json<CreateRefundRequest>,
-) -> Result<(StatusCode, Json<CreateRefundResponse>), AppError> {
-    if payload.amount_cents == 0 {
-        return Err(AppError::BadRequest("Amount must be greater than 0".to_string()));
+#[instrument(skip(path))]
+async fn get_task(
+    Path(task_id): Path<String>,
+) -> Result<Json<TaskResponse>, AppError> {
+    if task_id.is_empty() {
+        return Err(AppError::BadRequest("Task ID required".to_string()));
     }
     // ...
 }
@@ -102,28 +102,24 @@ async fn create_refund(
 **After**:
 ```rust
 #[instrument(
-    skip(_request_id, payload),
-    fields(
-        order_id = %payload.order_id,
-        amount_cents = payload.amount_cents,
-    )
+    skip(_request_id, path),
+    fields(task_id = %task_id)
 )]
-async fn create_refund(
+async fn get_task(
     Extension(_request_id): Extension<RequestId>,
-    Json(payload): Json<CreateRefundRequest>,
-) -> Result<(StatusCode, Json<CreateRefundResponse>), AppError> {
-    info!("Processing refund creation request");
+    Path(task_id): Path<String>,
+) -> Result<Json<TaskResponse>, AppError> {
+    info!("Fetching task");
 
-    if payload.amount_cents == 0 {
+    if task_id.is_empty() {
         return Err(
             AppError::validation_error(
-                ErrorCode::InvalidAmount,
-                "Amount must be greater than 0"
+                ErrorCode::InvalidRequest,
+                "Task ID is required"
             )
-            .with_context("field", "amount_cents")
-            .with_context("value", payload.amount_cents)
-            .with_ac_id("AC-REFUND-001")
-            .with_feature_id("FT-REFUND-CREATION")
+            .with_context("field", "task_id")
+            .with_ac_id("AC-PLT-TASKS-001")
+            .with_feature_id("FT-PLATFORM-TASKS")
         );
     }
     // ...
@@ -174,32 +170,28 @@ async fn handler(Extension(_request_id): Extension<RequestId>) -> Result<Respons
 AppError::bad_request("Invalid input")
 
 // Rich error with full context
-AppError::validation_error(ErrorCode::InvalidAmount, "Amount must be positive")
-    .with_context("field", "amount_cents")
-    .with_context("value", payload.amount_cents)
-    .with_ac_id("AC-REFUND-001")
-    .with_feature_id("FT-REFUND-CREATION")
+AppError::validation_error(ErrorCode::InvalidRequest, "Task ID is required")
+    .with_context("field", "task_id")
+    .with_context("value", task_id)
+    .with_ac_id("AC-PLT-TASKS-001")
+    .with_feature_id("FT-PLATFORM-TASKS")
 ```
 
 ### 3. Structured Logging
 ```rust
 // All fields are structured and queryable
 info!(
-    refund_id = %refund.id,
-    order_id = %payload.order_id,
-    amount_cents = payload.amount_cents,
-    "Refund created successfully"
+    task_id = %task.id,
+    status = %task.status,
+    "Task retrieved successfully"
 );
 ```
 
 ### 4. Instrumentation
 ```rust
 #[instrument(
-    skip(_request_id, payload),
-    fields(
-        order_id = %payload.order_id,
-        amount_cents = payload.amount_cents,
-    )
+    skip(_request_id),
+    fields(task_id = %task_id)
 )]
 async fn handler(...) { }
 ```
@@ -207,10 +199,10 @@ async fn handler(...) { }
 ### 5. Metrics Integration (Stubbed)
 ```rust
 // METRICS STUB: Increment validation error counter
-// metrics::counter!("refund_validation_errors_total", "field" => "amount").increment(1);
+// metrics::counter!("request_validation_errors_total", "field" => "task_id").increment(1);
 
-// METRICS STUB: Start timer for refund creation latency
-// let _timer = metrics::histogram!("refund_creation_duration_seconds").start_timer();
+// METRICS STUB: Start timer for request latency
+// let _timer = metrics::histogram!("request_duration_seconds").start_timer();
 ```
 
 ## Observability Story
@@ -241,25 +233,25 @@ async fn handler(...) { }
 ### Log Output Example
 
 ```
-INFO http_request: method=POST uri=/refunds request_id=550e8400-e29b-41d4-a716-446655440000
-INFO create_refund: request_id=550e8400-... order_id=ORD-123 amount_cents=1000
-  Processing refund creation request
+INFO http_request: method=GET uri=/platform/tasks/TASK-001 request_id=550e8400-e29b-41d4-a716-446655440000
+INFO get_task: request_id=550e8400-... task_id=TASK-001
+  Fetching task
 
-WARN http_error: request_id=550e8400-... error_code=INVALID_AMOUNT status_code=400
-  message="Amount must be greater than 0"
-  context={"field": "amount_cents", "value": 0}
-  ac_id="AC-REFUND-001"
-  feature_id="FT-REFUND-CREATION"
+WARN http_error: request_id=550e8400-... error_code=INVALID_REQUEST status_code=400
+  message="Task ID is required"
+  context={"field": "task_id"}
+  ac_id="AC-PLT-TASKS-001"
+  feature_id="FT-PLATFORM-TASKS"
 ```
 
 ### Error Response Example
 
 ```json
 {
-  "code": "INVALID_AMOUNT",
-  "message": "Amount must be greater than 0",
-  "ac_id": "AC-REFUND-001",
-  "feature_id": "FT-REFUND-CREATION"
+  "code": "INVALID_REQUEST",
+  "message": "Task ID is required",
+  "ac_id": "AC-PLT-TASKS-001",
+  "feature_id": "FT-PLATFORM-TASKS"
 }
 ```
 
@@ -284,15 +276,11 @@ curl -v http://localhost:8080/health
 # Test request ID preservation
 curl -v -H "X-Request-ID: my-test-id" http://localhost:8080/health
 
-# Test validation error
-curl -X POST http://localhost:8080/refunds \
-  -H "Content-Type: application/json" \
-  -d '{"orderId": "ORD-123", "amountCents": 0}'
+# Test platform endpoints
+curl http://localhost:8080/platform/status | jq
 
-# Test successful creation
-curl -X POST http://localhost:8080/refunds \
-  -H "Content-Type: application/json" \
-  -d '{"orderId": "ORD-123", "amountCents": 1000}'
+# Test docs index
+curl http://localhost:8080/platform/docs/index | jq
 ```
 
 ## Metrics Integration
@@ -303,7 +291,7 @@ The implementation includes detailed stubs showing where to add metrics:
 2. **Error Metrics** - Count errors by code, status, AC, and feature
 3. **Request Latency** - Histogram of request durations
 4. **Validation Errors** - Count validation errors by field
-5. **Business Metrics** - Track business events (refunds created, amounts, etc.)
+5. **Business Metrics** - Track business events (tasks created, status changes, etc.)
 
 To enable metrics, see `OBSERVABILITY.md` section "Adding Metrics".
 
@@ -369,5 +357,5 @@ This implementation provides a production-ready observability foundation with:
 - ✅ Full test coverage
 - ✅ Clean architecture integration
 
-The patterns demonstrated in the `health` and `create_refund` handlers serve as reference implementations for the rest of the service.
+The patterns demonstrated in the `health` and platform handlers serve as reference implementations for the rest of the service.
 

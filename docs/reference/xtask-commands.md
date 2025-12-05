@@ -312,11 +312,11 @@ cargo run -p xtask -- bdd
 
 ```
 Running acceptance tests...
-Feature: Refunds
-  Scenario: Create a refund
-   ✔  Given an order "ORD-1" totalling 5000 cents
-   ✔  When I POST /refunds with { "orderId": "ORD-1", "amountCents": 5000 }
-   ✔  Then I receive 201 with a "refundId"
+Feature: Platform Status
+  Scenario: Platform status returns governance health
+   ✔  Given the service is running
+   ✔  When I GET /platform/status
+   ✔  Then I receive 200 with governance data
 [Summary]
 1 feature
 1 scenario (1 passed)

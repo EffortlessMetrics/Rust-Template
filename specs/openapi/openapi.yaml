@@ -15,9 +15,6 @@ info:
     - /platform/status - Governance health, ledger counts, policy status
     - /platform/docs/index - Documentation inventory with validation
 
-    **Domain Endpoints** (Replace with your service):
-    - /refunds - Example domain endpoint to adapt or remove
-
   x-template-version: "3.3.6"
   x-schema-version: "1.0"
   x-last-updated: "2025-11-17"
@@ -142,53 +139,6 @@ paths:
                   error:
                     type: string
                     example: "Failed to load documentation index"
-
-  # ==========================================================================
-  # EXAMPLE DOMAIN ENDPOINT
-  # This endpoint is NOT part of the kernel. It's a reference example showing
-  # how to structure domain-specific API endpoints. In your fork:
-  #   - Delete or replace this endpoint with your actual business domain
-  #   - The canonical contract for the kernel is under /platform/*
-  # ==========================================================================
-  /refunds:
-    post:
-      summary: Create a refund
-      operationId: createRefund
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [orderId, amountCents]
-              properties:
-                orderId: { type: string }
-                amountCents: { type: integer, minimum: 0 }
-      responses:
-        "201":
-          description: Refund created successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                required: [refundId, orderId, amountCents, status]
-                properties:
-                  refundId: { type: string, description: "Unique refund identifier" }
-                  orderId: { type: string, description: "Original order identifier" }
-                  amountCents: { type: integer, minimum: 0, description: "Refund amount in cents" }
-                  status: { type: string, enum: [pending, approved, rejected], description: "Refund status" }
-        "400":
-          description: Bad request (e.g., amount is zero)
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        "500":
-          description: Internal error (e.g., refund processing unavailable)
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
 
 components:
   securitySchemes:

@@ -1,83 +1,95 @@
-# Template Foundation vs Examples
+# Template Foundation vs Domain Extension
 
-## Understanding What to Keep and What to Adapt
+## Understanding the Kernel vs Your Domain
 
-This template includes two types of functionality:
+This template provides a **governed platform cell** - a complete foundation that you extend with your domain logic. The kernel contains everything you need for operations and governance; you add your business features.
 
-### 1. **Template Foundation** (Keep and Extend)
+### 1. **Platform Kernel** (Keep and Extend)
 
-These are capabilities that **every service needs**, regardless of domain. They form the operational baseline that you build upon:
+These are capabilities that **every service needs**, regardless of domain. They form the operational and governance baseline:
 
-**Endpoints:**
+**Core Endpoints:**
 - `GET /health` - Health check for monitoring and load balancers
 - `GET /version` - Build information for deployments and debugging
 
+**Platform Introspection Endpoints:**
+- `GET /platform/status` - Governance health, ledger counts, policy status
+- `GET /platform/docs/index` - Documentation inventory with validation
+- `GET /platform/tasks` - Task list for agent consumption
+- `GET /platform/agent/hints` - Prioritized work suggestions for agents
+- `GET /platform/debug/info` - Development debug information
+
 **Specs:**
-- **Ledger**: `US-TPL-001` with `AC-TPL-001` and `AC-TPL-002`
-- **Feature**: `FT-TPL-CORE.yaml` - Template core operations
-- **OpenAPI**: `/health` and `/version` documented under "Template Core"
-- **BDD**: `specs/features/template_core.feature`
+- **Ledger**: `US-TPL-*` with `AC-TPL-*` and `AC-PLT-*`
+- **Feature**: `specs/features/template_core.feature`, `specs/features/platform.feature`
+- **OpenAPI**: Documented under "Template Core" and "Platform Introspection"
+- **BDD**: Step definitions in `crates/acceptance/src/steps/`
 
 **Implementation:**
-- `crates/app-http/src/lib.rs` - Core handlers marked as "Template Core"
-- Step definitions in `crates/acceptance/src/steps/template_core.rs`
+- `crates/app-http/src/routes/` - Route handlers
+- `crates/business-core/src/` - Domain and governance logic
+- `crates/spec-runtime/` - Spec ledger and governance kernel
 
-**What to do:** **Keep these** and extend them as your service grows. For example:
+**What to do:** **Keep these** and extend them as your service grows:
 - Add readiness checks to `/health` (database connectivity, etc.)
 - Add more build metadata to `/version` (deployment time, environment)
-- Add new operational endpoints like `/metrics` or `/ready`
+- Add custom platform endpoints for your domain's governance needs
 
 ---
 
-### 2. **Example Features** (Adapt or Replace)
+### 2. **Your Domain Features** (Add in Forks)
 
-These demonstrate **how to add domain logic** to the template. They're realistic examples, but specific to a sample domain (refunds):
+When you fork this template for your service, you add your business domain on top of the kernel:
 
-**Endpoints:**
-- `POST /refunds` - Create a refund (example business operation)
+**Pattern to follow:**
+1. Add AC to `specs/spec_ledger.yaml`
+2. Write BDD scenario in `specs/features/your_domain.feature`
+3. Implement handler in `crates/app-http/src/routes/`
+4. Add domain logic in `crates/business-core/src/`
+5. Add step definitions in `crates/acceptance/src/steps/`
 
-**Specs:**
-- **Ledger**: `US-42` with `REQ-411` and `AC-123`
-- **Feature**: `FT-123.yaml` - Refund creation (marked as "Example")
-- **OpenAPI**: `/refunds` documented under "Example Domain Endpoint"
-- **BDD**: `specs/features/refund.feature`
+**Example: Adding a Task Management API**
 
-**Implementation:**
-- `crates/app-http/src/lib.rs` - Refund handler marked as "Example Domain"
-- `crates/core/src/lib.rs` - `refund_ok()` domain logic
-- `crates/model/src/lib.rs` - `Refund` entity
-- Step definitions in `crates/acceptance/src/steps/refunds.rs`
+```yaml
+# specs/spec_ledger.yaml
+stories:
+  - id: US-TASKS-001
+    title: "Task Management"
+    requirements:
+      - id: REQ-TASKS-CRUD
+        text: "Users can create and manage tasks"
+        acceptance_criteria:
+          - id: AC-TASKS-CREATE
+            text: "POST /tasks creates a new task"
+            tests: [{ type: bdd, tag: "@AC-TASKS-CREATE" }]
+```
 
-**What to do:** **Adapt these** to your service's actual domain:
-1. Study how the refund feature is structured end-to-end
-2. Identify the pattern: spec → AC → BDD → handler → domain
-3. Replace "refund" with your domain (e.g., "invoice", "user", "order")
-4. Follow the same layering and testing approach
-5. Delete the refund example once you've built your first real feature
+**What to do:** Use the platform kernel as your foundation and add domain endpoints following the same patterns.
 
 ---
 
 ## Why This Distinction Matters
 
-### Template Foundation = Stability
+### Platform Kernel = Stability
 
-The core endpoints provide a **stable baseline** that:
+The kernel provides a **stable baseline** that:
 - Works out of the box for any service
 - Meets operational requirements (monitoring, deployments)
+- Provides governance visibility (`/platform/*`)
 - Doesn't need to be rewritten for your domain
 - Can be extended without being replaced
 
-### Examples = Learning Path
+### Domain Features = Your Business Value
 
-The refund example provides a **learning path** that:
-- Shows the complete vertical slice (specs → tests → code)
-- Demonstrates hexagonal architecture in practice
-- Proves the template's enforcement mechanisms work
-- Gives you a concrete pattern to replicate
+Your domain features provide **business value** that:
+- Follows the same vertical slice pattern (specs → tests → code)
+- Benefits from hexagonal architecture
+- Inherits the kernel's enforcement mechanisms
+- Gets governance tracking for free via AC linkage
 
 Think of it like a house:
-- **Foundation** = plumbing, electrical, framing (you keep and extend)
-- **Example** = furniture arrangement (you adapt to your lifestyle)
+- **Kernel** = foundation, plumbing, electrical (you keep and extend)
+- **Domain** = rooms and furniture (you design for your needs)
 
 ---
 
@@ -86,25 +98,26 @@ Think of it like a house:
 ### When Cloning This Template for a New Service
 
 **Keep:**
-- ✅ All template-core endpoints (`/health`, `/version`)
-- ✅ US-TPL-001 and associated ACs
-- ✅ `template_core.feature` and step definitions
-- ✅ Core handlers and DTOs in `app-http`
+- All template-core endpoints (`/health`, `/version`)
+- All platform introspection endpoints (`/platform/*`)
+- US-TPL-* and associated ACs
+- Core feature files and step definitions
 
-**Adapt:**
-- 🔄 Refund endpoints → Your domain endpoints
-- 🔄 US-42, AC-123 → Your stories and ACs
-- 🔄 `refund.feature` → Your domain features
-- 🔄 Domain handlers, core logic, models
+**Add:**
+- Your domain endpoints
+- Your domain stories and ACs
+- Your domain features
+- Your domain handlers, core logic, models
 
-**Delete (once confident):**
-- ❌ Refund-specific code (after you've built your first real feature)
-- ❌ Example specs (after you've replaced them with real ones)
+**Update:**
+- `specs/service_metadata.yaml` with your service identity
+- README.md with your service description
+- Documentation with your domain context
 
 ---
 
 ## See Also
 
-- [First AC Change Tutorial](../tutorials/first-ac-change.md) - How to add your first real AC
+- [First AC Change Tutorial](../tutorials/first-ac-change.md) - How to add your first AC
 - [Add HTTP Endpoint](../how-to/add-http-endpoint.md) - Step-by-step endpoint addition
 - [Architecture Explanation](./architecture.md) - Understanding hexagonal design

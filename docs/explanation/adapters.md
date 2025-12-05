@@ -957,12 +957,9 @@ specs/db/
 
 ```
 specs/proto/
-├── task/
-│   └── v1/
-│       └── task.proto
-└── payments/
+└── task/
     └── v1/
-        └── refund.proto
+        └── task.proto
 ```
 
 **Workflow:**

@@ -86,17 +86,17 @@ crates/
 
 **Example:**
 ```rust
-async fn create_refund(Json(req): Json<CreateRefundRequest>) -> Result<...> {
+async fn get_task(Path(task_id): Path<String>) -> Result<...> {
     // Validate HTTP inputs
-    if req.amount_cents == 0 {
+    if task_id.is_empty() {
         return Err(AppError::BadRequest(...));
     }
 
     // Call domain
-    let refund = core::refunds::create(req.order_id, req.amount_cents)?;
+    let task = core::tasks::get(&task_id)?;
 
     // Translate to HTTP response
-    Ok(Json(CreateRefundResponse::from(refund)))
+    Ok(Json(TaskResponse::from(task)))
 }
 ```
 
@@ -114,15 +114,16 @@ async fn create_refund(Json(req): Json<CreateRefundRequest>) -> Result<...> {
 
 **Example:**
 ```rust
-pub fn refund_ok() -> bool {
-    true
+pub fn validate_task_id(id: &str) -> bool {
+    id.starts_with("TASK-")
 }
 
-pub fn create_refund(order_id: &str, amount: u64) -> Result<Refund> {
-    if amount == 0 {
-        return Err(DomainError::InvalidAmount);
+pub fn update_task_status(task: &mut Task, new_status: TaskStatus) -> Result<()> {
+    if !task.can_transition_to(new_status) {
+        return Err(DomainError::InvalidTransition);
     }
-    Ok(Refund::new(order_id, amount))
+    task.status = new_status;
+    Ok(())
 }
 ```
 
@@ -131,9 +132,9 @@ pub fn create_refund(order_id: &str, amount: u64) -> Result<Refund> {
 **Role:** Define domain concepts as Rust types.
 
 **Responsibilities:**
-- Value objects (OrderId, Amount).
-- Entities (Refund, Order).
-- Domain enums (RefundStatus).
+- Value objects (TaskId, AcId).
+- Entities (Task, Requirement).
+- Domain enums (TaskStatus).
 - Serde derives for serialization.
 
 **Anti-pattern:** Putting business logic here. Entities are data; `core/` holds logic.
@@ -204,20 +205,20 @@ The template follows hexagonal (ports and adapters) architecture:
 **Correct:**
 ```rust
 // app-http/src/main.rs
-use core::refunds;
+use core::tasks;
 
-async fn create_refund(...) {
-    let refund = core::refunds::create(...)?; // Adapter calls domain
-    Ok(Json(refund))
+async fn get_task(...) {
+    let task = core::tasks::get(...)?; // Adapter calls domain
+    Ok(Json(task))
 }
 ```
 
 **Wrong:**
 ```rust
-// core/src/refunds.rs
+// core/src/tasks.rs
 use app_http::handlers; // Domain depends on adapter - avoid.
 
-pub fn create() {
+pub fn get() {
     handlers::send_response(...);
 }
 ```
@@ -257,16 +258,16 @@ The template encodes three governance layers:
 **Structure:**
 ```yaml
 stories:
-  - id: US-001
-    title: "Refund Processing"
+  - id: US-TPL-001
+    title: "Core HTTP Endpoints"
     requirements:
-      - id: REQ-001
+      - id: REQ-TPL-HEALTH
         acceptance_criteria:
-          - id: AC-123
-            text: "Customer can create refund"
+          - id: AC-TPL-001
+            text: "GET /health returns 200 with status ok"
             tests:
               - type: bdd
-                tag: "@AC-123"
+                tag: "@AC-TPL-001"
 ```
 
 **Governance:** Every AC must have tests (enforced by `policy/ledger.rego`).
@@ -323,16 +324,16 @@ RUST_LOG=app_http=trace cargo run    # Specific crate
 
 **Pattern:** Use `#[instrument]` on handlers.
 ```rust
-#[instrument(skip(payload))]
-async fn create_refund(Json(payload): Json<CreateRefundRequest>) -> Result<...> {
-    info!(order_id = %payload.order_id, amount = payload.amount_cents, "Creating refund");
+#[instrument(skip(path))]
+async fn get_task(Path(task_id): Path<String>) -> Result<...> {
+    info!(task_id = %task_id, "Fetching task");
     // ...
 }
 ```
 
 **Output:**
 ```
-INFO app_http::create_refund{order_id="ORD-123" amount=5000}: Creating refund
+INFO app_http::get_task{task_id="TASK-001"}: Fetching task
 ```
 
 ### Request Tracing
@@ -341,7 +342,7 @@ INFO app_http::create_refund{order_id="ORD-123" amount=5000}: Creating refund
 
 ```rust
 let app = Router::new()
-    .route("/refunds", post(create_refund))
+    .route("/platform/tasks", get(list_tasks))
     .layer(TraceLayer::new_for_http());  // Adds a span per request
 ```
 

@@ -1,23 +1,21 @@
 <!-- doclint:disable orphan-version -->
 <!-- External: This document references external tool versions that are not tied to template version. -->
-# Tutorial: Getting Started with the Rust Template
+# Tutorial: Getting Started with the Rust-as-Spec Platform Cell
 
 **Time:** 30 minutes
 **Goal:** Get the template running, understand core concepts, make your first change
 **Prerequisites:** Git, Nix installed
-
-> **⚠️ Note:** This tutorial references a "refunds" feature as a teaching example. The template itself only ships with template-core endpoints (`/health`, `/version`, `/api/echo`). References to refunds are fictional examples you would implement following the patterns shown. See `docs/PILOT-PROJECT-PLAN.md` for a complete real-world example using a Task Management API.
 
 ---
 
 ## What You'll Learn
 
 By the end of this tutorial, you'll have:
-- ✅ Cloned and validated the template
-- ✅ Run all core commands (check, bdd, bundle)
-- ✅ Started the HTTP service
-- ✅ Made a simple change to an endpoint
-- ✅ Understood the AC-first workflow
+- Cloned and validated the template
+- Run all core commands (check, bdd, bundle)
+- Started the HTTP service and explored platform endpoints
+- Made a simple change
+- Understood the AC-first workflow
 
 ---
 
@@ -49,13 +47,13 @@ You're now in a shell with all dependencies. To exit later, just type `exit`.
 ### Validate everything works
 
 ```bash
-cargo run -p xtask -- quickstart
+cargo xtask dev-up
 ```
 
 **Expected output:**
 ```
 ======================================
-  Rust Template Quick Start
+  Rust-as-Spec Platform Cell Bootstrap
 ======================================
 
 [1/5] Checking environment...
@@ -67,23 +65,21 @@ cargo run -p xtask -- quickstart
   ✓ Clippy passed
   ✓ Tests passed
 
-[3/5] Running BDD acceptance tests...
-  ✓ BDD scenarios passed
-  ✓ JUnit output created
+[3/5] Running kernel smoke test...
+  ✓ Kernel baseline validated
 
-[4/5] Testing LLM context bundler...
-  ✓ Bundle command executed
-  ✓ Bundle created (2708 bytes)
+[4/5] Installing git hooks...
+  ✓ Pre-commit hook installed
 
-[5/5] Testing helper commands...
-  ✓ Core commands validated
+[5/5] Running AC status...
+  ✓ All template ACs passing
 
 ======================================
-✓ Template validation passed!
+✓ Environment ready!
 ======================================
 ```
 
-If you see this, everything is working! 🎉
+If you see this, everything is working!
 
 ---
 
@@ -100,22 +96,20 @@ code .  # Or vim, emacs, etc.
 Open these files side-by-side to see the architecture:
 
 1. **specs/spec_ledger.yaml** - The source of truth for requirements
-2. **specs/features/refunds.feature** - BDD scenarios
-3. **crates/core/src/lib.rs** - Domain logic
-4. **crates/app-http/src/main.rs** - HTTP endpoints
+2. **specs/features/*.feature** - BDD scenarios
+3. **crates/business-core/src/lib.rs** - Domain logic
+4. **crates/app-http/src/lib.rs** - HTTP endpoints
 
 ### Understand the flow
 
 **Specification → Test → Code → Validation**
 
 ```
-specs/spec_ledger.yaml           (AC-123: "Customer can create refund")
+specs/spec_ledger.yaml           (AC-TPL-001: "GET /health returns 200")
         ↓
-specs/features/refunds.feature   (@AC-123 Gherkin scenario)
+specs/features/health.feature    (@AC-TPL-001 Gherkin scenario)
         ↓
-crates/core/src/lib.rs           (refund_ok() function)
-        ↓
-crates/app-http/src/main.rs      (POST /refunds endpoint)
+crates/app-http/src/lib.rs       (health endpoint handler)
         ↓
 target/junit/acceptance.xml      (Test results)
 ```
@@ -127,8 +121,7 @@ target/junit/acceptance.xml      (Test results)
 ### Start the service
 
 ```bash
-cd crates/app-http
-cargo run
+cargo run -p app-http
 ```
 
 **Expected output:**
@@ -137,36 +130,40 @@ INFO app_http: Starting HTTP service
 INFO app_http: Listening on 0.0.0.0:8080
 ```
 
-### Test the endpoints
+### Test the core endpoints
 
 In another terminal:
 
 ```bash
-# Health check
+# Health check (AC-TPL-001)
 curl http://localhost:8080/health
 
-# Expected: {"status":"ok","service":"refunds-api"}
+# Expected: {"status":"ok","service":"template-service"}
 ```
 
 ```bash
-# Create a refund
-curl -X POST http://localhost:8080/refunds \
-  -H "Content-Type: application/json" \
-  -d '{"order_id":"ORD-123","amount_cents":5000}'
+# Version info (AC-TPL-002)
+curl http://localhost:8080/version
 
-# Expected: {"refund_id":"REF-...","order_id":"ORD-123","amount_cents":5000,"status":"pending"}
+# Expected: {"version":"3.3.6","gitSha":"abc123..."}
 ```
 
-### See structured logs
+### Explore platform introspection endpoints
 
-Notice the server logs when you make requests:
+These are the kernel's governance surfaces:
 
+```bash
+# Platform status - governance health, ledger counts, policy status
+curl http://localhost:8080/platform/status | jq
+
+# Documentation index with validation
+curl http://localhost:8080/platform/docs/index | jq
+
+# Debug info for development
+curl http://localhost:8080/platform/debug/info | jq
 ```
-INFO app_http::create_refund{order_id="ORD-123" amount=5000}: Creating refund
-INFO app_http::create_refund{order_id="ORD-123" amount=5000}: Refund created refund_id="REF-abc123"
-```
 
-This is structured logging in action - `order_id` and `amount` are queryable fields.
+The `/platform/*` endpoints expose the same governance data that CI enforces.
 
 ### Stop the service
 
@@ -176,43 +173,22 @@ Press `Ctrl+C` in the server terminal.
 
 ## Step 4: Make Your First Change (10 minutes)
 
-Let's add a new field to the refund response.
+Let's add a new debug field to `/platform/debug/info`.
 
-### 1. Update the response DTO
+### 1. Find the handler
 
-**File:** `crates/app-http/src/main.rs`
+**File:** `crates/app-http/src/routes/platform.rs`
 
-Find the `CreateRefundResponse` struct and add a `created_at` field:
+Look for the `debug_info` handler function.
 
-```rust
-#[derive(Debug, Serialize)]
-struct CreateRefundResponse {
-    refund_id: String,
-    order_id: String,
-    amount_cents: u64,
-    status: String,
-    created_at: String,  // ← Add this
-}
-```
+### 2. Add a new field
 
-### 2. Update the handler
-
-In the `create_refund` function, add the timestamp:
-
-```rust
-Ok(Json(CreateRefundResponse {
-    refund_id: refund.id,
-    order_id: payload.order_id,
-    amount_cents: payload.amount_cents,
-    status: "pending".to_string(),
-    created_at: chrono::Utc::now().to_rfc3339(),  // ← Add this
-}))
-```
+In the debug info response struct, add a `template_version` field.
 
 ### 3. Run checks
 
 ```bash
-cargo run -p xtask -- check
+cargo xtask check
 ```
 
 **Expected:**
@@ -225,30 +201,13 @@ Running tests...
 
 ### 4. Test the change
 
-Start the server again:
+Start the server again and verify:
 ```bash
-cargo run -p app-http
+cargo run -p app-http &
+curl http://localhost:8080/platform/debug/info | jq .template_version
 ```
 
-Make a request:
-```bash
-curl -X POST http://localhost:8080/refunds \
-  -H "Content-Type: application/json" \
-  -d '{"order_id":"ORD-456","amount_cents":3000}'
-```
-
-**Expected response now includes `created_at`:**
-```json
-{
-  "refund_id": "REF-...",
-  "order_id": "ORD-456",
-  "amount_cents": 3000,
-  "status": "pending",
-  "created_at": "2025-11-13T10:30:00Z"
-}
-```
-
-Success! You've made your first change. 🎉
+Success! You've made your first change.
 
 ---
 
@@ -265,43 +224,37 @@ The change you just made was *not* AC-first. Let's see the proper workflow.
 4. Validate: Run xtask bdd, check feature_status.md
 ```
 
-### Example: Adding "refund reason" field (New AC)
+### Example: Adding a new platform endpoint
 
-> **Note**: We're creating a **new** AC (AC-124) as an example. It doesn't exist yet in the template's `spec_ledger.yaml`.
-
-**1. Update spec (`specs/spec_ledger.yaml`):**
-
-Add this new AC under the existing `AC-123`:
+**1. Add AC to spec (`specs/spec_ledger.yaml`):**
 
 ```yaml
 acceptance_criteria:
-  - id: AC-124  # ← NEW: Add this AC
-    text: "Refund request includes optional reason"
+  - id: AC-PLT-NEW
+    text: "GET /platform/metrics returns prometheus format"
     tests:
       - type: bdd
-        tag: "@AC-124"
+        tag: "@AC-PLT-NEW"
 ```
 
-**2. Write scenario (`specs/features/refunds.feature`):**
-
-Add this new scenario to the feature file:
+**2. Write scenario (`specs/features/platform.feature`):**
 
 ```gherkin
-@AC-124  # ← References the new AC you just added
-Scenario: Create refund with reason
-  Given an order "ORD-789" totalling 10000 cents
-  When I POST /refunds with { "orderId": "ORD-789", "amountCents": 10000, "reason": "damaged goods" }
-  Then I receive 201 with a "refundId"
-  And the response includes "reason" with value "damaged goods"
+@AC-PLT-NEW
+Scenario: Platform metrics endpoint returns prometheus format
+  When I GET /platform/metrics
+  Then I receive 200
+  And the response content-type is "text/plain"
+  And the response contains "http_requests_total"
 ```
 
-**3. Implement (update DTOs and handler)**
+**3. Implement (add handler and wire route)**
 
 **4. Validate:**
 ```bash
-cargo run -p xtask -- bdd
-cargo run -p xtask -- ac-status
-cat docs/feature_status.md  # ← AC-124 should show as passing
+cargo xtask bdd
+cargo xtask ac-status
+cat docs/feature_status.md  # AC-PLT-NEW should show as passing
 ```
 
 ### Why AC-First?
@@ -320,40 +273,39 @@ The template includes LLM context bundler for AI-assisted coding.
 ### Generate a bundle
 
 ```bash
-cargo run -p xtask -- bundle implement_ac
+cargo xtask bundle implement_ac
 ```
 
 **Output:**
 ```
 Generating LLM context bundle for task: implement_ac
-Bundle written to: .llm/bundle/implement_ac.md
+Bundle written to: bundle/implement_ac/context.md
 ```
 
 ### Look at the bundle
 
 ```bash
-cat .llm/bundle/implement_ac.md
+cat bundle/implement_ac/context.md
 ```
 
 You'll see it includes:
 - specs/spec_ledger.yaml
 - specs/features/*.feature
-- crates/core/src/**
-- crates/acceptance/src/**
+- Relevant source files
 
 ### Use it with an LLM
 
-Copy the bundle content and paste into ChatGPT/Claude with a prompt like:
+Copy the bundle content and paste into an LLM with a prompt like:
 
-> "Looking at this codebase context, implement AC-124: 'Refund request includes optional reason'. Show me the diffs for:
-> 1. CreateRefundRequest DTO
-> 2. Handler logic
+> "Looking at this codebase context, implement AC-PLT-METRICS: 'Platform metrics returns prometheus format'. Show me the diffs for:
+> 1. Route registration
+> 2. Handler implementation
 > 3. BDD step definition"
 
 **Important:** Always validate LLM output:
-- ✅ Run `xtask check`
-- ✅ Run `xtask bdd`
-- ✅ Review diffs carefully
+- Run `xtask check`
+- Run `xtask bdd`
+- Review diffs carefully
 
 See `docs/how-to/use-llm-bundles.md` for best practices.
 
@@ -361,28 +313,28 @@ See `docs/how-to/use-llm-bundles.md` for best practices.
 
 ## What You've Learned
 
-✅ **Environment:** Nix dev shell provides reproducible setup
-✅ **Validation:** `xtask quickstart` verifies everything works
-✅ **Architecture:** Specs → Tests → Core → HTTP (hexagonal)
-✅ **Development:** Make changes, run `xtask check` before committing
-✅ **AC-First:** Proper workflow is spec → test → code → validate
-✅ **LLM Integration:** Context bundles provide focused AI assistance
+- **Environment:** Nix dev shell provides reproducible setup
+- **Validation:** `xtask dev-up` verifies everything works
+- **Architecture:** Specs → Tests → Core → HTTP (hexagonal)
+- **Development:** Make changes, run `xtask check` before committing
+- **AC-First:** Proper workflow is spec → test → code → validate
+- **LLM Integration:** Context bundles provide focused AI assistance
 
 ---
 
 ## Next Steps
 
 ### For Learning:
-- 📖 **Read:** `docs/explanation/architecture.md` - Understand design decisions
-- 📖 **Tutorial:** `docs/tutorials/first-ac-change.md` - Complete AC workflow
+- **Read:** `docs/explanation/architecture.md` - Understand design decisions
+- **Tutorial:** `docs/tutorials/first-ac-change.md` - Complete AC workflow
 
 ### For Building:
-- 🛠️ **How-to:** `docs/how-to/new-service-from-template.md` - Adapt for your service
-- 🛠️ **How-to:** `docs/how-to/use-llm-bundles.md` - LLM best practices
+- **How-to:** `docs/how-to/new-service-from-template.md` - Adapt for your service
+- **How-to:** `docs/how-to/use-llm-bundles.md` - LLM best practices
 
 ### For Reference:
-- 📚 **API:** `TEMPLATE_API.md` - All xtask commands and schemas
-- 📚 **Profiles:** `docs/reference/branch-protection-profiles.md` - CI configuration
+- **API:** `TEMPLATE_API.md` - All xtask commands and schemas
+- **Profiles:** `docs/reference/branch-protection-profiles.md` - CI configuration
 
 ---
 
@@ -397,13 +349,13 @@ See `docs/how-to/use-llm-bundles.md` for best practices.
   ```
 - Check Nix flakes are enabled: `nix-env --version`
 
-**`xtask quickstart` fails on format check:**
+**`xtask dev-up` fails on format check:**
 - Run `cargo fmt --all` first
-- Then retry `cargo run -p xtask -- quickstart`
+- Then retry `cargo xtask dev-up`
 
 **HTTP service won't start:**
 - Check port 8080 isn't in use: `lsof -i :8080`
-- Try different port: Edit `crates/app-http/src/main.rs`, change `8080` to your chosen port
+- Try different port: Set `HTTP_PORT=9090` environment variable
 
 **BDD tests fail:**
 - Check `specs/features/*.feature` syntax
@@ -416,7 +368,7 @@ See `docs/how-to/use-llm-bundles.md` for best practices.
 
 You've now seen the template's core workflow:
 
-1. **Validate:** `xtask quickstart` - everything works
+1. **Validate:** `xtask dev-up` - everything works
 2. **Develop:** Make changes in `crates/`
 3. **Check:** `xtask check` - quality gates pass
 4. **Test:** `xtask bdd` - scenarios pass
@@ -424,5 +376,5 @@ You've now seen the template's core workflow:
 
 The template enforces quality by default - doing things right is the path of least resistance.
 
-Welcome to AC-first, policy-driven, LLM-native, governance-bounded Rust development! 🦀
+Welcome to Rust-as-Spec development!
 

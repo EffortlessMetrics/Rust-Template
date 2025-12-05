@@ -5,8 +5,6 @@ This tutorial walks you through the complete AC-first development loop: from spe
 **Time:** 15 minutes
 **Prerequisites:** Template cloned, Nix devShell working
 
-> **⚠️ Note:** This tutorial uses a "refunds" feature as a teaching example. The template ships with only template-core endpoints. You'll be adding the refund feature from scratch following AC-first development. See `docs/PILOT-PROJECT-PLAN.md` for a complete real-world example.
-
 ---
 
 ## The AC-First Loop
@@ -19,7 +17,7 @@ When developing with this template, follow this order:
 4. **Test**: Run acceptance tests
 5. **Verify**: Check `feature_status.md`
 
-Let's walk through each step.
+Let's walk through each step with a platform-native example.
 
 ---
 
@@ -27,33 +25,95 @@ Let's walk through each step.
 
 Open `specs/spec_ledger.yaml` and add a new AC.
 
-> **Note**: The template currently has `AC-123` for refund creation and `AC-TPL-001/002` for core endpoints. We're adding `AC-124` as a new example.
+We'll add a new platform endpoint for task listing:
 
 ```yaml
 stories:
-  - id: US-42
+  - id: US-PLT-TASKS
+    title: "Platform Task Visibility"
     requirements:
-      - id: REQ-411
+      - id: REQ-PLT-TASKS-LIST
+        text: "Platform exposes task list for agent consumption"
         acceptance_criteria:
-          - id: AC-123
-            text: "Customer can create a refund for an order"
-            tests: [{ type: bdd, tag: "@AC-123" }]
-
-          # Add new AC (you're creating this):
-          - id: AC-124  # ← NEW AC to add
-            text: "Customer can view refund status"
-            tests: [{ type: bdd, tag: "@AC-124" }]
+          - id: AC-PLT-TASKS-LIST
+            text: "GET /platform/tasks returns task list with status"
+            tests: [{ type: bdd, tag: "@AC-PLT-TASKS-LIST" }]
 ```
 
 **Key points:**
-- Use next sequential AC number (AC-124 in this example)
+- Use descriptive AC IDs with prefixes (PLT for platform, TPL for template)
 - Write clear, testable behavior statement
 - Reference the BDD tag you'll use in the scenario
 
 ---
 
+## Step 2: Write the BDD Scenario
+
+Create or update `specs/features/platform_tasks.feature`:
+
+```gherkin
+Feature: Platform Task Visibility
+  As a developer or agent
+  I want to query platform tasks
+  So that I can understand current work items
+
+@AC-PLT-TASKS-LIST
+Scenario: List all tasks
+  When I GET /platform/tasks
+  Then I receive 200
+  And the response is JSON
+  And the response contains "tasks" array
+```
+
+---
+
+## Step 3: Implement the Handler
+
+Add the route and handler in `crates/app-http/src/routes/platform.rs`:
+
+```rust
+pub async fn list_tasks() -> impl IntoResponse {
+    let tasks = vec![]; // Load from tasks.yaml
+    Json(serde_json::json!({ "tasks": tasks }))
+}
+```
+
+Wire it in the router:
+
+```rust
+.route("/platform/tasks", get(list_tasks))
+```
+
+---
+
+## Step 4: Run Tests
+
+```bash
+cargo xtask bdd
+cargo xtask ac-status
+```
+
+---
+
+## Step 5: Verify
+
+Check the feature status report:
+
+```bash
+cat docs/feature_status.md
+```
+
+Your new AC should show as passing.
+
+---
+
 ## Complete Loop Summary
 
-This tutorial demonstrates the AC-first approach. Always start with specs, then scenarios, then code.
+This tutorial demonstrates the AC-first approach:
 
-For full examples and troubleshooting, see the template documentation.
+1. **Spec first** - Define what success looks like
+2. **Test second** - Write the scenario before code
+3. **Code third** - Implement to make tests pass
+4. **Validate always** - Use xtask commands to verify
+
+For full examples and troubleshooting, see `docs/explanation/architecture.md`.
