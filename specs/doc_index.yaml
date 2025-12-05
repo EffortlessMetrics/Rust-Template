@@ -154,7 +154,7 @@ docs:
     doc_type: design_doc
     stories: [US-TPL-PLT-001]
     requirements: [REQ-TPL-PLATFORM-UI]
-    acs: [AC-TPL-PLATFORM-UI-DASHBOARD, AC-TPL-PLATFORM-UI-GRAPH, AC-TPL-PLATFORM-UI-FLOWS]
+    acs: [AC-TPL-PLATFORM-UI-DASHBOARD, AC-TPL-PLATFORM-UI-GRAPH, AC-TPL-PLATFORM-UI-FLOWS, AC-TPL-PLATFORM-UI-CONTRACT]
     adrs: [ADR-0004]
 
   # Platform Runtime Contract (schema/auth/metadata/log hygiene)

@@ -56,5 +56,6 @@ pub mod tasks;
 pub mod tasks_list;
 pub mod test_ac;
 pub mod test_changed;
+pub mod ui_contract_check;
 pub mod version;
 pub mod versioning;

@@ -428,6 +428,7 @@ Quick sanity checks before any kernel release:
 - [ ] `cargo xtask selftest` passes
 - [ ] `cargo xtask docs-check` passes
 - [ ] `cargo xtask contracts-check` passes (docs match selftest steps + AC counts)
+- [ ] `cargo xtask ui-contract-check` passes (UI HTML matches specs/ui_contract.yaml)
 - [ ] `cargo xtask idp-check` passes (OpenAPI + TS consumer + config)
 
 ### Pre-Release Checklist
