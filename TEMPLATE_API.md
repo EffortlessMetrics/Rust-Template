@@ -98,11 +98,13 @@ nix develop -c cargo run -p xtask -- ac-status
 
 **Behavior:**
 1. Reads `specs/spec_ledger.yaml` to extract all AC definitions
-2. Parses `specs/features/**/*.feature` files for `@AC-####` tagged scenarios
-3. Parses `target/junit/acceptance.xml` for test results
+2. **Primary:** Parses AC coverage JSONL (`target/ac/coverage.jsonl`) from BDD harness
+3. **Fallbacks:** JSON report or JUnit XML + feature file parsing (legacy)
 4. Maps testcases → scenarios → ACs
 5. Computes status for each AC (pass/fail/unknown)
 6. Generates `docs/feature_status.md` with status table
+
+See `docs/design/ac-coverage-format.md` for coverage.jsonl specification.
 
 **Exit codes:**
 - `0`: All ACs passed or unknown

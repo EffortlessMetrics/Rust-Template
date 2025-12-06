@@ -1,10 +1,13 @@
 use anyhow::Result;
 use colored::Colorize;
 use std::collections::{BTreeMap, HashMap};
+use std::fs;
 use std::path::Path;
 use std::path::PathBuf;
 
-use super::ac_parsing::{AcStatus, parse_cucumber_json, parse_features, parse_junit, parse_ledger};
+use super::ac_parsing::{
+    AcStatus, parse_ac_coverage, parse_cucumber_json, parse_features, parse_junit, parse_ledger,
+};
 
 pub fn run(args: AcCoverageArgs) -> Result<()> {
     println!("{}", "📊 Computing AC coverage...".blue().bold());
@@ -18,24 +21,42 @@ pub fn run(args: AcCoverageArgs) -> Result<()> {
 
     let (all_acs, acs_by_req) = parse_ledger(ledger_path)?;
 
-    // Parse scenarios from features
+    // Parse scenarios from features (for fallback path)
     let scenarios = parse_features(&args.features_dir)?;
 
-    // Parse test results
-    let ac_results = if args.json_report.exists() {
+    // PRIMARY PATH: AC Coverage JSONL (streams results, resilient to exit())
+    // The coverage.jsonl file is the preferred source as it flushes on each
+    // scenario completion and doesn't rely on Drop semantics.
+    //
+    // FALLBACK PATHS:
+    // 1. Cucumber JSON report
+    // 2. JUnit XML + feature file parsing (legacy)
+    let coverage_exists = args.coverage.exists()
+        && fs::metadata(&args.coverage).map(|m| m.len() > 0).unwrap_or(false);
+
+    let ac_results = if coverage_exists {
+        println!("  Using primary source: {}", args.coverage.display());
+        let (_, results) = parse_ac_coverage(&args.coverage)?;
+        results
+    } else if args.json_report.exists() {
+        println!("  Coverage not found; falling back to JSON: {}", args.json_report.display());
         parse_cucumber_json(&args.json_report).or_else(|_| {
-            // Fallback if JSON doesn't exist or is invalid
+            // Fallback if JSON is invalid
             if args.junit.exists() {
+                println!("  JSON invalid; falling back to JUnit: {}", args.junit.display());
                 parse_junit(&args.junit, &scenarios)
             } else {
                 Ok(HashMap::new())
             }
         })?
     } else if args.junit.exists() {
+        println!("  Coverage and JSON not found; falling back to JUnit: {}", args.junit.display());
         parse_junit(&args.junit, &scenarios)?
     } else {
+        println!("  ⚠ No test results found. Run BDD tests first: cargo xtask bdd");
         HashMap::new()
     };
+    println!();
 
     // Determine AC statuses
     let mut ac_statuses: HashMap<String, AcStatus> = HashMap::new();
@@ -48,7 +69,80 @@ pub fn run(args: AcCoverageArgs) -> Result<()> {
     }
 
     // Generate report
-    print_coverage_report(&all_acs, &acs_by_req, &ac_statuses)?;
+    if args.todo_only {
+        print_todo_backlog(&all_acs, &acs_by_req, &ac_statuses)?;
+    } else {
+        print_coverage_report(&all_acs, &acs_by_req, &ac_statuses)?;
+    }
+
+    Ok(())
+}
+
+/// Print a focused backlog of ACs that need BDD scenarios.
+///
+/// Used by `cargo xtask ac-coverage --todo` to show actionable work items.
+fn print_todo_backlog(
+    all_acs: &HashMap<String, String>,
+    _acs_by_req: &BTreeMap<String, Vec<String>>,
+    ac_statuses: &HashMap<String, AcStatus>,
+) -> Result<()> {
+    // Collect unknown ACs grouped by requirement
+    let mut unknowns_by_req: BTreeMap<String, Vec<String>> = BTreeMap::new();
+    for (ac_id, status) in ac_statuses {
+        if *status == AcStatus::Unknown
+            && let Some(req_id) = all_acs.get(ac_id)
+        {
+            unknowns_by_req.entry(req_id.clone()).or_default().push(ac_id.clone());
+        }
+    }
+
+    if unknowns_by_req.is_empty() {
+        println!("{} {} All ACs have BDD coverage!", "🎉".bold(), "✓".green());
+        println!();
+        println!("Nothing in the backlog. Run `cargo xtask ac-coverage` for full report.");
+        return Ok(());
+    }
+
+    // Count totals
+    let total_unknown: usize = unknowns_by_req.values().map(|v| v.len()).sum();
+    let total_reqs = unknowns_by_req.len();
+
+    println!("{} Coverage Backlog", "📋".bold());
+    println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+    println!();
+    println!(
+        "  {} ACs need BDD scenarios across {} requirements",
+        total_unknown.to_string().yellow().bold(),
+        total_reqs
+    );
+    println!();
+
+    // Print as a simple checklist
+    let mut item_num = 1;
+    for (req_id, mut ac_ids) in unknowns_by_req {
+        ac_ids.sort();
+        println!("  {}", req_id.cyan().bold());
+        for ac_id in ac_ids {
+            println!("    [ ] {}. {}", item_num, ac_id);
+            item_num += 1;
+        }
+        println!();
+    }
+
+    // Quick start command
+    if let Some(first_ac) =
+        ac_statuses.iter().find(|(_, s)| **s == AcStatus::Unknown).map(|(id, _)| id)
+    {
+        println!("{} Quick Start", "🚀".bold());
+        println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+        println!();
+        println!(
+            "  {} {}",
+            "$".dimmed(),
+            format!("cargo xtask ac-suggest-scenarios {}", first_ac).cyan()
+        );
+        println!();
+    }
 
     Ok(())
 }
@@ -133,8 +227,14 @@ pub struct AcCoverageArgs {
     #[allow(dead_code)]
     pub ledger: PathBuf,
     pub features_dir: PathBuf,
+    /// Primary source: AC coverage JSONL (resilient to cucumber exit())
+    pub coverage: PathBuf,
+    /// Fallback: JUnit XML from acceptance tests
     pub junit: PathBuf,
+    /// Fallback: Cucumber JSON report
     pub json_report: PathBuf,
+    /// Show only must_have_ac ACs with Unknown status (coverage backlog)
+    pub todo_only: bool,
 }
 
 impl Default for AcCoverageArgs {
@@ -142,8 +242,10 @@ impl Default for AcCoverageArgs {
         Self {
             ledger: PathBuf::from("specs/spec_ledger.yaml"),
             features_dir: PathBuf::from("specs/features"),
+            coverage: PathBuf::from("target/ac/coverage.jsonl"),
             junit: PathBuf::from("target/junit/acceptance.xml"),
             json_report: PathBuf::from("target/ac_report.json"),
+            todo_only: false,
         }
     }
 }

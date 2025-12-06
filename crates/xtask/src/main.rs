@@ -130,6 +130,9 @@ enum Commands {
         /// Output in JSON format
         #[arg(long)]
         json: bool,
+        /// Filter to a specific AC ID (e.g., AC-KERN-001)
+        #[arg(long)]
+        ac: Option<String>,
     },
 
     /// Create new acceptance criterion
@@ -149,7 +152,11 @@ enum Commands {
 
     /// Show AC coverage grouped by requirement (which ACs need BDD scenarios)
     #[command(next_help_heading = "📋 Acceptance Criteria")]
-    AcCoverage,
+    AcCoverage {
+        /// Show only must_have_ac ACs with Unknown status (coverage backlog)
+        #[arg(long)]
+        todo: bool,
+    },
 
     /// Suggest BDD scenarios for a given AC
     #[command(next_help_heading = "📋 Acceptance Criteria")]
@@ -660,19 +667,23 @@ fn main() -> Result<()> {
     };
 
     match cli.command {
-        Commands::AcStatus { summary, json } => {
+        Commands::AcStatus { summary, json, ac } => {
             commands::ac_status::run(commands::ac_status::AcStatusArgs {
                 verbosity,
                 summary,
                 json,
+                filter_ac: ac,
                 ..Default::default()
             })
         }
         Commands::AcNew { ac_id, description, story, requirement } => {
             commands::ac_new::run(&ac_id, &description, &story, &requirement)
         }
-        Commands::AcCoverage => {
-            commands::ac_coverage::run(commands::ac_coverage::AcCoverageArgs::default())
+        Commands::AcCoverage { todo } => {
+            commands::ac_coverage::run(commands::ac_coverage::AcCoverageArgs {
+                todo_only: todo,
+                ..Default::default()
+            })
         }
         Commands::AcSuggestScenarios { ac_id } => commands::ac_suggest_scenarios::run(
             commands::ac_suggest_scenarios::AcSuggestScenariosArgs { ac_id },

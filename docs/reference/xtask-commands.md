@@ -360,18 +360,19 @@ nix develop -c cargo run -p xtask -- ac-status
 ### What It Does
 
 1. Reads `specs/spec_ledger.yaml` to extract all AC definitions
-2. **Primary:** Parses structured JSON report (`target/ac_report.json`) from Cucumber with scenario metadata
-   - Includes scenario names, tags (AC IDs), status, and duration
-   - Single source of truth, no text parsing required
-3. **Fallback (legacy):** Falls back to JUnit XML + feature file parsing if JSON unavailable
+2. **Primary:** Parses AC coverage JSONL (`target/ac/coverage.jsonl`) written by the BDD harness
+   - Streams results, resilient to `std::process::exit()` (cucumber-rs issue)
+   - See `docs/design/ac-coverage-format.md` for format specification
+3. **Fallback 1:** JSON report (`target/ac_report.json`) if coverage.jsonl unavailable
+4. **Fallback 2 (legacy):** JUnit XML + feature file parsing if JSON unavailable
    - Parses `specs/features/**/*.feature` for `@AC-####` tags
    - Parses `target/junit/acceptance.xml` for test results
-   - Requires fragile string matching
-4. Maps scenarios → ACs based on `@AC-####` tags
-5. Computes status for each AC (pass/fail/unknown)
-6. Generates `docs/feature_status.md` with status table
+   - May be unreliable due to cucumber-rs exit() behavior
+5. Maps scenarios → ACs based on `@AC-####` tags
+6. Computes status for each AC (pass/fail/unknown)
+7. Generates `docs/feature_status.md` with status table
 
-**Note:** The JSON report path is the recommended approach. The JUnit+feature fallback is for backward compatibility and may be removed in a future major version.
+**Note:** The coverage.jsonl path is the recommended approach. JUnit fallback is for backward compatibility and may be removed in a future major version.
 
 ### JSON Output
 
