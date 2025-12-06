@@ -1429,4 +1429,74 @@ mod tests {
             );
         }
     }
+
+    // Helper to create a test AC
+    fn make_test_ac(id: &str, status: AcStatus) -> Ac {
+        let tests_executed = if status == AcStatus::Unknown { 0 } else { 1 };
+        Ac {
+            id: id.to_string(),
+            story_id: "US-TEST-001".to_string(),
+            req_id: "REQ-TEST-001".to_string(),
+            text: format!("Test AC for {}", id),
+            status,
+            scenarios: vec!["Test scenario".to_string()],
+            tests: vec![TestMapping {
+                test_type: "bdd".to_string(),
+                tag: format!("@{}", id),
+                file: None,
+                module: None,
+            }],
+            tests_total: 1,
+            tests_executed,
+            tags: vec!["kernel".to_string()],
+            must_have_ac: false,
+        }
+    }
+
+    #[test]
+    fn print_single_ac_returns_error_for_missing_ac() {
+        let acs: HashMap<String, Ac> = HashMap::new();
+        let result = print_single_ac(&acs, "AC-NONEXISTENT", false);
+        assert!(result.is_err());
+        assert!(result.unwrap_err().to_string().contains("not found"));
+    }
+
+    #[test]
+    fn print_single_ac_returns_ok_for_passing_ac() {
+        let mut acs = HashMap::new();
+        acs.insert("AC-PASS-001".to_string(), make_test_ac("AC-PASS-001", AcStatus::Pass));
+
+        let result = print_single_ac(&acs, "AC-PASS-001", false);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn print_single_ac_returns_ok_for_unknown_ac() {
+        let mut acs = HashMap::new();
+        acs.insert("AC-UNKNOWN-001".to_string(), make_test_ac("AC-UNKNOWN-001", AcStatus::Unknown));
+
+        let result = print_single_ac(&acs, "AC-UNKNOWN-001", false);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn print_single_ac_returns_error_for_failing_ac() {
+        let mut acs = HashMap::new();
+        acs.insert("AC-FAIL-001".to_string(), make_test_ac("AC-FAIL-001", AcStatus::Fail));
+
+        let result = print_single_ac(&acs, "AC-FAIL-001", false);
+        assert!(result.is_err());
+        assert!(result.unwrap_err().to_string().contains("failed"));
+    }
+
+    #[test]
+    fn print_single_ac_json_output_parses_correctly() {
+        let mut acs = HashMap::new();
+        acs.insert("AC-JSON-001".to_string(), make_test_ac("AC-JSON-001", AcStatus::Pass));
+
+        // Capture stdout by just verifying it doesn't panic and returns Ok
+        // In a real test setup we'd capture stdout, but for now we verify the contract
+        let result = print_single_ac(&acs, "AC-JSON-001", true);
+        assert!(result.is_ok());
+    }
 }

@@ -353,9 +353,23 @@ cargo run -p xtask -- ac-status
 # Output as JSON for agent/portal integration
 cargo run -p xtask -- ac-status --json
 
+# Show details for a single AC
+cargo run -p xtask -- ac-status --ac AC-KERN-001
+
+# Single AC as JSON (useful for debugging)
+cargo run -p xtask -- ac-status --ac AC-KERN-001 --json
+
 # Or in Nix shell
 nix develop -c cargo run -p xtask -- ac-status
 ```
+
+### Parameters
+
+| Flag | Description |
+|------|-------------|
+| `--json` | Output structured JSON instead of generating markdown |
+| `--ac <ID>` | Show details for a single AC (e.g., `AC-KERN-001`) |
+| `--summary` | Print concise summary to stdout |
 
 ### What It Does
 
@@ -490,9 +504,18 @@ Show AC coverage report grouped by requirement.
 ```bash
 cargo run -p xtask -- ac-coverage
 
+# Show only ACs with Unknown status (coverage backlog)
+cargo run -p xtask -- ac-coverage --todo
+
 # Or with alias
 xt ac-coverage
 ```
+
+### Parameters
+
+| Flag | Description |
+|------|-------------|
+| `--todo` | Show only ACs with Unknown status (coverage backlog checklist) |
 
 ### What It Does
 
