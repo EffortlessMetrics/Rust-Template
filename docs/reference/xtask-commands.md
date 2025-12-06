@@ -392,6 +392,8 @@ nix develop -c cargo run -p xtask -- ac-status
 
 When `--json` is specified, outputs structured JSON instead of generating the markdown file.
 
+> **Full schema reference:** See [ac-status-json-schema.md](./ac-status-json-schema.md) for the complete v2.0 schema with TypeScript types and migration guidance.
+
 **Schema version 2.0** uses `must_have_ac` metadata for AC classification instead of prefix-based heuristics:
 
 ```json

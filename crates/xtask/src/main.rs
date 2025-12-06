@@ -186,6 +186,23 @@ enum Commands {
     #[command(next_help_heading = "📋 Acceptance Criteria")]
     Bdd,
 
+    /// Generate human-readable AC governance report (consumes ac-status --json)
+    #[command(next_help_heading = "📋 Acceptance Criteria")]
+    AcReport {
+        /// Only show must_have_ac=true ACs
+        #[arg(long)]
+        must_have: bool,
+        /// Filter by status (pass, fail, unknown)
+        #[arg(long)]
+        status: Option<String>,
+        /// Group by story instead of requirement
+        #[arg(long)]
+        by_story: bool,
+        /// Output format (text, markdown, html, json)
+        #[arg(long, default_value = "text")]
+        format: String,
+    },
+
     // ============================================================================
     // DESIGN & DOCUMENTATION (Docs, ADRs, design docs)
     // ============================================================================
@@ -702,6 +719,14 @@ fn main() -> Result<()> {
         Commands::Check => commands::check::run(),
         Commands::Precommit => commands::precommit::run(),
         Commands::Bdd => commands::bdd::run(),
+        Commands::AcReport { must_have, status, by_story, format } => {
+            commands::ac_report::run(commands::ac_report::AcReportArgs {
+                must_have,
+                status,
+                by_story,
+                format,
+            })
+        }
         Commands::Bundle { task } => commands::bundle::run(&task),
         Commands::Audit => commands::audit::run(),
         Commands::Coverage => commands::coverage::run(),
