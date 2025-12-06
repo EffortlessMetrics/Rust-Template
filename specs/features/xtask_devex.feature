@@ -682,14 +682,16 @@ Feature: Developer Experience Commands
 
   @AC-TPL-CLI-JSON-CORE
   Scenario: ac-status command produces JSON output for tooling
-    # ac-status outputs valid JSON with stable top-level structure
+    # ac-status outputs valid JSON with stable top-level structure (schema v2.0)
+    # Uses must_have_ac metadata instead of prefix-based categorization
     # Exit code depends on whether any ACs are failing
     Given I am in the actual workspace
     When I run "cargo xtask ac-status --json"
     Then the output should be valid JSON
+    And the JSON should include "schema_version" field
     And the JSON should include "timestamp" field
-    And the JSON should include "kernel_acs" field
-    And the JSON should include "template_acs" field
+    And the JSON should include "must_have_acs" field
+    And the JSON should include "optional_acs" field
     And the JSON should include "coverage_percent" field
     And the JSON should include "acs" field
 

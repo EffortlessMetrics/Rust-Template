@@ -27,6 +27,9 @@ jobs:
         uses: ./.github/actions/setup-rust-nix
 
       - name: Run kernel selftest (Tier 1)
+        # To enable strict AC coverage enforcement (fail on Unknown must_have_ac ACs):
+        # env:
+        #   XTASK_STRICT_AC_COVERAGE: "1"
         run: nix develop -c cargo xtask selftest
 
       - name: Verify artifacts were generated
