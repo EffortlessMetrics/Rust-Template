@@ -38,6 +38,12 @@ jobs:
           test -f .llm/bundle/implement_ac.md || echo "Warning: LLM bundle not generated"
           test -f target/junit/acceptance.xml || echo "Warning: JUnit XML not generated"
 
+      - name: Generate AC status snapshot (JSON)
+        run: |
+          mkdir -p artifacts/ac-status
+          # ac-status uses schema_version=2.0; this is the contract consumers depend on
+          nix develop -c cargo xtask ac-status --json > artifacts/ac-status/ac-status-${GITHUB_SHA}.json
+
       - name: Show sccache stats
         if: always()
         uses: ./.github/actions/sccache-stats
@@ -52,3 +58,12 @@ jobs:
             .llm/bundle/implement_ac.md
             target/junit/acceptance.xml
           if-no-files-found: warn
+
+      - name: Upload AC status snapshot
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          # Group by branch for easier time-series analysis
+          name: ac-status-${{ github.ref_name }}
+          path: artifacts/ac-status/
+          retention-days: 30

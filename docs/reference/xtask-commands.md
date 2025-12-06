@@ -17,6 +17,8 @@ Complete reference for all `xtask` CLI commands.
 - [bdd](#xtask-bdd) - Run BDD acceptance tests
 - [ac-status](#xtask-ac-status) - Generate AC status report
 - [ac-coverage](#xtask-ac-coverage) - Show AC coverage and unknown ACs
+- [ac-report](#xtask-ac-report) - Human-readable AC governance reports
+- [ac-history](#xtask-ac-history) - Time-series analysis of AC coverage
 - [ac-suggest-scenarios](#xtask-ac-suggest-scenarios) - Generate BDD scenario stub
 - [policy-test](#xtask-policy-test) - Test Rego policies
 - [bundle](#xtask-bundle) - Generate LLM context
@@ -646,6 +648,365 @@ The `--must-have` flag filters to only show "kernel" ACs where `must_have_ac=tru
 - Provides direct command suggestions for next steps
 - No side effects (read-only operation)
 - Fast execution (parses YAML + feature files)
+
+---
+
+## xtask ac-report
+
+Human-readable AC governance reports. Downstream consumer of `ac-status --json`.
+
+### Usage
+
+```bash
+cargo run -p xtask -- ac-report
+
+# Kernel-only view (must_have_ac=true)
+cargo run -p xtask -- ac-report --must-have
+
+# Filter by status
+cargo run -p xtask -- ac-report --status unknown
+cargo run -p xtask -- ac-report --status fail
+
+# Combine filters
+cargo run -p xtask -- ac-report --must-have --status unknown
+
+# Group by story instead of requirement
+cargo run -p xtask -- ac-report --by-story
+
+# Output formats
+cargo run -p xtask -- ac-report --format text      # Default: colored terminal
+cargo run -p xtask -- ac-report --format markdown  # For PRs/Notion
+cargo run -p xtask -- ac-report --format html      # For portals
+cargo run -p xtask -- ac-report --format json      # Passthrough of ac-status --json
+```
+
+### Parameters
+
+| Flag | Description |
+|------|-------------|
+| `--must-have` | Only show ACs with `must_have_ac=true` (kernel ACs) |
+| `--status <STATUS>` | Filter by status: `pass`, `fail`, or `unknown` |
+| `--by-story` | Group output by story instead of requirement |
+| `--format <FORMAT>` | Output format: `text` (default), `markdown`, `html`, or `json` |
+
+### What It Does
+
+1. Calls `cargo xtask ac-status --json` internally to get AC data
+2. Validates schema version (expects `2.0`)
+3. Filters ACs based on `--must-have` and `--status` flags
+4. Groups ACs by requirement or story
+5. Renders output in the requested format
+
+### Exit Codes
+
+- `0`: Report generated successfully
+- Non-zero: Failed to load AC data or invalid format
+
+### Output Format Guarantees
+
+| Format | Stability | Use Case |
+|--------|-----------|----------|
+| `text` | Informational; may change | Terminal review, debugging |
+| `markdown` | Stable structure | PRs, Notion, documentation |
+| `html` | Stable classes | Dashboards, portals |
+| `json` | Identical to `ac-status --json` (schema v2.0) | Programmatic access |
+
+**Markdown output includes:**
+- Summary table (Must-have vs Optional counts)
+- Coverage percentage
+- Blockers section (failing ACs)
+- Missing coverage section (unknown ACs)
+
+**HTML output includes:**
+- CSS classes: `.pass`, `.fail`, `.unknown`, `.kernel`
+- No JavaScript dependencies
+- Self-contained, portable document
+
+### When to Use
+
+- **PR descriptions** - Generate markdown summary: `cargo xtask ac-report --format markdown`
+- **Sprint reviews** - Show kernel coverage: `cargo xtask ac-report --must-have`
+- **Debugging** - Find failing ACs: `cargo xtask ac-report --status fail`
+- **Dashboards** - Generate HTML: `cargo xtask ac-report --format html > report.html`
+- **Coverage backlog** - List missing kernel coverage: `cargo xtask ac-report --must-have --status unknown`
+
+### Example Output (Text)
+
+```
+AC Governance Report
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Summary:
+  Must-have ACs: 48 total (46 passing, 1 failing, 1 unknown)
+  Optional ACs:  17 total (15 passing, 0 failing, 2 unknown)
+  Coverage:      93.8%
+
+📋 Filtered by: all ACs
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Requirement REQ-KERN-HEALTH
+    [✓] AC-KERN-001 🔒
+         Health endpoint returns OK
+    [✗] AC-KERN-002 🔒
+         Metrics endpoint exposes counts
+         → cargo xtask test-ac AC-KERN-002
+
+  Requirement REQ-KERN-STATUS
+    [?] AC-KERN-003 🔒
+         Status shows version info
+         → cargo xtask ac-suggest-scenarios AC-KERN-003
+
+Next Steps:
+  1. Fix 1 failing AC(s): cargo xtask test-ac AC-KERN-002
+  2. Add coverage for 1 AC(s): cargo xtask ac-suggest-scenarios AC-KERN-003
+```
+
+### Example Output (Markdown)
+
+```markdown
+## AC Coverage Report
+
+| Category | Total | Pass | Fail | Unknown |
+|----------|-------|------|------|---------|
+| Must-have | 48 | 46 | 1 | 1 |
+| Optional | 17 | 15 | 0 | 2 |
+
+**Coverage:** 93.8%
+
+### Blockers (Failing ACs)
+
+- **AC-KERN-002** (fail): Metrics endpoint exposes counts
+  - Requirement: REQ-KERN-HEALTH
+  - Source: coverage
+
+### Missing Coverage (Kernel)
+
+- **AC-KERN-003** 🔒: Status shows version info
+```
+
+### Relationship to Other Commands
+
+| Command | Purpose | Data Source |
+|---------|---------|-------------|
+| `ac-status` | Generate JSON + markdown file | Spec ledger + test results |
+| `ac-coverage` | Quick terminal summary | Spec ledger + test results |
+| `ac-report` | Formatted views (human-readable) | `ac-status --json` output |
+
+**`ac-report` is a pure consumer** - it never reads spec files or test results directly. This separation ensures:
+- Schema versioning is respected
+- Format changes don't break the report
+- Easy to test rendering independently
+
+### Common Issues
+
+**"Unknown schema version" warning:**
+- The `ac-status --json` output has a newer schema than expected
+- Update `ac-report` to handle new fields, or downgrade `ac-status`
+
+**No ACs match filter:**
+- The combination of `--must-have` and `--status` returned empty set
+- This is success (e.g., no failing kernel ACs)
+
+**JSON format is empty:**
+- Ensure `ac-status --json` runs successfully first
+- Check for BDD test failures that prevent JSON generation
+
+### Notes
+
+- **Downstream consumer**: Depends on `ac-status --json` (schema v2.0)
+- **Read-only**: Never modifies files or state
+- **Fast**: Single subprocess call to ac-status, then in-memory filtering
+- **Testable**: Rendering logic is separated from data loading
+
+---
+
+## xtask ac-history
+
+Analyze AC coverage trends from CI-generated snapshots.
+
+### Usage
+
+```bash
+# Summarize history from downloaded CI artifacts
+cargo run -p xtask -- ac-history --dir ./artifacts/ac-status
+
+# Export as CSV for charting
+cargo run -p xtask -- ac-history --dir ./artifacts/ac-status --format csv
+
+# Focus on kernel ACs only
+cargo run -p xtask -- ac-history --dir ./artifacts/ac-status --must-have
+
+# JSON output for programmatic access
+cargo run -p xtask -- ac-history --dir ./artifacts/ac-status --format json
+```
+
+### Parameters
+
+| Flag | Description |
+|------|-------------|
+| `--dir <PATH>` | Directory containing `ac-status-*.json` snapshot files (default: `artifacts/ac-status`) |
+| `--format <FORMAT>` | Output format: `text` (default), `markdown`, `csv`, or `json` |
+| `--must-have` | Only show must_have_ac=true ACs (kernel ACs) |
+
+### What It Does
+
+1. **Scans directory** for `ac-status-<sha>.json` files
+2. **Parses snapshots** (validates schema v2.0)
+3. **Extracts commit SHA** from filename
+4. **Sorts by timestamp** from JSON
+5. **Computes deltas** between consecutive snapshots (new/resolved blockers, coverage change)
+6. **Renders output** in the requested format
+
+### How CI Snapshots Are Generated
+
+The `tier1-selftest.yml` workflow generates snapshots:
+
+```yaml
+- name: Generate AC status snapshot (JSON)
+  run: |
+    mkdir -p artifacts/ac-status
+    cargo xtask ac-status --json > artifacts/ac-status/ac-status-${GITHUB_SHA}.json
+
+- name: Upload AC status snapshot
+  uses: actions/upload-artifact@v4
+  with:
+    name: ac-status-${{ github.ref_name }}
+    path: artifacts/ac-status/
+    retention-days: 30
+```
+
+To analyze history:
+1. Download artifacts from CI
+2. Extract to a local directory
+3. Run `cargo xtask ac-history --dir ./path/to/artifacts`
+
+### Exit Codes
+
+- `0`: Report generated successfully
+- Non-zero: Failed to load snapshots or invalid format
+
+### Output Format Guarantees
+
+| Format | Stability | Use Case |
+|--------|-----------|----------|
+| `text` | Informational; may change | Terminal review |
+| `markdown` | Stable structure | PRs, documentation |
+| `csv` | Stable columns | Spreadsheets, charting |
+| `json` | Schema v1.0 | Programmatic access |
+
+### Example Output (Text)
+
+```
+AC Coverage History
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  2 snapshots analyzed
+  Date range: 2025-12-01T10:00:00Z → 2025-12-02T10:00:00Z
+
+All ACs:
+
+  Commit       Date                   Cov%  Pass  Fail   Unk
+  ────────────────────────────────────────────────────────────
+  abc123       2025-12-01             73.3     11     2     2
+  def456       2025-12-02             93.3     14     0     1
+
+Notable Changes:
+  ↑ def456 – Resolved: AC-KERN-002, AC-KERN-003
+
+Latest Snapshot:
+  Commit: def456
+  Coverage: 93.3%
+  [OK] No kernel blockers
+```
+
+### Example Output (Markdown)
+
+```markdown
+## AC Coverage History
+
+**Snapshots:** 2
+**Date range:** 2025-12-01T10:00:00Z → 2025-12-02T10:00:00Z
+
+| Commit | Date | Cov% | Pass | Fail | Unknown |
+|--------|------|------|------|------|---------|
+| abc123 | 2025-12-01 | 73.3% | 11 | 2 | 2 |
+| def456 | 2025-12-02 | 93.3% | 14 | 0 | 1 |
+
+### Notable Changes
+
+- **def456** ✅ Resolved: AC-KERN-002, AC-KERN-003
+```
+
+### Example Output (CSV)
+
+```csv
+commit,timestamp,coverage_percent,total,passing,failing,unknown,kernel_blockers
+abc123,2025-12-01T10:00:00Z,73.33,15,11,2,2,"AC-KERN-002;AC-KERN-003"
+def456,2025-12-02T10:00:00Z,93.33,15,14,0,1,""
+```
+
+### JSON Schema
+
+```json
+{
+  "snapshot_count": 2,
+  "date_range": ["2025-12-01T10:00:00Z", "2025-12-02T10:00:00Z"],
+  "snapshots": [
+    {
+      "commit": "abc123",
+      "timestamp": "2025-12-01T10:00:00Z",
+      "must_have_total": 10,
+      "must_have_passing": 7,
+      "must_have_failing": 2,
+      "must_have_unknown": 1,
+      "optional_total": 5,
+      "optional_passing": 4,
+      "optional_failing": 0,
+      "optional_unknown": 1,
+      "coverage_percent": 73.3,
+      "kernel_blockers": ["AC-KERN-002", "AC-KERN-003"]
+    }
+  ],
+  "deltas": [
+    {
+      "commit": "def456",
+      "new_blockers": [],
+      "resolved_blockers": ["AC-KERN-002", "AC-KERN-003"],
+      "coverage_delta": 20.0
+    }
+  ]
+}
+```
+
+### Relationship to Other Commands
+
+| Command | Purpose | Data Source |
+|---------|---------|-------------|
+| `ac-status` | Generate JSON + markdown file | Spec ledger + test results |
+| `ac-report` | Formatted views (human-readable) | `ac-status --json` output |
+| `ac-history` | Time-series analysis | Directory of `ac-status --json` snapshots |
+
+### Common Issues
+
+**Empty directory:**
+- Ensure CI artifacts have been downloaded
+- Check file extension is `.json`
+- Verify filename format: `ac-status-<sha>.json`
+
+**Schema version warning:**
+- Snapshots have older or newer schema version
+- Output may be incomplete for incompatible versions
+
+**No deltas shown:**
+- Deltas only appear when blockers change or coverage shifts >0.5%
+- Single snapshot has no previous to compare against
+
+### Notes
+
+- **CI integration**: Designed to consume artifacts from `tier1-selftest.yml`
+- **Read-only**: Never modifies files or state
+- **Offline**: Works entirely on local files after artifact download
+- **Extensible**: JSON output can feed dashboards or BI tools
 
 ---
 

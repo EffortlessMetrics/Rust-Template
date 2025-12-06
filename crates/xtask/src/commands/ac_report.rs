@@ -298,7 +298,11 @@ fn describe_filter(args: &AcReportArgs) -> String {
 
 fn render_markdown(report: &AcReport, args: &AcReportArgs) -> Result<()> {
     let mut out = std::io::stdout();
+    render_markdown_to(&mut out, report, args)
+}
 
+/// Render markdown to any writer (for testing)
+fn render_markdown_to<W: Write>(out: &mut W, report: &AcReport, args: &AcReportArgs) -> Result<()> {
     writeln!(out, "## AC Coverage Report")?;
     writeln!(out)?;
     writeln!(out, "| Category | Total | Pass | Fail | Unknown |")?;
@@ -431,7 +435,11 @@ impl serde::Serialize for AcJson {
 
 fn render_html(report: &AcReport, args: &AcReportArgs) -> Result<()> {
     let mut out = std::io::stdout();
+    render_html_to(&mut out, report, args)
+}
 
+/// Render HTML to any writer (for testing)
+fn render_html_to<W: Write>(out: &mut W, report: &AcReport, args: &AcReportArgs) -> Result<()> {
     writeln!(out, "<!DOCTYPE html>")?;
     writeln!(out, "<html><head>")?;
     writeln!(out, "<title>AC Coverage Report</title>")?;
@@ -616,5 +624,175 @@ mod tests {
         assert_eq!(groups.len(), 2);
         assert!(groups.contains_key("US-TEST-001"));
         assert!(groups.contains_key("US-TEST-002"));
+    }
+
+    // =========================================================================
+    // Golden tests for rendering output
+    // =========================================================================
+
+    #[test]
+    fn markdown_output_has_expected_structure() {
+        let report = AcReport::from_json(SAMPLE_JSON).unwrap();
+        let args = AcReportArgs::default();
+        let mut buf = Vec::new();
+
+        render_markdown_to(&mut buf, &report, &args).unwrap();
+        let output = String::from_utf8(buf).unwrap();
+
+        // Verify heading
+        assert!(output.contains("## AC Coverage Report"), "Missing heading");
+
+        // Verify summary table structure
+        assert!(
+            output.contains("| Category | Total | Pass | Fail | Unknown |"),
+            "Missing table header"
+        );
+        assert!(output.contains("| Must-have |"), "Missing must-have row");
+        assert!(output.contains("| Optional |"), "Missing optional row");
+
+        // Verify coverage percentage
+        assert!(output.contains("**Coverage:**"), "Missing coverage line");
+        assert!(output.contains("80.0%"), "Coverage value incorrect");
+    }
+
+    #[test]
+    fn markdown_output_shows_blockers_when_failing() {
+        let report = AcReport::from_json(SAMPLE_JSON).unwrap();
+        let args = AcReportArgs::default();
+        let mut buf = Vec::new();
+
+        render_markdown_to(&mut buf, &report, &args).unwrap();
+        let output = String::from_utf8(buf).unwrap();
+
+        // Should have blockers section for failing AC
+        assert!(output.contains("### Blockers"), "Missing blockers section");
+        assert!(output.contains("AC-TEST-003"), "Missing failing AC ID");
+        assert!(output.contains("(fail)"), "Missing fail status");
+    }
+
+    #[test]
+    fn markdown_output_shows_missing_coverage() {
+        let report = AcReport::from_json(SAMPLE_JSON).unwrap();
+        let args = AcReportArgs::default();
+        let mut buf = Vec::new();
+
+        render_markdown_to(&mut buf, &report, &args).unwrap();
+        let output = String::from_utf8(buf).unwrap();
+
+        // Should have missing coverage section for unknown AC
+        assert!(output.contains("### Missing Coverage"), "Missing coverage section");
+        assert!(output.contains("AC-TEST-002"), "Missing unknown AC ID");
+    }
+
+    #[test]
+    fn markdown_output_shows_all_passing_when_no_issues() {
+        // Create a report with all ACs passing
+        let json = r#"{
+            "schema_version": "2.0",
+            "timestamp": "2025-12-05T12:00:00Z",
+            "must_have_acs": {"total": 2, "passing": 2, "failing": 0, "unknown": 0},
+            "optional_acs": {"total": 0, "passing": 0, "failing": 0, "unknown": 0},
+            "coverage_percent": 100.0,
+            "acs": [
+                {
+                    "id": "AC-TEST-001",
+                    "story_id": "US-TEST-001",
+                    "req_id": "REQ-TEST-001",
+                    "text": "Test AC 1",
+                    "status": "pass",
+                    "source": "coverage",
+                    "must_have_ac": true,
+                    "scenarios": ["Test scenario"],
+                    "tests_total": 1,
+                    "tests_executed": 1
+                }
+            ]
+        }"#;
+
+        let report = AcReport::from_json(json).unwrap();
+        let args = AcReportArgs::default();
+        let mut buf = Vec::new();
+
+        render_markdown_to(&mut buf, &report, &args).unwrap();
+        let output = String::from_utf8(buf).unwrap();
+
+        // Should show all passing message
+        assert!(output.contains("✅ All filtered ACs are passing"), "Missing all-passing message");
+        // Should NOT have blockers section
+        assert!(!output.contains("### Blockers"), "Should not have blockers when all passing");
+    }
+
+    #[test]
+    fn markdown_must_have_filter_shows_kernel_only() {
+        let report = AcReport::from_json(SAMPLE_JSON).unwrap();
+        let args = AcReportArgs { must_have: true, ..Default::default() };
+        let mut buf = Vec::new();
+
+        render_markdown_to(&mut buf, &report, &args).unwrap();
+        let output = String::from_utf8(buf).unwrap();
+
+        // Should include kernel ACs
+        assert!(output.contains("AC-TEST-002"), "Missing kernel AC");
+        // Should NOT include non-kernel AC (AC-TEST-003 is must_have_ac=false)
+        assert!(!output.contains("AC-TEST-003"), "Should not include non-kernel AC");
+    }
+
+    #[test]
+    fn html_output_has_expected_structure() {
+        let report = AcReport::from_json(SAMPLE_JSON).unwrap();
+        let args = AcReportArgs::default();
+        let mut buf = Vec::new();
+
+        render_html_to(&mut buf, &report, &args).unwrap();
+        let output = String::from_utf8(buf).unwrap();
+
+        // Verify HTML structure
+        assert!(output.contains("<!DOCTYPE html>"), "Missing doctype");
+        assert!(output.contains("<html>"), "Missing html tag");
+        assert!(output.contains("<title>AC Coverage Report</title>"), "Missing title");
+
+        // Verify CSS classes
+        assert!(output.contains(".pass {"), "Missing .pass CSS class");
+        assert!(output.contains(".fail {"), "Missing .fail CSS class");
+        assert!(output.contains(".unknown {"), "Missing .unknown CSS class");
+        assert!(output.contains(".kernel {"), "Missing .kernel CSS class");
+
+        // Verify heading
+        assert!(output.contains("<h1>AC Coverage Report</h1>"), "Missing h1 heading");
+    }
+
+    #[test]
+    fn html_output_has_status_classes_on_elements() {
+        let report = AcReport::from_json(SAMPLE_JSON).unwrap();
+        let args = AcReportArgs::default();
+        let mut buf = Vec::new();
+
+        render_html_to(&mut buf, &report, &args).unwrap();
+        let output = String::from_utf8(buf).unwrap();
+
+        // Verify status classes are applied to table cells
+        assert!(output.contains("class=\"pass\""), "Missing pass class on element");
+        assert!(output.contains("class=\"fail\""), "Missing fail class on element");
+
+        // Verify kernel class is applied
+        assert!(output.contains(" kernel\""), "Missing kernel class on element");
+    }
+
+    #[test]
+    fn html_output_is_self_contained() {
+        let report = AcReport::from_json(SAMPLE_JSON).unwrap();
+        let args = AcReportArgs::default();
+        let mut buf = Vec::new();
+
+        render_html_to(&mut buf, &report, &args).unwrap();
+        let output = String::from_utf8(buf).unwrap();
+
+        // Should have inline styles, no external dependencies
+        assert!(output.contains("<style>"), "Missing inline styles");
+        assert!(!output.contains("<script"), "Should not have JavaScript");
+        assert!(!output.contains("href=\"http"), "Should not have external links");
+
+        // Should be properly closed
+        assert!(output.contains("</body></html>"), "Missing closing tags");
     }
 }
