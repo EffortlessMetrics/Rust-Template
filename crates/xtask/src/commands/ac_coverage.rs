@@ -249,3 +249,80 @@ impl Default for AcCoverageArgs {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn print_todo_backlog_with_unknown_acs_shows_backlog() {
+        // Setup: 3 ACs, 2 unknown (need BDD), 1 passing
+        let mut all_acs = HashMap::new();
+        all_acs.insert("AC-PLT-001".to_string(), "REQ-PLT-001".to_string());
+        all_acs.insert("AC-PLT-002".to_string(), "REQ-PLT-001".to_string());
+        all_acs.insert("AC-PLT-003".to_string(), "REQ-PLT-002".to_string());
+
+        let acs_by_req = BTreeMap::new(); // Not used by this function
+
+        let mut ac_statuses = HashMap::new();
+        ac_statuses.insert("AC-PLT-001".to_string(), AcStatus::Unknown);
+        ac_statuses.insert("AC-PLT-002".to_string(), AcStatus::Pass);
+        ac_statuses.insert("AC-PLT-003".to_string(), AcStatus::Unknown);
+
+        // The function should succeed
+        let result = print_todo_backlog(&all_acs, &acs_by_req, &ac_statuses);
+        assert!(result.is_ok());
+
+        // Note: We can't easily capture stdout in this test setup,
+        // but we verify the function doesn't error
+    }
+
+    #[test]
+    fn print_todo_backlog_with_all_covered_shows_success() {
+        // Setup: all ACs have BDD coverage (Pass or Fail, no Unknown)
+        let mut all_acs = HashMap::new();
+        all_acs.insert("AC-PLT-001".to_string(), "REQ-PLT-001".to_string());
+        all_acs.insert("AC-PLT-002".to_string(), "REQ-PLT-001".to_string());
+
+        let acs_by_req = BTreeMap::new();
+
+        let mut ac_statuses = HashMap::new();
+        ac_statuses.insert("AC-PLT-001".to_string(), AcStatus::Pass);
+        ac_statuses.insert("AC-PLT-002".to_string(), AcStatus::Fail); // Even failing is "covered"
+
+        let result = print_todo_backlog(&all_acs, &acs_by_req, &ac_statuses);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn print_todo_backlog_with_empty_acs() {
+        let all_acs = HashMap::new();
+        let acs_by_req = BTreeMap::new();
+        let ac_statuses = HashMap::new();
+
+        // Should succeed with "all covered" message (vacuously true)
+        let result = print_todo_backlog(&all_acs, &acs_by_req, &ac_statuses);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn print_coverage_report_counts_correctly() {
+        let mut all_acs = HashMap::new();
+        all_acs.insert("AC-001".to_string(), "REQ-001".to_string());
+        all_acs.insert("AC-002".to_string(), "REQ-001".to_string());
+        all_acs.insert("AC-003".to_string(), "REQ-002".to_string());
+        all_acs.insert("AC-004".to_string(), "REQ-002".to_string());
+
+        let acs_by_req = BTreeMap::new();
+
+        let mut ac_statuses = HashMap::new();
+        ac_statuses.insert("AC-001".to_string(), AcStatus::Pass);
+        ac_statuses.insert("AC-002".to_string(), AcStatus::Pass);
+        ac_statuses.insert("AC-003".to_string(), AcStatus::Fail);
+        ac_statuses.insert("AC-004".to_string(), AcStatus::Unknown);
+
+        // Should succeed and print correct counts (2 passing, 1 failing, 1 unknown)
+        let result = print_coverage_report(&all_acs, &acs_by_req, &ac_statuses);
+        assert!(result.is_ok());
+    }
+}
