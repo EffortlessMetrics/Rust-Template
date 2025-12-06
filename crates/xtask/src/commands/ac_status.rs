@@ -28,6 +28,8 @@ pub struct AcStatusArgs {
     pub verbosity: crate::Verbosity,
     pub summary: bool,
     pub json: bool,
+    /// Filter to a specific AC ID (e.g., AC-KERN-001)
+    pub filter_ac: Option<String>,
 }
 
 impl Default for AcStatusArgs {
@@ -42,6 +44,7 @@ impl Default for AcStatusArgs {
             verbosity: crate::Verbosity::Normal,
             summary: false,
             json: false,
+            filter_ac: None,
         }
     }
 }
@@ -334,6 +337,11 @@ pub fn run(args: AcStatusArgs) -> Result<()> {
 
     // Combine BDD + unit results into a final AC status
     update_ac_statuses(&mut acs, &bdd_results, &unit_results);
+
+    // Handle single-AC filter mode
+    if let Some(ref filter_id) = args.filter_ac {
+        return print_single_ac(&acs, filter_id, args.json);
+    }
 
     if args.json {
         // Output structured JSON
@@ -814,6 +822,96 @@ fn print_summary(acs: &HashMap<String, Ac>) -> Result<()> {
 
     if total_failing > 0 {
         anyhow::bail!("One or more ACs failed");
+    }
+
+    Ok(())
+}
+
+/// Print detailed information about a single AC.
+///
+/// Used by `cargo xtask ac-status --ac <ID>` to debug specific AC status.
+fn print_single_ac(acs: &HashMap<String, Ac>, filter_id: &str, json_output: bool) -> Result<()> {
+    let ac = acs.get(filter_id).ok_or_else(|| {
+        anyhow::anyhow!(
+            "AC '{}' not found in ledger. Run `cargo xtask ac-status --json` to see all AC IDs.",
+            filter_id
+        )
+    })?;
+
+    if json_output {
+        // Output just this AC as JSON
+        let ac_json = AcJson {
+            id: ac.id.clone(),
+            story_id: ac.story_id.clone(),
+            req_id: ac.req_id.clone(),
+            text: ac.text.clone(),
+            status: ac.status.clone(),
+            scenarios: ac.scenarios.clone(),
+            tests: ac.tests.clone(),
+            tests_total: ac.tests_total,
+            tests_executed: ac.tests_executed,
+        };
+        let json_str =
+            serde_json::to_string_pretty(&ac_json).context("Failed to serialize AC to JSON")?;
+        println!("{}", json_str);
+    } else {
+        // Print human-readable output
+        println!("AC: {}", ac.id.cyan().bold());
+        println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+        println!();
+        println!("  Story:       {}", ac.story_id);
+        println!("  Requirement: {}", ac.req_id);
+        println!("  Text:        {}", ac.text);
+        println!();
+
+        // Status with icon
+        let status_display = match ac.status {
+            AcStatus::Pass => format!("{} {}", "[PASS]".green(), "All tests passed"),
+            AcStatus::Fail => format!("{} {}", "[FAIL]".red(), "One or more tests failed"),
+            AcStatus::Unknown => format!("{} {}", "[UNKNOWN]".yellow(), "No tests executed"),
+        };
+        println!("  Status:      {}", status_display);
+        println!("  Tests:       {} executed / {} total", ac.tests_executed, ac.tests_total);
+        println!();
+
+        // Scenarios
+        if ac.scenarios.is_empty() {
+            println!("  Scenarios:   {} (no BDD scenarios mapped)", "(none)".yellow());
+            println!();
+            println!("  💡 Hint: Add a scenario tagged with @{} to a .feature file", ac.id);
+            println!("     Or run: cargo xtask ac-suggest-scenarios {}", ac.id);
+        } else {
+            println!("  Scenarios:");
+            for scenario in &ac.scenarios {
+                println!("    • {}", scenario);
+            }
+        }
+        println!();
+
+        // Tests
+        if ac.tests.is_empty() {
+            println!("  Tests:       {} (no tests declared in ledger)", "(none)".yellow());
+        } else {
+            println!("  Test mappings:");
+            for test in &ac.tests {
+                let module = test.module.as_deref().unwrap_or("-");
+                println!("    • [{}] {} (tag: {})", test.test_type, module, test.tag);
+            }
+        }
+        println!();
+
+        // Tags
+        if !ac.tags.is_empty() {
+            println!("  Tags: {}", ac.tags.join(", "));
+        }
+        if ac.must_have_ac {
+            println!("  Flags: must_have_ac=true");
+        }
+    }
+
+    // Exit with error if AC failed
+    if ac.status == AcStatus::Fail {
+        anyhow::bail!("AC {} failed", filter_id);
     }
 
     Ok(())
