@@ -56,6 +56,8 @@ struct Ac {
     req_id: String,
     text: String,
     status: AcStatus,
+    /// Source of the status determination (coverage, junit, json, or inferred)
+    source: AcSource,
     scenarios: Vec<String>,
     tests: Vec<TestMapping>,
     tests_total: usize,
@@ -100,11 +102,18 @@ enum TestOutcome {
 }
 
 /// JSON output structure for ac-status
+///
+/// Schema version 2.0 - uses must_have_ac metadata instead of prefix-based categorization
 #[derive(Debug, Serialize)]
 struct AcStatusJson {
+    /// Schema version for forward compatibility (bump on breaking changes)
+    schema_version: String,
     timestamp: String,
-    kernel_acs: AcCategoryStats,
-    template_acs: AcCategoryStats,
+    /// Stats for ACs with must_have_ac=true (kernel/required ACs)
+    must_have_acs: AcCategoryStats,
+    /// Stats for ACs with must_have_ac=false (optional/exploratory ACs)
+    optional_acs: AcCategoryStats,
+    /// Overall coverage percentage (passing / total ACs)
     coverage_percent: f64,
     acs: Vec<AcJson>,
 }
@@ -117,6 +126,20 @@ struct AcCategoryStats {
     unknown: usize,
 }
 
+/// Source of AC status determination
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "lowercase")]
+enum AcSource {
+    /// Result came from coverage.jsonl (streaming BDD results)
+    Coverage,
+    /// Result came from JUnit XML fallback
+    Junit,
+    /// Result came from Cucumber JSON fallback
+    Json,
+    /// No test results; status inferred from ledger (Unknown)
+    Inferred,
+}
+
 #[derive(Debug, Serialize)]
 struct AcJson {
     id: String,
@@ -124,6 +147,10 @@ struct AcJson {
     req_id: String,
     text: String,
     status: AcStatus,
+    /// Source of the status determination
+    source: AcSource,
+    /// Whether this AC is enforced in strict coverage mode
+    must_have_ac: bool,
     scenarios: Vec<String>,
     tests: Vec<TestMapping>,
     tests_total: usize,
@@ -169,7 +196,19 @@ struct Requirement {
     #[serde(default)]
     #[allow(dead_code)]
     tags: Vec<String>,
+    /// Whether all ACs under this requirement must have BDD coverage.
+    /// Defaults to true (kernel). Set to false for non-kernel/exploratory ACs.
+    #[serde(default = "default_must_have_ac")]
+    must_have_ac: bool,
     acceptance_criteria: Vec<AcceptanceCriteria>,
+}
+
+/// Default for `must_have_ac` field: true (kernel AC).
+///
+/// This matches the AC classification semantics in ADR-0023.
+/// Keep in sync with `ac_parsing.rs::default_must_have_ac()`.
+fn default_must_have_ac() -> bool {
+    true
 }
 
 #[derive(Debug, Deserialize)]
@@ -178,7 +217,9 @@ struct AcceptanceCriteria {
     text: String,
     #[serde(default)]
     tags: Vec<String>,
-    #[serde(default)]
+    /// Whether this specific AC must have BDD coverage.
+    /// Inherits from requirement if not specified, defaults to true.
+    #[serde(default = "default_must_have_ac")]
     must_have_ac: bool,
     #[serde(default)]
     tests: Vec<TestMapping>,
@@ -261,7 +302,7 @@ pub fn run(args: AcStatusArgs) -> Result<()> {
     // FALLBACK PATHS:
     // 1. JUnit XML + feature file parsing (legacy, may be empty on exit())
     // 2. Structured JSON report from acceptance tests
-    let (scenarios, bdd_results) = if coverage_status == ReportStatus::NonEmpty {
+    let (scenarios, bdd_results, bdd_source) = if coverage_status == ReportStatus::NonEmpty {
         if should_print_progress {
             eprintln!("Parsing AC coverage (primary path): {}", args.coverage.display());
         }
@@ -270,7 +311,7 @@ pub fn run(args: AcStatusArgs) -> Result<()> {
             eprintln!("  Found {} scenarios", scenario_map.len());
             eprintln!("  Found results for {} ACs", results.len());
         }
-        (scenario_map, results)
+        (scenario_map, results, AcSource::Coverage)
     } else if junit_status == ReportStatus::NonEmpty {
         if should_print_progress {
             eprintln!(
@@ -279,7 +320,8 @@ pub fn run(args: AcStatusArgs) -> Result<()> {
                 args.junit.display()
             );
         }
-        fallback_to_junit(&args, should_print_progress)?
+        let (scenario_map, results) = fallback_to_junit(&args, should_print_progress)?;
+        (scenario_map, results, AcSource::Junit)
     } else if let Some(json_path) = &args.json_report {
         if json_status == Some(ReportStatus::NonEmpty) {
             if should_print_progress {
@@ -293,7 +335,7 @@ pub fn run(args: AcStatusArgs) -> Result<()> {
                 eprintln!("  Found {} scenarios", scenario_map.len());
                 eprintln!("  Found results for {} ACs", results.len());
             }
-            (scenario_map, results)
+            (scenario_map, results, AcSource::Json)
         } else {
             // GRACEFUL DEGRADATION: No BDD results available, continue with empty results.
             // BDD-driven ACs will be marked as "unknown" in the report.
@@ -308,7 +350,7 @@ pub fn run(args: AcStatusArgs) -> Result<()> {
                 );
                 eprintln!("  BDD-driven ACs will be marked as 'unknown'.");
             }
-            (HashMap::new(), HashMap::new())
+            (HashMap::new(), HashMap::new(), AcSource::Inferred)
         }
     } else {
         // GRACEFUL DEGRADATION: No BDD results available, continue with empty results.
@@ -322,7 +364,7 @@ pub fn run(args: AcStatusArgs) -> Result<()> {
             );
             eprintln!("  BDD-driven ACs will be marked as 'unknown'.");
         }
-        (HashMap::new(), HashMap::new())
+        (HashMap::new(), HashMap::new(), AcSource::Inferred)
     };
 
     // Map scenarios to ACs
@@ -336,7 +378,7 @@ pub fn run(args: AcStatusArgs) -> Result<()> {
     let unit_results = collect_unit_test_results(&acs, args.verbosity, should_print_progress)?;
 
     // Combine BDD + unit results into a final AC status
-    update_ac_statuses(&mut acs, &bdd_results, &unit_results);
+    update_ac_statuses(&mut acs, &bdd_results, &unit_results, bdd_source);
 
     // Handle single-AC filter mode
     if let Some(ref filter_id) = args.filter_ac {
@@ -410,6 +452,8 @@ fn parse_ledger(ledger_path: &Path) -> Result<HashMap<String, Ac>> {
         for req in story.requirements {
             for ac in req.acceptance_criteria {
                 let tests_total = ac.tests.iter().filter(|t| is_automated_test(t)).count();
+                // AC's must_have_ac is effective if BOTH REQ and AC have it true (AND semantics)
+                let effective_must_have = req.must_have_ac && ac.must_have_ac;
                 acs.insert(
                     ac.id.clone(),
                     Ac {
@@ -418,12 +462,13 @@ fn parse_ledger(ledger_path: &Path) -> Result<HashMap<String, Ac>> {
                         req_id: req.id.clone(),
                         text: ac.text,
                         status: AcStatus::Unknown,
+                        source: AcSource::Inferred, // Will be updated when test results are parsed
                         scenarios: Vec::new(),
                         tests: ac.tests,
                         tests_total,
                         tests_executed: 0,
                         tags: ac.tags,
-                        must_have_ac: ac.must_have_ac,
+                        must_have_ac: effective_must_have,
                     },
                 );
             }
@@ -561,12 +606,15 @@ fn update_ac_statuses(
     acs: &mut HashMap<String, Ac>,
     bdd_results: &HashMap<String, AcStatus>,
     unit_results: &HashMap<String, bool>,
+    bdd_source: AcSource,
 ) {
     for ac in acs.values_mut() {
         ac.tests_executed = 0;
+        let mut has_bdd_result = false;
 
         if ac.tests_total == 0 {
             ac.status = AcStatus::Unknown;
+            ac.source = AcSource::Inferred;
             continue;
         }
 
@@ -578,15 +626,21 @@ fn update_ac_statuses(
             }
 
             let outcome = match test.test_type.to_lowercase().as_str() {
-                "bdd" | "integration" => bdd_results
-                    .get(&ac.id)
-                    .cloned()
-                    .map(|status| match status {
-                        AcStatus::Pass => TestOutcome::Pass,
-                        AcStatus::Fail => TestOutcome::Fail,
-                        AcStatus::Unknown => TestOutcome::Missing,
-                    })
-                    .unwrap_or(TestOutcome::Missing),
+                "bdd" | "integration" => {
+                    let result = bdd_results
+                        .get(&ac.id)
+                        .cloned()
+                        .map(|status| match status {
+                            AcStatus::Pass => TestOutcome::Pass,
+                            AcStatus::Fail => TestOutcome::Fail,
+                            AcStatus::Unknown => TestOutcome::Missing,
+                        })
+                        .unwrap_or(TestOutcome::Missing);
+                    if result != TestOutcome::Missing {
+                        has_bdd_result = true;
+                    }
+                    result
+                }
                 "unit" => outcome_for_unit_test(test, unit_results),
                 _ => TestOutcome::Missing,
             };
@@ -613,6 +667,17 @@ fn update_ac_statuses(
             AcStatus::Pass
         } else {
             AcStatus::Unknown
+        };
+
+        // Set source based on where the result came from
+        ac.source = if has_bdd_result {
+            bdd_source.clone()
+        } else if ac.tests_executed > 0 {
+            // Had unit tests but no BDD - still mark with the bdd_source for consistency
+            // since unit tests don't have their own source tracking
+            bdd_source.clone()
+        } else {
+            AcSource::Inferred
         };
     }
 }
@@ -786,27 +851,19 @@ fn print_summary(acs: &HashMap<String, Ac>) -> Result<()> {
     let coverage_percent =
         if total_acs > 0 { (total_passing as f64 / total_acs as f64) * 100.0 } else { 0.0 };
 
-    // Count by known prefixes for breakdown
-    let kernel_count = acs.values().filter(|ac| ac.id.starts_with("AC-KERN-")).count();
-    let template_count = acs.values().filter(|ac| ac.id.starts_with("AC-TPL-")).count();
-    let platform_count = acs.values().filter(|ac| ac.id.starts_with("AC-PLT-")).count();
-    let other_count = total_acs - kernel_count - template_count - platform_count;
+    // Count by must_have_ac flag (kernel/required vs optional)
+    let must_have_count = acs.values().filter(|ac| ac.must_have_ac).count();
+    let optional_count = acs.values().filter(|ac| !ac.must_have_ac).count();
 
     println!("AC Status Summary:");
 
     // Build breakdown string dynamically (only include non-zero categories)
     let mut breakdown_parts = Vec::new();
-    if kernel_count > 0 {
-        breakdown_parts.push(format!("{} kernel", kernel_count));
+    if must_have_count > 0 {
+        breakdown_parts.push(format!("{} must-have", must_have_count));
     }
-    if template_count > 0 {
-        breakdown_parts.push(format!("{} template", template_count));
-    }
-    if platform_count > 0 {
-        breakdown_parts.push(format!("{} platform", platform_count));
-    }
-    if other_count > 0 {
-        breakdown_parts.push(format!("{} other", other_count));
+    if optional_count > 0 {
+        breakdown_parts.push(format!("{} optional", optional_count));
     }
 
     if breakdown_parts.is_empty() {
@@ -846,6 +903,8 @@ fn print_single_ac(acs: &HashMap<String, Ac>, filter_id: &str, json_output: bool
             req_id: ac.req_id.clone(),
             text: ac.text.clone(),
             status: ac.status.clone(),
+            source: ac.source.clone(),
+            must_have_ac: ac.must_have_ac,
             scenarios: ac.scenarios.clone(),
             tests: ac.tests.clone(),
             tests_total: ac.tests_total,
@@ -918,26 +977,26 @@ fn print_single_ac(acs: &HashMap<String, Ac>, filter_id: &str, json_output: bool
 }
 
 fn print_json_output(acs: &HashMap<String, Ac>) -> Result<()> {
-    // Separate kernel ACs (AC-KERN-*) from template ACs (AC-TPL-*)
-    let kernel_acs: Vec<_> = acs.values().filter(|ac| ac.id.starts_with("AC-KERN-")).collect();
-    let template_acs: Vec<_> = acs.values().filter(|ac| ac.id.starts_with("AC-TPL-")).collect();
+    // Categorize ACs by must_have_ac flag (kernel/required vs optional)
+    let must_have_acs: Vec<_> = acs.values().filter(|ac| ac.must_have_ac).collect();
+    let optional_acs: Vec<_> = acs.values().filter(|ac| !ac.must_have_ac).collect();
 
-    let kernel_stats = AcCategoryStats {
-        total: kernel_acs.len(),
-        passing: kernel_acs.iter().filter(|ac| ac.status == AcStatus::Pass).count(),
-        failing: kernel_acs.iter().filter(|ac| ac.status == AcStatus::Fail).count(),
-        unknown: kernel_acs.iter().filter(|ac| ac.status == AcStatus::Unknown).count(),
+    let must_have_stats = AcCategoryStats {
+        total: must_have_acs.len(),
+        passing: must_have_acs.iter().filter(|ac| ac.status == AcStatus::Pass).count(),
+        failing: must_have_acs.iter().filter(|ac| ac.status == AcStatus::Fail).count(),
+        unknown: must_have_acs.iter().filter(|ac| ac.status == AcStatus::Unknown).count(),
     };
 
-    let template_stats = AcCategoryStats {
-        total: template_acs.len(),
-        passing: template_acs.iter().filter(|ac| ac.status == AcStatus::Pass).count(),
-        failing: template_acs.iter().filter(|ac| ac.status == AcStatus::Fail).count(),
-        unknown: template_acs.iter().filter(|ac| ac.status == AcStatus::Unknown).count(),
+    let optional_stats = AcCategoryStats {
+        total: optional_acs.len(),
+        passing: optional_acs.iter().filter(|ac| ac.status == AcStatus::Pass).count(),
+        failing: optional_acs.iter().filter(|ac| ac.status == AcStatus::Fail).count(),
+        unknown: optional_acs.iter().filter(|ac| ac.status == AcStatus::Unknown).count(),
     };
 
-    let total_passing = kernel_stats.passing + template_stats.passing;
-    let total_acs = kernel_stats.total + template_stats.total;
+    let total_passing = must_have_stats.passing + optional_stats.passing;
+    let total_acs = acs.len();
     let coverage_percent =
         if total_acs > 0 { (total_passing as f64 / total_acs as f64) * 100.0 } else { 0.0 };
 
@@ -953,6 +1012,8 @@ fn print_json_output(acs: &HashMap<String, Ac>) -> Result<()> {
             req_id: ac.req_id.clone(),
             text: ac.text.clone(),
             status: ac.status.clone(),
+            source: ac.source.clone(),
+            must_have_ac: ac.must_have_ac,
             scenarios: ac.scenarios.clone(),
             tests: ac.tests.clone(),
             tests_total: ac.tests_total,
@@ -961,9 +1022,10 @@ fn print_json_output(acs: &HashMap<String, Ac>) -> Result<()> {
         .collect();
 
     let output = AcStatusJson {
+        schema_version: "2.0".to_string(),
         timestamp: chrono::Utc::now().to_rfc3339(),
-        kernel_acs: kernel_stats,
-        template_acs: template_stats,
+        must_have_acs: must_have_stats,
+        optional_acs: optional_stats,
         coverage_percent,
         acs: acs_json,
     };
@@ -974,7 +1036,7 @@ fn print_json_output(acs: &HashMap<String, Ac>) -> Result<()> {
     println!("{}", json_output);
 
     // Check for failures (still need to fail the command if tests failed)
-    if output.kernel_acs.failing > 0 || output.template_acs.failing > 0 {
+    if output.must_have_acs.failing > 0 || output.optional_acs.failing > 0 {
         anyhow::bail!("One or more ACs failed");
     }
 
@@ -1167,6 +1229,7 @@ mod tests {
                 req_id: "REQ-TEST".to_string(),
                 text: "Unit-backed AC".to_string(),
                 status: AcStatus::Unknown,
+                source: AcSource::Inferred,
                 scenarios: Vec::new(),
                 tests_total: 1,
                 tests_executed: 0,
@@ -1189,6 +1252,7 @@ mod tests {
                 req_id: "REQ-TEST".to_string(),
                 text: "BDD-backed AC".to_string(),
                 status: AcStatus::Unknown,
+                source: AcSource::Inferred,
                 scenarios: vec!["Scenario A".to_string()],
                 tests_total: 1,
                 tests_executed: 0,
@@ -1207,7 +1271,7 @@ mod tests {
         let unit_results =
             HashMap::from([("graph::tests::graph_invariants_req_has_ac".to_string(), true)]);
 
-        update_ac_statuses(&mut acs, &bdd_results, &unit_results);
+        update_ac_statuses(&mut acs, &bdd_results, &unit_results, AcSource::Coverage);
 
         let ac_unit = acs.get("AC-UNIT").unwrap();
         assert_eq!(ac_unit.status, AcStatus::Pass);
@@ -1225,6 +1289,7 @@ mod tests {
                 req_id: "REQ-TEST".to_string(),
                 text: "Missing coverage".to_string(),
                 status: AcStatus::Unknown,
+                source: AcSource::Inferred,
                 scenarios: Vec::new(),
                 tests_total: 1,
                 tests_executed: 0,
@@ -1239,7 +1304,7 @@ mod tests {
             },
         );
 
-        update_ac_statuses(&mut acs, &bdd_results, &unit_results);
+        update_ac_statuses(&mut acs, &bdd_results, &unit_results, AcSource::Coverage);
         let ac_missing = acs.get("AC-MISSING").unwrap();
         assert_eq!(ac_missing.status, AcStatus::Unknown);
         assert_eq!(ac_missing.tests_executed, 0);
@@ -1367,10 +1432,12 @@ mod tests {
     fn ac_status_json_shape_is_stable() {
         // This test documents the stable JSON contract for AI/IDP consumers
         // Changes to this test indicate a breaking change to the --json output
+        // Schema version 2.0: uses must_have_ac metadata instead of prefix-based categorization
         let output = AcStatusJson {
+            schema_version: "2.0".to_string(),
             timestamp: "2025-11-27T00:00:00Z".to_string(),
-            kernel_acs: AcCategoryStats { total: 10, passing: 8, failing: 1, unknown: 1 },
-            template_acs: AcCategoryStats { total: 5, passing: 4, failing: 0, unknown: 1 },
+            must_have_acs: AcCategoryStats { total: 10, passing: 8, failing: 1, unknown: 1 },
+            optional_acs: AcCategoryStats { total: 5, passing: 4, failing: 0, unknown: 1 },
             coverage_percent: 80.0,
             acs: vec![AcJson {
                 id: "AC-TEST-001".to_string(),
@@ -1378,6 +1445,8 @@ mod tests {
                 req_id: "REQ-TEST-001".to_string(),
                 text: "Test AC".to_string(),
                 status: AcStatus::Pass,
+                source: AcSource::Coverage,
+                must_have_ac: true,
                 scenarios: vec!["Test scenario".to_string()],
                 tests: vec![],
                 tests_total: 1,
@@ -1388,9 +1457,15 @@ mod tests {
         let json_str = serde_json::to_string_pretty(&output).unwrap();
         let parsed: serde_json::Value = serde_json::from_str(&json_str).unwrap();
 
-        // Required top-level fields
-        let required_fields =
-            ["timestamp", "kernel_acs", "template_acs", "coverage_percent", "acs"];
+        // Required top-level fields (v2.0 schema)
+        let required_fields = [
+            "schema_version",
+            "timestamp",
+            "must_have_acs",
+            "optional_acs",
+            "coverage_percent",
+            "acs",
+        ];
         for field in &required_fields {
             assert!(
                 parsed.get(*field).is_some(),
@@ -1399,13 +1474,25 @@ mod tests {
             );
         }
 
+        // Verify schema_version is 2.0
+        assert_eq!(parsed["schema_version"].as_str().unwrap(), "2.0");
+
         // Verify acs is an array
         assert!(parsed["acs"].is_array(), "acs must be an array");
 
-        // Verify AC object shape
+        // Verify AC object shape (v2.0 includes source and must_have_ac)
         let first_ac = &parsed["acs"][0];
-        let ac_fields =
-            ["id", "story_id", "req_id", "text", "status", "tests_total", "tests_executed"];
+        let ac_fields = [
+            "id",
+            "story_id",
+            "req_id",
+            "text",
+            "status",
+            "source",
+            "must_have_ac",
+            "tests_total",
+            "tests_executed",
+        ];
         for field in &ac_fields {
             assert!(
                 first_ac.get(*field).is_some(),
@@ -1418,13 +1505,13 @@ mod tests {
         let stats_fields = ["total", "passing", "failing", "unknown"];
         for field in &stats_fields {
             assert!(
-                parsed["kernel_acs"].get(*field).is_some(),
-                "Missing required field '{}' in kernel_acs",
+                parsed["must_have_acs"].get(*field).is_some(),
+                "Missing required field '{}' in must_have_acs",
                 field
             );
             assert!(
-                parsed["template_acs"].get(*field).is_some(),
-                "Missing required field '{}' in template_acs",
+                parsed["optional_acs"].get(*field).is_some(),
+                "Missing required field '{}' in optional_acs",
                 field
             );
         }
@@ -1433,12 +1520,15 @@ mod tests {
     // Helper to create a test AC
     fn make_test_ac(id: &str, status: AcStatus) -> Ac {
         let tests_executed = if status == AcStatus::Unknown { 0 } else { 1 };
+        let source =
+            if status == AcStatus::Unknown { AcSource::Inferred } else { AcSource::Coverage };
         Ac {
             id: id.to_string(),
             story_id: "US-TEST-001".to_string(),
             req_id: "REQ-TEST-001".to_string(),
             text: format!("Test AC for {}", id),
             status,
+            source,
             scenarios: vec!["Test scenario".to_string()],
             tests: vec![TestMapping {
                 test_type: "bdd".to_string(),
@@ -1498,5 +1588,245 @@ mod tests {
         // In a real test setup we'd capture stdout, but for now we verify the contract
         let result = print_single_ac(&acs, "AC-JSON-001", true);
         assert!(result.is_ok());
+    }
+
+    // ==========================================================================
+    // Cross-module invariants test: must_have_ac semantics
+    // ==========================================================================
+    //
+    // This test bridges ac_parsing.rs and ac_status.rs to ensure both modules
+    // compute the same `must_have_ac` value for each AC. If this test fails,
+    // it means the AND semantics for must_have_ac have diverged.
+
+    #[test]
+    fn must_have_ac_invariant_matches_ac_parsing() {
+        use super::super::ac_parsing::parse_ledger_with_metadata;
+        use std::io::Write;
+        use tempfile::NamedTempFile;
+
+        // Create a ledger with varied must_have_ac configurations
+        let content = r#"
+stories:
+  - id: US-INVARIANT-001
+    requirements:
+      # Case 1: Both default (true && true = true)
+      - id: REQ-BOTH-DEFAULT
+        acceptance_criteria:
+          - id: AC-BOTH-DEFAULT
+            text: "Both default to true"
+
+      # Case 2: REQ false, AC default (false && true = false)
+      - id: REQ-FALSE-AC-DEFAULT
+        must_have_ac: false
+        acceptance_criteria:
+          - id: AC-REQ-FALSE
+            text: "REQ is false"
+
+      # Case 3: REQ default, AC false (true && false = false)
+      - id: REQ-DEFAULT-AC-FALSE
+        acceptance_criteria:
+          - id: AC-EXPLICIT-FALSE
+            text: "AC explicitly false"
+            must_have_ac: false
+
+      # Case 4: Both explicit true (true && true = true)
+      - id: REQ-BOTH-TRUE
+        must_have_ac: true
+        acceptance_criteria:
+          - id: AC-BOTH-TRUE
+            text: "Both explicit true"
+            must_have_ac: true
+
+      # Case 5: Both explicit false (false && false = false)
+      - id: REQ-BOTH-FALSE
+        must_have_ac: false
+        acceptance_criteria:
+          - id: AC-BOTH-FALSE
+            text: "Both explicit false"
+            must_have_ac: false
+
+      # Case 6: Mixed ACs under same REQ
+      - id: REQ-MIXED-ACS
+        must_have_ac: true
+        acceptance_criteria:
+          - id: AC-MIXED-KERNEL
+            text: "Kernel AC"
+            must_have_ac: true
+          - id: AC-MIXED-OPTIONAL
+            text: "Optional AC"
+            must_have_ac: false
+"#;
+
+        let mut file = NamedTempFile::new().unwrap();
+        write!(file, "{}", content).unwrap();
+        file.flush().unwrap();
+
+        // Parse with both modules
+        let metadata = parse_ledger_with_metadata(file.path()).unwrap();
+        let acs = parse_ledger(file.path()).unwrap();
+
+        // Verify all ACs exist in both
+        assert_eq!(metadata.len(), acs.len(), "AC count mismatch");
+
+        // Verify each AC has matching must_have_ac
+        for (id, meta) in &metadata {
+            let ac = acs.get(id).unwrap_or_else(|| panic!("AC {} missing from ac_status", id));
+            assert_eq!(
+                ac.must_have_ac, meta.must_have_ac,
+                "must_have_ac mismatch for {}: ac_status={}, ac_parsing={}",
+                id, ac.must_have_ac, meta.must_have_ac
+            );
+            assert_eq!(
+                ac.req_id, meta.req_id,
+                "req_id mismatch for {}: ac_status={}, ac_parsing={}",
+                id, ac.req_id, meta.req_id
+            );
+        }
+
+        // Verify expected values
+        assert!(acs.get("AC-BOTH-DEFAULT").unwrap().must_have_ac);
+        assert!(!acs.get("AC-REQ-FALSE").unwrap().must_have_ac);
+        assert!(!acs.get("AC-EXPLICIT-FALSE").unwrap().must_have_ac);
+        assert!(acs.get("AC-BOTH-TRUE").unwrap().must_have_ac);
+        assert!(!acs.get("AC-BOTH-FALSE").unwrap().must_have_ac);
+        assert!(acs.get("AC-MIXED-KERNEL").unwrap().must_have_ac);
+        assert!(!acs.get("AC-MIXED-OPTIONAL").unwrap().must_have_ac);
+    }
+
+    // ==========================================================================
+    // AcSource behavior tests
+    // ==========================================================================
+
+    #[test]
+    fn update_ac_statuses_sets_source_from_bdd() {
+        let mut acs = HashMap::new();
+        acs.insert(
+            "AC-BDD-SRC".to_string(),
+            Ac {
+                id: "AC-BDD-SRC".to_string(),
+                story_id: "US-TEST".to_string(),
+                req_id: "REQ-TEST".to_string(),
+                text: "BDD source test".to_string(),
+                status: AcStatus::Unknown,
+                source: AcSource::Inferred,
+                scenarios: vec!["Test scenario".to_string()],
+                tests_total: 1,
+                tests_executed: 0,
+                tags: vec![],
+                must_have_ac: true,
+                tests: vec![TestMapping {
+                    test_type: "bdd".to_string(),
+                    tag: "@AC-BDD-SRC".to_string(),
+                    file: None,
+                    module: None,
+                }],
+            },
+        );
+
+        // Case 1: BDD result from Coverage
+        let bdd_results = HashMap::from([("AC-BDD-SRC".to_string(), AcStatus::Pass)]);
+        update_ac_statuses(&mut acs, &bdd_results, &HashMap::new(), AcSource::Coverage);
+
+        let ac = acs.get("AC-BDD-SRC").unwrap();
+        assert_eq!(ac.status, AcStatus::Pass);
+        assert!(matches!(ac.source, AcSource::Coverage));
+    }
+
+    #[test]
+    fn update_ac_statuses_sets_source_from_junit() {
+        let mut acs = HashMap::new();
+        acs.insert(
+            "AC-JUNIT-SRC".to_string(),
+            Ac {
+                id: "AC-JUNIT-SRC".to_string(),
+                story_id: "US-TEST".to_string(),
+                req_id: "REQ-TEST".to_string(),
+                text: "JUnit source test".to_string(),
+                status: AcStatus::Unknown,
+                source: AcSource::Inferred,
+                scenarios: Vec::new(),
+                tests_total: 1,
+                tests_executed: 0,
+                tags: vec![],
+                must_have_ac: true,
+                tests: vec![TestMapping {
+                    test_type: "bdd".to_string(),
+                    tag: "@AC-JUNIT-SRC".to_string(),
+                    file: None,
+                    module: None,
+                }],
+            },
+        );
+
+        // Case 2: BDD result from JUnit fallback
+        let bdd_results = HashMap::from([("AC-JUNIT-SRC".to_string(), AcStatus::Fail)]);
+        update_ac_statuses(&mut acs, &bdd_results, &HashMap::new(), AcSource::Junit);
+
+        let ac = acs.get("AC-JUNIT-SRC").unwrap();
+        assert_eq!(ac.status, AcStatus::Fail);
+        assert!(matches!(ac.source, AcSource::Junit));
+    }
+
+    #[test]
+    fn update_ac_statuses_sets_inferred_when_no_tests() {
+        let mut acs = HashMap::new();
+        acs.insert(
+            "AC-NO-TESTS".to_string(),
+            Ac {
+                id: "AC-NO-TESTS".to_string(),
+                story_id: "US-TEST".to_string(),
+                req_id: "REQ-TEST".to_string(),
+                text: "No tests".to_string(),
+                status: AcStatus::Unknown,
+                source: AcSource::Coverage, // Will be reset
+                scenarios: Vec::new(),
+                tests_total: 1,
+                tests_executed: 0,
+                tags: vec![],
+                must_have_ac: true,
+                tests: vec![TestMapping {
+                    test_type: "bdd".to_string(),
+                    tag: "@AC-NO-TESTS".to_string(),
+                    file: None,
+                    module: None,
+                }],
+            },
+        );
+
+        // Case 3: No BDD results, no unit results -> Inferred
+        update_ac_statuses(&mut acs, &HashMap::new(), &HashMap::new(), AcSource::Coverage);
+
+        let ac = acs.get("AC-NO-TESTS").unwrap();
+        assert_eq!(ac.status, AcStatus::Unknown);
+        assert!(matches!(ac.source, AcSource::Inferred));
+    }
+
+    #[test]
+    fn update_ac_statuses_zero_tests_total_is_inferred() {
+        let mut acs = HashMap::new();
+        acs.insert(
+            "AC-ZERO-TOTAL".to_string(),
+            Ac {
+                id: "AC-ZERO-TOTAL".to_string(),
+                story_id: "US-TEST".to_string(),
+                req_id: "REQ-TEST".to_string(),
+                text: "Zero tests declared".to_string(),
+                status: AcStatus::Pass,     // Will be reset
+                source: AcSource::Coverage, // Will be reset
+                scenarios: Vec::new(),
+                tests_total: 0, // No tests declared
+                tests_executed: 0,
+                tags: vec![],
+                must_have_ac: true,
+                tests: vec![],
+            },
+        );
+
+        // Case 4: tests_total == 0 -> immediately Unknown + Inferred
+        update_ac_statuses(&mut acs, &HashMap::new(), &HashMap::new(), AcSource::Coverage);
+
+        let ac = acs.get("AC-ZERO-TOTAL").unwrap();
+        assert_eq!(ac.status, AcStatus::Unknown);
+        assert!(matches!(ac.source, AcSource::Inferred));
     }
 }

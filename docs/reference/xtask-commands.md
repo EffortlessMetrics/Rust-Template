@@ -388,26 +388,29 @@ nix develop -c cargo run -p xtask -- ac-status
 
 **Note:** The coverage.jsonl path is the recommended approach. JUnit fallback is for backward compatibility and may be removed in a future major version.
 
-### JSON Output
+### JSON Output (Schema v2.0)
 
-When `--json` is specified, outputs structured JSON instead of generating the markdown file:
+When `--json` is specified, outputs structured JSON instead of generating the markdown file.
+
+**Schema version 2.0** uses `must_have_ac` metadata for AC classification instead of prefix-based heuristics:
 
 ```json
 {
-  "timestamp": "2025-11-26T12:00:00Z",
-  "kernel_acs": {
+  "schema_version": "2.0",
+  "timestamp": "2025-12-05T12:00:00Z",
+  "must_have_acs": {
     "total": 48,
-    "passing": 48,
-    "failing": 0,
-    "unknown": 0
+    "passing": 46,
+    "failing": 1,
+    "unknown": 1
   },
-  "template_acs": {
+  "optional_acs": {
     "total": 17,
-    "passing": 17,
+    "passing": 15,
     "failing": 0,
-    "unknown": 0
+    "unknown": 2
   },
-  "coverage_percent": 100.0,
+  "coverage_percent": 93.8,
   "acs": [
     {
       "id": "AC-TPL-001",
@@ -415,6 +418,8 @@ When `--json` is specified, outputs structured JSON instead of generating the ma
       "req_id": "REQ-TPL-HEALTH",
       "text": "Doctor command validates environment",
       "status": "pass",
+      "source": "coverage",
+      "must_have_ac": true,
       "scenarios": ["Doctor detects missing tools"],
       "tests": [...],
       "tests_total": 1,
@@ -423,6 +428,51 @@ When `--json` is specified, outputs structured JSON instead of generating the ma
   ]
 }
 ```
+
+#### JSON Field Reference
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `schema_version` | string | Schema version (currently `"2.0"`). Bump on breaking changes. |
+| `timestamp` | string | ISO 8601 timestamp of report generation |
+| `must_have_acs` | object | Stats for ACs with `must_have_ac=true` (strictly enforced in selftest) |
+| `optional_acs` | object | Stats for ACs with `must_have_ac=false` (informational) |
+| `coverage_percent` | number | Overall coverage: (passing ACs / total ACs) × 100 |
+| `acs` | array | Array of individual AC status objects |
+
+**Per-AC Fields:**
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | string | AC identifier (e.g., `AC-KERN-001`) |
+| `story_id` | string | Parent user story ID |
+| `req_id` | string | Parent requirement ID |
+| `text` | string | Human-readable AC description |
+| `status` | string | `"pass"`, `"fail"`, or `"unknown"` |
+| `source` | string | Primary result source (see below) |
+| `must_have_ac` | boolean | Whether AC participates in strict coverage gate |
+| `scenarios` | array | BDD scenario names mapped to this AC |
+| `tests` | array | Test mappings from ledger |
+| `tests_total` | number | Total mapped tests declared in ledger |
+| `tests_executed` | number | Tests that actually ran |
+
+**Source Values:**
+
+| Source | Description |
+|--------|-------------|
+| `"coverage"` | Result from `coverage.jsonl` (streaming BDD, preferred) |
+| `"junit"` | Result from JUnit XML fallback |
+| `"json"` | Result from Cucumber JSON fallback |
+| `"inferred"` | No test results; status is ledger-only (`Unknown`) |
+
+**`must_have_ac` Semantics:**
+
+The `must_have_ac` flag uses AND semantics between requirement and AC:
+- If `REQ.must_have_ac=true` AND `AC.must_have_ac=true` → effective `must_have_ac=true`
+- If either is `false` → effective `must_have_ac=false`
+- Both default to `true` if not specified in `spec_ledger.yaml`
+
+When `XTASK_STRICT_AC_COVERAGE=1` is set, selftest fails if any `must_have_ac=true` AC has `status=unknown`.
 
 ### Exit Codes
 

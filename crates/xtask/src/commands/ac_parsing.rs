@@ -96,6 +96,10 @@ struct Requirement {
     acceptance_criteria: Vec<AcceptanceCriteria>,
 }
 
+/// Default for `must_have_ac` field: true (kernel AC).
+///
+/// This matches the AC classification semantics in ADR-0023.
+/// Keep in sync with `ac_status.rs::default_must_have_ac()`.
 fn default_must_have_ac() -> bool {
     true
 }
@@ -928,5 +932,182 @@ mod tests {
 
         assert!(scenarios.is_empty());
         assert!(results.is_empty());
+    }
+
+    // ============================================================================
+    // Tests for parse_ledger_with_metadata - must_have_ac AND semantics
+    // ============================================================================
+
+    fn write_ledger_file(content: &str) -> NamedTempFile {
+        let mut file = NamedTempFile::new().unwrap();
+        write!(file, "{}", content).unwrap();
+        file.flush().unwrap();
+        file
+    }
+
+    #[test]
+    fn test_must_have_ac_defaults_to_true() {
+        // When neither requirement nor AC specifies must_have_ac, it should default to true
+        let content = r#"
+stories:
+  - id: US-TEST-001
+    requirements:
+      - id: REQ-TEST-001
+        acceptance_criteria:
+          - id: AC-TEST-001
+            text: "Test AC without must_have_ac specified"
+"#;
+        let file = write_ledger_file(content);
+        let metadata = parse_ledger_with_metadata(file.path()).unwrap();
+
+        assert!(metadata.contains_key("AC-TEST-001"));
+        assert!(
+            metadata.get("AC-TEST-001").unwrap().must_have_ac,
+            "must_have_ac should default to true when not specified"
+        );
+    }
+
+    #[test]
+    fn test_must_have_ac_and_semantics_both_true() {
+        // When both requirement and AC have must_have_ac=true, effective is true
+        let content = r#"
+stories:
+  - id: US-TEST-001
+    requirements:
+      - id: REQ-TEST-001
+        must_have_ac: true
+        acceptance_criteria:
+          - id: AC-TEST-001
+            text: "Test AC"
+            must_have_ac: true
+"#;
+        let file = write_ledger_file(content);
+        let metadata = parse_ledger_with_metadata(file.path()).unwrap();
+
+        assert!(
+            metadata.get("AC-TEST-001").unwrap().must_have_ac,
+            "must_have_ac should be true when both REQ and AC are true"
+        );
+    }
+
+    #[test]
+    fn test_must_have_ac_and_semantics_req_false() {
+        // When requirement has must_have_ac=false, even if AC is true, effective is false
+        let content = r#"
+stories:
+  - id: US-TEST-001
+    requirements:
+      - id: REQ-TEST-001
+        must_have_ac: false
+        acceptance_criteria:
+          - id: AC-TEST-001
+            text: "Test AC"
+            must_have_ac: true
+"#;
+        let file = write_ledger_file(content);
+        let metadata = parse_ledger_with_metadata(file.path()).unwrap();
+
+        assert!(
+            !metadata.get("AC-TEST-001").unwrap().must_have_ac,
+            "must_have_ac should be false when REQ is false (AND semantics)"
+        );
+    }
+
+    #[test]
+    fn test_must_have_ac_and_semantics_ac_false() {
+        // When AC has must_have_ac=false, even if REQ is true, effective is false
+        let content = r#"
+stories:
+  - id: US-TEST-001
+    requirements:
+      - id: REQ-TEST-001
+        must_have_ac: true
+        acceptance_criteria:
+          - id: AC-TEST-001
+            text: "Test AC"
+            must_have_ac: false
+"#;
+        let file = write_ledger_file(content);
+        let metadata = parse_ledger_with_metadata(file.path()).unwrap();
+
+        assert!(
+            !metadata.get("AC-TEST-001").unwrap().must_have_ac,
+            "must_have_ac should be false when AC is false (AND semantics)"
+        );
+    }
+
+    #[test]
+    fn test_must_have_ac_and_semantics_both_false() {
+        // When both are false, effective is false
+        let content = r#"
+stories:
+  - id: US-TEST-001
+    requirements:
+      - id: REQ-TEST-001
+        must_have_ac: false
+        acceptance_criteria:
+          - id: AC-TEST-001
+            text: "Test AC"
+            must_have_ac: false
+"#;
+        let file = write_ledger_file(content);
+        let metadata = parse_ledger_with_metadata(file.path()).unwrap();
+
+        assert!(
+            !metadata.get("AC-TEST-001").unwrap().must_have_ac,
+            "must_have_ac should be false when both are false"
+        );
+    }
+
+    #[test]
+    fn test_must_have_ac_mixed_acs_under_same_req() {
+        // Different ACs under the same requirement can have different must_have_ac values
+        let content = r#"
+stories:
+  - id: US-TEST-001
+    requirements:
+      - id: REQ-TEST-001
+        must_have_ac: true
+        acceptance_criteria:
+          - id: AC-KERNEL-001
+            text: "Kernel AC"
+            must_have_ac: true
+          - id: AC-OPTIONAL-001
+            text: "Optional AC"
+            must_have_ac: false
+"#;
+        let file = write_ledger_file(content);
+        let metadata = parse_ledger_with_metadata(file.path()).unwrap();
+
+        assert!(
+            metadata.get("AC-KERNEL-001").unwrap().must_have_ac,
+            "AC-KERNEL-001 should be must_have_ac=true"
+        );
+        assert!(
+            !metadata.get("AC-OPTIONAL-001").unwrap().must_have_ac,
+            "AC-OPTIONAL-001 should be must_have_ac=false"
+        );
+    }
+
+    #[test]
+    fn test_must_have_ac_preserves_req_id() {
+        // Verify that req_id is correctly preserved in metadata
+        let content = r#"
+stories:
+  - id: US-TEST-001
+    requirements:
+      - id: REQ-PARENT-001
+        acceptance_criteria:
+          - id: AC-CHILD-001
+            text: "Child AC"
+"#;
+        let file = write_ledger_file(content);
+        let metadata = parse_ledger_with_metadata(file.path()).unwrap();
+
+        assert_eq!(
+            metadata.get("AC-CHILD-001").unwrap().req_id,
+            "REQ-PARENT-001",
+            "req_id should be correctly preserved"
+        );
     }
 }
