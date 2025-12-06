@@ -1,4 +1,5 @@
 pub mod ac_coverage;
+pub mod ac_history;
 pub mod ac_new;
 pub mod ac_parsing;
 pub mod ac_report;

@@ -203,6 +203,20 @@ enum Commands {
         format: String,
     },
 
+    /// Analyze AC coverage trends from CI snapshots
+    #[command(next_help_heading = "📋 Acceptance Criteria")]
+    AcHistory {
+        /// Directory containing ac-status JSON snapshots
+        #[arg(long, default_value = "artifacts/ac-status")]
+        dir: String,
+        /// Output format (text, markdown, csv, json)
+        #[arg(long, default_value = "text")]
+        format: String,
+        /// Only show must_have_ac=true ACs
+        #[arg(long)]
+        must_have: bool,
+    },
+
     // ============================================================================
     // DESIGN & DOCUMENTATION (Docs, ADRs, design docs)
     // ============================================================================
@@ -727,6 +741,13 @@ fn main() -> Result<()> {
                 format,
             })
         }
+        Commands::AcHistory { dir, format, must_have } => {
+            commands::ac_history::run(commands::ac_history::AcHistoryArgs {
+                dir: std::path::PathBuf::from(dir),
+                format,
+                must_have,
+            })
+        }
         Commands::Bundle { task } => commands::bundle::run(&task),
         Commands::Audit => commands::audit::run(),
         Commands::Coverage => commands::coverage::run(),
@@ -977,6 +998,7 @@ fn format_command(cmd: &Command) -> String {
 /// Used by devex contract check to validate required commands exist
 pub fn all_command_names() -> Vec<&'static str> {
     vec![
+        "ac-history",
         "ac-status",
         "ac-new",
         "adr-check",
