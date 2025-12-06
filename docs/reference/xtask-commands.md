@@ -507,6 +507,9 @@ cargo run -p xtask -- ac-coverage
 # Show only ACs with Unknown status (coverage backlog)
 cargo run -p xtask -- ac-coverage --todo
 
+# Show only kernel (must_have_ac=true) ACs with Unknown status
+cargo run -p xtask -- ac-coverage --todo --must-have
+
 # Or with alias
 xt ac-coverage
 ```
@@ -516,6 +519,7 @@ xt ac-coverage
 | Flag | Description |
 |------|-------------|
 | `--todo` | Show only ACs with Unknown status (coverage backlog checklist) |
+| `--must-have` | When used with `--todo`, filter to only kernel ACs (`must_have_ac=true`) |
 
 ### What It Does
 
@@ -527,6 +531,8 @@ Displays AC coverage summary and identifies which ACs need BDD scenarios:
 4. Groups unknown ACs by requirement
 5. Displays pass/fail/unknown counts and actionable next steps
 
+The `--must-have` flag filters to only show "kernel" ACs where `must_have_ac=true` in the spec ledger. These are the ACs that selftest enforces coverage for.
+
 ### Exit Codes
 
 - `0`: Always succeeds (read-only operation)
@@ -534,8 +540,8 @@ Displays AC coverage summary and identifies which ACs need BDD scenarios:
 ### When to Use
 
 - **During AC development** - Identify which ACs still need scenarios
-- **Sprint planning** - See coverage gaps at a glance
-- **Before releases** - Ensure all ACs have test coverage
+- **Sprint planning** - See coverage gaps at a glance (`--todo`)
+- **Before releases** - Ensure all kernel ACs have coverage (`--todo --must-have`)
 - **Onboarding new features** - Understand what's missing
 
 ### Example Output
@@ -1360,11 +1366,22 @@ XTASK_LOW_RESOURCES=1 cargo run -p xtask -- selftest
 
 # Verbose mode
 cargo run -p xtask -- selftest -v
+
+# Strict AC coverage mode (fails on Unknown kernel ACs)
+XTASK_STRICT_AC_COVERAGE=1 cargo run -p xtask -- selftest
 ```
+
+### Environment Variables
+
+| Variable | Description |
+|----------|-------------|
+| `XTASK_LOW_RESOURCES=1` | Reduce parallelism and skip resource-intensive checks |
+| `XTASK_SKIP_BDD=1` | Skip BDD tests (used internally to avoid recursion) |
+| `XTASK_STRICT_AC_COVERAGE=1` | Fail selftest if kernel (`must_have_ac=true`) ACs have Unknown status (no BDD coverage) |
 
 ### What It Does
 
-Comprehensive validation in **7 steps**:
+Comprehensive validation in **11 steps**:
 
 1. **Core checks:** format, clippy, tests
 2. **BDD tests:** acceptance scenarios + JUnit XML

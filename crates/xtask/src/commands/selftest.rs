@@ -776,8 +776,10 @@ fn run_ac_coverage_check(verbosity: crate::Verbosity) -> Result<()> {
         }
     }
 
-    // Only fail on explicit failures - unknown is advisory due to cucumber JUnit writer issue
-    // (cucumber-rs 0.21.1 JUnit writer buffers and only writes on drop, but exit() skips drop)
+    // Check for strict mode: XTASK_STRICT_AC_COVERAGE=1 fails on Unknown must_have_ac ACs
+    let strict_mode = env::var("XTASK_STRICT_AC_COVERAGE").unwrap_or_default() == "1";
+
+    // Fail on explicit failures
     if kernel_failing_count > 0 {
         eprintln!();
         eprintln!("{}", "❌ Kernel AC coverage gate failed".red().bold());
@@ -796,16 +798,56 @@ fn run_ac_coverage_check(verbosity: crate::Verbosity) -> Result<()> {
         anyhow::bail!("Kernel AC coverage incomplete: {} failing", kernel_failing_count);
     }
 
-    // Unknown ACs are advisory (not a hard gate) due to JUnit writer limitations
-    if kernel_unknown_count > 0 {
-        println!();
-        println!(
-            "  {} {} kernel ACs have unknown coverage (advisory)",
-            "⚠".yellow(),
+    // In strict mode, Unknown must_have_ac ACs also fail the gate
+    if strict_mode && kernel_unknown_count > 0 {
+        eprintln!();
+        eprintln!("{}", "❌ Kernel AC coverage gate failed (strict mode)".red().bold());
+        eprintln!();
+
+        eprintln!("{}", "Unknown must_have_ac ACs (no BDD coverage):".bold());
+        for (ac_id, req_id) in &kernel_unknown {
+            eprintln!("  • {} ({})", ac_id, req_id);
+        }
+        eprintln!();
+
+        eprintln!("{}", "Next steps:".bold());
+        eprintln!("  1. View the backlog: {}", "cargo xtask ac-coverage --todo --must-have".cyan());
+        eprintln!("  2. Generate scenarios: {}", "cargo xtask ac-suggest-scenarios <AC_ID>".cyan());
+        eprintln!("  3. Add @<AC_ID> scenarios and rerun: {}", "cargo xtask selftest".cyan());
+        eprintln!();
+        eprintln!("{}", "ℹ️  To disable strict mode, unset XTASK_STRICT_AC_COVERAGE".dimmed());
+
+        anyhow::bail!(
+            "Kernel AC coverage incomplete: {} unknown (strict mode enabled)",
             kernel_unknown_count
         );
-        println!("    This is typically due to cucumber JUnit writer issue (file may be empty).");
-        println!("    AC status is based on BDD scenario execution, not JUnit file presence.");
+    }
+
+    // In non-strict mode, Unknown ACs are advisory
+    if kernel_unknown_count > 0 {
+        println!();
+        if strict_mode {
+            // This branch won't be reached (we'd have failed above), but for completeness
+            println!(
+                "  {} {} kernel ACs have unknown coverage",
+                "⚠".yellow(),
+                kernel_unknown_count
+            );
+        } else {
+            println!(
+                "  {} {} kernel ACs have unknown coverage (advisory)",
+                "⚠".yellow(),
+                kernel_unknown_count
+            );
+            println!(
+                "    💡 To enforce coverage, set {} and rerun",
+                "XTASK_STRICT_AC_COVERAGE=1".cyan()
+            );
+            println!(
+                "    📋 View backlog: {}",
+                "cargo xtask ac-coverage --todo --must-have".cyan()
+            );
+        }
     }
 
     // Provide informational warning about non-kernel ACs if any are failing/unknown
@@ -1024,5 +1066,41 @@ mod tests {
         assert_eq!(results.steps.len(), 3);
         assert!(results.steps[0].ok);
         assert!(!results.steps[2].ok);
+    }
+
+    /// Test that XTASK_STRICT_AC_COVERAGE env var is recognized
+    /// This documents the expected behavior of strict mode:
+    /// - Default (unset or "0"): Unknown kernel ACs are advisory
+    /// - "1": Unknown kernel ACs fail the gate
+    #[test]
+    fn strict_ac_coverage_env_var_parsing() {
+        use std::env;
+
+        // Test parsing logic (same as in run_ac_coverage_check)
+        let parse_strict = || env::var("XTASK_STRICT_AC_COVERAGE").unwrap_or_default() == "1";
+
+        // Default behavior: strict mode is off
+        // SAFETY: Tests run single-threaded when using this env var
+        unsafe {
+            env::remove_var("XTASK_STRICT_AC_COVERAGE");
+        }
+        assert!(!parse_strict(), "Default should be non-strict");
+
+        // Explicit "0" should be non-strict
+        unsafe {
+            env::set_var("XTASK_STRICT_AC_COVERAGE", "0");
+        }
+        assert!(!parse_strict(), "Explicit 0 should be non-strict");
+
+        // "1" enables strict mode
+        unsafe {
+            env::set_var("XTASK_STRICT_AC_COVERAGE", "1");
+        }
+        assert!(parse_strict(), "1 should enable strict mode");
+
+        // Clean up
+        unsafe {
+            env::remove_var("XTASK_STRICT_AC_COVERAGE");
+        }
     }
 }

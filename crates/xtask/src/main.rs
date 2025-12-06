@@ -153,9 +153,12 @@ enum Commands {
     /// Show AC coverage grouped by requirement (which ACs need BDD scenarios)
     #[command(next_help_heading = "📋 Acceptance Criteria")]
     AcCoverage {
-        /// Show only must_have_ac ACs with Unknown status (coverage backlog)
+        /// Show only ACs with Unknown status (coverage backlog)
         #[arg(long)]
         todo: bool,
+        /// When used with --todo, filter to only kernel ACs (must_have_ac=true)
+        #[arg(long, requires = "todo")]
+        must_have: bool,
     },
 
     /// Suggest BDD scenarios for a given AC
@@ -679,9 +682,10 @@ fn main() -> Result<()> {
         Commands::AcNew { ac_id, description, story, requirement } => {
             commands::ac_new::run(&ac_id, &description, &story, &requirement)
         }
-        Commands::AcCoverage { todo } => {
+        Commands::AcCoverage { todo, must_have } => {
             commands::ac_coverage::run(commands::ac_coverage::AcCoverageArgs {
                 todo_only: todo,
+                must_have_only: must_have,
                 ..Default::default()
             })
         }

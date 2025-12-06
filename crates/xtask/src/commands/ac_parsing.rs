@@ -52,6 +52,15 @@ pub struct Scenario {
 pub type AcsByReq = BTreeMap<String, Vec<String>>;
 pub type AcToReqMap = HashMap<String, String>;
 
+/// Metadata for an acceptance criterion
+#[derive(Debug, Clone)]
+pub struct AcMetadata {
+    /// The parent requirement ID
+    pub req_id: String,
+    /// Whether this AC must have BDD coverage (true = kernel, false = non-kernel)
+    pub must_have_ac: bool,
+}
+
 // ============================================================================
 // Ledger Parsing
 // ============================================================================
@@ -80,7 +89,15 @@ struct Requirement {
     #[serde(default)]
     #[allow(dead_code)]
     tags: Vec<String>,
+    /// Whether all ACs under this requirement must have BDD coverage.
+    /// Defaults to true (kernel). Set to false for non-kernel/exploratory ACs.
+    #[serde(default = "default_must_have_ac")]
+    must_have_ac: bool,
     acceptance_criteria: Vec<AcceptanceCriteria>,
+}
+
+fn default_must_have_ac() -> bool {
+    true
 }
 
 #[derive(Debug, Deserialize)]
@@ -91,6 +108,10 @@ struct AcceptanceCriteria {
     /// Currently only ID is needed for mapping ACs to tests.
     #[allow(dead_code)]
     text: String,
+    /// Whether this specific AC must have BDD coverage.
+    /// Inherits from requirement if not specified, defaults to true.
+    #[serde(default = "default_must_have_ac")]
+    must_have_ac: bool,
 }
 
 /// Parse the spec_ledger.yaml file and return all ACs mapped to their parent requirement ID.
@@ -122,6 +143,38 @@ pub fn parse_ledger(ledger_path: &Path) -> Result<(AcToReqMap, AcsByReq)> {
     }
 
     Ok((all_acs, acs_by_req))
+}
+
+/// Parse the spec_ledger.yaml file and return all ACs with full metadata.
+///
+/// Returns HashMap<AC_ID, AcMetadata> containing:
+/// - req_id: parent requirement ID
+/// - must_have_ac: whether this AC must have BDD coverage (kernel AC)
+///
+/// This is a richer version of `parse_ledger` that exposes `must_have_ac` for filtering.
+pub fn parse_ledger_with_metadata(ledger_path: &Path) -> Result<HashMap<String, AcMetadata>> {
+    let content = fs::read_to_string(ledger_path)
+        .with_context(|| format!("Failed to read ledger: {}", ledger_path.display()))?;
+
+    let ledger: Ledger = serde_yaml::from_str(&content)
+        .with_context(|| format!("Failed to parse ledger YAML: {}", ledger_path.display()))?;
+
+    let mut ac_metadata: HashMap<String, AcMetadata> = HashMap::new();
+
+    for story in ledger.stories {
+        for req in story.requirements {
+            for ac in req.acceptance_criteria {
+                // AC's must_have_ac is effective if both REQ and AC have it true
+                let effective_must_have = req.must_have_ac && ac.must_have_ac;
+                ac_metadata.insert(
+                    ac.id.clone(),
+                    AcMetadata { req_id: req.id.clone(), must_have_ac: effective_must_have },
+                );
+            }
+        }
+    }
+
+    Ok(ac_metadata)
 }
 
 // ============================================================================
