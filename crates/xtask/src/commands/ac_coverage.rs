@@ -6,7 +6,8 @@ use std::path::Path;
 use std::path::PathBuf;
 
 use super::ac_parsing::{
-    AcStatus, parse_ac_coverage, parse_cucumber_json, parse_features, parse_junit, parse_ledger,
+    AcMetadata, AcStatus, parse_ac_coverage, parse_cucumber_json, parse_features, parse_junit,
+    parse_ledger, parse_ledger_with_metadata,
 };
 
 pub fn run(args: AcCoverageArgs) -> Result<()> {
@@ -20,6 +21,9 @@ pub fn run(args: AcCoverageArgs) -> Result<()> {
     }
 
     let (all_acs, acs_by_req) = parse_ledger(ledger_path)?;
+
+    // Parse ledger with metadata for must_have_ac filtering
+    let ac_metadata = parse_ledger_with_metadata(ledger_path)?;
 
     // Parse scenarios from features (for fallback path)
     let scenarios = parse_features(&args.features_dir)?;
@@ -70,7 +74,7 @@ pub fn run(args: AcCoverageArgs) -> Result<()> {
 
     // Generate report
     if args.todo_only {
-        print_todo_backlog(&all_acs, &acs_by_req, &ac_statuses)?;
+        print_todo_backlog(&ac_metadata, &ac_statuses, args.must_have_only)?;
     } else {
         print_coverage_report(&all_acs, &acs_by_req, &ac_statuses)?;
     }
@@ -81,25 +85,39 @@ pub fn run(args: AcCoverageArgs) -> Result<()> {
 /// Print a focused backlog of ACs that need BDD scenarios.
 ///
 /// Used by `cargo xtask ac-coverage --todo` to show actionable work items.
+///
+/// # Arguments
+/// * `ac_metadata` - Map of AC_ID -> AcMetadata with req_id and must_have_ac
+/// * `ac_statuses` - Map of AC_ID -> AcStatus (Pass/Fail/Unknown)
+/// * `must_have_only` - If true, only show ACs where must_have_ac=true (kernel ACs)
 fn print_todo_backlog(
-    all_acs: &HashMap<String, String>,
-    _acs_by_req: &BTreeMap<String, Vec<String>>,
+    ac_metadata: &HashMap<String, AcMetadata>,
     ac_statuses: &HashMap<String, AcStatus>,
+    must_have_only: bool,
 ) -> Result<()> {
     // Collect unknown ACs grouped by requirement
     let mut unknowns_by_req: BTreeMap<String, Vec<String>> = BTreeMap::new();
     for (ac_id, status) in ac_statuses {
         if *status == AcStatus::Unknown
-            && let Some(req_id) = all_acs.get(ac_id)
+            && let Some(metadata) = ac_metadata.get(ac_id)
         {
-            unknowns_by_req.entry(req_id.clone()).or_default().push(ac_id.clone());
+            // Filter by must_have_ac if requested
+            if must_have_only && !metadata.must_have_ac {
+                continue;
+            }
+            unknowns_by_req.entry(metadata.req_id.clone()).or_default().push(ac_id.clone());
         }
     }
 
     if unknowns_by_req.is_empty() {
-        println!("{} {} All ACs have BDD coverage!", "🎉".bold(), "✓".green());
+        let filter_text = if must_have_only { "kernel (must_have_ac) " } else { "" };
+        println!("{} {} All {}ACs have BDD coverage!", "🎉".bold(), "✓".green(), filter_text);
         println!();
-        println!("Nothing in the backlog. Run `cargo xtask ac-coverage` for full report.");
+        if must_have_only {
+            println!("Run `cargo xtask ac-coverage --todo` to see all unknown ACs.");
+        } else {
+            println!("Nothing in the backlog. Run `cargo xtask ac-coverage` for full report.");
+        }
         return Ok(());
     }
 
@@ -107,39 +125,87 @@ fn print_todo_backlog(
     let total_unknown: usize = unknowns_by_req.values().map(|v| v.len()).sum();
     let total_reqs = unknowns_by_req.len();
 
-    println!("{} Coverage Backlog", "📋".bold());
+    let title = if must_have_only {
+        format!("{} Kernel AC Coverage Backlog", "📋".bold())
+    } else {
+        format!("{} Coverage Backlog", "📋".bold())
+    };
+    println!("{title}");
     println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
     println!();
-    println!(
-        "  {} ACs need BDD scenarios across {} requirements",
-        total_unknown.to_string().yellow().bold(),
-        total_reqs
-    );
+    if must_have_only {
+        println!(
+            "  {} kernel ACs need BDD scenarios across {} requirements",
+            total_unknown.to_string().yellow().bold(),
+            total_reqs
+        );
+        println!("  (Showing only must_have_ac=true ACs)");
+    } else {
+        println!(
+            "  {} ACs need BDD scenarios across {} requirements",
+            total_unknown.to_string().yellow().bold(),
+            total_reqs
+        );
+    }
     println!();
 
-    // Print as a simple checklist
+    // Count kernel unknowns before we consume unknowns_by_req in the loop
+    let kernel_unknown: usize = if !must_have_only {
+        unknowns_by_req
+            .values()
+            .flatten()
+            .filter(|ac_id| ac_metadata.get(*ac_id).map(|m| m.must_have_ac).unwrap_or(false))
+            .count()
+    } else {
+        0
+    };
+
+    // Print as a checklist with per-AC hints
     let mut item_num = 1;
     for (req_id, mut ac_ids) in unknowns_by_req {
         ac_ids.sort();
         println!("  {}", req_id.cyan().bold());
-        for ac_id in ac_ids {
-            println!("    [ ] {}. {}", item_num, ac_id);
+        for ac_id in &ac_ids {
+            // Check if this is a must_have_ac for annotation
+            let is_kernel = ac_metadata.get(ac_id).map(|m| m.must_have_ac).unwrap_or(false);
+            let kernel_marker = if is_kernel && !must_have_only { " 🔒" } else { "" };
+
+            println!("    [ ] {}. {}{}", item_num, ac_id, kernel_marker);
+            // Per-AC hint: show the command to generate scenarios
+            println!(
+                "         {} {}",
+                "→".dimmed(),
+                format!("cargo xtask ac-suggest-scenarios {}", ac_id).cyan()
+            );
             item_num += 1;
         }
         println!();
     }
 
-    // Quick start command
-    if let Some(first_ac) =
-        ac_statuses.iter().find(|(_, s)| **s == AcStatus::Unknown).map(|(id, _)| id)
-    {
-        println!("{} Quick Start", "🚀".bold());
+    // Usage hints
+    println!("{} Next Steps", "🚀".bold());
+    println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+    println!();
+    println!("  1. Pick an AC from above and generate scenarios:");
+    println!("     {} {}", "$".dimmed(), "cargo xtask ac-suggest-scenarios <AC_ID>".cyan());
+    println!();
+    println!("  2. Add scenarios to specs/features/*.feature with @<AC_ID> tag");
+    println!();
+    println!("  3. Run BDD tests:");
+    println!("     {} {}", "$".dimmed(), "cargo xtask bdd".cyan());
+    println!();
+
+    if !must_have_only && kernel_unknown > 0 && kernel_unknown < total_unknown {
+        println!("{} Filter Options", "💡".bold());
         println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
         println!();
         println!(
-            "  {} {}",
-            "$".dimmed(),
-            format!("cargo xtask ac-suggest-scenarios {}", first_ac).cyan()
+            "  {} of {} unknown ACs are kernel (must_have_ac=true)",
+            kernel_unknown, total_unknown
+        );
+        println!(
+            "  To show only kernel ACs: {}",
+            "cargo xtask ac-coverage --todo --must-have".cyan()
         );
         println!();
     }
@@ -233,8 +299,10 @@ pub struct AcCoverageArgs {
     pub junit: PathBuf,
     /// Fallback: Cucumber JSON report
     pub json_report: PathBuf,
-    /// Show only must_have_ac ACs with Unknown status (coverage backlog)
+    /// Show only ACs with Unknown status (coverage backlog)
     pub todo_only: bool,
+    /// When used with todo_only, filter to only kernel ACs (must_have_ac=true)
+    pub must_have_only: bool,
 }
 
 impl Default for AcCoverageArgs {
@@ -246,6 +314,7 @@ impl Default for AcCoverageArgs {
             junit: PathBuf::from("target/junit/acceptance.xml"),
             json_report: PathBuf::from("target/ac_report.json"),
             todo_only: false,
+            must_have_only: false,
         }
     }
 }
@@ -254,54 +323,69 @@ impl Default for AcCoverageArgs {
 mod tests {
     use super::*;
 
+    /// Helper to create AcMetadata
+    fn make_metadata(req_id: &str, must_have: bool) -> AcMetadata {
+        AcMetadata { req_id: req_id.to_string(), must_have_ac: must_have }
+    }
+
     #[test]
     fn print_todo_backlog_with_unknown_acs_shows_backlog() {
         // Setup: 3 ACs, 2 unknown (need BDD), 1 passing
-        let mut all_acs = HashMap::new();
-        all_acs.insert("AC-PLT-001".to_string(), "REQ-PLT-001".to_string());
-        all_acs.insert("AC-PLT-002".to_string(), "REQ-PLT-001".to_string());
-        all_acs.insert("AC-PLT-003".to_string(), "REQ-PLT-002".to_string());
-
-        let acs_by_req = BTreeMap::new(); // Not used by this function
+        let mut ac_metadata = HashMap::new();
+        ac_metadata.insert("AC-PLT-001".to_string(), make_metadata("REQ-PLT-001", true));
+        ac_metadata.insert("AC-PLT-002".to_string(), make_metadata("REQ-PLT-001", true));
+        ac_metadata.insert("AC-PLT-003".to_string(), make_metadata("REQ-PLT-002", false));
 
         let mut ac_statuses = HashMap::new();
         ac_statuses.insert("AC-PLT-001".to_string(), AcStatus::Unknown);
         ac_statuses.insert("AC-PLT-002".to_string(), AcStatus::Pass);
         ac_statuses.insert("AC-PLT-003".to_string(), AcStatus::Unknown);
 
-        // The function should succeed
-        let result = print_todo_backlog(&all_acs, &acs_by_req, &ac_statuses);
+        // The function should succeed (no filter)
+        let result = print_todo_backlog(&ac_metadata, &ac_statuses, false);
         assert!(result.is_ok());
+    }
 
-        // Note: We can't easily capture stdout in this test setup,
-        // but we verify the function doesn't error
+    #[test]
+    fn print_todo_backlog_with_must_have_filter() {
+        // Setup: 3 ACs, 2 unknown, but only 1 is must_have
+        let mut ac_metadata = HashMap::new();
+        ac_metadata.insert("AC-PLT-001".to_string(), make_metadata("REQ-PLT-001", true));
+        ac_metadata.insert("AC-PLT-002".to_string(), make_metadata("REQ-PLT-001", false));
+        ac_metadata.insert("AC-PLT-003".to_string(), make_metadata("REQ-PLT-002", false));
+
+        let mut ac_statuses = HashMap::new();
+        ac_statuses.insert("AC-PLT-001".to_string(), AcStatus::Unknown);
+        ac_statuses.insert("AC-PLT-002".to_string(), AcStatus::Unknown);
+        ac_statuses.insert("AC-PLT-003".to_string(), AcStatus::Unknown);
+
+        // With must_have filter, only AC-PLT-001 should appear
+        let result = print_todo_backlog(&ac_metadata, &ac_statuses, true);
+        assert!(result.is_ok());
     }
 
     #[test]
     fn print_todo_backlog_with_all_covered_shows_success() {
         // Setup: all ACs have BDD coverage (Pass or Fail, no Unknown)
-        let mut all_acs = HashMap::new();
-        all_acs.insert("AC-PLT-001".to_string(), "REQ-PLT-001".to_string());
-        all_acs.insert("AC-PLT-002".to_string(), "REQ-PLT-001".to_string());
-
-        let acs_by_req = BTreeMap::new();
+        let mut ac_metadata = HashMap::new();
+        ac_metadata.insert("AC-PLT-001".to_string(), make_metadata("REQ-PLT-001", true));
+        ac_metadata.insert("AC-PLT-002".to_string(), make_metadata("REQ-PLT-001", true));
 
         let mut ac_statuses = HashMap::new();
         ac_statuses.insert("AC-PLT-001".to_string(), AcStatus::Pass);
         ac_statuses.insert("AC-PLT-002".to_string(), AcStatus::Fail); // Even failing is "covered"
 
-        let result = print_todo_backlog(&all_acs, &acs_by_req, &ac_statuses);
+        let result = print_todo_backlog(&ac_metadata, &ac_statuses, false);
         assert!(result.is_ok());
     }
 
     #[test]
     fn print_todo_backlog_with_empty_acs() {
-        let all_acs = HashMap::new();
-        let acs_by_req = BTreeMap::new();
+        let ac_metadata = HashMap::new();
         let ac_statuses = HashMap::new();
 
         // Should succeed with "all covered" message (vacuously true)
-        let result = print_todo_backlog(&all_acs, &acs_by_req, &ac_statuses);
+        let result = print_todo_backlog(&ac_metadata, &ac_statuses, false);
         assert!(result.is_ok());
     }
 

@@ -80,6 +80,15 @@ Automated enforcement:
 1. `cargo xtask selftest` step 10 validates AC coverage via `ac-status --summary`
 2. `ac-status` and `ac-coverage` both use `parse_ac_coverage()` as primary
 3. The coverage.jsonl format is documented and validated by `parse_ac_coverage()`
+4. Selftest enforces `must_have_ac=true` coverage:
+   - Default: Failing ACs fail the gate, Unknown ACs are advisory
+   - Strict mode (`XTASK_STRICT_AC_COVERAGE=1`): Unknown `must_have_ac` ACs also fail the gate
+
+View the coverage backlog with:
+```bash
+cargo xtask ac-coverage --todo              # All unknown ACs
+cargo xtask ac-coverage --todo --must-have  # Only kernel (must_have_ac) ACs
+```
 
 Manual review:
 
