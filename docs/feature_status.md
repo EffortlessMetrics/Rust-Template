@@ -77,7 +77,7 @@ Auto-generated AC status from acceptance (BDD) and unit tests.
 | AC-TPL-BUNDLE-MANIFEST | US-TPL-PLT-001 | REQ-TPL-BUNDLE-CONTRACT | [PASS] pass | 1 / 1 |
 | AC-TPL-BUNDLE-MANIFEST-LINKED | US-TPL-PLT-001 | REQ-TPL-BUNDLE-CONTRACT | [PASS] pass | 1 / 2 |
 | AC-TPL-BUNDLE-MINIMAL-SCOPE | US-TPL-PLT-001 | REQ-TPL-BUNDLE-CONTRACT | [PASS] pass | 1 / 1 |
-| AC-TPL-CLI-JSON-CORE | US-TPL-PHILOSOPHY-001 | REQ-TPL-AI-IDP-COMPAT | [PASS] pass | 3 / 3 |
+| AC-TPL-CLI-JSON-CORE | US-TPL-PHILOSOPHY-001 | REQ-TPL-AI-IDP-COMPAT | [PASS] pass | 2 / 3 |
 | AC-TPL-CLI-JSON-OUTPUT | US-TPL-PLT-001 | REQ-PLT-DEVEX-CONTRACT | [PASS] pass | 1 / 1 |
 | AC-TPL-CONFIG-VALIDATION | US-TPL-PLT-001 | REQ-TPL-CONFIG-INTEGRITY | [PASS] pass | 2 / 2 |
 | AC-TPL-EXAMPLE-FORK-BUILDS | US-TPL-PLT-001 | REQ-TPL-EXAMPLE-FORK | [UNKNOWN] unknown | 0 / 0 |
@@ -96,8 +96,8 @@ Auto-generated AC status from acceptance (BDD) and unit tests.
 | AC-TPL-IAC-COMPOSE-ALIGN | US-TPL-PLT-001 | REQ-TPL-IAC-ALIGNMENT | [PASS] pass | 1 / 1 |
 | AC-TPL-IAC-K8S-ALIGN | US-TPL-PLT-001 | REQ-TPL-IAC-ALIGNMENT | [PASS] pass | 1 / 1 |
 | AC-TPL-IAC-TF-ALIGN | US-TPL-PLT-001 | REQ-TPL-IAC-ALIGNMENT | [PASS] pass | 1 / 1 |
-| AC-TPL-IDP-SNAPSHOT | US-TPL-PHILOSOPHY-001 | REQ-TPL-IDP-SNAPSHOT | [PASS] pass | 1 / 1 |
-| AC-TPL-IDP-SNAPSHOT-VALID-JSON | US-TPL-PHILOSOPHY-001 | REQ-TPL-IDP-SNAPSHOT | [PASS] pass | 1 / 1 |
+| AC-TPL-IDP-SNAPSHOT | US-TPL-PHILOSOPHY-001 | REQ-TPL-IDP-SNAPSHOT | [UNKNOWN] unknown | 0 / 1 |
+| AC-TPL-IDP-SNAPSHOT-VALID-JSON | US-TPL-PHILOSOPHY-001 | REQ-TPL-IDP-SNAPSHOT | [UNKNOWN] unknown | 0 / 1 |
 | AC-TPL-KERNEL-CONTRACT-EMITTED | US-TPL-PLT-001 | REQ-TPL-REL-BUNDLE | [PASS] pass | 1 / 1 |
 | AC-TPL-LOCAL-DOCKER | US-TPL-PLT-001 | REQ-TPL-LOCAL-RUNTIME | [PASS] pass | 1 / 1 |
 | AC-TPL-LOG-NO-SECRETS | US-TPL-PLT-001 | REQ-TPL-LOG-HYGIENE | [PASS] pass | 2 / 2 |
@@ -144,14 +144,16 @@ Auto-generated AC status from acceptance (BDD) and unit tests.
 | AC-TPL-VERSION-ATOMIC | US-TPL-PLT-001 | REQ-TPL-VERSIONING-ENGINE | [PASS] pass | 1 / 1 |
 | AC-TPL-VERSION-DRYRUN | US-TPL-PLT-001 | REQ-TPL-VERSIONING-ENGINE | [PASS] pass | 1 / 1 |
 | AC-TPL-VERSION-MANIFEST | US-TPL-PLT-001 | REQ-TPL-VERSIONING-ENGINE | [PASS] pass | 1 / 1 |
-| AC-TPL-XTASK-NONINTERACTIVE | US-TPL-PLT-001 | REQ-TPL-AUTOMATION-BEHAVIOUR | [PASS] pass | 1 / 1 |
+| AC-TPL-XTASK-NONINTERACTIVE | US-TPL-PLT-001 | REQ-TPL-AUTOMATION-BEHAVIOUR | [UNKNOWN] unknown | 0 / 1 |
 | AC-TPL-XTASK-SPEC-ROOT | US-TPL-PLT-001 | REQ-PLT-DEVEX-CONTRACT | [PASS] pass | 1 / 1 |
 
 ## Unmapped ACs (Service Behaviour)
 
 *(This list SHOULD be empty in this repo. If anything appears here, it's a bug.)*
 
-- *(none)*
+- AC-TPL-XTASK-NONINTERACTIVE: For commands covered by the DevEx contract (doctor, check, selftest, ac-status, ac-coverage, bundle, version, friction-*, questions-*, fork-*), setting CI=1 or XTASK_NONINTERACTIVE=1 guarantees: - no interactive prompts, and - exit code 0 on success, non-zero on failure.
+- AC-TPL-IDP-SNAPSHOT: `cargo xtask idp-snapshot` emits JSON containing timestamp, template_version, service_id, governance_health (status, ac_coverage), documentation metrics, and task hints for pending/in_progress tasks.
+- AC-TPL-IDP-SNAPSHOT-VALID-JSON: The idp-snapshot output is valid JSON that can be parsed without errors and contains all required top-level keys.
 
 ## Meta / CI-only ACs (Not Executed Locally)
 

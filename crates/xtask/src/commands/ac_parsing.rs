@@ -49,52 +49,10 @@ pub type AcToReqMap = HashMap<String, String>;
 // Ledger Parsing
 // ============================================================================
 
-// Internal YAML structs for parse_ledger (kept local for backwards compatibility)
-// Note: These duplicate the structs in ac-kernel::ledger but are needed for parse_ledger().
-// Consider consolidating in a future refactor.
-
-#[derive(Debug, Deserialize)]
-struct Ledger {
-    stories: Vec<Story>,
-}
-
-#[derive(Debug, Deserialize)]
-struct Story {
-    #[allow(dead_code)]
-    id: String,
-    requirements: Vec<Requirement>,
-}
-
-#[derive(Debug, Deserialize)]
-struct Requirement {
-    id: String,
-    #[serde(default)]
-    #[allow(dead_code)]
-    title: String,
-    #[serde(default)]
-    #[allow(dead_code)]
-    tags: Vec<String>,
-    #[serde(default = "default_must_have_ac")]
-    #[allow(dead_code)]
-    must_have_ac: bool,
-    acceptance_criteria: Vec<AcceptanceCriteria>,
-}
-
-fn default_must_have_ac() -> bool {
-    true
-}
-
-#[derive(Debug, Deserialize)]
-struct AcceptanceCriteria {
-    id: String,
-    #[allow(dead_code)]
-    text: String,
-    #[serde(default = "default_must_have_ac")]
-    #[allow(dead_code)]
-    must_have_ac: bool,
-}
-
 /// Parse the spec_ledger.yaml file and return all ACs mapped to their parent requirement ID.
+///
+/// This is a thin wrapper over `ac_kernel::parse_ledger_with_metadata` that derives
+/// the simple map structures used by legacy code paths.
 ///
 /// Returns:
 /// - all_acs: HashMap<AC_ID, REQ_ID> - maps each AC to its parent requirement
@@ -103,26 +61,19 @@ struct AcceptanceCriteria {
 /// NOTE: For richer metadata including `must_have_ac`, use `parse_ledger_with_metadata`
 /// from `ac-kernel` (re-exported above).
 pub fn parse_ledger(ledger_path: &Path) -> Result<(AcToReqMap, AcsByReq)> {
-    let content = fs::read_to_string(ledger_path)
-        .with_context(|| format!("Failed to read ledger: {}", ledger_path.display()))?;
+    let meta = parse_ledger_with_metadata(ledger_path)?;
 
-    let ledger: Ledger = serde_yaml::from_str(&content)
-        .with_context(|| format!("Failed to parse ledger YAML: {}", ledger_path.display()))?;
+    let mut all_acs: AcToReqMap = HashMap::new();
+    let mut acs_by_req: AcsByReq = BTreeMap::new();
 
-    let mut all_acs: HashMap<String, String> = HashMap::new();
-    let mut acs_by_req: BTreeMap<String, Vec<String>> = BTreeMap::new();
+    for (ac_id, m) in meta {
+        all_acs.insert(ac_id.clone(), m.req_id.clone());
+        acs_by_req.entry(m.req_id.clone()).or_default().push(ac_id);
+    }
 
-    for story in ledger.stories {
-        for req in story.requirements {
-            let mut req_acs = Vec::new();
-            for ac in req.acceptance_criteria {
-                all_acs.insert(ac.id.clone(), req.id.clone());
-                req_acs.push(ac.id.clone());
-            }
-            if !req_acs.is_empty() {
-                acs_by_req.insert(req.id.clone(), req_acs);
-            }
-        }
+    // Sort AC IDs within each requirement for consistent output
+    for ids in acs_by_req.values_mut() {
+        ids.sort();
     }
 
     Ok((all_acs, acs_by_req))
