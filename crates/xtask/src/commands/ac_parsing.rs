@@ -61,6 +61,23 @@ pub struct AcMetadata {
     pub must_have_ac: bool,
 }
 
+/// Full details for an acceptance criterion (including text)
+#[derive(Debug, Clone)]
+pub struct AcDetails {
+    /// The AC ID (e.g., "AC-TPL-001")
+    pub id: String,
+    /// Human-readable AC description text
+    pub text: String,
+    /// The parent story ID
+    pub story_id: String,
+    /// The parent requirement ID
+    pub req_id: String,
+    /// The requirement title
+    pub req_title: String,
+    /// Whether this AC must have BDD coverage (true = kernel, false = non-kernel)
+    pub must_have_ac: bool,
+}
+
 // ============================================================================
 // Ledger Parsing
 // ============================================================================
@@ -73,9 +90,7 @@ struct Ledger {
 #[derive(Debug, Deserialize)]
 struct Story {
     /// Story ID from spec_ledger.yaml.
-    /// Future: Used for filtering and reporting in spec query features.
-    /// See TASK-DX-SPEC-QUERY for planned query and filtering commands.
-    #[allow(dead_code)]
+    /// Used for filtering and reporting, and for AC scenario suggestions.
     id: String,
     requirements: Vec<Requirement>,
 }
@@ -83,6 +98,9 @@ struct Story {
 #[derive(Debug, Deserialize)]
 struct Requirement {
     id: String,
+    /// Human-readable requirement title
+    #[serde(default)]
+    title: String,
     /// Tags for categorizing requirements (e.g., @tier1, @security).
     /// Future: Used for filtering ACs by tag in `cargo xtask ac-list --tag <TAG>`.
     /// See TASK-DX-AC-FILTERING for planned tag-based AC queries.
@@ -108,9 +126,7 @@ fn default_must_have_ac() -> bool {
 struct AcceptanceCriteria {
     id: String,
     /// Human-readable AC description text.
-    /// Future: Used in `cargo xtask ac-show <AC_ID>` for detailed AC display.
-    /// Currently only ID is needed for mapping ACs to tests.
-    #[allow(dead_code)]
+    /// Used in ac-suggest-scenarios and ac-show commands.
     text: String,
     /// Whether this specific AC must have BDD coverage.
     /// Inherits from requirement if not specified, defaults to true.
@@ -179,6 +195,37 @@ pub fn parse_ledger_with_metadata(ledger_path: &Path) -> Result<HashMap<String, 
     }
 
     Ok(ac_metadata)
+}
+
+/// Look up a single AC by ID and return its full details.
+///
+/// Returns None if the AC ID is not found in the ledger.
+pub fn get_ac_details(ledger_path: &Path, ac_id: &str) -> Result<Option<AcDetails>> {
+    let content = fs::read_to_string(ledger_path)
+        .with_context(|| format!("Failed to read ledger: {}", ledger_path.display()))?;
+
+    let ledger: Ledger = serde_yaml::from_str(&content)
+        .with_context(|| format!("Failed to parse ledger YAML: {}", ledger_path.display()))?;
+
+    for story in ledger.stories {
+        for req in story.requirements {
+            for ac in req.acceptance_criteria {
+                if ac.id == ac_id {
+                    let effective_must_have = req.must_have_ac && ac.must_have_ac;
+                    return Ok(Some(AcDetails {
+                        id: ac.id,
+                        text: ac.text,
+                        story_id: story.id.clone(),
+                        req_id: req.id.clone(),
+                        req_title: req.title.clone(),
+                        must_have_ac: effective_must_have,
+                    }));
+                }
+            }
+        }
+    }
+
+    Ok(None)
 }
 
 // ============================================================================
