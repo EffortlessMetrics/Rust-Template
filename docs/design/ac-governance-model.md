@@ -133,6 +133,36 @@ On `main` / `release/*` branches:
 - `XTASK_STRICT_AC_COVERAGE=1` enabled
 - SLO gate via `ac-slo` command
 
+### 3.4 SLOs & Gates (Policy)
+
+The following SLOs are enforced on `main` branch in `.github/workflows/tier1-selftest.yml`:
+
+**Selftest (strict mode):**
+```yaml
+env:
+  XTASK_STRICT_AC_COVERAGE: ${{ github.ref == 'refs/heads/main' && '1' || '' }}
+run: nix develop -c cargo xtask selftest
+```
+- Fails if any `must_have_ac=true` AC has status `unknown`
+- All kernel ACs must be covered by tests
+
+**SLO gate (kernel):**
+```bash
+cargo xtask ac-slo \
+  --dir artifacts/ac-status \
+  --min-coverage 80.0 \
+  --max-blockers 0
+```
+- `--min-coverage 80.0`: Overall AC coverage must be ≥80%
+- `--max-blockers 0`: No kernel (`must_have_ac=true`) ACs may be failing or unknown
+- Only applies to snapshots in the artifacts directory
+
+**What this means:**
+- **Kernel failures block merge**: Any failing must_have_ac AC = CI failure
+- **Kernel unknowns block main**: Any unknown must_have_ac AC = selftest failure on main
+- **Optional unknowns are informational**: Non-kernel ACs may be unknown without blocking
+- **Coverage baseline is advisory**: 80% is a floor, not a ceiling
+
 ## 4. Commands Reference
 
 | Command | Purpose |
