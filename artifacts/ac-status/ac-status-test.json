@@ -1,0 +1,2767 @@
+{
+  "schema_version": "2.0",
+  "timestamp": "2025-12-07T01:14:37.992135111+00:00",
+  "must_have_acs": {
+    "total": 62,
+    "passing": 62,
+    "failing": 0,
+    "unknown": 0
+  },
+  "optional_acs": {
+    "total": 55,
+    "passing": 37,
+    "failing": 0,
+    "unknown": 18
+  },
+  "coverage_percent": 84.61538461538461,
+  "acs": [
+    {
+      "id": "AC-PLT-001",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-PLT-ONBOARDING",
+      "text": "`cargo xtask doctor` validates Rust, Nix, conftest, git and provides next-steps guidance",
+      "status": "pass",
+      "source": "coverage",
+      "must_have_ac": true,
+      "scenarios": [
+        "doctor validates the environment and prints next steps"
+      ],
+      "tests": [
+        {
+          "type": "integration",
+          "tag": "@AC-PLT-001",
+          "file": "specs/features/xtask_devex.feature"
+        },
+        {
+          "type": "unit",
+          "tag": "test_check_rust_version_accepts_valid_versions",
+          "file": "crates/xtask/src/commands/doctor.rs",
+          "module": "commands::doctor::tests"
+        },
+        {
+          "type": "unit",
+          "tag": "test_doctor_command_exists",
+          "file": "crates/xtask/src/commands/doctor.rs",
+          "module": "commands::doctor::tests"
+        }
+      ],
+      "tests_total": 3,
+      "tests_executed": 1
+    },
+    {
+      "id": "AC-PLT-002",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-PLT-ONBOARDING",
+      "text": "`cargo xtask help-flows` renders categorized command map from specs/devex_flows.yaml",
+      "status": "pass",
+      "source": "coverage",
+      "must_have_ac": true,
+      "scenarios": [
+        "help-flows renders DevEx flows grouped by category"
+      ],
+      "tests": [
+        {
+          "type": "integration",
+          "tag": "@AC-PLT-002",
+          "file": "specs/features/xtask_devex.feature"
+        },
+        {
+          "type": "unit",
+          "tag": "test_help_flows_command_exists",
+          "file": "crates/xtask/src/commands/help_flows.rs",
+          "module": "commands::help_flows::tests"
+        },
+        {
+          "type": "unit",
+          "tag": "test_devex_spec_contains_required_categories",
+          "file": "crates/xtask/src/commands/help_flows.rs",
+          "module": "commands::help_flows::tests"
+        }
+      ],
+      "tests_total": 3,
+      "tests_executed": 1
+    },
+    {
+      "id": "AC-PLT-003",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-PLT-ONBOARDING",
+      "text": "`cargo xtask check` runs fmt + clippy + tests as fast dev loop",
+      "status": "pass",
+      "source": "coverage",
+      "must_have_ac": true,
+      "scenarios": [
+        "check runs fmt, clippy, and tests as a fast dev loop"
+      ],
+      "tests": [
+        {
+          "type": "integration",
+          "tag": "@AC-PLT-003",
+          "file": "specs/features/xtask_devex.feature"
+        },
+        {
+          "type": "unit",
+          "tag": "test_check_command_exists",
+          "file": "crates/xtask/src/commands/check.rs",
+          "module": "commands::check::tests"
+        },
+        {
+          "type": "unit",
+          "tag": "test_check_options_low_resource_mode",
+          "file": "crates/xtask/src/commands/check.rs",
+          "module": "commands::check::tests"
+        }
+      ],
+      "tests_total": 3,
+      "tests_executed": 1
+    },
+    {
+      "id": "AC-PLT-004",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-PLT-DESIGN-SCAFFOLDING",
+      "text": "`cargo xtask adr-new <title>` creates numbered ADR from template with metadata",
+      "status": "pass",
+      "source": "coverage",
+      "must_have_ac": true,
+      "scenarios": [
+        "adr-new creates numbered ADR from template with next steps"
+      ],
+      "tests": [
+        {
+          "type": "integration",
+          "tag": "@AC-PLT-004",
+          "file": "specs/features/xtask_devex.feature"
+        },
+        {
+          "type": "unit",
+          "tag": "test_adr_new_command_exists",
+          "file": "crates/xtask/src/commands/adr_new.rs",
+          "module": "commands::adr_new::tests"
+        },
+        {
+          "type": "unit",
+          "tag": "test_slug_generation_from_title",
+          "file": "crates/xtask/src/commands/adr_new.rs",
+          "module": "commands::adr_new::tests"
+        },
+        {
+          "type": "unit",
+          "tag": "test_adr_id_formatting",
+          "file": "crates/xtask/src/commands/adr_new.rs",
+          "module": "commands::adr_new::tests"
+        }
+      ],
+      "tests_total": 4,
+      "tests_executed": 1
+    },
+    {
+      "id": "AC-PLT-005",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-PLT-DESIGN-SCAFFOLDING",
+      "text": "`cargo xtask ac-new <ID> <desc>` rejects duplicate IDs and generates YAML snippet",
+      "status": "pass",
+      "source": "coverage",
+      "must_have_ac": true,
+      "scenarios": [
+        "ac-new generates YAML AC entry with Gherkin template and next steps"
+      ],
+      "tests": [
+        {
+          "type": "integration",
+          "tag": "@AC-PLT-005",
+          "file": "specs/features/xtask_devex.feature"
+        },
+        {
+          "type": "unit",
+          "tag": "test_ac_new_command_exists",
+          "file": "crates/xtask/src/commands/ac_new.rs",
+          "module": "commands::ac_new::tests"
+        },
+        {
+          "type": "unit",
+          "tag": "test_ac_id_validation_requires_prefix",
+          "file": "crates/xtask/src/commands/ac_new.rs",
+          "module": "commands::ac_new::tests"
+        },
+        {
+          "type": "unit",
+          "tag": "test_ac_entry_generation",
+          "file": "crates/xtask/src/commands/ac_new.rs",
+          "module": "commands::ac_new::tests"
+        }
+      ],
+      "tests_total": 4,
+      "tests_executed": 1
+    },
+    {
+      "id": "AC-PLT-006",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-PLT-SECURITY-GOVERNANCE",
+      "text": "`cargo xtask audit` runs cargo-audit + cargo-deny with repo policy (deny.toml)",
+      "status": "pass",
+      "source": "coverage",
+      "must_have_ac": true,
+      "scenarios": [
+        "audit runs supply-chain vulnerability check"
+      ],
+      "tests": [
+        {
+          "type": "integration",
+          "tag": "@AC-PLT-006",
+          "file": "specs/features/xtask_devex.feature"
+        },
+        {
+          "type": "unit",
+          "tag": "test_audit_command_exists",
+          "file": "crates/xtask/src/commands/audit.rs",
+          "module": "commands::audit::tests"
+        },
+        {
+          "type": "unit",
+          "tag": "test_audit_checks_for_tools",
+          "file": "crates/xtask/src/commands/audit.rs",
+          "module": "commands::audit::tests"
+        }
+      ],
+      "tests_total": 3,
+      "tests_executed": 1
+    },
+    {
+      "id": "AC-PLT-007",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-PLT-SECURITY-GOVERNANCE",
+      "text": "`cargo xtask audit` provides 4-step recovery guidance on failure",
+      "status": "pass",
+      "source": "coverage",
+      "must_have_ac": true,
+      "scenarios": [
+        "audit provides recovery guidance on failure"
+      ],
+      "tests": [
+        {
+          "type": "integration",
+          "tag": "@AC-PLT-007",
+          "file": "specs/features/xtask_devex.feature"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 1
+    },
+    {
+      "id": "AC-PLT-008",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-PLT-SECURITY-GOVERNANCE",
+      "text": "`cargo xtask sbom-local` generates SPDX JSON to target/sbom.spdx.json",
+      "status": "pass",
+      "source": "coverage",
+      "must_have_ac": true,
+      "scenarios": [
+        "sbom-local generates SPDX bill of materials"
+      ],
+      "tests": [
+        {
+          "type": "integration",
+          "tag": "@AC-PLT-008",
+          "file": "specs/features/xtask_devex.feature"
+        },
+        {
+          "type": "unit",
+          "tag": "test_sbom_local_command_exists",
+          "file": "crates/xtask/src/commands/sbom_local.rs",
+          "module": "commands::sbom_local::tests"
+        },
+        {
+          "type": "unit",
+          "tag": "test_sbom_json_structure",
+          "file": "crates/xtask/src/commands/sbom_local.rs",
+          "module": "commands::sbom_local::tests"
+        },
+        {
+          "type": "unit",
+          "tag": "test_package_id_replacement_logic",
+          "file": "crates/xtask/src/commands/sbom_local.rs",
+          "module": "commands::sbom_local::tests"
+        }
+      ],
+      "tests_total": 4,
+      "tests_executed": 1
+    },
+    {
+      "id": "AC-PLT-009",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-PLT-DOCS-CONSISTENCY",
+      "text": "`cargo xtask docs-check` validates version alignment across spec_ledger (canonical) and 8 consumer files",
+      "status": "pass",
+      "source": "coverage",
+      "must_have_ac": true,
+      "scenarios": [
+        "docs-check validates Service policies",
+        "docs-check validates documentation consistency",
+        "docs-check provides actionable fix hints on version mismatch",
+        "docs-check validates doc policies",
+        "docs-check validates Skills definitions",
+        "docs-check validates version alignment across all consumer files"
+      ],
+      "tests": [
+        {
+          "type": "integration",
+          "tag": "@AC-PLT-009",
+          "file": "specs/features/xtask_devex.feature"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 1
+    },
+    {
+      "id": "AC-PLT-010",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-PLT-DOCS-CONSISTENCY",
+      "text": "`cargo xtask docs-check` regenerates feature_status and fails on dirty git tree. Validates feature_status.md header contains Template Version metadata that matches spec_ledger.yaml, ensuring the document cannot silently drift from its source of truth.\n",
+      "status": "pass",
+      "source": "coverage",
+      "must_have_ac": true,
+      "scenarios": [
+        "docs-check provides fix hints for AC status out of sync",
+        "docs-check reports issues when found",
+        "docs-check validates AC status regeneration"
+      ],
+      "tests": [
+        {
+          "type": "integration",
+          "tag": "@AC-PLT-010",
+          "file": "specs/features/xtask_devex.feature"
+        },
+        {
+          "type": "unit",
+          "tag": "validate_feature_status_invariants",
+          "file": "crates/xtask/src/commands/docs_check.rs",
+          "module": "commands::docs_check"
+        }
+      ],
+      "tests_total": 2,
+      "tests_executed": 1
+    },
+    {
+      "id": "AC-PLT-011",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-PLT-RELEASE-SAFETY",
+      "text": "`cargo xtask release-prepare X.Y.Z` updates spec_ledger, README, CLAUDE, CHANGELOG",
+      "status": "pass",
+      "source": "coverage",
+      "must_have_ac": false,
+      "scenarios": [
+        "release-prepare updates version files"
+      ],
+      "tests": [
+        {
+          "type": "integration",
+          "tag": "@AC-PLT-011",
+          "file": "specs/features/xtask_devex.feature"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 1
+    },
+    {
+      "id": "AC-PLT-012",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-PLT-RELEASE-SAFETY",
+      "text": "`cargo xtask release-verify` runs selftest + audit + docs-check + clean tree",
+      "status": "pass",
+      "source": "coverage",
+      "must_have_ac": false,
+      "scenarios": [
+        "release-verify runs comprehensive checks"
+      ],
+      "tests": [
+        {
+          "type": "integration",
+          "tag": "@AC-PLT-012",
+          "file": "specs/features/xtask_devex.feature"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 1
+    },
+    {
+      "id": "AC-PLT-013",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-PLT-RELEASE-SAFETY",
+      "text": "`cargo xtask release-verify` provides git command sequence on success",
+      "status": "pass",
+      "source": "coverage",
+      "must_have_ac": false,
+      "scenarios": [
+        "release-verify provides git commands on success"
+      ],
+      "tests": [
+        {
+          "type": "integration",
+          "tag": "@AC-PLT-013",
+          "file": "specs/features/xtask_devex.feature"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 1
+    },
+    {
+      "id": "AC-PLT-014",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-PLT-DEVEX-CONTRACT",
+      "text": "Canonical flows and commands are defined in specs/devex_flows.yaml",
+      "status": "pass",
+      "source": "coverage",
+      "must_have_ac": false,
+      "scenarios": [
+        "devex_flows.yaml defines canonical flows"
+      ],
+      "tests": [
+        {
+          "type": "unit",
+          "tag": "devex_flows_schema_valid",
+          "file": "crates/spec-runtime/src/devex.rs",
+          "module": "devex::tests::devex_flows_schema_valid"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 1
+    },
+    {
+      "id": "AC-PLT-015",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-PLT-DEVEX-CONTRACT",
+      "text": "`cargo xtask selftest` enforces devex contract (required commands exist)",
+      "status": "pass",
+      "source": "coverage",
+      "must_have_ac": true,
+      "scenarios": [],
+      "tests": [
+        {
+          "type": "unit",
+          "tag": "devex_contract_enforced_missing_commands",
+          "file": "crates/xtask/src/commands/selftest.rs",
+          "module": "commands::selftest::tests::devex_contract_enforced_missing_commands"
+        },
+        {
+          "type": "unit",
+          "tag": "devex_contract_enforced_all_present",
+          "file": "crates/xtask/src/commands/selftest.rs",
+          "module": "commands::selftest::tests::devex_contract_enforced_all_present"
+        },
+        {
+          "type": "unit",
+          "tag": "devex_contract_real_spec_satisfied",
+          "file": "crates/xtask/src/commands/selftest.rs",
+          "module": "commands::selftest::tests::devex_contract_real_spec_satisfied"
+        },
+        {
+          "type": "integration",
+          "tag": "@AC-PLT-015",
+          "file": "specs/features/xtask_devex.feature"
+        }
+      ],
+      "tests_total": 4,
+      "tests_executed": 3
+    },
+    {
+      "id": "AC-PLT-016",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-PLT-DEVEX-CONTRACT",
+      "text": "`cargo xtask ci-local` orchestrates doctor + selftest + audit + docs-check",
+      "status": "pass",
+      "source": "coverage",
+      "must_have_ac": false,
+      "scenarios": [
+        "ci-local orchestrates full check suite"
+      ],
+      "tests": [
+        {
+          "type": "integration",
+          "tag": "@AC-PLT-016",
+          "file": "specs/features/xtask_devex.feature"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 1
+    },
+    {
+      "id": "AC-PLT-017",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-PLT-STATUS-CLI",
+      "text": "`cargo xtask status` displays version, REQ/AC/task counts, selftest status, and suggested next tasks",
+      "status": "pass",
+      "source": "coverage",
+      "must_have_ac": true,
+      "scenarios": [
+        "status shows platform server status information",
+        "status shows task breakdown by status",
+        "status includes helpful next steps",
+        "status shows governance metrics with counts",
+        "status displays governance dashboard",
+        "status shows git repository status context"
+      ],
+      "tests": [
+        {
+          "type": "integration",
+          "tag": "@AC-PLT-017",
+          "file": "specs/features/xtask_devex.feature"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 1
+    },
+    {
+      "id": "AC-PLT-018",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-PLT-ONBOARDING",
+      "text": "`cargo xtask dev-up` runs doctor + install-hooks + check and displays next steps",
+      "status": "pass",
+      "source": "coverage",
+      "must_have_ac": true,
+      "scenarios": [
+        "dev-up runs governance check",
+        "dev-up checks Docker availability",
+        "dev-up succeeds in clean environment",
+        "dev-up displays next steps on success",
+        "dev-up skips hook installation if already present",
+        "dev-up installs pre-commit hooks"
+      ],
+      "tests": [
+        {
+          "type": "integration",
+          "tag": "@AC-PLT-018",
+          "file": "specs/features/xtask_devex.feature"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 1
+    },
+    {
+      "id": "AC-PLT-019",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-PLT-DEVEX-CONTRACT",
+      "text": "`cargo xtask selftest` displays a condensed summary with clear pass/fail indicators for all 11 steps",
+      "status": "pass",
+      "source": "coverage",
+      "must_have_ac": true,
+      "scenarios": [],
+      "tests": [
+        {
+          "type": "unit",
+          "tag": "selftest_summary_has_eleven_steps",
+          "file": "crates/xtask/src/commands/selftest.rs",
+          "module": "commands::selftest::tests::selftest_summary_has_eleven_steps"
+        },
+        {
+          "type": "unit",
+          "tag": "selftest_results_track_status",
+          "file": "crates/xtask/src/commands/selftest.rs",
+          "module": "commands::selftest::tests::selftest_results_track_status"
+        },
+        {
+          "type": "integration",
+          "tag": "@AC-PLT-019",
+          "file": "specs/features/xtask_devex.feature"
+        }
+      ],
+      "tests_total": 3,
+      "tests_executed": 2
+    },
+    {
+      "id": "AC-PLT-020",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-PLT-DEVEX-CONTRACT",
+      "text": "`XTASK_LOW_RESOURCES=1` environment variable skips resource-intensive steps in selftest for CI/constrained environments",
+      "status": "pass",
+      "source": "coverage",
+      "must_have_ac": true,
+      "scenarios": [
+        "XTASK_LOW_RESOURCES mode is used in CI environments"
+      ],
+      "tests": [
+        {
+          "type": "integration",
+          "tag": "@AC-PLT-020",
+          "file": "specs/features/xtask_devex.feature"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 1
+    },
+    {
+      "id": "AC-PLT-021",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-PLT-ONBOARDING",
+      "text": "`cargo xtask service-init` updates service_metadata.yaml, README, and CLAUDE.md with a new service ID, name, and description, and `/platform/status` reflects the new identity.\n",
+      "status": "pass",
+      "source": "coverage",
+      "must_have_ac": true,
+      "scenarios": [
+        "service-init is idempotent",
+        "service-init validates service ID format"
+      ],
+      "tests": [
+        {
+          "type": "integration",
+          "tag": "@AC-PLT-021",
+          "file": "specs/features/xtask_devex.feature"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 1
+    },
+    {
+      "id": "AC-PLT-AC-DEMOTION-GOVERNED",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-PLT-AC-GOVERNANCE",
+      "text": "Changes to must_have_ac for any acceptance criterion are treated as kernel contract changes and are documented with an ADR and kernel version update.\n",
+      "status": "unknown",
+      "source": "inferred",
+      "must_have_ac": false,
+      "scenarios": [],
+      "tests": [
+        {
+          "type": "ci",
+          "tag": "ac_demotion_governed"
+        }
+      ],
+      "tests_total": 0,
+      "tests_executed": 0
+    },
+    {
+      "id": "AC-PLT-DOC-INDEX-FRONTMATTER",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-PLT-DOCS-CONSISTENCY",
+      "text": "`cargo xtask docs-check` validates bidirectional alignment between doc_index.yaml entries and document front-matter (stories, requirements, acs, adrs). Items in index must be in front-matter and vice versa. (Docs-as-Code v3)\n",
+      "status": "pass",
+      "source": "coverage",
+      "must_have_ac": false,
+      "scenarios": [
+        "docs-check validates bidirectional front-matter alignment",
+        "docs-check enforces doc_index frontmatter invariants",
+        "docs-check provides fix hints for front-matter issues"
+      ],
+      "tests": [
+        {
+          "type": "unit",
+          "tag": "test_doc_index_frontmatter_sync",
+          "file": "crates/xtask/src/commands/docs_check.rs",
+          "module": "commands::docs_check"
+        },
+        {
+          "type": "bdd",
+          "tag": "@AC-PLT-DOC-INDEX-FRONTMATTER",
+          "file": "specs/features/xtask_devex.feature"
+        }
+      ],
+      "tests_total": 2,
+      "tests_executed": 1
+    },
+    {
+      "id": "AC-PLT-ENV-ABI-CHECK",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-PLT-ENV-DIAGNOSTICS",
+      "text": "`cargo xtask doctor` detects ABI mismatches between system rustc and Nix devshell rustc, warns about proc-macro compatibility issues, and points to TROUBLESHOOTING.md for resolution.\n",
+      "status": "pass",
+      "source": "coverage",
+      "must_have_ac": true,
+      "scenarios": [
+        "doctor reports exit code status",
+        "doctor checks libz.so.1 availability",
+        "doctor detects environment type",
+        "doctor checks glibc version on Linux",
+        "doctor checks toolchain ABI compatibility",
+        "doctor shows structured environment sections"
+      ],
+      "tests": [
+        {
+          "type": "bdd",
+          "tag": "@AC-PLT-ENV-ABI-CHECK",
+          "file": "specs/features/xtask_devex.feature"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 1
+    },
+    {
+      "id": "AC-PLT-ENV-SCCACHE-WARN",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-PLT-ENV-DIAGNOSTICS",
+      "text": "When sccache/libz.so.1 issues are detected, doctor classifies them as environment warnings (not template failures) and suggests workarounds including RUSTC_WRAPPER=\"\" and IN_NIX_SHELL=1 patterns.\n",
+      "status": "pass",
+      "source": "coverage",
+      "must_have_ac": false,
+      "scenarios": [
+        "doctor provides TROUBLESHOOTING.md reference when warnings found",
+        "doctor reports sccache status"
+      ],
+      "tests": [
+        {
+          "type": "bdd",
+          "tag": "@AC-PLT-ENV-SCCACHE-WARN",
+          "file": "specs/features/xtask_devex.feature"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 1
+    },
+    {
+      "id": "AC-TPL-001",
+      "story_id": "US-TPL-001",
+      "req_id": "REQ-TPL-HEALTH",
+      "text": "GET /health returns 200 with status 'ok' when service is healthy",
+      "status": "pass",
+      "source": "coverage",
+      "must_have_ac": true,
+      "scenarios": [
+        "Health endpoint reports service is healthy"
+      ],
+      "tests": [
+        {
+          "type": "bdd",
+          "tag": "@AC-TPL-005",
+          "file": "specs/features/template_core.feature"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 1
+    },
+    {
+      "id": "AC-TPL-002",
+      "story_id": "US-TPL-001",
+      "req_id": "REQ-TPL-VERSION",
+      "text": "GET /version returns build information including version and git SHA",
+      "status": "pass",
+      "source": "coverage",
+      "must_have_ac": true,
+      "scenarios": [
+        "Version endpoint reports build information"
+      ],
+      "tests": [
+        {
+          "type": "bdd",
+          "tag": "@AC-TPL-002",
+          "file": "specs/features/template_core.feature"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 1
+    },
+    {
+      "id": "AC-TPL-003",
+      "story_id": "US-TPL-001",
+      "req_id": "REQ-TPL-ERROR-HANDLING",
+      "text": "All 4xx/5xx responses include an error code, message, and request ID",
+      "status": "pass",
+      "source": "coverage",
+      "must_have_ac": true,
+      "scenarios": [
+        "Error responses include standardized error envelope"
+      ],
+      "tests": [
+        {
+          "type": "bdd",
+          "tag": "@AC-TPL-003",
+          "file": "specs/features/template_core.feature"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 1
+    },
+    {
+      "id": "AC-TPL-004",
+      "story_id": "US-TPL-001",
+      "req_id": "REQ-TPL-ERROR-HANDLING",
+      "text": "Handlers propagate or generate X-Request-ID and expose it in responses",
+      "status": "pass",
+      "source": "coverage",
+      "must_have_ac": true,
+      "scenarios": [
+        "Error responses include X-Request-ID header",
+        "X-Request-ID is generated when not provided in request",
+        "X-Request-ID is propagated when provided in request"
+      ],
+      "tests": [
+        {
+          "type": "bdd",
+          "tag": "@AC-TPL-004",
+          "file": "specs/features/template_core.feature"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 1
+    },
+    {
+      "id": "AC-TPL-007",
+      "story_id": "US-TPL-001",
+      "req_id": "REQ-TPL-METRICS",
+      "text": "GET /metrics returns Prometheus-formatted metrics including http_requests_total",
+      "status": "pass",
+      "source": "coverage",
+      "must_have_ac": true,
+      "scenarios": [
+        "Metrics endpoint is available"
+      ],
+      "tests": [
+        {
+          "type": "bdd",
+          "tag": "@AC-TPL-007",
+          "file": "specs/features/metrics.feature"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 1
+    },
+    {
+      "id": "AC-TPL-AGENT-HINTS",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-TPL-AGENT-INTERFACE",
+      "text": "GET /platform/agent/hints returns prioritized task suggestions for agents, filtering tasks by Todo/InProgress status. Each hint includes: task_id, status, requirement_ids, ac_ids, reason, and recommended_sequence (array of commands/edits).\n",
+      "status": "pass",
+      "source": "coverage",
+      "must_have_ac": true,
+      "scenarios": [
+        "Hints include recommended_sequence with more than 2 commands from flows",
+        "CLI suggest-next filters by owner",
+        "CLI suggest-next outputs structured hints with all required fields",
+        "Hints filter tasks by Todo and InProgress status",
+        "Hints include stable metadata (title, owner, labels) from tasks.yaml",
+        "Hints include next steps based on current state",
+        "Hints sorted by priority labels",
+        "GET /platform/agent/hints returns context-aware hints",
+        "Filter hints by owner",
+        "Hints include meaningful reason information",
+        "Empty hints when no tasks are Todo or InProgress",
+        "CLI suggest-next filters by requirement",
+        "Filter hints by label",
+        "CLI suggest-next filters by label",
+        "Filter hints by requirement",
+        "Each hint includes task id, title, status, owner, labels, requirement, ACs, and reason",
+        "Hints sorted by status then ID",
+        "CLI suggest-next returns hints in JSON format",
+        "CLI suggest-next respects limit parameter"
+      ],
+      "tests": [
+        {
+          "type": "bdd",
+          "tag": "@AC-TPL-AGENT-HINTS"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 1
+    },
+    {
+      "id": "AC-TPL-AGENT-HINTS-SCHEMA",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-TPL-AGENT-INTERFACE",
+      "text": "Hints returned from `/platform/agent/hints` MUST be objects with fields:\n  - `id`: stable hint identifier (string)\n  - `kind`: category of hint (e.g., `task`, `governance`, `policy`)\n  - `priority`: one of `low`, `medium`, `high`\n  - `status`: one of `open`, `in_progress`, `done`\n  - `reason`: object with `code` and `details`\n  - `target`: object describing what the hint is about\n    (e.g., `{ \"type\": \"task\", \"id\": \"TASK-…\" }`)\n  - `tags`: array of strings (labels)\n  - `links`: object with optional `spec`, `task`, `docs`,\n    `adrs`, and `extra` entries\n\nThe CLI command `cargo xtask suggest-next --format json` MAY project this into a simpler structure (`task_id`, `title`, `status`, `owner`, `labels`, `requirement_ids`, `ac_ids`, `reason`), but it MUST preserve the same underlying semantics (priority, status, linkage to REQs/ACs).\n",
+      "status": "pass",
+      "source": "coverage",
+      "must_have_ac": true,
+      "scenarios": [
+        "HTTP hints include all required schema fields"
+      ],
+      "tests": [
+        {
+          "type": "bdd",
+          "tag": "@AC-TPL-AGENT-HINTS-SCHEMA",
+          "file": "specs/features/agent_hints.feature"
+        },
+        {
+          "type": "unit",
+          "tag": "hint_serialization_schema",
+          "file": "crates/spec-runtime/src/hints.rs"
+        }
+      ],
+      "tests_total": 2,
+      "tests_executed": 1
+    },
+    {
+      "id": "AC-TPL-AGENT-SKILLS",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-TPL-AGENT-INTERFACE",
+      "text": "The .claude/skills directory contains executable skill definitions for feature development, release, and maintenance workflows, each referencing the appropriate xtask commands and platform APIs.\n",
+      "status": "pass",
+      "source": "coverage",
+      "must_have_ac": true,
+      "scenarios": [
+        "Skills directory contains required skill definitions"
+      ],
+      "tests": [
+        {
+          "type": "manual",
+          "tag": "agent_skill_discovery"
+        },
+        {
+          "type": "bdd",
+          "tag": "@AC-TPL-AGENT-SKILLS",
+          "file": "specs/features/xtask_devex.feature"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 1
+    },
+    {
+      "id": "AC-TPL-AGENTS-DESCRIPTION-QUALITY",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-TPL-AGENTS-GOVERNANCE",
+      "text": "Agent descriptions MUST include both WHAT (capability) and WHEN (triggers/context), and be ≤1024 characters. agents-lint MUST treat absence/emptiness as an error and missing WHEN as a warning.\n",
+      "status": "unknown",
+      "source": "inferred",
+      "must_have_ac": false,
+      "scenarios": [],
+      "tests": [
+        {
+          "type": "ci",
+          "tag": "agents_description_quality"
+        }
+      ],
+      "tests_total": 0,
+      "tests_executed": 0
+    },
+    {
+      "id": "AC-TPL-AGENTS-GOVERNANCE-001",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-TPL-AGENTS-GOVERNANCE",
+      "text": "docs/AGENTS_GOVERNANCE.md exists and documents the agent governance spec, lifecycle (create/maintain/retire), validation rules, and ADR-0021 principles for this repo.\n",
+      "status": "pass",
+      "source": "coverage",
+      "must_have_ac": true,
+      "scenarios": [
+        "agents-lint reports errors for invalid agent names",
+        "agents-lint validates all agent files when valid"
+      ],
+      "tests": [
+        {
+          "type": "docs",
+          "tag": "agents_governance_doc_exists"
+        },
+        {
+          "type": "bdd",
+          "tag": "@AC-TPL-AGENTS-GOVERNANCE-001",
+          "file": "specs/features/xtask_devex.feature"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 1
+    },
+    {
+      "id": "AC-TPL-AGENTS-GOVERNANCE-002",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-TPL-AGENTS-GOVERNANCE",
+      "text": "Each project agent in .claude/agents/* has a corresponding REQ in spec_ledger.yaml and at least one AC defining its configuration and system prompt requirements.\n",
+      "status": "pass",
+      "source": "coverage",
+      "must_have_ac": true,
+      "scenarios": [
+        "agents-lint validates agent requirement alignment"
+      ],
+      "tests": [
+        {
+          "type": "manual",
+          "tag": "agents_req_ac_alignment"
+        },
+        {
+          "type": "bdd",
+          "tag": "@AC-TPL-AGENTS-GOVERNANCE-002",
+          "file": "specs/features/xtask_devex.feature"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 1
+    },
+    {
+      "id": "AC-TPL-AGENTS-LIFECYCLE-DOCS",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-TPL-AGENTS-GOVERNANCE",
+      "text": "docs/AGENTS_GOVERNANCE.md documents the full lifecycle: how to create an agent (REQ + AC → Task → implement), maintain (keep config in sync with flows and Skills), and retire (mark REQ deprecated, archive agent file).\n",
+      "status": "unknown",
+      "source": "inferred",
+      "must_have_ac": false,
+      "scenarios": [],
+      "tests": [
+        {
+          "type": "ci",
+          "tag": "agents_lifecycle_documented"
+        }
+      ],
+      "tests_total": 0,
+      "tests_executed": 0
+    },
+    {
+      "id": "AC-TPL-AGENTS-MODEL-POLICY",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-TPL-AGENTS-GOVERNANCE",
+      "text": "Agent model selection MUST respect repo policy (e.g., default to 'inherit' or approved aliases only). agents-lint MUST error on unknown models and warn when expensive models (opus) are used without justification.\n",
+      "status": "unknown",
+      "source": "inferred",
+      "must_have_ac": false,
+      "scenarios": [],
+      "tests": [
+        {
+          "type": "ci",
+          "tag": "agents_model_policy"
+        }
+      ],
+      "tests_total": 0,
+      "tests_executed": 0
+    },
+    {
+      "id": "AC-TPL-AGENTS-NAME-FORMAT",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-TPL-AGENTS-GOVERNANCE",
+      "text": "Agent names MUST be kebab-case, contain only lowercase letters/digits/hyphens, max 64 characters, and be unique within the project. agents-lint enforces this.\n",
+      "status": "pass",
+      "source": "coverage",
+      "must_have_ac": false,
+      "scenarios": [
+        "agents-lint enforces agent name format in the template"
+      ],
+      "tests": [
+        {
+          "type": "bdd",
+          "tag": "@AC-TPL-AGENTS-NAME-FORMAT",
+          "file": "specs/features/xtask_devex.feature"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 1
+    },
+    {
+      "id": "AC-TPL-AGENTS-SKILLS-REFERENCES",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-TPL-AGENTS-GOVERNANCE",
+      "text": "Agent 'skills' entries MUST reference existing Skills in .claude/skills/* or be omitted. agents-lint MUST error if an agent declares a Skill that does not exist.\n",
+      "status": "unknown",
+      "source": "inferred",
+      "must_have_ac": false,
+      "scenarios": [],
+      "tests": [
+        {
+          "type": "ci",
+          "tag": "agents_skills_references"
+        }
+      ],
+      "tests_total": 0,
+      "tests_executed": 0
+    },
+    {
+      "id": "AC-TPL-AGENTS-TEMPLATE-DOC",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-TPL-AGENTS-GOVERNANCE",
+      "text": "docs/AGENTS_TEMPLATE.md exists and provides a copy-paste template for creating new agents with checklist for name format, description quality (what + when), tools/permissionMode safety, model selection, and skills references.\n",
+      "status": "pass",
+      "source": "coverage",
+      "must_have_ac": true,
+      "scenarios": [
+        "AGENTS_TEMPLATE.md exists and provides authoring guidance"
+      ],
+      "tests": [
+        {
+          "type": "docs",
+          "tag": "agents_template_doc_exists"
+        },
+        {
+          "type": "bdd",
+          "tag": "@AC-TPL-AGENTS-TEMPLATE-DOC",
+          "file": "specs/features/xtask_devex.feature"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 1
+    },
+    {
+      "id": "AC-TPL-AGENTS-TOOLS-PERMISSION-SAFETY",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-TPL-AGENTS-GOVERNANCE",
+      "text": "Agent tools and permissionMode MUST follow least-privilege and explicitness principles. agents-lint MUST error on invalid permissionMode values and warn on broad tool grants (e.g., full Bash + Edit + Write) without justification.\n",
+      "status": "unknown",
+      "source": "inferred",
+      "must_have_ac": false,
+      "scenarios": [],
+      "tests": [
+        {
+          "type": "ci",
+          "tag": "agents_tools_safety"
+        }
+      ],
+      "tests_total": 0,
+      "tests_executed": 0
+    },
+    {
+      "id": "AC-TPL-ARTIFACTS-HAVE-REFS",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-TPL-GOV-ARTIFACTS",
+      "text": "Questions and friction entries support a 'refs' field for REQ-*/AC-* IDs, allowing governance artifacts to reference the contracts they relate to.\n",
+      "status": "pass",
+      "source": "coverage",
+      "must_have_ac": true,
+      "scenarios": [
+        "Question artifacts support refs field for traceability"
+      ],
+      "tests": [
+        {
+          "type": "bdd",
+          "tag": "@AC-TPL-ARTIFACTS-HAVE-REFS",
+          "file": "specs/features/questions.feature"
+        },
+        {
+          "type": "unit",
+          "tag": "artifacts_have_refs",
+          "file": "crates/xtask/src/commands/questions.rs",
+          "module": "xtask::commands::questions::tests::artifacts_have_refs"
+        }
+      ],
+      "tests_total": 2,
+      "tests_executed": 2
+    },
+    {
+      "id": "AC-TPL-BDD-EXIT-CODES",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-TPL-BDD-HARNESS",
+      "text": "The acceptance test binary returns exit 0 when all non-@wip scenarios pass (regardless of skipped scenarios), and returns non-zero only if at least one non-@wip scenario fails.\n",
+      "status": "pass",
+      "source": "coverage",
+      "must_have_ac": false,
+      "scenarios": [],
+      "tests": [
+        {
+          "type": "unit",
+          "tag": "commands::bdd::tests::is_bdd_success_with_exit_101_and_bdd_pass_marker",
+          "file": "crates/xtask/src/commands/bdd.rs"
+        },
+        {
+          "type": "unit",
+          "tag": "commands::bdd::tests::is_bdd_success_with_exit_1_no_markers",
+          "file": "crates/xtask/src/commands/bdd.rs"
+        }
+      ],
+      "tests_total": 2,
+      "tests_executed": 2
+    },
+    {
+      "id": "AC-TPL-BUNDLE-LAYOUT",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-TPL-BUNDLE-CONTRACT",
+      "text": "`cargo xtask bundle <TASK>` creates `bundle/<TASK>/` with: (1) `bundle.yaml` manifest listing task_id, requirement_ids, ac_ids, referenced spec_ledger sections, docs, and tests; (2) `context.md` with bundled file contents (markdown format); (3) manifest includes bundle_version, git_sha, and timestamp for reproducibility.\n",
+      "status": "pass",
+      "source": "coverage",
+      "must_have_ac": true,
+      "scenarios": [
+        "Bundle creates directory structure with manifest and context",
+        "Context markdown is readable and includes files"
+      ],
+      "tests": [
+        {
+          "type": "bdd",
+          "tag": "@AC-TPL-BUNDLE-LAYOUT",
+          "file": "specs/features/bundles.feature"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 1
+    },
+    {
+      "id": "AC-TPL-BUNDLE-MANIFEST",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-TPL-BUNDLE-CONTRACT",
+      "text": "`bundle.yaml` contains bundle_version (current: 1), task_id, requirement_ids, ac_ids, spec sections (with file paths and line anchors), referenced docs (with paths), and test handles (type, tag, file). Manifest is machine-readable and governs bundle scope boundaries.\n",
+      "status": "pass",
+      "source": "coverage",
+      "must_have_ac": true,
+      "scenarios": [
+        "Manifest task_id matches requested task name",
+        "Bundle manifest contains required fields",
+        "Manifest includes bundle_version 1 for current schema"
+      ],
+      "tests": [
+        {
+          "type": "bdd",
+          "tag": "@AC-TPL-BUNDLE-MANIFEST",
+          "file": "specs/features/bundles.feature"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 1
+    },
+    {
+      "id": "AC-TPL-BUNDLE-MANIFEST-LINKED",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-TPL-BUNDLE-CONTRACT",
+      "text": "When the bundle task name exists in specs/tasks.yaml, bundle.yaml MUST populate requirement_ids from the task's `requirement` field, ac_ids from the task's `acs` array, and tests from the spec_ledger.yaml tests mapping for those ACs. If the task is not in tasks.yaml, these fields remain empty arrays.\n",
+      "status": "pass",
+      "source": "coverage",
+      "must_have_ac": true,
+      "scenarios": [
+        "Manifest populates tests from spec_ledger for linked ACs",
+        "Manifest populates requirement and AC IDs from tasks.yaml"
+      ],
+      "tests": [
+        {
+          "type": "bdd",
+          "tag": "@AC-TPL-BUNDLE-MANIFEST-LINKED",
+          "file": "specs/features/bundles.feature"
+        },
+        {
+          "type": "unit",
+          "tag": "bundle_manifest_populates_from_task",
+          "file": "crates/xtask/src/commands/bundle.rs"
+        }
+      ],
+      "tests_total": 2,
+      "tests_executed": 1
+    },
+    {
+      "id": "AC-TPL-BUNDLE-MINIMAL-SCOPE",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-TPL-BUNDLE-CONTRACT",
+      "text": "Bundle scope is minimal: specs/ includes only referenced sections (not entire spec_ledger), docs/ includes only docs mentioned in ACs/tests, src/ is optional and narrowly scoped (crate-specific). As a guardrail, a single bundle MUST NOT exceed a configurable size and file-count threshold (default: 300 KiB / 64 files) unless explicitly overridden via BUNDLE_MAX_BYTES / BUNDLE_MAX_FILES.\n",
+      "status": "pass",
+      "source": "coverage",
+      "must_have_ac": false,
+      "scenarios": [],
+      "tests": [
+        {
+          "type": "unit",
+          "tag": "bundle_scope_audit",
+          "file": "crates/xtask/src/commands/bundle.rs",
+          "module": "commands::bundle::tests::bundle_scope_audit"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 1
+    },
+    {
+      "id": "AC-TPL-CLI-JSON-CORE",
+      "story_id": "US-TPL-PHILOSOPHY-001",
+      "req_id": "REQ-TPL-AI-IDP-COMPAT",
+      "text": "At minimum, cargo xtask ac-status, friction-list, questions-list, fork-list, and version accept --json and produce stable JSON output.\n",
+      "status": "pass",
+      "source": "coverage",
+      "must_have_ac": true,
+      "scenarios": [
+        "ac-status command produces JSON output for tooling",
+        "version command produces stable JSON for tooling"
+      ],
+      "tests": [
+        {
+          "type": "bdd",
+          "tag": "@AC-TPL-CLI-JSON-CORE",
+          "file": "specs/features/xtask_devex.feature"
+        },
+        {
+          "type": "unit",
+          "tag": "version_json_shape_is_stable",
+          "file": "crates/xtask/src/commands/version.rs",
+          "module": "xtask::commands::version::tests::version_json_shape_is_stable"
+        },
+        {
+          "type": "unit",
+          "tag": "ac_status_json_shape_is_stable",
+          "file": "crates/xtask/src/commands/ac_status.rs",
+          "module": "xtask::commands::ac_status::tests::ac_status_json_shape_is_stable"
+        }
+      ],
+      "tests_total": 3,
+      "tests_executed": 3
+    },
+    {
+      "id": "AC-TPL-CLI-JSON-OUTPUT",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-PLT-DEVEX-CONTRACT",
+      "text": "For core reporting commands (`ac-status`, `version`, `friction-list`, `questions-list`, `fork-list`), passing `--json` produces a single valid JSON document on stdout with a stable top-level shape, and exit codes follow the success/failure of the operation.\n",
+      "status": "pass",
+      "source": "coverage",
+      "must_have_ac": true,
+      "scenarios": [
+        "ac-status supports JSON output format",
+        "questions-list supports JSON output",
+        "friction-list supports JSON output",
+        "fork-list supports JSON output",
+        "version command supports JSON output"
+      ],
+      "tests": [
+        {
+          "type": "integration",
+          "tag": "@AC-TPL-CLI-JSON-OUTPUT",
+          "file": "specs/features/xtask_devex.feature"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 1
+    },
+    {
+      "id": "AC-TPL-CONFIG-VALIDATION",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-TPL-CONFIG-INTEGRITY",
+      "text": "On startup the service validates configuration against config_schema.yaml and exits non-zero with a clear validation error when the config is invalid.\n",
+      "status": "pass",
+      "source": "coverage",
+      "must_have_ac": true,
+      "scenarios": [
+        "Invalid configuration fails fast"
+      ],
+      "tests": [
+        {
+          "type": "bdd",
+          "tag": "@AC-TPL-CONFIG-VALIDATION",
+          "file": "specs/features/config_validation.feature"
+        },
+        {
+          "type": "unit",
+          "tag": "config_validation_rejects_invalid",
+          "file": "crates/spec-runtime/src/config.rs",
+          "module": "config::tests::config_validation_rejects_invalid"
+        }
+      ],
+      "tests_total": 2,
+      "tests_executed": 2
+    },
+    {
+      "id": "AC-TPL-EXAMPLE-FORK-BUILDS",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-TPL-EXAMPLE-FORK",
+      "text": "`examples/fork-customization/` is validated and demonstrates fork extensibility patterns in CI, proving template provides a working foundation for forked services.",
+      "status": "unknown",
+      "source": "inferred",
+      "must_have_ac": false,
+      "scenarios": [
+        "example fork builds and passes selftest"
+      ],
+      "tests": [
+        {
+          "type": "ci",
+          "tag": "example_fork_validation"
+        }
+      ],
+      "tests_total": 0,
+      "tests_executed": 0
+    },
+    {
+      "id": "AC-TPL-FLOW-IDEMPOTENT",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-TPL-FLOW-IDEMPOTENCY",
+      "text": "Running cargo xtask selftest or cargo xtask suggest-next multiple times without changes produces stable outputs and no duplicate artifacts.\n",
+      "status": "pass",
+      "source": "coverage",
+      "must_have_ac": true,
+      "scenarios": [
+        "suggest-next produces identical results when run twice",
+        "suggest-next does not create artifacts"
+      ],
+      "tests": [
+        {
+          "type": "bdd",
+          "tag": "@AC-TPL-FLOW-IDEMPOTENT",
+          "file": "specs/features/flow_idempotency.feature"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 1
+    },
+    {
+      "id": "AC-TPL-FORKS-STATUS-SUMMARY",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-TPL-FORK-VISIBILITY",
+      "text": "/platform/status includes governance.forks.total and a forks.ids array when forks/fork_registry.yaml exists, and `cargo xtask fork-list --json` reflects that state.\n",
+      "status": "pass",
+      "source": "coverage",
+      "must_have_ac": true,
+      "scenarios": [
+        "Status endpoint includes fork visibility"
+      ],
+      "tests": [
+        {
+          "type": "bdd",
+          "tag": "@AC-TPL-FORKS-STATUS-SUMMARY",
+          "file": "specs/features/platform_schema.feature"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 1
+    },
+    {
+      "id": "AC-TPL-GOV-FORKS",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-TPL-GOV-ARTIFACTS",
+      "text": "Fork metadata is stored under forks/fork_registry.yaml, can be managed via `cargo xtask fork-register`/`fork-list`, and is exposed via /platform/forks and /platform/forks/{name}.\n",
+      "status": "pass",
+      "source": "coverage",
+      "must_have_ac": false,
+      "scenarios": [
+        "List forks with JSON output",
+        "List registered forks via CLI"
+      ],
+      "tests": [
+        {
+          "type": "bdd",
+          "tag": "@AC-TPL-GOV-FORKS",
+          "file": "specs/features/forks.feature"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 1
+    },
+    {
+      "id": "AC-TPL-GOV-FRICTION",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-TPL-GOV-ARTIFACTS",
+      "text": "Friction log entries are stored as structured files under friction/, can be created and listed via `cargo xtask friction-new`/`friction-list`, and are exposed via /platform/friction and /platform/friction/{id}.\n",
+      "status": "pass",
+      "source": "coverage",
+      "must_have_ac": false,
+      "scenarios": [
+        "List friction entries via CLI",
+        "List friction entries with JSON output"
+      ],
+      "tests": [
+        {
+          "type": "bdd",
+          "tag": "@AC-TPL-GOV-FRICTION",
+          "file": "specs/features/friction.feature"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 1
+    },
+    {
+      "id": "AC-TPL-GOV-WRITE-TASK-STATUS-200",
+      "story_id": "US-TPL-PLATFORM-V3",
+      "req_id": "REQ-TPL-GOV-WRITE-001",
+      "text": "set_task_status writes durable state reflected in the governance graph.",
+      "status": "pass",
+      "source": "coverage",
+      "must_have_ac": true,
+      "scenarios": [
+        "Task status is persisted via governance repository"
+      ],
+      "tests": [
+        {
+          "type": "integration",
+          "tag": "@AC-TPL-GOV-WRITE-TASK-STATUS-200"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 1
+    },
+    {
+      "id": "AC-TPL-GRAPH-AC-HAS-TEST",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-TPL-GRAPH-INVARIANTS",
+      "text": "Every AC with a tests mapping in spec_ledger.yaml has at least one test node linked in the graph.\n",
+      "status": "pass",
+      "source": "coverage",
+      "must_have_ac": false,
+      "scenarios": [],
+      "tests": [
+        {
+          "type": "unit",
+          "tag": "ac_with_tests_produces_graph_node_and_edge",
+          "file": "crates/spec-runtime/src/graph.rs",
+          "module": "graph::tests::ac_with_tests_produces_graph_node_and_edge"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 1
+    },
+    {
+      "id": "AC-TPL-GRAPH-COMMAND-REACHABLE",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-TPL-GRAPH-INVARIANTS",
+      "text": "Every command declared in specs/devex_flows.yaml is either referenced by a flow or explicitly marked internal; no orphan commands exist.\n",
+      "status": "pass",
+      "source": "coverage",
+      "must_have_ac": false,
+      "scenarios": [],
+      "tests": [
+        {
+          "type": "unit",
+          "tag": "graph_invariants_command_reachable",
+          "file": "crates/spec-runtime/src/graph.rs",
+          "module": "graph::tests::graph_invariants_command_reachable"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 1
+    },
+    {
+      "id": "AC-TPL-GRAPH-INVARIANTS",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-TPL-GRAPH-INVARIANTS",
+      "text": "Graph invariants (requirements have ACs, ACs have tests, commands are reachable) are enforced together as a cohesive governance check.\n",
+      "status": "unknown",
+      "source": "inferred",
+      "must_have_ac": false,
+      "scenarios": [],
+      "tests": [
+        {
+          "type": "bdd",
+          "tag": "@AC-TPL-GRAPH-INVARIANTS",
+          "file": "specs/features/graph_invariants.feature"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 0
+    },
+    {
+      "id": "AC-TPL-GRAPH-MERMAID",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-TPL-GRAPH-VISUALIZATION",
+      "text": "cargo xtask graph-export --format mermaid emits a valid Mermaid graph (graph TD) that includes nodes for stories, requirements, and ACs, and edges showing their relationships.\n",
+      "status": "pass",
+      "source": "coverage",
+      "must_have_ac": true,
+      "scenarios": [
+        "graph-export emits Mermaid with stories and requirements"
+      ],
+      "tests": [
+        {
+          "type": "unit",
+          "tag": "graph_export_mermaid",
+          "file": "crates/spec-runtime/src/graph.rs",
+          "module": "graph::tests::graph_export_mermaid"
+        },
+        {
+          "type": "bdd",
+          "tag": "@AC-TPL-GRAPH-MERMAID",
+          "file": "specs/features/graph_visualization.feature"
+        }
+      ],
+      "tests_total": 2,
+      "tests_executed": 2
+    },
+    {
+      "id": "AC-TPL-GRAPH-REQ-HAS-AC",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-TPL-GRAPH-INVARIANTS",
+      "text": "Every requirement with tags including platform, structural, security, devex, docs, or release has at least one AC node in the graph.\n",
+      "status": "pass",
+      "source": "coverage",
+      "must_have_ac": false,
+      "scenarios": [],
+      "tests": [
+        {
+          "type": "unit",
+          "tag": "graph_invariants_req_has_ac",
+          "file": "crates/spec-runtime/src/graph.rs",
+          "module": "graph::tests::graph_invariants_req_has_ac"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 1
+    },
+    {
+      "id": "AC-TPL-GRAPH-SELFTEST",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-TPL-GRAPH-INVARIANTS",
+      "text": "cargo xtask selftest validates graph invariants and outputs 'Graph invariants satisfied' when all checks pass.\n",
+      "status": "pass",
+      "source": "coverage",
+      "must_have_ac": true,
+      "scenarios": [],
+      "tests": [
+        {
+          "type": "unit",
+          "tag": "graph_invariants_req_has_ac",
+          "file": "crates/spec-runtime/src/graph.rs",
+          "module": "graph::tests::graph_invariants_req_has_ac"
+        },
+        {
+          "type": "unit",
+          "tag": "ac_with_tests_produces_graph_node_and_edge",
+          "file": "crates/spec-runtime/src/graph.rs",
+          "module": "graph::tests::ac_with_tests_produces_graph_node_and_edge"
+        },
+        {
+          "type": "unit",
+          "tag": "graph_invariants_command_reachable",
+          "file": "crates/spec-runtime/src/graph.rs",
+          "module": "graph::tests::graph_invariants_command_reachable"
+        },
+        {
+          "type": "bdd",
+          "tag": "@AC-TPL-GRAPH-SELFTEST",
+          "file": "specs/features/graph_invariants.feature"
+        }
+      ],
+      "tests_total": 4,
+      "tests_executed": 3
+    },
+    {
+      "id": "AC-TPL-HOOKS-INSTALL",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-TPL-GOV-HOOKS",
+      "text": "The 'cargo xtask install-hooks' command creates a pre-commit hook that runs 'cargo run -p xtask -- precommit' inside the Nix devshell when available; failures are advisory and do not block commits.\n",
+      "status": "pass",
+      "source": "coverage",
+      "must_have_ac": true,
+      "scenarios": [
+        "pre-commit hook file is created as executable script",
+        "install-hooks creates hooks directory if missing",
+        "install-hooks creates executable pre-commit hook on Unix",
+        "install-hooks fails gracefully outside git repository",
+        "install-hooks reports success when hook already exists",
+        "pre-commit hook includes low-resource mode when environment variable is set",
+        "pre-commit hook contains governance messaging",
+        "pre-commit hook respects XTASK_LOW_RESOURCES environment variable",
+        "pre-commit hook runs governance check"
+      ],
+      "tests": [
+        {
+          "type": "manual",
+          "tag": "git_commit_verify"
+        },
+        {
+          "type": "bdd",
+          "tag": "@AC-TPL-HOOKS-INSTALL",
+          "file": "specs/features/git_hooks.feature"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 1
+    },
+    {
+      "id": "AC-TPL-IAC-COMPOSE-ALIGN",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-TPL-IAC-ALIGNMENT",
+      "text": "docker-compose.yaml services (database, tracing, app) use the ports and env vars defined for the local environment in config_schema.yaml and envs.yaml.\n",
+      "status": "pass",
+      "source": "coverage",
+      "must_have_ac": false,
+      "scenarios": [],
+      "tests": [
+        {
+          "type": "unit",
+          "tag": "iac_compose_aligns_with_config",
+          "module": "local_docker::tests::iac_compose_aligns_with_config"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 1
+    },
+    {
+      "id": "AC-TPL-IAC-K8S-ALIGN",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-TPL-IAC-ALIGNMENT",
+      "text": "Kubernetes manifests under infra/k8s (Deployment/Service) use ports and env vars consistent with config_schema.yaml and the default environment.\n",
+      "status": "pass",
+      "source": "coverage",
+      "must_have_ac": false,
+      "scenarios": [],
+      "tests": [
+        {
+          "type": "unit",
+          "tag": "iac_k8s_aligns_with_config",
+          "file": "crates/spec-runtime/src/k8s_iac.rs",
+          "module": "k8s_iac::tests::iac_k8s_aligns_with_config"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 1
+    },
+    {
+      "id": "AC-TPL-IAC-TF-ALIGN",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-TPL-IAC-ALIGNMENT",
+      "text": "Terraform examples (when present) reference the same variables and defaults as config_schema.yaml for services and dependencies.\n",
+      "status": "pass",
+      "source": "coverage",
+      "must_have_ac": false,
+      "scenarios": [],
+      "tests": [
+        {
+          "type": "unit",
+          "tag": "iac_tf_aligns_with_config",
+          "file": "crates/spec-runtime/src/local_docker.rs",
+          "module": "local_docker::tests::iac_tf_aligns_with_config"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 1
+    },
+    {
+      "id": "AC-TPL-IDP-SNAPSHOT",
+      "story_id": "US-TPL-PHILOSOPHY-001",
+      "req_id": "REQ-TPL-IDP-SNAPSHOT",
+      "text": "`cargo xtask idp-snapshot` emits JSON containing timestamp, template_version, service_id, governance_health (status, ac_coverage), documentation metrics, and task hints for pending/in_progress tasks.\n",
+      "status": "pass",
+      "source": "coverage",
+      "must_have_ac": true,
+      "scenarios": [
+        "idp-snapshot emits valid JSON with governance health",
+        "idp-snapshot writes to file when --output specified"
+      ],
+      "tests": [
+        {
+          "type": "bdd",
+          "tag": "@AC-TPL-IDP-SNAPSHOT",
+          "file": "specs/features/xtask_devex.feature"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 1
+    },
+    {
+      "id": "AC-TPL-IDP-SNAPSHOT-VALID-JSON",
+      "story_id": "US-TPL-PHILOSOPHY-001",
+      "req_id": "REQ-TPL-IDP-SNAPSHOT",
+      "text": "The idp-snapshot output is valid JSON that can be parsed without errors and contains all required top-level keys.\n",
+      "status": "pass",
+      "source": "coverage",
+      "must_have_ac": true,
+      "scenarios": [
+        "idp-snapshot JSON is parseable and complete"
+      ],
+      "tests": [
+        {
+          "type": "bdd",
+          "tag": "@AC-TPL-IDP-SNAPSHOT-VALID-JSON",
+          "file": "specs/features/xtask_devex.feature"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 1
+    },
+    {
+      "id": "AC-TPL-KERNEL-CONTRACT-EMITTED",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-TPL-REL-BUNDLE",
+      "text": "`cargo xtask release-bundle X.Y.Z` writes `release_evidence/kernel_contract.vX.Y.Z.json` describing xtask commands, /platform/* endpoints, and governance schemas for that version.",
+      "status": "pass",
+      "source": "coverage",
+      "must_have_ac": false,
+      "scenarios": [
+        "release-bundle emits kernel contract JSON"
+      ],
+      "tests": [
+        {
+          "type": "integration",
+          "tag": "@AC-TPL-KERNEL-CONTRACT-EMITTED",
+          "file": "specs/features/xtask_devex.feature"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 1
+    },
+    {
+      "id": "AC-TPL-LOCAL-DOCKER",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-TPL-LOCAL-RUNTIME",
+      "text": "Optional local Docker compose (Postgres + Jaeger) aligns with the application's default local config; convenience only, not a gating kernel requirement.\n",
+      "status": "pass",
+      "source": "coverage",
+      "must_have_ac": false,
+      "scenarios": [
+        "docker-compose.yaml provides Postgres and Jaeger"
+      ],
+      "tests": [
+        {
+          "type": "unit",
+          "tag": "local_docker_compose_exists",
+          "file": "crates/spec-runtime/src/local_docker.rs",
+          "module": "local_docker::tests::local_docker_compose_exists_and_has_core_services"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 1
+    },
+    {
+      "id": "AC-TPL-LOG-NO-SECRETS",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-TPL-LOG-HYGIENE",
+      "text": "Rendering of /platform/status and UI dashboards redacts or omits secret values, and selftest/log output does not include raw secret data from config.\n",
+      "status": "pass",
+      "source": "coverage",
+      "must_have_ac": false,
+      "scenarios": [
+        "Platform status redacts secrets"
+      ],
+      "tests": [
+        {
+          "type": "unit",
+          "tag": "log_hygiene_redacts_secrets",
+          "module": "platform::tests::log_hygiene_redacts_secrets"
+        },
+        {
+          "type": "bdd",
+          "tag": "@AC-TPL-LOG-NO-SECRETS",
+          "file": "specs/features/platform_security.feature"
+        }
+      ],
+      "tests_total": 2,
+      "tests_executed": 2
+    },
+    {
+      "id": "AC-TPL-METADATA-COMPLETE",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-TPL-METADATA-CONSISTENT",
+      "text": "service_metadata.yaml includes service_id, template_version, URLs, and tags; /platform/status returns the same identifiers; the UI links to runbook, roadmap, agent guide, feature status, and platform support docs.\n",
+      "status": "pass",
+      "source": "coverage",
+      "must_have_ac": true,
+      "scenarios": [
+        "Platform metadata is exposed via status and UI"
+      ],
+      "tests": [
+        {
+          "type": "bdd",
+          "tag": "@AC-TPL-METADATA-COMPLETE",
+          "file": "specs/features/platform_schema.feature"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 1
+    },
+    {
+      "id": "AC-TPL-OPINIONS-DOCUMENTED",
+      "story_id": "US-TPL-PHILOSOPHY-001",
+      "req_id": "REQ-TPL-OPINIONATED-DEFAULTS",
+      "text": "docs/QUICKSTART.md and docs/ROADMAP.md include a 'Defaults & Opinions' section listing at least: environment model (Nix-first, Tier-1/Tier-2 split), CI gate (selftest as required), governance artifacts (questions, friction, forks), and agent surfaces (/platform/*, bundles, xtask CLI).\n",
+      "status": "pass",
+      "source": "coverage",
+      "must_have_ac": false,
+      "scenarios": [
+        "QUICKSTART.md contains Defaults & Opinions section",
+        "ROADMAP.md contains Philosophy section"
+      ],
+      "tests": [
+        {
+          "type": "bdd",
+          "tag": "@AC-TPL-OPINIONS-DOCUMENTED",
+          "file": "specs/features/philosophy_docs.feature"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 1
+    },
+    {
+      "id": "AC-TPL-OVERRIDE-DOC",
+      "story_id": "US-TPL-PHILOSOPHY-001",
+      "req_id": "REQ-TPL-OVERRIDE-PATH",
+      "text": "docs/how-to/change-template-opinion.md exists and describes the recommended override path: (1) Identify story/REQ/AC in spec_ledger.yaml, (2) Update AC text/tags/must_have_ac in the fork, (3) Update BDD scenarios, (4) Run selftest + ac-status, (5) Optionally log friction/question if the kernel made this hard.\n",
+      "status": "pass",
+      "source": "coverage",
+      "must_have_ac": false,
+      "scenarios": [
+        "Override guide exists with recommended steps",
+        "Override guide provides concrete examples"
+      ],
+      "tests": [
+        {
+          "type": "bdd",
+          "tag": "@AC-TPL-OVERRIDE-DOC",
+          "file": "specs/features/philosophy_docs.feature"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 1
+    },
+    {
+      "id": "AC-TPL-OVERRIDE-TRACEABLE",
+      "story_id": "US-TPL-PHILOSOPHY-001",
+      "req_id": "REQ-TPL-OVERRIDE-PATH",
+      "text": "specs/doc_index.yaml registers the override doc with tag 'override_path', and /platform/docs/index exposes it under a 'Kernel Overrides' category.\n",
+      "status": "pass",
+      "source": "coverage",
+      "must_have_ac": false,
+      "scenarios": [
+        "Override doc is registered in doc_index"
+      ],
+      "tests": [
+        {
+          "type": "bdd",
+          "tag": "@AC-TPL-OVERRIDE-TRACEABLE",
+          "file": "specs/features/philosophy_docs.feature"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 1
+    },
+    {
+      "id": "AC-TPL-PLATFORM-AUTH-BASIC",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-TPL-PLATFORM-AUTH",
+      "text": "When PLATFORM_AUTH_MODE=basic, write endpoints under /platform/* reject unauthenticated requests with 401/403 and accept requests with the configured credential header; read endpoints may remain open or use the same guard.\n",
+      "status": "pass",
+      "source": "coverage",
+      "must_have_ac": false,
+      "scenarios": [
+        "Basic auth without a token surfaces a warning state",
+        "Write endpoints require a platform token when auth mode is basic"
+      ],
+      "tests": [
+        {
+          "type": "bdd",
+          "tag": "@AC-TPL-PLATFORM-AUTH-BASIC",
+          "file": "specs/features/platform_security.feature"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 1
+    },
+    {
+      "id": "AC-TPL-PLATFORM-DEVEX",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-TPL-PLATFORM-INTROSPECTION",
+      "text": "GET /platform/devex/flows returns the canonical flows definition.",
+      "status": "pass",
+      "source": "coverage",
+      "must_have_ac": true,
+      "scenarios": [
+        "DevEx flows endpoint returns flows"
+      ],
+      "tests": [
+        {
+          "type": "bdd",
+          "tag": "@AC-TPL-PLATFORM-DEVEX",
+          "file": "specs/features/platform_introspection.feature"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 1
+    },
+    {
+      "id": "AC-TPL-PLATFORM-DOCS",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-TPL-PLATFORM-INTROSPECTION",
+      "text": "GET /platform/docs/index returns the documentation index.",
+      "status": "pass",
+      "source": "coverage",
+      "must_have_ac": true,
+      "scenarios": [
+        "Docs index endpoint returns document index"
+      ],
+      "tests": [
+        {
+          "type": "bdd",
+          "tag": "@AC-TPL-PLATFORM-DOCS",
+          "file": "specs/features/platform_introspection.feature"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 1
+    },
+    {
+      "id": "AC-TPL-PLATFORM-DOCS-CONTRACT",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-TPL-PLATFORM-CONTRACT",
+      "text": "/platform/docs/index returns a JSON object matching the DocsIndex schema in specs/openapi/openapi.yaml, including summary and docs array.\n",
+      "status": "unknown",
+      "source": "inferred",
+      "must_have_ac": false,
+      "scenarios": [],
+      "tests": [
+        {
+          "type": "ci",
+          "tag": "openapi_lint_docs_index"
+        }
+      ],
+      "tests_total": 0,
+      "tests_executed": 0
+    },
+    {
+      "id": "AC-TPL-PLATFORM-GOVERNANCE-APIS",
+      "story_id": "US-TPL-PHILOSOPHY-001",
+      "req_id": "REQ-TPL-AI-IDP-COMPAT",
+      "text": "/platform/questions, /platform/friction, and /platform/forks return JSON payloads that match their schemas and are linked from /platform/schema.\n",
+      "status": "pass",
+      "source": "coverage",
+      "must_have_ac": true,
+      "scenarios": [
+        "Forks endpoint returns all registered forks",
+        "Questions endpoint returns all questions",
+        "Question by ID endpoint returns 404 for unknown question",
+        "Friction endpoint returns valid JSON for AI/IDP consumption",
+        "Question by ID endpoint returns specific question",
+        "Forks endpoint returns valid JSON for AI/IDP consumption",
+        "Questions endpoint supports status filtering",
+        "Fork by name endpoint returns 404 for unknown fork",
+        "Questions endpoint returns valid JSON for AI/IDP consumption"
+      ],
+      "tests": [
+        {
+          "type": "bdd",
+          "tag": "@AC-TPL-PLATFORM-GOVERNANCE-APIS",
+          "file": "specs/features/platform_introspection.feature"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 1
+    },
+    {
+      "id": "AC-TPL-PLATFORM-GRAPH",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-TPL-PLATFORM-INTROSPECTION",
+      "text": "GET /platform/graph returns the full governance graph in JSON format.",
+      "status": "pass",
+      "source": "coverage",
+      "must_have_ac": true,
+      "scenarios": [
+        "Graph endpoint returns governance graph"
+      ],
+      "tests": [
+        {
+          "type": "bdd",
+          "tag": "@AC-TPL-PLATFORM-GRAPH",
+          "file": "specs/features/platform_introspection.feature"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 1
+    },
+    {
+      "id": "AC-TPL-PLATFORM-SCHEMA",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-TPL-PLATFORM-SCHEMA",
+      "text": "GET /platform/schema (or /platform/openapi) returns a JSON schema/OpenAPI document that includes /platform/status, /platform/graph, /platform/tasks, and /platform/agent/hints.\n",
+      "status": "pass",
+      "source": "coverage",
+      "must_have_ac": true,
+      "scenarios": [
+        "Platform exposes machine-readable schema",
+        "Platform exposes individual schemas by name"
+      ],
+      "tests": [
+        {
+          "type": "bdd",
+          "tag": "@AC-TPL-PLATFORM-SCHEMA",
+          "file": "specs/features/platform_schema.feature"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 1
+    },
+    {
+      "id": "AC-TPL-PLATFORM-STATUS-CONTRACT",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-TPL-PLATFORM-CONTRACT",
+      "text": "/platform/status returns a JSON object matching the PlatformStatus schema in specs/openapi/openapi.yaml, including service, governance, and optional config sections.\n",
+      "status": "unknown",
+      "source": "inferred",
+      "must_have_ac": false,
+      "scenarios": [],
+      "tests": [
+        {
+          "type": "ci",
+          "tag": "openapi_lint_platform_status"
+        }
+      ],
+      "tests_total": 0,
+      "tests_executed": 0
+    },
+    {
+      "id": "AC-TPL-PLATFORM-UI-CONTRACT",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-TPL-PLATFORM-UI",
+      "text": "The platform provides a governed UI contract (specs/ui_contract.yaml) defining screens and regions, a /platform/ui/contract endpoint exposing the contract as JSON, and data-uiid attributes in HTML matching the contract. The cargo xtask ui-contract-check command validates YAML structure and DOM anchors, and selftest includes this check.\n",
+      "status": "pass",
+      "source": "coverage",
+      "must_have_ac": true,
+      "scenarios": [
+        "UI contract endpoint returns JSON contract"
+      ],
+      "tests": [
+        {
+          "type": "bdd",
+          "tag": "@AC-TPL-PLATFORM-UI-CONTRACT",
+          "file": "specs/features/platform_ui.feature"
+        },
+        {
+          "type": "unit",
+          "tag": "test_real_contract_passes",
+          "file": "crates/xtask/src/commands/ui_contract_check.rs",
+          "module": "commands::ui_contract_check::tests"
+        },
+        {
+          "type": "integration",
+          "tag": "test_full_contract_coverage",
+          "file": "crates/app-http/tests/ui_contract_dom.rs"
+        },
+        {
+          "type": "integration",
+          "tag": "test_get_ui_contract",
+          "file": "crates/app-http/tests/ui_contract_api.rs"
+        }
+      ],
+      "tests_total": 4,
+      "tests_executed": 3
+    },
+    {
+      "id": "AC-TPL-PLATFORM-UI-DASHBOARD",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-TPL-PLATFORM-UI",
+      "text": "GET / or /ui serves an HTML dashboard showing platform status, including governance health metrics from /platform/status.\n",
+      "status": "pass",
+      "source": "coverage",
+      "must_have_ac": true,
+      "scenarios": [
+        "Dashboard serves HTML with platform metrics"
+      ],
+      "tests": [
+        {
+          "type": "bdd",
+          "tag": "@AC-TPL-PLATFORM-UI-DASHBOARD",
+          "file": "specs/features/platform_ui.feature"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 1
+    },
+    {
+      "id": "AC-TPL-PLATFORM-UI-FLOWS",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-TPL-PLATFORM-UI",
+      "text": "The UI provides a flows and tasks view displaying DevEx flows and available tasks from the platform APIs.\n",
+      "status": "pass",
+      "source": "coverage",
+      "must_have_ac": true,
+      "scenarios": [
+        "Flows view displays DevEx flows and tasks"
+      ],
+      "tests": [
+        {
+          "type": "bdd",
+          "tag": "@AC-TPL-PLATFORM-UI-FLOWS",
+          "file": "specs/features/platform_ui.feature"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 1
+    },
+    {
+      "id": "AC-TPL-PLATFORM-UI-GRAPH",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-TPL-PLATFORM-UI",
+      "text": "The UI provides a graph visualization rendering the governance graph (stories, requirements, ACs, docs, commands) using Mermaid.js.\n",
+      "status": "pass",
+      "source": "coverage",
+      "must_have_ac": true,
+      "scenarios": [
+        "Graph view renders Mermaid diagram"
+      ],
+      "tests": [
+        {
+          "type": "bdd",
+          "tag": "@AC-TPL-PLATFORM-UI-GRAPH",
+          "file": "specs/features/platform_ui.feature"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 1
+    },
+    {
+      "id": "AC-TPL-POLICY-STATUS-OVERVIEW",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-TPL-PLATFORM-INTROSPECTION",
+      "text": "GET /platform/status includes governance.policies.status field derived from the last policy-test run (pass/fail/unknown), read from target/policy_status.json.\n",
+      "status": "pass",
+      "source": "coverage",
+      "must_have_ac": true,
+      "scenarios": [
+        "Platform status exposes policy health"
+      ],
+      "tests": [
+        {
+          "type": "bdd",
+          "tag": "@AC-TPL-PLATFORM-STATUS"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 1
+    },
+    {
+      "id": "AC-TPL-QUESTIONS-LOGGED",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-TPL-GOV-ARTIFACTS",
+      "text": "Ambiguity during automated flows or suggest-next emits a structured question (file/PR comment/status entry) that can be surfaced to humans or agents without halting progress.\n",
+      "status": "pass",
+      "source": "coverage",
+      "must_have_ac": false,
+      "scenarios": [
+        "Questions list supports JSON output",
+        "Questions list command works"
+      ],
+      "tests": [
+        {
+          "type": "bdd",
+          "tag": "@AC-TPL-QUESTIONS-LOGGED",
+          "file": "specs/features/questions.feature"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 1
+    },
+    {
+      "id": "AC-TPL-REL-CHANGELOG",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-TPL-REL-BUNDLE",
+      "text": "Evidence file includes distinct sections (Tasks, Specs/ACs, ADRs, Git log, Governance signals) adequate for LLM formatting into Keep a Changelog format.",
+      "status": "pass",
+      "source": "coverage",
+      "must_have_ac": false,
+      "scenarios": [
+        "evidence file has stable sections for LLM formatting",
+        "evidence file includes linked requirements and ACs"
+      ],
+      "tests": [
+        {
+          "type": "integration",
+          "tag": "release_bundle_structure",
+          "file": "specs/features/xtask_devex.feature"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 1
+    },
+    {
+      "id": "AC-TPL-REL-EVIDENCE",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-TPL-REL-BUNDLE",
+      "text": "`cargo xtask release-bundle X.Y.Z` writes `release_evidence/vX.Y.Z.md` containing: all tasks completed in this version, linked REQs/ACs/ADRs, git log since last tag, selftest summary, policy status, resolved friction entries.",
+      "status": "pass",
+      "source": "coverage",
+      "must_have_ac": false,
+      "scenarios": [
+        "release-bundle includes done tasks from specs",
+        "release-bundle includes policy status",
+        "release-bundle generates evidence file with all required sections",
+        "release-bundle includes selftest summary",
+        "release-bundle includes git log since last tag",
+        "release-bundle validates version format",
+        "release-bundle creates release_evidence directory if missing"
+      ],
+      "tests": [
+        {
+          "type": "integration",
+          "tag": "release_bundle_generation",
+          "file": "specs/features/xtask_devex.feature"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 1
+    },
+    {
+      "id": "AC-TPL-SKILLS-ALIGN-001",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-TPL-SKILLS-GUIDE",
+      "text": "Existing .claude/skills/* are aligned with documented workflows (bootstrap-dev-env, governed-feature-dev, governed-maintenance, governed-release, governed-governance-debug).\n",
+      "status": "pass",
+      "source": "coverage",
+      "must_have_ac": true,
+      "scenarios": [
+        "skills-lint validates Skills alignment with workflows"
+      ],
+      "tests": [
+        {
+          "type": "manual",
+          "tag": "skills_alignment_review"
+        },
+        {
+          "type": "bdd",
+          "tag": "@AC-TPL-SKILLS-ALIGN-001",
+          "file": "specs/features/xtask_devex.feature"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 1
+    },
+    {
+      "id": "AC-TPL-SKILLS-ALLOWED-TOOLS-SAFETY",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-TPL-SKILLS-GOVERNANCE",
+      "text": "Skill allowed-tools MUST follow least-privilege principle. skills-lint must warn if read-only Skill includes Write/Edit, or if unscoped Bash is used without justification. No hardcoded secrets in SKILL.md or supporting files.\n",
+      "status": "unknown",
+      "source": "inferred",
+      "must_have_ac": false,
+      "scenarios": [],
+      "tests": [
+        {
+          "type": "ci",
+          "tag": "skills_tools_safety"
+        }
+      ],
+      "tests_total": 0,
+      "tests_executed": 0
+    },
+    {
+      "id": "AC-TPL-SKILLS-DESCRIPTION-QUALITY",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-TPL-SKILLS-GOVERNANCE",
+      "text": "Skill descriptions MUST include both WHAT (capability) and WHEN (triggers/context), use third-person voice, and max 1024 characters. skills-lint must warn if description omits \"when to use\" triggers.\n",
+      "status": "unknown",
+      "source": "inferred",
+      "must_have_ac": false,
+      "scenarios": [],
+      "tests": [
+        {
+          "type": "ci",
+          "tag": "skills_description_quality"
+        }
+      ],
+      "tests_total": 0,
+      "tests_executed": 0
+    },
+    {
+      "id": "AC-TPL-SKILLS-FLOW-MAPPING",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-TPL-SKILLS-GOVERNANCE",
+      "text": "Skill descriptions MUST reference at least one devex_flows entry or xtask command. Anti-pattern detection: warn if Skill name suggests it wraps single command (e.g., skill-check) instead of workflow. Lint rule: description must mention workflow scope.\n",
+      "status": "unknown",
+      "source": "inferred",
+      "must_have_ac": false,
+      "scenarios": [],
+      "tests": [
+        {
+          "type": "ci",
+          "tag": "skills_flow_mapping"
+        }
+      ],
+      "tests_total": 0,
+      "tests_executed": 0
+    },
+    {
+      "id": "AC-TPL-SKILLS-FMT",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-TPL-SKILLS-TOOLING",
+      "text": "`cargo run -p xtask -- skills-fmt` normalizes SKILL.md files according to repo conventions (frontmatter, headings, links).\n",
+      "status": "pass",
+      "source": "coverage",
+      "must_have_ac": true,
+      "scenarios": [
+        "skills-fmt formats Skills files"
+      ],
+      "tests": [
+        {
+          "type": "integration",
+          "tag": "@AC-TPL-SKILLS-FMT",
+          "file": "specs/features/xtask_devex.feature"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 1
+    },
+    {
+      "id": "AC-TPL-SKILLS-GOVERNANCE-001",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-TPL-SKILLS-GOVERNANCE",
+      "text": "docs/SKILLS_GOVERNANCE.md exists and documents the governance spec, lifecycle (create/maintain/retire), validation rules, and ADR-0020 principles for this repo.\n",
+      "status": "unknown",
+      "source": "inferred",
+      "must_have_ac": false,
+      "scenarios": [],
+      "tests": [
+        {
+          "type": "ci",
+          "tag": "skills_governance_documented"
+        }
+      ],
+      "tests_total": 0,
+      "tests_executed": 0
+    },
+    {
+      "id": "AC-TPL-SKILLS-GOVERNANCE-002",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-TPL-SKILLS-GOVERNANCE",
+      "text": "Each Skill in .claude/skills/* has a corresponding REQ in spec_ledger.yaml and at least one AC defining its SKILL.md structure requirements.\n",
+      "status": "unknown",
+      "source": "inferred",
+      "must_have_ac": false,
+      "scenarios": [],
+      "tests": [
+        {
+          "type": "ci",
+          "tag": "skills_governance_guidance"
+        }
+      ],
+      "tests_total": 0,
+      "tests_executed": 0
+    },
+    {
+      "id": "AC-TPL-SKILLS-GOVERNANCE-003",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-TPL-SKILLS-GOVERNANCE",
+      "text": "docs/SKILLS_TEMPLATE.md exists and provides a copy-paste template for creating new Skills with checklist for name format, description quality (what + when), allowed-tools safety, and references.\n",
+      "status": "unknown",
+      "source": "inferred",
+      "must_have_ac": false,
+      "scenarios": [],
+      "tests": [
+        {
+          "type": "ci",
+          "tag": "skills_template_documented"
+        }
+      ],
+      "tests_total": 0,
+      "tests_executed": 0
+    },
+    {
+      "id": "AC-TPL-SKILLS-GUIDE-001",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-TPL-SKILLS-GUIDE",
+      "text": "docs/AGENT_SKILLS.md exists and documents the recommended Skill set, SKILL.md templates, and best practices for this repo.\n",
+      "status": "pass",
+      "source": "coverage",
+      "must_have_ac": true,
+      "scenarios": [
+        "AGENT_SKILLS.md provides comprehensive guidance"
+      ],
+      "tests": [
+        {
+          "type": "docs",
+          "tag": "skills_guide_exists"
+        },
+        {
+          "type": "bdd",
+          "tag": "@AC-TPL-SKILLS-GUIDE-001",
+          "file": "specs/features/xtask_devex.feature"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 1
+    },
+    {
+      "id": "AC-TPL-SKILLS-LIFECYCLE-DOCS",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-TPL-SKILLS-GOVERNANCE",
+      "text": "docs/SKILLS_GOVERNANCE.md documents the full lifecycle: how to create a Skill (REQ + AC → Task → implement), maintain (keep devex_flows.yaml in sync), and retire (mark REQ deprecated, archive SKILL.md).\n",
+      "status": "unknown",
+      "source": "inferred",
+      "must_have_ac": false,
+      "scenarios": [],
+      "tests": [
+        {
+          "type": "ci",
+          "tag": "skills_lifecycle_documented"
+        }
+      ],
+      "tests_total": 0,
+      "tests_executed": 0
+    },
+    {
+      "id": "AC-TPL-SKILLS-LINT",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-TPL-SKILLS-TOOLING",
+      "text": "`cargo run -p xtask -- skills-lint` validates Skills frontmatter and content (name/description rules, references to flows and APIs).\n",
+      "status": "pass",
+      "source": "coverage",
+      "must_have_ac": true,
+      "scenarios": [
+        "skills-lint validates all SKILL.md files silently when valid"
+      ],
+      "tests": [
+        {
+          "type": "integration",
+          "tag": "@AC-TPL-SKILLS-LINT",
+          "file": "specs/features/xtask_devex.feature"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 1
+    },
+    {
+      "id": "AC-TPL-SKILLS-NAME-FORMAT",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-TPL-SKILLS-GOVERNANCE",
+      "text": "Skill names MUST be kebab-case, contain only lowercase letters/digits/hyphens, max 64 characters, and be unique within the project. skills-lint enforces this.\n",
+      "status": "pass",
+      "source": "coverage",
+      "must_have_ac": false,
+      "scenarios": [
+        "skills-lint enforces skill name format in the template"
+      ],
+      "tests": [
+        {
+          "type": "bdd",
+          "tag": "@AC-TPL-SKILLS-NAME-FORMAT",
+          "file": "specs/features/xtask_devex.feature"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 1
+    },
+    {
+      "id": "AC-TPL-SUGGEST-NEXT-CLI",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-TPL-SUGGEST-NEXT",
+      "text": "cargo xtask suggest-next --task <ID> prints a structured sequence of recommended commands and edits for the given task, based on its recommended_flows.\n",
+      "status": "pass",
+      "source": "coverage",
+      "must_have_ac": false,
+      "scenarios": [
+        "suggest-next prints structured steps for a task"
+      ],
+      "tests": [
+        {
+          "type": "bdd",
+          "tag": "@AC-TPL-SUGGEST-NEXT-CLI",
+          "file": "specs/features/platform_rounding.feature"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 1
+    },
+    {
+      "id": "AC-TPL-SUGGEST-NEXT-HTTP",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-TPL-SUGGEST-NEXT",
+      "text": "GET /platform/tasks/suggest-next?task=<ID> returns a JSON payload with task metadata and a recommended_sequence of steps (commands/edits) for that task.\n",
+      "status": "pass",
+      "source": "coverage",
+      "must_have_ac": false,
+      "scenarios": [
+        "suggest-next HTTP endpoint returns JSON"
+      ],
+      "tests": [
+        {
+          "type": "bdd",
+          "tag": "@AC-TPL-SUGGEST-NEXT-HTTP",
+          "file": "specs/features/platform_rounding.feature"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 1
+    },
+    {
+      "id": "AC-TPL-TASK-TRANSITIONS",
+      "story_id": "US-TPL-PLATFORM-V3",
+      "req_id": "REQ-TPL-TASK-LIFECYCLE",
+      "text": "Task status transitions are validated against the domain model.",
+      "status": "pass",
+      "source": "coverage",
+      "must_have_ac": false,
+      "scenarios": [
+        "Update task status via HTTP API",
+        "Invalid task transition via HTTP API"
+      ],
+      "tests": [
+        {
+          "type": "unit",
+          "tag": "test_allowed_transitions",
+          "file": "crates/business-core/src/lib.rs",
+          "module": "governance::tests::test_allowed_transitions"
+        },
+        {
+          "type": "unit",
+          "tag": "test_forbidden_transitions",
+          "file": "crates/business-core/src/lib.rs",
+          "module": "governance::tests::test_forbidden_transitions"
+        }
+      ],
+      "tests_total": 2,
+      "tests_executed": 2
+    },
+    {
+      "id": "AC-TPL-TASKS-CLI",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-TPL-PLATFORM-TASKS",
+      "text": "cargo xtask tasks-list prints all tasks with their IDs, titles, status, and requirement IDs (no filters implemented yet).\n",
+      "status": "pass",
+      "source": "coverage",
+      "must_have_ac": false,
+      "scenarios": [
+        "List all tasks via CLI"
+      ],
+      "tests": [
+        {
+          "type": "bdd",
+          "tag": "@AC-TPL-TASKS-CLI",
+          "file": "specs/features/platform_tasks.feature"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 1
+    },
+    {
+      "id": "AC-TPL-TASKS-CREATE-CLI",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-TPL-PLATFORM-TASKS",
+      "text": "cargo xtask task-create creates a new task in specs/tasks.yaml, validates that the requirement and ACs exist in spec_ledger.yaml, and rejects duplicate task IDs.\n",
+      "status": "pass",
+      "source": "coverage",
+      "must_have_ac": false,
+      "scenarios": [
+        "Create a new task via CLI"
+      ],
+      "tests": [
+        {
+          "type": "bdd",
+          "tag": "@AC-TPL-TASKS-CREATE-CLI",
+          "file": "specs/features/platform_tasks.feature"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 1
+    },
+    {
+      "id": "AC-TPL-TASKS-HTTP",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-TPL-PLATFORM-TASKS",
+      "text": "GET /platform/tasks returns a JSON representation of tasks.yaml, including id, title, requirement, acs, status, owner, labels, and docs fields, and supports status/requirement filters. POST /platform/tasks/{id}/status updates task status via HTTP (no POST /platform/tasks or PUT /platform/tasks/{id} implemented yet).\n",
+      "status": "pass",
+      "source": "coverage",
+      "must_have_ac": false,
+      "scenarios": [
+        "Get tasks filtered by status via HTTP API",
+        "Get empty task list when no tasks match filters",
+        "Get tasks filtered by requirement via HTTP API",
+        "Get tasks via HTTP API"
+      ],
+      "tests": [
+        {
+          "type": "bdd",
+          "tag": "@AC-TPL-TASKS-HTTP",
+          "file": "specs/features/platform_tasks.feature"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 1
+    },
+    {
+      "id": "AC-TPL-TASKS-UPDATE-CLI",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-TPL-PLATFORM-TASKS",
+      "text": "cargo xtask task-update updates task fields (status, title, owner) in specs/tasks.yaml, enforces valid status transitions, and persists changes to the task definition.\n",
+      "status": "pass",
+      "source": "coverage",
+      "must_have_ac": false,
+      "scenarios": [
+        "Update a task via CLI"
+      ],
+      "tests": [
+        {
+          "type": "bdd",
+          "tag": "@AC-TPL-TASKS-UPDATE-CLI",
+          "file": "specs/features/platform_tasks.feature"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 1
+    },
+    {
+      "id": "AC-TPL-TS-CONFIG-VALIDATION",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-TPL-TS-CONFIG-GOVERNANCE",
+      "text": "All tsconfig.json files avoid deprecated moduleResolution values (node, node10) and ignoreDeprecations flags; violations are caught by scripts/validate-ts-config.sh and the ts-config-lints CI job.\n",
+      "status": "unknown",
+      "source": "inferred",
+      "must_have_ac": false,
+      "scenarios": [],
+      "tests": [
+        {
+          "type": "ci",
+          "tag": "ts-config-lints"
+        }
+      ],
+      "tests_total": 0,
+      "tests_executed": 0
+    },
+    {
+      "id": "AC-TPL-VERSION-ATOMIC",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-TPL-VERSIONING-ENGINE",
+      "text": "Version updates are atomic with rollback on failure, ensuring no partial state if any file update fails",
+      "status": "pass",
+      "source": "coverage",
+      "must_have_ac": true,
+      "scenarios": [
+        "release-prepare updates all version files atomically"
+      ],
+      "tests": [
+        {
+          "type": "bdd",
+          "tag": "@AC-TPL-VERSION-ATOMIC",
+          "file": "specs/features/xtask_devex.feature"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 1
+    },
+    {
+      "id": "AC-TPL-VERSION-DRYRUN",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-TPL-VERSIONING-ENGINE",
+      "text": "`cargo xtask release-prepare X.Y.Z --dry-run` shows all changes before applying them, listing each file and the old→new version without modifying files",
+      "status": "pass",
+      "source": "coverage",
+      "must_have_ac": true,
+      "scenarios": [
+        "release-prepare dry-run shows changes without modifying files"
+      ],
+      "tests": [
+        {
+          "type": "bdd",
+          "tag": "@AC-TPL-VERSION-DRYRUN",
+          "file": "specs/features/xtask_devex.feature"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 1
+    },
+    {
+      "id": "AC-TPL-VERSION-MANIFEST",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-TPL-VERSIONING-ENGINE",
+      "text": "Version locations declared in specs/version_manifest.yaml listing all files and extraction patterns; release-prepare reads this manifest to update all version-bearing files",
+      "status": "pass",
+      "source": "coverage",
+      "must_have_ac": true,
+      "scenarios": [
+        "version manifest declares all version-bearing files"
+      ],
+      "tests": [
+        {
+          "type": "bdd",
+          "tag": "@AC-TPL-VERSION-MANIFEST",
+          "file": "specs/features/xtask_devex.feature"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 1
+    },
+    {
+      "id": "AC-TPL-XTASK-NONINTERACTIVE",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-TPL-AUTOMATION-BEHAVIOUR",
+      "text": "For commands covered by the DevEx contract (doctor, check, selftest, ac-status, ac-coverage, bundle, version, friction-*, questions-*, fork-*), setting CI=1 or XTASK_NONINTERACTIVE=1 guarantees: - no interactive prompts, and - exit code 0 on success, non-zero on failure.\n",
+      "status": "pass",
+      "source": "coverage",
+      "must_have_ac": true,
+      "scenarios": [
+        "friction-list runs non-interactively in CI mode",
+        "doctor runs non-interactively with CI=1",
+        "exit codes reflect operation success in automation mode",
+        "bundle command runs non-interactively with CI=1",
+        "version command runs non-interactively",
+        "ac-status runs non-interactively in automation mode",
+        "check runs non-interactively in CI mode"
+      ],
+      "tests": [
+        {
+          "type": "bdd",
+          "tag": "@AC-TPL-XTASK-NONINTERACTIVE",
+          "file": "specs/features/xtask_devex.feature"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 1
+    },
+    {
+      "id": "AC-TPL-XTASK-SPEC-ROOT",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-PLT-DEVEX-CONTRACT",
+      "text": "xtask commands that read specs or tasks (e.g., `status`, `suggest-next`, `tasks-list`, bundle generation) MUST resolve their workspace root via the SPEC_ROOT environment variable when it is set. When SPEC_ROOT is unset, they default to the repository root.\n",
+      "status": "pass",
+      "source": "coverage",
+      "must_have_ac": false,
+      "scenarios": [],
+      "tests": [
+        {
+          "type": "unit",
+          "tag": "commands::tasks::tests::spec_root_resolved",
+          "file": "crates/xtask/src/commands/tasks.rs"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 1
+    }
+  ]
+}

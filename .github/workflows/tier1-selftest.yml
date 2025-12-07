@@ -27,9 +27,9 @@ jobs:
         uses: ./.github/actions/setup-rust-nix
 
       - name: Run kernel selftest (Tier 1)
-        # To enable strict AC coverage enforcement (fail on Unknown must_have_ac ACs):
-        # env:
-        #   XTASK_STRICT_AC_COVERAGE: "1"
+        # Strict AC coverage: fail on Unknown must_have_ac ACs (main branch only)
+        env:
+          XTASK_STRICT_AC_COVERAGE: ${{ github.ref == 'refs/heads/main' && '1' || '' }}
         run: nix develop -c cargo xtask selftest
 
       - name: Verify artifacts were generated
@@ -69,22 +69,17 @@ jobs:
           retention-days: 30
 
       # -------------------------------------------------------------------------
-      # AC SLO Gate (Optional)
-      # Uncomment to enforce AC coverage Service Level Objectives on this branch.
-      # This checks the current snapshot against configurable thresholds.
+      # AC SLO Gate
+      # Enforces AC coverage Service Level Objectives on main branch.
+      # - Kernel failures (--max-blockers 0): No failing must_have_ac ACs
+      # - Kernel unknowns: Enforced via XTASK_STRICT_AC_COVERAGE in selftest
+      # - Overall coverage (--min-coverage 80.0): Advisory baseline
+      # Note: Optional/non-kernel unknowns are informational and don't block.
       # -------------------------------------------------------------------------
-      # - name: Check AC governance SLO
-      #   run: |
-      #     nix develop -c cargo xtask ac-slo \
-      #       --dir artifacts/ac-status \
-      #       --min-coverage 80.0 \
-      #       --max-blockers 0
-      #
-      # For stricter enforcement (e.g., release branches):
-      # - name: Check AC governance SLO (strict)
-      #   run: |
-      #     nix develop -c cargo xtask ac-slo \
-      #       --dir artifacts/ac-status \
-      #       --min-coverage 95.0 \
-      #       --max-blockers 0 \
-      #       --max-unknown 0
+      - name: Check AC governance SLO (kernel)
+        if: github.ref == 'refs/heads/main'
+        run: |
+          nix develop -c cargo xtask ac-slo \
+            --dir artifacts/ac-status \
+            --min-coverage 80.0 \
+            --max-blockers 0
