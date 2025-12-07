@@ -133,4 +133,53 @@ mod tests {
         assert!(layout.history_dir.ends_with("artifacts/ac-status"));
         assert!(layout.features_dir.ends_with("specs/features"));
     }
+
+    #[test]
+    fn spec_root_honors_env_var() {
+        use std::sync::Mutex;
+        use std::sync::OnceLock;
+
+        // Serialize env var tests to avoid race conditions
+        static ENV_LOCK: OnceLock<Mutex<()>> = OnceLock::new();
+        let _guard = ENV_LOCK.get_or_init(|| Mutex::new(())).lock().unwrap();
+
+        // Save original value
+        let original = std::env::var("SPEC_ROOT").ok();
+
+        // Set SPEC_ROOT to a custom path
+        let custom_root = PathBuf::from("/tmp/custom-spec-root");
+        // SAFETY: We hold a mutex lock to serialize all env var modifications in tests
+        unsafe { std::env::set_var("SPEC_ROOT", &custom_root) };
+
+        // spec_root() should return the env var value
+        let root = spec_root();
+        assert_eq!(root, custom_root, "spec_root() should honor SPEC_ROOT env var");
+
+        // layout_for_repo() should use that root for all paths
+        let layout = layout_for_repo();
+        assert!(
+            layout.ledger.starts_with(&custom_root),
+            "ledger path should be under SPEC_ROOT: {:?}",
+            layout.ledger
+        );
+        assert!(
+            layout.features_dir.starts_with(&custom_root),
+            "features_dir should be under SPEC_ROOT: {:?}",
+            layout.features_dir
+        );
+        assert!(
+            layout.coverage_file.starts_with(&custom_root),
+            "coverage_file should be under SPEC_ROOT: {:?}",
+            layout.coverage_file
+        );
+
+        // Restore original value
+        // SAFETY: We hold a mutex lock to serialize all env var modifications in tests
+        unsafe {
+            match original {
+                Some(val) => std::env::set_var("SPEC_ROOT", val),
+                None => std::env::remove_var("SPEC_ROOT"),
+            }
+        }
+    }
 }
