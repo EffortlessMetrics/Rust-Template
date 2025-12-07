@@ -62,7 +62,7 @@ pub use history::{
 pub use json::{
     AC_STATUS_SCHEMA_VERSION, Ac, AcCategoryStats, AcJson, AcStatusJson, build_status_json,
 };
-pub use layout::SpecLayout;
+pub use layout::{SpecLayout, SpecLayoutBuilder};
 pub use ledger::{AcDetails, AcMetadata, get_ac_details, parse_ledger_with_metadata};
 pub use model::{AcSource, AcStatus, Scenario, TestMapping};
 
