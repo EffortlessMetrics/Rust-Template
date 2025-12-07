@@ -10,27 +10,14 @@
 use cucumber::cli::Empty;
 use cucumber::event::{self, Cucumber, Feature, Rule, Scenario};
 use cucumber::{Event, World as CucumberWorld, Writer};
-use serde::{Deserialize, Serialize};
 use std::fmt::Debug;
 use std::fs::File;
 use std::io::{BufWriter, Write};
 use std::path::Path;
 use std::sync::Arc;
 
-/// A single AC coverage record emitted to the JSONL file.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct AcCoverageRecord {
-    /// The AC ID (e.g., "AC-KERN-001")
-    pub ac_id: String,
-    /// The status of the scenario: "passed", "failed", or "skipped"
-    pub status: String,
-    /// The feature file path
-    pub feature: String,
-    /// The scenario name
-    pub scenario: String,
-    /// All tags from feature, rule, and scenario
-    pub tags: Vec<String>,
-}
+// Re-export AcCoverageRecord from ac-kernel for use by callers
+pub use ac_kernel::AcCoverageRecord;
 
 /// State tracking for the current scenario being executed.
 #[derive(Debug, Default)]

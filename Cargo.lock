@@ -9,9 +9,23 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fe438c63458706e03479442743baae6c88256498e6431708f6dfc520a26515d3"
 
 [[package]]
+name = "ac-kernel"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "chrono",
+ "serde",
+ "serde_json",
+ "serde_yaml_ng",
+ "spec-runtime",
+ "tempfile",
+]
+
+[[package]]
 name = "acceptance"
 version = "0.1.0"
 dependencies = [
+ "ac-kernel",
  "adapters-spec-fs",
  "app-http",
  "axum",
@@ -5134,6 +5148,7 @@ dependencies = [
 name = "xtask"
 version = "0.1.0"
 dependencies = [
+ "ac-kernel",
  "anyhow",
  "business-core",
  "chrono",

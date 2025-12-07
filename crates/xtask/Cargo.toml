@@ -10,6 +10,7 @@ colored = "3.0.0"
 serde.workspace = true
 serde_yaml = { workspace = true }
 spec-runtime = { path = "../spec-runtime" }
+ac-kernel = { path = "../ac-kernel" }
 serde_json = "1.0.145"
 quick-xml = "0.38.4"
 glob = "0.3.3"

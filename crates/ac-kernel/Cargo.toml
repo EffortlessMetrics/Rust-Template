@@ -1,0 +1,19 @@
+[package]
+name = "ac-kernel"
+version = "0.1.0"
+edition.workspace = true
+publish.workspace = true
+description = "Core AC governance logic for the Rust-as-Spec platform"
+
+[dependencies]
+serde = { workspace = true }
+serde_json = "1.0"
+serde_yaml = { workspace = true }
+anyhow = { workspace = true }
+chrono = "0.4"
+
+# Re-export TestMapping from spec-runtime
+spec-runtime = { path = "../spec-runtime" }
+
+[dev-dependencies]
+tempfile = "3.0"

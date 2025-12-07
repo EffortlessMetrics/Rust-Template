@@ -29,5 +29,6 @@ business-core = { path = "../business-core" }
 telemetry = { path = "../telemetry" }
 adapters-spec-fs = { path = "../adapters-spec-fs" }
 spec-runtime = { path = "../spec-runtime" }
+ac-kernel = { path = "../ac-kernel" }
 tracing.workspace = true
 tempfile = "3.23.0"
