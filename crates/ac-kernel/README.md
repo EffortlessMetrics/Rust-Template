@@ -116,13 +116,36 @@ The JSON output schemas are versioned and considered public API:
 │   ├── spec_ledger.yaml     # The spec ledger
 │   └── features/            # BDD feature files
 ├── target/
-│   └── ac/
-│       └── coverage.jsonl   # BDD coverage output
+│   ├── ac/
+│   │   └── coverage.jsonl   # BDD coverage output
+│   └── junit/
+│       └── acceptance.xml   # JUnit test results
 └── artifacts/
     └── ac-status/           # Historical ac-status snapshots
 ```
 
-Custom layouts can be created by constructing `SpecLayout` directly:
+### Customizing the Layout
+
+Use `SpecLayoutBuilder` to override individual paths while keeping defaults for the rest:
+
+```rust
+use ac_kernel::SpecLayout;
+use std::path::Path;
+
+let layout = SpecLayout::builder(Path::new("/my/repo"))
+    .with_ledger("/custom/path/ledger.yaml")
+    .with_features_dir("/custom/features")
+    .build();
+
+// Other paths remain at defaults:
+// - coverage_file: /my/repo/target/ac/coverage.jsonl
+// - junit_file: /my/repo/target/junit/acceptance.xml
+// - history_dir: /my/repo/artifacts/ac-status
+```
+
+**Path semantics**: Paths passed to `with_*` methods are used **as-is**. Pass absolute paths, or handle root-joining yourself. The builder does not interpret relative paths.
+
+For full control, construct `SpecLayout` directly:
 
 ```rust
 use ac_kernel::SpecLayout;
@@ -131,10 +154,46 @@ use std::path::PathBuf;
 let layout = SpecLayout {
     ledger: PathBuf::from("/custom/path/ledger.yaml"),
     coverage_file: PathBuf::from("/custom/path/coverage.jsonl"),
+    junit_file: PathBuf::from("/custom/path/junit.xml"),
     history_dir: PathBuf::from("/custom/path/history"),
     features_dir: PathBuf::from("/custom/path/features"),
 };
 ```
+
+## AC Governance Semantics
+
+### `must_have_ac` Field
+
+The `must_have_ac` field controls whether an AC is part of the **kernel contract** (hard gate) or just **tracked** (soft gate):
+
+| `must_have_ac` | Effect |
+|----------------|--------|
+| `true` (default) | AC is **mandatory**. Tests must exist and pass for `selftest` to be green. |
+| `false` | AC is **tracked** but non-blocking. Shows in `ac-status` / `ac-coverage` but doesn't fail `selftest`. |
+
+This applies at two levels:
+
+- **On a REQ**: Controls whether the requirement must have at least one AC with mapped tests.
+- **On an AC**: Controls whether that specific AC's tests gate selftest.
+
+### AC Status Values
+
+Each AC can be in one of these states:
+
+| Status | Meaning |
+|--------|---------|
+| `Pass` | All mapped tests exist and pass |
+| `Fail` | At least one mapped test exists and fails |
+| `Unknown` | No test mapping or coverage data found |
+
+### Selftest Behavior
+
+`cargo xtask selftest` only treats ACs with `must_have_ac: true` as mandatory:
+
+- If a kernel AC (`must_have_ac: true`) is `Fail` or `Unknown` → **selftest fails**
+- If an optional AC (`must_have_ac: false`) is `Fail` or `Unknown` → **selftest warns but passes**
+
+This allows incremental adoption: add new ACs as `must_have_ac: false`, implement tests, then flip to `true` when ready.
 
 ## See Also
 
