@@ -1732,6 +1732,32 @@ stories:
             tests:
               - { type: bdd, tag: "@AC-TPL-IDP-SNAPSHOT-VALID-JSON", file: "specs/features/xtask_devex.feature" }
 
+  # ============================================================================
+  # MYSERV Domain Stories - Example service-specific features
+  # ============================================================================
+  # This section demonstrates adding domain-specific ACs to the template.
+  # Remove or adapt these for your actual service.
+
+  - id: US-MYSERV-001
+    title: "Todo Management"
+    description: >
+      Users can manage their personal todo list through the API.
+      This is an example domain story to demonstrate the AC workflow.
+    requirements:
+      - id: REQ-MYSERV-LIST-TODOS
+        title: "List Todos Endpoint"
+        tags: [domain, myserv]
+        must_have_ac: false  # Optional AC - example only
+        description: >
+          Users can retrieve their current list of todos via a GET endpoint.
+        acceptance_criteria:
+          - id: AC-MYSERV-001
+            text: "GET /todos returns a JSON array of the user's todos"
+            tags: [domain, myserv]
+            must_have_ac: false
+            tests:
+              - { type: bdd, tag: "@AC-MYSERV-001", file: "specs/features/myserv_todos.feature" }
+
   # When adding your domain features:
   # - Copy the structure above (story → requirement → AC → tests)
   # - Use @AC-XXX tags in feature files
