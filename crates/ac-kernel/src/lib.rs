@@ -177,25 +177,31 @@ impl AcKernel {
 fn build_ac_index(meta: &HashMap<String, AcMetadata>) -> HashMap<String, Ac> {
     meta.iter()
         .map(|(id, m)| {
+            let tests_total = m.tests.iter().filter(|t| is_automated_test(t)).count();
             (
                 id.clone(),
                 Ac {
                     id: id.clone(),
-                    story_id: String::new(), // Would need to extend AcMetadata to include this
+                    story_id: m.story_id.clone(),
                     req_id: m.req_id.clone(),
-                    text: String::new(), // Would need to extend AcMetadata to include this
+                    text: m.text.clone(),
                     status: AcStatus::Unknown,
                     source: AcSource::Inferred,
                     scenarios: Vec::new(),
-                    tests: Vec::new(),
-                    tests_total: 0,
+                    tests: m.tests.clone(),
+                    tests_total,
                     tests_executed: 0,
-                    tags: Vec::new(),
+                    tags: m.tags.clone(),
                     must_have_ac: m.must_have_ac,
                 },
             )
         })
         .collect()
+}
+
+/// Check if a test mapping represents an automated test.
+fn is_automated_test(test: &TestMapping) -> bool {
+    matches!(test.test_type.to_lowercase().as_str(), "unit" | "integration" | "bdd")
 }
 
 /// Update AC statuses from coverage results.
@@ -238,7 +244,7 @@ mod tests {
         std::fs::create_dir_all(dir.path().join("target/ac")).unwrap();
         std::fs::create_dir_all(dir.path().join("artifacts/ac-status")).unwrap();
 
-        // Write a simple ledger
+        // Write a simple ledger with test mappings
         let ledger = r#"
 stories:
   - id: US-TEST-001
@@ -248,8 +254,14 @@ stories:
         acceptance_criteria:
           - id: AC-TEST-001
             text: "Test AC 1"
+            tests:
+              - type: bdd
+                tag: "@AC-TEST-001"
           - id: AC-TEST-002
             text: "Test AC 2"
+            tests:
+              - type: bdd
+                tag: "@AC-TEST-002"
 "#;
         std::fs::write(dir.path().join("specs/spec_ledger.yaml"), ledger).unwrap();
 

@@ -1,9 +1,9 @@
+use ac_kernel::{Ac, AcJson, AcSource, AcStatus, build_status_json};
 use anyhow::{Context, Result};
 use colored::Colorize;
 use quick_xml::Reader;
 use quick_xml::events::Event;
 use regex::Regex;
-use serde::{Deserialize, Serialize};
 use spec_runtime::ledger::TestMapping;
 use std::collections::{HashMap, HashSet};
 use std::fs;
@@ -12,9 +12,9 @@ use std::process::Command;
 use walkdir::WalkDir;
 
 use super::ac_parsing::{
-    AC_PATTERN_WITH_AT, AcStatus, SCENARIO_PATTERN, Scenario, TAG_PATTERN,
-    TESTCASE_SCENARIO_PATTERN, TESTCASE_SUFFIX_PATTERN, parse_ac_coverage,
-    parse_cucumber_json_with_scenarios, parse_features_with_metadata, parse_junit_with_scenarios,
+    AC_PATTERN_WITH_AT, SCENARIO_PATTERN, Scenario, TAG_PATTERN, TESTCASE_SCENARIO_PATTERN,
+    TESTCASE_SUFFIX_PATTERN, parse_ac_coverage, parse_cucumber_json_with_scenarios,
+    parse_features_with_metadata, parse_junit_with_scenarios,
 };
 
 #[derive(Debug, Clone)]
@@ -49,22 +49,7 @@ impl Default for AcStatusArgs {
     }
 }
 
-#[derive(Debug, Clone, Serialize)]
-struct Ac {
-    id: String,
-    story_id: String,
-    req_id: String,
-    text: String,
-    status: AcStatus,
-    /// Source of the status determination (coverage, junit, json, or inferred)
-    source: AcSource,
-    scenarios: Vec<String>,
-    tests: Vec<TestMapping>,
-    tests_total: usize,
-    tests_executed: usize,
-    tags: Vec<String>,
-    must_have_ac: bool,
-}
+// Ac struct is now imported from ac_kernel
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum ReportStatus {
@@ -101,113 +86,8 @@ enum TestOutcome {
     Missing,
 }
 
-/// JSON output structure for ac-status
-///
-/// Schema version 2.0 - uses must_have_ac metadata instead of prefix-based categorization
-#[derive(Debug, Serialize)]
-struct AcStatusJson {
-    /// Schema version for forward compatibility (bump on breaking changes)
-    schema_version: String,
-    timestamp: String,
-    /// Stats for ACs with must_have_ac=true (kernel/required ACs)
-    must_have_acs: AcCategoryStats,
-    /// Stats for ACs with must_have_ac=false (optional/exploratory ACs)
-    optional_acs: AcCategoryStats,
-    /// Overall coverage percentage (passing / total ACs)
-    coverage_percent: f64,
-    acs: Vec<AcJson>,
-}
-
-#[derive(Debug, Serialize)]
-struct AcCategoryStats {
-    total: usize,
-    passing: usize,
-    failing: usize,
-    unknown: usize,
-}
-
-/// Source of AC status determination
-#[derive(Debug, Clone, Serialize)]
-#[serde(rename_all = "lowercase")]
-enum AcSource {
-    /// Result came from coverage.jsonl (streaming BDD results)
-    Coverage,
-    /// Result came from JUnit XML fallback
-    Junit,
-    /// Result came from Cucumber JSON fallback
-    Json,
-    /// No test results; status inferred from ledger (Unknown)
-    Inferred,
-}
-
-#[derive(Debug, Serialize)]
-struct AcJson {
-    id: String,
-    story_id: String,
-    req_id: String,
-    text: String,
-    status: AcStatus,
-    /// Source of the status determination
-    source: AcSource,
-    /// Whether this AC is enforced in strict coverage mode
-    must_have_ac: bool,
-    scenarios: Vec<String>,
-    tests: Vec<TestMapping>,
-    tests_total: usize,
-    tests_executed: usize,
-}
-
-// NOTE: AcStatus::icon() and AcStatus::name() are now defined in ac-kernel::model
-
-// Ledger deserialization structures
-#[derive(Debug, Deserialize)]
-struct Ledger {
-    stories: Vec<Story>,
-}
-
-#[derive(Debug, Deserialize)]
-struct Story {
-    id: String,
-    requirements: Vec<Requirement>,
-}
-
-#[derive(Debug, Deserialize)]
-struct Requirement {
-    id: String,
-    /// Tags for categorizing requirements (e.g., @tier1, @security).
-    /// Future: Used for filtering ACs by tag in `cargo xtask ac-list --tag <TAG>`.
-    /// See TASK-DX-AC-FILTERING for planned tag-based AC queries.
-    #[serde(default)]
-    #[allow(dead_code)]
-    tags: Vec<String>,
-    /// Whether all ACs under this requirement must have BDD coverage.
-    /// Defaults to true (kernel). Set to false for non-kernel/exploratory ACs.
-    #[serde(default = "default_must_have_ac")]
-    must_have_ac: bool,
-    acceptance_criteria: Vec<AcceptanceCriteria>,
-}
-
-/// Default for `must_have_ac` field: true (kernel AC).
-///
-/// This matches the AC classification semantics in ADR-0023.
-/// Keep in sync with `ac_parsing.rs::default_must_have_ac()`.
-fn default_must_have_ac() -> bool {
-    true
-}
-
-#[derive(Debug, Deserialize)]
-struct AcceptanceCriteria {
-    id: String,
-    text: String,
-    #[serde(default)]
-    tags: Vec<String>,
-    /// Whether this specific AC must have BDD coverage.
-    /// Inherits from requirement if not specified, defaults to true.
-    #[serde(default = "default_must_have_ac")]
-    must_have_ac: bool,
-    #[serde(default)]
-    tests: Vec<TestMapping>,
-}
+// AcStatusJson, AcCategoryStats, AcJson, and AcSource are now imported from ac_kernel
+// Ledger parsing is now done via ac_kernel::parse_ledger_with_metadata()
 
 pub fn run(args: AcStatusArgs) -> Result<()> {
     // Validate inputs
@@ -424,39 +304,29 @@ fn fallback_to_junit(
 }
 
 fn parse_ledger(ledger_path: &Path) -> Result<HashMap<String, Ac>> {
-    let content = fs::read_to_string(ledger_path)
-        .with_context(|| format!("Failed to read ledger: {}", ledger_path.display()))?;
-
-    let ledger: Ledger = serde_yaml::from_str(&content)
-        .with_context(|| format!("Failed to parse ledger YAML: {}", ledger_path.display()))?;
+    // Use ac-kernel's ledger parser for consistency
+    let metadata = ac_kernel::parse_ledger_with_metadata(ledger_path)?;
 
     let mut acs = HashMap::new();
-
-    for story in ledger.stories {
-        for req in story.requirements {
-            for ac in req.acceptance_criteria {
-                let tests_total = ac.tests.iter().filter(|t| is_automated_test(t)).count();
-                // AC's must_have_ac is effective if BOTH REQ and AC have it true (AND semantics)
-                let effective_must_have = req.must_have_ac && ac.must_have_ac;
-                acs.insert(
-                    ac.id.clone(),
-                    Ac {
-                        id: ac.id.clone(),
-                        story_id: story.id.clone(),
-                        req_id: req.id.clone(),
-                        text: ac.text,
-                        status: AcStatus::Unknown,
-                        source: AcSource::Inferred, // Will be updated when test results are parsed
-                        scenarios: Vec::new(),
-                        tests: ac.tests,
-                        tests_total,
-                        tests_executed: 0,
-                        tags: ac.tags,
-                        must_have_ac: effective_must_have,
-                    },
-                );
-            }
-        }
+    for (id, m) in metadata {
+        let tests_total = m.tests.iter().filter(|t| is_automated_test(t)).count();
+        acs.insert(
+            id.clone(),
+            Ac {
+                id,
+                story_id: m.story_id,
+                req_id: m.req_id,
+                text: m.text,
+                status: AcStatus::Unknown,
+                source: AcSource::Inferred,
+                scenarios: Vec::new(),
+                tests: m.tests,
+                tests_total,
+                tests_executed: 0,
+                tags: m.tags,
+                must_have_ac: m.must_have_ac,
+            },
+        );
     }
 
     Ok(acs)
@@ -961,58 +831,8 @@ fn print_single_ac(acs: &HashMap<String, Ac>, filter_id: &str, json_output: bool
 }
 
 fn print_json_output(acs: &HashMap<String, Ac>) -> Result<()> {
-    // Categorize ACs by must_have_ac flag (kernel/required vs optional)
-    let must_have_acs: Vec<_> = acs.values().filter(|ac| ac.must_have_ac).collect();
-    let optional_acs: Vec<_> = acs.values().filter(|ac| !ac.must_have_ac).collect();
-
-    let must_have_stats = AcCategoryStats {
-        total: must_have_acs.len(),
-        passing: must_have_acs.iter().filter(|ac| ac.status == AcStatus::Pass).count(),
-        failing: must_have_acs.iter().filter(|ac| ac.status == AcStatus::Fail).count(),
-        unknown: must_have_acs.iter().filter(|ac| ac.status == AcStatus::Unknown).count(),
-    };
-
-    let optional_stats = AcCategoryStats {
-        total: optional_acs.len(),
-        passing: optional_acs.iter().filter(|ac| ac.status == AcStatus::Pass).count(),
-        failing: optional_acs.iter().filter(|ac| ac.status == AcStatus::Fail).count(),
-        unknown: optional_acs.iter().filter(|ac| ac.status == AcStatus::Unknown).count(),
-    };
-
-    let total_passing = must_have_stats.passing + optional_stats.passing;
-    let total_acs = acs.len();
-    let coverage_percent =
-        if total_acs > 0 { (total_passing as f64 / total_acs as f64) * 100.0 } else { 0.0 };
-
-    // Convert ACs to JSON format
-    let mut acs_vec: Vec<_> = acs.values().collect();
-    acs_vec.sort_by(|a, b| a.id.cmp(&b.id));
-
-    let acs_json: Vec<AcJson> = acs_vec
-        .into_iter()
-        .map(|ac| AcJson {
-            id: ac.id.clone(),
-            story_id: ac.story_id.clone(),
-            req_id: ac.req_id.clone(),
-            text: ac.text.clone(),
-            status: ac.status.clone(),
-            source: ac.source.clone(),
-            must_have_ac: ac.must_have_ac,
-            scenarios: ac.scenarios.clone(),
-            tests: ac.tests.clone(),
-            tests_total: ac.tests_total,
-            tests_executed: ac.tests_executed,
-        })
-        .collect();
-
-    let output = AcStatusJson {
-        schema_version: "2.0".to_string(),
-        timestamp: chrono::Utc::now().to_rfc3339(),
-        must_have_acs: must_have_stats,
-        optional_acs: optional_stats,
-        coverage_percent,
-        acs: acs_json,
-    };
+    // Use ac-kernel's build_status_json for consistency with the kernel
+    let output = build_status_json(acs);
 
     let json_output =
         serde_json::to_string_pretty(&output).context("Failed to serialize AC status to JSON")?;
@@ -1412,94 +1232,9 @@ mod tests {
         assert_eq!(scenario.ac_id, "AC-TEST-005");
     }
 
-    #[test]
-    fn ac_status_json_shape_is_stable() {
-        // This test documents the stable JSON contract for AI/IDP consumers
-        // Changes to this test indicate a breaking change to the --json output
-        // Schema version 2.0: uses must_have_ac metadata instead of prefix-based categorization
-        let output = AcStatusJson {
-            schema_version: "2.0".to_string(),
-            timestamp: "2025-11-27T00:00:00Z".to_string(),
-            must_have_acs: AcCategoryStats { total: 10, passing: 8, failing: 1, unknown: 1 },
-            optional_acs: AcCategoryStats { total: 5, passing: 4, failing: 0, unknown: 1 },
-            coverage_percent: 80.0,
-            acs: vec![AcJson {
-                id: "AC-TEST-001".to_string(),
-                story_id: "US-TEST-001".to_string(),
-                req_id: "REQ-TEST-001".to_string(),
-                text: "Test AC".to_string(),
-                status: AcStatus::Pass,
-                source: AcSource::Coverage,
-                must_have_ac: true,
-                scenarios: vec!["Test scenario".to_string()],
-                tests: vec![],
-                tests_total: 1,
-                tests_executed: 1,
-            }],
-        };
-
-        let json_str = serde_json::to_string_pretty(&output).unwrap();
-        let parsed: serde_json::Value = serde_json::from_str(&json_str).unwrap();
-
-        // Required top-level fields (v2.0 schema)
-        let required_fields = [
-            "schema_version",
-            "timestamp",
-            "must_have_acs",
-            "optional_acs",
-            "coverage_percent",
-            "acs",
-        ];
-        for field in &required_fields {
-            assert!(
-                parsed.get(*field).is_some(),
-                "Missing required field '{}' in ac-status --json output",
-                field
-            );
-        }
-
-        // Verify schema_version is 2.0
-        assert_eq!(parsed["schema_version"].as_str().unwrap(), "2.0");
-
-        // Verify acs is an array
-        assert!(parsed["acs"].is_array(), "acs must be an array");
-
-        // Verify AC object shape (v2.0 includes source and must_have_ac)
-        let first_ac = &parsed["acs"][0];
-        let ac_fields = [
-            "id",
-            "story_id",
-            "req_id",
-            "text",
-            "status",
-            "source",
-            "must_have_ac",
-            "tests_total",
-            "tests_executed",
-        ];
-        for field in &ac_fields {
-            assert!(
-                first_ac.get(*field).is_some(),
-                "Missing required field '{}' in AC object",
-                field
-            );
-        }
-
-        // Verify category stats shape
-        let stats_fields = ["total", "passing", "failing", "unknown"];
-        for field in &stats_fields {
-            assert!(
-                parsed["must_have_acs"].get(*field).is_some(),
-                "Missing required field '{}' in must_have_acs",
-                field
-            );
-            assert!(
-                parsed["optional_acs"].get(*field).is_some(),
-                "Missing required field '{}' in optional_acs",
-                field
-            );
-        }
-    }
+    // NOTE: The ac_status_json_shape_is_stable test is now in ac-kernel::json::tests
+    // since the JSON schema is owned by the kernel. See crates/ac-kernel/src/json.rs
+    // for the authoritative shape lock test.
 
     // Helper to create a test AC
     fn make_test_ac(id: &str, status: AcStatus) -> Ac {

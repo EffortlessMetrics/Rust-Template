@@ -5,15 +5,26 @@
 
 use anyhow::{Context, Result};
 use serde::Deserialize;
+use spec_runtime::ledger::TestMapping;
 use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
 
-/// Metadata for an acceptance criterion.
+/// Full metadata for an acceptance criterion.
+///
+/// Contains all the data needed to build an `Ac` for status computation.
 #[derive(Debug, Clone)]
 pub struct AcMetadata {
+    /// The parent story ID
+    pub story_id: String,
     /// The parent requirement ID
     pub req_id: String,
+    /// Human-readable AC description text
+    pub text: String,
+    /// Tags from the ledger
+    pub tags: Vec<String>,
+    /// Test mappings from the ledger
+    pub tests: Vec<TestMapping>,
     /// Whether this AC must have BDD coverage (true = kernel, false = non-kernel)
     pub must_have_ac: bool,
 }
@@ -76,6 +87,12 @@ fn default_must_have_ac() -> bool {
 struct AcceptanceCriteria {
     id: String,
     text: String,
+    /// Tags for categorizing this AC
+    #[serde(default)]
+    tags: Vec<String>,
+    /// Test mappings for this AC
+    #[serde(default)]
+    tests: Vec<TestMapping>,
     /// Whether this specific AC must have BDD coverage.
     /// Inherits from requirement if not specified, defaults to true.
     #[serde(default = "default_must_have_ac")]
@@ -115,7 +132,14 @@ pub fn parse_ledger_with_metadata(ledger_path: &Path) -> Result<HashMap<String, 
                 let effective_must_have = req.must_have_ac && ac.must_have_ac;
                 ac_metadata.insert(
                     ac.id.clone(),
-                    AcMetadata { req_id: req.id.clone(), must_have_ac: effective_must_have },
+                    AcMetadata {
+                        story_id: story.id.clone(),
+                        req_id: req.id.clone(),
+                        text: ac.text,
+                        tags: ac.tags,
+                        tests: ac.tests,
+                        must_have_ac: effective_must_have,
+                    },
                 );
             }
         }
@@ -183,10 +207,11 @@ stories:
         let metadata = parse_ledger_with_metadata(file.path()).unwrap();
 
         assert!(metadata.contains_key("AC-TEST-001"));
-        assert!(
-            metadata.get("AC-TEST-001").unwrap().must_have_ac,
-            "must_have_ac should default to true when not specified"
-        );
+        let ac = metadata.get("AC-TEST-001").unwrap();
+        assert!(ac.must_have_ac, "must_have_ac should default to true when not specified");
+        assert_eq!(ac.story_id, "US-TEST-001");
+        assert_eq!(ac.req_id, "REQ-TEST-001");
+        assert_eq!(ac.text, "Test AC without must_have_ac specified");
     }
 
     #[test]

@@ -400,7 +400,6 @@ fn render_json(report: &AcHistoryReport) -> Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ac_kernel::SkippedFile;
     use std::fs;
     use tempfile::TempDir;
 
