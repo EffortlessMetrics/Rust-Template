@@ -7,17 +7,16 @@ use anyhow::{Context, Result};
 use colored::Colorize;
 
 use crate::commands::ac_parsing::{AcDetails, get_ac_details};
-use crate::commands::tasks;
+use crate::kernel::layout_for_repo;
 
 pub struct AcSuggestScenariosArgs {
     pub ac_id: String,
 }
 
 pub fn run(args: AcSuggestScenariosArgs) -> Result<()> {
-    let root = tasks::spec_root();
-    let ledger_path = root.join("specs/spec_ledger.yaml");
+    let layout = layout_for_repo();
 
-    let ac = get_ac_details(&ledger_path, &args.ac_id)
+    let ac = get_ac_details(&layout.ledger, &args.ac_id)
         .with_context(|| format!("Failed to look up AC: {}", args.ac_id))?
         .ok_or_else(|| anyhow::anyhow!("AC '{}' not found in spec_ledger.yaml", args.ac_id))?;
 

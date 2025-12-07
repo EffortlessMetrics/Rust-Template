@@ -208,10 +208,12 @@ fn plan_only_mode() -> bool {
 
 /// Extract AC tags from changed feature files
 fn extract_ac_tags_from_features(changed_features: &[String]) -> Result<Vec<String>> {
+    use crate::kernel::layout_for_repo;
+
     let mut ac_tags = HashSet::new();
 
     // Parse all feature files to get metadata
-    let features_dir = PathBuf::from("specs/features");
+    let features_dir = layout_for_repo().features_dir;
     if !features_dir.exists() {
         return Ok(Vec::new());
     }

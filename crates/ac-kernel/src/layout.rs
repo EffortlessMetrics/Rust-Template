@@ -20,8 +20,10 @@ use std::path::{Path, PathBuf};
 /// │   ├── spec_ledger.yaml     # The spec ledger
 /// │   └── features/            # BDD feature files
 /// ├── target/
-/// │   └── ac/
-/// │       └── coverage.jsonl   # BDD coverage output
+/// │   ├── ac/
+/// │   │   └── coverage.jsonl   # BDD coverage output (streaming)
+/// │   └── junit/
+/// │       └── acceptance.xml   # JUnit XML fallback for test results
 /// └── artifacts/
 ///     └── ac-status/           # Historical ac-status snapshots
 /// ```
@@ -31,6 +33,8 @@ pub struct SpecLayout {
     pub ledger: PathBuf,
     /// Path to the coverage.jsonl file produced by BDD tests
     pub coverage_file: PathBuf,
+    /// Path to the JUnit XML file for BDD test results (fallback)
+    pub junit_file: PathBuf,
     /// Directory containing historical ac-status-*.json snapshots
     pub history_dir: PathBuf,
     /// Directory containing BDD feature files
@@ -43,12 +47,14 @@ impl SpecLayout {
     /// This implements the standard Rust-as-Spec platform layout:
     /// - `specs/spec_ledger.yaml` - the spec ledger
     /// - `specs/features/` - BDD feature files
-    /// - `target/ac/coverage.jsonl` - BDD coverage output
+    /// - `target/ac/coverage.jsonl` - BDD coverage output (streaming)
+    /// - `target/junit/acceptance.xml` - JUnit XML fallback
     /// - `artifacts/ac-status/` - historical snapshots
     pub fn for_repo_root(root: &Path) -> Self {
         Self {
             ledger: root.join("specs/spec_ledger.yaml"),
             coverage_file: root.join("target/ac/coverage.jsonl"),
+            junit_file: root.join("target/junit/acceptance.xml"),
             history_dir: root.join("artifacts/ac-status"),
             features_dir: root.join("specs/features"),
         }
@@ -70,6 +76,11 @@ impl SpecLayout {
     pub fn has_coverage(&self) -> bool {
         self.coverage_file.exists()
             && std::fs::metadata(&self.coverage_file).is_ok_and(|m| m.len() > 0)
+    }
+
+    /// Check if the JUnit XML file exists.
+    pub fn has_junit(&self) -> bool {
+        self.junit_file.exists()
     }
 
     /// Check if the history directory exists.
@@ -101,6 +112,7 @@ mod tests {
 
         assert_eq!(layout.ledger, PathBuf::from("/my/repo/specs/spec_ledger.yaml"));
         assert_eq!(layout.coverage_file, PathBuf::from("/my/repo/target/ac/coverage.jsonl"));
+        assert_eq!(layout.junit_file, PathBuf::from("/my/repo/target/junit/acceptance.xml"));
         assert_eq!(layout.history_dir, PathBuf::from("/my/repo/artifacts/ac-status"));
         assert_eq!(layout.features_dir, PathBuf::from("/my/repo/specs/features"));
     }
@@ -120,6 +132,7 @@ mod tests {
 
         assert_eq!(layout1.ledger, layout2.ledger);
         assert_eq!(layout1.coverage_file, layout2.coverage_file);
+        assert_eq!(layout1.junit_file, layout2.junit_file);
         assert_eq!(layout1.history_dir, layout2.history_dir);
         assert_eq!(layout1.features_dir, layout2.features_dir);
     }
@@ -130,6 +143,7 @@ mod tests {
 
         assert!(!layout.has_ledger());
         assert!(!layout.has_coverage());
+        assert!(!layout.has_junit());
         assert!(!layout.has_history());
         assert!(!layout.has_features());
     }

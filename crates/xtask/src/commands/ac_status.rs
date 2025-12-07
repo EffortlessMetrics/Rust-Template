@@ -16,6 +16,7 @@ use super::ac_parsing::{
     TESTCASE_SUFFIX_PATTERN, parse_ac_coverage, parse_cucumber_json_with_scenarios,
     parse_features_with_metadata, parse_junit_with_scenarios,
 };
+use crate::kernel::layout_for_repo;
 
 #[derive(Debug, Clone)]
 pub struct AcStatusArgs {
@@ -34,11 +35,12 @@ pub struct AcStatusArgs {
 
 impl Default for AcStatusArgs {
     fn default() -> Self {
+        let layout = layout_for_repo();
         Self {
-            ledger: PathBuf::from("specs/spec_ledger.yaml"),
-            features_dir: PathBuf::from("specs/features"),
-            coverage: PathBuf::from("target/ac/coverage.jsonl"),
-            junit: PathBuf::from("target/junit/acceptance.xml"),
+            ledger: layout.ledger,
+            features_dir: layout.features_dir,
+            coverage: layout.coverage_file,
+            junit: layout.junit_file,
             json_report: Some(PathBuf::from("target/ac_report.json")),
             output: PathBuf::from("docs/feature_status.md"),
             verbosity: crate::Verbosity::Normal,
@@ -847,9 +849,10 @@ fn print_json_output(acs: &HashMap<String, Ac>) -> Result<()> {
     Ok(())
 }
 
-/// Extract template_version from specs/spec_ledger.yaml for feature_status metadata
+/// Extract template_version from spec_ledger.yaml for feature_status metadata
 fn get_template_version() -> Option<String> {
-    if let Ok(content) = fs::read_to_string("specs/spec_ledger.yaml") {
+    let ledger_path = layout_for_repo().ledger;
+    if let Ok(content) = fs::read_to_string(&ledger_path) {
         for line in content.lines() {
             if line.trim().starts_with("template_version:")
                 && let Some(version) = line.split(':').nth(1)
@@ -861,9 +864,10 @@ fn get_template_version() -> Option<String> {
     None
 }
 
-/// Extract last_updated from specs/spec_ledger.yaml for feature_status metadata
+/// Extract last_updated from spec_ledger.yaml for feature_status metadata
 fn get_last_updated_date() -> Option<String> {
-    if let Ok(content) = fs::read_to_string("specs/spec_ledger.yaml") {
+    let ledger_path = layout_for_repo().ledger;
+    if let Ok(content) = fs::read_to_string(&ledger_path) {
         for line in content.lines() {
             if line.trim().starts_with("last_updated:")
                 && let Some(date) = line.split(':').nth(1)
