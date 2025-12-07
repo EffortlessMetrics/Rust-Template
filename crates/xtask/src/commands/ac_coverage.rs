@@ -325,7 +325,14 @@ mod tests {
 
     /// Helper to create AcMetadata
     fn make_metadata(req_id: &str, must_have: bool) -> AcMetadata {
-        AcMetadata { req_id: req_id.to_string(), must_have_ac: must_have }
+        AcMetadata {
+            story_id: "US-TEST-001".to_string(),
+            req_id: req_id.to_string(),
+            text: "Test AC".to_string(),
+            tags: Vec::new(),
+            tests: Vec::new(),
+            must_have_ac: must_have,
+        }
     }
 
     #[test]
