@@ -217,6 +217,26 @@ enum Commands {
         must_have: bool,
     },
 
+    /// Check if AC coverage meets SLO thresholds
+    #[command(next_help_heading = "📋 Acceptance Criteria")]
+    AcSlo {
+        /// Directory containing ac-status JSON snapshots
+        #[arg(long, default_value = "artifacts/ac-status")]
+        dir: String,
+        /// Minimum required coverage percentage
+        #[arg(long, default_value = "80.0")]
+        min_coverage: f64,
+        /// Maximum allowed kernel blockers
+        #[arg(long, default_value = "0")]
+        max_blockers: usize,
+        /// Maximum allowed unknown status ACs (no limit if not specified)
+        #[arg(long)]
+        max_unknown: Option<usize>,
+        /// Output format (text, json)
+        #[arg(long, default_value = "text")]
+        format: String,
+    },
+
     // ============================================================================
     // DESIGN & DOCUMENTATION (Docs, ADRs, design docs)
     // ============================================================================
@@ -748,6 +768,15 @@ fn main() -> Result<()> {
                 must_have,
             })
         }
+        Commands::AcSlo { dir, min_coverage, max_blockers, max_unknown, format } => {
+            commands::ac_slo::run(commands::ac_slo::AcSloArgs {
+                dir: std::path::PathBuf::from(dir),
+                min_coverage,
+                max_blockers,
+                max_unknown,
+                format,
+            })
+        }
         Commands::Bundle { task } => commands::bundle::run(&task),
         Commands::Audit => commands::audit::run(),
         Commands::Coverage => commands::coverage::run(),
@@ -999,6 +1028,7 @@ fn format_command(cmd: &Command) -> String {
 pub fn all_command_names() -> Vec<&'static str> {
     vec![
         "ac-history",
+        "ac-slo",
         "ac-status",
         "ac-new",
         "adr-check",

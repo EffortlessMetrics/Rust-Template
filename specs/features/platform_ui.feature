@@ -33,3 +33,11 @@ Feature: Platform Web UI
     And the response content-type should be "text/html"
     And the response body should contain "DevEx Flows"
     And the response body should contain "Tasks"
+
+  @AC-TPL-PLATFORM-UI-CONTRACT
+  Scenario: UI contract endpoint returns JSON contract
+    When I GET "http://localhost:8080/platform/ui/contract"
+    Then the response status should be 200
+    And the response content-type should be "application/json"
+    And the response body should contain "screens"
+    And the response body should contain "regions"

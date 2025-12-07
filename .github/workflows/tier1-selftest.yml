@@ -67,3 +67,24 @@ jobs:
           name: ac-status-${{ github.ref_name }}
           path: artifacts/ac-status/
           retention-days: 30
+
+      # -------------------------------------------------------------------------
+      # AC SLO Gate (Optional)
+      # Uncomment to enforce AC coverage Service Level Objectives on this branch.
+      # This checks the current snapshot against configurable thresholds.
+      # -------------------------------------------------------------------------
+      # - name: Check AC governance SLO
+      #   run: |
+      #     nix develop -c cargo xtask ac-slo \
+      #       --dir artifacts/ac-status \
+      #       --min-coverage 80.0 \
+      #       --max-blockers 0
+      #
+      # For stricter enforcement (e.g., release branches):
+      # - name: Check AC governance SLO (strict)
+      #   run: |
+      #     nix develop -c cargo xtask ac-slo \
+      #       --dir artifacts/ac-status \
+      #       --min-coverage 95.0 \
+      #       --max-blockers 0 \
+      #       --max-unknown 0

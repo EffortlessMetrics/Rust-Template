@@ -5,6 +5,8 @@ Complete reference for all `xtask` CLI commands.
 
 **JSON Output Support:** The following commands support `--json` flag for agent/portal integration:
 - `ac-status --json` - AC coverage report as structured JSON
+- `ac-history --format json` - Time-series history of AC snapshots
+- `ac-slo --format json` - SLO check result with thresholds
 - `friction-list --json` - Friction entries with statistics
 - `questions-list --json` - Questions with statistics
 - `fork-list --json` - Fork registry with kernel version breakdown
@@ -19,6 +21,7 @@ Complete reference for all `xtask` CLI commands.
 - [ac-coverage](#xtask-ac-coverage) - Show AC coverage and unknown ACs
 - [ac-report](#xtask-ac-report) - Human-readable AC governance reports
 - [ac-history](#xtask-ac-history) - Time-series analysis of AC coverage
+- [ac-slo](#xtask-ac-slo) - SLO gate for AC coverage
 - [ac-suggest-scenarios](#xtask-ac-suggest-scenarios) - Generate BDD scenario stub
 - [policy-test](#xtask-policy-test) - Test Rego policies
 - [bundle](#xtask-bundle) - Generate LLM context
@@ -1007,6 +1010,189 @@ def456,2025-12-02T10:00:00Z,93.33,15,14,0,1,""
 - **Read-only**: Never modifies files or state
 - **Offline**: Works entirely on local files after artifact download
 - **Extensible**: JSON output can feed dashboards or BI tools
+
+---
+
+## xtask ac-slo
+
+Check if AC coverage meets Service Level Objective (SLO) thresholds. This is the governance gate for pipelines.
+
+### Usage
+
+```bash
+# Basic usage - check against default thresholds (80% coverage, 0 blockers)
+cargo run -p xtask -- ac-slo --dir ./artifacts/ac-status
+
+# Custom thresholds
+cargo run -p xtask -- ac-slo --dir ./artifacts/ac-status --min-coverage 95 --max-blockers 0
+
+# Strict mode (any unknown counts as failure)
+cargo run -p xtask -- ac-slo --dir ./artifacts/ac-status --max-unknown 0
+
+# JSON output for CI pipelines
+cargo run -p xtask -- ac-slo --dir ./artifacts/ac-status --format json
+```
+
+### Parameters
+
+| Flag | Description | Default |
+|------|-------------|---------|
+| `--dir <PATH>` | Directory containing `ac-status-*.json` snapshot files | `artifacts/ac-status` |
+| `--min-coverage <PERCENT>` | Minimum required coverage percentage | `80.0` |
+| `--max-blockers <COUNT>` | Maximum allowed kernel blockers (failing must_have_ac ACs) | `0` |
+| `--max-unknown <COUNT>` | Maximum allowed unknown status ACs (no limit if omitted) | No limit |
+| `--format <FORMAT>` | Output format: `text` or `json` | `text` |
+
+### What It Does
+
+1. **Loads snapshots** from the specified directory (same as `ac-history`)
+2. **Selects the latest snapshot** (by timestamp)
+3. **Evaluates SLO conditions**:
+   - `coverage_percent >= min_coverage`
+   - `kernel_blockers.len() <= max_blockers`
+   - If `max_unknown` is set: `unknown_count <= max_unknown`
+4. **Returns exit code** based on SLO result
+
+### Exit Codes
+
+- `0`: SLO met (all conditions satisfied)
+- Non-zero: SLO violated (one or more conditions failed)
+
+### Example Output (Text)
+
+**SLO Passed:**
+```
+[SLO OK] AC SLO OK: coverage 95.0% (>=80%), 0 kernel blockers (<=0)
+
+  Commit:    abc123def456
+  Timestamp: 2025-12-05T10:00:00Z
+  Coverage:  95.0% (threshold: 80%)
+  Blockers:  0 (threshold: 0)
+```
+
+**SLO Violated:**
+```
+[SLO VIOLATED] AC SLO VIOLATED: coverage 53.3% (<80%), 2 kernel blockers (>0): AC-KERN-002, AC-KERN-003
+
+  Commit:    abc123def456
+  Timestamp: 2025-12-05T10:00:00Z
+  Coverage:  53.3% (threshold: 80%)
+  Blockers:  2 (threshold: 0)
+             AC-KERN-002, AC-KERN-003
+```
+
+### Example Output (JSON)
+
+```json
+{
+  "schema_version": "1.0",
+  "passed": false,
+  "commit": "abc123def456",
+  "timestamp": "2025-12-05T10:00:00Z",
+  "coverage_percent": 53.3,
+  "min_coverage": 80.0,
+  "coverage_ok": false,
+  "kernel_blockers": 2,
+  "max_blockers": 0,
+  "blockers_ok": false,
+  "blocker_ids": ["AC-KERN-002", "AC-KERN-003"],
+  "unknown_count": 3,
+  "max_unknown": null,
+  "unknown_ok": true,
+  "summary": "AC SLO VIOLATED: coverage 53.3% (<80%), 2 kernel blockers (>0): AC-KERN-002, AC-KERN-003"
+}
+```
+
+### JSON Field Reference
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `schema_version` | string | Schema version (currently `"1.0"`) |
+| `passed` | boolean | Whether all SLO conditions were met |
+| `commit` | string | Commit SHA of evaluated snapshot |
+| `timestamp` | string | ISO 8601 timestamp of snapshot |
+| `coverage_percent` | number | Actual coverage percentage |
+| `min_coverage` | number | Required minimum coverage (SLO threshold) |
+| `coverage_ok` | boolean | Whether coverage threshold was met |
+| `kernel_blockers` | number | Count of failing must_have_ac ACs |
+| `max_blockers` | number | Maximum allowed blockers (SLO threshold) |
+| `blockers_ok` | boolean | Whether blockers threshold was met |
+| `blocker_ids` | array | List of failing kernel AC IDs |
+| `unknown_count` | number | Count of unknown status ACs |
+| `max_unknown` | number/null | Maximum allowed unknowns (null = no limit) |
+| `unknown_ok` | boolean | Whether unknown threshold was met |
+| `summary` | string | Human-readable summary message |
+
+### Relationship to Other Commands
+
+| Command | Purpose | Data Source |
+|---------|---------|-------------|
+| `ac-status` | Point-in-time AC status | Ledger + tests |
+| `ac-report` | Human report of one snapshot | `ac-status --json` |
+| `ac-history` | Time-series of snapshots | ac-status snapshots on disk |
+| `ac-slo` | Pass/fail gate on latest | `ac-history` / snapshots |
+
+### CI Integration
+
+**Protected branch / release pipeline:**
+
+```yaml
+- name: Download AC status artifacts
+  uses: actions/download-artifact@v4
+  with:
+    pattern: ac-status-*
+    path: artifacts/ac-status
+
+- name: Check AC governance SLO
+  run: |
+    cargo xtask ac-slo \
+      --dir artifacts/ac-status \
+      --min-coverage 95.0 \
+      --max-blockers 0
+```
+
+**Nightly job on main (looser SLO):**
+
+```yaml
+- name: Check AC governance SLO (nightly)
+  run: |
+    cargo xtask ac-slo \
+      --dir artifacts/ac-status \
+      --min-coverage 80.0 \
+      --max-blockers 0 \
+      --max-unknown 5
+```
+
+### When to Use
+
+- **Release gates**: Ensure minimum quality bar before cutting releases
+- **Protected branches**: Block merges that degrade coverage below threshold
+- **Nightly health checks**: Monitor trends with slightly relaxed thresholds
+- **Post-merge validation**: Fail loudly if coverage regresses
+
+### Common Issues
+
+**No snapshots found:**
+- Ensure CI artifacts have been downloaded
+- Check file naming: must match `ac-status-<sha>.json`
+- Verify the directory path is correct
+
+**SLO unexpectedly fails:**
+- Check `--min-coverage` threshold (default is 80%)
+- Review blocker IDs to understand which ACs are failing
+- Use `ac-report --status fail` to see details
+
+**Exit code 1 but need to continue:**
+- Use `|| true` in shell to ignore failure: `cargo xtask ac-slo ... || true`
+- Consider loosening thresholds for non-blocking checks
+
+### Notes
+
+- **Governance gate**: Use as hard gate in release pipelines
+- **Complements selftest**: Selftest checks correctness; ac-slo checks aggregate health
+- **Latest snapshot only**: Evaluates most recent snapshot, not historical average
+- **Read-only**: Never modifies files or state
+- **Fast**: Single pass through snapshot directory
 
 ---
 
@@ -2329,6 +2515,8 @@ This check runs as part of **step 9 (Governance graph & UI)** in selftest:
 | `check` | Fast | Code quality | Every commit |
 | `bdd` | Medium | Acceptance | After AC work |
 | `ac-status` | Fast | AC coverage | After BDD tests |
+| `ac-history` | Fast | Time-series analysis | Review coverage trends |
+| `ac-slo` | Fast | SLO gate | Release pipelines |
 | `policy-test` | Fast | Governance | Validate policies |
 | `bundle` | Fast | Context gen | Before LLM use |
 | `quickstart` | Medium | Basic validation | First run |

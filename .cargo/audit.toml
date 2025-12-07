@@ -4,14 +4,22 @@
 [advisories]
 # False positives: local workspace crates that share names with vulnerable published crates.
 # Our 'telemetry' and 'model' crates are NOT the same as the crates with these advisories.
+#
+# See deny.toml and ADR-0007 for dependency security policy.
 ignore = [
     # RUSTSEC-2021-0046: telemetry crate - our local 'telemetry' is unrelated
     "RUSTSEC-2021-0046",
     # RUSTSEC-2020-0140: model crate - our local 'model' is unrelated
     "RUSTSEC-2020-0140",
     # RUSTSEC-2023-0071: rsa Marvin Attack - transitive from sqlx-mysql, no fix available
-    # See deny.toml and ADR-0007 for dependency security policy
+    # Timing side-channel; acceptable for this template. See ADR-0007.
     "RUSTSEC-2023-0071",
+    # RUSTSEC-2025-0057: fxhash unmaintained - dev-only via selectors/scraper
+    # Waiting for upstream selectors fix
+    "RUSTSEC-2025-0057",
+    # RUSTSEC-2025-0134: rustls-pemfile unmaintained - dev-only via bollard/testcontainers
+    # Waiting for upstream bollard fix
+    "RUSTSEC-2025-0134",
 ]
 
 # Warn about unmaintained crates but don't fail

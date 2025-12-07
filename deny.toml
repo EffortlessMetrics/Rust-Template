@@ -1,9 +1,23 @@
 [advisories]
 yanked = "deny"
-# Ignore RUSTSEC-2023-0071 (rsa Marvin Attack) - transitive from sqlx-mysql, no fix available.
-# The vulnerability requires timing side-channel access; acceptable for this template.
 # See ADR-0007 for dependency security policy.
-ignore = ["RUSTSEC-2023-0071"]
+#
+# RUSTSEC-2025-0057 (fxhash unmaintained):
+#   - Transitive: selectors → scraper → app-http (dev-only)
+#   - Not a security vulnerability, just unmaintained
+#   - Upstream issue: https://github.com/servo/selectors/issues
+#   - We use the latest scraper/selectors versions
+#
+# RUSTSEC-2025-0134 (rustls-pemfile unmaintained):
+#   - Transitive: bollard → testcontainers → adapters-db-sqlx (dev-only)
+#   - Not a security vulnerability, just unmaintained (archived)
+#   - Upstream issue: https://github.com/testcontainers/testcontainers-rs/issues
+#   - We use the latest testcontainers version
+#
+ignore = [
+    "RUSTSEC-2025-0057",  # fxhash - dev-only, awaiting selectors fix
+    "RUSTSEC-2025-0134",  # rustls-pemfile - dev-only, awaiting bollard fix
+]
 
 [licenses]
 # Standard permissive licenses plus commonly-used compatible licenses
