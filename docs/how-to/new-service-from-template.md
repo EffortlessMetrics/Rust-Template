@@ -326,3 +326,85 @@ git merge template/main --no-ff -m "chore: backport template improvements"
 - [ ] First AC implemented and passing (optional but recommended)
 
 You're now ready to share with your team and start iterating!
+
+---
+
+## Governance Checklist (Before First Release)
+
+After scaffolding your service, complete these governance setup steps:
+
+### 1. Classify your ACs
+
+Decide which ACs are kernel (blocking) vs optional (informational):
+
+```yaml
+# In specs/spec_ledger.yaml, for each AC:
+acceptance_criteria:
+  - id: AC-MYSERV-001
+    must_have_ac: true   # Kernel: blocks CI if fail/unknown
+    # ... or ...
+    must_have_ac: false  # Optional: informational only
+```
+
+**Guidance:**
+- `must_have_ac: true` → Core functionality, security, API contracts
+- `must_have_ac: false` → Documentation, guidance, future plans, ergonomics
+
+### 2. Capture baseline evidence
+
+```bash
+# Run AC status and capture as initial evidence
+cargo xtask ac-status --summary
+cargo xtask ac-status --json > evidence/ac-status-baseline.json
+```
+
+### 3. Wire CI for governance
+
+In your CI workflow (`.github/workflows/tier1-selftest.yml`):
+
+```yaml
+- name: Run selftest (strict on main)
+  env:
+    # Fail on unknown kernel ACs on main branch
+    XTASK_STRICT_AC_COVERAGE: ${{ github.ref == 'refs/heads/main' && '1' || '' }}
+  run: nix develop -c cargo xtask selftest
+
+- name: Check AC governance SLO (main only)
+  if: github.ref == 'refs/heads/main'
+  run: |
+    mkdir -p artifacts/ac-status
+    cargo xtask ac-status --json > artifacts/ac-status/ac-status-${GITHUB_SHA}.json
+    cargo xtask ac-slo \
+      --dir artifacts/ac-status \
+      --min-coverage 80.0 \
+      --max-blockers 0
+```
+
+### 4. Verify governance is active
+
+```bash
+# Should show all kernel ACs as pass
+cargo xtask ac-coverage --must-have
+
+# Should exit 0 if governance is healthy
+XTASK_STRICT_AC_COVERAGE=1 cargo xtask selftest
+```
+
+### 5. Document your governance baseline
+
+Add to your README or `docs/GOVERNANCE.md`:
+
+```markdown
+## Governance
+
+This service enforces:
+- **Kernel ACs**: All `must_have_ac=true` ACs must pass (CI blocks otherwise)
+- **Coverage SLO**: ≥80% overall AC coverage on `main`
+- **Zero kernel blockers**: No failing or unknown kernel ACs on `main`
+
+Run `cargo xtask ac-status --summary` to see current state.
+```
+
+---
+
+**Reference:** See [`docs/design/ac-governance-model.md`](../design/ac-governance-model.md) for the full governance model.
