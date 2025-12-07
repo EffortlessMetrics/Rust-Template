@@ -56,6 +56,26 @@ pub fn kernel_for_repo() -> anyhow::Result<AcKernel> {
     Ok(AcKernel::new(layout))
 }
 
+/// Get the `SpecLayout` for the current repository without creating a full kernel.
+///
+/// Use this when you only need path information and don't need to load AC data.
+/// For commands that need to load AC status, history, or coverage, use
+/// `kernel_for_repo()` instead.
+///
+/// # Example
+///
+/// ```no_run
+/// use crate::kernel::layout_for_repo;
+///
+/// let layout = layout_for_repo();
+/// println!("Ledger: {}", layout.ledger.display());
+/// println!("Coverage: {}", layout.coverage_file.display());
+/// ```
+pub fn layout_for_repo() -> SpecLayout {
+    let root = spec_root();
+    SpecLayout::for_repo_root(&root)
+}
+
 /// Create an `AcKernel` with a custom history directory.
 ///
 /// This is useful for `ac-history` when the user specifies a different
@@ -100,5 +120,17 @@ mod tests {
         assert_eq!(kernel.layout().history_dir, custom_dir.path());
         // Other paths should still use the repo root
         assert!(kernel.layout().ledger.ends_with("specs/spec_ledger.yaml"));
+    }
+
+    #[test]
+    fn layout_for_repo_returns_standard_paths() {
+        let layout = layout_for_repo();
+
+        // Should return paths matching the standard Rust-as-Spec layout
+        assert!(layout.ledger.ends_with("specs/spec_ledger.yaml"));
+        assert!(layout.coverage_file.ends_with("target/ac/coverage.jsonl"));
+        assert!(layout.junit_file.ends_with("target/junit/acceptance.xml"));
+        assert!(layout.history_dir.ends_with("artifacts/ac-status"));
+        assert!(layout.features_dir.ends_with("specs/features"));
     }
 }

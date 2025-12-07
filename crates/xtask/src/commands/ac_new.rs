@@ -1,7 +1,8 @@
 use anyhow::Result;
 use colored::Colorize;
 use std::fs;
-use std::path::Path;
+
+use crate::kernel::layout_for_repo;
 
 pub fn run(ac_id: &str, description: &str, _story: &str, requirement: &str) -> Result<()> {
     println!("{}", "✨ Creating new acceptance criterion...".blue().bold());
@@ -16,12 +17,12 @@ pub fn run(ac_id: &str, description: &str, _story: &str, requirement: &str) -> R
     check_ac_uniqueness(ac_id)?;
 
     // Find the requirement in spec_ledger
-    let ledger_path = Path::new("specs/spec_ledger.yaml");
-    if !ledger_path.exists() {
-        anyhow::bail!("spec_ledger.yaml not found at {}", ledger_path.display());
+    let layout = layout_for_repo();
+    if !layout.ledger.exists() {
+        anyhow::bail!("spec_ledger.yaml not found at {}", layout.ledger.display());
     }
 
-    let _ledger_content = fs::read_to_string(ledger_path)?;
+    let _ledger_content = fs::read_to_string(&layout.ledger)?;
 
     // Simple insertion: find the requirement and add AC
     // This is a basic implementation - more sophisticated YAML parsing could be added
@@ -56,19 +57,19 @@ pub fn run(ac_id: &str, description: &str, _story: &str, requirement: &str) -> R
 }
 
 fn check_ac_uniqueness(ac_id: &str) -> Result<()> {
+    let layout = layout_for_repo();
+
     // Check spec_ledger.yaml
-    let ledger_path = Path::new("specs/spec_ledger.yaml");
-    if ledger_path.exists() {
-        let content = fs::read_to_string(ledger_path)?;
+    if layout.ledger.exists() {
+        let content = fs::read_to_string(&layout.ledger)?;
         if content.contains(&format!("id: {}", ac_id)) {
             anyhow::bail!("AC ID {} already exists in spec_ledger.yaml", ac_id);
         }
     }
 
     // Check feature files
-    let features_dir = Path::new("specs/features");
-    if features_dir.exists() {
-        for entry in fs::read_dir(features_dir)? {
+    if layout.features_dir.exists() {
+        for entry in fs::read_dir(&layout.features_dir)? {
             let entry = entry?;
             let path = entry.path();
             if path.extension().and_then(|s| s.to_str()) == Some("feature") {

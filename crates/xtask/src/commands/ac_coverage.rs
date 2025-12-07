@@ -2,20 +2,21 @@ use anyhow::Result;
 use colored::Colorize;
 use std::collections::{BTreeMap, HashMap};
 use std::fs;
-use std::path::Path;
 use std::path::PathBuf;
 
 use super::ac_parsing::{
     AcMetadata, AcStatus, parse_ac_coverage, parse_cucumber_json, parse_features, parse_junit,
     parse_ledger, parse_ledger_with_metadata,
 };
+use crate::kernel::layout_for_repo;
 
 pub fn run(args: AcCoverageArgs) -> Result<()> {
     println!("{}", "📊 Computing AC coverage...".blue().bold());
     println!();
 
     // Parse ledger
-    let ledger_path = Path::new("specs/spec_ledger.yaml");
+    let layout = layout_for_repo();
+    let ledger_path = &layout.ledger;
     if !ledger_path.exists() {
         anyhow::bail!("spec_ledger.yaml not found at {}", ledger_path.display());
     }
@@ -307,11 +308,12 @@ pub struct AcCoverageArgs {
 
 impl Default for AcCoverageArgs {
     fn default() -> Self {
+        let layout = layout_for_repo();
         Self {
-            ledger: PathBuf::from("specs/spec_ledger.yaml"),
-            features_dir: PathBuf::from("specs/features"),
-            coverage: PathBuf::from("target/ac/coverage.jsonl"),
-            junit: PathBuf::from("target/junit/acceptance.xml"),
+            ledger: layout.ledger,
+            features_dir: layout.features_dir,
+            coverage: layout.coverage_file,
+            junit: layout.junit_file,
             json_report: PathBuf::from("target/ac_report.json"),
             todo_only: false,
             must_have_only: false,

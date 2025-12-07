@@ -1,19 +1,14 @@
 use anyhow::{Context, Result};
-use std::path::Path;
+
+use crate::kernel::layout_for_repo;
 
 /// Run tests for a specific acceptance criterion
 pub fn run(ac_id: &str) -> Result<()> {
-    let workspace_root = Path::new(env!("CARGO_MANIFEST_DIR"))
-        .parent()
-        .and_then(|p| p.parent())
-        .context("Failed to determine workspace root")?;
-
-    let ledger_path = workspace_root.join("specs/spec_ledger.yaml");
-    let features_dir = workspace_root.join("specs/features");
+    let layout = layout_for_repo();
 
     // Validate AC exists in ledger
     println!("[INFO] Looking up AC: {}", ac_id);
-    let (all_acs, _) = super::ac_parsing::parse_ledger(&ledger_path)?;
+    let (all_acs, _) = super::ac_parsing::parse_ledger(&layout.ledger)?;
 
     if !all_acs.contains_key(ac_id) {
         let preview =
@@ -31,7 +26,7 @@ pub fn run(ac_id: &str) -> Result<()> {
 
     // Find scenarios tagged with this AC
     println!("\n[INFO] Searching for BDD scenarios tagged with @{}...", ac_id);
-    let scenarios = super::ac_parsing::parse_features_with_metadata(&features_dir)?;
+    let scenarios = super::ac_parsing::parse_features_with_metadata(&layout.features_dir)?;
 
     let ac_scenarios: Vec<_> = scenarios.values().filter(|s| s.ac_id == ac_id).collect();
 

@@ -1,15 +1,13 @@
 use anyhow::{Context, Result};
 use colored::Colorize;
 use spec_runtime::{SpecLedger, load_spec_ledger};
-use std::path::PathBuf;
+
+use crate::kernel::layout_for_repo;
 
 pub fn run(ac_id: &str) -> Result<()> {
-    let root =
-        PathBuf::from(env!("CARGO_MANIFEST_DIR")).parent().unwrap().parent().unwrap().to_path_buf();
-
-    let ledger_path = root.join("specs/spec_ledger.yaml");
+    let layout = layout_for_repo();
     let ledger: SpecLedger =
-        load_spec_ledger(&ledger_path).context("Failed to load spec_ledger.yaml")?;
+        load_spec_ledger(&layout.ledger).context("Failed to load spec_ledger.yaml")?;
 
     // Find the AC in the ledger
     let mut found_ac = None;
