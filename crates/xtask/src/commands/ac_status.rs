@@ -157,23 +157,7 @@ struct AcJson {
     tests_executed: usize,
 }
 
-impl AcStatus {
-    fn icon(&self) -> &str {
-        match self {
-            AcStatus::Pass => "[PASS]",
-            AcStatus::Fail => "[FAIL]",
-            AcStatus::Unknown => "[UNKNOWN]",
-        }
-    }
-
-    fn name(&self) -> &str {
-        match self {
-            AcStatus::Pass => "pass",
-            AcStatus::Fail => "fail",
-            AcStatus::Unknown => "unknown",
-        }
-    }
-}
+// NOTE: AcStatus::icon() and AcStatus::name() are now defined in ac-kernel::model
 
 // Ledger deserialization structures
 #[derive(Debug, Deserialize)]

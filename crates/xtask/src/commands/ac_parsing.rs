@@ -5,6 +5,10 @@
 //! - Parsing feature files to extract scenarios
 //! - Parsing test results (JUnit XML and Cucumber JSON)
 //! - Mapping scenarios to ACs
+//!
+//! NOTE: Core types (AcStatus, Scenario, AcMetadata, AcDetails, AcCoverageRecord)
+//! are now defined in the `ac-kernel` crate. This module re-exports them for
+//! backwards compatibility and provides additional parsing functionality.
 
 use anyhow::{Context, Result};
 use once_cell::sync::Lazy;
@@ -16,6 +20,14 @@ use std::collections::{BTreeMap, HashMap};
 use std::fs;
 use std::path::Path;
 use walkdir::WalkDir;
+
+// Re-export core types from ac-kernel for backwards compatibility
+pub use ac_kernel::{
+    AcDetails, AcMetadata, AcStatus, Scenario, get_ac_details, parse_ac_coverage,
+    parse_ledger_with_metadata,
+};
+// Note: AcCoverageRecord is available from ac_kernel but not re-exported here
+// as it's only used by the acceptance crate's coverage_writer.
 
 // Precompiled regex patterns for performance
 pub(crate) static AC_PATTERN: Lazy<Regex> = Lazy::new(|| Regex::new(r"^(AC-[A-Z0-9-]+)$").unwrap());
@@ -29,58 +41,17 @@ pub(crate) static TESTCASE_SCENARIO_PATTERN: Lazy<Regex> =
 pub(crate) static TESTCASE_SUFFIX_PATTERN: Lazy<Regex> =
     Lazy::new(|| Regex::new(r"\s*\((?:row|example)\s+\d+\)\s*$").unwrap());
 
-// ============================================================================
-// Public Types
-// ============================================================================
-
-#[derive(Debug, Clone, PartialEq, serde::Serialize)]
-#[serde(rename_all = "lowercase")]
-pub enum AcStatus {
-    Pass,
-    Fail,
-    Unknown,
-}
-
-#[derive(Debug, Clone)]
-pub struct Scenario {
-    pub name: String,
-    pub ac_id: String,
-    pub file: String,
-}
-
 // Type aliases to reduce complexity
 pub type AcsByReq = BTreeMap<String, Vec<String>>;
 pub type AcToReqMap = HashMap<String, String>;
 
-/// Metadata for an acceptance criterion
-#[derive(Debug, Clone)]
-pub struct AcMetadata {
-    /// The parent requirement ID
-    pub req_id: String,
-    /// Whether this AC must have BDD coverage (true = kernel, false = non-kernel)
-    pub must_have_ac: bool,
-}
-
-/// Full details for an acceptance criterion (including text)
-#[derive(Debug, Clone)]
-pub struct AcDetails {
-    /// The AC ID (e.g., "AC-TPL-001")
-    pub id: String,
-    /// Human-readable AC description text
-    pub text: String,
-    /// The parent story ID
-    pub story_id: String,
-    /// The parent requirement ID
-    pub req_id: String,
-    /// The requirement title
-    pub req_title: String,
-    /// Whether this AC must have BDD coverage (true = kernel, false = non-kernel)
-    pub must_have_ac: bool,
-}
-
 // ============================================================================
 // Ledger Parsing
 // ============================================================================
+
+// Internal YAML structs for parse_ledger (kept local for backwards compatibility)
+// Note: These duplicate the structs in ac-kernel::ledger but are needed for parse_ledger().
+// Consider consolidating in a future refactor.
 
 #[derive(Debug, Deserialize)]
 struct Ledger {
@@ -89,8 +60,7 @@ struct Ledger {
 
 #[derive(Debug, Deserialize)]
 struct Story {
-    /// Story ID from spec_ledger.yaml.
-    /// Used for filtering and reporting, and for AC scenario suggestions.
+    #[allow(dead_code)]
     id: String,
     requirements: Vec<Requirement>,
 }
@@ -98,26 +68,18 @@ struct Story {
 #[derive(Debug, Deserialize)]
 struct Requirement {
     id: String,
-    /// Human-readable requirement title
     #[serde(default)]
+    #[allow(dead_code)]
     title: String,
-    /// Tags for categorizing requirements (e.g., @tier1, @security).
-    /// Future: Used for filtering ACs by tag in `cargo xtask ac-list --tag <TAG>`.
-    /// See TASK-DX-AC-FILTERING for planned tag-based AC queries.
     #[serde(default)]
     #[allow(dead_code)]
     tags: Vec<String>,
-    /// Whether all ACs under this requirement must have BDD coverage.
-    /// Defaults to true (kernel). Set to false for non-kernel/exploratory ACs.
     #[serde(default = "default_must_have_ac")]
+    #[allow(dead_code)]
     must_have_ac: bool,
     acceptance_criteria: Vec<AcceptanceCriteria>,
 }
 
-/// Default for `must_have_ac` field: true (kernel AC).
-///
-/// This matches the AC classification semantics in ADR-0023.
-/// Keep in sync with `ac_status.rs::default_must_have_ac()`.
 fn default_must_have_ac() -> bool {
     true
 }
@@ -125,12 +87,10 @@ fn default_must_have_ac() -> bool {
 #[derive(Debug, Deserialize)]
 struct AcceptanceCriteria {
     id: String,
-    /// Human-readable AC description text.
-    /// Used in ac-suggest-scenarios and ac-show commands.
+    #[allow(dead_code)]
     text: String,
-    /// Whether this specific AC must have BDD coverage.
-    /// Inherits from requirement if not specified, defaults to true.
     #[serde(default = "default_must_have_ac")]
+    #[allow(dead_code)]
     must_have_ac: bool,
 }
 
@@ -139,6 +99,9 @@ struct AcceptanceCriteria {
 /// Returns:
 /// - all_acs: HashMap<AC_ID, REQ_ID> - maps each AC to its parent requirement
 /// - acs_by_req: BTreeMap<REQ_ID, Vec<AC_ID>> - groups ACs by requirement
+///
+/// NOTE: For richer metadata including `must_have_ac`, use `parse_ledger_with_metadata`
+/// from `ac-kernel` (re-exported above).
 pub fn parse_ledger(ledger_path: &Path) -> Result<(AcToReqMap, AcsByReq)> {
     let content = fs::read_to_string(ledger_path)
         .with_context(|| format!("Failed to read ledger: {}", ledger_path.display()))?;
@@ -165,68 +128,8 @@ pub fn parse_ledger(ledger_path: &Path) -> Result<(AcToReqMap, AcsByReq)> {
     Ok((all_acs, acs_by_req))
 }
 
-/// Parse the spec_ledger.yaml file and return all ACs with full metadata.
-///
-/// Returns HashMap<AC_ID, AcMetadata> containing:
-/// - req_id: parent requirement ID
-/// - must_have_ac: whether this AC must have BDD coverage (kernel AC)
-///
-/// This is a richer version of `parse_ledger` that exposes `must_have_ac` for filtering.
-pub fn parse_ledger_with_metadata(ledger_path: &Path) -> Result<HashMap<String, AcMetadata>> {
-    let content = fs::read_to_string(ledger_path)
-        .with_context(|| format!("Failed to read ledger: {}", ledger_path.display()))?;
-
-    let ledger: Ledger = serde_yaml::from_str(&content)
-        .with_context(|| format!("Failed to parse ledger YAML: {}", ledger_path.display()))?;
-
-    let mut ac_metadata: HashMap<String, AcMetadata> = HashMap::new();
-
-    for story in ledger.stories {
-        for req in story.requirements {
-            for ac in req.acceptance_criteria {
-                // AC's must_have_ac is effective if both REQ and AC have it true
-                let effective_must_have = req.must_have_ac && ac.must_have_ac;
-                ac_metadata.insert(
-                    ac.id.clone(),
-                    AcMetadata { req_id: req.id.clone(), must_have_ac: effective_must_have },
-                );
-            }
-        }
-    }
-
-    Ok(ac_metadata)
-}
-
-/// Look up a single AC by ID and return its full details.
-///
-/// Returns None if the AC ID is not found in the ledger.
-pub fn get_ac_details(ledger_path: &Path, ac_id: &str) -> Result<Option<AcDetails>> {
-    let content = fs::read_to_string(ledger_path)
-        .with_context(|| format!("Failed to read ledger: {}", ledger_path.display()))?;
-
-    let ledger: Ledger = serde_yaml::from_str(&content)
-        .with_context(|| format!("Failed to parse ledger YAML: {}", ledger_path.display()))?;
-
-    for story in ledger.stories {
-        for req in story.requirements {
-            for ac in req.acceptance_criteria {
-                if ac.id == ac_id {
-                    let effective_must_have = req.must_have_ac && ac.must_have_ac;
-                    return Ok(Some(AcDetails {
-                        id: ac.id,
-                        text: ac.text,
-                        story_id: story.id.clone(),
-                        req_id: req.id.clone(),
-                        req_title: req.title.clone(),
-                        must_have_ac: effective_must_have,
-                    }));
-                }
-            }
-        }
-    }
-
-    Ok(None)
-}
+// NOTE: `parse_ledger_with_metadata` and `get_ac_details` are now provided by ac-kernel
+// and re-exported above. The local implementations have been removed.
 
 // ============================================================================
 // Feature File Parsing
@@ -363,108 +266,8 @@ pub fn parse_features_with_metadata(features_dir: &Path) -> Result<HashMap<Strin
 // Test Results Parsing - AC Coverage JSONL
 // ============================================================================
 
-/// A single AC coverage record from the JSONL file.
-#[derive(Debug, Clone, Deserialize)]
-pub struct AcCoverageRecord {
-    /// The AC ID (e.g., "AC-KERN-001")
-    pub ac_id: String,
-    /// The status of the scenario: "passed", "failed", or "skipped"
-    pub status: String,
-    /// The feature file path
-    pub feature: String,
-    /// The scenario name
-    pub scenario: String,
-    /// All tags from feature, rule, and scenario.
-    /// Future: Used for filtering scenarios by tag in AC coverage reports.
-    #[allow(dead_code)]
-    pub tags: Vec<String>,
-}
-
-/// Parse the AC coverage JSONL file and extract AC test results.
-///
-/// This is the preferred primary source for AC coverage as it streams
-/// results and is resilient to cucumber's exit() behavior.
-///
-/// ## Scenario Identity
-///
-/// Scenarios are keyed by `feature::scenario_name` to avoid collisions when
-/// the same scenario name appears in multiple feature files.
-///
-/// ## Skipped Scenario Semantics
-///
-/// Skipped scenarios (status = "skipped") are excluded from pass/fail aggregation:
-/// - AC with only "passed" scenarios → Pass
-/// - AC with any "failed" scenarios → Fail
-/// - AC with only "skipped" scenarios → no entries → Unknown (when merged with ledger)
-///
-/// This means "skipped" is treated as "not proven" rather than "failed".
-///
-/// Returns tuple of (scenarios, ac_results) for use by ac_status.rs.
-pub fn parse_ac_coverage(
-    coverage_path: &Path,
-) -> Result<(HashMap<String, Scenario>, HashMap<String, AcStatus>)> {
-    use std::io::{BufRead, BufReader};
-
-    let file = match fs::File::open(coverage_path) {
-        Ok(f) => f,
-        Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
-            // No coverage file yet - return empty results
-            return Ok((HashMap::new(), HashMap::new()));
-        }
-        Err(e) => {
-            return Err(anyhow::anyhow!(e).context("opening AC coverage file"));
-        }
-    };
-
-    let reader = BufReader::new(file);
-    let mut scenarios: HashMap<String, Scenario> = HashMap::new();
-    let mut ac_results: HashMap<String, Vec<bool>> = HashMap::new();
-
-    for line in reader.lines() {
-        let line = line?;
-        if line.trim().is_empty() {
-            continue;
-        }
-
-        let record: AcCoverageRecord =
-            serde_json::from_str(&line).context("parsing AC coverage line")?;
-
-        // Use feature::scenario_name as key to avoid collisions across features
-        let scenario_key = format!("{}::{}", record.feature, record.scenario);
-
-        // Store scenario information
-        scenarios.insert(
-            scenario_key,
-            Scenario {
-                name: record.scenario.clone(),
-                ac_id: record.ac_id.clone(),
-                file: record.feature.clone(),
-            },
-        );
-
-        // Determine if scenario passed.
-        // Skipped scenarios are excluded from aggregation - an AC with only skipped
-        // scenarios will have no entries and be treated as Unknown when merged with ledger.
-        let passed = match record.status.as_str() {
-            "passed" => true,
-            "failed" => false,
-            "skipped" => continue,
-            _ => continue,
-        };
-
-        ac_results.entry(record.ac_id).or_default().push(passed);
-    }
-
-    // Aggregate: AC passes only if all scenarios pass
-    let mut ac_status = HashMap::new();
-    for (ac_id, results) in ac_results {
-        let status =
-            if results.iter().all(|&passed| passed) { AcStatus::Pass } else { AcStatus::Fail };
-        ac_status.insert(ac_id, status);
-    }
-
-    Ok((scenarios, ac_status))
-}
+// NOTE: `AcCoverageRecord` and `parse_ac_coverage` are now provided by ac-kernel
+// and re-exported above. The local implementations have been removed.
 
 // ============================================================================
 // Test Results Parsing - Cucumber JSON
