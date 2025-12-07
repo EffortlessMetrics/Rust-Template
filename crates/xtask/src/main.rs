@@ -10,6 +10,7 @@ mod contracts;
 mod devex;
 mod docs_index;
 pub mod env;
+pub mod kernel;
 mod validation;
 
 /// Verbosity level for command output

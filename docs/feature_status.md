@@ -44,8 +44,8 @@ Auto-generated AC status from acceptance (BDD) and unit tests.
 | AC-PLT-013 | US-TPL-PLT-001 | REQ-PLT-RELEASE-SAFETY | [PASS] pass | 1 / 1 |
 | AC-PLT-014 | US-TPL-PLT-001 | REQ-PLT-DEVEX-CONTRACT | [PASS] pass | 1 / 1 |
 | AC-PLT-015 | US-TPL-PLT-001 | REQ-PLT-DEVEX-CONTRACT | [PASS] pass | 3 / 4 |
-| AC-PLT-016 | US-TPL-PLT-001 | REQ-PLT-DEVEX-CONTRACT | [PASS] pass | 1 / 1 |
-| AC-PLT-017 | US-TPL-PLT-001 | REQ-PLT-STATUS-CLI | [PASS] pass | 1 / 1 |
+| AC-PLT-016 | US-TPL-PLT-001 | REQ-PLT-DEVEX-CONTRACT | [UNKNOWN] unknown | 0 / 1 |
+| AC-PLT-017 | US-TPL-PLT-001 | REQ-PLT-STATUS-CLI | [UNKNOWN] unknown | 0 / 1 |
 | AC-PLT-018 | US-TPL-PLT-001 | REQ-PLT-ONBOARDING | [PASS] pass | 1 / 1 |
 | AC-PLT-019 | US-TPL-PLT-001 | REQ-PLT-DEVEX-CONTRACT | [PASS] pass | 2 / 3 |
 | AC-PLT-020 | US-TPL-PLT-001 | REQ-PLT-DEVEX-CONTRACT | [UNKNOWN] unknown | 0 / 1 |
@@ -141,8 +141,8 @@ Auto-generated AC status from acceptance (BDD) and unit tests.
 | AC-TPL-TASKS-HTTP | US-TPL-PLT-001 | REQ-TPL-PLATFORM-TASKS | [PASS] pass | 1 / 1 |
 | AC-TPL-TASKS-UPDATE-CLI | US-TPL-PLT-001 | REQ-TPL-PLATFORM-TASKS | [PASS] pass | 1 / 1 |
 | AC-TPL-TS-CONFIG-VALIDATION | US-TPL-PLT-001 | REQ-TPL-TS-CONFIG-GOVERNANCE | [UNKNOWN] unknown | 0 / 0 |
-| AC-TPL-VERSION-ATOMIC | US-TPL-PLT-001 | REQ-TPL-VERSIONING-ENGINE | [PASS] pass | 1 / 1 |
-| AC-TPL-VERSION-DRYRUN | US-TPL-PLT-001 | REQ-TPL-VERSIONING-ENGINE | [PASS] pass | 1 / 1 |
+| AC-TPL-VERSION-ATOMIC | US-TPL-PLT-001 | REQ-TPL-VERSIONING-ENGINE | [UNKNOWN] unknown | 0 / 1 |
+| AC-TPL-VERSION-DRYRUN | US-TPL-PLT-001 | REQ-TPL-VERSIONING-ENGINE | [UNKNOWN] unknown | 0 / 1 |
 | AC-TPL-VERSION-MANIFEST | US-TPL-PLT-001 | REQ-TPL-VERSIONING-ENGINE | [PASS] pass | 1 / 1 |
 | AC-TPL-XTASK-NONINTERACTIVE | US-TPL-PLT-001 | REQ-TPL-AUTOMATION-BEHAVIOUR | [UNKNOWN] unknown | 0 / 1 |
 | AC-TPL-XTASK-SPEC-ROOT | US-TPL-PLT-001 | REQ-PLT-DEVEX-CONTRACT | [PASS] pass | 1 / 1 |
@@ -151,26 +151,30 @@ Auto-generated AC status from acceptance (BDD) and unit tests.
 
 *(This list SHOULD be empty in this repo. If anything appears here, it's a bug.)*
 
-- AC-TPL-IDP-SNAPSHOT-VALID-JSON: The idp-snapshot output is valid JSON that can be parsed without errors and contains all required top-level keys.
-- AC-TPL-AGENTS-TEMPLATE-DOC: docs/AGENTS_TEMPLATE.md exists and provides a copy-paste template for creating new agents with checklist for name format, description quality (what + when), tools/permissionMode safety, model selection, and skills references.
-- AC-TPL-AGENTS-NAME-FORMAT: Agent names MUST be kebab-case, contain only lowercase letters/digits/hyphens, max 64 characters, and be unique within the project. agents-lint enforces this.
-- AC-TPL-SKILLS-LINT: `cargo run -p xtask -- skills-lint` validates Skills frontmatter and content (name/description rules, references to flows and APIs).
-- AC-PLT-DOC-INDEX-FRONTMATTER: `cargo xtask docs-check` validates bidirectional alignment between doc_index.yaml entries and document front-matter (stories, requirements, acs, adrs). Items in index must be in front-matter and vice versa. (Docs-as-Code v3)
-- AC-TPL-REL-EVIDENCE: `cargo xtask release-bundle X.Y.Z` writes `release_evidence/vX.Y.Z.md` containing: all tasks completed in this version, linked REQs/ACs/ADRs, git log since last tag, selftest summary, policy status, resolved friction entries.
-- AC-TPL-KERNEL-CONTRACT-EMITTED: `cargo xtask release-bundle X.Y.Z` writes `release_evidence/kernel_contract.vX.Y.Z.json` describing xtask commands, /platform/* endpoints, and governance schemas for that version.
-- AC-TPL-AGENT-SKILLS: The .claude/skills directory contains executable skill definitions for feature development, release, and maintenance workflows, each referencing the appropriate xtask commands and platform APIs.
-- AC-PLT-021: `cargo xtask service-init` updates service_metadata.yaml, README, and CLAUDE.md with a new service ID, name, and description, and `/platform/status` reflects the new identity.
-- AC-TPL-XTASK-NONINTERACTIVE: For commands covered by the DevEx contract (doctor, check, selftest, ac-status, ac-coverage, bundle, version, friction-*, questions-*, fork-*), setting CI=1 or XTASK_NONINTERACTIVE=1 guarantees: - no interactive prompts, and - exit code 0 on success, non-zero on failure.
-- AC-TPL-SKILLS-NAME-FORMAT: Skill names MUST be kebab-case, contain only lowercase letters/digits/hyphens, max 64 characters, and be unique within the project. skills-lint enforces this.
-- AC-TPL-IDP-SNAPSHOT: `cargo xtask idp-snapshot` emits JSON containing timestamp, template_version, service_id, governance_health (status, ac_coverage), documentation metrics, and task hints for pending/in_progress tasks.
-- AC-TPL-SKILLS-ALIGN-001: Existing .claude/skills/* are aligned with documented workflows (bootstrap-dev-env, governed-feature-dev, governed-maintenance, governed-release, governed-governance-debug).
-- AC-TPL-AGENTS-GOVERNANCE-002: Each project agent in .claude/agents/* has a corresponding REQ in spec_ledger.yaml and at least one AC defining its configuration and system prompt requirements.
-- AC-TPL-SKILLS-FMT: `cargo run -p xtask -- skills-fmt` normalizes SKILL.md files according to repo conventions (frontmatter, headings, links).
-- AC-TPL-CLI-JSON-OUTPUT: For core reporting commands (`ac-status`, `version`, `friction-list`, `questions-list`, `fork-list`), passing `--json` produces a single valid JSON document on stdout with a stable top-level shape, and exit codes follow the success/failure of the operation.
-- AC-TPL-AGENTS-GOVERNANCE-001: docs/AGENTS_GOVERNANCE.md exists and documents the agent governance spec, lifecycle (create/maintain/retire), validation rules, and ADR-0021 principles for this repo.
-- AC-PLT-020: `XTASK_LOW_RESOURCES=1` environment variable skips resource-intensive steps in selftest for CI/constrained environments
 - AC-TPL-SKILLS-GUIDE-001: docs/AGENT_SKILLS.md exists and documents the recommended Skill set, SKILL.md templates, and best practices for this repo.
+- AC-TPL-SKILLS-NAME-FORMAT: Skill names MUST be kebab-case, contain only lowercase letters/digits/hyphens, max 64 characters, and be unique within the project. skills-lint enforces this.
+- AC-TPL-REL-EVIDENCE: `cargo xtask release-bundle X.Y.Z` writes `release_evidence/vX.Y.Z.md` containing: all tasks completed in this version, linked REQs/ACs/ADRs, git log since last tag, selftest summary, policy status, resolved friction entries.
+- AC-TPL-VERSION-ATOMIC: Version updates are atomic with rollback on failure, ensuring no partial state if any file update fails
+- AC-TPL-VERSION-DRYRUN: `cargo xtask release-prepare X.Y.Z --dry-run` shows all changes before applying them, listing each file and the old→new version without modifying files
+- AC-TPL-AGENTS-TEMPLATE-DOC: docs/AGENTS_TEMPLATE.md exists and provides a copy-paste template for creating new agents with checklist for name format, description quality (what + when), tools/permissionMode safety, model selection, and skills references.
+- AC-TPL-SKILLS-LINT: `cargo run -p xtask -- skills-lint` validates Skills frontmatter and content (name/description rules, references to flows and APIs).
+- AC-TPL-IDP-SNAPSHOT-VALID-JSON: The idp-snapshot output is valid JSON that can be parsed without errors and contains all required top-level keys.
+- AC-PLT-021: `cargo xtask service-init` updates service_metadata.yaml, README, and CLAUDE.md with a new service ID, name, and description, and `/platform/status` reflects the new identity.
+- AC-TPL-AGENT-SKILLS: The .claude/skills directory contains executable skill definitions for feature development, release, and maintenance workflows, each referencing the appropriate xtask commands and platform APIs.
+- AC-TPL-AGENTS-GOVERNANCE-001: docs/AGENTS_GOVERNANCE.md exists and documents the agent governance spec, lifecycle (create/maintain/retire), validation rules, and ADR-0021 principles for this repo.
+- AC-TPL-CLI-JSON-OUTPUT: For core reporting commands (`ac-status`, `version`, `friction-list`, `questions-list`, `fork-list`), passing `--json` produces a single valid JSON document on stdout with a stable top-level shape, and exit codes follow the success/failure of the operation.
+- AC-TPL-XTASK-NONINTERACTIVE: For commands covered by the DevEx contract (doctor, check, selftest, ac-status, ac-coverage, bundle, version, friction-*, questions-*, fork-*), setting CI=1 or XTASK_NONINTERACTIVE=1 guarantees: - no interactive prompts, and - exit code 0 on success, non-zero on failure.
+- AC-TPL-SKILLS-ALIGN-001: Existing .claude/skills/* are aligned with documented workflows (bootstrap-dev-env, governed-feature-dev, governed-maintenance, governed-release, governed-governance-debug).
+- AC-TPL-SKILLS-FMT: `cargo run -p xtask -- skills-fmt` normalizes SKILL.md files according to repo conventions (frontmatter, headings, links).
+- AC-PLT-017: `cargo xtask status` displays version, REQ/AC/task counts, selftest status, and suggested next tasks
+- AC-TPL-KERNEL-CONTRACT-EMITTED: `cargo xtask release-bundle X.Y.Z` writes `release_evidence/kernel_contract.vX.Y.Z.json` describing xtask commands, /platform/* endpoints, and governance schemas for that version.
 - AC-TPL-REL-CHANGELOG: Evidence file includes distinct sections (Tasks, Specs/ACs, ADRs, Git log, Governance signals) adequate for LLM formatting into Keep a Changelog format.
+- AC-PLT-020: `XTASK_LOW_RESOURCES=1` environment variable skips resource-intensive steps in selftest for CI/constrained environments
+- AC-TPL-AGENTS-GOVERNANCE-002: Each project agent in .claude/agents/* has a corresponding REQ in spec_ledger.yaml and at least one AC defining its configuration and system prompt requirements.
+- AC-TPL-IDP-SNAPSHOT: `cargo xtask idp-snapshot` emits JSON containing timestamp, template_version, service_id, governance_health (status, ac_coverage), documentation metrics, and task hints for pending/in_progress tasks.
+- AC-TPL-AGENTS-NAME-FORMAT: Agent names MUST be kebab-case, contain only lowercase letters/digits/hyphens, max 64 characters, and be unique within the project. agents-lint enforces this.
+- AC-PLT-016: `cargo xtask ci-local` orchestrates doctor + selftest + audit + docs-check
+- AC-PLT-DOC-INDEX-FRONTMATTER: `cargo xtask docs-check` validates bidirectional alignment between doc_index.yaml entries and document front-matter (stories, requirements, acs, adrs). Items in index must be in front-matter and vice versa. (Docs-as-Code v3)
 
 ## Meta / CI-only ACs (Not Executed Locally)
 

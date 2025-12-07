@@ -25,7 +25,7 @@ use colored::Colorize;
 use serde::Serialize;
 use std::path::PathBuf;
 
-use super::ac_history::{build_report, load_snapshots};
+use ac_kernel::{build_report, load_snapshots};
 
 /// Arguments for ac-slo command
 #[derive(Debug, Clone)]
