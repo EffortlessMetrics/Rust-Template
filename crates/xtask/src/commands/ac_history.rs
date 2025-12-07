@@ -4,6 +4,14 @@
 //!
 //! # Design
 //!
+//! Core types and logic live in `ac-kernel`:
+//! - `SnapshotMetric`, `AcHistoryReport`, `SnapshotDelta` (data model)
+//! - `load_snapshots()`, `build_report()` (parsing and aggregation)
+//!
+//! This module provides only CLI concerns:
+//! - Argument parsing (`AcHistoryArgs`)
+//! - Output formatting with colors (text, markdown, csv, json)
+//!
 //! Each CI run generates `ac-status --json` and stores it as an artifact with the commit SHA
 //! in the filename. This command reads a directory of those snapshots and produces trend analysis.
 //!
@@ -22,10 +30,11 @@
 
 use anyhow::{Context, Result};
 use colored::Colorize;
-use serde::{Deserialize, Serialize};
-use std::fs;
 use std::io::Write;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
+
+// Import types and functions from ac-kernel
+use ac_kernel::{AcHistoryReport, build_report, load_snapshots};
 
 /// Arguments for ac-history command
 #[derive(Debug, Clone)]
@@ -45,291 +54,6 @@ impl Default for AcHistoryArgs {
             format: "text".to_string(),
             must_have: false,
         }
-    }
-}
-
-// ===========================================================================
-// Data types - mirror ac_status.rs JSON output (schema v2.0)
-// ===========================================================================
-
-/// Deserialized AC status snapshot (from ac-status --json)
-#[derive(Debug, Deserialize)]
-struct AcStatusSnapshot {
-    schema_version: String,
-    timestamp: String,
-    must_have_acs: AcCategoryStats,
-    optional_acs: AcCategoryStats,
-    coverage_percent: f64,
-    #[serde(default)]
-    acs: Vec<AcJson>,
-}
-
-#[derive(Debug, Deserialize)]
-struct AcCategoryStats {
-    total: usize,
-    passing: usize,
-    failing: usize,
-    unknown: usize,
-}
-
-#[derive(Debug, Deserialize)]
-struct AcJson {
-    id: String,
-    #[serde(default)]
-    status: String,
-    #[serde(default)]
-    must_have_ac: bool,
-}
-
-// ===========================================================================
-// Aggregated snapshot metric
-// ===========================================================================
-
-/// Aggregated metrics from a single snapshot
-#[derive(Debug, Clone, Serialize)]
-pub struct SnapshotMetric {
-    /// Commit SHA (extracted from filename)
-    pub commit: String,
-    /// Timestamp from JSON
-    pub timestamp: String,
-
-    // Must-have AC stats
-    pub must_have_total: usize,
-    pub must_have_passing: usize,
-    pub must_have_failing: usize,
-    pub must_have_unknown: usize,
-
-    // Optional AC stats
-    pub optional_total: usize,
-    pub optional_passing: usize,
-    pub optional_failing: usize,
-    pub optional_unknown: usize,
-
-    /// Overall coverage percentage
-    pub coverage_percent: f64,
-
-    /// List of failing must-have AC IDs (blockers)
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub kernel_blockers: Vec<String>,
-}
-
-/// History report containing all snapshots
-#[derive(Debug, Serialize)]
-pub struct AcHistoryReport {
-    /// Schema version for forward compatibility (bump on breaking changes)
-    /// v1.0: Initial schema with snapshots, deltas, skipped_files
-    pub schema_version: String,
-    /// Number of snapshots analyzed
-    pub snapshot_count: usize,
-    /// Date range (first timestamp to last)
-    pub date_range: Option<(String, String)>,
-    /// All snapshots sorted by timestamp
-    pub snapshots: Vec<SnapshotMetric>,
-    /// Delta analysis (new blockers between snapshots)
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub deltas: Vec<SnapshotDelta>,
-    /// Files skipped due to incompatible schema or parse errors
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub skipped_files: Vec<SkippedFile>,
-}
-
-/// Information about a skipped snapshot file
-#[derive(Debug, Clone, Serialize)]
-pub struct SkippedFile {
-    /// Filename that was skipped
-    pub filename: String,
-    /// Reason it was skipped
-    pub reason: String,
-}
-
-/// Delta between consecutive snapshots
-#[derive(Debug, Serialize)]
-pub struct SnapshotDelta {
-    /// Commit SHA of the newer snapshot
-    pub commit: String,
-    /// New blockers introduced in this commit
-    pub new_blockers: Vec<String>,
-    /// Blockers resolved in this commit
-    pub resolved_blockers: Vec<String>,
-    /// Coverage change (percentage points)
-    pub coverage_delta: f64,
-}
-
-// ===========================================================================
-// Parsing helpers
-// ===========================================================================
-
-/// Extract commit SHA from filename like "ac-status-abcd1234.json"
-pub fn extract_commit_from_filename(path: &Path) -> Option<String> {
-    let stem = path.file_stem()?.to_str()?;
-    // Expected format: ac-status-<sha>
-    if let Some(sha) = stem.strip_prefix("ac-status-") { Some(sha.to_string()) } else { None }
-}
-
-/// Parse a single snapshot file
-fn parse_snapshot(path: &Path) -> Result<SnapshotMetric> {
-    let commit = extract_commit_from_filename(path)
-        .ok_or_else(|| anyhow::anyhow!("Cannot extract commit from filename: {:?}", path))?;
-
-    let content = fs::read_to_string(path)
-        .with_context(|| format!("Failed to read snapshot: {}", path.display()))?;
-
-    let snapshot: AcStatusSnapshot = serde_json::from_str(&content)
-        .with_context(|| format!("Failed to parse snapshot JSON: {}", path.display()))?;
-
-    if snapshot.schema_version != "2.0" {
-        eprintln!(
-            "{} Snapshot {} has schema version '{}', expected '2.0'",
-            "[WARN]".yellow(),
-            path.display(),
-            snapshot.schema_version
-        );
-    }
-
-    // Extract kernel blockers (failing must_have_ac=true ACs)
-    let kernel_blockers: Vec<String> = snapshot
-        .acs
-        .iter()
-        .filter(|ac| ac.must_have_ac && ac.status == "fail")
-        .map(|ac| ac.id.clone())
-        .collect();
-
-    Ok(SnapshotMetric {
-        commit,
-        timestamp: snapshot.timestamp,
-        must_have_total: snapshot.must_have_acs.total,
-        must_have_passing: snapshot.must_have_acs.passing,
-        must_have_failing: snapshot.must_have_acs.failing,
-        must_have_unknown: snapshot.must_have_acs.unknown,
-        optional_total: snapshot.optional_acs.total,
-        optional_passing: snapshot.optional_acs.passing,
-        optional_failing: snapshot.optional_acs.failing,
-        optional_unknown: snapshot.optional_acs.unknown,
-        coverage_percent: snapshot.coverage_percent,
-        kernel_blockers,
-    })
-}
-
-/// Result of loading snapshots from a directory
-#[derive(Debug)]
-pub struct LoadResult {
-    /// Successfully parsed snapshots
-    pub snapshots: Vec<SnapshotMetric>,
-    /// Files that were skipped
-    pub skipped: Vec<SkippedFile>,
-}
-
-/// Load all snapshots from a directory
-pub fn load_snapshots(dir: &Path) -> Result<LoadResult> {
-    if !dir.exists() {
-        anyhow::bail!("Snapshot directory does not exist: {}", dir.display());
-    }
-
-    let mut snapshots = Vec::new();
-    let mut skipped = Vec::new();
-
-    for entry in fs::read_dir(dir)? {
-        let entry = entry?;
-        let path = entry.path();
-
-        // Only process files that match the expected naming pattern: ac-status-*.json
-        // Ignore other JSON files silently (they're not ours)
-        if path.extension().is_some_and(|ext| ext == "json") {
-            let filename = path.file_name().unwrap_or_default().to_string_lossy().to_string();
-
-            // Only attempt to parse files that match the ac-status-<sha>.json pattern
-            if extract_commit_from_filename(&path).is_none() {
-                // Not an ac-status file, silently ignore
-                continue;
-            }
-
-            match parse_snapshot(&path) {
-                Ok(snapshot) => snapshots.push(snapshot),
-                Err(e) => {
-                    eprintln!("{} Skipping {}: {}", "[WARN]".yellow(), path.display(), e);
-                    skipped.push(SkippedFile { filename, reason: e.to_string() });
-                }
-            }
-        }
-    }
-
-    // Sort by timestamp
-    snapshots.sort_by(|a, b| a.timestamp.cmp(&b.timestamp));
-
-    Ok(LoadResult { snapshots, skipped })
-}
-
-/// Compute deltas between consecutive snapshots
-fn compute_deltas(snapshots: &[SnapshotMetric]) -> Vec<SnapshotDelta> {
-    if snapshots.len() < 2 {
-        return Vec::new();
-    }
-
-    let mut deltas = Vec::new();
-
-    for window in snapshots.windows(2) {
-        let prev = &window[0];
-        let curr = &window[1];
-
-        // Find new blockers
-        let new_blockers: Vec<String> = curr
-            .kernel_blockers
-            .iter()
-            .filter(|b| !prev.kernel_blockers.contains(b))
-            .cloned()
-            .collect();
-
-        // Find resolved blockers
-        let resolved_blockers: Vec<String> = prev
-            .kernel_blockers
-            .iter()
-            .filter(|b| !curr.kernel_blockers.contains(b))
-            .cloned()
-            .collect();
-
-        let coverage_delta = curr.coverage_percent - prev.coverage_percent;
-
-        // Only include if there's something interesting
-        if !new_blockers.is_empty() || !resolved_blockers.is_empty() || coverage_delta.abs() > 0.5 {
-            deltas.push(SnapshotDelta {
-                commit: curr.commit.clone(),
-                new_blockers,
-                resolved_blockers,
-                coverage_delta,
-            });
-        }
-    }
-
-    deltas
-}
-
-/// Current schema version for ac-history JSON output
-pub const AC_HISTORY_SCHEMA_VERSION: &str = "1.0";
-
-/// Build the history report
-pub fn build_report(
-    snapshots: Vec<SnapshotMetric>,
-    skipped_files: Vec<SkippedFile>,
-) -> AcHistoryReport {
-    let snapshot_count = snapshots.len();
-
-    let date_range = if snapshot_count >= 2 {
-        Some((snapshots[0].timestamp.clone(), snapshots[snapshot_count - 1].timestamp.clone()))
-    } else if snapshot_count == 1 {
-        Some((snapshots[0].timestamp.clone(), snapshots[0].timestamp.clone()))
-    } else {
-        None
-    };
-
-    let deltas = compute_deltas(&snapshots);
-
-    AcHistoryReport {
-        schema_version: AC_HISTORY_SCHEMA_VERSION.to_string(),
-        snapshot_count,
-        date_range,
-        snapshots,
-        deltas,
-        skipped_files,
     }
 }
 
@@ -369,12 +93,12 @@ pub fn run(args: AcHistoryArgs) -> Result<()> {
 
 fn render_text(report: &AcHistoryReport, args: &AcHistoryArgs) -> Result<()> {
     println!("{}", "AC Coverage History".cyan().bold());
-    println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+    println!("{}", "=".repeat(48));
     println!();
 
     println!("  {} snapshots analyzed", report.snapshot_count);
     if let Some((start, end)) = &report.date_range {
-        println!("  Date range: {} → {}", start, end);
+        println!("  Date range: {} -> {}", start, end);
     }
     println!();
 
@@ -390,7 +114,7 @@ fn render_text(report: &AcHistoryReport, args: &AcHistoryArgs) -> Result<()> {
         "  {:12} {:24} {:>6} {:>5} {:>5} {:>5}",
         "Commit", "Date", "Cov%", "Pass", "Fail", "Unk"
     );
-    println!("  {}", "─".repeat(60));
+    println!("  {}", "-".repeat(60));
 
     for snapshot in &report.snapshots {
         let (pass, fail, unk, total) = if args.must_have {
@@ -437,16 +161,16 @@ fn render_text(report: &AcHistoryReport, args: &AcHistoryArgs) -> Result<()> {
         for delta in &report.deltas {
             if !delta.new_blockers.is_empty() {
                 println!(
-                    "  {} {} – New blockers: {}",
-                    "↓".red(),
+                    "  {} {} - New blockers: {}",
+                    "v".red(),
                     &delta.commit[..12.min(delta.commit.len())],
                     delta.new_blockers.join(", ")
                 );
             }
             if !delta.resolved_blockers.is_empty() {
                 println!(
-                    "  {} {} – Resolved: {}",
-                    "↑".green(),
+                    "  {} {} - Resolved: {}",
+                    "^".green(),
                     &delta.commit[..12.min(delta.commit.len())],
                     delta.resolved_blockers.join(", ")
                 );
@@ -455,9 +179,9 @@ fn render_text(report: &AcHistoryReport, args: &AcHistoryArgs) -> Result<()> {
                 && delta.resolved_blockers.is_empty()
                 && delta.coverage_delta.abs() > 0.5
             {
-                let arrow = if delta.coverage_delta > 0.0 { "↑".green() } else { "↓".red() };
+                let arrow = if delta.coverage_delta > 0.0 { "^".green() } else { "v".red() };
                 println!(
-                    "  {} {} – Coverage: {:+.1}%",
+                    "  {} {} - Coverage: {:+.1}%",
                     arrow,
                     &delta.commit[..12.min(delta.commit.len())],
                     delta.coverage_delta
@@ -518,7 +242,7 @@ fn render_markdown_to<W: Write>(
 
     writeln!(out, "**Snapshots:** {}", report.snapshot_count)?;
     if let Some((start, end)) = &report.date_range {
-        writeln!(out, "**Date range:** {} → {}", start, end)?;
+        writeln!(out, "**Date range:** {} -> {}", start, end)?;
     }
     writeln!(out)?;
 
@@ -578,7 +302,7 @@ fn render_markdown_to<W: Write>(
             if !delta.new_blockers.is_empty() {
                 writeln!(
                     out,
-                    "- **{}** ⚠️ New blockers: {}",
+                    "- **{}** New blockers: {}",
                     short_commit,
                     delta.new_blockers.join(", ")
                 )?;
@@ -586,7 +310,7 @@ fn render_markdown_to<W: Write>(
             if !delta.resolved_blockers.is_empty() {
                 writeln!(
                     out,
-                    "- **{}** ✅ Resolved: {}",
+                    "- **{}** Resolved: {}",
                     short_commit,
                     delta.resolved_blockers.join(", ")
                 )?;
@@ -676,6 +400,7 @@ fn render_json(report: &AcHistoryReport) -> Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use ac_kernel::SkippedFile;
     use std::fs;
     use tempfile::TempDir;
 
@@ -712,79 +437,6 @@ mod tests {
         fs::write(dir.path().join("ac-status-abc123.json"), SAMPLE_SNAPSHOT_1).unwrap();
         fs::write(dir.path().join("ac-status-def456.json"), SAMPLE_SNAPSHOT_2).unwrap();
         dir
-    }
-
-    #[test]
-    fn extract_commit_from_valid_filename() {
-        let path = PathBuf::from("ac-status-abc123.json");
-        assert_eq!(extract_commit_from_filename(&path), Some("abc123".to_string()));
-    }
-
-    #[test]
-    fn extract_commit_from_long_sha() {
-        let path = PathBuf::from("ac-status-abcdef1234567890.json");
-        assert_eq!(extract_commit_from_filename(&path), Some("abcdef1234567890".to_string()));
-    }
-
-    #[test]
-    fn extract_commit_from_invalid_filename() {
-        let path = PathBuf::from("not-a-snapshot.json");
-        assert_eq!(extract_commit_from_filename(&path), None);
-    }
-
-    #[test]
-    fn load_snapshots_from_directory() {
-        let dir = create_test_dir();
-        let result = load_snapshots(dir.path()).unwrap();
-
-        assert_eq!(result.snapshots.len(), 2);
-        assert!(result.skipped.is_empty());
-        // Should be sorted by timestamp
-        assert_eq!(result.snapshots[0].timestamp, "2025-12-01T10:00:00Z");
-        assert_eq!(result.snapshots[1].timestamp, "2025-12-02T10:00:00Z");
-    }
-
-    #[test]
-    fn snapshot_extracts_kernel_blockers() {
-        let dir = create_test_dir();
-        let result = load_snapshots(dir.path()).unwrap();
-
-        // First snapshot has 2 failing kernel ACs
-        assert_eq!(result.snapshots[0].kernel_blockers.len(), 2);
-        assert!(result.snapshots[0].kernel_blockers.contains(&"AC-KERN-002".to_string()));
-        assert!(result.snapshots[0].kernel_blockers.contains(&"AC-KERN-003".to_string()));
-
-        // Second snapshot has no blockers
-        assert!(result.snapshots[1].kernel_blockers.is_empty());
-    }
-
-    #[test]
-    fn build_report_computes_date_range() {
-        let dir = create_test_dir();
-        let result = load_snapshots(dir.path()).unwrap();
-        let report = build_report(result.snapshots, result.skipped);
-
-        assert_eq!(report.snapshot_count, 2);
-        let (start, end) = report.date_range.unwrap();
-        assert_eq!(start, "2025-12-01T10:00:00Z");
-        assert_eq!(end, "2025-12-02T10:00:00Z");
-    }
-
-    #[test]
-    fn build_report_computes_deltas() {
-        let dir = create_test_dir();
-        let result = load_snapshots(dir.path()).unwrap();
-        let report = build_report(result.snapshots, result.skipped);
-
-        // Should have delta showing resolved blockers
-        assert_eq!(report.deltas.len(), 1);
-        let delta = &report.deltas[0];
-        assert_eq!(delta.commit, "def456");
-        assert!(delta.new_blockers.is_empty());
-        assert_eq!(delta.resolved_blockers.len(), 2);
-        assert!(delta.resolved_blockers.contains(&"AC-KERN-002".to_string()));
-        assert!(delta.resolved_blockers.contains(&"AC-KERN-003".to_string()));
-        assert!(delta.coverage_delta > 15.0); // ~20% improvement
     }
 
     #[test]
@@ -836,22 +488,8 @@ mod tests {
         let output = String::from_utf8(buf).unwrap();
 
         assert!(output.contains("### Notable Changes"));
-        assert!(output.contains("✅ Resolved"));
+        assert!(output.contains("Resolved"));
         assert!(output.contains("AC-KERN-002"));
-    }
-
-    #[test]
-    fn json_output_parses_back() {
-        let dir = create_test_dir();
-        let result = load_snapshots(dir.path()).unwrap();
-        let report = build_report(result.snapshots, result.skipped);
-
-        let json = serde_json::to_string_pretty(&report).unwrap();
-        let parsed: serde_json::Value = serde_json::from_str(&json).unwrap();
-
-        assert_eq!(parsed["snapshot_count"], 2);
-        assert!(parsed["snapshots"].is_array());
-        assert!(parsed["deltas"].is_array());
     }
 
     #[test]
@@ -875,142 +513,5 @@ mod tests {
         // Numbers should be different (kernel has 10+5=15 total, kernel-only has 10)
         // We can verify by checking the total column differs
         assert_ne!(output_kernel, output_all);
-    }
-
-    #[test]
-    fn empty_directory_returns_empty_snapshots() {
-        let dir = TempDir::new().unwrap();
-        let result = load_snapshots(dir.path()).unwrap();
-        assert!(result.snapshots.is_empty());
-    }
-
-    #[test]
-    fn nonexistent_directory_returns_error() {
-        let result = load_snapshots(Path::new("/nonexistent/path"));
-        assert!(result.is_err());
-    }
-
-    #[test]
-    fn skipped_files_are_tracked() {
-        let dir = TempDir::new().unwrap();
-        // Write one valid snapshot
-        fs::write(dir.path().join("ac-status-abc123.json"), SAMPLE_SNAPSHOT_1).unwrap();
-        // Write one invalid file (missing required fields)
-        fs::write(
-            dir.path().join("ac-status-invalid.json"),
-            r#"{"schema_version": "2.0", "invalid": true}"#,
-        )
-        .unwrap();
-        // Write one non-ac-status file (should be ignored, not skipped)
-        fs::write(dir.path().join("other-file.json"), r#"{"foo": "bar"}"#).unwrap();
-
-        let result = load_snapshots(dir.path()).unwrap();
-
-        // Should have 1 valid snapshot
-        assert_eq!(result.snapshots.len(), 1);
-        // Should have 1 skipped file (the invalid one)
-        // Note: "other-file.json" doesn't match ac-status-* pattern so it's not even attempted
-        assert_eq!(result.skipped.len(), 1);
-        assert!(result.skipped[0].filename.contains("invalid"));
-    }
-
-    /// Shape lock test: Documents the stable JSON contract for ac-history consumers.
-    /// Changes to this test indicate a breaking change to the --json output.
-    /// Schema version 1.0: Initial schema with snapshots, deltas, skipped_files.
-    #[test]
-    fn ac_history_json_shape_is_stable() {
-        let dir = create_test_dir();
-        let result = load_snapshots(dir.path()).unwrap();
-        let report = build_report(result.snapshots, result.skipped);
-
-        let json = serde_json::to_string_pretty(&report).unwrap();
-        let parsed: serde_json::Value = serde_json::from_str(&json).unwrap();
-
-        // ──────────────────────────────────────────────────────────────────
-        // TOP-LEVEL FIELDS - Schema version 1.0
-        // ──────────────────────────────────────────────────────────────────
-        let required_top_level = ["schema_version", "snapshot_count", "date_range", "snapshots"];
-
-        for field in required_top_level {
-            assert!(parsed.get(field).is_some(), "Missing required top-level field: {}", field);
-        }
-
-        // Schema version must be "1.0"
-        assert_eq!(
-            parsed["schema_version"].as_str().unwrap(),
-            "1.0",
-            "schema_version must be '1.0'"
-        );
-
-        // snapshot_count must be a number
-        assert!(parsed["snapshot_count"].is_u64(), "snapshot_count must be a number");
-
-        // snapshots must be an array
-        assert!(parsed["snapshots"].is_array(), "snapshots must be an array");
-
-        // ──────────────────────────────────────────────────────────────────
-        // SNAPSHOT FIELDS
-        // ──────────────────────────────────────────────────────────────────
-        let snapshots = parsed["snapshots"].as_array().unwrap();
-        assert!(!snapshots.is_empty(), "Test should have at least one snapshot");
-
-        let snapshot = &snapshots[0];
-        let required_snapshot_fields = [
-            "commit",
-            "timestamp",
-            "must_have_total",
-            "must_have_passing",
-            "must_have_failing",
-            "must_have_unknown",
-            "optional_total",
-            "optional_passing",
-            "optional_failing",
-            "optional_unknown",
-            "coverage_percent",
-        ];
-
-        for field in required_snapshot_fields {
-            assert!(snapshot.get(field).is_some(), "Missing required snapshot field: {}", field);
-        }
-
-        // Type checks for snapshot fields
-        assert!(snapshot["commit"].is_string(), "commit must be a string");
-        assert!(snapshot["timestamp"].is_string(), "timestamp must be a string");
-        assert!(snapshot["coverage_percent"].is_f64(), "coverage_percent must be a number");
-
-        // ──────────────────────────────────────────────────────────────────
-        // DELTA FIELDS (if present)
-        // ──────────────────────────────────────────────────────────────────
-        if let Some(deltas) = parsed.get("deltas") {
-            assert!(deltas.is_array(), "deltas must be an array");
-            if let Some(deltas_arr) = deltas.as_array() {
-                if !deltas_arr.is_empty() {
-                    let delta = &deltas_arr[0];
-                    let required_delta_fields =
-                        ["commit", "new_blockers", "resolved_blockers", "coverage_delta"];
-                    for field in required_delta_fields {
-                        assert!(
-                            delta.get(field).is_some(),
-                            "Missing required delta field: {}",
-                            field
-                        );
-                    }
-                }
-            }
-        }
-
-        // ──────────────────────────────────────────────────────────────────
-        // SKIPPED_FILES FIELDS (if present)
-        // ──────────────────────────────────────────────────────────────────
-        if let Some(skipped) = parsed.get("skipped_files") {
-            assert!(skipped.is_array(), "skipped_files must be an array");
-            if let Some(skipped_arr) = skipped.as_array() {
-                if !skipped_arr.is_empty() {
-                    let sf = &skipped_arr[0];
-                    assert!(sf.get("filename").is_some(), "skipped_files entry must have filename");
-                    assert!(sf.get("reason").is_some(), "skipped_files entry must have reason");
-                }
-            }
-        }
     }
 }
