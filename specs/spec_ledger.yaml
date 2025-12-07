@@ -976,6 +976,7 @@ stories:
             tags: [kernel]
             must_have_ac: true
             tests:
+              - { type: bdd, tag: "@AC-TPL-PLATFORM-UI-CONTRACT", file: "specs/features/platform_ui.feature" }
               - { type: unit, tag: "test_real_contract_passes", module: "commands::ui_contract_check::tests", file: "crates/xtask/src/commands/ui_contract_check.rs" }
               - { type: integration, tag: "test_full_contract_coverage", file: "crates/app-http/tests/ui_contract_dom.rs" }
               - { type: integration, tag: "test_get_ui_contract", file: "crates/app-http/tests/ui_contract_api.rs" }

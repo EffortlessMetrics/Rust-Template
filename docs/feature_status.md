@@ -77,8 +77,8 @@ Auto-generated AC status from acceptance (BDD) and unit tests.
 | AC-TPL-BUNDLE-MANIFEST | US-TPL-PLT-001 | REQ-TPL-BUNDLE-CONTRACT | [PASS] pass | 1 / 1 |
 | AC-TPL-BUNDLE-MANIFEST-LINKED | US-TPL-PLT-001 | REQ-TPL-BUNDLE-CONTRACT | [PASS] pass | 1 / 2 |
 | AC-TPL-BUNDLE-MINIMAL-SCOPE | US-TPL-PLT-001 | REQ-TPL-BUNDLE-CONTRACT | [PASS] pass | 1 / 1 |
-| AC-TPL-CLI-JSON-CORE | US-TPL-PHILOSOPHY-001 | REQ-TPL-AI-IDP-COMPAT | [PASS] pass | 3 / 3 |
-| AC-TPL-CLI-JSON-OUTPUT | US-TPL-PLT-001 | REQ-PLT-DEVEX-CONTRACT | [PASS] pass | 1 / 1 |
+| AC-TPL-CLI-JSON-CORE | US-TPL-PHILOSOPHY-001 | REQ-TPL-AI-IDP-COMPAT | [PASS] pass | 2 / 3 |
+| AC-TPL-CLI-JSON-OUTPUT | US-TPL-PLT-001 | REQ-PLT-DEVEX-CONTRACT | [UNKNOWN] unknown | 0 / 1 |
 | AC-TPL-CONFIG-VALIDATION | US-TPL-PLT-001 | REQ-TPL-CONFIG-INTEGRITY | [PASS] pass | 2 / 2 |
 | AC-TPL-EXAMPLE-FORK-BUILDS | US-TPL-PLT-001 | REQ-TPL-EXAMPLE-FORK | [UNKNOWN] unknown | 0 / 0 |
 | AC-TPL-FLOW-IDEMPOTENT | US-TPL-PLT-001 | REQ-TPL-FLOW-IDEMPOTENCY | [PASS] pass | 1 / 1 |
@@ -113,7 +113,7 @@ Auto-generated AC status from acceptance (BDD) and unit tests.
 | AC-TPL-PLATFORM-GRAPH | US-TPL-PLT-001 | REQ-TPL-PLATFORM-INTROSPECTION | [PASS] pass | 1 / 1 |
 | AC-TPL-PLATFORM-SCHEMA | US-TPL-PLT-001 | REQ-TPL-PLATFORM-SCHEMA | [PASS] pass | 1 / 1 |
 | AC-TPL-PLATFORM-STATUS-CONTRACT | US-TPL-PLT-001 | REQ-TPL-PLATFORM-CONTRACT | [UNKNOWN] unknown | 0 / 0 |
-| AC-TPL-PLATFORM-UI-CONTRACT | US-TPL-PLT-001 | REQ-TPL-PLATFORM-UI | [UNKNOWN] unknown | 0 / 3 |
+| AC-TPL-PLATFORM-UI-CONTRACT | US-TPL-PLT-001 | REQ-TPL-PLATFORM-UI | [PASS] pass | 3 / 4 |
 | AC-TPL-PLATFORM-UI-DASHBOARD | US-TPL-PLT-001 | REQ-TPL-PLATFORM-UI | [PASS] pass | 1 / 1 |
 | AC-TPL-PLATFORM-UI-FLOWS | US-TPL-PLT-001 | REQ-TPL-PLATFORM-UI | [PASS] pass | 1 / 1 |
 | AC-TPL-PLATFORM-UI-GRAPH | US-TPL-PLT-001 | REQ-TPL-PLATFORM-UI | [PASS] pass | 1 / 1 |
@@ -151,10 +151,10 @@ Auto-generated AC status from acceptance (BDD) and unit tests.
 
 *(This list SHOULD be empty in this repo. If anything appears here, it's a bug.)*
 
-- AC-TPL-PLATFORM-UI-CONTRACT: The platform provides a governed UI contract (specs/ui_contract.yaml) defining screens and regions, a /platform/ui/contract endpoint exposing the contract as JSON, and data-uiid attributes in HTML matching the contract. The cargo xtask ui-contract-check command validates YAML structure and DOM anchors, and selftest includes this check.
-- AC-TPL-IDP-SNAPSHOT: `cargo xtask idp-snapshot` emits JSON containing timestamp, template_version, service_id, governance_health (status, ac_coverage), documentation metrics, and task hints for pending/in_progress tasks.
-- AC-TPL-XTASK-NONINTERACTIVE: For commands covered by the DevEx contract (doctor, check, selftest, ac-status, ac-coverage, bundle, version, friction-*, questions-*, fork-*), setting CI=1 or XTASK_NONINTERACTIVE=1 guarantees: - no interactive prompts, and - exit code 0 on success, non-zero on failure.
+- AC-TPL-CLI-JSON-OUTPUT: For core reporting commands (`ac-status`, `version`, `friction-list`, `questions-list`, `fork-list`), passing `--json` produces a single valid JSON document on stdout with a stable top-level shape, and exit codes follow the success/failure of the operation.
 - AC-TPL-IDP-SNAPSHOT-VALID-JSON: The idp-snapshot output is valid JSON that can be parsed without errors and contains all required top-level keys.
+- AC-TPL-XTASK-NONINTERACTIVE: For commands covered by the DevEx contract (doctor, check, selftest, ac-status, ac-coverage, bundle, version, friction-*, questions-*, fork-*), setting CI=1 or XTASK_NONINTERACTIVE=1 guarantees: - no interactive prompts, and - exit code 0 on success, non-zero on failure.
+- AC-TPL-IDP-SNAPSHOT: `cargo xtask idp-snapshot` emits JSON containing timestamp, template_version, service_id, governance_health (status, ac_coverage), documentation metrics, and task hints for pending/in_progress tasks.
 
 ## Meta / CI-only ACs (Not Executed Locally)
 

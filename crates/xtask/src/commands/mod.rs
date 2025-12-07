@@ -3,6 +3,7 @@ pub mod ac_history;
 pub mod ac_new;
 pub mod ac_parsing;
 pub mod ac_report;
+pub mod ac_slo;
 pub mod ac_status;
 pub mod ac_suggest_scenarios;
 pub mod ac_tests;

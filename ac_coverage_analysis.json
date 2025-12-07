@@ -1,0 +1,966 @@
+{
+  "schema_version": "v1",
+  "analysis_date": "2025-12-06",
+  "total_acs": 117,
+  "must_have_ac": {
+    "total": 62,
+    "pass": 13,
+    "fail": 0,
+    "unknown": 49
+  },
+  "optional": {
+    "total": 55,
+    "pass": 15,
+    "fail": 0,
+    "unknown": 40
+  },
+  "unknown_must_have_acs": [
+    {
+      "id": "AC-TPL-BUNDLE-CMD",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-TPL-BUNDLES",
+      "text": "cargo xtask bundle emits a structured context pack for LLMs including specs, tasks, ADRs, and code context, respecting size limits and include patterns.",
+      "status": "unknown",
+      "source": "inferred",
+      "must_have_ac": true,
+      "scenarios": [],
+      "tests": [
+        {
+          "type": "bdd",
+          "tag": "@AC-TPL-BUNDLE-CMD",
+          "file": "specs/features/bundles.feature"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 0,
+      "category": "Mapped tests but no results"
+    },
+    {
+      "id": "AC-TPL-CLI-HELP",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-TPL-DEVEX-CONTRACT",
+      "text": "All xtask commands provide help text and exit with code 0 when run with --help flag.",
+      "status": "unknown",
+      "source": "inferred",
+      "must_have_ac": true,
+      "scenarios": [],
+      "tests": [
+        {
+          "type": "bdd",
+          "tag": "@AC-TPL-CLI-HELP",
+          "file": "specs/features/xtask_devex.feature"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 0,
+      "category": "Mapped tests but no results"
+    },
+    {
+      "id": "AC-TPL-CONFIG-SCHEMA-VALID",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-TPL-CONFIG-SCHEMA",
+      "text": "specs/config_schema.yaml is valid JSON Schema and can be used to validate config files.",
+      "status": "unknown",
+      "source": "inferred",
+      "must_have_ac": true,
+      "scenarios": [],
+      "tests": [
+        {
+          "type": "bdd",
+          "tag": "@AC-TPL-CONFIG-SCHEMA-VALID",
+          "file": "specs/features/config_validation.feature"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 0,
+      "category": "Mapped tests but no results"
+    },
+    {
+      "id": "AC-TPL-CONFIG-VALIDATION-CMD",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-TPL-CONFIG-SCHEMA",
+      "text": "cargo xtask config-validate validates config files against specs/config_schema.yaml and reports errors with line numbers.",
+      "status": "unknown",
+      "source": "inferred",
+      "must_have_ac": true,
+      "scenarios": [],
+      "tests": [
+        {
+          "type": "bdd",
+          "tag": "@AC-TPL-CONFIG-VALIDATION-CMD",
+          "file": "specs/features/config_validation.feature"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 0,
+      "category": "Mapped tests but no results"
+    },
+    {
+      "id": "AC-TPL-DOCTOR-CMD",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-TPL-DEVEX-CONTRACT",
+      "text": "cargo xtask doctor checks environment, dependencies, and configuration, reporting any issues that could affect development.",
+      "status": "unknown",
+      "source": "inferred",
+      "must_have_ac": true,
+      "scenarios": [],
+      "tests": [
+        {
+          "type": "bdd",
+          "tag": "@AC-TPL-DOCTOR-CMD",
+          "file": "specs/features/xtask_devex.feature"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 0,
+      "category": "Mapped tests but no results"
+    },
+    {
+      "id": "AC-TPL-ENV-MODE",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-TPL-ENV-MODE",
+      "text": "cargo xtask env-mode prints the current environment mode (development, staging, production) based on configuration.",
+      "status": "unknown",
+      "source": "inferred",
+      "must_have_ac": true,
+      "scenarios": [],
+      "tests": [
+        {
+          "type": "bdd",
+          "tag": "@AC-TPL-ENV-MODE",
+          "file": "specs/features/xtask_devex.feature"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 0,
+      "category": "Mapped tests but no results"
+    },
+    {
+      "id": "AC-TPL-FRICTION-CREATE",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-TPL-GOV-ARTIFACTS",
+      "text": "cargo xtask friction-create creates a structured friction entry with timestamp, context, and optional resolution path.",
+      "status": "unknown",
+      "source": "inferred",
+      "must_have_ac": true,
+      "scenarios": [],
+      "tests": [
+        {
+          "type": "bdd",
+          "tag": "@AC-TPL-FRICTION-CREATE",
+          "file": "specs/features/friction.feature"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 0,
+      "category": "Mapped tests but no results"
+    },
+    {
+      "id": "AC-TPL-FRICTION-LIST",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-TPL-GOV-ARTIFACTS",
+      "text": "cargo xtask friction-list lists all friction entries with filtering options by status or tag.",
+      "status": "unknown",
+      "source": "inferred",
+      "must_have_ac": true,
+      "scenarios": [],
+      "tests": [
+        {
+          "type": "bdd",
+          "tag": "@AC-TPL-FRICTION-LIST",
+          "file": "specs/features/friction.feature"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 0,
+      "category": "Mapped tests but no results"
+    },
+    {
+      "id": "AC-TPL-FRICTION-RESOLVE",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-TPL-GOV-ARTIFACTS",
+      "text": "cargo xtask friction-resolve marks a friction entry as resolved with resolution notes and timestamp.",
+      "status": "unknown",
+      "source": "inferred",
+      "must_have_ac": true,
+      "scenarios": [],
+      "tests": [
+        {
+          "type": "bdd",
+          "tag": "@AC-TPL-FRICTION-RESOLVE",
+          "file": "specs/features/friction.feature"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 0,
+      "category": "Mapped tests but no results"
+    },
+    {
+      "id": "AC-TPL-FRICTION-VALIDATE",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-TPL-GOV-ARTIFACTS",
+      "text": "cargo xtask friction-validate checks friction entries for required fields and valid structure.",
+      "status": "unknown",
+      "source": "inferred",
+      "must_have_ac": true,
+      "scenarios": [],
+      "tests": [
+        {
+          "type": "bdd",
+          "tag": "@AC-TPL-FRICTION-VALIDATE",
+          "file": "specs/features/friction.feature"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 0,
+      "category": "Mapped tests but no results"
+    },
+    {
+      "id": "AC-TPL-FORK-CREATE",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-TPL-GOV-ARTIFACTS",
+      "text": "cargo xtask fork-create creates a new fork with metadata, purpose, and governance alignment.",
+      "status": "unknown",
+      "source": "inferred",
+      "must_have_ac": true,
+      "scenarios": [],
+      "tests": [
+        {
+          "type": "bdd",
+          "tag": "@AC-TPL-FORK-CREATE",
+          "file": "specs/features/forks.feature"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 0,
+      "category": "Mapped tests but no results"
+    },
+    {
+      "id": "AC-TPL-FORK-LIST",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-TPL-GOV-ARTIFACTS",
+      "text": "cargo xtask fork-list lists all forks with filtering options by status or purpose.",
+      "status": "unknown",
+      "source": "inferred",
+      "must_have_ac": true,
+      "scenarios": [],
+      "tests": [
+        {
+          "type": "bdd",
+          "tag": "@AC-TPL-FORK-LIST",
+          "file": "specs/features/forks.feature"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 0,
+      "category": "Mapped tests but no results"
+    },
+    {
+      "id": "AC-TPL-FORK-MERGE",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-TPL-GOV-ARTIFACTS",
+      "text": "cargo xtask fork-merge prepares a fork for merge with conflict resolution guidance and governance checks.",
+      "status": "unknown",
+      "source": "inferred",
+      "must_have_ac": true,
+      "scenarios": [],
+      "tests": [
+        {
+          "type": "bdd",
+          "tag": "@AC-TPL-FORK-MERGE",
+          "file": "specs/features/forks.feature"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 0,
+      "category": "Mapped tests but no results"
+    },
+    {
+      "id": "AC-TPL-FORK-VALIDATE",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-TPL-GOV-ARTIFACTS",
+      "text": "cargo xtask fork-validate checks fork entries for required fields and valid structure.",
+      "status": "unknown",
+      "source": "inferred",
+      "must_have_ac": true,
+      "scenarios": [],
+      "tests": [
+        {
+          "type": "bdd",
+          "tag": "@AC-TPL-FORK-VALIDATE",
+          "file": "specs/features/forks.feature"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 0,
+      "category": "Mapped tests but no results"
+    },
+    {
+      "id": "AC-TPL-GOV-ARTIFACTS-SCHEMA",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-TPL-GOV-ARTIFACTS",
+      "text": "questions/, friction/, and forks/ directories contain YAML files with validated schemas and required fields.",
+      "status": "unknown",
+      "source": "inferred",
+      "must_have_ac": true,
+      "scenarios": [],
+      "tests": [
+        {
+          "type": "bdd",
+          "tag": "@AC-TPL-GOV-ARTIFACTS-SCHEMA",
+          "file": "specs/features/friction.feature"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 0,
+      "category": "Mapped tests but no results"
+    },
+    {
+      "id": "AC-TPL-GOV-WRITE-CLI",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-TPL-GOV-WRITE",
+      "text": "cargo xtask gov-write creates structured governance artifacts (questions, friction, forks) with templates and validation.",
+      "status": "unknown",
+      "source": "inferred",
+      "must_have_ac": true,
+      "scenarios": [],
+      "tests": [
+        {
+          "type": "bdd",
+          "tag": "@AC-TPL-GOV-WRITE-CLI",
+          "file": "specs/features/governance_write.feature"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 0,
+      "category": "Mapped tests but no results"
+    },
+    {
+      "id": "AC-TPL-GOV-WRITE-HTTP",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-TPL-GOV-WRITE",
+      "text": "POST /platform/questions, /platform/friction, and /platform/forks create governance artifacts via HTTP API with validation.",
+      "status": "unknown",
+      "source": "inferred",
+      "must_have_ac": true,
+      "scenarios": [],
+      "tests": [
+        {
+          "type": "bdd",
+          "tag": "@AC-TPL-GOV-WRITE-HTTP",
+          "file": "specs/features/governance_write.feature"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 0,
+      "category": "Mapped tests but no results"
+    },
+    {
+      "id": "AC-TPL-HINTS-CMD",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-TPL-AGENT-HINTS",
+      "text": "cargo xtask agent-hints emits structured hints for LLMs including repository context, governance patterns, and recommended workflows.",
+      "status": "unknown",
+      "source": "inferred",
+      "must_have_ac": true,
+      "scenarios": [],
+      "tests": [
+        {
+          "type": "bdd",
+          "tag": "@AC-TPL-HINTS-CMD",
+          "file": "specs/features/agent_hints.feature"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 0,
+      "category": "Mapped tests but no results"
+    },
+    {
+      "id": "AC-TPL-HOOKS-INSTALL",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-TPL-GOV-HOOKS",
+      "text": "The 'cargo xtask install-hooks' command creates a pre-commit hook that runs 'cargo run -p xtask -- precommit' inside the Nix devshell when available; failures are advisory and do not block commits.",
+      "status": "unknown",
+      "source": "inferred",
+      "must_have_ac": true,
+      "scenarios": [],
+      "tests": [
+        {
+          "type": "manual",
+          "tag": "git_commit_verify"
+        },
+        {
+          "type": "bdd",
+          "tag": "@AC-TPL-HOOKS-INSTALL",
+          "file": "specs/features/git_hooks.feature"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 0,
+      "category": "Mapped tests but no results"
+    },
+    {
+      "id": "AC-TPL-IDP-SNAPSHOT",
+      "story_id": "US-TPL-PHILOSOPHY-001",
+      "req_id": "REQ-TPL-IDP-SNAPSHOT",
+      "text": "`cargo xtask idp-snapshot` emits JSON containing timestamp, template_version, service_id, governance_health (status, ac_coverage), documentation metrics, and task hints for pending/in_progress tasks.",
+      "status": "unknown",
+      "source": "inferred",
+      "must_have_ac": true,
+      "scenarios": [],
+      "tests": [
+        {
+          "type": "bdd",
+          "tag": "@AC-TPL-IDP-SNAPSHOT",
+          "file": "specs/features/xtask_devex.feature"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 0,
+      "category": "Mapped tests but no results"
+    },
+    {
+      "id": "AC-TPL-IDP-SNAPSHOT-VALID-JSON",
+      "story_id": "US-TPL-PHILOSOPHY-001",
+      "req_id": "REQ-TPL-IDP-SNAPSHOT",
+      "text": "The idp-snapshot output is valid JSON that can be parsed without errors and contains all required top-level keys.",
+      "status": "unknown",
+      "source": "inferred",
+      "must_have_ac": true,
+      "scenarios": [],
+      "tests": [
+        {
+          "type": "bdd",
+          "tag": "@AC-TPL-IDP-SNAPSHOT-VALID-JSON",
+          "file": "specs/features/xtask_devex.feature"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 0,
+      "category": "Mapped tests but no results"
+    },
+    {
+      "id": "AC-TPL-METADATA-COMPLETE",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-TPL-METADATA-CONSISTENT",
+      "text": "service_metadata.yaml includes service_id, template_version, URLs, and tags; /platform/status returns the same identifiers; the UI links to runbook, roadmap, agent guide, feature status, and platform support docs.",
+      "status": "unknown",
+      "source": "inferred",
+      "must_have_ac": true,
+      "scenarios": [],
+      "tests": [
+        {
+          "type": "bdd",
+          "tag": "@AC-TPL-METADATA-COMPLETE",
+          "file": "specs/features/platform_schema.feature"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 0,
+      "category": "Mapped tests but no results"
+    },
+    {
+      "id": "AC-TPL-PLATFORM-DEVEX",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-TPL-PLATFORM-INTROSPECTION",
+      "text": "GET /platform/devex/flows returns the canonical flows definition.",
+      "status": "unknown",
+      "source": "inferred",
+      "must_have_ac": true,
+      "scenarios": [],
+      "tests": [
+        {
+          "type": "bdd",
+          "tag": "@AC-TPL-PLATFORM-DEVEX",
+          "file": "specs/features/platform_introspection.feature"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 0,
+      "category": "Mapped tests but no results"
+    },
+    {
+      "id": "AC-TPL-PLATFORM-DOCS",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-TPL-PLATFORM-INTROSPECTION",
+      "text": "GET /platform/docs/index returns the documentation index.",
+      "status": "unknown",
+      "source": "inferred",
+      "must_have_ac": true,
+      "scenarios": [],
+      "tests": [
+        {
+          "type": "bdd",
+          "tag": "@AC-TPL-PLATFORM-DOCS",
+          "file": "specs/features/platform_introspection.feature"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 0,
+      "category": "Mapped tests but no results"
+    },
+    {
+      "id": "AC-TPL-PLATFORM-GOVERNANCE-APIS",
+      "story_id": "US-TPL-PHILOSOPHY-001",
+      "req_id": "REQ-TPL-AI-IDP-COMPAT",
+      "text": "/platform/questions, /platform/friction, and /platform/forks return JSON payloads that match their schemas and are linked from /platform/schema.",
+      "status": "unknown",
+      "source": "inferred",
+      "must_have_ac": true,
+      "scenarios": [],
+      "tests": [
+        {
+          "type": "bdd",
+          "tag": "@AC-TPL-PLATFORM-GOVERNANCE-APIS",
+          "file": "specs/features/platform_introspection.feature"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 0,
+      "category": "Mapped tests but no results"
+    },
+    {
+      "id": "AC-TPL-PLATFORM-GRAPH",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-TPL-PLATFORM-INTROSPECTION",
+      "text": "GET /platform/graph returns the full governance graph in JSON format.",
+      "status": "unknown",
+      "source": "inferred",
+      "must_have_ac": true,
+      "scenarios": [],
+      "tests": [
+        {
+          "type": "bdd",
+          "tag": "@AC-TPL-PLATFORM-GRAPH",
+          "file": "specs/features/platform_introspection.feature"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 0,
+      "category": "Mapped tests but no results"
+    },
+    {
+      "id": "AC-TPL-PLATFORM-SCHEMA",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-TPL-PLATFORM-SCHEMA",
+      "text": "GET /platform/schema (or /platform/openapi) returns a JSON schema/OpenAPI document that includes /platform/status, /platform/graph, /platform/tasks, and /platform/agent/hints.",
+      "status": "unknown",
+      "source": "inferred",
+      "must_have_ac": true,
+      "scenarios": [],
+      "tests": [
+        {
+          "type": "bdd",
+          "tag": "@AC-TPL-PLATFORM-SCHEMA",
+          "file": "specs/features/platform_schema.feature"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 0,
+      "category": "Mapped tests but no results"
+    },
+    {
+      "id": "AC-TPL-PLATFORM-UI-CONTRACT",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-TPL-PLATFORM-UI",
+      "text": "The platform provides a governed UI contract (specs/ui_contract.yaml) defining screens and regions, a /platform/ui/contract endpoint exposing the contract as JSON, and data-uiid attributes in HTML matching the contract. The cargo xtask ui-contract-check command validates YAML structure and DOM anchors, and selftest includes this check.",
+      "status": "unknown",
+      "source": "inferred",
+      "must_have_ac": true,
+      "scenarios": [],
+      "tests": [
+        {
+          "type": "unit",
+          "tag": "test_real_contract_passes",
+          "file": "crates/xtask/src/commands/ui_contract_check.rs",
+          "module": "commands::ui_contract_check::tests"
+        },
+        {
+          "type": "integration",
+          "tag": "test_full_contract_coverage",
+          "file": "crates/app-http/tests/ui_contract_dom.rs"
+        },
+        {
+          "type": "integration",
+          "tag": "test_get_ui_contract",
+          "file": "crates/app-http/tests/ui_contract_api.rs"
+        }
+      ],
+      "tests_total": 3,
+      "tests_executed": 0,
+      "category": "Mapped tests but no results"
+    },
+    {
+      "id": "AC-TPL-PLATFORM-UI-DASHBOARD",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-TPL-PLATFORM-UI",
+      "text": "GET / or /ui serves an HTML dashboard showing platform status, including governance health metrics from /platform/status.",
+      "status": "unknown",
+      "source": "inferred",
+      "must_have_ac": true,
+      "scenarios": [],
+      "tests": [
+        {
+          "type": "bdd",
+          "tag": "@AC-TPL-PLATFORM-UI-DASHBOARD",
+          "file": "specs/features/platform_ui.feature"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 0,
+      "category": "Mapped tests but no results"
+    },
+    {
+      "id": "AC-TPL-PLATFORM-UI-FLOWS",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-TPL-PLATFORM-UI",
+      "text": "The UI provides a flows and tasks view displaying DevEx flows and available tasks from the platform APIs.",
+      "status": "unknown",
+      "source": "inferred",
+      "must_have_ac": true,
+      "scenarios": [],
+      "tests": [
+        {
+          "type": "bdd",
+          "tag": "@AC-TPL-PLATFORM-UI-FLOWS",
+          "file": "specs/features/platform_ui.feature"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 0,
+      "category": "Mapped tests but no results"
+    },
+    {
+      "id": "AC-TPL-PLATFORM-UI-GRAPH",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-TPL-PLATFORM-UI",
+      "text": "The UI provides a graph visualization rendering the governance graph (stories, requirements, ACs, docs, commands) using Mermaid.js.",
+      "status": "unknown",
+      "source": "inferred",
+      "must_have_ac": true,
+      "scenarios": [],
+      "tests": [
+        {
+          "type": "bdd",
+          "tag": "@AC-TPL-PLATFORM-GRAPH",
+          "file": "specs/features/platform_ui.feature"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 0,
+      "category": "Mapped tests but no results"
+    },
+    {
+      "id": "AC-TPL-POLICY-STATUS-OVERVIEW",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-TPL-PLATFORM-INTROSPECTION",
+      "text": "GET /platform/status includes governance.policies.status field derived from the last policy-test run (pass/fail/unknown), read from target/policy_status.json.",
+      "status": "unknown",
+      "source": "inferred",
+      "must_have_ac": true,
+      "scenarios": [],
+      "tests": [
+        {
+          "type": "bdd",
+          "tag": "@AC-TPL-PLATFORM-STATUS"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 0,
+      "category": "Spec only"
+    },
+    {
+      "id": "AC-TPL-QUESTIONS-CREATE",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-TPL-GOV-ARTIFACTS",
+      "text": "cargo xtask questions-create creates a structured question with context, options, and resolution criteria.",
+      "status": "unknown",
+      "source": "inferred",
+      "must_have_ac": true,
+      "scenarios": [],
+      "tests": [
+        {
+          "type": "bdd",
+          "tag": "@AC-TPL-QUESTIONS-CREATE",
+          "file": "specs/features/questions.feature"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 0,
+      "category": "Mapped tests but no results"
+    },
+    {
+      "id": "AC-TPL-QUESTIONS-LIST",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-TPL-GOV-ARTIFACTS",
+      "text": "cargo xtask questions-list lists all questions with filtering options by status or tag.",
+      "status": "unknown",
+      "source": "inferred",
+      "must_have_ac": true,
+      "scenarios": [],
+      "tests": [
+        {
+          "type": "bdd",
+          "tag": "@AC-TPL-QUESTIONS-LIST",
+          "file": "specs/features/questions.feature"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 0,
+      "category": "Mapped tests but no results"
+    },
+    {
+      "id": "AC-TPL-QUESTIONS-RESOLVE",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-TPL-GOV-ARTIFACTS",
+      "text": "cargo xtask questions-resolve marks a question as resolved with resolution notes and timestamp.",
+      "status": "unknown",
+      "source": "inferred",
+      "must_have_ac": true,
+      "scenarios": [],
+      "tests": [
+        {
+          "type": "bdd",
+          "tag": "@AC-TPL-QUESTIONS-RESOLVE",
+          "file": "specs/features/questions.feature"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 0,
+      "category": "Mapped tests but no results"
+    },
+    {
+      "id": "AC-TPL-QUESTIONS-VALIDATE",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-TPL-GOV-ARTIFACTS",
+      "text": "cargo xtask questions-validate checks question entries for required fields and valid structure.",
+      "status": "unknown",
+      "source": "inferred",
+      "must_have_ac": true,
+      "scenarios": [],
+      "tests": [
+        {
+          "type": "bdd",
+          "tag": "@AC-TPL-QUESTIONS-VALIDATE",
+          "file": "specs/features/questions.feature"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 0,
+      "category": "Mapped tests but no results"
+    },
+    {
+      "id": "AC-TPL-QUESTIONS-LOGGED",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-TPL-GOV-ARTIFACTS",
+      "text": "Ambiguity during automated flows or suggest-next emits a structured question (file/PR comment/status entry) that can be surfaced to humans or agents without halting progress.",
+      "status": "unknown",
+      "source": "inferred",
+      "must_have_ac": false,
+      "scenarios": [],
+      "tests": [
+        {
+          "type": "bdd",
+          "tag": "@AC-TPL-QUESTIONS-LOGGED",
+          "file": "specs/features/questions.feature"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 0,
+      "category": "Mapped tests but no results"
+    },
+    {
+      "id": "AC-TPL-SKILLS-ALIGN-001",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-TPL-SKILLS-GUIDE",
+      "text": "Existing .claude/skills/* are aligned with documented workflows (bootstrap-dev-env, governed-feature-dev, governed-maintenance, governed-release, governed-governance-debug).",
+      "status": "unknown",
+      "source": "inferred",
+      "must_have_ac": true,
+      "scenarios": [],
+      "tests": [
+        {
+          "type": "manual",
+          "tag": "skills_alignment_review"
+        },
+        {
+          "type": "bdd",
+          "tag": "@AC-TPL-SKILLS-ALIGN-001",
+          "file": "specs/features/xtask_devex.feature"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 0,
+      "category": "Mapped tests but no results"
+    },
+    {
+      "id": "AC-TPL-SKILLS-FMT",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-TPL-SKILLS-TOOLING",
+      "text": "`cargo run -p xtask -- skills-fmt` normalizes SKILL.md files according to repo conventions (frontmatter, headings, links).",
+      "status": "unknown",
+      "source": "inferred",
+      "must_have_ac": true,
+      "scenarios": [],
+      "tests": [
+        {
+          "type": "integration",
+          "tag": "@AC-TPL-SKILLS-FMT",
+          "file": "specs/features/xtask_devex.feature"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 0,
+      "category": "Mapped tests but no results"
+    },
+    {
+      "id": "AC-TPL-SKILLS-GUIDE-001",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-TPL-SKILLS-GUIDE",
+      "text": "docs/AGENT_SKILLS.md exists and documents the recommended Skill set, SKILL.md templates, and best practices for this repo.",
+      "status": "unknown",
+      "source": "inferred",
+      "must_have_ac": true,
+      "scenarios": [],
+      "tests": [
+        {
+          "type": "docs",
+          "tag": "skills_guide_exists"
+        },
+        {
+          "type": "bdd",
+          "tag": "@AC-TPL-SKILLS-GUIDE-001",
+          "file": "specs/features/xtask_devex.feature"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 0,
+      "category": "Mapped tests but no results"
+    },
+    {
+      "id": "AC-TPL-SKILLS-LINT",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-TPL-SKILLS-TOOLING",
+      "text": "`cargo run -p xtask -- skills-lint` validates Skills frontmatter and content (name/description rules, references to flows and APIs).",
+      "status": "unknown",
+      "source": "inferred",
+      "must_have_ac": true,
+      "scenarios": [],
+      "tests": [
+        {
+          "type": "integration",
+          "tag": "@AC-TPL-SKILLS-LINT",
+          "file": "specs/features/xtask_devex.feature"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 0,
+      "category": "Mapped tests but no results"
+    },
+    {
+      "id": "AC-TPL-SKILLS-NAME-FORMAT",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-TPL-SKILLS-GOVERNANCE",
+      "text": "Skill names MUST be kebab-case, contain only lowercase letters/digits/hyphens, max 64 characters, and be unique within the project. skills-lint enforces this.",
+      "status": "unknown",
+      "source": "inferred",
+      "must_have_ac": false,
+      "scenarios": [],
+      "tests": [
+        {
+          "type": "bdd",
+          "tag": "@AC-TPL-SKILLS-NAME-FORMAT",
+          "file": "specs/features/xtask_devex.feature"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 0,
+      "category": "Mapped tests but no results"
+    },
+    {
+      "id": "AC-TPL-VERSION-ATOMIC",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-TPL-VERSIONING-ENGINE",
+      "text": "Version updates are atomic with rollback on failure, ensuring no partial state if any file update fails",
+      "status": "unknown",
+      "source": "inferred",
+      "must_have_ac": true,
+      "scenarios": [],
+      "tests": [
+        {
+          "type": "bdd",
+          "tag": "@AC-TPL-VERSION-ATOMIC",
+          "file": "specs/features/xtask_devex.feature"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 0,
+      "category": "Mapped tests but no results"
+    },
+    {
+      "id": "AC-TPL-VERSION-DRYRUN",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-TPL-VERSIONING-ENGINE",
+      "text": "`cargo xtask release-prepare X.Y.Z --dry-run` shows all changes before applying them, listing each file and the old→new version without modifying files",
+      "status": "unknown",
+      "source": "inferred",
+      "must_have_ac": true,
+      "scenarios": [],
+      "tests": [
+        {
+          "type": "bdd",
+          "tag": "@AC-TPL-VERSION-DRYRUN",
+          "file": "specs/features/xtask_devex.feature"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 0,
+      "category": "Mapped tests but no results"
+    },
+    {
+      "id": "AC-TPL-VERSION-MANIFEST",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-TPL-VERSIONING-ENGINE",
+      "text": "Version locations declared in specs/version_manifest.yaml listing all files and extraction patterns; release-prepare reads this manifest to update all version-bearing files",
+      "status": "unknown",
+      "source": "inferred",
+      "must_have_ac": true,
+      "scenarios": [],
+      "tests": [
+        {
+          "type": "bdd",
+          "tag": "@AC-TPL-VERSION-MANIFEST",
+          "file": "specs/features/xtask_devex.feature"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 0,
+      "category": "Mapped tests but no results"
+    },
+    {
+      "id": "AC-TPL-XTASK-NONINTERACTIVE",
+      "story_id": "US-TPL-PLT-001",
+      "req_id": "REQ-TPL-AUTOMATION-BEHAVIOUR",
+      "text": "For commands covered by the DevEx contract (doctor, check, selftest, ac-status, ac-coverage, bundle, version, friction-*, questions-*, fork-*), setting CI=1 or XTASK_NONINTERACTIVE=1 guarantees: - no interactive prompts, and - exit code 0 on success, non-zero on failure.",
+      "status": "unknown",
+      "source": "inferred",
+      "must_have_ac": true,
+      "scenarios": [],
+      "tests": [
+        {
+          "type": "bdd",
+          "tag": "@AC-TPL-XTASK-NONINTERACTIVE",
+          "file": "specs/features/xtask_devex.feature"
+        }
+      ],
+      "tests_total": 1,
+      "tests_executed": 0,
+      "category": "Mapped tests but no results"
+    }
+  ],
+  "categories": {
+    "Spec only": 1,
+    "Mapped tests but no results": 48,
+    "Other anomaly": 0
+  }
+}
