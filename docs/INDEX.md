@@ -69,6 +69,7 @@ New to this repository? Start here:
 ### Adoption & Setup
 - **[Add Governance to Existing Repo](how-to/add-governance-to-existing-repo.md)** - Brownfield adoption (complete guide)
 - **[Create New Service from Template](how-to/new-service-from-template.md)** - Greenfield instantiation
+- **[Your First Hour](how-to/first-hour.md)** - Hands-on exploration tour (30-60 min)
 - **[Pre-Fork Checklist](how-to/pre-fork-checklist.md)** - Before forking this template
 - **[Second Service LLM Sanity Check](how-to/second-service-llm-sanity.md)** - Validating second service with LLM assistance
 

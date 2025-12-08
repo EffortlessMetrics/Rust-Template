@@ -1814,6 +1814,18 @@ stories:
             must_have_ac: false
             tests:
               - { type: bdd, tag: "@AC-MYSERV-003", file: "specs/features/myserv_todos.feature" }
+          - id: AC-MYSERV-005
+            text: "POST /todos rejects duplicate todo ID with 409 Conflict"
+            tags: [domain, myserv, error-handling, validation]
+            must_have_ac: false
+            tests:
+              - { type: bdd, tag: "@AC-MYSERV-005", file: "specs/features/myserv_todos.feature" }
+          - id: AC-MYSERV-006
+            text: "POST /todos validates title is non-empty and not exceeding 256 characters"
+            tags: [domain, myserv, error-handling, validation]
+            must_have_ac: false
+            tests:
+              - { type: bdd, tag: "@AC-MYSERV-006", file: "specs/features/myserv_todos.feature" }
       - id: REQ-MYSERV-DELETE-TODOS
         title: "Delete Todos"
         tags: [domain, myserv]
