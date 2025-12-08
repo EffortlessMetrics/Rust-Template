@@ -214,177 +214,170 @@ pub fn kernel_with_history_dir(history_dir: PathBuf) -> anyhow::Result<AcKernel>
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::path::Path;
+    use std::sync::{Mutex, OnceLock};
+
+    /// Run a closure with SPEC_ROOT temporarily set (or unset), serialized
+    /// across all tests in this module.
+    ///
+    /// This ensures tests that modify SPEC_ROOT don't race against each other.
+    fn with_spec_root<R, F>(value: Option<&Path>, f: F) -> R
+    where
+        F: FnOnce() -> R,
+    {
+        // One global lock shared by *all* tests using with_spec_root.
+        static ENV_LOCK: OnceLock<Mutex<()>> = OnceLock::new();
+        let _guard = ENV_LOCK.get_or_init(|| Mutex::new(())).lock().unwrap();
+
+        let original = std::env::var("SPEC_ROOT").ok();
+
+        // SAFETY: We hold a mutex lock to serialize all env var modifications
+        unsafe {
+            match value {
+                Some(path) => std::env::set_var("SPEC_ROOT", path),
+                None => std::env::remove_var("SPEC_ROOT"),
+            }
+        }
+
+        let result = f();
+
+        // SAFETY: We hold the mutex lock
+        unsafe {
+            match original {
+                Some(val) => std::env::set_var("SPEC_ROOT", val),
+                None => std::env::remove_var("SPEC_ROOT"),
+            }
+        }
+
+        result
+    }
 
     #[test]
     fn spec_root_returns_path() {
-        let root = spec_root();
-        // Should be an absolute path (or at least exist for the test environment)
-        assert!(root.is_absolute() || root.exists());
+        with_spec_root(None, || {
+            let root = spec_root();
+            // Should be an absolute path (or at least exist for the test environment)
+            assert!(root.is_absolute() || root.exists());
+        });
     }
 
     #[test]
     fn kernel_for_repo_creates_kernel() {
-        // This test runs in the repo, so the kernel should be constructable
-        let kernel = kernel_for_repo().unwrap();
-        // The kernel should have the repo's layout
-        assert!(kernel.layout().ledger.ends_with("specs/spec_ledger.yaml"));
+        with_spec_root(None, || {
+            // This test runs in the repo, so the kernel should be constructable
+            let kernel = kernel_for_repo().unwrap();
+            // The kernel should have the repo's layout
+            assert!(kernel.layout().ledger.ends_with("specs/spec_ledger.yaml"));
+        });
     }
 
     #[test]
     fn kernel_with_custom_history_dir() {
         use tempfile::TempDir;
 
-        let custom_dir = TempDir::new().unwrap();
-        let kernel = kernel_with_history_dir(custom_dir.path().to_path_buf()).unwrap();
+        with_spec_root(None, || {
+            let custom_dir = TempDir::new().unwrap();
+            let kernel = kernel_with_history_dir(custom_dir.path().to_path_buf()).unwrap();
 
-        assert_eq!(kernel.layout().history_dir, custom_dir.path());
-        // Other paths should still use the repo root
-        assert!(kernel.layout().ledger.ends_with("specs/spec_ledger.yaml"));
+            assert_eq!(kernel.layout().history_dir, custom_dir.path());
+            // Other paths should still use the repo root
+            assert!(kernel.layout().ledger.ends_with("specs/spec_ledger.yaml"));
+        });
     }
 
     #[test]
     fn layout_for_repo_returns_standard_paths() {
-        let layout = layout_for_repo();
+        with_spec_root(None, || {
+            let layout = layout_for_repo();
 
-        // Should return paths matching the standard Rust-as-Spec layout
-        assert!(layout.ledger.ends_with("specs/spec_ledger.yaml"));
-        assert!(layout.coverage_file.ends_with("target/ac/coverage.jsonl"));
-        assert!(layout.junit_file.ends_with("target/junit/acceptance.xml"));
-        assert!(layout.history_dir.ends_with("artifacts/ac-status"));
-        assert!(layout.features_dir.ends_with("specs/features"));
+            // Should return paths matching the standard Rust-as-Spec layout
+            assert!(layout.ledger.ends_with("specs/spec_ledger.yaml"));
+            assert!(layout.coverage_file.ends_with("target/ac/coverage.jsonl"));
+            assert!(layout.junit_file.ends_with("target/junit/acceptance.xml"));
+            assert!(layout.history_dir.ends_with("artifacts/ac-status"));
+            assert!(layout.features_dir.ends_with("specs/features"));
+        });
     }
 
     #[test]
     fn spec_root_honors_env_var() {
-        use std::sync::Mutex;
-        use std::sync::OnceLock;
-
-        // Serialize env var tests to avoid race conditions
-        static ENV_LOCK: OnceLock<Mutex<()>> = OnceLock::new();
-        let _guard = ENV_LOCK.get_or_init(|| Mutex::new(())).lock().unwrap();
-
-        // Save original value
-        let original = std::env::var("SPEC_ROOT").ok();
-
-        // Set SPEC_ROOT to a custom path
         let custom_root = PathBuf::from("/tmp/custom-spec-root");
-        // SAFETY: We hold a mutex lock to serialize all env var modifications in tests
-        unsafe { std::env::set_var("SPEC_ROOT", &custom_root) };
 
-        // spec_root() should return the env var value
-        let root = spec_root();
-        assert_eq!(root, custom_root, "spec_root() should honor SPEC_ROOT env var");
+        with_spec_root(Some(custom_root.as_path()), || {
+            // spec_root() should return the env var value
+            let root = spec_root();
+            assert_eq!(root, custom_root, "spec_root() should honor SPEC_ROOT env var");
 
-        // layout_for_repo() should use that root for all paths
-        let layout = layout_for_repo();
-        assert!(
-            layout.ledger.starts_with(&custom_root),
-            "ledger path should be under SPEC_ROOT: {:?}",
-            layout.ledger
-        );
-        assert!(
-            layout.features_dir.starts_with(&custom_root),
-            "features_dir should be under SPEC_ROOT: {:?}",
-            layout.features_dir
-        );
-        assert!(
-            layout.coverage_file.starts_with(&custom_root),
-            "coverage_file should be under SPEC_ROOT: {:?}",
-            layout.coverage_file
-        );
-
-        // Restore original value
-        // SAFETY: We hold a mutex lock to serialize all env var modifications in tests
-        unsafe {
-            match original {
-                Some(val) => std::env::set_var("SPEC_ROOT", val),
-                None => std::env::remove_var("SPEC_ROOT"),
-            }
-        }
+            // layout_for_repo() should use that root for all paths
+            let layout = layout_for_repo();
+            assert!(
+                layout.ledger.starts_with(&custom_root),
+                "ledger path should be under SPEC_ROOT: {:?}",
+                layout.ledger
+            );
+            assert!(
+                layout.features_dir.starts_with(&custom_root),
+                "features_dir should be under SPEC_ROOT: {:?}",
+                layout.features_dir
+            );
+            assert!(
+                layout.coverage_file.starts_with(&custom_root),
+                "coverage_file should be under SPEC_ROOT: {:?}",
+                layout.coverage_file
+            );
+        });
     }
 
     #[test]
     fn spec_root_info_detects_valid_repo() {
-        // In the test environment, spec_root should resolve to a valid repo
-        let info = spec_root_info();
-        assert!(info.valid, "spec_root_info should report valid in test environment");
-        assert!(info.missing_files.is_empty(), "No files should be missing");
-        assert!(
-            info.source == "default (relative to xtask)"
-                || info.source == "SPEC_ROOT environment variable"
-        );
+        with_spec_root(None, || {
+            // In the test environment, spec_root should resolve to a valid repo
+            let info = spec_root_info();
+            assert!(info.valid, "spec_root_info should report valid in test environment");
+            assert!(info.missing_files.is_empty(), "No files should be missing");
+            assert!(
+                info.source == "default (relative to xtask)"
+                    || info.source == "SPEC_ROOT environment variable"
+            );
+        });
     }
 
     #[test]
     fn spec_root_info_detects_missing_directory() {
-        use std::sync::Mutex;
-        use std::sync::OnceLock;
-
-        static ENV_LOCK: OnceLock<Mutex<()>> = OnceLock::new();
-        let _guard = ENV_LOCK.get_or_init(|| Mutex::new(())).lock().unwrap();
-
-        let original = std::env::var("SPEC_ROOT").ok();
-
-        // Set SPEC_ROOT to a non-existent directory
         let nonexistent = PathBuf::from("/nonexistent/path/to/repo");
-        // SAFETY: We hold a mutex lock
-        unsafe { std::env::set_var("SPEC_ROOT", &nonexistent) };
 
-        let info = spec_root_info();
-        assert!(!info.valid, "Should detect invalid path");
-        assert!(!info.missing_files.is_empty(), "Should report missing directory");
-        assert_eq!(info.source, "SPEC_ROOT environment variable");
-
-        // Restore
-        // SAFETY: We hold a mutex lock
-        unsafe {
-            match original {
-                Some(val) => std::env::set_var("SPEC_ROOT", val),
-                None => std::env::remove_var("SPEC_ROOT"),
-            }
-        }
+        with_spec_root(Some(nonexistent.as_path()), || {
+            let info = spec_root_info();
+            assert!(!info.valid, "Should detect invalid path");
+            assert!(!info.missing_files.is_empty(), "Should report missing directory");
+            assert_eq!(info.source, "SPEC_ROOT environment variable");
+        });
     }
 
     #[test]
     fn validate_spec_root_succeeds_for_valid_repo() {
-        // Should succeed in the test environment
-        let result = validate_spec_root();
-        assert!(result.is_ok(), "validate_spec_root should succeed in valid repo");
+        with_spec_root(None, || {
+            // Should succeed in the test environment
+            let result = validate_spec_root();
+            assert!(result.is_ok(), "validate_spec_root should succeed in valid repo");
+        });
     }
 
     #[test]
     fn validate_spec_root_fails_with_helpful_message() {
-        use std::sync::Mutex;
-        use std::sync::OnceLock;
-
-        static ENV_LOCK: OnceLock<Mutex<()>> = OnceLock::new();
-        let _guard = ENV_LOCK.get_or_init(|| Mutex::new(())).lock().unwrap();
-
-        let original = std::env::var("SPEC_ROOT").ok();
-
-        // Set SPEC_ROOT to invalid path
         let invalid = PathBuf::from("/tmp/invalid-spec-root-for-test");
-        // SAFETY: We hold a mutex lock
-        unsafe { std::env::set_var("SPEC_ROOT", &invalid) };
 
-        let result = validate_spec_root();
-        assert!(result.is_err(), "Should fail for invalid path");
+        with_spec_root(Some(invalid.as_path()), || {
+            let result = validate_spec_root();
+            assert!(result.is_err(), "Should fail for invalid path");
 
-        let err_msg = result.unwrap_err().to_string();
-        assert!(
-            err_msg.to_lowercase().contains("spec root is invalid"),
-            "Error should mention spec root"
-        );
-        assert!(err_msg.contains("cargo xtask doctor"), "Error should suggest running doctor");
-        assert!(err_msg.contains("SPEC_ROOT"), "Error should mention SPEC_ROOT env var");
-
-        // Restore
-        // SAFETY: We hold a mutex lock
-        unsafe {
-            match original {
-                Some(val) => std::env::set_var("SPEC_ROOT", val),
-                None => std::env::remove_var("SPEC_ROOT"),
-            }
-        }
+            let err_msg = result.unwrap_err().to_string();
+            assert!(
+                err_msg.to_lowercase().contains("spec root is invalid"),
+                "Error should mention spec root"
+            );
+            assert!(err_msg.contains("cargo xtask doctor"), "Error should suggest running doctor");
+            assert!(err_msg.contains("SPEC_ROOT"), "Error should mention SPEC_ROOT env var");
+        });
     }
 }
