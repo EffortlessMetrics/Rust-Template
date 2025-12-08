@@ -6,6 +6,7 @@
 //! - Structured logging with correlation fields
 //! - Proper HTTP responses with JSON error bodies
 //! - Request ID correlation
+//! - Error tracking for `/platform/status` surfacing
 //!
 //! # Design Philosophy
 //!
@@ -44,11 +45,123 @@ use axum::{
     http::{HeaderValue, StatusCode, header::HeaderName},
     response::{IntoResponse, Response},
 };
-use serde::Serialize;
+use chrono::{DateTime, Utc};
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::sync::{Mutex, OnceLock};
 use tracing::{error, warn};
 
 use crate::middleware::request_id::RequestId;
+
+// ============================================================================
+// Error Tracking for /platform/status
+// ============================================================================
+
+/// Summary of the last error that occurred.
+///
+/// This is surfaced via `/platform/status` for observability by agents and portals.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct LastErrorSummary {
+    /// Error category (e.g., "task_not_found", "invalid_transition", "internal")
+    pub category: String,
+    /// Human-readable error message
+    pub message: String,
+    /// HTTP status code returned
+    pub status_code: u16,
+    /// When the error occurred
+    pub occurred_at: DateTime<Utc>,
+    /// Request ID for correlation (if available)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub request_id: Option<String>,
+}
+
+/// Aggregated error statistics for the service.
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+pub struct ErrorStats {
+    /// Total number of errors since service start
+    pub total_errors: u64,
+    /// Number of 4xx client errors
+    pub client_errors: u64,
+    /// Number of 5xx server errors
+    pub server_errors: u64,
+}
+
+/// Error summary surfaced via `/platform/status`.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ErrorSummary {
+    /// Whether any errors have occurred recently (since service start)
+    pub has_recent_errors: bool,
+    /// The last error that occurred (if any)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub last_error: Option<LastErrorSummary>,
+    /// Aggregated error statistics
+    pub stats: ErrorStats,
+}
+
+impl Default for ErrorSummary {
+    fn default() -> Self {
+        Self { has_recent_errors: false, last_error: None, stats: ErrorStats::default() }
+    }
+}
+
+/// Global error tracker (thread-safe singleton).
+static ERROR_TRACKER: OnceLock<Mutex<ErrorSummary>> = OnceLock::new();
+
+/// Get the global error tracker.
+fn error_tracker() -> &'static Mutex<ErrorSummary> {
+    ERROR_TRACKER.get_or_init(|| Mutex::new(ErrorSummary::default()))
+}
+
+/// Record an error in the global tracker.
+fn record_error(code: &ErrorCode, status: StatusCode, message: &str, request_id: Option<&str>) {
+    if let Ok(mut tracker) = error_tracker().lock() {
+        tracker.has_recent_errors = true;
+        tracker.stats.total_errors += 1;
+
+        if status.is_client_error() {
+            tracker.stats.client_errors += 1;
+        } else if status.is_server_error() {
+            tracker.stats.server_errors += 1;
+        }
+
+        tracker.last_error = Some(LastErrorSummary {
+            category: error_code_category(code),
+            message: message.to_string(),
+            status_code: status.as_u16(),
+            occurred_at: Utc::now(),
+            request_id: request_id.map(String::from),
+        });
+    }
+}
+
+/// Get the current error summary for `/platform/status`.
+pub fn get_error_summary() -> ErrorSummary {
+    error_tracker().lock().map(|t| t.clone()).unwrap_or_default()
+}
+
+/// Map an error code to a category string for the error summary.
+fn error_code_category(code: &ErrorCode) -> String {
+    match code {
+        ErrorCode::ResourceNotFound => "resource_not_found".to_string(),
+        ErrorCode::InvalidTransition => "invalid_transition".to_string(),
+        ErrorCode::InvalidRequest => "invalid_request".to_string(),
+        ErrorCode::InvalidAmount => "invalid_amount".to_string(),
+        ErrorCode::MissingField => "missing_field".to_string(),
+        ErrorCode::InvalidFormat => "invalid_format".to_string(),
+        ErrorCode::Unauthorized => "unauthorized".to_string(),
+        ErrorCode::InvalidState => "invalid_state".to_string(),
+        ErrorCode::Conflict => "conflict".to_string(),
+        ErrorCode::DuplicateRequest => "duplicate_request".to_string(),
+        ErrorCode::InternalError => "internal_error".to_string(),
+        ErrorCode::ServiceUnavailable => "service_unavailable".to_string(),
+        ErrorCode::DatabaseError => "database_error".to_string(),
+        ErrorCode::ExternalServiceError => "external_service_error".to_string(),
+    }
+}
+
+// ============================================================================
+// Error Codes and AppError
+// ============================================================================
 
 /// Machine-readable error codes
 ///
@@ -70,6 +183,7 @@ pub enum ErrorCode {
     // Business logic errors (4xx)
     ResourceNotFound,
     InvalidState,
+    InvalidTransition,
     Conflict,
     DuplicateRequest,
 
@@ -91,6 +205,7 @@ impl std::fmt::Display for ErrorCode {
             ErrorCode::Unauthorized => write!(f, "UNAUTHORIZED"),
             ErrorCode::ResourceNotFound => write!(f, "RESOURCE_NOT_FOUND"),
             ErrorCode::InvalidState => write!(f, "INVALID_STATE"),
+            ErrorCode::InvalidTransition => write!(f, "INVALID_TRANSITION"),
             ErrorCode::Conflict => write!(f, "CONFLICT"),
             ErrorCode::DuplicateRequest => write!(f, "DUPLICATE_REQUEST"),
             ErrorCode::InternalError => write!(f, "INTERNAL_ERROR"),
@@ -203,10 +318,13 @@ impl AppError {
         self
     }
 
-    /// Log the error with structured fields
+    /// Log the error with structured fields and record in error tracker.
     fn log_error(&self) {
         // Determine if this is a client error (4xx) or server error (5xx)
         let is_server_error = self.status.is_server_error();
+
+        // Record error in global tracker for /platform/status
+        record_error(&self.code, self.status, &self.message, self.request_id.as_deref());
 
         // Create structured log event
         if is_server_error {
@@ -304,10 +422,11 @@ impl From<business_core::governance::GovernanceError> for AppError {
         use business_core::governance::GovernanceError::*;
         match error {
             TaskNotFound(id) => AppError::not_found(format!("Task not found: {:?}", id)),
-            InvalidTransition { from, to } => AppError::internal_error(format!(
-                "Invalid status transition from {:?} to {:?}",
-                from, to
-            )),
+            InvalidTransition { from, to } => AppError::new(
+                StatusCode::BAD_REQUEST,
+                ErrorCode::InvalidTransition,
+                format!("Invalid status transition from {} to {}", from, to),
+            ),
             Lock(msg) => AppError::internal_error(format!("Lock error: {}", msg)),
             Io(e) => AppError::internal_error(format!("IO error: {}", e)),
             Serialization(msg) => AppError::internal_error(format!("Serialization error: {}", msg)),
@@ -382,7 +501,7 @@ mod tests {
     }
 
     #[test]
-    fn test_governance_invalid_transition_maps_to_server_error() {
+    fn test_governance_invalid_transition_maps_to_bad_request() {
         use business_core::governance::TaskStatus;
 
         let app_error: AppError = business_core::governance::GovernanceError::InvalidTransition {
@@ -391,7 +510,9 @@ mod tests {
         }
         .into();
 
-        assert_eq!(app_error.status, StatusCode::INTERNAL_SERVER_ERROR);
+        // Invalid transitions are client errors (user requested invalid state change)
+        assert_eq!(app_error.status, StatusCode::BAD_REQUEST);
+        assert_eq!(app_error.code, ErrorCode::InvalidTransition);
         assert!(
             app_error.message.contains("Invalid status transition"),
             "message should mention status transition, got: {}",

@@ -60,6 +60,17 @@ stories:
             must_have_ac: true
             tests: [ { type: bdd, tag: "@AC-TPL-004", file: "specs/features/template_core.feature" } ]
             adr: ADR-0005  # Selftest as single gate
+          - id: AC-TPL-ERROR-MAPPING
+            text: >
+              Platform governance errors are mapped consistently from domain errors to HTTP
+              responses and surfaced via /platform/status. TaskNotFound returns 404,
+              invalid transitions return 400, and repository/configuration errors return 5xx.
+              /platform/status exposes a summary of recent governance errors.
+            tags: [kernel, governance]
+            must_have_ac: true
+            tests:
+              - { type: unit, tag: "test_governance_invalid_transition_maps_to_bad_request", module: "errors::tests", file: "crates/app-http/src/errors.rs" }
+              - { type: bdd, tag: "@AC-TPL-ERROR-MAPPING", file: "specs/features/platform_errors.feature" }
       - id: REQ-TPL-METRICS
         title: "Prometheus Metrics Endpoint"
         tags: [platform]
