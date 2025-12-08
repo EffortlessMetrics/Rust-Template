@@ -273,6 +273,16 @@ docs:
     acs: [AC-PLT-ENV-CHECK, AC-PLT-009]
     adrs: [ADR-0002, ADR-0005]
 
+  # Fork and Build First Feature (Golden Path)
+  - id: HOWTO-FORK-BUILD-001
+    file: docs/how-to/fork-and-build-first-feature.md
+    title: "Fork and Build Your First Feature"
+    doc_type: how-to
+    stories: [US-TPL-PLT-001]
+    requirements: [REQ-PLT-ONBOARDING, REQ-PLT-DEVEX-CONTRACT]
+    acs: [AC-PLT-ENV-CHECK, AC-PLT-009, AC-PLT-015]
+    adrs: [ADR-0002, ADR-0005, ADR-0017]
+
   # Windows Development Guide
   - id: GUIDE-TPL-WINDOWS-DEV-001
     file: docs/how-to/windows-development.md
