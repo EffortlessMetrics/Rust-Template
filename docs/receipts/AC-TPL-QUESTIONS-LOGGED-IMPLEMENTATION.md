@@ -14,9 +14,9 @@ Implemented a structured question artifact system that allows flows to emit YAML
 ### 1. Questions Schema and Documentation
 
 **Created:**
-- `/home/steven/code/Rust/Rust-Template/specs/questions_schema.yaml` - Complete schema definition for question artifacts
-- `/home/steven/code/Rust/Rust-Template/questions/README.md` - Developer documentation for question lifecycle
-- `/home/steven/code/Rust/Rust-Template/questions/Q-EXAMPLE-001.yaml` - Example question artifact
+- `../../specs/questions_schema.yaml` - Complete schema definition for question artifacts
+- `../../questions/README.md` - Developer documentation for question lifecycle
+- `../../questions/Q-EXAMPLE-001.yaml` - Example question artifact
 
 **Schema includes:**
 - Unique ID pattern: `Q-{COMPONENT}-{NUMBER}` (e.g., Q-BUNDLE-001)
@@ -28,7 +28,7 @@ Implemented a structured question artifact system that allows flows to emit YAML
 
 ### 2. Question Support Module
 
-**Created:** `/home/steven/code/Rust/Rust-Template/crates/xtask/src/commands/questions.rs`
+**Created:** `../../crates/xtask/src/commands/questions.rs`
 
 **Key types:**
 - `Question` - Main question artifact structure
@@ -49,7 +49,7 @@ Implemented a structured question artifact system that allows flows to emit YAML
 
 ### 3. CLI Integration - cargo xtask status
 
-**Modified:** `/home/steven/code/Rust/Rust-Template/crates/xtask/src/commands/status.rs`
+**Modified:** `../../crates/xtask/src/commands/status.rs`
 
 **Added:**
 - Question statistics display section
@@ -69,7 +69,7 @@ Questions:
 
 ### 4. HTTP Platform Integration - /platform/status
 
-**Modified:** `/home/steven/code/Rust/Rust-Template/crates/app-http/src/platform.rs`
+**Modified:** `../../crates/app-http/src/platform.rs`
 
 **Added:**
 - `QuestionCounts` structure to PlatformStatus response
@@ -92,7 +92,7 @@ Questions:
 
 ### 5. Flow Integration - Bundle Command
 
-**Modified:** `/home/steven/code/Rust/Rust-Template/crates/xtask/src/commands/bundle.rs`
+**Modified:** `../../crates/xtask/src/commands/bundle.rs`
 
 **Added:**
 - Question emission when task not found in contextpack
@@ -113,7 +113,7 @@ Questions:
 
 ### 6. BDD Test Scenarios
 
-**Created:** `/home/steven/code/Rust/Rust-Template/specs/features/questions.feature`
+**Created:** `../../specs/features/questions.feature`
 
 **Scenarios:**
 1. Bundle flow emits question when task not found
@@ -125,7 +125,7 @@ Questions:
 
 ### 7. Spec Ledger Integration
 
-**Modified:** `/home/steven/code/Rust/Rust-Template/specs/spec_ledger.yaml`
+**Modified:** `../../specs/spec_ledger.yaml`
 
 **Changes:**
 - Updated AC-TPL-QUESTIONS-LOGGED from `tags: [future]` to `tags: [kernel]`
@@ -143,11 +143,11 @@ Questions:
 6. `/AC-TPL-QUESTIONS-LOGGED-IMPLEMENTATION.md` - This document
 
 ### Modified Files (4)
-1. `/crates/xtask/src/commands/mod.rs` - Added questions module
-2. `/crates/xtask/src/commands/status.rs` - Added question statistics
-3. `/crates/app-http/src/platform.rs` - Added /platform/status integration
-4. `/specs/spec_ledger.yaml` - Updated AC status to kernel requirement
-5. `/crates/xtask/src/commands/bundle.rs` - Added question emission logic (Note: May need re-application if auto-formatted)
+1. `../../crates/xtask/src/commands/mod.rs` - Added questions module
+2. `../../crates/xtask/src/commands/status.rs` - Added question statistics
+3. `../../crates/app-http/src/platform.rs` - Added /platform/status integration
+4. `../../specs/spec_ledger.yaml` - Updated AC status to kernel requirement
+5. `../../crates/xtask/src/commands/bundle.rs` - Added question emission logic (Note: May need re-application if auto-formatted)
 
 ## Validation
 

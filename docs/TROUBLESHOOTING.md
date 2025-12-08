@@ -1104,7 +1104,7 @@ taskkill /F /IM cargo.exe
 
 ---
 
-**See comprehensive Windows guide:** [docs/how-to/windows-development.md](/home/steven/code/Rust/Rust-Template/docs/how-to/windows-development.md)
+**See comprehensive Windows guide:** [docs/how-to/windows-development.md](./how-to/windows-development.md)
 
 ---
 
@@ -1511,7 +1511,7 @@ cargo xtask test-ac AC-PLT-001
 cargo test --lib
 ```
 
-**See:** [docs/SELECTIVE_TESTING.md](/home/steven/code/Rust/Rust-Template/docs/SELECTIVE_TESTING.md)
+**See:** [docs/SELECTIVE_TESTING.md](./SELECTIVE_TESTING.md)
 
 ---
 
@@ -1679,13 +1679,13 @@ For detailed gate documentation, see [ADR-0017](adr/0017-tier1-selftest-gate.md)
 
 ## Related Documentation
 
-- **[AGENT_GUIDE.md](/home/steven/code/Rust/Rust-Template/docs/AGENT_GUIDE.md)** - Complete developer workflow
-- **[MISSING_MANUAL.md](/home/steven/code/Rust/Rust-Template/docs/MISSING_MANUAL.md)** - Platform support tiers and operational realities
-- **[docs/how-to/windows-development.md](/home/steven/code/Rust/Rust-Template/docs/how-to/windows-development.md)** - Comprehensive Windows guide
-- **[docs/SELECTIVE_TESTING.md](/home/steven/code/Rust/Rust-Template/docs/SELECTIVE_TESTING.md)** - Faster test iteration
-- **[docs/dev-environment.md](/home/steven/code/Rust/Rust-Template/docs/dev-environment.md)** - Environment setup
-- **[CONTRIBUTING.md](/home/steven/code/Rust/Rust-Template/CONTRIBUTING.md)** - Contribution guidelines
-- **[.github/workflows/README.md](/home/steven/code/Rust/Rust-Template/.github/workflows/README.md)** - CI/CD documentation
+- **[AGENT_GUIDE.md](./AGENT_GUIDE.md)** - Complete developer workflow
+- **[MISSING_MANUAL.md](./MISSING_MANUAL.md)** - Platform support tiers and operational realities
+- **[docs/how-to/windows-development.md](./how-to/windows-development.md)** - Comprehensive Windows guide
+- **[docs/SELECTIVE_TESTING.md](./SELECTIVE_TESTING.md)** - Faster test iteration
+- **[docs/dev-environment.md](./dev-environment.md)** - Environment setup
+- **[CONTRIBUTING.md](../CONTRIBUTING.md)** - Contribution guidelines
+- **[.github/workflows/README.md](../.github/workflows/README.md)** - CI/CD documentation
 
 ---
 

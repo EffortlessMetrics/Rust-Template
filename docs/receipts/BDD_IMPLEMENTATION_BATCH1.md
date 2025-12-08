@@ -16,7 +16,7 @@ Implemented 24 new reusable Cucumber step definitions focusing on file operation
 
 ## Implementation Location
 
-**File:** `/home/steven/code/Rust/Rust-Template/crates/acceptance/src/steps/common.rs`
+**File:** `../../crates/acceptance/src/steps/common.rs`
 
 ---
 
@@ -205,10 +205,10 @@ Feature: Configuration Management
 
 ## Related Documentation
 
-- **Step Library Reference:** `/home/steven/code/Rust/Rust-Template/docs/testing/BDD_STEP_LIBRARY.md`
-- **Batch 2 Implementation:** `/home/steven/code/Rust/Rust-Template/docs/receipts/BDD_IMPLEMENTATION_BATCH2.md`
-- **Acceptance Test Crate:** `/home/steven/code/Rust/Rust-Template/crates/acceptance/`
-- **Feature Files:** `/home/steven/code/Rust/Rust-Template/specs/features/`
+- **Step Library Reference:** `../testing/BDD_STEP_LIBRARY.md`
+- **Batch 2 Implementation:** `BDD_IMPLEMENTATION_BATCH2.md`
+- **Acceptance Test Crate:** `../../crates/acceptance/`
+- **Feature Files:** `../../specs/features/`
 
 ---
 

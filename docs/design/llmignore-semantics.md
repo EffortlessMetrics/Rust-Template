@@ -36,7 +36,7 @@ The current `.llmignore` implementation is minimal and has semantic inconsistenc
 ## Current Implementation Analysis
 
 ### Code Location
-`/home/steven/code/Rust/Rust-Template/crates/xtask/src/commands/bundle.rs`
+`../../crates/xtask/src/commands/bundle.rs`
 
 ### Current Semantics (lines 178-201)
 

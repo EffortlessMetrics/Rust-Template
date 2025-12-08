@@ -27,7 +27,7 @@ Batch 2 adds comprehensive JSON validation capabilities and environment variable
 
 **Purpose:** Verifies that a JSON output from a CLI command contains a specific top-level field.
 
-**Location:** `/home/steven/code/Rust/Rust-Template/crates/acceptance/src/steps/xtask_devex.rs` (lines 2850-2869)
+**Location:** `../../crates/acceptance/src/steps/xtask_devex.rs` (lines 2850-2869)
 
 **Usage Example:**
 ```gherkin
@@ -50,7 +50,7 @@ And the JSON should contain field "governance_health"
 
 **Purpose:** Verifies that a nested JSON field contains a specific sub-field. Enables validation of nested object structures.
 
-**Location:** `/home/steven/code/Rust/Rust-Template/crates/acceptance/src/steps/xtask_devex.rs` (lines 2871-2904)
+**Location:** `../../crates/acceptance/src/steps/xtask_devex.rs` (lines 2871-2904)
 
 **Usage Example:**
 ```gherkin
@@ -78,7 +78,7 @@ And the JSON field "governance_health" should have "ac_coverage"
 
 **Purpose:** Verifies that a file written by a command contains valid, parseable JSON.
 
-**Location:** `/home/steven/code/Rust/Rust-Template/crates/acceptance/src/steps/xtask_devex.rs` (lines 2906-2940)
+**Location:** `../../crates/acceptance/src/steps/xtask_devex.rs` (lines 2906-2940)
 
 **Usage Example:**
 ```gherkin
@@ -113,7 +113,7 @@ And the file should contain valid JSON
 
 **Purpose:** Sets an environment variable for subsequent command executions within the same scenario.
 
-**Location:** `/home/steven/code/Rust/Rust-Template/crates/acceptance/src/steps/xtask_devex.rs` (lines 209-212)
+**Location:** `../../crates/acceptance/src/steps/xtask_devex.rs` (lines 209-212)
 
 **Usage Example:**
 ```gherkin
@@ -259,11 +259,11 @@ Before committing new steps:
 
 - **Cucumber Documentation:** https://cucumber.io/docs/cucumber/
 - **Cucumber Rust:** https://github.com/cucumber-rs/cucumber
-- **Step Library Reference:** `/home/steven/code/Rust/Rust-Template/docs/testing/BDD_STEP_LIBRARY.md`
-- **Batch 1 Implementation:** `/home/steven/code/Rust/Rust-Template/docs/receipts/BDD_IMPLEMENTATION_BATCH1.md`
-- **Acceptance Test Crate:** `/home/steven/code/Rust/Rust-Template/crates/acceptance/`
-- **Feature Files:** `/home/steven/code/Rust/Rust-Template/specs/features/`
-- **World State:** `/home/steven/code/Rust/Rust-Template/crates/acceptance/src/world.rs`
+- **Step Library Reference:** `../testing/BDD_STEP_LIBRARY.md`
+- **Batch 1 Implementation:** `BDD_IMPLEMENTATION_BATCH1.md`
+- **Acceptance Test Crate:** `../../crates/acceptance/`
+- **Feature Files:** `../../specs/features/`
+- **World State:** `../../crates/acceptance/src/world.rs`
 
 ---
 

@@ -211,7 +211,7 @@ The script uses `gh api` to configure:
 ### Run the Script
 
 ```bash
-cd /home/steven/code/Rust/Rust-Template
+# From repository root
 .github/scripts/setup-branch-protection.sh
 ```
 
