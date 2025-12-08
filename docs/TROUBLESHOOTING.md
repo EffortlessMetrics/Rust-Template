@@ -1623,6 +1623,60 @@ cargo xtask ac-coverage
 
 ---
 
+## Selftest Gate Reference
+
+The `cargo xtask selftest` command runs 11 validation steps. Here's a quick reference for debugging failures:
+
+| Gate | What It Checks | Common Fix |
+|------|---------------|------------|
+| **1. Core checks** | fmt, clippy, unit tests | `cargo fmt --all`, fix clippy warnings |
+| **2. Skills lint** | `.claude/skills/*/SKILL.md` | `cargo xtask skills-lint`, fix name/tools |
+| **3. Agents lint** | `.claude/agents/*.md` | `cargo xtask agents-lint`, fix name/tools |
+| **4. BDD tests** | Gherkin scenarios | Fix `.feature` files, implement steps |
+| **5. AC mapping** | AC→test linkage, ADRs | `cargo xtask ac-status`, fix spec_ledger |
+| **6. Bundler** | Context bundle generation | Update `.llm/contextpack.yaml` paths |
+| **7. Policy tests** | OPA/Conftest policies | Fix `policy/*.rego` or configs |
+| **8. DevEx contract** | Flow→command validity | Update `specs/devex_flows.yaml` |
+| **9. Graph + UI** | Governance graph, APIs | Fix spec_ledger refs, break cycles |
+| **10. AC coverage** | AC test coverage % | Add tests, tag with AC IDs (advisory) |
+| **11. Test coverage** | Code coverage % | Add tests for uncovered code (advisory) |
+
+### Quick Debugging Steps
+
+```bash
+# 1. Identify which gate failed (look for "Gate X:" in output)
+cargo xtask selftest
+
+# 2. Run that gate in isolation
+cargo xtask skills-lint      # Gate 2
+cargo xtask agents-lint      # Gate 3
+cargo xtask bdd              # Gate 4
+cargo xtask ac-status        # Gate 5
+
+# 3. Fix and re-run full selftest
+cargo xtask selftest
+```
+
+### Important: What Selftest Does NOT Check
+
+**IDP contract checks are standalone and NOT part of selftest:**
+
+```bash
+cargo xtask idp-check      # Validate IDP contracts
+cargo xtask idp-snapshot   # Capture IDP state snapshot
+```
+
+Breaking IDP contracts (platform API schemas, UI responses) will NOT fail selftest. If you're modifying `/platform/*` endpoints, run `cargo xtask idp-check` manually.
+
+### Gate Types
+
+- **HARD gates** (1-9): Must pass or selftest fails
+- **SOFT gates** (10-11): Advisory, warns but doesn't block
+
+For detailed gate documentation, see [ADR-0017](adr/0017-tier1-selftest-gate.md).
+
+---
+
 ## Related Documentation
 
 - **[AGENT_GUIDE.md](/home/steven/code/Rust/Rust-Template/docs/AGENT_GUIDE.md)** - Complete developer workflow
@@ -1635,4 +1689,4 @@ cargo xtask ac-coverage
 
 ---
 
-**Last Updated:** 2025-12-01 (v3.3.6)
+**Last Updated:** 2025-12-08 (v3.3.7)

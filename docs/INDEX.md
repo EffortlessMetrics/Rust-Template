@@ -14,7 +14,7 @@ last_updated: 2025-12-04
 
 # Documentation Index
 
-**Navigation hub for the Rust-as-Spec Platform Cell (v3.3.6)**
+**Navigation hub for the Rust-as-Spec Platform Cell (v3.3.7)**
 
 ---
 
@@ -67,6 +67,7 @@ New to this repository? Start here:
 ## How-To Guides
 
 ### Adoption & Setup
+- **[Fork and Build Your First Feature](how-to/fork-and-build-first-feature.md)** - **Golden path: fork to feature in 2-3 hours** ⭐
 - **[Add Governance to Existing Repo](how-to/add-governance-to-existing-repo.md)** - Brownfield adoption (complete guide)
 - **[Create New Service from Template](how-to/new-service-from-template.md)** - Greenfield instantiation
 - **[Your First Hour](how-to/first-hour.md)** - Hands-on exploration tour (30-60 min)
