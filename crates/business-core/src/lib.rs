@@ -315,7 +315,7 @@ pub mod governance {
                     to: new_status,
                 });
             }
-            task.status = new_status.clone();
+            task.status = new_status;
             self.repo.set_task_status(id, new_status)?;
             Ok(())
         }

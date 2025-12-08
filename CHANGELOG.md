@@ -42,6 +42,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 See [ac-status JSON Schema Reference](docs/reference/ac-status-json-schema.md) for the complete v2.0 schema.
 
+## [3.3.7] - 2025-12-07
+
+### Added
+
+- **Bundle task discovery** – `cargo xtask bundle` now displays available task names when an invalid task is provided, improving discoverability and reducing friction
+- **Graph invariants JSON reporting** – Added `--report-format json` flag to graph invariant checks, enabling machine-readable output for CI/tooling integration
+- **SPEC_ROOT validation and diagnostics** – Enhanced `cargo xtask doctor` to show spec root source and provide better error hints when SPEC_ROOT is misconfigured
+- **MYSERV /todos example service** – Implemented AC-MYSERV-001 with GET /todos handler, complete with BDD scenarios and step definitions as a reference implementation
+
+### Improved
+
+- Error tracking summary now available via `/platform/status` endpoint with governance error visibility
+- Better developer experience for debugging governance issues with structured reporting
+
 ## [3.3.6] - 2025-12-01
 
 ### Added

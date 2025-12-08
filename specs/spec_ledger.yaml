@@ -3,8 +3,8 @@
 
 metadata:
   schema_version: "1.0"
-  template_version: "3.3.6"
-  last_updated: "2025-12-01"
+  template_version: "3.3.7"
+  last_updated: "2025-12-07"
   description: "Template core capabilities - v2.4.0 includes health, version, errors, metrics, and supply chain hardening"
   # Template-wide ADRs (not tied to specific stories/requirements)
   adrs:
@@ -1795,6 +1795,38 @@ stories:
             must_have_ac: false
             tests:
               - { type: bdd, tag: "@AC-MYSERV-001", file: "specs/features/myserv_todos.feature" }
+          - id: AC-MYSERV-002
+            text: "GET /todos returns an empty array when no todos exist"
+            tags: [domain, myserv]
+            must_have_ac: false
+            tests:
+              - { type: bdd, tag: "@AC-MYSERV-002", file: "specs/features/myserv_todos.feature" }
+      - id: REQ-MYSERV-ERROR-HANDLING
+        title: "Error Handling"
+        tags: [domain, myserv]
+        must_have_ac: false
+        description: >
+          The API properly handles invalid inputs and returns structured error responses.
+        acceptance_criteria:
+          - id: AC-MYSERV-003
+            text: "Invalid payload returns 400 with structured error message"
+            tags: [domain, myserv, error-handling]
+            must_have_ac: false
+            tests:
+              - { type: bdd, tag: "@AC-MYSERV-003", file: "specs/features/myserv_todos.feature" }
+      - id: REQ-MYSERV-DELETE-TODOS
+        title: "Delete Todos"
+        tags: [domain, myserv]
+        must_have_ac: false
+        description: >
+          Users can delete individual todos by ID.
+        acceptance_criteria:
+          - id: AC-MYSERV-004
+            text: "DELETE /todos/:id removes the todo from the list"
+            tags: [domain, myserv]
+            must_have_ac: false
+            tests:
+              - { type: bdd, tag: "@AC-MYSERV-004", file: "specs/features/myserv_todos.feature" }
 
   # When adding your domain features:
   # - Copy the structure above (story → requirement → AC → tests)

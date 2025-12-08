@@ -4,7 +4,7 @@
 # This is the canonical registry for "serious" documentation with front-matter
 
 schema_version: "1.0"
-template_version: "3.3.6"
+template_version: "3.3.7"
 
 docs:
   # Example design doc entry
@@ -262,6 +262,16 @@ docs:
     requirements: [REQ-PLT-DEVEX-CONTRACT, REQ-PLT-ONBOARDING]
     acs: [AC-PLT-015, AC-PLT-016, AC-PLT-019, AC-PLT-020]
     adrs: [ADR-0002, ADR-0005, ADR-0017]
+
+  # First Hour Onboarding Guide
+  - id: HOWTO-FIRST-HOUR-001
+    file: docs/how-to/first-hour.md
+    title: "Your First Hour with the Template"
+    doc_type: how-to
+    stories: [US-TPL-PLT-001]
+    requirements: [REQ-PLT-ONBOARDING, REQ-PLT-DEVEX-CONTRACT]
+    acs: [AC-PLT-ENV-CHECK, AC-PLT-009]
+    adrs: [ADR-0002, ADR-0005]
 
   # Windows Development Guide
   - id: GUIDE-TPL-WINDOWS-DEV-001
