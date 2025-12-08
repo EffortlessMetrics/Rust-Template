@@ -1626,6 +1626,20 @@ stories:
               - { type: unit, tag: "test_allowed_transitions", module: "governance::tests::test_allowed_transitions", file: "crates/business-core/src/lib.rs" }
               - { type: unit, tag: "test_forbidden_transitions", module: "governance::tests::test_forbidden_transitions", file: "crates/business-core/src/lib.rs" }
 
+          - id: AC-TPL-TASK-STATUS-MODEL
+            text: >
+              Task status values (Todo, InProgress, Review, Done) have a single canonical
+              representation in business_core::governance::TaskStatus. All adapters, CLIs,
+              and HTTP surfaces parse status strings through this model via FromStr and
+              reject unknown status strings consistently.
+            tags: [kernel, governance]
+            must_have_ac: true
+            tests:
+              - { type: unit, tag: "test_task_status_roundtrip", module: "governance::tests", file: "crates/business-core/src/lib.rs" }
+              - { type: unit, tag: "test_task_status_from_str_variants", module: "governance::tests", file: "crates/business-core/src/lib.rs" }
+              - { type: unit, tag: "test_task_status_from_str_rejects_unknown", module: "governance::tests", file: "crates/business-core/src/lib.rs" }
+              - { type: unit, tag: "test_task_status_display", module: "governance::tests", file: "crates/business-core/src/lib.rs" }
+
   - id: US-TPL-PHILOSOPHY-001
     title: "Template Philosophy and Kernel Contracts"
     description: >

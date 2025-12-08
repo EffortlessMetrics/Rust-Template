@@ -257,15 +257,10 @@ async fn then_task_title_in_yaml(world: &mut World, task_id: String, expected_ti
 }
 
 fn parse_status(status_str: &str) -> (TaskStatus, String) {
-    match status_str.to_lowercase().as_str() {
-        "todo" => (TaskStatus::Todo, "Todo".to_string()),
-        "inprogress" | "in_progress" | "in-progress" => {
-            (TaskStatus::InProgress, "InProgress".to_string())
-        }
-        "review" => (TaskStatus::Review, "Review".to_string()),
-        "done" => (TaskStatus::Done, "Done".to_string()),
-        other => (TaskStatus::Todo, other.to_string()),
-    }
+    // Use canonical FromStr from TaskStatus
+    let status = status_str.parse::<TaskStatus>().unwrap_or(TaskStatus::Todo);
+    let label = status.to_string();
+    (status, label)
 }
 
 fn load_tasks_from_spec_root(world: &World) -> TasksSpec {

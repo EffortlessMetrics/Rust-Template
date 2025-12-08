@@ -46,7 +46,7 @@ pub fn create_task(
         title: title.to_string(),
         requirement: requirement.to_string(),
         acs: acs.to_vec(),
-        status: format_status(&desired_status),
+        status: desired_status.to_string(),
         owner,
         labels: labels.to_vec(),
         docs: Some(TaskDocs { design: Vec::new(), plan: Vec::new() }),
@@ -58,12 +58,7 @@ pub fn create_task(
     tasks_spec.tasks.push(new_task);
     write_tasks(&tasks_path, &tasks_spec)?;
 
-    println!(
-        "Created task {} (requirement: {}, status: {})",
-        id,
-        requirement,
-        format_status(&desired_status)
-    );
+    println!("Created task {} (requirement: {}, status: {})", id, requirement, desired_status);
 
     Ok(())
 }
@@ -98,14 +93,9 @@ pub fn update_task(
     if let Some(status_text) = status {
         let new_status = parse_status(&status_text)?;
         if current_status != new_status && !current_status.can_transition_to(&new_status) {
-            bail!(
-                "Invalid status transition for {}: {} -> {}",
-                id,
-                format_status(&current_status),
-                format_status(&new_status)
-            );
+            bail!("Invalid status transition for {}: {} -> {}", id, current_status, new_status);
         }
-        task.status = format_status(&new_status);
+        task.status = new_status.to_string();
     }
 
     write_tasks(&tasks_path, &tasks_spec)?;
@@ -124,23 +114,13 @@ fn write_tasks(path: &Path, tasks: &TasksSpec) -> Result<()> {
 }
 
 fn parse_status(raw: &str) -> Result<TaskStatus> {
-    match raw.trim().to_lowercase().as_str() {
-        "todo" | "open" => Ok(TaskStatus::Todo),
-        "inprogress" | "in_progress" | "in-progress" | "in progress" => Ok(TaskStatus::InProgress),
-        "review" => Ok(TaskStatus::Review),
-        "done" | "completed" => Ok(TaskStatus::Done),
-        other => bail!("Invalid status '{}'. Use one of: Todo, InProgress, Review, Done.", other),
-    }
-}
-
-fn format_status(status: &TaskStatus) -> String {
-    match status {
-        TaskStatus::Todo => "Todo",
-        TaskStatus::InProgress => "InProgress",
-        TaskStatus::Review => "Review",
-        TaskStatus::Done => "Done",
-    }
-    .to_string()
+    raw.trim().parse::<TaskStatus>().map_err(|e| {
+        anyhow::anyhow!(
+            "Invalid status '{}'. Use one of: Todo, InProgress, Review, Done. ({})",
+            raw,
+            e
+        )
+    })
 }
 
 fn validate_requirement_and_acs(

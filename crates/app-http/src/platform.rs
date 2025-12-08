@@ -750,23 +750,17 @@ pub struct TaskDocsOut {
     pub plan: Vec<String>,
 }
 
+/// Normalize a raw status string to its canonical display form.
+/// Uses the canonical `FromStr` implementation from `TaskStatus`.
 fn normalize_status(raw: &str) -> String {
-    let key = raw.trim().to_ascii_lowercase().replace([' ', '-'], "_");
-
-    match key.as_str() {
-        "todo" | "open" => "Todo".to_string(),
-        "inprogress" | "in_progress" => "InProgress".to_string(),
-        "review" => "Review".to_string(),
-        "done" | "closed" => "Done".to_string(),
-        _ => {
-            tracing::warn!(
-                raw_status = raw,
-                normalized_status = "Todo",
-                "Unknown task status provided; defaulting to Todo"
-            );
-            "Todo".to_string()
-        }
-    }
+    raw.parse::<TaskStatus>().map(|s| s.to_string()).unwrap_or_else(|_| {
+        tracing::warn!(
+            raw_status = raw,
+            normalized_status = "Todo",
+            "Unknown task status provided; defaulting to Todo"
+        );
+        TaskStatus::Todo.to_string()
+    })
 }
 
 async fn get_tasks(
