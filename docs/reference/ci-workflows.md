@@ -2,7 +2,7 @@
 id: REF-CI-WORKFLOWS-001
 title: "CI Workflows Reference Guide"
 doc_type: reference
-version: 3.3.6
+version: 3.3.7
 stories: [US-TPL-PLT-001]
 requirements:
   - REQ-PLT-DEVEX-CONTRACT
@@ -978,6 +978,56 @@ open target/llvm-cov/html/index.html
 # Add tests for uncovered code
 # Or justify why coverage dropped (requires approval to adjust floor)
 ```
+
+---
+
+### Kernel AC Coverage in CI
+
+Kernel (must_have_ac=true) acceptance criteria are enforced as a hard gate in CI.
+
+**How it works:**
+
+- Locally:
+  ```bash
+  cargo xtask selftest
+  ```
+
+- In CI (`tier1-selftest.yml` on main branch):
+  ```bash
+  XTASK_STRICT_AC_COVERAGE=1 cargo xtask selftest
+  ```
+
+**Strict mode behavior:**
+
+When `XTASK_STRICT_AC_COVERAGE=1` is set:
+- Selftest fails if any kernel AC (must_have_ac=true) has "unknown" coverage status
+- This ensures all kernel ACs have either passing BDD scenarios or mapped unit tests
+- Non-kernel ACs (must_have_ac=false) are informational and don't block
+
+**If CI fails due to kernel AC coverage:**
+
+```bash
+# View the backlog of ACs needing coverage
+cargo xtask ac-coverage --todo --must-have
+
+# Generate BDD scenarios for a specific AC
+cargo xtask ac-suggest-scenarios AC-TPL-XXX
+
+# Add @AC-TPL-XXX tag to scenarios in specs/features/*.feature
+
+# Regenerate coverage and verify
+cargo test -p acceptance --test acceptance
+cargo xtask ac-status
+cargo xtask selftest
+```
+
+**Coverage sources:**
+
+Kernel AC coverage is determined by `docs/feature_status.md` which aggregates:
+1. BDD scenarios tagged with @AC-XXX (from `target/ac/coverage.jsonl`)
+2. Unit tests mapped in `specs/spec_ledger.yaml` tests: arrays
+
+An AC shows as "passing" if it has at least one passing test from either source.
 
 ---
 

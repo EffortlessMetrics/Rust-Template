@@ -1650,6 +1650,7 @@ stories:
               - { type: unit, tag: "test_task_status_from_str_variants", module: "governance::tests", file: "crates/business-core/src/lib.rs" }
               - { type: unit, tag: "test_task_status_from_str_rejects_unknown", module: "governance::tests", file: "crates/business-core/src/lib.rs" }
               - { type: unit, tag: "test_task_status_display", module: "governance::tests", file: "crates/business-core/src/lib.rs" }
+              - { type: bdd, tag: "@AC-TPL-TASK-STATUS-MODEL", file: "specs/features/platform_tasks.feature" }
 
   - id: US-TPL-PHILOSOPHY-001
     title: "Template Philosophy and Kernel Contracts"
