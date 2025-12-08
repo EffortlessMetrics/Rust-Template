@@ -1,10 +1,14 @@
 ---
-id: fork-and-build-first-feature
+id: HOWTO-FORK-BUILD-001
 title: Fork and Build Your First Feature
-doc_type: how_to
+doc_type: how-to
 status: published
 audience: [developers, teams]
 tags: [adoption, getting-started, onboarding, fork, feature-development]
+stories: [US-TPL-PLT-001]
+requirements: [REQ-PLT-ONBOARDING, REQ-PLT-DEVEX-CONTRACT]
+acs: [AC-PLT-ENV-CHECK, AC-PLT-009, AC-PLT-015]
+adrs: [ADR-0002, ADR-0005, ADR-0017]
 related_docs:
   - docs/how-to/FIRST_FORK.md
   - docs/how-to/first-hour.md
@@ -13,6 +17,7 @@ related_docs:
 created: 2025-12-08
 updated: 2025-12-08
 ---
+<!-- doclint:disable orphan-version -->
 
 # Fork and Build Your First Feature
 
