@@ -809,6 +809,20 @@ Feature: Developer Experience Commands
     And AC status is out of sync
     Then the output should contain "cargo xtask ac-status"
 
+  @AC-TPL-AC-STATUS-CONSISTENCY
+  Scenario: feature_status.md contains governance semantics cross-reference
+    Given the file "docs/feature_status.md" exists
+    Then the file should contain "ac-kernel/README.md"
+    And the file should contain "ac-governance-semantics"
+    And the file should contain "must_have_ac"
+
+  @AC-TPL-AC-STATUS-CONSISTENCY
+  Scenario: ac-status regeneration includes governance link
+    When I run "cargo xtask ac-status"
+    And the regenerated output is captured
+    Then the output should contain "For formal definitions of"
+    And the output should contain "ac-kernel/README.md"
+
   @AC-PLT-DOC-INDEX-FRONTMATTER
   Scenario: docs-check validates bidirectional front-matter alignment
     When I run "cargo xtask docs-check"
