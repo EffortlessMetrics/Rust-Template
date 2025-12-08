@@ -71,6 +71,7 @@ Forks inherit the kernel as-is and extend with domain-specific specs, ACs, and c
 
 > **Using this as a template?** Start here:
 > - **[Quick Start Guide](docs/QUICKSTART.md) – Get productive in 15 minutes**
+> - **[Your First Hour](docs/how-to/first-hour.md) – Hands-on exploration (30-60 min)**
 > - **[Pre-Fork Checklist](docs/how-to/pre-fork-checklist.md) – Validate before forking**
 > - [Kernel snapshot](docs/KERNEL_SNAPSHOT.md) – what you're inheriting
 > - [New service guide](docs/how-to/new-service-from-template.md) – step-by-step setup

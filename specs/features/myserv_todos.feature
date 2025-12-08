@@ -52,3 +52,31 @@ Feature: Todo Management
   Scenario: DELETE /todos/:id with non-existent id returns 404
     When I send a DELETE request to "/todos/non-existent-id"
     Then the response status should be 404
+
+  @AC-MYSERV-005
+  Scenario: POST /todos with duplicate ID returns 409 Conflict
+    Given the user has existing todos
+    When I send a POST request to "/todos" with body:
+      """
+      {"id": "todo-1", "title": "Duplicate ID attempt"}
+      """
+    Then the response status should be 409
+    And the response should contain an error message
+
+  @AC-MYSERV-006
+  Scenario: POST /todos with empty title returns 400
+    When I send a POST request to "/todos" with body:
+      """
+      {"id": "todo-new", "title": ""}
+      """
+    Then the response status should be 400
+    And the response should contain an error message
+
+  @AC-MYSERV-006
+  Scenario: POST /todos with title exceeding 256 characters returns 400
+    When I send a POST request to "/todos" with body:
+      """
+      {"id": "todo-long", "title": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}
+      """
+    Then the response status should be 400
+    And the response should contain an error message

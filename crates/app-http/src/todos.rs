@@ -73,6 +73,14 @@ impl TodosState {
             .map(|mut guard| guard.push(todo))
     }
 
+    /// Check if a todo with the given ID exists
+    fn exists(&self, id: &str) -> Result<bool, AppError> {
+        self.todos
+            .read()
+            .map_err(|e| AppError::internal_error(format!("Failed to acquire read lock: {}", e)))
+            .map(|guard| guard.iter().any(|t| t.id == id))
+    }
+
     /// Delete a todo by ID, returns true if found and deleted
     fn delete(&self, id: &str) -> Result<bool, AppError> {
         self.todos
@@ -176,7 +184,36 @@ async fn create_todo(
     }
     if payload.title.is_empty() {
         warn!("Missing required field: title");
-        return Err(AppError::bad_request("Missing required field: title"));
+        return Err(
+            AppError::bad_request("Missing required field: title").with_ac_id("AC-MYSERV-006")
+        );
+    }
+
+    // AC-MYSERV-006: Validate title length (max 256 characters)
+    const MAX_TITLE_LENGTH: usize = 256;
+    if payload.title.len() > MAX_TITLE_LENGTH {
+        warn!(
+            title_len = payload.title.len(),
+            max_len = MAX_TITLE_LENGTH,
+            "Title exceeds maximum length"
+        );
+        return Err(AppError::new(
+            StatusCode::BAD_REQUEST,
+            ErrorCode::InvalidFormat,
+            format!("Title must not exceed {} characters", MAX_TITLE_LENGTH),
+        )
+        .with_ac_id("AC-MYSERV-006"));
+    }
+
+    // AC-MYSERV-005: Check for duplicate ID
+    if state.1.exists(&payload.id)? {
+        warn!(id = %payload.id, "Duplicate todo ID");
+        return Err(AppError::new(
+            StatusCode::CONFLICT,
+            ErrorCode::Conflict,
+            format!("Todo with id '{}' already exists", payload.id),
+        )
+        .with_ac_id("AC-MYSERV-005"));
     }
 
     let todo = Todo { id: payload.id.clone(), title: payload.title.clone() };

@@ -36,6 +36,8 @@ Auto-generated AC status from acceptance (BDD) and unit tests.
 | AC-MYSERV-002 | US-MYSERV-001 | REQ-MYSERV-LIST-TODOS | [UNKNOWN] unknown | 0 / 1 |
 | AC-MYSERV-003 | US-MYSERV-001 | REQ-MYSERV-ERROR-HANDLING | [UNKNOWN] unknown | 0 / 1 |
 | AC-MYSERV-004 | US-MYSERV-001 | REQ-MYSERV-DELETE-TODOS | [UNKNOWN] unknown | 0 / 1 |
+| AC-MYSERV-005 | US-MYSERV-001 | REQ-MYSERV-ERROR-HANDLING | [UNKNOWN] unknown | 0 / 1 |
+| AC-MYSERV-006 | US-MYSERV-001 | REQ-MYSERV-ERROR-HANDLING | [UNKNOWN] unknown | 0 / 1 |
 | AC-PLT-001 | US-TPL-PLT-001 | REQ-PLT-ONBOARDING | [UNKNOWN] unknown | 0 / 3 |
 | AC-PLT-002 | US-TPL-PLT-001 | REQ-PLT-ONBOARDING | [UNKNOWN] unknown | 0 / 3 |
 | AC-PLT-003 | US-TPL-PLT-001 | REQ-PLT-ONBOARDING | [UNKNOWN] unknown | 0 / 3 |
@@ -68,7 +70,7 @@ Auto-generated AC status from acceptance (BDD) and unit tests.
 | AC-TPL-007 | US-TPL-001 | REQ-TPL-METRICS | [UNKNOWN] unknown | 0 / 1 |
 | AC-TPL-AC-STATUS-CONSISTENCY | US-TPL-PLT-001 | REQ-PLT-DOCS-CONSISTENCY | [UNKNOWN] unknown | 0 / 2 |
 | AC-TPL-AGENT-HINTS | US-TPL-PLT-001 | REQ-TPL-AGENT-INTERFACE | [PASS] pass | 1 / 1 |
-| AC-TPL-AGENT-HINTS-SCHEMA | US-TPL-PLT-001 | REQ-TPL-AGENT-INTERFACE | [UNKNOWN] unknown | 0 / 2 |
+| AC-TPL-AGENT-HINTS-SCHEMA | US-TPL-PLT-001 | REQ-TPL-AGENT-INTERFACE | [PASS] pass | 1 / 2 |
 | AC-TPL-AGENT-SKILLS | US-TPL-PLT-001 | REQ-TPL-AGENT-INTERFACE | [UNKNOWN] unknown | 0 / 1 |
 | AC-TPL-AGENTS-DESCRIPTION-QUALITY | US-TPL-PLT-001 | REQ-TPL-AGENTS-GOVERNANCE | [UNKNOWN] unknown | 0 / 0 |
 | AC-TPL-AGENTS-GOVERNANCE-001 | US-TPL-PLT-001 | REQ-TPL-AGENTS-GOVERNANCE | [UNKNOWN] unknown | 0 / 1 |
@@ -81,9 +83,9 @@ Auto-generated AC status from acceptance (BDD) and unit tests.
 | AC-TPL-AGENTS-TOOLS-PERMISSION-SAFETY | US-TPL-PLT-001 | REQ-TPL-AGENTS-GOVERNANCE | [UNKNOWN] unknown | 0 / 0 |
 | AC-TPL-ARTIFACTS-HAVE-REFS | US-TPL-PLT-001 | REQ-TPL-GOV-ARTIFACTS | [PASS] pass | 1 / 2 |
 | AC-TPL-BDD-EXIT-CODES | US-TPL-PLT-001 | REQ-TPL-BDD-HARNESS | [PASS] pass | 2 / 2 |
-| AC-TPL-BUNDLE-LAYOUT | US-TPL-PLT-001 | REQ-TPL-BUNDLE-CONTRACT | [UNKNOWN] unknown | 0 / 1 |
-| AC-TPL-BUNDLE-MANIFEST | US-TPL-PLT-001 | REQ-TPL-BUNDLE-CONTRACT | [UNKNOWN] unknown | 0 / 1 |
-| AC-TPL-BUNDLE-MANIFEST-LINKED | US-TPL-PLT-001 | REQ-TPL-BUNDLE-CONTRACT | [UNKNOWN] unknown | 0 / 2 |
+| AC-TPL-BUNDLE-LAYOUT | US-TPL-PLT-001 | REQ-TPL-BUNDLE-CONTRACT | [PASS] pass | 1 / 1 |
+| AC-TPL-BUNDLE-MANIFEST | US-TPL-PLT-001 | REQ-TPL-BUNDLE-CONTRACT | [PASS] pass | 1 / 1 |
+| AC-TPL-BUNDLE-MANIFEST-LINKED | US-TPL-PLT-001 | REQ-TPL-BUNDLE-CONTRACT | [PASS] pass | 1 / 2 |
 | AC-TPL-BUNDLE-MINIMAL-SCOPE | US-TPL-PLT-001 | REQ-TPL-BUNDLE-CONTRACT | [PASS] pass | 1 / 1 |
 | AC-TPL-CLI-JSON-CORE | US-TPL-PHILOSOPHY-001 | REQ-TPL-AI-IDP-COMPAT | [PASS] pass | 1 / 3 |
 | AC-TPL-CLI-JSON-OUTPUT | US-TPL-PLT-001 | REQ-PLT-DEVEX-CONTRACT | [UNKNOWN] unknown | 0 / 1 |
@@ -161,103 +163,89 @@ Auto-generated AC status from acceptance (BDD) and unit tests.
 
 *(This list SHOULD be empty in this repo. If anything appears here, it's a bug.)*
 
-- AC-TPL-TASKS-CREATE-CLI: cargo xtask task-create creates a new task in specs/tasks.yaml, validates that the requirement and ACs exist in spec_ledger.yaml, and rejects duplicate task IDs.
-- AC-TPL-GOV-WRITE-TASK-STATUS-200: set_task_status writes durable state reflected in the governance graph.
-- AC-TPL-TASKS-UPDATE-CLI: cargo xtask task-update updates task fields (status, title, owner) in specs/tasks.yaml, enforces valid status transitions, and persists changes to the task definition.
 - AC-TPL-FLOW-IDEMPOTENT: Running cargo xtask selftest or cargo xtask suggest-next multiple times without changes produces stable outputs and no duplicate artifacts.
-- AC-TPL-GOV-FRICTION: Friction log entries are stored as structured files under friction/, can be created and listed via `cargo xtask friction-new`/`friction-list`, and are exposed via /platform/friction and /platform/friction/{id}.
-- AC-TPL-SKILLS-LINT: `cargo run -p xtask -- skills-lint` validates Skills frontmatter and content (name/description rules, references to flows and APIs).
-- AC-TPL-PLATFORM-GRAPH: GET /platform/graph returns the full governance graph in JSON format.
-- AC-MYSERV-004: DELETE /todos/:id removes the todo from the list
-- AC-TPL-IDP-SNAPSHOT-VALID-JSON: The idp-snapshot output is valid JSON that can be parsed without errors and contains all required top-level keys.
-- AC-TPL-OVERRIDE-DOC: docs/how-to/change-template-opinion.md exists and describes the recommended override path: (1) Identify story/REQ/AC in spec_ledger.yaml, (2) Update AC text/tags/must_have_ac in the fork, (3) Update BDD scenarios, (4) Run selftest + ac-status, (5) Optionally log friction/question if the kernel made this hard.
-- AC-TPL-AGENT-SKILLS: The .claude/skills directory contains executable skill definitions for feature development, release, and maintenance workflows, each referencing the appropriate xtask commands and platform APIs.
-- AC-TPL-REL-EVIDENCE: `cargo xtask release-bundle X.Y.Z` writes `release_evidence/vX.Y.Z.md` containing: all tasks completed in this version, linked REQs/ACs/ADRs, git log since last tag, selftest summary, policy status, resolved friction entries.
-- AC-TPL-PLATFORM-DOCS: GET /platform/docs/index returns the documentation index.
-- AC-TPL-OVERRIDE-TRACEABLE: specs/doc_index.yaml registers the override doc with tag 'override_path', and /platform/docs/index exposes it under a 'Kernel Overrides' category.
-- AC-PLT-004: `cargo xtask adr-new <title>` creates numbered ADR from template with metadata
-- AC-TPL-GOV-FORKS: Fork metadata is stored under forks/fork_registry.yaml, can be managed via `cargo xtask fork-register`/`fork-list`, and is exposed via /platform/forks and /platform/forks/{name}.
-- AC-TPL-ERROR-MAPPING: Platform governance errors are mapped consistently from domain errors to HTTP responses and surfaced via /platform/status. TaskNotFound returns 404, invalid transitions return 400, and repository/configuration errors return 5xx. /platform/status exposes a summary of recent governance errors.
-- AC-MYSERV-001: GET /todos returns a JSON array of the user's todos
-- AC-TPL-002: GET /version returns build information including version and git SHA
-- AC-TPL-IDP-SNAPSHOT: `cargo xtask idp-snapshot` emits JSON containing timestamp, template_version, service_id, governance_health (status, ac_coverage), documentation metrics, and task hints for pending/in_progress tasks.
-- AC-PLT-ENV-ABI-CHECK: `cargo xtask doctor` detects ABI mismatches between system rustc and Nix devshell rustc, warns about proc-macro compatibility issues, and points to TROUBLESHOOTING.md for resolution.
-- AC-TPL-SKILLS-GUIDE-001: docs/AGENT_SKILLS.md exists and documents the recommended Skill set, SKILL.md templates, and best practices for this repo.
-- AC-TPL-BUNDLE-MANIFEST-LINKED: When the bundle task name exists in specs/tasks.yaml, bundle.yaml MUST populate requirement_ids from the task's `requirement` field, ac_ids from the task's `acs` array, and tests from the spec_ledger.yaml tests mapping for those ACs. If the task is not in tasks.yaml, these fields remain empty arrays.
-- AC-TPL-SUGGEST-NEXT-CLI: cargo xtask suggest-next --task <ID> prints a structured sequence of recommended commands and edits for the given task, based on its recommended_flows.
-- AC-PLT-006: `cargo xtask audit` runs cargo-audit + cargo-deny with repo policy (deny.toml)
-- AC-TPL-AGENTS-GOVERNANCE-002: Each project agent in .claude/agents/* has a corresponding REQ in spec_ledger.yaml and at least one AC defining its configuration and system prompt requirements.
-- AC-TPL-PLATFORM-GOVERNANCE-APIS: /platform/questions, /platform/friction, and /platform/forks return JSON payloads that match their schemas and are linked from /platform/schema.
-- AC-TPL-PLATFORM-DEVEX: GET /platform/devex/flows returns the canonical flows definition.
-- AC-PLT-013: `cargo xtask release-verify` provides git command sequence on success
-- AC-TPL-PLATFORM-AUTH-BASIC: When PLATFORM_AUTH_MODE=basic, write endpoints under /platform/* reject unauthenticated requests with 401/403 and accept requests with the configured credential header; read endpoints may remain open or use the same guard.
 - AC-TPL-SUGGEST-NEXT-HTTP: GET /platform/tasks/suggest-next?task=<ID> returns a JSON payload with task metadata and a recommended_sequence of steps (commands/edits) for that task.
-- AC-TPL-BUNDLE-MANIFEST: `bundle.yaml` contains bundle_version (current: 1), task_id, requirement_ids, ac_ids, spec sections (with file paths and line anchors), referenced docs (with paths), and test handles (type, tag, file). Manifest is machine-readable and governs bundle scope boundaries.
-- AC-PLT-020: `XTASK_LOW_RESOURCES=1` environment variable skips resource-intensive steps in selftest for CI/constrained environments
-- AC-TPL-PLATFORM-UI-FLOWS: The UI provides a flows and tasks view displaying DevEx flows and available tasks from the platform APIs.
-- AC-TPL-TASKS-HTTP: GET /platform/tasks returns a JSON representation of tasks.yaml, including id, title, requirement, acs, status, owner, labels, and docs fields, and supports status/requirement filters. POST /platform/tasks/{id}/status updates task status via HTTP (no POST /platform/tasks or PUT /platform/tasks/{id} implemented yet).
-- AC-TPL-PLATFORM-UI-DASHBOARD: GET / or /ui serves an HTML dashboard showing platform status, including governance health metrics from /platform/status.
-- AC-TPL-SKILLS-NAME-FORMAT: Skill names MUST be kebab-case, contain only lowercase letters/digits/hyphens, max 64 characters, and be unique within the project. skills-lint enforces this.
-- AC-TPL-AC-STATUS-CONSISTENCY: `docs/feature_status.md` is regenerated by `cargo xtask ac-status` from `spec_ledger.yaml` and test results. The header MUST include schema_version, template_version, and a cross-reference to governance semantics in `crates/ac-kernel/README.md`. `cargo xtask docs-check` validates this alignment.
-- AC-TPL-REL-CHANGELOG: Evidence file includes distinct sections (Tasks, Specs/ACs, ADRs, Git log, Governance signals) adequate for LLM formatting into Keep a Changelog format.
-- AC-TPL-004: Handlers propagate or generate X-Request-ID and expose it in responses
-- AC-PLT-012: `cargo xtask release-verify` runs selftest + audit + docs-check + clean tree
-- AC-TPL-PLATFORM-UI-CONTRACT: The platform provides a governed UI contract (specs/ui_contract.yaml) defining screens and regions, a /platform/ui/contract endpoint exposing the contract as JSON, and data-uiid attributes in HTML matching the contract. The cargo xtask ui-contract-check command validates YAML structure and DOM anchors, and selftest includes this check.
-- AC-PLT-002: `cargo xtask help-flows` renders categorized command map from specs/devex_flows.yaml
-- AC-TPL-AGENTS-GOVERNANCE-001: docs/AGENTS_GOVERNANCE.md exists and documents the agent governance spec, lifecycle (create/maintain/retire), validation rules, and ADR-0021 principles for this repo.
-- AC-TPL-AGENTS-TEMPLATE-DOC: docs/AGENTS_TEMPLATE.md exists and provides a copy-paste template for creating new agents with checklist for name format, description quality (what + when), tools/permissionMode safety, model selection, and skills references.
-- AC-PLT-009: `cargo xtask docs-check` validates version alignment across spec_ledger (canonical) and 8 consumer files
-- AC-TPL-AGENT-HINTS-SCHEMA: Hints returned from `/platform/agent/hints` MUST be objects with fields:
-  - `id`: stable hint identifier (string)
-  - `kind`: category of hint (e.g., `task`, `governance`, `policy`)
-  - `priority`: one of `low`, `medium`, `high`
-  - `status`: one of `open`, `in_progress`, `done`
-  - `reason`: object with `code` and `details`
-  - `target`: object describing what the hint is about
-    (e.g., `{ "type": "task", "id": "TASK-…" }`)
-  - `tags`: array of strings (labels)
-  - `links`: object with optional `spec`, `task`, `docs`,
-    `adrs`, and `extra` entries
-
-The CLI command `cargo xtask suggest-next --format json` MAY project this into a simpler structure (`task_id`, `title`, `status`, `owner`, `labels`, `requirement_ids`, `ac_ids`, `reason`), but it MUST preserve the same underlying semantics (priority, status, linkage to REQs/ACs).
-- AC-TPL-BUNDLE-LAYOUT: `cargo xtask bundle <TASK>` creates `bundle/<TASK>/` with: (1) `bundle.yaml` manifest listing task_id, requirement_ids, ac_ids, referenced spec_ledger sections, docs, and tests; (2) `context.md` with bundled file contents (markdown format); (3) manifest includes bundle_version, git_sha, and timestamp for reproducibility.
-- AC-TPL-FORKS-STATUS-SUMMARY: /platform/status includes governance.forks.total and a forks.ids array when forks/fork_registry.yaml exists, and `cargo xtask fork-list --json` reflects that state.
-- AC-TPL-TASKS-CLI: cargo xtask tasks-list prints all tasks with their IDs, titles, status, and requirement IDs (no filters implemented yet).
-- AC-TPL-KERNEL-CONTRACT-EMITTED: `cargo xtask release-bundle X.Y.Z` writes `release_evidence/kernel_contract.vX.Y.Z.json` describing xtask commands, /platform/* endpoints, and governance schemas for that version.
-- AC-PLT-001: `cargo xtask doctor` validates Rust, Nix, conftest, git and provides next-steps guidance
-- AC-PLT-008: `cargo xtask sbom-local` generates SPDX JSON to target/sbom.spdx.json
-- AC-MYSERV-002: GET /todos returns an empty array when no todos exist
-- AC-TPL-007: GET /metrics returns Prometheus-formatted metrics including http_requests_total
-- AC-TPL-VERSION-DRYRUN: `cargo xtask release-prepare X.Y.Z --dry-run` shows all changes before applying them, listing each file and the old→new version without modifying files
-- AC-PLT-005: `cargo xtask ac-new <ID> <desc>` rejects duplicate IDs and generates YAML snippet
-- AC-PLT-016: `cargo xtask ci-local` orchestrates doctor + selftest + audit + docs-check
-- AC-TPL-HOOKS-INSTALL: The 'cargo xtask install-hooks' command creates a pre-commit hook that runs 'cargo run -p xtask -- precommit' inside the Nix devshell when available; failures are advisory and do not block commits.
-- AC-TPL-PLATFORM-SCHEMA: GET /platform/schema (or /platform/openapi) returns a JSON schema/OpenAPI document that includes /platform/status, /platform/graph, /platform/tasks, and /platform/agent/hints.
-- AC-TPL-VERSION-ATOMIC: Version updates are atomic with rollback on failure, ensuring no partial state if any file update fails
-- AC-PLT-007: `cargo xtask audit` provides 4-step recovery guidance on failure
-- AC-TPL-PLATFORM-UI-GRAPH: The UI provides a graph visualization rendering the governance graph (stories, requirements, ACs, docs, commands) using Mermaid.js.
-- AC-TPL-AGENTS-NAME-FORMAT: Agent names MUST be kebab-case, contain only lowercase letters/digits/hyphens, max 64 characters, and be unique within the project. agents-lint enforces this.
-- AC-PLT-010: `cargo xtask docs-check` regenerates feature_status and fails on dirty git tree. Validates feature_status.md header contains Template Version metadata that matches spec_ledger.yaml, ensuring the document cannot silently drift from its source of truth.
-- AC-PLT-018: `cargo xtask dev-up` runs doctor + install-hooks + check and displays next steps
-- AC-PLT-017: `cargo xtask status` displays version, REQ/AC/task counts, selftest status, and suggested next tasks
-- AC-TPL-VERSION-MANIFEST: Version locations declared in specs/version_manifest.yaml listing all files and extraction patterns; release-prepare reads this manifest to update all version-bearing files
-- AC-PLT-003: `cargo xtask check` runs fmt + clippy + tests as fast dev loop
-- AC-PLT-021: `cargo xtask service-init` updates service_metadata.yaml, README, and CLAUDE.md with a new service ID, name, and description, and `/platform/status` reflects the new identity.
-- AC-PLT-ENV-SCCACHE-WARN: When sccache/libz.so.1 issues are detected, doctor classifies them as environment warnings (not template failures) and suggests workarounds including RUSTC_WRAPPER="" and IN_NIX_SHELL=1 patterns.
-- AC-MYSERV-003: Invalid payload returns 400 with structured error message
-- AC-TPL-XTASK-NONINTERACTIVE: For commands covered by the DevEx contract (doctor, check, selftest, ac-status, ac-coverage, bundle, version, friction-*, questions-*, fork-*), setting CI=1 or XTASK_NONINTERACTIVE=1 guarantees: - no interactive prompts, and - exit code 0 on success, non-zero on failure.
-- AC-TPL-SKILLS-ALIGN-001: Existing .claude/skills/* are aligned with documented workflows (bootstrap-dev-env, governed-feature-dev, governed-maintenance, governed-release, governed-governance-debug).
-- AC-TPL-POLICY-STATUS-OVERVIEW: GET /platform/status includes governance.policies.status field derived from the last policy-test run (pass/fail/unknown), read from target/policy_status.json.
-- AC-TPL-TASK-STATUS-MODEL: Task status values (Todo, InProgress, Review, Done) have a single canonical representation in business_core::governance::TaskStatus. All adapters, CLIs, and HTTP surfaces parse status strings through this model via FromStr and reject unknown status strings consistently.
-- AC-PLT-011: `cargo xtask release-prepare X.Y.Z` updates spec_ledger, README, CLAUDE, CHANGELOG
-- AC-PLT-DOC-INDEX-FRONTMATTER: `cargo xtask docs-check` validates bidirectional alignment between doc_index.yaml entries and document front-matter (stories, requirements, acs, adrs). Items in index must be in front-matter and vice versa. (Docs-as-Code v3)
-- AC-TPL-CLI-JSON-OUTPUT: For core reporting commands (`ac-status`, `version`, `friction-list`, `questions-list`, `fork-list`), passing `--json` produces a single valid JSON document on stdout with a stable top-level shape, and exit codes follow the success/failure of the operation.
-- AC-TPL-001: GET /health returns 200 with status 'ok' when service is healthy
-- AC-TPL-OPINIONS-DOCUMENTED: docs/QUICKSTART.md and docs/ROADMAP.md include a 'Defaults & Opinions' section listing at least: environment model (Nix-first, Tier-1/Tier-2 split), CI gate (selftest as required), governance artifacts (questions, friction, forks), and agent surfaces (/platform/*, bundles, xtask CLI).
+- AC-TPL-REL-EVIDENCE: `cargo xtask release-bundle X.Y.Z` writes `release_evidence/vX.Y.Z.md` containing: all tasks completed in this version, linked REQs/ACs/ADRs, git log since last tag, selftest summary, policy status, resolved friction entries.
 - AC-TPL-QUESTIONS-LOGGED: Ambiguity during automated flows or suggest-next emits a structured question (file/PR comment/status entry) that can be surfaced to humans or agents without halting progress.
-- AC-TPL-SKILLS-FMT: `cargo run -p xtask -- skills-fmt` normalizes SKILL.md files according to repo conventions (frontmatter, headings, links).
+- AC-MYSERV-001: GET /todos returns a JSON array of the user's todos
+- AC-MYSERV-006: POST /todos validates title is non-empty and not exceeding 256 characters
+- AC-TPL-PLATFORM-SCHEMA: GET /platform/schema (or /platform/openapi) returns a JSON schema/OpenAPI document that includes /platform/status, /platform/graph, /platform/tasks, and /platform/agent/hints.
+- AC-PLT-DOC-INDEX-FRONTMATTER: `cargo xtask docs-check` validates bidirectional alignment between doc_index.yaml entries and document front-matter (stories, requirements, acs, adrs). Items in index must be in front-matter and vice versa. (Docs-as-Code v3)
+- AC-PLT-002: `cargo xtask help-flows` renders categorized command map from specs/devex_flows.yaml
+- AC-TPL-OVERRIDE-DOC: docs/how-to/change-template-opinion.md exists and describes the recommended override path: (1) Identify story/REQ/AC in spec_ledger.yaml, (2) Update AC text/tags/must_have_ac in the fork, (3) Update BDD scenarios, (4) Run selftest + ac-status, (5) Optionally log friction/question if the kernel made this hard.
+- AC-PLT-016: `cargo xtask ci-local` orchestrates doctor + selftest + audit + docs-check
+- AC-PLT-021: `cargo xtask service-init` updates service_metadata.yaml, README, and CLAUDE.md with a new service ID, name, and description, and `/platform/status` reflects the new identity.
+- AC-TPL-VERSION-DRYRUN: `cargo xtask release-prepare X.Y.Z --dry-run` shows all changes before applying them, listing each file and the old→new version without modifying files
+- AC-PLT-013: `cargo xtask release-verify` provides git command sequence on success
+- AC-PLT-017: `cargo xtask status` displays version, REQ/AC/task counts, selftest status, and suggested next tasks
+- AC-TPL-PLATFORM-GOVERNANCE-APIS: /platform/questions, /platform/friction, and /platform/forks return JSON payloads that match their schemas and are linked from /platform/schema.
+- AC-PLT-006: `cargo xtask audit` runs cargo-audit + cargo-deny with repo policy (deny.toml)
+- AC-TPL-PLATFORM-GRAPH: GET /platform/graph returns the full governance graph in JSON format.
+- AC-MYSERV-005: POST /todos rejects duplicate todo ID with 409 Conflict
+- AC-TPL-AC-STATUS-CONSISTENCY: `docs/feature_status.md` is regenerated by `cargo xtask ac-status` from `spec_ledger.yaml` and test results. The header MUST include schema_version, template_version, and a cross-reference to governance semantics in `crates/ac-kernel/README.md`. `cargo xtask docs-check` validates this alignment.
+- AC-TPL-PLATFORM-AUTH-BASIC: When PLATFORM_AUTH_MODE=basic, write endpoints under /platform/* reject unauthenticated requests with 401/403 and accept requests with the configured credential header; read endpoints may remain open or use the same guard.
+- AC-TPL-SKILLS-LINT: `cargo run -p xtask -- skills-lint` validates Skills frontmatter and content (name/description rules, references to flows and APIs).
+- AC-PLT-008: `cargo xtask sbom-local` generates SPDX JSON to target/sbom.spdx.json
+- AC-TPL-REL-CHANGELOG: Evidence file includes distinct sections (Tasks, Specs/ACs, ADRs, Git log, Governance signals) adequate for LLM formatting into Keep a Changelog format.
+- AC-PLT-018: `cargo xtask dev-up` runs doctor + install-hooks + check and displays next steps
+- AC-TPL-IDP-SNAPSHOT: `cargo xtask idp-snapshot` emits JSON containing timestamp, template_version, service_id, governance_health (status, ac_coverage), documentation metrics, and task hints for pending/in_progress tasks.
+- AC-TPL-GOV-FRICTION: Friction log entries are stored as structured files under friction/, can be created and listed via `cargo xtask friction-new`/`friction-list`, and are exposed via /platform/friction and /platform/friction/{id}.
+- AC-PLT-001: `cargo xtask doctor` validates Rust, Nix, conftest, git and provides next-steps guidance
+- AC-TPL-PLATFORM-UI-DASHBOARD: GET / or /ui serves an HTML dashboard showing platform status, including governance health metrics from /platform/status.
+- AC-TPL-IDP-SNAPSHOT-VALID-JSON: The idp-snapshot output is valid JSON that can be parsed without errors and contains all required top-level keys.
+- AC-PLT-004: `cargo xtask adr-new <title>` creates numbered ADR from template with metadata
 - AC-TPL-METADATA-COMPLETE: service_metadata.yaml includes service_id, template_version, URLs, and tags; /platform/status returns the same identifiers; the UI links to runbook, roadmap, agent guide, feature status, and platform support docs.
+- AC-TPL-007: GET /metrics returns Prometheus-formatted metrics including http_requests_total
+- AC-TPL-SUGGEST-NEXT-CLI: cargo xtask suggest-next --task <ID> prints a structured sequence of recommended commands and edits for the given task, based on its recommended_flows.
+- AC-TPL-SKILLS-GUIDE-001: docs/AGENT_SKILLS.md exists and documents the recommended Skill set, SKILL.md templates, and best practices for this repo.
+- AC-TPL-PLATFORM-DOCS: GET /platform/docs/index returns the documentation index.
+- AC-MYSERV-002: GET /todos returns an empty array when no todos exist
+- AC-TPL-TASKS-CREATE-CLI: cargo xtask task-create creates a new task in specs/tasks.yaml, validates that the requirement and ACs exist in spec_ledger.yaml, and rejects duplicate task IDs.
+- AC-TPL-POLICY-STATUS-OVERVIEW: GET /platform/status includes governance.policies.status field derived from the last policy-test run (pass/fail/unknown), read from target/policy_status.json.
+- AC-TPL-SKILLS-FMT: `cargo run -p xtask -- skills-fmt` normalizes SKILL.md files according to repo conventions (frontmatter, headings, links).
+- AC-TPL-TASK-STATUS-MODEL: Task status values (Todo, InProgress, Review, Done) have a single canonical representation in business_core::governance::TaskStatus. All adapters, CLIs, and HTTP surfaces parse status strings through this model via FromStr and reject unknown status strings consistently.
+- AC-TPL-SKILLS-NAME-FORMAT: Skill names MUST be kebab-case, contain only lowercase letters/digits/hyphens, max 64 characters, and be unique within the project. skills-lint enforces this.
+- AC-TPL-TASKS-UPDATE-CLI: cargo xtask task-update updates task fields (status, title, owner) in specs/tasks.yaml, enforces valid status transitions, and persists changes to the task definition.
+- AC-TPL-AGENTS-NAME-FORMAT: Agent names MUST be kebab-case, contain only lowercase letters/digits/hyphens, max 64 characters, and be unique within the project. agents-lint enforces this.
+- AC-TPL-VERSION-ATOMIC: Version updates are atomic with rollback on failure, ensuring no partial state if any file update fails
+- AC-TPL-ERROR-MAPPING: Platform governance errors are mapped consistently from domain errors to HTTP responses and surfaced via /platform/status. TaskNotFound returns 404, invalid transitions return 400, and repository/configuration errors return 5xx. /platform/status exposes a summary of recent governance errors.
+- AC-TPL-001: GET /health returns 200 with status 'ok' when service is healthy
+- AC-PLT-005: `cargo xtask ac-new <ID> <desc>` rejects duplicate IDs and generates YAML snippet
+- AC-TPL-004: Handlers propagate or generate X-Request-ID and expose it in responses
+- AC-TPL-PLATFORM-UI-CONTRACT: The platform provides a governed UI contract (specs/ui_contract.yaml) defining screens and regions, a /platform/ui/contract endpoint exposing the contract as JSON, and data-uiid attributes in HTML matching the contract. The cargo xtask ui-contract-check command validates YAML structure and DOM anchors, and selftest includes this check.
+- AC-TPL-VERSION-MANIFEST: Version locations declared in specs/version_manifest.yaml listing all files and extraction patterns; release-prepare reads this manifest to update all version-bearing files
+- AC-PLT-010: `cargo xtask docs-check` regenerates feature_status and fails on dirty git tree. Validates feature_status.md header contains Template Version metadata that matches spec_ledger.yaml, ensuring the document cannot silently drift from its source of truth.
+- AC-TPL-KERNEL-CONTRACT-EMITTED: `cargo xtask release-bundle X.Y.Z` writes `release_evidence/kernel_contract.vX.Y.Z.json` describing xtask commands, /platform/* endpoints, and governance schemas for that version.
+- AC-TPL-XTASK-NONINTERACTIVE: For commands covered by the DevEx contract (doctor, check, selftest, ac-status, ac-coverage, bundle, version, friction-*, questions-*, fork-*), setting CI=1 or XTASK_NONINTERACTIVE=1 guarantees: - no interactive prompts, and - exit code 0 on success, non-zero on failure.
 - AC-TPL-003: All 4xx/5xx responses include an error code, message, and request ID
+- AC-MYSERV-003: Invalid payload returns 400 with structured error message
+- AC-TPL-PLATFORM-UI-FLOWS: The UI provides a flows and tasks view displaying DevEx flows and available tasks from the platform APIs.
+- AC-TPL-AGENTS-TEMPLATE-DOC: docs/AGENTS_TEMPLATE.md exists and provides a copy-paste template for creating new agents with checklist for name format, description quality (what + when), tools/permissionMode safety, model selection, and skills references.
+- AC-TPL-PLATFORM-DEVEX: GET /platform/devex/flows returns the canonical flows definition.
+- AC-TPL-TASKS-HTTP: GET /platform/tasks returns a JSON representation of tasks.yaml, including id, title, requirement, acs, status, owner, labels, and docs fields, and supports status/requirement filters. POST /platform/tasks/{id}/status updates task status via HTTP (no POST /platform/tasks or PUT /platform/tasks/{id} implemented yet).
+- AC-TPL-AGENT-SKILLS: The .claude/skills directory contains executable skill definitions for feature development, release, and maintenance workflows, each referencing the appropriate xtask commands and platform APIs.
+- AC-TPL-GOV-WRITE-TASK-STATUS-200: set_task_status writes durable state reflected in the governance graph.
+- AC-TPL-CLI-JSON-OUTPUT: For core reporting commands (`ac-status`, `version`, `friction-list`, `questions-list`, `fork-list`), passing `--json` produces a single valid JSON document on stdout with a stable top-level shape, and exit codes follow the success/failure of the operation.
+- AC-PLT-020: `XTASK_LOW_RESOURCES=1` environment variable skips resource-intensive steps in selftest for CI/constrained environments
+- AC-TPL-HOOKS-INSTALL: The 'cargo xtask install-hooks' command creates a pre-commit hook that runs 'cargo run -p xtask -- precommit' inside the Nix devshell when available; failures are advisory and do not block commits.
+- AC-TPL-OVERRIDE-TRACEABLE: specs/doc_index.yaml registers the override doc with tag 'override_path', and /platform/docs/index exposes it under a 'Kernel Overrides' category.
+- AC-TPL-GOV-FORKS: Fork metadata is stored under forks/fork_registry.yaml, can be managed via `cargo xtask fork-register`/`fork-list`, and is exposed via /platform/forks and /platform/forks/{name}.
+- AC-TPL-SKILLS-ALIGN-001: Existing .claude/skills/* are aligned with documented workflows (bootstrap-dev-env, governed-feature-dev, governed-maintenance, governed-release, governed-governance-debug).
+- AC-PLT-007: `cargo xtask audit` provides 4-step recovery guidance on failure
+- AC-PLT-ENV-SCCACHE-WARN: When sccache/libz.so.1 issues are detected, doctor classifies them as environment warnings (not template failures) and suggests workarounds including RUSTC_WRAPPER="" and IN_NIX_SHELL=1 patterns.
+- AC-PLT-011: `cargo xtask release-prepare X.Y.Z` updates spec_ledger, README, CLAUDE, CHANGELOG
+- AC-TPL-OPINIONS-DOCUMENTED: docs/QUICKSTART.md and docs/ROADMAP.md include a 'Defaults & Opinions' section listing at least: environment model (Nix-first, Tier-1/Tier-2 split), CI gate (selftest as required), governance artifacts (questions, friction, forks), and agent surfaces (/platform/*, bundles, xtask CLI).
+- AC-MYSERV-004: DELETE /todos/:id removes the todo from the list
+- AC-TPL-TASKS-CLI: cargo xtask tasks-list prints all tasks with their IDs, titles, status, and requirement IDs (no filters implemented yet).
+- AC-TPL-AGENTS-GOVERNANCE-001: docs/AGENTS_GOVERNANCE.md exists and documents the agent governance spec, lifecycle (create/maintain/retire), validation rules, and ADR-0021 principles for this repo.
+- AC-PLT-012: `cargo xtask release-verify` runs selftest + audit + docs-check + clean tree
+- AC-TPL-002: GET /version returns build information including version and git SHA
+- AC-PLT-009: `cargo xtask docs-check` validates version alignment across spec_ledger (canonical) and 8 consumer files
+- AC-TPL-PLATFORM-UI-GRAPH: The UI provides a graph visualization rendering the governance graph (stories, requirements, ACs, docs, commands) using Mermaid.js.
+- AC-PLT-ENV-ABI-CHECK: `cargo xtask doctor` detects ABI mismatches between system rustc and Nix devshell rustc, warns about proc-macro compatibility issues, and points to TROUBLESHOOTING.md for resolution.
+- AC-PLT-003: `cargo xtask check` runs fmt + clippy + tests as fast dev loop
+- AC-TPL-AGENTS-GOVERNANCE-002: Each project agent in .claude/agents/* has a corresponding REQ in spec_ledger.yaml and at least one AC defining its configuration and system prompt requirements.
+- AC-TPL-FORKS-STATUS-SUMMARY: /platform/status includes governance.forks.total and a forks.ids array when forks/fork_registry.yaml exists, and `cargo xtask fork-list --json` reflects that state.
 
 ## Meta / CI-only ACs (Not Executed Locally)
 
