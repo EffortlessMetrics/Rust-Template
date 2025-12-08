@@ -202,7 +202,7 @@ components:
     PlatformStatus:
       type: object
       description: "Complete platform governance status"
-      required: [service, governance]
+      required: [service, governance, errors]
       properties:
         service:
           $ref: '#/components/schemas/ServiceInfo'
@@ -211,6 +211,9 @@ components:
         config:
           description: "Runtime configuration (may be absent if no config loaded)"
           $ref: '#/components/schemas/ConfigInfo'
+        errors:
+          description: "Error tracking summary (AC-TPL-ERROR-MAPPING)"
+          $ref: '#/components/schemas/ErrorSummary'
 
     ServiceInfo:
       type: object
@@ -485,6 +488,74 @@ components:
         token_present:
           type: boolean
           description: "Whether an auth token is configured"
+
+    # ==========================================================================
+    # Error Tracking Schemas (AC-TPL-ERROR-MAPPING)
+    # ==========================================================================
+
+    ErrorSummary:
+      type: object
+      description: "Error tracking summary surfaced via /platform/status"
+      required: [has_recent_errors, stats]
+      properties:
+        has_recent_errors:
+          type: boolean
+          description: "Whether any errors have occurred since service start"
+        last_error:
+          description: "The most recent error (if any)"
+          $ref: '#/components/schemas/LastErrorSummary'
+        stats:
+          description: "Aggregated error statistics"
+          $ref: '#/components/schemas/ErrorStats'
+
+    LastErrorSummary:
+      type: object
+      description: "Summary of the last error that occurred"
+      required: [category, message, status_code, occurred_at]
+      properties:
+        category:
+          type: string
+          description: "Error category (e.g., 'task_not_found', 'invalid_transition', 'internal')"
+          example: "task_not_found"
+        message:
+          type: string
+          description: "Human-readable error message"
+          example: "Task TASK-TPL-DEMO-001 not found"
+        status_code:
+          type: integer
+          format: int32
+          minimum: 400
+          maximum: 599
+          description: "HTTP status code returned"
+          example: 404
+        occurred_at:
+          type: string
+          format: date-time
+          description: "When the error occurred (ISO 8601)"
+        request_id:
+          type: string
+          description: "Request ID for correlation (X-Request-ID header value)"
+
+    ErrorStats:
+      type: object
+      description: "Aggregated error statistics since service start"
+      required: [total_errors, client_errors, server_errors]
+      properties:
+        total_errors:
+          type: integer
+          format: int64
+          minimum: 0
+          description: "Total number of errors since service start"
+        client_errors:
+          type: integer
+          format: int64
+          minimum: 0
+          description: "Number of 4xx client errors"
+        server_errors:
+          type: integer
+          format: int64
+          minimum: 0
+          description: "Number of 5xx server errors"
 
     # ==========================================================================
     # Documentation Index Schemas
