@@ -8,6 +8,12 @@ pub enum OutputFormat {
     Mermaid,
 }
 
+#[derive(Debug, Clone, ValueEnum)]
+pub enum ReportFormat {
+    Text,
+    Json,
+}
+
 #[derive(Parser, Debug)]
 pub struct GraphExportArgs {
     /// Output format (json or mermaid)
@@ -17,6 +23,10 @@ pub struct GraphExportArgs {
     /// Check graph invariants
     #[arg(long)]
     pub check: bool,
+
+    /// Report format for invariant checks (text or json)
+    #[arg(long, value_enum, default_value_t = ReportFormat::Text)]
+    pub report_format: ReportFormat,
 }
 
 pub fn run(args: GraphExportArgs) -> Result<()> {
@@ -27,15 +37,22 @@ pub fn run(args: GraphExportArgs) -> Result<()> {
     let graph = spec_runtime::build_graph(&specs.ledger, &specs.devex, &specs.docs)?;
 
     if args.check {
-        if let Err(violations) =
-            spec_runtime::graph::check_invariants(&graph, &specs.devex, &specs.ledger)
-        {
-            for v in violations {
-                eprintln!("  - {}", v);
+        let report = spec_runtime::graph::check_invariants(&graph, &specs.devex, &specs.ledger);
+
+        match args.report_format {
+            ReportFormat::Json => {
+                println!("{}", serde_json::to_string_pretty(&report)?);
             }
+            ReportFormat::Text => {
+                print_invariant_report(&report);
+            }
+        }
+
+        if !report.passed {
             anyhow::bail!("Graph invariants failed");
         }
-        eprintln!("✓ Graph invariants satisfied");
+
+        return Ok(());
     }
 
     match args.format {
@@ -50,6 +67,34 @@ pub fn run(args: GraphExportArgs) -> Result<()> {
     Ok(())
 }
 
+fn print_invariant_report(report: &spec_runtime::graph::InvariantReport) {
+    eprintln!("Graph Invariants Check ({})", report.checked_at);
+    eprintln!();
+
+    for invariant in &report.invariants {
+        let status = if invariant.passed { "✓" } else { "✗" };
+        eprintln!(
+            "  {} {} ({} items checked)",
+            status, invariant.description, invariant.checked_count
+        );
+    }
+
+    if !report.violations.is_empty() {
+        eprintln!();
+        eprintln!("Violations:");
+        for v in &report.violations {
+            eprintln!("  - {}", v);
+        }
+    }
+
+    eprintln!();
+    if report.passed {
+        eprintln!("✓ All invariants satisfied");
+    } else {
+        eprintln!("✗ {} violation(s) found", report.violations.len());
+    }
+}
+
 pub fn run_graph_invariants(_verbosity: u8) -> Result<()> {
     let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     let root = manifest_dir.parent().unwrap().parent().unwrap();
@@ -57,13 +102,14 @@ pub fn run_graph_invariants(_verbosity: u8) -> Result<()> {
     let specs = spec_runtime::load_all_specs(root)?;
     let graph = spec_runtime::build_graph(&specs.ledger, &specs.devex, &specs.docs)?;
 
-    match spec_runtime::graph::check_invariants(&graph, &specs.devex, &specs.ledger) {
-        Ok(_) => Ok(()),
-        Err(violations) => {
-            for v in violations {
-                eprintln!("  - {}", v);
-            }
-            anyhow::bail!("Graph invariants failed");
+    let report = spec_runtime::graph::check_invariants(&graph, &specs.devex, &specs.ledger);
+
+    if !report.passed {
+        for v in &report.violations {
+            eprintln!("  - {}", v);
         }
+        anyhow::bail!("Graph invariants failed");
     }
+
+    Ok(())
 }

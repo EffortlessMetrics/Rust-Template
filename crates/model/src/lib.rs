@@ -27,3 +27,13 @@ pub enum TaskStatus {
     InProgress,
     Completed,
 }
+
+/// Todo item for the MYSERV domain
+///
+/// Example domain model demonstrating AC-MYSERV-001:
+/// GET /todos returns a JSON array of todos with id and title fields.
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+pub struct Todo {
+    pub id: String,
+    pub title: String,
+}

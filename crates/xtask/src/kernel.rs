@@ -34,6 +34,126 @@ pub fn spec_root() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).parent().unwrap().parent().unwrap().to_path_buf()
 }
 
+/// Diagnostic information about the spec root configuration.
+#[derive(Debug, Clone)]
+pub struct SpecRootInfo {
+    pub path: PathBuf,
+    pub source: String,
+    pub valid: bool,
+    pub missing_files: Vec<String>,
+}
+
+/// Get diagnostic information about the spec root.
+///
+/// This provides detailed information about where spec_root is coming from,
+/// whether it's valid, and what files are missing (if any).
+///
+/// # Example
+///
+/// ```no_run
+/// use crate::kernel::spec_root_info;
+///
+/// let info = spec_root_info();
+/// if !info.valid {
+///     eprintln!("Spec root {} is invalid", info.path.display());
+///     eprintln!("  Source: {}", info.source);
+///     eprintln!("  Missing files: {}", info.missing_files.join(", "));
+/// }
+/// ```
+pub fn spec_root_info() -> SpecRootInfo {
+    let path = spec_root();
+    let source = if std::env::var("SPEC_ROOT").is_ok() {
+        "SPEC_ROOT environment variable".to_string()
+    } else {
+        "default (relative to xtask)".to_string()
+    };
+
+    let (valid, missing_files) = validate_spec_root_path(&path);
+
+    SpecRootInfo { path, source, valid, missing_files }
+}
+
+/// Validate that the spec root directory exists and contains expected files.
+///
+/// Checks for:
+/// - Directory exists
+/// - specs/spec_ledger.yaml exists
+/// - specs/devex_flows.yaml exists
+///
+/// Returns (valid, missing_files) tuple.
+fn validate_spec_root_path(root: &PathBuf) -> (bool, Vec<String>) {
+    let mut missing = Vec::new();
+
+    if !root.exists() {
+        missing.push(format!("Directory '{}' does not exist", root.display()));
+        return (false, missing);
+    }
+
+    if !root.is_dir() {
+        missing.push(format!("Path '{}' is not a directory", root.display()));
+        return (false, missing);
+    }
+
+    // Check for expected files
+    let expected_files = vec!["specs/spec_ledger.yaml", "specs/devex_flows.yaml"];
+
+    for file in expected_files {
+        let file_path = root.join(file);
+        if !file_path.exists() {
+            missing.push(file.to_string());
+        }
+    }
+
+    (missing.is_empty(), missing)
+}
+
+/// Validate the spec root and return a helpful error if invalid.
+///
+/// This is a convenience function that returns a Result with a detailed
+/// error message if the spec root is not valid.
+///
+/// # Errors
+///
+/// Returns an error if:
+/// - SPEC_ROOT is set but the directory doesn't exist
+/// - The spec root directory is missing required files
+///
+/// # Example
+///
+/// ```no_run
+/// use crate::kernel::validate_spec_root;
+///
+/// validate_spec_root()?;
+/// // Now safe to use spec_root() or kernel_for_repo()
+/// # Ok::<(), anyhow::Error>(())
+/// ```
+pub fn validate_spec_root() -> anyhow::Result<()> {
+    let info = spec_root_info();
+
+    if !info.valid {
+        let mut msg =
+            format!("Spec root is invalid: {}\n  Source: {}", info.path.display(), info.source);
+
+        if !info.missing_files.is_empty() {
+            msg.push_str("\n  Missing files:\n");
+            for file in &info.missing_files {
+                msg.push_str(&format!("    - {}\n", file));
+            }
+        }
+
+        msg.push_str("\n  Tip: Run `cargo xtask doctor` to check your environment");
+
+        if std::env::var("SPEC_ROOT").is_ok() {
+            msg.push_str("\n  Note: SPEC_ROOT environment variable is set");
+            msg.push_str("\n        Verify it points to the repository root");
+        }
+
+        anyhow::bail!(msg);
+    }
+
+    Ok(())
+}
+
 /// Create an `AcKernel` configured for the current repository.
 ///
 /// This is the main entry point for xtask commands that need to work with
@@ -175,6 +295,91 @@ mod tests {
 
         // Restore original value
         // SAFETY: We hold a mutex lock to serialize all env var modifications in tests
+        unsafe {
+            match original {
+                Some(val) => std::env::set_var("SPEC_ROOT", val),
+                None => std::env::remove_var("SPEC_ROOT"),
+            }
+        }
+    }
+
+    #[test]
+    fn spec_root_info_detects_valid_repo() {
+        // In the test environment, spec_root should resolve to a valid repo
+        let info = spec_root_info();
+        assert!(info.valid, "spec_root_info should report valid in test environment");
+        assert!(info.missing_files.is_empty(), "No files should be missing");
+        assert!(
+            info.source == "default (relative to xtask)"
+                || info.source == "SPEC_ROOT environment variable"
+        );
+    }
+
+    #[test]
+    fn spec_root_info_detects_missing_directory() {
+        use std::sync::Mutex;
+        use std::sync::OnceLock;
+
+        static ENV_LOCK: OnceLock<Mutex<()>> = OnceLock::new();
+        let _guard = ENV_LOCK.get_or_init(|| Mutex::new(())).lock().unwrap();
+
+        let original = std::env::var("SPEC_ROOT").ok();
+
+        // Set SPEC_ROOT to a non-existent directory
+        let nonexistent = PathBuf::from("/nonexistent/path/to/repo");
+        // SAFETY: We hold a mutex lock
+        unsafe { std::env::set_var("SPEC_ROOT", &nonexistent) };
+
+        let info = spec_root_info();
+        assert!(!info.valid, "Should detect invalid path");
+        assert!(!info.missing_files.is_empty(), "Should report missing directory");
+        assert_eq!(info.source, "SPEC_ROOT environment variable");
+
+        // Restore
+        // SAFETY: We hold a mutex lock
+        unsafe {
+            match original {
+                Some(val) => std::env::set_var("SPEC_ROOT", val),
+                None => std::env::remove_var("SPEC_ROOT"),
+            }
+        }
+    }
+
+    #[test]
+    fn validate_spec_root_succeeds_for_valid_repo() {
+        // Should succeed in the test environment
+        let result = validate_spec_root();
+        assert!(result.is_ok(), "validate_spec_root should succeed in valid repo");
+    }
+
+    #[test]
+    fn validate_spec_root_fails_with_helpful_message() {
+        use std::sync::Mutex;
+        use std::sync::OnceLock;
+
+        static ENV_LOCK: OnceLock<Mutex<()>> = OnceLock::new();
+        let _guard = ENV_LOCK.get_or_init(|| Mutex::new(())).lock().unwrap();
+
+        let original = std::env::var("SPEC_ROOT").ok();
+
+        // Set SPEC_ROOT to invalid path
+        let invalid = PathBuf::from("/tmp/invalid-spec-root-for-test");
+        // SAFETY: We hold a mutex lock
+        unsafe { std::env::set_var("SPEC_ROOT", &invalid) };
+
+        let result = validate_spec_root();
+        assert!(result.is_err(), "Should fail for invalid path");
+
+        let err_msg = result.unwrap_err().to_string();
+        assert!(err_msg.contains("Spec root is invalid"), "Error should mention spec root");
+        assert!(err_msg.contains("cargo xtask doctor"), "Error should suggest running doctor");
+        assert!(
+            err_msg.contains("SPEC_ROOT environment variable"),
+            "Error should mention SPEC_ROOT env var"
+        );
+
+        // Restore
+        // SAFETY: We hold a mutex lock
         unsafe {
             match original {
                 Some(val) => std::env::set_var("SPEC_ROOT", val),

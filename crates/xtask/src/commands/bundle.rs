@@ -106,26 +106,76 @@ struct SpecLedger {
     stories: Vec<SpecStory>,
 }
 
+/// Display available tasks when the requested task is not found
+fn display_available_tasks(contextpack: &ContextPack, invalid_task: &str) -> Result<()> {
+    println!();
+    println!("{}", "AVAILABLE BUNDLE TASKS".bold());
+    println!();
+    println!("{}", format!("Source: {}", ".llm/contextpack.yaml").dimmed());
+    println!();
+
+    if !invalid_task.is_empty() {
+        println!("{}", format!("❌ Task '{}' not found", invalid_task).red());
+        println!();
+    }
+
+    // Sort tasks alphabetically for consistent display
+    let mut tasks: Vec<_> = contextpack.tasks.iter().collect();
+    tasks.sort_by_key(|(name, _)| *name);
+
+    println!("{}", "Available tasks:".cyan().bold());
+    println!();
+
+    for (name, task) in tasks {
+        let description = if task.description.is_empty() {
+            "No description available".dimmed().to_string()
+        } else {
+            task.description.clone()
+        };
+
+        println!("  {:<20} {}", name.bold(), description);
+        println!("    {}", format!("Max size: {} bytes", task.max_bytes).dimmed());
+        println!("    {}", format!("Patterns: {}", task.include.len()).dimmed());
+        println!();
+    }
+
+    println!("{}", "Usage:".dimmed());
+    println!("  {}", "cargo xtask bundle <TASK>".dimmed());
+    println!();
+    println!("{}", "Examples:".dimmed());
+    println!("  {}", "cargo xtask bundle implement_ac".dimmed());
+    println!("  {}", "cargo xtask bundle debug_tests".dimmed());
+    println!();
+
+    Ok(())
+}
+
 /// Generate LLM context bundle for a task
 pub fn run(task_name: &str) -> Result<()> {
     let workspace_root = get_workspace_root()?;
     let contextpack_path = workspace_root.join(".llm/contextpack.yaml");
 
     if !contextpack_path.exists() {
-        anyhow::bail!("ContextPack not found: {}", contextpack_path.display());
+        anyhow::bail!(
+            "ContextPack not found: {}\n  \
+             Tip: Run `cargo xtask doctor` to check your environment\n  \
+             Ensure you're in the repository root.",
+            contextpack_path.display()
+        );
     }
 
-    println!("Loading contextpack: {}", contextpack_path.display());
     let contextpack = load_contextpack(&contextpack_path)?;
 
-    let task = contextpack.tasks.get(task_name).with_context(|| {
-        let available: Vec<_> = contextpack.tasks.keys().map(|s| s.as_str()).collect();
-        format!(
-            "Task '{}' not found in contextpack. Available tasks: {}",
-            task_name,
-            available.join(", ")
-        )
-    })?;
+    // If task not found, show available tasks
+    let task = match contextpack.tasks.get(task_name) {
+        Some(t) => t,
+        None => {
+            display_available_tasks(&contextpack, task_name)?;
+            anyhow::bail!("Task '{}' not found", task_name);
+        }
+    };
+
+    println!("Loading contextpack: {}", contextpack_path.display());
 
     println!("Task: {}", task_name.blue());
     if !task.description.is_empty() {

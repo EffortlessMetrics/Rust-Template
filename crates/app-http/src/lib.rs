@@ -16,6 +16,7 @@ pub mod middleware;
 pub mod platform;
 pub mod security;
 pub mod tasks;
+pub mod todos;
 
 // Re-export commonly used types
 pub use errors::{AppError, ErrorCode, ErrorSummary, get_error_summary};
@@ -90,6 +91,7 @@ fn build_router(app_state: AppState) -> Router {
         Router::new().with_state(app_state.clone()).route("/ui/tasks", get(tasks::tasks_ui));
 
     let agent_router = agent::router(app_state.clone());
+    let todos_router = todos::router(app_state.clone());
 
     Router::new()
         // Template core endpoints - keep these
@@ -104,6 +106,7 @@ fn build_router(app_state: AppState) -> Router {
         // Merge domain endpoints
         .merge(tasks_router)
         .merge(agent_router)
+        .merge(todos_router)
         // Middleware layers (applied in reverse order - bottom to top)
         .layer(axum::middleware::from_fn(metrics::metrics_middleware))
         .layer(axum::middleware::from_fn(middleware::request_id_middleware))

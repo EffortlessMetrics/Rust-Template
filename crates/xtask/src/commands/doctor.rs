@@ -44,6 +44,30 @@ pub fn run() -> Result<()> {
 
     println!();
 
+    // Spec Root Section: Verify repository structure
+    println!("{}", "Repository Structure:".bold());
+
+    // Check spec root configuration
+    print!("  Spec root... ");
+    let spec_info = crate::kernel::spec_root_info();
+    if spec_info.valid {
+        println!("{} {}", "✓".green(), spec_info.path.display().to_string().dimmed());
+        println!("    Source: {}", spec_info.source.dimmed());
+    } else {
+        println!("{} Invalid", "✗".red());
+        println!("    Path: {}", spec_info.path.display());
+        println!("    Source: {}", spec_info.source);
+        if !spec_info.missing_files.is_empty() {
+            println!("    Missing files:");
+            for file in &spec_info.missing_files {
+                println!("      - {}", file);
+            }
+        }
+        issues += 1;
+    }
+
+    println!();
+
     // ABI Compatibility Section: Detect mismatches between system and Nix rustc
     println!("{}", "ABI Compatibility:".bold());
 
