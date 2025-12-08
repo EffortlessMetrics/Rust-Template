@@ -106,7 +106,7 @@ Feature: Platform Tasks Management
         "status": "Todo"
       }
       """
-    Then the response status code should be 500
+    Then the response status code should be 400
     And the response body should contain "Invalid status transition"
 
   # GET /platform/tasks with advanced filtering
@@ -131,3 +131,33 @@ Feature: Platform Tasks Management
     When I send a GET request to "/platform/tasks?status=Done"
     Then the response status code should be 200
     And the JSON should have an empty tasks array
+
+  # AC-TPL-TASK-STATUS-MODEL: Canonical status representation
+  @AC-TPL-TASK-STATUS-MODEL
+  Scenario: Task statuses normalize to canonical values
+    Given the following tasks exist in "specs/tasks.yaml":
+      | id            | title             | status      | requirement      |
+      | TASK-STAT-001 | Open alias        | open        | REQ-TPL-HEALTH  |
+      | TASK-STAT-002 | Snake case        | in_progress | REQ-TPL-HEALTH  |
+      | TASK-STAT-003 | Dash case         | in-progress | REQ-TPL-HEALTH  |
+      | TASK-STAT-004 | Standard form     | Review      | REQ-TPL-HEALTH  |
+      | TASK-STAT-005 | Completed alias   | completed   | REQ-TPL-HEALTH  |
+    When I send a GET request to "/platform/tasks"
+    Then the response status code should be 200
+    And the JSON should contain a task with id "TASK-STAT-001" and status "Todo"
+    And the JSON should contain a task with id "TASK-STAT-002" and status "InProgress"
+    And the JSON should contain a task with id "TASK-STAT-003" and status "InProgress"
+    And the JSON should contain a task with id "TASK-STAT-004" and status "Review"
+    And the JSON should contain a task with id "TASK-STAT-005" and status "Done"
+
+  @AC-TPL-TASK-STATUS-MODEL
+  Scenario: Unknown task status is rejected via HTTP API
+    Given a task "TASK-BAD-001" exists with status "Todo"
+    When I send a POST request to "/platform/tasks/TASK-BAD-001/status" with body:
+      """
+      {
+        "status": "unknown_status"
+      }
+      """
+    Then the response status code should be 400
+    And the response body should contain "unknown variant"

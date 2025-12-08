@@ -421,6 +421,31 @@ async fn then_json_not_contains_task(world: &mut World, task_id: String) {
     );
 }
 
+#[then(regex = r#"^the JSON should contain a task with id "([^"]+)" and status "([^"]+)"$"#)]
+async fn then_json_contains_task_with_status(
+    world: &mut World,
+    task_id: String,
+    expected_status: String,
+) {
+    let response = world.last_response.as_ref().expect("response should exist");
+    let tasks =
+        response.body.get("tasks").and_then(|t| t.as_array()).expect("tasks array should exist");
+
+    let task = tasks
+        .iter()
+        .find(|task| {
+            task.get("id").and_then(|id| id.as_str()).map(|id| id == task_id).unwrap_or(false)
+        })
+        .unwrap_or_else(|| panic!("Expected to find task with id '{}' in response", task_id));
+
+    let actual_status = task.get("status").and_then(|s| s.as_str()).unwrap_or("");
+    assert_eq!(
+        actual_status, expected_status,
+        "Expected task '{}' to have status '{}', but got '{}'. Task: {:?}",
+        task_id, expected_status, actual_status, task
+    );
+}
+
 #[then(regex = r#"^the response body should contain ['"](.+)['"]$"#)]
 async fn then_body_contains(world: &mut World, needle: String) {
     let response = world.last_response.as_ref().expect("response should exist");
