@@ -109,7 +109,7 @@ The port says "the domain needs a way to save/find tasks" but doesn't specify da
 
 **Purpose:** Expose domain operations via REST endpoints.
 
-**Location:** `/home/steven/code/Rust/Rust-Template/crates/app-http/`
+**Location:** `../../crates/app-http/`
 
 **Technology:** Axum web framework with Tower middleware
 
@@ -165,7 +165,7 @@ tokio = { version = "1.48.0", features = ["full"] }
 
 **Purpose:** Persist domain entities in Postgres via sqlx.
 
-**Location:** `/home/steven/code/Rust/Rust-Template/crates/adapters-db-sqlx/`
+**Location:** `../../crates/adapters-db-sqlx/`
 
 **Technology:** sqlx (compile-time checked SQL), Postgres
 
@@ -223,7 +223,7 @@ impl TaskRepository for PostgresTaskRepository {
 
 **Schema Management:**
 
-Database schema lives in `/home/steven/code/Rust/Rust-Template/specs/db/schema.hcl`:
+Database schema lives in `../../specs/db/schema.hcl`:
 
 ```hcl
 table "tasks" {
@@ -263,7 +263,7 @@ testcontainers = "0.25.2"          # For integration tests
 
 **Purpose:** Expose domain operations via gRPC/Protobuf endpoints.
 
-**Location:** `/home/steven/code/Rust/Rust-Template/crates/adapters-grpc/`
+**Location:** `../../crates/adapters-grpc/`
 
 **Technology:** Tonic (gRPC framework), prost (Protobuf)
 
@@ -372,7 +372,7 @@ impl EventPublisher for NatsEventPublisher {
 
 **Event Schema:**
 
-Events would be validated against schemas in `/home/steven/code/Rust/Rust-Template/specs/events/`:
+Events would be validated against schemas in `../../specs/events/`:
 
 ```yaml
 # specs/events/subjects.yaml
@@ -1169,13 +1169,13 @@ Key:
 ### Next Steps
 
 - **Add a new adapter:** Follow [How to Add a New Adapter](#how-to-add-a-new-adapter)
-- **Understand governance:** Read `/home/steven/code/Rust/Rust-Template/docs/explanation/architecture.md`
-- **Write integration tests:** See examples in `crates/adapters-db-sqlx/tests/integration.rs`
+- **Understand governance:** Read [Architecture Overview](./architecture.md)
+- **Write integration tests:** See examples in `../../crates/adapters-db-sqlx/tests/integration.rs`
 - **Explore multi-service:** Plan service boundaries based on team/scaling needs
 
 ### Related Documentation
 
-- [Architecture Overview](/home/steven/code/Rust/Rust-Template/docs/explanation/architecture.md)
-- [First AC Change Tutorial](/home/steven/code/Rust/Rust-Template/docs/tutorials/) (TBD)
-- [Testing Strategy](/home/steven/code/Rust/Rust-Template/docs/how-to/) (TBD)
-- [Governance Model](/home/steven/code/Rust/Rust-Template/docs/explanation/TEMPLATE-CONTRACTS.md)
+- [Architecture Overview](./architecture.md)
+- [First AC Change Tutorial](../tutorials/) (TBD)
+- [Testing Strategy](../how-to/) (TBD)
+- [Governance Model](./TEMPLATE-CONTRACTS.md)

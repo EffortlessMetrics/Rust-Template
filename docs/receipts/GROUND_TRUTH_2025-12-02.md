@@ -31,7 +31,7 @@
 The code fix has been applied (removed `std::process::exit(0)` at line 179), but the JUnit XML file is **still empty (0 bytes)** even after running the full BDD test suite.
 
 **Evidence**:
-- File size: 0 bytes at `/home/steven/code/Rust/Rust-Template/target/junit/acceptance.xml`
+- File size: 0 bytes at `../../target/junit/acceptance.xml`
 - BDD tests executed: 208 scenarios (165 passed, 30 skipped, 13 failed based on console output)
 - JUnit writer configured at line 91: `writer::JUnit::new(junit_file, 0)`
 - Function returns normally at line 169 (no early exit)

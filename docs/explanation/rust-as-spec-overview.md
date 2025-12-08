@@ -30,17 +30,17 @@ All governance contracts live in `specs/`:
 
 | File | Purpose | Schema |
 |------|---------|--------|
-| [`spec_ledger.yaml`](file:///home/steven/code/Rust/Rust-Template/specs/spec_ledger.yaml) | Stories → Requirements → ACs | `SpecLedger` struct |
-| [`devex_flows.yaml`](file:///home/steven/code/Rust/Rust-Template/specs/devex_flows.yaml) | Developer workflows (flows + commands) | `DevExFlows` struct |
-| [`doc_index.yaml`](file:///home/steven/code/Rust/Rust-Template/specs/doc_index.yaml) | Documentation inventory with metadata | `DocIndex` struct |
-| [`tasks.yaml`](file:///home/steven/code/Rust/Rust-Template/specs/tasks.yaml) | Work units with recommended sequences | `TasksSpec` struct |
-| [`service_policies.yaml`](file:///home/steven/code/Rust/Rust-Template/specs/service_policies.yaml) | Compliance policies (OPA/Rego references) | Policy enforcement config |
+| [`spec_ledger.yaml`](../../specs/spec_ledger.yaml) | Stories → Requirements → ACs | `SpecLedger` struct |
+| [`devex_flows.yaml`](../../specs/devex_flows.yaml) | Developer workflows (flows + commands) | `DevExFlows` struct |
+| [`doc_index.yaml`](../../specs/doc_index.yaml) | Documentation inventory with metadata | `DocIndex` struct |
+| [`tasks.yaml`](../../specs/tasks.yaml) | Work units with recommended sequences | `TasksSpec` struct |
+| [`service_policies.yaml`](../../specs/service_policies.yaml) | Compliance policies (OPA/Rego references) | Policy enforcement config |
 
 **Key Constraint:** Specs are **not free-form**. They deserialize into Rust structs via `serde`, making invalid specs a compile error (or runtime parse error caught by `selftest`).
 
 ### Phase 2: Loader (Type-Safe Deserialization)
 
-The [`spec-runtime`](file:///home/steven/code/Rust/Rust-Template/crates/spec-runtime) crate provides loaders for each spec:
+The [`spec-runtime`](../../crates/spec-runtime) crate provides loaders for each spec:
 
 ```rust
 // crates/spec-runtime/src/lib.rs
@@ -60,7 +60,7 @@ pub fn load_tasks(path: &Path) -> Result<TasksSpec>;
 
 ### Phase 3: Enforce (7-Step Selftest + CI)
 
-The [`cargo xtask selftest`](file:///home/steven/code/Rust/Rust-Template/crates/xtask/src/commands/selftest.rs) command is the **single mandatory gate** for all changes:
+The [`cargo xtask selftest`](../../crates/xtask/src/commands/selftest.rs) command is the **single mandatory gate** for all changes:
 
 ```bash
 $ cargo xtask selftest
@@ -98,7 +98,7 @@ Each step enforces a different contract:
 
 ### Phase 4: Introspect (APIs + UI)
 
-The same specs loaded by `selftest` are exposed at runtime via [`app-http`](file:///home/steven/code/Rust/Rust-Template/crates/app-http):
+The same specs loaded by `selftest` are exposed at runtime via [`app-http`](../../crates/app-http):
 
 **HTTP APIs** (`/platform/*`):
 ```bash
@@ -176,7 +176,7 @@ A directed graph where:
 - **Nodes** = Stories, Requirements, ACs, Docs, Commands, Flows
 - **Edges** = Relationships (`contains`, `implements`, `uses`, `documents`)
 
-Built in [`spec-runtime/src/graph.rs`](file:///home/steven/code/Rust/Rust-Template/crates/spec-runtime/src/graph.rs):
+Built in [`spec-runtime/src/graph.rs`](../../crates/spec-runtime/src/graph.rs):
 
 ```rust
 pub struct Graph {
@@ -269,7 +269,7 @@ pub enum Action {
 }
 ```
 
-**Stateful checks** (in [`tasks.rs`](file:///home/steven/code/Rust/Rust-Template/crates/spec-runtime/src/tasks.rs)):
+**Stateful checks** (in [`tasks.rs`](../../crates/spec-runtime/src/tasks.rs)):
 
 | Step | Check | Satisfied If |
 |------|-------|--------------|
@@ -383,8 +383,8 @@ Governance policies are **declarative** and **testable**.
 ### Policy Structure
 
 Each policy area has:
-1. A `.rego` file defining rules ([`policy/ledger.rego`](file:///home/steven/code/Rust/Rust-Template/policy/ledger.rego))
-2. Test fixtures in [`policy/testdata/`](file:///home/steven/code/Rust/Rust-Template/policy/testdata)
+1. A `.rego` file defining rules ([`policy/ledger.rego`](../../policy/ledger.rego))
+2. Test fixtures in [`policy/testdata/`](../../policy/testdata)
 3. A `conftest` runner invoked by `cargo xtask policy-test`
 
 ### Example: Ledger Policy
@@ -526,8 +526,8 @@ The four-phase pipeline (Spec → Loader → Enforce → Introspect) provides a 
 
 ## References
 
-- [ROADMAP.md](file:///home/steven/code/Rust/Rust-Template/docs/ROADMAP.md) - Strategic direction and pilot plan
-- [ADR-0004](file:///home/steven/code/Rust/Rust-Template/docs/adr/0004-platform-introspection-contract.md) - Platform introspection API design
-- [ADR-0006](file:///home/steven/code/Rust/Rust-Template/docs/adr/0006-graph-first-governance.md) - Graph-based governance rationale
-- [Selftest Command](file:///home/steven/code/Rust/Rust-Template/crates/xtask/src/commands/selftest.rs) - Implementation of the selftest governance gate
-- [Spec Runtime](file:///home/steven/code/Rust/Rust-Template/crates/spec-runtime) - Core loaders and graph logic
+- [ROADMAP.md](../ROADMAP.md) - Strategic direction and pilot plan
+- [ADR-0004](../adr/0004-platform-introspection-contract.md) - Platform introspection API design
+- [ADR-0006](../adr/0006-graph-first-governance.md) - Graph-based governance rationale
+- [Selftest Command](../../crates/xtask/src/commands/selftest.rs) - Implementation of the selftest governance gate
+- [Spec Runtime](../../crates/spec-runtime) - Core loaders and graph logic

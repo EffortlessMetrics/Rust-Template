@@ -10,7 +10,7 @@ This document describes the implementation of Phase 1.3 of the meta-contract: ma
 
 ### 1. xtask Commands Specification
 
-**File**: `/home/steven/code/Rust/Rust-Template/specs/xtask_commands.yaml`
+**File**: `../specs/xtask_commands.yaml`
 
 A YAML specification defining all required xtask commands. This serves as the single source of truth for what commands must be implemented.
 
@@ -37,7 +37,7 @@ commands:
 
 ### 2. AC Report Schema
 
-**File**: `/home/steven/code/Rust/Rust-Template/specs/ac_report.schema.json`
+**File**: `../specs/ac_report.schema.json`
 
 A JSON Schema (draft-07) that defines the structure of Cucumber JSON reports used for AC status tracking.
 
@@ -52,7 +52,7 @@ A JSON Schema (draft-07) that defines the structure of Cucumber JSON reports use
 
 ### 3. Validation Module
 
-**File**: `/home/steven/code/Rust/Rust-Template/crates/xtask/src/validation.rs`
+**File**: `../crates/xtask/src/validation.rs`
 
 Provides automated validation of specifications against implementation.
 
@@ -98,7 +98,7 @@ Provides automated validation of specifications against implementation.
 
 ### 4. Dependencies Added
 
-**File**: `/home/steven/code/Rust/Rust-Template/crates/xtask/Cargo.toml`
+**File**: `../crates/xtask/Cargo.toml`
 
 Added to `[dev-dependencies]`:
 ```toml
@@ -257,15 +257,15 @@ test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured
 ## Files Created/Modified
 
 ### Created
-- `/home/steven/code/Rust/Rust-Template/specs/xtask_commands.yaml` - xtask command specification
-- `/home/steven/code/Rust/Rust-Template/specs/ac_report.schema.json` - AC report JSON Schema
-- `/home/steven/code/Rust/Rust-Template/crates/xtask/src/validation.rs` - Validation module
-- `/home/steven/code/Rust/Rust-Template/docs/meta_contract_phase1.3.md` - This documentation
+- `../specs/xtask_commands.yaml` - xtask command specification
+- `../specs/ac_report.schema.json` - AC report JSON Schema
+- `../crates/xtask/src/validation.rs` - Validation module
+- `meta_contract_phase1.3.md` - This documentation
 
 ### Modified
-- `/home/steven/code/Rust/Rust-Template/crates/xtask/src/main.rs` - Added `mod validation;`
-- `/home/steven/code/Rust/Rust-Template/crates/xtask/Cargo.toml` - Added jsonschema dependency
-- `/home/steven/code/Rust/Rust-Template/crates/xtask/src/commands/ac_status.rs` - Fixed function signature (unrelated fix)
+- `../crates/xtask/src/main.rs` - Added `mod validation;`
+- `../crates/xtask/Cargo.toml` - Added jsonschema dependency
+- `../crates/xtask/src/commands/ac_status.rs` - Fixed function signature (unrelated fix)
 
 ## Verification Checklist
 

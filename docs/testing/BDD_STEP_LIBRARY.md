@@ -728,11 +728,11 @@ Then the output should not be empty  # Shows current directory
 
 - **Cucumber Documentation:** https://cucumber.io/docs/cucumber/
 - **Cucumber Rust:** https://github.com/cucumber-rs/cucumber
-- **Acceptance Test Crate:** `/home/steven/code/Rust/Rust-Template/crates/acceptance/`
-- **Feature Files:** `/home/steven/code/Rust/Rust-Template/specs/features/`
-- **World State:** `/home/steven/code/Rust/Rust-Template/crates/acceptance/src/world.rs`
-- **Implementation Summary (Batch 1):** `docs/receipts/BDD_IMPLEMENTATION_BATCH1.md`
-- **Implementation Summary (Batch 2):** `docs/receipts/BDD_IMPLEMENTATION_BATCH2.md`
+- **Acceptance Test Crate:** `../../crates/acceptance/`
+- **Feature Files:** `../../specs/features/`
+- **World State:** `../../crates/acceptance/src/world.rs`
+- **Implementation Summary (Batch 1):** `../receipts/BDD_IMPLEMENTATION_BATCH1.md`
+- **Implementation Summary (Batch 2):** `../receipts/BDD_IMPLEMENTATION_BATCH2.md`
 
 ---
 
