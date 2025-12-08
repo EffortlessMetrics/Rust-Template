@@ -9,8 +9,8 @@ anyhow = { workspace = true }
 serde = { workspace = true }
 serde_yaml = { workspace = true }
 serde_json = "1.0.145"
-url = "2.5.2"
-chrono = { version = "0.4", features = ["serde"] }
+url = "2.5.7"
+chrono = { version = "0.4.42", features = ["serde"] }
 
 [dev-dependencies]
-tempfile = "3.13.0"
+tempfile = "3.23.0"
