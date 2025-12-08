@@ -10,9 +10,9 @@
 ## Executive Summary
 
 As of v3.3.6 (December 2025 update):
-- **Total ACs:** 116
-- **Kernel ACs (must_have_ac: true):** 61 (all passing)
-- **Template ACs (must_have_ac: false):** 37
+- **Total ACs:** 126
+- **Kernel ACs (must_have_ac: true):** 65 (all passing)
+- **Template ACs (must_have_ac: false):** 43
 - **Meta/CI-only ACs:** 18 (CI tests, harness, or example tags)
 
 **Status:** The template is at "LLM-native Rust cell 1.0" state. All kernel ACs pass. The 17 remaining UNKNOWN ACs are intentionally soft contracts (`must_have_ac: false`) covering governance documentation, guidance policies, and meta/CI-only contracts that aren't exercised in local selftest.
@@ -37,7 +37,7 @@ These counts are computed from `specs/spec_ledger.yaml` by `ContractsSnapshot` i
 
 ### Kernel ACs: All Passing
 
-All 61 kernel ACs (`must_have_ac: true`) are passing:
+All 65 kernel ACs (`must_have_ac: true`) are passing:
 - DevEx commands (doctor, check, selftest, ci-local)
 - Platform APIs (/status, /graph, /docs, governance endpoints)
 - UI, graph invariants, config validation, auth
