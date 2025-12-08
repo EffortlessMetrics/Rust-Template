@@ -630,6 +630,9 @@ enum Commands {
         /// Validate graph invariants instead of emitting graph output
         #[arg(long)]
         check: bool,
+        /// Report format for invariant checks (text or json)
+        #[arg(long, value_enum, default_value = "text")]
+        report_format: commands::graph_export::ReportFormat,
     },
 
     /// Manage workspace dependencies with hakari
@@ -804,8 +807,12 @@ fn main() -> Result<()> {
         Commands::ContractsCheck => commands::contracts::check(),
         Commands::ContractsFmt => commands::contracts::fmt(),
         Commands::UiContractCheck => commands::ui_contract_check::run(),
-        Commands::GraphExport { format, check } => {
-            commands::graph_export::run(commands::graph_export::GraphExportArgs { format, check })
+        Commands::GraphExport { format, check, report_format } => {
+            commands::graph_export::run(commands::graph_export::GraphExportArgs {
+                format,
+                check,
+                report_format,
+            })
         }
         Commands::TaskCreate { id, title, requirement, acs, owner, status, labels } => {
             commands::tasks::create_task(&id, &title, &requirement, &acs, owner, status, &labels)

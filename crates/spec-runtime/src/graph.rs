@@ -165,7 +165,7 @@ pub fn build_graph(ledger: &SpecLedger, devex: &DevExFlows, docs: &DocIndex) -> 
     Ok(graph)
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Clone)]
 pub struct InvariantViolation {
     pub code: String,
     pub message: String,
@@ -177,35 +177,64 @@ impl std::fmt::Display for InvariantViolation {
     }
 }
 
-pub fn check_invariants(
-    graph: &Graph,
-    devex: &DevExFlows,
-    ledger: &SpecLedger,
-) -> Result<(), Vec<InvariantViolation>> {
+#[derive(Debug, Serialize, Clone)]
+pub struct InvariantStatus {
+    pub code: String,
+    pub description: String,
+    pub passed: bool,
+    pub checked_count: usize,
+}
+
+#[derive(Debug, Serialize, Clone)]
+pub struct InvariantReport {
+    pub checked_at: String,
+    pub invariants: Vec<InvariantStatus>,
+    pub violations: Vec<InvariantViolation>,
+    pub passed: bool,
+}
+
+pub fn check_invariants(graph: &Graph, devex: &DevExFlows, ledger: &SpecLedger) -> InvariantReport {
     let mut violations = Vec::new();
+    let mut invariants = Vec::new();
 
     // 1. REQ must_have_ac -> at least one AC
+    let mut req_ac_checked = 0;
+    let mut req_ac_violations = Vec::new();
+
     for req in graph.nodes.iter().filter(|n| n.node_type == "requirement") {
         if !req.meta.must_have_ac {
             continue;
         }
+        req_ac_checked += 1;
 
         let has_ac = graph.edges.iter().any(|e| e.source == req.id && e.edge_type == "contains");
 
         if !has_ac {
-            violations.push(InvariantViolation {
+            req_ac_violations.push(InvariantViolation {
                 code: "REQ_HAS_NO_AC".into(),
                 message: format!("Requirement {} has no ACs in graph", req.id),
             });
         }
     }
 
+    invariants.push(InvariantStatus {
+        code: "REQ_HAS_AC".into(),
+        description: "Requirements with must_have_ac=true have at least one AC".into(),
+        passed: req_ac_violations.is_empty(),
+        checked_count: req_ac_checked,
+    });
+    violations.extend(req_ac_violations);
+
     // 2. AC has tests - validate that ACs with test mappings have non-empty tests array
+    let mut ac_test_checked = 0;
+    let mut ac_test_violations = Vec::new();
+
     for story in &ledger.stories {
         for req in &story.requirements {
             for ac in &req.acceptance_criteria {
+                ac_test_checked += 1;
                 if ac.tests.is_empty() {
-                    violations.push(InvariantViolation {
+                    ac_test_violations.push(InvariantViolation {
                         code: "AC_HAS_NO_TEST".into(),
                         message: format!("Acceptance criterion {} has no test mappings", ac.id),
                     });
@@ -214,22 +243,50 @@ pub fn check_invariants(
         }
     }
 
+    invariants.push(InvariantStatus {
+        code: "AC_HAS_TEST".into(),
+        description: "Acceptance criteria have at least one test mapping".into(),
+        passed: ac_test_violations.is_empty(),
+        checked_count: ac_test_checked,
+    });
+    violations.extend(ac_test_violations);
+
     // 3. DevEx commands reachable
+    let mut cmd_reachable_checked = 0;
+    let mut cmd_reachable_violations = Vec::new();
+
     for cmd_name in devex.commands.keys() {
-        let cmd_id = format!("cmd:{}", cmd_name);
-        let is_reachable = graph.edges.iter().any(|e| e.target == cmd_id);
         if let Some(cmd_spec) = devex.commands.get(cmd_name)
             && cmd_spec.required
-            && !is_reachable
         {
-            violations.push(InvariantViolation {
-                code: "COMMAND_UNREACHABLE".into(),
-                message: format!("Required command '{}' is not used in any flow or task", cmd_name),
-            });
+            cmd_reachable_checked += 1;
+            let cmd_id = format!("cmd:{}", cmd_name);
+            let is_reachable = graph.edges.iter().any(|e| e.target == cmd_id);
+
+            if !is_reachable {
+                cmd_reachable_violations.push(InvariantViolation {
+                    code: "COMMAND_UNREACHABLE".into(),
+                    message: format!(
+                        "Required command '{}' is not used in any flow or task",
+                        cmd_name
+                    ),
+                });
+            }
         }
     }
 
-    if violations.is_empty() { Ok(()) } else { Err(violations) }
+    invariants.push(InvariantStatus {
+        code: "COMMAND_REACHABLE".into(),
+        description: "Required commands are used in at least one flow".into(),
+        passed: cmd_reachable_violations.is_empty(),
+        checked_count: cmd_reachable_checked,
+    });
+    violations.extend(cmd_reachable_violations);
+
+    let passed = violations.is_empty();
+    let checked_at = chrono::Utc::now().to_rfc3339();
+
+    InvariantReport { checked_at, invariants, violations, passed }
 }
 
 impl Graph {
@@ -409,8 +466,8 @@ mod tests {
             }],
         };
 
-        let result = check_invariants(&graph, &devex, &ledger_with_tests);
-        assert!(result.is_ok(), "AC with tests should pass validation");
+        let report = check_invariants(&graph, &devex, &ledger_with_tests);
+        assert!(report.passed, "AC with tests should pass validation");
 
         // Test case 2: AC without tests should fail
         let ledger_without_tests = SpecLedger {
@@ -437,14 +494,11 @@ mod tests {
             }],
         };
 
-        let result = check_invariants(&graph, &devex, &ledger_without_tests);
-        assert!(result.is_err(), "AC without tests should fail validation");
-
-        if let Err(violations) = result {
-            assert_eq!(violations.len(), 1);
-            assert_eq!(violations[0].code, "AC_HAS_NO_TEST");
-            assert!(violations[0].message.contains("AC-TEST-002"));
-        }
+        let report = check_invariants(&graph, &devex, &ledger_without_tests);
+        assert!(!report.passed, "AC without tests should fail validation");
+        assert_eq!(report.violations.len(), 1);
+        assert_eq!(report.violations[0].code, "AC_HAS_NO_TEST");
+        assert!(report.violations[0].message.contains("AC-TEST-002"));
     }
 
     /// AC-TPL-GRAPH-REQ-HAS-AC: Validates that requirements with must_have_ac: true
@@ -498,8 +552,8 @@ mod tests {
         };
 
         let graph = build_graph(&ledger_valid, &devex, &docs).expect("build_graph should succeed");
-        let result = check_invariants(&graph, &devex, &ledger_valid);
-        assert!(result.is_ok(), "Requirement with AC should pass validation");
+        let report = check_invariants(&graph, &devex, &ledger_valid);
+        assert!(report.passed, "Requirement with AC should pass validation");
 
         // Test case 2: Requirement with must_have_ac but no AC should fail
         let ledger_invalid = SpecLedger {
@@ -524,14 +578,11 @@ mod tests {
 
         let graph =
             build_graph(&ledger_invalid, &devex, &docs).expect("build_graph should succeed");
-        let result = check_invariants(&graph, &devex, &ledger_invalid);
-        assert!(result.is_err(), "Requirement without AC should fail validation");
-
-        if let Err(violations) = result {
-            assert!(violations.iter().any(|v| v.code == "REQ_HAS_NO_AC"));
-            let req_violation = violations.iter().find(|v| v.code == "REQ_HAS_NO_AC").unwrap();
-            assert!(req_violation.message.contains("REQ-TEST-002"));
-        }
+        let report = check_invariants(&graph, &devex, &ledger_invalid);
+        assert!(!report.passed, "Requirement without AC should fail validation");
+        assert!(report.violations.iter().any(|v| v.code == "REQ_HAS_NO_AC"));
+        let req_violation = report.violations.iter().find(|v| v.code == "REQ_HAS_NO_AC").unwrap();
+        assert!(req_violation.message.contains("REQ-TEST-002"));
     }
 
     /// AC-TPL-GRAPH-COMMAND-REACHABLE: Validates that required DevEx commands
@@ -589,8 +640,8 @@ mod tests {
         };
 
         let graph = build_graph(&ledger, &devex_valid, &docs).expect("build_graph should succeed");
-        let result = check_invariants(&graph, &devex_valid, &ledger);
-        assert!(result.is_ok(), "Required command used in flow should pass validation");
+        let report = check_invariants(&graph, &devex_valid, &ledger);
+        assert!(report.passed, "Required command used in flow should pass validation");
 
         // Test case 2: Required command not used in any flow should fail
         let mut commands_invalid = HashMap::new();
@@ -613,15 +664,12 @@ mod tests {
 
         let graph =
             build_graph(&ledger, &devex_invalid, &docs).expect("build_graph should succeed");
-        let result = check_invariants(&graph, &devex_invalid, &ledger);
-        assert!(result.is_err(), "Required command not in any flow should fail validation");
-
-        if let Err(violations) = result {
-            assert!(violations.iter().any(|v| v.code == "COMMAND_UNREACHABLE"));
-            let cmd_violation =
-                violations.iter().find(|v| v.code == "COMMAND_UNREACHABLE").unwrap();
-            assert!(cmd_violation.message.contains("orphan-cmd"));
-        }
+        let report = check_invariants(&graph, &devex_invalid, &ledger);
+        assert!(!report.passed, "Required command not in any flow should fail validation");
+        assert!(report.violations.iter().any(|v| v.code == "COMMAND_UNREACHABLE"));
+        let cmd_violation =
+            report.violations.iter().find(|v| v.code == "COMMAND_UNREACHABLE").unwrap();
+        assert!(cmd_violation.message.contains("orphan-cmd"));
     }
 
     /// AC-TPL-GRAPH-SELFTEST: Validates that the mermaid export produces valid

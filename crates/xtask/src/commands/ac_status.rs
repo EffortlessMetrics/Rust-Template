@@ -94,10 +94,19 @@ enum TestOutcome {
 pub fn run(args: AcStatusArgs) -> Result<()> {
     // Validate inputs
     if !args.ledger.exists() {
-        anyhow::bail!("Ledger file not found: {}", args.ledger.display());
+        anyhow::bail!(
+            "Ledger file not found: {}\n  \
+             Tip: Run `cargo xtask doctor` to check your environment\n  \
+             The spec root may be misconfigured.",
+            args.ledger.display()
+        );
     }
     if !args.features_dir.exists() {
-        anyhow::bail!("Features directory not found: {}", args.features_dir.display());
+        anyhow::bail!(
+            "Features directory not found: {}\n  \
+             Tip: Run `cargo xtask doctor` to check your environment",
+            args.features_dir.display()
+        );
     }
 
     // Helper: should we print progress messages? (not in quiet or JSON mode)
