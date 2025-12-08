@@ -59,15 +59,10 @@ impl FsGovernanceRepository {
     }
 }
 
-/// Parse a task status string from tasks.yaml to TaskStatus enum
+/// Parse a task status string from tasks.yaml to TaskStatus enum.
+/// Delegates to the canonical `FromStr` implementation on `TaskStatus`.
 fn parse_task_status(status_str: &str) -> Option<TaskStatus> {
-    match status_str.to_lowercase().as_str() {
-        "todo" | "open" => Some(TaskStatus::Todo),
-        "in_progress" | "inprogress" | "in-progress" => Some(TaskStatus::InProgress),
-        "review" => Some(TaskStatus::Review),
-        "done" | "closed" | "complete" | "completed" => Some(TaskStatus::Done),
-        _ => None,
-    }
+    status_str.parse().ok()
 }
 
 impl GovernanceRepository for FsGovernanceRepository {

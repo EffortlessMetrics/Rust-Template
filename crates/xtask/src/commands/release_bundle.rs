@@ -1,36 +1,11 @@
 use anyhow::{Context, Result};
+use business_core::governance::TaskStatus;
 use colored::Colorize;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
-
-/// Normalized task status used for release evidence generation.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum TaskStatus {
-    Todo,
-    InProgress,
-    Review,
-    Done,
-}
-
-impl TaskStatus {
-    fn is_done(&self) -> bool {
-        matches!(self, TaskStatus::Done)
-    }
-}
-
-/// Parse task status strings from tasks.yaml or tasks_state.yaml into a normalized enum.
-fn parse_task_status(status: &str) -> Option<TaskStatus> {
-    match status.to_lowercase().as_str() {
-        "todo" | "open" => Some(TaskStatus::Todo),
-        "in_progress" | "inprogress" | "in-progress" => Some(TaskStatus::InProgress),
-        "review" => Some(TaskStatus::Review),
-        "done" | "closed" | "complete" | "completed" => Some(TaskStatus::Done),
-        _ => None,
-    }
-}
 
 #[derive(Debug, Default, Deserialize)]
 struct TasksState {
@@ -50,7 +25,7 @@ fn load_task_status_overrides(root: &Path) -> Result<HashMap<String, TaskStatus>
 
     let mut overrides = HashMap::new();
     for (id, status) in state.tasks {
-        if let Some(normalized) = parse_task_status(&status) {
+        if let Ok(normalized) = status.parse::<TaskStatus>() {
             overrides.insert(id, normalized);
         }
     }
@@ -179,7 +154,7 @@ fn collect_tasks_section(root: &Path, _version: &str) -> Result<(Vec<String>, St
             status_overrides
                 .get(&t.id)
                 .copied()
-                .or_else(|| parse_task_status(&t.status))
+                .or_else(|| t.status.parse::<TaskStatus>().ok())
                 .unwrap_or(TaskStatus::Todo)
                 .is_done()
         })

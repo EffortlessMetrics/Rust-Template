@@ -109,11 +109,31 @@ pub mod use_cases {
 /// including task states, transitions, and the governance repository trait.
 pub mod governance {
     use serde::{Deserialize, Serialize};
+    use std::fmt;
+    use std::str::FromStr;
+
+    /// Error returned when parsing an unknown task status string.
+    #[derive(Debug, Clone, thiserror::Error)]
+    #[error("unknown task status: {0}")]
+    pub struct TaskStatusParseError(pub String);
 
     /// Task status in the governance workflow.
     ///
     /// Defines the allowed states and valid transitions for governance tasks.
-    #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+    /// Status values are parsed case-insensitively and accept common aliases.
+    ///
+    /// # Parsing
+    ///
+    /// Use [`FromStr`] to parse status strings. Accepted values:
+    /// - `Todo`: "todo", "open"
+    /// - `InProgress`: "inprogress", "in_progress", "in-progress", "in progress"
+    /// - `Review`: "review"
+    /// - `Done`: "done", "closed", "complete", "completed"
+    ///
+    /// # Display
+    ///
+    /// Uses [`Display`] for canonical string output: "Todo", "InProgress", "Review", "Done".
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
     pub enum TaskStatus {
         /// Task is not yet started.
         Todo,
@@ -123,6 +143,32 @@ pub mod governance {
         Review,
         /// Task is fully complete and approved.
         Done,
+    }
+
+    impl FromStr for TaskStatus {
+        type Err = TaskStatusParseError;
+
+        fn from_str(s: &str) -> Result<Self, Self::Err> {
+            match s.to_ascii_lowercase().replace(['-', ' '], "_").as_str() {
+                "todo" | "open" => Ok(TaskStatus::Todo),
+                "inprogress" | "in_progress" => Ok(TaskStatus::InProgress),
+                "review" => Ok(TaskStatus::Review),
+                "done" | "closed" | "complete" | "completed" => Ok(TaskStatus::Done),
+                _ => Err(TaskStatusParseError(s.to_string())),
+            }
+        }
+    }
+
+    impl fmt::Display for TaskStatus {
+        fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+            let s = match self {
+                TaskStatus::Todo => "Todo",
+                TaskStatus::InProgress => "InProgress",
+                TaskStatus::Review => "Review",
+                TaskStatus::Done => "Done",
+            };
+            write!(f, "{s}")
+        }
     }
 
     impl TaskStatus {
@@ -142,6 +188,11 @@ pub mod governance {
                 (InProgress, Todo) => true,   // Backwards allowed
                 _ => false,
             }
+        }
+
+        /// Check if the task is in a terminal state.
+        pub fn is_done(&self) -> bool {
+            matches!(self, TaskStatus::Done)
         }
     }
 
@@ -295,6 +346,74 @@ pub mod governance {
         fn test_forbidden_transitions() {
             assert!(!TaskStatus::Done.can_transition_to(&TaskStatus::Todo));
             assert!(!TaskStatus::Todo.can_transition_to(&TaskStatus::Done));
+        }
+
+        #[test]
+        fn test_task_status_roundtrip() {
+            // Test that Display -> FromStr produces the same value
+            for status in
+                [TaskStatus::Todo, TaskStatus::InProgress, TaskStatus::Review, TaskStatus::Done]
+            {
+                let s = status.to_string();
+                let parsed: TaskStatus = s.parse().unwrap();
+                assert_eq!(status, parsed, "roundtrip failed for {status}");
+            }
+        }
+
+        #[test]
+        fn test_task_status_from_str_variants() {
+            // Todo aliases
+            assert_eq!("todo".parse::<TaskStatus>().unwrap(), TaskStatus::Todo);
+            assert_eq!("Todo".parse::<TaskStatus>().unwrap(), TaskStatus::Todo);
+            assert_eq!("TODO".parse::<TaskStatus>().unwrap(), TaskStatus::Todo);
+            assert_eq!("open".parse::<TaskStatus>().unwrap(), TaskStatus::Todo);
+            assert_eq!("Open".parse::<TaskStatus>().unwrap(), TaskStatus::Todo);
+
+            // InProgress aliases
+            assert_eq!("inprogress".parse::<TaskStatus>().unwrap(), TaskStatus::InProgress);
+            assert_eq!("InProgress".parse::<TaskStatus>().unwrap(), TaskStatus::InProgress);
+            assert_eq!("in_progress".parse::<TaskStatus>().unwrap(), TaskStatus::InProgress);
+            assert_eq!("in-progress".parse::<TaskStatus>().unwrap(), TaskStatus::InProgress);
+            assert_eq!("in progress".parse::<TaskStatus>().unwrap(), TaskStatus::InProgress);
+            assert_eq!("IN_PROGRESS".parse::<TaskStatus>().unwrap(), TaskStatus::InProgress);
+
+            // Review
+            assert_eq!("review".parse::<TaskStatus>().unwrap(), TaskStatus::Review);
+            assert_eq!("Review".parse::<TaskStatus>().unwrap(), TaskStatus::Review);
+
+            // Done aliases
+            assert_eq!("done".parse::<TaskStatus>().unwrap(), TaskStatus::Done);
+            assert_eq!("Done".parse::<TaskStatus>().unwrap(), TaskStatus::Done);
+            assert_eq!("closed".parse::<TaskStatus>().unwrap(), TaskStatus::Done);
+            assert_eq!("complete".parse::<TaskStatus>().unwrap(), TaskStatus::Done);
+            assert_eq!("completed".parse::<TaskStatus>().unwrap(), TaskStatus::Done);
+        }
+
+        #[test]
+        fn test_task_status_from_str_rejects_unknown() {
+            assert!("unknown".parse::<TaskStatus>().is_err());
+            assert!("blocked".parse::<TaskStatus>().is_err());
+            assert!("pending".parse::<TaskStatus>().is_err());
+            assert!("".parse::<TaskStatus>().is_err());
+
+            let err = "notastatus".parse::<TaskStatus>().unwrap_err();
+            assert!(err.to_string().contains("notastatus"));
+        }
+
+        #[test]
+        fn test_task_status_display() {
+            assert_eq!(TaskStatus::Todo.to_string(), "Todo");
+            assert_eq!(TaskStatus::InProgress.to_string(), "InProgress");
+            assert_eq!(TaskStatus::Review.to_string(), "Review");
+            assert_eq!(TaskStatus::Done.to_string(), "Done");
+        }
+
+        #[test]
+        fn test_task_status_is_done() {
+            assert!(!TaskStatus::Todo.is_done());
+            assert!(!TaskStatus::InProgress.is_done());
+            assert!(!TaskStatus::Review.is_done());
+            assert!(TaskStatus::Done.is_done());
         }
     }
 }
