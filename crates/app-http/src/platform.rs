@@ -1,4 +1,4 @@
-use crate::{AppError, AppState, ErrorCode};
+use crate::{AppError, AppState, ErrorCode, get_error_summary};
 use adapters_spec_fs::tasks_state;
 use axum::{
     Json, Router,
@@ -82,6 +82,7 @@ struct PlatformStatus {
     governance: GovernanceStatus,
     #[serde(skip_serializing_if = "Option::is_none")]
     config: Option<ConfigSummary>,
+    errors: crate::errors::ErrorSummary,
 }
 
 #[derive(Serialize)]
@@ -536,6 +537,7 @@ async fn get_status(State(state): State<AppState>) -> Json<PlatformStatus> {
             policies: PolicyStatus { status: policy_status },
         },
         config,
+        errors: get_error_summary(),
     })
 }
 

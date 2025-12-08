@@ -18,7 +18,7 @@ pub mod security;
 pub mod tasks;
 
 // Re-export commonly used types
-pub use errors::{AppError, ErrorCode};
+pub use errors::{AppError, ErrorCode, ErrorSummary, get_error_summary};
 pub use middleware::{REQUEST_ID_HEADER, RequestId};
 
 use business_core::governance::GovernanceRepository;
