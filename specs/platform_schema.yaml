@@ -170,7 +170,7 @@ paths:
 
   /platform/status:
     description: |
-      Full governance status including policies, authentication, and counts.
+      Full governance status including policies, authentication, counts, and error tracking.
       Primary endpoint for governance health tiles.
     method: GET
     response:
@@ -178,6 +178,7 @@ paths:
       required:
         - template_version
         - governance
+        - errors
       properties:
         template_version:
           type: string
@@ -202,6 +203,54 @@ paths:
                   type: integer
                 acs:
                   type: integer
+        errors:
+          description: Error tracking summary (AC-TPL-ERROR-MAPPING)
+          type: object
+          required:
+            - has_recent_errors
+            - stats
+          properties:
+            has_recent_errors:
+              type: boolean
+              description: Whether any errors have occurred since service start
+            last_error:
+              type: object
+              nullable: true
+              description: The most recent error (if any)
+              properties:
+                category:
+                  type: string
+                  description: Error category (e.g., 'task_not_found', 'internal')
+                message:
+                  type: string
+                  description: Human-readable error message
+                status_code:
+                  type: integer
+                  description: HTTP status code returned
+                occurred_at:
+                  type: string
+                  format: date-time
+                  description: When the error occurred
+                request_id:
+                  type: string
+                  nullable: true
+                  description: Request ID for correlation
+            stats:
+              type: object
+              required:
+                - total_errors
+                - client_errors
+                - server_errors
+              properties:
+                total_errors:
+                  type: integer
+                  description: Total errors since service start
+                client_errors:
+                  type: integer
+                  description: Number of 4xx client errors
+                server_errors:
+                  type: integer
+                  description: Number of 5xx server errors
 
   /platform/docs/index:
     description: |

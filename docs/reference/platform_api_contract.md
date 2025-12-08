@@ -36,6 +36,7 @@ Returns comprehensive governance status.
 | `service` | `ServiceInfo` | Yes | Service metadata |
 | `governance` | `GovernanceInfo` | Yes | Governance metrics |
 | `config` | `ConfigInfo` | No | Runtime config (omitted if not loaded) |
+| `errors` | `ErrorSummary` | Yes | Error tracking summary (AC-TPL-ERROR-MAPPING) |
 
 **ServiceInfo fields:**
 
@@ -65,6 +66,38 @@ Returns comprehensive governance status.
 - `"pass"` - All policies pass
 - `"fail"` - One or more policies fail
 - `"unknown"` - Policy status not yet evaluated (policy-test hasn't run)
+
+**ErrorSummary fields:**
+
+| Field | Type | Required | Notes |
+|-------|------|----------|-------|
+| `has_recent_errors` | boolean | Yes | Whether any errors have occurred since service start |
+| `last_error` | `LastErrorSummary` | No | The most recent error (if any) |
+| `stats` | `ErrorStats` | Yes | Aggregated error statistics |
+
+**LastErrorSummary fields:**
+
+| Field | Type | Required | Notes |
+|-------|------|----------|-------|
+| `category` | string | Yes | Error category (e.g., `task_not_found`, `invalid_transition`, `internal`) |
+| `message` | string | Yes | Human-readable error message |
+| `status_code` | integer | Yes | HTTP status code returned (4xx or 5xx) |
+| `occurred_at` | string | Yes | ISO 8601 timestamp |
+| `request_id` | string | No | X-Request-ID for correlation |
+
+**ErrorStats fields:**
+
+| Field | Type | Required | Notes |
+|-------|------|----------|-------|
+| `total_errors` | integer | Yes | Total errors since service start |
+| `client_errors` | integer | Yes | Number of 4xx client errors |
+| `server_errors` | integer | Yes | Number of 5xx server errors |
+
+**Error category values:**
+- `task_not_found` - Task ID not found in tasks.yaml
+- `invalid_transition` - Invalid task status transition
+- `validation` - Request validation failed
+- `internal` - Internal server error
 
 ### GET /platform/docs/index
 
@@ -171,6 +204,7 @@ class PlatformClient {
 
 - `PlatformStatus`, `ServiceInfo`, `GovernanceInfo`, `ConfigInfo`
 - `DocsIndex`, `DocumentEntry`, `DocsSummary`
+- `ErrorSummary`, `LastErrorSummary`, `ErrorStats`
 - All nested types (`LedgerCounts`, `FrictionInfo`, etc.)
 - `PlatformAPIError` for error handling
 
@@ -213,6 +247,7 @@ curl http://localhost:9090/platform/docs/index | jq
 ## See Also
 
 - `specs/openapi/openapi.yaml` - Formal OpenAPI specification
-- `crates/app-http/src/platform.rs` - Rust implementation
+- `crates/app-http/src/platform.rs` - Rust implementation (platform endpoints)
+- `crates/app-http/src/errors.rs` - Error tracking implementation (AC-TPL-ERROR-MAPPING)
 - `examples/backstage-plugin/src/api/PlatformClient.ts` - TypeScript client
 - `examples/backstage-plugin/src/api/PlatformClient.test.ts` - Client tests
