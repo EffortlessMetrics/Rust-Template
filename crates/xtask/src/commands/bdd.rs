@@ -106,7 +106,7 @@ pub fn run_for_junit(junit_path: &std::path::Path) -> Result<()> {
     // Ensure parent directory exists
     if let Some(parent) = junit_path.parent() {
         std::fs::create_dir_all(parent).with_context(|| {
-            format!("Failed to create JUnit output directory: {}", parent.display())
+            format!("failed to create JUnit output directory: {}", parent.display())
         })?;
     }
 
@@ -141,7 +141,7 @@ pub fn run_with_options(options: BddOptions) -> Result<()> {
     }
 
     // Run with output capture for semantic success detection
-    let output = cmd.output().context("Failed to run acceptance tests")?;
+    let output = cmd.output().context("failed to run acceptance tests")?;
 
     // Use semantic success detection (see is_bdd_success for details)
     if is_bdd_success(&output) {
@@ -158,7 +158,12 @@ pub fn run_with_options(options: BddOptions) -> Result<()> {
         eprintln!("stderr:\n{}", stderr);
     }
 
-    anyhow::bail!("Acceptance tests failed with exit code {:?}", output.status.code())
+    anyhow::bail!(
+        "acceptance tests failed with exit code {:?}\n\n\
+         try: cargo xtask bdd --help\n\
+         hint: check BDD output above for failing scenarios",
+        output.status.code()
+    )
 }
 
 #[cfg(test)]

@@ -1,6 +1,6 @@
 ---
 id: SNAPSHOT-TPL-KERNEL-001
-title: Kernel Snapshot v3.3.6
+title: Kernel Snapshot v3.3.7
 doc_type: status
 status: published
 audience: maintainers, platform-engineers, forks
@@ -12,9 +12,9 @@ adrs: [ADR-0005]
 last_updated: 2025-12-01
 ---
 
-# Kernel Snapshot v3.3.6
+# Kernel Snapshot v3.3.7
 
-**Date:** 2025-12-01 | **Version:** v3.3.6-kernel
+**Date:** 2025-12-07 | **Version:** v3.3.7-kernel
 
 ## Executive Summary
 

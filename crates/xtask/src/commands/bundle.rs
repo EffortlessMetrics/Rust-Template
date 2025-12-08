@@ -157,9 +157,9 @@ pub fn run(task_name: &str) -> Result<()> {
 
     if !contextpack_path.exists() {
         anyhow::bail!(
-            "ContextPack not found: {}\n  \
-             Tip: Run `cargo xtask doctor` to check your environment\n  \
-             Ensure you're in the repository root.",
+            "contextpack not found: {}\n\n\
+             try: cargo xtask doctor\n\
+             hint: ensure you're in the repository root",
             contextpack_path.display()
         );
     }
@@ -298,10 +298,13 @@ fn get_workspace_root() -> Result<PathBuf> {
     let output = Command::new("git")
         .args(["rev-parse", "--show-toplevel"])
         .output()
-        .context("Failed to run git rev-parse")?;
+        .context("failed to run git rev-parse")?;
 
     if !output.status.success() {
-        anyhow::bail!("Not in a git repository");
+        anyhow::bail!(
+            "not in a git repository\n\n\
+             try: cd to your repository root directory"
+        );
     }
 
     let root = String::from_utf8(output.stdout)?.trim().to_string();
@@ -323,10 +326,13 @@ fn get_git_sha(workspace_root: &Path) -> Result<String> {
         .current_dir(workspace_root)
         .args(["rev-parse", "HEAD"])
         .output()
-        .context("Failed to get git SHA")?;
+        .context("failed to get git SHA")?;
 
     if !output.status.success() {
-        anyhow::bail!("Failed to get git SHA");
+        anyhow::bail!(
+            "failed to get git SHA\n\n\
+             try: git log --oneline -1"
+        );
     }
 
     Ok(String::from_utf8(output.stdout)?.trim().to_string())

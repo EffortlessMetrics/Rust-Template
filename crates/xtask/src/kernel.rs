@@ -16,7 +16,7 @@
 //! - `kernel_for_repo()` convenience constructor
 
 use ac_kernel::{AcKernel, SpecLayout};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 /// Get the spec root directory for the current repo.
 ///
@@ -81,7 +81,7 @@ pub fn spec_root_info() -> SpecRootInfo {
 /// - specs/devex_flows.yaml exists
 ///
 /// Returns (valid, missing_files) tuple.
-fn validate_spec_root_path(root: &PathBuf) -> (bool, Vec<String>) {
+fn validate_spec_root_path(root: &Path) -> (bool, Vec<String>) {
     let mut missing = Vec::new();
 
     if !root.exists() {
@@ -132,20 +132,20 @@ pub fn validate_spec_root() -> anyhow::Result<()> {
 
     if !info.valid {
         let mut msg =
-            format!("Spec root is invalid: {}\n  Source: {}", info.path.display(), info.source);
+            format!("spec root is invalid: {}\n  source: {}", info.path.display(), info.source);
 
         if !info.missing_files.is_empty() {
-            msg.push_str("\n  Missing files:\n");
+            msg.push_str("\n  missing files:\n");
             for file in &info.missing_files {
                 msg.push_str(&format!("    - {}\n", file));
             }
         }
 
-        msg.push_str("\n  Tip: Run `cargo xtask doctor` to check your environment");
+        msg.push_str("\n\ntry: cargo xtask doctor");
 
         if std::env::var("SPEC_ROOT").is_ok() {
-            msg.push_str("\n  Note: SPEC_ROOT environment variable is set");
-            msg.push_str("\n        Verify it points to the repository root");
+            msg.push_str("\nhint: SPEC_ROOT environment variable is set");
+            msg.push_str("\n      verify it points to the repository root");
         }
 
         anyhow::bail!(msg);
@@ -371,12 +371,12 @@ mod tests {
         assert!(result.is_err(), "Should fail for invalid path");
 
         let err_msg = result.unwrap_err().to_string();
-        assert!(err_msg.contains("Spec root is invalid"), "Error should mention spec root");
-        assert!(err_msg.contains("cargo xtask doctor"), "Error should suggest running doctor");
         assert!(
-            err_msg.contains("SPEC_ROOT environment variable"),
-            "Error should mention SPEC_ROOT env var"
+            err_msg.to_lowercase().contains("spec root is invalid"),
+            "Error should mention spec root"
         );
+        assert!(err_msg.contains("cargo xtask doctor"), "Error should suggest running doctor");
+        assert!(err_msg.contains("SPEC_ROOT"), "Error should mention SPEC_ROOT env var");
 
         // Restore
         // SAFETY: We hold a mutex lock

@@ -123,6 +123,8 @@ enum Commands {
     // ACCEPTANCE CRITERIA (AC management & testing)
     // ============================================================================
     /// Generate AC status report from acceptance tests
+    ///
+    /// See also: /platform/coverage API for programmatic access
     #[command(next_help_heading = "📋 Acceptance Criteria")]
     AcStatus {
         /// Print concise summary instead of generating full markdown file
@@ -601,6 +603,8 @@ enum Commands {
     // LLM/AGENT SUPPORT (Bundles, hints, workflows)
     // ============================================================================
     /// Generate LLM context bundle for a task (AI-native development)
+    ///
+    /// See also: /platform/tasks API for available tasks
     #[command(next_help_heading = "🤖 LLM/Agent Support")]
     Bundle {
         /// Task name from .llm/contextpack.yaml

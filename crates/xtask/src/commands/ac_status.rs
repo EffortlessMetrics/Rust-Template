@@ -95,16 +95,17 @@ pub fn run(args: AcStatusArgs) -> Result<()> {
     // Validate inputs
     if !args.ledger.exists() {
         anyhow::bail!(
-            "Ledger file not found: {}\n  \
-             Tip: Run `cargo xtask doctor` to check your environment\n  \
-             The spec root may be misconfigured.",
+            "ledger file not found: {}\n\n\
+             try: cargo xtask doctor\n\
+             hint: the spec root may be misconfigured",
             args.ledger.display()
         );
     }
     if !args.features_dir.exists() {
         anyhow::bail!(
-            "Features directory not found: {}\n  \
-             Tip: Run `cargo xtask doctor` to check your environment",
+            "features directory not found: {}\n\n\
+             try: create specs/features/*.feature files\n\
+             hint: run 'cargo xtask doctor' to check your environment",
             args.features_dir.display()
         );
     }
@@ -755,7 +756,9 @@ fn print_summary(acs: &HashMap<String, Ac>) -> Result<()> {
 fn print_single_ac(acs: &HashMap<String, Ac>, filter_id: &str, json_output: bool) -> Result<()> {
     let ac = acs.get(filter_id).ok_or_else(|| {
         anyhow::anyhow!(
-            "AC '{}' not found in ledger. Run `cargo xtask ac-status --json` to see all AC IDs.",
+            "AC '{}' not found in ledger\n\n\
+             try: cargo xtask ac-status --json\n\
+             hint: check specs/spec_ledger.yaml for available AC IDs",
             filter_id
         )
     })?;
