@@ -819,9 +819,9 @@ Feature: Developer Experience Commands
   @AC-TPL-AC-STATUS-CONSISTENCY
   Scenario: ac-status regeneration includes governance link
     When I run "cargo xtask ac-status"
-    And the regenerated output is captured
-    Then the output should contain "For formal definitions of"
-    And the output should contain "ac-kernel/README.md"
+    Then the command should succeed
+    And the file "docs/feature_status.md" should contain "For formal definitions of"
+    And the file "docs/feature_status.md" should contain "ac-kernel/README.md"
 
   @AC-PLT-DOC-INDEX-FRONTMATTER
   Scenario: docs-check validates bidirectional front-matter alignment

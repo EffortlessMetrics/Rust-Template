@@ -415,6 +415,33 @@ async fn given_file_exists(world: &mut World, file_path: String) {
     }
 }
 
+/// Step: Given the file "..." exists
+/// Verifies a file exists and stores its path for subsequent "the file should contain" steps.
+/// Used for AC-TPL-AC-STATUS-CONSISTENCY and similar scenarios that check file contents.
+#[given(regex = r#"^the file "([^"]+)" exists$"#)]
+async fn given_the_file_exists(world: &mut World, file_path: String) {
+    let path = resolve_path(world, &file_path);
+
+    assert!(
+        path.exists(),
+        "File should exist at: {}\nResolved path: {}",
+        file_path,
+        path.display()
+    );
+
+    // Store path for subsequent "the file should contain" steps
+    world.xtask_context_mut().test_adr_path = Some(path);
+}
+
+/// Step: And the regenerated output is captured
+/// No-op step - the output is already captured by "When I run" steps.
+/// This step exists for documentation/clarity in BDD scenarios.
+#[when("the regenerated output is captured")]
+async fn when_regenerated_output_captured(_world: &mut World) {
+    // No-op: output is already captured by "When I run" step
+    // This step provides clarity in scenarios about where we're checking output
+}
+
 #[given(regex = r#"^a directory "([^"]+)" exists$"#)]
 async fn given_directory_exists(world: &mut World, dir_path: String) {
     let path = resolve_path(world, &dir_path);

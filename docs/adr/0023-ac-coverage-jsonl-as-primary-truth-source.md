@@ -1,5 +1,8 @@
 # ADR-0023: AC Coverage JSONL as Primary Truth Source
 
+<!-- doclint:disable orphan-version -->
+<!-- Historical: References cucumber-rs version 0.21.1 as documentation context -->
+
 **Status**: Accepted
 **Date**: 2025-12-05
 **Authors**: Steven Zimmerman
