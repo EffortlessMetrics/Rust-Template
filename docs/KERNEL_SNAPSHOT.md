@@ -18,7 +18,7 @@ last_updated: 2025-12-01
 
 ## Executive Summary
 
-This is the frozen kernel baseline (v3.3.6-kernel) for the Rust-as-Spec platform template. All kernel acceptance criteria pass. All selftest gates pass. Day-0 commands work as documented. This is a stable, forkable baseline.
+This is the frozen kernel baseline (v3.3.7-kernel) for the Rust-as-Spec platform template. All kernel acceptance criteria pass. All selftest gates pass. Day-0 commands work as documented. This is a stable, forkable baseline.
 
 **v3.3.6 highlights:**
 
@@ -51,7 +51,7 @@ cargo xtask selftest     # Full governance validation
 
 ---
 
-### Key Kernel Contracts (v3.3.6)
+### Key Kernel Contracts (v3.3.7)
 
 **Philosophy & Governance:**
 
@@ -242,7 +242,7 @@ cargo run -p app-http    # Listening on :8080
 
 ## Fork Readiness
 
-The template is ready to fork. Services inheriting from v3.3.5-kernel get:
+The template is ready to fork. Services inheriting from v3.3.7-kernel get:
 
 - Runtime, APIs, and UI that pass their ACs
 - DevEx tooling for agents and humans
