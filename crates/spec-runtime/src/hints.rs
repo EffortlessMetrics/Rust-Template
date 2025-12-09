@@ -152,6 +152,59 @@ pub struct HintFilter {
     pub limit: Option<usize>,
 }
 
+/// Build kernel AC statuses from the spec ledger and AC coverage.
+///
+/// Returns a list of KernelAcStatus for all ACs that are in requirements
+/// with `must_have_ac: true`. These are the "kernel" ACs that must pass
+/// for the template contract to be satisfied.
+///
+/// # Arguments
+///
+/// * `ledger` - The spec ledger containing stories, requirements, and ACs
+/// * `coverage` - AC coverage index from feature_status.md
+///
+/// # Example
+///
+/// ```ignore
+/// let ledger = load_spec_ledger(Path::new("specs/spec_ledger.yaml"))?;
+/// let coverage = build_ac_coverage_index(Path::new("docs/feature_status.md"))?;
+/// let kernel_acs = build_kernel_ac_statuses(&ledger, &coverage);
+/// ```
+pub fn build_kernel_ac_statuses(
+    ledger: &crate::ledger::SpecLedger,
+    coverage: &AcCoverageIndex,
+) -> Vec<KernelAcStatus> {
+    let mut kernel_acs = Vec::new();
+
+    for story in &ledger.stories {
+        for req in &story.requirements {
+            // Only include ACs from requirements with must_have_ac: true
+            if !req.must_have_ac {
+                continue;
+            }
+
+            for ac in &req.acceptance_criteria {
+                // Look up the AC's status in coverage
+                let status = if let Some(cov) = coverage.get(&ac.id) {
+                    cov.status
+                } else {
+                    // If not in coverage, treat as unknown
+                    AcExecutionStatus::Unknown { total: 0 }
+                };
+
+                kernel_acs.push(KernelAcStatus {
+                    ac_id: ac.id.clone(),
+                    status,
+                    story_id: story.id.clone(),
+                    requirement_id: req.id.clone(),
+                });
+            }
+        }
+    }
+
+    kernel_acs
+}
+
 /// The HintEngine builds prioritized hints from tasks and AC coverage
 pub struct HintEngine {
     ac_index: AcCoverageIndex,

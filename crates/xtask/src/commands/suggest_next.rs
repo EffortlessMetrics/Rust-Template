@@ -94,9 +94,19 @@ pub fn run(args: SuggestNextArgs) -> Result<()> {
         .collect();
 
     // Create HintEngine with referential integrity validation
-    let mut engine =
-        HintEngine::with_validation(ac_index, runtime_tasks.clone(), valid_ac_ids, valid_req_ids);
+    let mut engine = HintEngine::with_validation(
+        ac_index.clone(),
+        runtime_tasks.clone(),
+        valid_ac_ids,
+        valid_req_ids,
+    );
+
+    // Build kernel AC statuses for governance hints (AC-TPL-HINTS-KERNEL-SIGNALS)
+    let kernel_acs = spec_runtime::build_kernel_ac_statuses(&ledger, &ac_index);
+    engine.set_kernel_acs(kernel_acs);
+
     let hint_engine_hints = engine.task_hints();
+    let kernel_governance_hints = engine.kernel_governance_hints();
 
     // Collect any referential integrity warnings
     let warnings: Vec<CliWarning> = engine
@@ -165,6 +175,26 @@ pub fn run(args: SuggestNextArgs) -> Result<()> {
             })
         })
         .collect();
+
+    // Add kernel governance hints for failing kernel ACs (AC-TPL-HINTS-KERNEL-SIGNALS)
+    // These are high-priority hints to fix failing kernel ACs before other work
+    for hint in &kernel_governance_hints {
+        let ac_id = match &hint.target {
+            hints::HintTarget::Ac { id } => id.clone(),
+            _ => continue,
+        };
+
+        cli_hints.push(CliHint {
+            task_id: ac_id.clone(), // Use AC ID as task_id for compatibility
+            title: hint.title.clone(),
+            status: "open".to_string(),
+            owner: "kernel".to_string(), // Kernel ACs are owned by the kernel
+            labels: hint.tags.clone(),
+            requirement_ids: vec![], // Kernel hints don't have explicit requirements
+            ac_ids: vec![ac_id],
+            reason: hint.reason.details.clone(),
+        });
+    }
 
     // Sort by status (in_progress before open) then by ID
     cli_hints.sort_by(|a, b| {
