@@ -719,4 +719,148 @@ mod tests {
         assert_eq!(parsed.get("status").unwrap(), "open");
         assert_eq!(target.get("type").unwrap(), "task");
     }
+
+    /// AC-TPL-HINTS-KERNEL-SIGNALS: Validates that kernel_governance_hints()
+    /// generates high-priority governance hints when kernel ACs are failing.
+    #[test]
+    fn kernel_governance_hints_surfaces_failing_acs() {
+        // Build a HintEngine with kernel AC statuses
+        let ac_index = AcCoverageIndex::new();
+        let engine_kernel_acs = vec![
+            KernelAcStatus {
+                ac_id: "AC-TPL-001".to_string(),
+                status: AcExecutionStatus::Pass { executed: 1, total: 1 },
+                story_id: "US-TPL-001".to_string(),
+                requirement_id: "REQ-TPL-HEALTH".to_string(),
+            },
+            KernelAcStatus {
+                ac_id: "AC-TPL-KERNEL-FAIL".to_string(),
+                status: AcExecutionStatus::Fail { executed: 0, total: 1 },
+                story_id: "US-TPL-CORE".to_string(),
+                requirement_id: "REQ-TPL-CORE".to_string(),
+            },
+        ];
+
+        let mut engine = HintEngine::new(ac_index, vec![]);
+        engine.set_kernel_acs(engine_kernel_acs);
+
+        // Generate governance hints
+        let hints = engine.kernel_governance_hints();
+
+        // Should have exactly one hint (only the failing AC)
+        assert_eq!(hints.len(), 1, "Should have one governance hint for the failing AC");
+
+        let hint = &hints[0];
+
+        // Verify hint structure matches AC-TPL-HINTS-KERNEL-SIGNALS requirements
+        assert_eq!(hint.kind, HintKind::Governance, "kind should be Governance");
+        assert_eq!(hint.priority, HintPriority::High, "priority should be High");
+        assert_eq!(
+            hint.reason.code, "KERNEL_AC_FAILING",
+            "reason.code should be KERNEL_AC_FAILING"
+        );
+        assert!(
+            hint.reason.details.contains("AC-TPL-KERNEL-FAIL"),
+            "reason.details should mention the failing AC ID"
+        );
+        assert!(hint.tags.contains(&"kernel".to_string()), "tags should include 'kernel'");
+        assert!(hint.tags.contains(&"governance".to_string()), "tags should include 'governance'");
+        assert!(hint.tags.contains(&"blocking".to_string()), "tags should include 'blocking'");
+
+        // Verify target is the failing AC
+        match &hint.target {
+            HintTarget::Ac { id } => assert_eq!(id, "AC-TPL-KERNEL-FAIL"),
+            _ => panic!("target should be HintTarget::Ac"),
+        }
+    }
+
+    /// AC-TPL-HINTS-REFERENTIAL-INTEGRITY: Validates that with_validation()
+    /// detects and reports invalid AC/REQ references in tasks.
+    #[test]
+    fn with_validation_detects_invalid_references() {
+        use std::collections::HashSet;
+
+        let ac_index = AcCoverageIndex::new();
+
+        // Define valid IDs (what exists in spec_ledger)
+        let valid_ac_ids: HashSet<String> =
+            ["AC-VALID-001", "AC-VALID-002"].iter().map(|s| s.to_string()).collect();
+        let valid_req_ids: HashSet<String> =
+            ["REQ-VALID-001"].iter().map(|s| s.to_string()).collect();
+
+        // Task with one valid and one invalid AC, and an invalid REQ
+        let task = crate::Task {
+            id: "TASK-TEST-REFS".to_string(),
+            title: "Test referential integrity".to_string(),
+            status: "Todo".to_string(),
+            requirement: "REQ-NONEXISTENT".to_string(), // Invalid REQ
+            acs: vec![
+                "AC-VALID-001".to_string(),       // Valid AC
+                "AC-NONEXISTENT-123".to_string(), // Invalid AC
+            ],
+            labels: vec![],
+            owner: None,
+            docs: None,
+            summary: "A task with invalid references".to_string(),
+            recommended_flows: vec![],
+            depends_on: vec![],
+        };
+
+        // Create engine with validation enabled
+        let mut engine =
+            HintEngine::with_validation(ac_index, vec![task], valid_ac_ids, valid_req_ids);
+
+        // Generate hints (this triggers validation)
+        let _hints = engine.task_hints();
+
+        // Check warnings
+        let warnings = engine.warnings();
+        assert_eq!(warnings.len(), 2, "Should have 2 warnings: one for REQ, one for AC");
+
+        // Find the AC warning
+        let ac_warning =
+            warnings.iter().find(|w| w.ref_type == "ac").expect("Should have AC warning");
+        assert_eq!(ac_warning.invalid_id, "AC-NONEXISTENT-123");
+        assert_eq!(ac_warning.source, "TASK-TEST-REFS");
+
+        // Find the REQ warning
+        let req_warning =
+            warnings.iter().find(|w| w.ref_type == "requirement").expect("Should have REQ warning");
+        assert_eq!(req_warning.invalid_id, "REQ-NONEXISTENT");
+        assert_eq!(req_warning.source, "TASK-TEST-REFS");
+    }
+
+    /// Validates that with_validation() does not warn for valid references.
+    #[test]
+    fn with_validation_accepts_valid_references() {
+        use std::collections::HashSet;
+
+        let ac_index = AcCoverageIndex::new();
+
+        let valid_ac_ids: HashSet<String> =
+            ["AC-VALID-001"].iter().map(|s| s.to_string()).collect();
+        let valid_req_ids: HashSet<String> =
+            ["REQ-VALID-001"].iter().map(|s| s.to_string()).collect();
+
+        // Task with all valid references
+        let task = crate::Task {
+            id: "TASK-ALL-VALID".to_string(),
+            title: "All valid references".to_string(),
+            status: "Todo".to_string(),
+            requirement: "REQ-VALID-001".to_string(),
+            acs: vec!["AC-VALID-001".to_string()],
+            labels: vec![],
+            owner: None,
+            docs: None,
+            summary: "A task with all valid references".to_string(),
+            recommended_flows: vec![],
+            depends_on: vec![],
+        };
+
+        let mut engine =
+            HintEngine::with_validation(ac_index, vec![task], valid_ac_ids, valid_req_ids);
+        let _hints = engine.task_hints();
+
+        assert!(engine.warnings().is_empty(), "Should have no warnings for valid references");
+    }
 }

@@ -88,3 +88,10 @@ Feature: LLM Bundle Structure
     And the output should contain "AC-NONEXISTENT-TEST-123"
     And "bundle/_test_bundle_invalid_refs/bundle.yaml" should contain "warnings:"
     And "bundle/_test_bundle_invalid_refs/bundle.yaml" should contain "AC-NONEXISTENT-TEST-123"
+
+  @AC-TPL-BUNDLE-REFERENTIAL-INTEGRITY
+  Scenario: Strict mode fails on invalid AC references
+    Given I am in the actual workspace
+    When I run "BUNDLE_STRICT_REFS=1 cargo xtask bundle _test_bundle_invalid_refs"
+    Then the command should fail
+    And the output should contain "referential integrity warning"

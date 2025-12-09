@@ -1636,6 +1636,8 @@ stories:
             must_have_ac: true
             tests:
               - { type: bdd, tag: "@AC-TPL-HINTS-REFERENTIAL-INTEGRITY", file: "specs/features/agent_hints.feature" }
+              - { type: unit, tag: "with_validation_detects_invalid_references", file: "crates/spec-runtime/src/hints.rs" }
+              - { type: unit, tag: "with_validation_accepts_valid_references", file: "crates/spec-runtime/src/hints.rs" }
 
           - id: AC-TPL-HINTS-KERNEL-SIGNALS
             text: >
@@ -1648,6 +1650,7 @@ stories:
             must_have_ac: true
             tests:
               - { type: bdd, tag: "@AC-TPL-HINTS-KERNEL-SIGNALS", file: "specs/features/agent_hints.feature" }
+              - { type: unit, tag: "kernel_governance_hints_surfaces_failing_acs", file: "crates/spec-runtime/src/hints.rs" }
 
           - id: AC-TPL-BUNDLE-REFERENTIAL-INTEGRITY
             text: >

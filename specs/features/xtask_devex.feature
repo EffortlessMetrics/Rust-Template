@@ -796,6 +796,13 @@ Feature: Developer Experience Commands
     And the JSON should contain field "documentation"
     And the JSON should contain field "task_hints"
 
+  @AC-TPL-IDP-CELL-SMOKE
+  Scenario: kernel-status reports IDP surfaces as healthy
+    Given I am in the actual workspace
+    When I run "cargo xtask kernel-status"
+    Then the output should contain "IDP Surfaces"
+    And the output should contain "idp-snapshot:"
+
   # Docs Governance Scenarios (Lane 1 hardening)
   @AC-PLT-009
   Scenario: docs-check validates version alignment across all consumer files
