@@ -9,38 +9,49 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Added
+### IDP Integration & Platform Contract
 
-**IDP Integration:**
+**Added:**
 
+- **IDP Cell Contract doc** (`docs/IDP_CELL_CONTRACT.md`) – Central datasheet for IDP teams:
+  - Defines the IDP profile (which ACs constitute the IDP contract)
+  - Documents surfaces to consume (`/platform/*`, `idp-snapshot`, CLI JSON mode)
+  - Explains how to trust a cell (CI signals, versioning model)
+  - Provides integration patterns (health tiles, scorecards, work sync)
 - **`cargo xtask idp-check`** – Validates IDP consumer surface with three checks:
   - OpenAPI lint via Redocly CLI
   - Backstage plugin type checks and tests
   - TypeScript configuration validation (no deprecated moduleResolution)
-- **Platform API contract** – `/platform/status`, `/platform/docs/index`, and other introspection endpoints documented in OpenAPI + reference Backstage plugin
-- **TypeScript configuration governance** – `scripts/validate-ts-config.sh` enforces modern TypeScript best practices (NodeNext module resolution, no ignoreDeprecations)
+- **TypeScript configuration governance** – `scripts/validate-ts-config.sh` enforces modern TypeScript best practices
+- **IDP Profile in KERNEL_SNAPSHOT** – Table of IDP-contract surfaces with their ACs
+- **"For IDPs" block in README** – Quick reference pointing to IDP Cell Contract
 
-**Documentation:**
+**Changed:**
 
-- **Day-0/Day-1 quick-start box** in README.md – Prominent commands for new clones and daily iteration
-- **Cross-linked core docs** – "See also" blocks linking rust-as-spec-overview, template-architecture, and TEMPLATE-CONTRACTS
-- **Kernel identity established** – README and docs now center "Rust-as-Spec Platform Cell" as the kernel identity; default instance is "template-service" (forks rename this)
+- **idp-check UX** – Compact one-screen summary with `[1/3]`, `[2/3]`, `[3/3]` progress indicators
 
-### Changed
+### Governance & AC Coverage
 
-- **idp-check UX** – Compact one-screen summary with `[1/3]`, `[2/3]`, `[3/3]` progress indicators and graceful degradation when tools/directories are missing
-
-**xtask / AC coverage:**
+**Changed:**
 
 - `cargo xtask ac-status --json` schema bumped to **v2.0**:
   - `kernel_acs` / `template_acs` → `must_have_acs` / `optional_acs`
   - New top-level field: `schema_version`
   - New per-AC fields: `source`, `must_have_ac`
-- Old field names are removed; external consumers must update to the new shape.
-- AC classification now uses `must_have_ac` metadata from `spec_ledger.yaml` instead of ID prefix heuristics.
-- Selftest strict mode (`XTASK_STRICT_AC_COVERAGE=1`) now enforces coverage for `must_have_ac=true` ACs.
+- Old field names are removed; external consumers must update to the new shape
+- AC classification now uses `must_have_ac` metadata from `spec_ledger.yaml` instead of ID prefix heuristics
+- Selftest strict mode (`XTASK_STRICT_AC_COVERAGE=1`) now enforces coverage for `must_have_ac=true` ACs
+- **"How an IDP Can Trust a Cell"** section added to `docs/reference/ci-workflows.md`
 
 See [ac-status JSON Schema Reference](docs/reference/ac-status-json-schema.md) for the complete v2.0 schema.
+
+### Documentation & DevEx
+
+**Added:**
+
+- **Day-0/Day-1 quick-start box** in README.md – Prominent commands for new clones and daily iteration
+- **Cross-linked core docs** – "See also" blocks linking rust-as-spec-overview, template-architecture, and TEMPLATE-CONTRACTS
+- **Kernel identity established** – README and docs now center "Rust-as-Spec Platform Cell" as the kernel identity
 
 ## [3.3.7] - 2025-12-07
 

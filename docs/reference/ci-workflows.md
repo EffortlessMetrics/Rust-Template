@@ -140,6 +140,56 @@ The platform uses a tiered validation approach based on the environment:
 
 ---
 
+## How an IDP Can Trust a Cell
+
+> **For IDP teams:** See [`docs/IDP_CELL_CONTRACT.md`](../IDP_CELL_CONTRACT.md) for the
+> complete integration datasheet.
+
+A cell built on this template is considered **valid** when:
+
+1. **`tier1-selftest` passes on main** - The authoritative CI gate (11 steps)
+2. **`idp-snapshot` returns valid JSON** - Machine-readable governance health
+3. **Kernel tag exists** - `vX.Y.Z-kernel` with `kernel_contract.vX.Y.Z.json`
+
+### What "Selftest Green" Means for IDPs
+
+| Selftest Step | IDP Implication |
+|---------------|-----------------|
+| Core checks (fmt, clippy, tests) | Code compiles and passes unit tests |
+| Skills governance lint | Agent workflows are valid |
+| Agents governance lint | Agent definitions are valid |
+| BDD acceptance tests | All AC behaviors verified |
+| AC status + ADR mapping | AC coverage is tracked |
+| LLM context bundler | Agent context packs work |
+| Policy tests (Rego) | Governance policies pass |
+| DevEx contract | Required xtask commands exist |
+| Graph invariants | REQ/AC/test/doc relationships intact |
+| AC coverage sanity | Kernel ACs have tests |
+
+### IDP Integration Signals
+
+```bash
+# Check cell health (returns JSON)
+curl http://localhost:8080/platform/status | jq '.governance.selftest_status'
+# Expected: "pass"
+
+# Get IDP tile data
+cargo xtask idp-snapshot --pretty
+
+# Local cell readiness probe
+cargo xtask kernel-status
+```
+
+### CI Events to Watch
+
+| Event | Signal | Action |
+|-------|--------|--------|
+| Tag `v*.*.*-kernel` pushed | Kernel contract frozen | Update IDP registry |
+| `tier1-selftest` green on main | Cell is governed | Safe to deploy/consume |
+| `tier1-selftest` red | Contract violation | Investigate before consuming |
+
+---
+
 ## Workflow Inventory
 
 ### Primary Validation Workflows
