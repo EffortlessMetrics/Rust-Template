@@ -6,7 +6,10 @@ version: 3.3.7
 stories: [US-TPL-PLT-001]
 requirements: [REQ-TPL-PLATFORM-INTROSPECTION]
 acs: [AC-TPL-KERNEL-CONTRACT-EMITTED, AC-TPL-AC-STATUS-CONSISTENCY]
+adrs: [ADR-0005]
 ---
+
+<!-- doclint:disable orphan-version -->
 
 # How to Adopt the Rust-as-Spec Kernel
 
