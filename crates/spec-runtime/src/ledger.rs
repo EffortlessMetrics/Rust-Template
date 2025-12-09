@@ -121,3 +121,55 @@ pub fn load_spec_ledger(path: &Path) -> Result<SpecLedger> {
     serde_yaml::from_str(&content)
         .with_context(|| format!("Failed to parse spec ledger: {}", path.display()))
 }
+
+// =============================================================================
+// Referential Integrity Support
+// =============================================================================
+
+/// Index of all AC IDs in the spec ledger for fast lookup.
+/// Used for referential integrity validation in agent hints and bundles.
+pub type AcIdIndex = std::collections::HashSet<String>;
+
+/// Index of all REQ IDs in the spec ledger for fast lookup.
+/// Used for referential integrity validation in agent hints and bundles.
+pub type ReqIdIndex = std::collections::HashSet<String>;
+
+/// Build an index of all AC IDs from a SpecLedger.
+///
+/// # Example
+///
+/// ```ignore
+/// let ledger = load_spec_ledger(Path::new("specs/spec_ledger.yaml"))?;
+/// let ac_ids = build_ac_id_index(&ledger);
+/// assert!(ac_ids.contains("AC-TPL-001"));
+/// ```
+pub fn build_ac_id_index(ledger: &SpecLedger) -> AcIdIndex {
+    let mut index = AcIdIndex::new();
+    for story in &ledger.stories {
+        for req in &story.requirements {
+            for ac in &req.acceptance_criteria {
+                index.insert(ac.id.clone());
+            }
+        }
+    }
+    index
+}
+
+/// Build an index of all REQ IDs from a SpecLedger.
+///
+/// # Example
+///
+/// ```ignore
+/// let ledger = load_spec_ledger(Path::new("specs/spec_ledger.yaml"))?;
+/// let req_ids = build_req_id_index(&ledger);
+/// assert!(req_ids.contains("REQ-TPL-HEALTH"));
+/// ```
+pub fn build_req_id_index(ledger: &SpecLedger) -> ReqIdIndex {
+    let mut index = ReqIdIndex::new();
+    for story in &ledger.stories {
+        for req in &story.requirements {
+            index.insert(req.id.clone());
+        }
+    }
+    index
+}

@@ -296,6 +296,81 @@ jobs:
 
 ---
 
+## Referential Integrity
+
+The agent hints API (`/platform/agent/hints`) and bundle command (`cargo xtask bundle`) validate referential integrity of task definitions.
+
+### Agent Hints Warnings
+
+When a task references a non-existent AC or REQ in `specs/tasks.yaml`, the hints response includes a `warnings` array:
+
+```json
+{
+  "hints": [...],
+  "warnings": [
+    {
+      "invalid_id": "AC-NONEXISTENT-999",
+      "ref_type": "ac",
+      "source": "TASK-001",
+      "message": "Task TASK-001 references non-existent AC AC-NONEXISTENT-999"
+    }
+  ]
+}
+```
+
+This enables agents and IDPs to:
+- Detect governance drift without blocking work
+- Surface broken references for human review
+- Prioritize fixing referential issues
+
+### Bundle Warnings
+
+Bundle generation logs warnings for invalid AC/REQ references:
+
+```bash
+cargo xtask bundle my_task
+# Output includes: [WARN] AC-NONEXISTENT-999 not found in spec_ledger.yaml
+```
+
+Set `BUNDLE_STRICT_REFS=1` to fail on invalid references in CI:
+
+```bash
+BUNDLE_STRICT_REFS=1 cargo xtask bundle my_task
+# Exits with error if any invalid references found
+```
+
+---
+
+## Understanding AC Status
+
+The `docs/feature_status.md` file shows AC execution status with three states:
+
+| Status | Meaning |
+|--------|---------|
+| `[PASS]` | At least one test (BDD or unit) ran and passed |
+| `[FAIL]` | At least one test ran and failed |
+| `[UNKNOWN]` | No local test ran for this AC |
+
+### Meta / CI-only ACs
+
+Some ACs show `[UNKNOWN]` status by design. These are **meta/CI-only ACs**:
+
+1. **CI-validated ACs** - Tested in GitHub Actions, not locally (e.g., `AC-TPL-EXAMPLE-FORK-BUILDS`)
+2. **Policy ACs** - Define contracts validated by linting tools, not executable tests
+3. **Documentation ACs** - Verified by `docs-check`, not BDD scenarios
+
+This is **intentional**. The kernel contract (`must_have_ac=true` ACs) are all locally testable and will show `[PASS]` or `[FAIL]`.
+
+### IDP Implications
+
+When integrating with an IDP:
+
+- **Filter by `must_have_ac=true`** for core health metrics
+- **Treat `[UNKNOWN]` as informational**, not a failure
+- **Use `/platform/status` governance.selftest_status** as the authoritative health signal
+
+---
+
 ## What's Out of Scope
 
 This cell is a **per-service kernel**, not a full IDP. The following are intentionally left to the platform layer:

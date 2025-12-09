@@ -69,6 +69,46 @@ pub struct HintLinks {
     pub extra: BTreeMap<String, String>,
 }
 
+// =============================================================================
+// Referential Integrity Warnings (AC-TPL-HINTS-REFERENTIAL-INTEGRITY)
+// =============================================================================
+
+/// Warning about referential integrity issues in task definitions.
+///
+/// When a task references an AC or REQ that doesn't exist in spec_ledger.yaml,
+/// a ReferentialWarning is generated instead of silently omitting the reference.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ReferentialWarning {
+    /// The ID that failed validation (AC or REQ ID)
+    pub invalid_id: String,
+    /// The type of reference ("ac" or "requirement")
+    pub ref_type: String,
+    /// The task ID that contained the invalid reference
+    pub source: String,
+    /// Human-readable message explaining the issue
+    pub message: String,
+}
+
+// =============================================================================
+// Kernel AC Signals (AC-TPL-HINTS-KERNEL-SIGNALS)
+// =============================================================================
+
+/// Status of a kernel AC (must_have_ac=true) for governance signaling.
+///
+/// When kernel ACs are failing, the hints API surfaces them as high-priority
+/// governance hints so agents prioritize fixing kernel regressions.
+#[derive(Debug, Clone, Serialize)]
+pub struct KernelAcStatus {
+    /// AC ID (e.g., "AC-TPL-001")
+    pub ac_id: String,
+    /// Current execution status
+    pub status: AcExecutionStatus,
+    /// Story this AC belongs to
+    pub story_id: String,
+    /// Requirement this AC belongs to
+    pub requirement_id: String,
+}
+
 /// A complete hint suggesting work to an agent
 #[derive(Debug, Clone, Serialize)]
 pub struct Hint {
@@ -116,17 +156,143 @@ pub struct HintFilter {
 pub struct HintEngine {
     ac_index: AcCoverageIndex,
     tasks: Vec<crate::Task>,
+    /// Optional: Set of valid AC IDs for referential integrity checks
+    valid_ac_ids: Option<std::collections::HashSet<String>>,
+    /// Optional: Set of valid REQ IDs for referential integrity checks
+    valid_req_ids: Option<std::collections::HashSet<String>>,
+    /// Warnings accumulated during hint generation
+    warnings: Vec<ReferentialWarning>,
+    /// Kernel AC statuses (for governance hints)
+    kernel_acs: Vec<KernelAcStatus>,
 }
 
 impl HintEngine {
     /// Create a new HintEngine from AC coverage and tasks
     pub fn new(ac_index: AcCoverageIndex, tasks: Vec<crate::Task>) -> Self {
-        Self { ac_index, tasks }
+        Self {
+            ac_index,
+            tasks,
+            valid_ac_ids: None,
+            valid_req_ids: None,
+            warnings: Vec::new(),
+            kernel_acs: Vec::new(),
+        }
     }
 
-    /// Generate hints from open/in-progress tasks
-    pub fn task_hints(&self) -> Vec<Hint> {
-        self.tasks
+    /// Create a new HintEngine with referential integrity validation enabled.
+    ///
+    /// When valid_ac_ids and valid_req_ids are provided, the engine will validate
+    /// task references and accumulate warnings for invalid ones.
+    pub fn with_validation(
+        ac_index: AcCoverageIndex,
+        tasks: Vec<crate::Task>,
+        valid_ac_ids: std::collections::HashSet<String>,
+        valid_req_ids: std::collections::HashSet<String>,
+    ) -> Self {
+        Self {
+            ac_index,
+            tasks,
+            valid_ac_ids: Some(valid_ac_ids),
+            valid_req_ids: Some(valid_req_ids),
+            warnings: Vec::new(),
+            kernel_acs: Vec::new(),
+        }
+    }
+
+    /// Get accumulated warnings after calling task_hints().
+    ///
+    /// Returns warnings about invalid AC/REQ references found during hint generation.
+    pub fn warnings(&self) -> &[ReferentialWarning] {
+        &self.warnings
+    }
+
+    /// Set kernel ACs for governance hint generation.
+    ///
+    /// Call this before task_hints() to enable KERNEL_AC_FAILING governance hints.
+    pub fn set_kernel_acs(&mut self, kernel_acs: Vec<KernelAcStatus>) {
+        self.kernel_acs = kernel_acs;
+    }
+
+    /// Generate governance hints for failing kernel ACs.
+    ///
+    /// Returns high-priority hints with reason.code = "KERNEL_AC_FAILING" for
+    /// any kernel AC (must_have_ac=true) that has a failing status.
+    pub fn kernel_governance_hints(&self) -> Vec<Hint> {
+        self.kernel_acs
+            .iter()
+            .filter(|kac| matches!(kac.status, AcExecutionStatus::Fail { .. }))
+            .enumerate()
+            .map(|(idx, kac)| Hint {
+                id: format!("HINT-GOV-KERNEL-{:03}", idx + 1),
+                kind: HintKind::Governance,
+                title: format!("Kernel AC {} is failing", kac.ac_id),
+                priority: HintPriority::High,
+                status: HintStatus::Open,
+                reason: HintReason {
+                    code: "KERNEL_AC_FAILING".to_string(),
+                    details: format!(
+                        "Kernel AC {} (must_have_ac=true) is failing. Fix this before continuing other work. \
+                        Story: {}, Requirement: {}",
+                        kac.ac_id, kac.story_id, kac.requirement_id
+                    ),
+                },
+                target: HintTarget::Ac { id: kac.ac_id.clone() },
+                tags: vec!["kernel".to_string(), "governance".to_string(), "blocking".to_string()],
+                links: HintLinks {
+                    spec: Some(format!("specs/spec_ledger.yaml#{}", kac.requirement_id)),
+                    task: None,
+                    docs: vec![],
+                    adrs: vec![],
+                    extra: BTreeMap::new(),
+                },
+            })
+            .collect()
+    }
+
+    /// Validate task AC/REQ references and accumulate warnings.
+    fn validate_task_references(&mut self, task: &crate::Task) {
+        // Validate REQ reference
+        if let Some(ref valid_reqs) = self.valid_req_ids {
+            if !valid_reqs.contains(&task.requirement) {
+                self.warnings.push(ReferentialWarning {
+                    invalid_id: task.requirement.clone(),
+                    ref_type: "requirement".to_string(),
+                    source: task.id.clone(),
+                    message: format!(
+                        "Task {} references non-existent requirement {}",
+                        task.id, task.requirement
+                    ),
+                });
+            }
+        }
+
+        // Validate AC references
+        if let Some(ref valid_acs) = self.valid_ac_ids {
+            for ac_id in &task.acs {
+                if !valid_acs.contains(ac_id) {
+                    self.warnings.push(ReferentialWarning {
+                        invalid_id: ac_id.clone(),
+                        ref_type: "ac".to_string(),
+                        source: task.id.clone(),
+                        message: format!("Task {} references non-existent AC {}", task.id, ac_id),
+                    });
+                }
+            }
+        }
+    }
+
+    /// Generate hints from open/in-progress tasks.
+    ///
+    /// If validation was enabled via `with_validation()`, this method also validates
+    /// task references and accumulates warnings. Call `warnings()` after this to get
+    /// any referential integrity issues found.
+    pub fn task_hints(&mut self) -> Vec<Hint> {
+        // Clear previous warnings
+        self.warnings.clear();
+
+        // Collect tasks that need hints
+        let tasks_to_process: Vec<_> = self
+            .tasks
             .iter()
             .filter(|t| {
                 matches!(
@@ -134,8 +300,16 @@ impl HintEngine {
                     "Todo" | "InProgress" | "todo" | "in_progress" | "in-progress"
                 )
             })
+            .cloned()
+            .collect();
+
+        // Validate and build hints
+        tasks_to_process
+            .iter()
             .enumerate()
             .map(|(idx, task)| {
+                // Validate references if enabled
+                self.validate_task_references(task);
                 let hint_id = format!("HINT-TASK-{:03}", idx + 1);
                 self.build_hint_for_task(&hint_id, task)
             })
@@ -423,7 +597,7 @@ mod tests {
             depends_on: vec![],
         };
 
-        let engine = HintEngine::new(ac_index, vec![task]);
+        let mut engine = HintEngine::new(ac_index, vec![task]);
         let hints = engine.task_hints();
 
         assert_eq!(hints.len(), 1);

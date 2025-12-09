@@ -41,9 +41,21 @@ pub struct CliHint {
     pub reason: String,
 }
 
+/// Warning about referential integrity issues in CLI output
+#[derive(Debug, Serialize)]
+pub struct CliWarning {
+    pub invalid_id: String,
+    pub ref_type: String,
+    pub source: String,
+    pub message: String,
+}
+
 #[derive(Debug, Serialize)]
 pub struct CliHintsResponse {
     pub hints: Vec<CliHint>,
+    /// Warnings about referential integrity issues (invalid AC/REQ references)
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub warnings: Vec<CliWarning>,
 }
 
 pub fn run(args: SuggestNextArgs) -> Result<()> {
@@ -55,6 +67,12 @@ pub fn run(args: SuggestNextArgs) -> Result<()> {
 
     let feature_status_path = root.join("docs/feature_status.md");
     let ac_index = hints::parse_feature_status(&feature_status_path)?;
+
+    // Load spec_ledger for referential integrity validation (AC-TPL-HINTS-REFERENTIAL-INTEGRITY)
+    let ledger_path = root.join("specs/spec_ledger.yaml");
+    let ledger = spec_runtime::load_spec_ledger(&ledger_path)?;
+    let valid_ac_ids = spec_runtime::build_ac_id_index(&ledger);
+    let valid_req_ids = spec_runtime::build_req_id_index(&ledger);
 
     // Convert task specs to runtime tasks
     let runtime_tasks: Vec<spec_runtime::Task> = task_specs
@@ -75,9 +93,22 @@ pub fn run(args: SuggestNextArgs) -> Result<()> {
         })
         .collect();
 
-    // Create HintEngine
-    let engine = HintEngine::new(ac_index, runtime_tasks.clone());
+    // Create HintEngine with referential integrity validation
+    let mut engine =
+        HintEngine::with_validation(ac_index, runtime_tasks.clone(), valid_ac_ids, valid_req_ids);
     let hint_engine_hints = engine.task_hints();
+
+    // Collect any referential integrity warnings
+    let warnings: Vec<CliWarning> = engine
+        .warnings()
+        .iter()
+        .map(|w| CliWarning {
+            invalid_id: w.invalid_id.clone(),
+            ref_type: w.ref_type.clone(),
+            source: w.source.clone(),
+            message: w.message.clone(),
+        })
+        .collect();
 
     // Convert to CLI hints and apply filters
     let mut cli_hints: Vec<CliHint> = hint_engine_hints
@@ -153,9 +184,19 @@ pub fn run(args: SuggestNextArgs) -> Result<()> {
 
     // Output based on format
     if args.format == "json" {
-        let response = CliHintsResponse { hints: cli_hints };
+        let response = CliHintsResponse { hints: cli_hints, warnings };
         println!("{}", serde_json::to_string_pretty(&response)?);
     } else {
+        // Show warnings first if any
+        if !warnings.is_empty() {
+            println!("{}", "Referential Integrity Warnings".yellow().bold());
+            println!();
+            for warn in &warnings {
+                println!("  {} {}: {}", "[WARN]".yellow(), warn.source, warn.message);
+            }
+            println!();
+        }
+
         println!("{}", "Agent Hints".bold());
         println!();
 

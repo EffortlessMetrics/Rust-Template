@@ -85,6 +85,8 @@ async fn given_tasks_exist(world: &mut World, file: String, step: &cucumber::ghe
             let mut labels: Vec<String> = Vec::new();
             let mut recommended_flows: Vec<String> = Vec::new();
 
+            let mut acs: Vec<String> = Vec::new();
+
             for (i, cell) in row.iter().enumerate() {
                 if let Some(&header) = headers.get(i) {
                     match header {
@@ -100,6 +102,11 @@ async fn given_tasks_exist(world: &mut World, file: String, step: &cucumber::ghe
                         "labels" => {
                             if !cell.is_empty() {
                                 labels = cell.split(',').map(|s| s.trim().to_string()).collect();
+                            }
+                        }
+                        "acs" => {
+                            if !cell.is_empty() {
+                                acs = cell.split(',').map(|s| s.trim().to_string()).collect();
                             }
                         }
                         "recommended_flows" => {
@@ -129,7 +136,7 @@ async fn given_tasks_exist(world: &mut World, file: String, step: &cucumber::ghe
                     id: task_id.clone(),
                     title: title.clone(),
                     requirement: requirement.clone(),
-                    acs: Vec::new(),
+                    acs: acs.clone(),
                     status: status_label,
                     owner: owner.clone(),
                     labels: labels.clone(),
@@ -932,6 +939,59 @@ async fn then_hints_sorted_by_priority(world: &mut World, priority_order: String
             pos_j
         );
     }
+}
+
+// ============================================================================
+// Referential Integrity Warning Steps (AC-TPL-HINTS-REFERENTIAL-INTEGRITY)
+// ============================================================================
+
+#[then(regex = r#"^the "([^"]+)" array should not be empty$"#)]
+async fn then_warnings_array_not_empty(world: &mut World, field: String) {
+    // Support both HTTP API responses and CLI JSON output
+    let json = if let Some(cli_json) = &world.cli_json_output {
+        cli_json
+    } else if let Some(response) = &world.last_response {
+        &response.body
+    } else {
+        panic!("response should exist");
+    };
+
+    let array = json
+        .get(&field)
+        .and_then(|v| v.as_array())
+        .unwrap_or_else(|| panic!("field '{}' should be an array. JSON: {:?}", field, json));
+
+    assert!(
+        !array.is_empty(),
+        "Expected '{}' array to not be empty, but it was. JSON: {:?}",
+        field,
+        json
+    );
+}
+
+#[then(regex = r#"^the first warning should have field "([^"]+)"$"#)]
+async fn then_first_warning_has_field(world: &mut World, field: String) {
+    // Support both HTTP API responses and CLI JSON output
+    let json = if let Some(cli_json) = &world.cli_json_output {
+        cli_json
+    } else if let Some(response) = &world.last_response {
+        &response.body
+    } else {
+        panic!("response should exist");
+    };
+
+    let warnings =
+        json.get("warnings").and_then(|v| v.as_array()).expect("warnings should be an array");
+
+    assert!(!warnings.is_empty(), "Expected at least one warning, but warnings array is empty");
+
+    let first_warning = &warnings[0];
+    assert!(
+        first_warning.get(&field).is_some(),
+        "Expected first warning to have field '{}', but it didn't. Warning: {:?}",
+        field,
+        first_warning
+    );
 }
 
 #[cfg(test)]
