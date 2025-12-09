@@ -28,8 +28,10 @@ jobs:
 
       - name: Run kernel selftest (Tier 1)
         # Strict AC coverage: fail on Unknown must_have_ac ACs (main branch only)
+        # Strict precommit: make docs-check a hard gate in CI
         env:
           XTASK_STRICT_AC_COVERAGE: ${{ github.ref == 'refs/heads/main' && '1' || '' }}
+          XTASK_STRICT_PRECOMMIT: "1"
         run: nix develop -c cargo xtask selftest
 
       - name: Verify artifacts were generated

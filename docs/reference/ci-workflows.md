@@ -20,7 +20,7 @@ adrs:
   - ADR-0002
   - ADR-0005
   - ADR-0017
-last_updated: 2025-11-26
+last_updated: 2025-12-09
 ---
 
 # CI Workflows Reference
@@ -619,6 +619,90 @@ buf breaking --against main
 - Broken links
 - Markdown syntax errors
 - Missing referenced files
+
+---
+
+### Documentation Governance (doclint)
+
+Documentation is validated by `cargo xtask docs-check` as part of selftest. This section covers key doclint invariants and how to handle common patterns.
+
+#### Version String Governance
+
+Version strings in documentation are checked for consistency with `specs/spec_ledger.yaml → metadata.template_version`.
+
+**Two approaches for version references:**
+
+1. **Governed versions** (tracked in `specs/version_manifest.yaml`):
+   - Use for version strings that should update with releases
+   - Example: README badges, "Current version: X.Y.Z"
+   - These are updated automatically by `cargo xtask release-prepare`
+
+2. **Fixed versions** (use `<!-- doclint:disable orphan-version -->`):
+   - Use for version tags that are intentionally frozen (e.g., `v3.3.7-kernel`)
+   - Use for historical references or snapshots
+   - Example:
+     ```markdown
+     <!-- doclint:disable orphan-version -->
+     The kernel baseline is frozen at v3.3.7-kernel.
+     ```
+
+**When to use which:**
+
+| Scenario | Approach |
+|----------|----------|
+| Current template version | `version_manifest.yaml` |
+| Frozen kernel tag | `doclint:disable orphan-version` |
+| Historical release notes | `doclint:disable orphan-version` |
+| ADR referencing a past version | `doclint:disable orphan-version` |
+| Dynamic "latest version" badge | `version_manifest.yaml` |
+
+#### Front-matter Synchronization
+
+All governed docs must have YAML front-matter that matches their entry in `specs/doc_index.yaml`.
+
+**Required front-matter fields:**
+```yaml
+---
+id: UNIQUE-DOC-ID
+title: "Document Title"
+doc_type: reference | how_to | tutorial | explanation | design_doc
+version: 3.3.7  # Must match spec_ledger template_version
+# ... other fields (stories, requirements, acs, adrs)
+---
+```
+
+**Sync front-matter:**
+```bash
+cargo xtask docs-frontmatter-sync
+```
+
+**Validate:**
+```bash
+cargo xtask docs-check
+```
+
+#### Doc Index Registration
+
+All docs in `docs/` should be registered in `specs/doc_index.yaml`. Unregistered docs may trigger warnings.
+
+**Register a new doc:**
+1. Add entry to `specs/doc_index.yaml` with id, path, doc_type, status
+2. Add matching front-matter to the markdown file
+3. Run `cargo xtask docs-frontmatter-sync` to sync
+4. Run `cargo xtask docs-check` to validate
+
+#### CI Strictness Levels
+
+Documentation checks have configurable strictness:
+
+| Environment Variable | Effect |
+|---------------------|--------|
+| `XTASK_STRICT_PRECOMMIT=1` | Make docs-check a hard gate (CI default) |
+| (unset) | Soft mode - warnings but doesn't block (local default) |
+
+In CI (`tier1-selftest.yml`), `XTASK_STRICT_PRECOMMIT=1` is set, making documentation issues blocking errors.
+
+Locally, developers can iterate without being blocked by doc warnings, but must fix them before merging.
 
 ---
 
