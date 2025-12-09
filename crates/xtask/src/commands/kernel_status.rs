@@ -227,7 +227,25 @@ pub fn run() -> Result<()> {
     }
     println!();
 
-    // 8. Summary
+    // 8. IDP Surfaces (probe idp-snapshot for valid JSON)
+    println!("{}", "IDP Surfaces".bold());
+    match check_idp_snapshot_probe() {
+        Ok(()) => {
+            println!("  idp-snapshot: {}", "OK".green());
+            subsystems.push(SubsystemStatus::ok("idp_snapshot"));
+        }
+        Err(e) => {
+            println!("  idp-snapshot: {}", "FAIL".red());
+            println!("    {}", format!("{e:#}").red());
+            subsystems.push(SubsystemStatus::fail(
+                "idp_snapshot",
+                "Run `cargo xtask idp-snapshot` to diagnose",
+            ));
+        }
+    }
+    println!();
+
+    // 9. Summary
     println!("{}", "Summary".bold());
     let failures: Vec<_> = subsystems.iter().filter(|s| !s.ok).collect();
 
@@ -381,4 +399,48 @@ fn check_ci_env_var(workflow_path: &str, env_var: &str) -> bool {
     content.contains(env_var)
         && (content.contains(&format!("{}: \"1\"", env_var))
             || content.contains(&format!("{}:", env_var)))
+}
+
+/// Probe idp-snapshot to verify IDP surfaces are healthy.
+///
+/// This runs `cargo xtask idp-snapshot` and validates the output is valid JSON
+/// with expected top-level fields (governance_health, template_version, etc.).
+fn check_idp_snapshot_probe() -> Result<()> {
+    // Run idp-snapshot command
+    let output = Command::new("cargo")
+        .args(["xtask", "idp-snapshot"])
+        .output()
+        .map_err(|e| anyhow::anyhow!("Failed to run idp-snapshot: {}", e))?;
+
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        return Err(anyhow::anyhow!("idp-snapshot failed: {}", stderr.trim()));
+    }
+
+    // Parse output as JSON
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let json: serde_json::Value = serde_json::from_str(stdout.trim())
+        .map_err(|e| anyhow::anyhow!("idp-snapshot output is not valid JSON: {}", e))?;
+
+    // Validate expected top-level fields
+    let required_fields = ["timestamp", "template_version", "governance_health"];
+    for field in required_fields {
+        if json.get(field).is_none() {
+            return Err(anyhow::anyhow!("idp-snapshot missing required field: {}", field));
+        }
+    }
+
+    // Validate governance_health has expected structure
+    if let Some(health) = json.get("governance_health") {
+        if health.get("status").is_none() {
+            return Err(anyhow::anyhow!("idp-snapshot governance_health missing 'status' field"));
+        }
+        if health.get("ac_coverage").is_none() {
+            return Err(anyhow::anyhow!(
+                "idp-snapshot governance_health missing 'ac_coverage' field"
+            ));
+        }
+    }
+
+    Ok(())
 }
