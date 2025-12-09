@@ -1,3 +1,5 @@
+<!-- doclint:disable orphan-version -->
+
 # Fork Dry-Run Receipt – v3.3.7-kernel
 
 > **Template:** Copy this file and rename to `FORK_DRY_RUN_YYYY-MM-DD.md` to record

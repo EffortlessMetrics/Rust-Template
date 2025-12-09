@@ -23,7 +23,9 @@ last_updated: 2025-12-09
 
 ## Executive Summary
 
-This is the frozen kernel baseline (v3.3.7-kernel) for the Rust-as-Spec platform template. All kernel acceptance criteria pass. All selftest gates pass. Day-0 commands work as documented. This is a stable, forkable baseline.
+This is the frozen kernel baseline (v3.3.7-kernel) for the Rust-as-Spec platform template.
+All kernel acceptance criteria pass. All selftest gates pass.
+Day-0 commands work as documented. This is a stable, forkable baseline.
 
 **v3.3.6 highlights:**
 
@@ -114,11 +116,16 @@ These REQs encode the template's opinionated stance. They define *how* the platf
 | REQ-TPL-FLOW-IDEMPOTENCY | Platform flows are safe to rerun | AC-TPL-FLOW-IDEMPOTENT |
 | REQ-TPL-GRAPH-INVARIANTS | Every REQ has an AC, every AC has a test | AC-TPL-GRAPH-REQ-HAS-AC, AC-TPL-GRAPH-AC-HAS-TEST |
 
-**Why this matters:** When you fork, these philosophy contracts carry over. If you want different behavior (e.g., no JSON CLI requirement), you explicitly demote the AC in your fork's `spec_ledger.yaml`. This keeps "what we enforce" visible in spec, not buried in CI config.
+**Why this matters:** When you fork, these philosophy contracts carry over.
+If you want different behavior (e.g., no JSON CLI requirement), you explicitly demote the AC in
+your fork's `spec_ledger.yaml`. This keeps "what we enforce" visible in spec, not buried in CI config.
 
 **Cross-reference:** [`docs/how-to/pre-fork-checklist.md`](./how-to/pre-fork-checklist.md) → Phase 5: Choose Your Opinionation Level
 
-**Note on ID prefixes:** IDs with `TPL` prefixes are part of the template family. Kernel vs template default is controlled by `must_have_ac`, not the ID prefix. An AC like `AC-TPL-ARTIFACTS-HAVE-REFS` with `must_have_ac: true` is kernel; one with `must_have_ac: false` is a template default.
+**Note on ID prefixes:** IDs with `TPL` prefixes are part of the template family.
+Kernel vs template default is controlled by `must_have_ac`, not the ID prefix.
+An AC like `AC-TPL-ARTIFACTS-HAVE-REFS` with `must_have_ac: true` is kernel;
+one with `must_have_ac: false` is a template default.
 
 ---
 

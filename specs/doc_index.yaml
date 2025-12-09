@@ -469,7 +469,7 @@ docs:
   # Kernel Snapshot (Release Baseline)
   - id: SNAPSHOT-TPL-KERNEL-001
     file: docs/KERNEL_SNAPSHOT.md
-    title: "Kernel Snapshot v3.3.5"
+    title: "Kernel Snapshot v3.3.7"
     doc_type: status
     stories: [US-TPL-PLT-001]
     requirements: [REQ-PLT-DOCS-CONSISTENCY, REQ-TPL-OPINIONATED-DEFAULTS]
@@ -774,6 +774,16 @@ docs:
     stories: [US-TPL-PLT-001]
     requirements: [REQ-PLT-DOCS-CONSISTENCY, REQ-PLT-DEVEX-CONTRACT]
     acs: [AC-PLT-009, AC-PLT-010]
+    adrs: [ADR-0005]
+
+  # Adopt the Rust-as-Spec Kernel
+  - id: HOW-TO-ADOPT-KERNEL-001
+    file: docs/how-to/adopt-kernel.md
+    title: "Adopt the Rust-as-Spec Kernel (v3.3.7-kernel)"
+    doc_type: how_to
+    stories: [US-TPL-PLT-001]
+    requirements: [REQ-TPL-PLATFORM-INTROSPECTION]
+    acs: [AC-TPL-KERNEL-CONTRACT-EMITTED, AC-TPL-AC-STATUS-CONSISTENCY]
     adrs: [ADR-0005]
 
   # AC Governance Framework
