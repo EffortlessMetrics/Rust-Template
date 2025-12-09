@@ -20,6 +20,21 @@ last_updated: 2025-12-01
 
 This guide covers the governance-compliant workflows for modifying documentation in the Rust-as-Spec platform cell. Following these patterns ensures your changes pass `cargo xtask docs-check` and `selftest`.
 
+## Quick Edit Loop
+
+While editing docs, run this loop to validate your changes:
+
+```bash
+# While editing docs:
+cargo xtask docs-check        # validate front-matter, doc_index, doclint
+git diff docs/...             # sanity check your changes
+```
+
+CI treats doc issues as **hard failures** via `XTASK_STRICT_PRECOMMIT=1` in `tier1-selftest.yml`.
+Run `docs-check` before pushing to avoid surprises.
+
+---
+
 ## Quick Reference
 
 | Change Type | Key Steps |

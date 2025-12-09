@@ -364,4 +364,31 @@ File issues with `refs: AC-XXX` tags to feed findings back. See [`ROADMAP.md`](.
 
 ---
 
+## Changing the Kernel After v3.3.7-kernel
+
+<!-- doclint:disable orphan-version -->
+
+The kernel contracts (must_have_ac=true ACs, `/platform/*` APIs, xtask governance commands) are frozen
+at the `v3.3.7-kernel` tag.
+
+Any change that:
+
+- Flips `must_have_ac` on a kernel AC
+- Changes `/platform/*` response shapes
+- Changes xtask's DevEx / selftest contracts
+
+**must**:
+
+1. Add or update an ADR (see `AC-PLT-AC-DEMOTION-GOVERNED`)
+2. Bump `Template Version` in `specs/spec_ledger.yaml`
+3. Regenerate `docs/feature_status.md` and `release_evidence/*`
+4. Cut a new `v3.3.X-kernel` tag
+
+This keeps kernel changes traceable through ADRs and explicit version bumps.
+See [ADR-0005](./adr/0005-version-alignment.md) for the rationale behind governed version management.
+
+<!-- doclint:enable orphan-version -->
+
+---
+
 ## End of Kernel Snapshot
