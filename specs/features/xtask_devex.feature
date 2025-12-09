@@ -781,6 +781,21 @@ Feature: Developer Experience Commands
     And the file "/tmp/idp-test.json" should exist
     And the file should contain valid JSON
 
+  @AC-TPL-IDP-CELL-SMOKE
+  Scenario: idp-snapshot output matches IDP Cell Contract shape
+    When I run "cargo xtask idp-snapshot --pretty"
+    Then the command should succeed
+    And the output should be valid JSON
+    And the JSON should contain field "timestamp"
+    And the JSON should contain field "template_version"
+    And the JSON should contain field "service_id"
+    And the JSON should contain field "governance_health"
+    And the JSON field "governance_health" should have "status"
+    And the JSON field "governance_health" should have "ac_coverage"
+    And the JSON field "governance_health" should have "spec_counts"
+    And the JSON should contain field "documentation"
+    And the JSON should contain field "task_hints"
+
   # Docs Governance Scenarios (Lane 1 hardening)
   @AC-PLT-009
   Scenario: docs-check validates version alignment across all consumer files

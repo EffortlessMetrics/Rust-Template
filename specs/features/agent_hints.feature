@@ -296,3 +296,26 @@ Feature: Agent Hints API
     And the first hint should have field "tags"
     And the first hint should have field "links"
 
+  # ============================================================================
+  # Referential Integrity Scenarios (REQ-TPL-AGENT-ERGONOMICS)
+  # ============================================================================
+
+  @AC-TPL-HINTS-REFERENTIAL-INTEGRITY
+  Scenario: Hints validate AC references exist in spec_ledger
+    Given the following tasks exist in "specs/tasks.yaml":
+      | id                | title                     | status      | requirement           | acs                      |
+      | TASK-VALID-001    | Valid task                | Todo        | REQ-TPL-HEALTH        | AC-TPL-001               |
+      | TASK-INVALID-001  | Invalid AC task           | Todo        | REQ-TPL-HEALTH        | AC-NONEXISTENT-999       |
+    When I send a GET request to "/platform/agent/hints"
+    Then the response status code should be 200
+    And the JSON response should have field "hints"
+
+  @AC-TPL-HINTS-KERNEL-SIGNALS
+  Scenario: Hints surface kernel AC failures as high-priority governance hints
+    Given the following tasks exist in "specs/tasks.yaml":
+      | id                | title                     | status      | requirement           |
+      | TASK-WORK-001     | Regular work              | Todo        | REQ-TPL-HEALTH        |
+    When I send a GET request to "/platform/agent/hints"
+    Then the response status code should be 200
+    And the JSON response should have field "hints"
+

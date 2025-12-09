@@ -7,7 +7,7 @@ audience: platform-engineers, idp-operators, integration-developers
 tags: [idp, platform, kernel, contract, integration]
 stories: [US-TPL-PLT-001]
 requirements: [REQ-PLT-PLATFORM-APIS, REQ-TPL-IDP-SNAPSHOT, REQ-TPL-AI-IDP-COMPAT]
-acs: [AC-PLT-015, AC-TPL-IDP-SNAPSHOT, AC-TPL-CLI-JSON-CORE]
+acs: [AC-PLT-015, AC-TPL-IDP-SNAPSHOT, AC-TPL-IDP-SNAPSHOT-VALID-JSON, AC-TPL-IDP-CELL-SMOKE, AC-TPL-CLI-JSON-CORE]
 adrs: [ADR-0004, ADR-0017]
 last_updated: 2025-12-09
 ---
@@ -26,7 +26,7 @@ last_updated: 2025-12-09
 
 This repository is a **governed Rust service cell** designed for IDP integration:
 
-- **65 kernel ACs** validated by `cargo xtask selftest`
+- **72 kernel ACs** validated by `cargo xtask selftest`
 - **Stable `/platform/*` introspection APIs** for governance health, tasks, and docs
 - **Machine-readable contracts** via `cargo xtask idp-snapshot` and `kernel_contract.vX.Y.Z.json`
 - **CI-enforced governance** via `tier1-selftest.yml` with strict coverage

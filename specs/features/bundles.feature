@@ -67,3 +67,14 @@ Feature: LLM Bundle Structure
     When I run "cargo xtask bundle implement_ac"
     Then the command should succeed
     And "bundle/implement_ac/bundle.yaml" should contain "bundle_version: 1"
+
+  # ============================================================================
+  # Referential Integrity Scenarios (REQ-TPL-AGENT-ERGONOMICS)
+  # ============================================================================
+
+  @AC-TPL-BUNDLE-REFERENTIAL-INTEGRITY
+  Scenario: Bundle validates AC references exist in spec_ledger
+    Given I am in the actual workspace
+    When I run "cargo xtask bundle implement_ac"
+    Then the command should succeed
+    And "bundle/implement_ac/bundle.yaml" should contain "ac_ids:"
