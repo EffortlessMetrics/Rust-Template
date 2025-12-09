@@ -8,6 +8,19 @@
 > domain-specific stories, requirements, and services.
 > See [docs/how-to/adopt-kernel.md](docs/how-to/adopt-kernel.md) for adoption instructions.
 
+---
+
+**For IDPs / platform teams:** This repo is a **Rust service cell template** that:
+
+- Exposes `/platform/*` introspection APIs and `cargo xtask idp-snapshot` for IDP tiles
+- Guarantees 65 kernel ACs via `tier1-selftest` + CI enforcement
+- Ships a stable kernel contract at `v3.3.7-kernel`
+- Validates cell readiness via `cargo xtask kernel-status`
+
+See **[IDP Cell Contract](docs/IDP_CELL_CONTRACT.md)** for the full integration datasheet.
+
+---
+
 ## What This Is
 
 A **governed Rust template** with:

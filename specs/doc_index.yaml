@@ -1083,3 +1083,19 @@ docs:
     acs: []
     adrs: [ADR-0001]
 
+  # IDP Cell Contract Reference
+  - id: REF-IDP-CELL-CONTRACT-001
+    file: docs/IDP_CELL_CONTRACT.md
+    title: "IDP Cell Contract"
+    doc_type: reference
+    stories: [US-TPL-PLT-001]
+    requirements:
+      - REQ-PLT-PLATFORM-APIS
+      - REQ-TPL-IDP-SNAPSHOT
+      - REQ-TPL-AI-IDP-COMPAT
+    acs:
+      - AC-PLT-015
+      - AC-TPL-IDP-SNAPSHOT
+      - AC-TPL-CLI-JSON-CORE
+    adrs: [ADR-0004, ADR-0017]
+

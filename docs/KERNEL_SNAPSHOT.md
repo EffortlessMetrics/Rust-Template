@@ -87,6 +87,28 @@ cargo xtask selftest     # Full governance validation
 - `examples/backstage-plugin/` provides a TypeScript reference consumer
 - Contract details: `docs/reference/platform_api_contract.md`
 
+### IDP Profile
+
+> **For IDP teams:** See [`docs/IDP_CELL_CONTRACT.md`](./IDP_CELL_CONTRACT.md) for the complete integration datasheet.
+
+The following surfaces constitute the **IDP contract** - what an IDP can rely on:
+
+| Surface | Contract | Description |
+|---------|----------|-------------|
+| `/platform/status` | AC-PLT-015 | Governance health, AC coverage, selftest gates |
+| `/platform/docs/index` | AC-PLT-015 | Documentation inventory with health |
+| `/platform/graph` | AC-PLT-015 | REQ/AC/test/doc relationships |
+| `/platform/tasks` | AC-PLT-019 | Task management with filters |
+| `/platform/schema` | AC-TPL-PLATFORM-SCHEMA | OpenAPI spec |
+| `cargo xtask idp-snapshot` | AC-TPL-IDP-SNAPSHOT | Machine-readable tile data |
+
+**Invariants an IDP can trust:**
+
+- `tier1-selftest` green = kernel contracts intact
+- `idp-snapshot` outputs valid JSON with all required keys
+- Kernel tags (`vX.Y.Z-kernel`) freeze these contract shapes
+- Template tags may add features but won't break IDP surfaces
+
 ### Kernel vs Template Defaults
 
 This table clarifies which ACs are **enforced kernel contracts** (must stay `must_have_ac: true`) vs **template defaults** (enabled here but forks can demote via `must_have_ac: false`):
