@@ -63,9 +63,13 @@ pub use docs::{DocEntry, DocIndex, load_doc_index};
 pub use graph::{Edge, Graph, Node, build_graph};
 pub use hints::{
     AcCoverage, AcCoverageIndex, AcExecutionStatus, Hint, HintEngine, HintFilter, HintKind,
-    HintLinks, HintPriority, HintReason, HintStatus, HintTarget,
+    HintLinks, HintPriority, HintReason, HintStatus, HintTarget, KernelAcStatus,
+    ReferentialWarning,
 };
-pub use ledger::{AcceptanceCriterion, Requirement, SpecLedger, Story, load_spec_ledger};
+pub use ledger::{
+    AcIdIndex, AcceptanceCriterion, ReqIdIndex, Requirement, SpecLedger, Story, build_ac_id_index,
+    build_req_id_index, load_spec_ledger,
+};
 pub use schema::{
     EndpointSchema, PlatformSchemas, SchemaInfo, get_all_schemas, get_schema_by_name,
 };

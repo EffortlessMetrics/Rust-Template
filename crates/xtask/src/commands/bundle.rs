@@ -20,6 +20,14 @@ struct Task {
     description: String,
 }
 
+/// Warning about referential integrity issues in bundle generation
+#[derive(Debug, Serialize, Deserialize)]
+struct BundleWarning {
+    invalid_id: String,
+    ref_type: String,
+    message: String,
+}
+
 #[derive(Debug, Serialize, Deserialize)]
 struct BundleManifest {
     bundle_version: i32,
@@ -36,6 +44,9 @@ struct BundleManifest {
     docs: Vec<ManifestDoc>,
     #[serde(skip_serializing_if = "Vec::is_empty")]
     tests: Vec<ManifestTest>,
+    /// Warnings about invalid AC/REQ references (AC-TPL-BUNDLE-REFERENTIAL-INTEGRITY)
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    warnings: Vec<BundleWarning>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -203,19 +214,72 @@ pub fn run(task_name: &str) -> Result<()> {
     let (file_count, total_bytes) =
         build_context(&context_path, task, &files, &git_sha, &workspace_root)?;
 
+    // Load spec_ledger for referential integrity validation (AC-TPL-BUNDLE-REFERENTIAL-INTEGRITY)
+    let (valid_ac_ids, valid_req_ids) = load_valid_ids_from_ledger(&workspace_root);
+
     // Load task linkage from specs/tasks.yaml (if task exists there)
-    let (requirement_ids, ac_ids) = match load_task_spec(&workspace_root, task_name) {
+    let (requirement_ids, ac_ids, warnings) = match load_task_spec(&workspace_root, task_name) {
         Some(task_spec) => {
-            let reqs = task_spec.requirement.map(|r| vec![r]).unwrap_or_default();
-            let acs = task_spec.acs;
+            let mut warns = Vec::new();
+
+            // Validate and filter requirement
+            let reqs = if let Some(ref r) = task_spec.requirement {
+                if valid_req_ids.contains(r) {
+                    vec![r.clone()]
+                } else {
+                    warns.push(BundleWarning {
+                        invalid_id: r.clone(),
+                        ref_type: "requirement".to_string(),
+                        message: format!("Requirement {} not found in spec_ledger.yaml", r),
+                    });
+                    vec![]
+                }
+            } else {
+                vec![]
+            };
+
+            // Validate and filter ACs
+            let acs: Vec<String> = task_spec
+                .acs
+                .into_iter()
+                .filter(|ac| {
+                    if valid_ac_ids.contains(ac) {
+                        true
+                    } else {
+                        warns.push(BundleWarning {
+                            invalid_id: ac.clone(),
+                            ref_type: "ac".to_string(),
+                            message: format!("AC {} not found in spec_ledger.yaml", ac),
+                        });
+                        false
+                    }
+                })
+                .collect();
+
             println!("  Linked to: {} REQs, {} ACs", reqs.len(), acs.len());
-            (reqs, acs)
+            if !warns.is_empty() {
+                for warn in &warns {
+                    println!("  {} {}", "[WARN]".yellow(), warn.message);
+                }
+            }
+            (reqs, acs, warns)
         }
         None => {
             println!("  No task linkage found in specs/tasks.yaml");
-            (vec![], vec![])
+            (vec![], vec![], vec![])
         }
     };
+
+    // Check BUNDLE_STRICT_REFS environment variable
+    if !warnings.is_empty() {
+        if std::env::var("BUNDLE_STRICT_REFS").map(|v| v == "1").unwrap_or(false) {
+            anyhow::bail!(
+                "Bundle has {} referential integrity warning(s) and BUNDLE_STRICT_REFS=1 is set. \
+                Fix the invalid references in specs/tasks.yaml or unset BUNDLE_STRICT_REFS.",
+                warnings.len()
+            );
+        }
+    }
 
     // Load tests from spec_ledger for linked ACs
     let tests =
@@ -235,6 +299,7 @@ pub fn run(task_name: &str) -> Result<()> {
         specs: vec![ManifestSpec { file: "specs/spec_ledger.yaml".to_string() }],
         docs: vec![ManifestDoc { file: "docs/explanation/TEMPLATE-CONTRACTS.md".to_string() }],
         tests,
+        warnings,
     };
 
     // Write manifest.yaml
@@ -394,6 +459,34 @@ fn load_llmignore(workspace_root: &Path) -> Result<ignore::gitignore::Gitignore>
     }
 
     builder.build().context("Failed to build .llmignore matcher")
+}
+
+/// Load valid AC and REQ IDs from spec_ledger.yaml for referential integrity validation
+fn load_valid_ids_from_ledger(workspace_root: &Path) -> (HashSet<String>, HashSet<String>) {
+    let ledger_path = workspace_root.join("specs/spec_ledger.yaml");
+    let content = match fs::read_to_string(&ledger_path) {
+        Ok(c) => c,
+        Err(_) => return (HashSet::new(), HashSet::new()),
+    };
+
+    let ledger: SpecLedger = match serde_yaml::from_str(&content) {
+        Ok(l) => l,
+        Err(_) => return (HashSet::new(), HashSet::new()),
+    };
+
+    let mut valid_ac_ids = HashSet::new();
+    let mut valid_req_ids = HashSet::new();
+
+    for story in ledger.stories {
+        for req in story.requirements {
+            valid_req_ids.insert(req.id.clone());
+            for ac in req.acceptance_criteria {
+                valid_ac_ids.insert(ac.id);
+            }
+        }
+    }
+
+    (valid_ac_ids, valid_req_ids)
 }
 
 /// Load task spec from specs/tasks.yaml if it exists

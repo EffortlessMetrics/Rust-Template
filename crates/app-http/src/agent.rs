@@ -44,6 +44,9 @@ pub struct AgentHint {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct AgentHintsResponse {
     pub hints: Vec<AgentHint>,
+    /// Warnings about referential integrity issues (invalid AC/REQ references)
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub warnings: Vec<spec_runtime::ReferentialWarning>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -91,6 +94,18 @@ async fn agent_hints(
         )
     })?;
 
+    // Load spec_ledger for referential integrity validation (AC-TPL-HINTS-REFERENTIAL-INTEGRITY)
+    let ledger_path = state.workspace_root.join("specs/spec_ledger.yaml");
+    let ledger = spec_runtime::load_spec_ledger(&ledger_path).map_err(|e| {
+        crate::AppError::new(
+            axum::http::StatusCode::INTERNAL_SERVER_ERROR,
+            crate::ErrorCode::InternalError,
+            format!("Failed to load spec_ledger: {}", e),
+        )
+    })?;
+    let valid_ac_ids = spec_runtime::build_ac_id_index(&ledger);
+    let valid_req_ids = spec_runtime::build_req_id_index(&ledger);
+
     // Load devex_flows.yaml for flow-based command sequences
     let devex_path = state.workspace_root.join("specs/devex_flows.yaml");
     let devex_content = std::fs::read_to_string(&devex_path).map_err(|e| {
@@ -131,9 +146,13 @@ async fn agent_hints(
         })
         .collect();
 
-    // Create HintEngine with AC coverage
-    let engine = HintEngine::new(ac_index, runtime_tasks);
+    // Create HintEngine with AC coverage and referential integrity validation
+    let mut engine =
+        HintEngine::with_validation(ac_index, runtime_tasks, valid_ac_ids, valid_req_ids);
     let hint_engine_hints = engine.task_hints();
+
+    // Collect any referential integrity warnings
+    let warnings: Vec<spec_runtime::ReferentialWarning> = engine.warnings().to_vec();
 
     // Convert HintEngine hints to AgentHints and build recommended sequences
     let mut hints: Vec<AgentHint> = hint_engine_hints
@@ -258,7 +277,7 @@ async fn agent_hints(
         }
     });
 
-    Ok(Json(AgentHintsResponse { hints }))
+    Ok(Json(AgentHintsResponse { hints, warnings }))
 }
 
 /// Helper function to determine priority order from labels

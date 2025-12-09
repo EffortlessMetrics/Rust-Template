@@ -78,3 +78,12 @@ Feature: LLM Bundle Structure
     When I run "cargo xtask bundle implement_ac"
     Then the command should succeed
     And "bundle/implement_ac/bundle.yaml" should contain "ac_ids:"
+
+  @AC-TPL-BUNDLE-REFERENTIAL-INTEGRITY
+  Scenario: Bundle includes warnings for invalid AC references
+    Given I am in the actual workspace
+    And a task with invalid AC reference exists
+    When I run bundle generation for that task
+    Then the command should succeed
+    And the output should contain "[WARN]"
+    And the bundle manifest should contain "warnings:" if invalid refs exist

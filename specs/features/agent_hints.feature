@@ -309,6 +309,22 @@ Feature: Agent Hints API
     When I send a GET request to "/platform/agent/hints"
     Then the response status code should be 200
     And the JSON response should have field "hints"
+    And the JSON response should have field "warnings"
+    And the "warnings" array should not be empty
+    And the first warning should have field "invalid_id"
+    And the first warning should have field "ref_type"
+    And the first warning should have field "source"
+    And the first warning should have field "message"
+
+  @AC-TPL-HINTS-REFERENTIAL-INTEGRITY
+  Scenario: CLI suggest-next shows warnings for invalid AC references
+    Given the following tasks exist in "specs/tasks.yaml":
+      | id                | title                     | status      | requirement           | acs                      |
+      | TASK-CLI-INVALID  | Task with bad AC          | Todo        | REQ-TPL-HEALTH        | AC-DOES-NOT-EXIST        |
+    When I run the command "cargo xtask suggest-next --format json"
+    Then the exit code should be 0
+    And the JSON output should have field "warnings"
+    And the "warnings" array should not be empty
 
   @AC-TPL-HINTS-KERNEL-SIGNALS
   Scenario: Hints surface kernel AC failures as high-priority governance hints
