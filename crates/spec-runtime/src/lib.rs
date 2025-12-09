@@ -64,7 +64,7 @@ pub use graph::{Edge, Graph, Node, build_graph};
 pub use hints::{
     AcCoverage, AcCoverageIndex, AcExecutionStatus, Hint, HintEngine, HintFilter, HintKind,
     HintLinks, HintPriority, HintReason, HintStatus, HintTarget, KernelAcStatus,
-    ReferentialWarning,
+    ReferentialWarning, build_kernel_ac_statuses,
 };
 pub use ledger::{
     AcIdIndex, AcceptanceCriterion, ReqIdIndex, Requirement, SpecLedger, Story, build_ac_id_index,

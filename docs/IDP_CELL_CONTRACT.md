@@ -79,6 +79,7 @@ cargo xtask idp-snapshot --pretty
 ```
 
 **Output structure:**
+
 ```json
 {
   "timestamp": "2025-12-09T12:00:00Z",
@@ -298,7 +299,8 @@ jobs:
 
 ## Referential Integrity
 
-The agent hints API (`/platform/agent/hints`) and bundle command (`cargo xtask bundle`) validate referential integrity of task definitions.
+The agent hints API (`/platform/agent/hints`) and bundle command (`cargo xtask bundle`) validate
+referential integrity of task definitions.
 
 ### Agent Hints Warnings
 
@@ -359,7 +361,8 @@ Some ACs show `[UNKNOWN]` status by design. These are **meta/CI-only ACs**:
 2. **Policy ACs** - Define contracts validated by linting tools, not executable tests
 3. **Documentation ACs** - Verified by `docs-check`, not BDD scenarios
 
-This is **intentional**. The kernel contract (`must_have_ac=true` ACs) are all locally testable and will show `[PASS]` or `[FAIL]`.
+This is **intentional**. The kernel contract (`must_have_ac=true` ACs) are all locally testable
+and will show `[PASS]` or `[FAIL]`.
 
 ### IDP Implications
 
@@ -391,22 +394,26 @@ The cell contract stays **platform-agnostic**. Forks can add domain-specific REQ
 ## Quick Reference
 
 ### Verify Cell Health
+
 ```bash
 curl http://localhost:8080/platform/status | jq '.governance.selftest_status'
 # Expected: "pass"
 ```
 
 ### Get IDP Tile Data
+
 ```bash
 cargo xtask idp-snapshot --pretty
 ```
 
 ### Validate Cell Locally
+
 ```bash
 cargo xtask kernel-status
 ```
 
 ### Check Kernel AC Coverage
+
 ```bash
 cargo xtask ac-status --json | jq '.must_have_acs'
 ```

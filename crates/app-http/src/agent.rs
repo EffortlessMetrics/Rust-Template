@@ -148,8 +148,14 @@ async fn agent_hints(
 
     // Create HintEngine with AC coverage and referential integrity validation
     let mut engine =
-        HintEngine::with_validation(ac_index, runtime_tasks, valid_ac_ids, valid_req_ids);
+        HintEngine::with_validation(ac_index.clone(), runtime_tasks, valid_ac_ids, valid_req_ids);
+
+    // Build kernel AC statuses for governance hints (AC-TPL-HINTS-KERNEL-SIGNALS)
+    let kernel_acs = spec_runtime::build_kernel_ac_statuses(&ledger, &ac_index);
+    engine.set_kernel_acs(kernel_acs);
+
     let hint_engine_hints = engine.task_hints();
+    let kernel_governance_hints = engine.kernel_governance_hints();
 
     // Collect any referential integrity warnings
     let warnings: Vec<spec_runtime::ReferentialWarning> = engine.warnings().to_vec();
@@ -226,6 +232,36 @@ async fn agent_hints(
             })
         })
         .collect();
+
+    // Add kernel governance hints for failing kernel ACs (AC-TPL-HINTS-KERNEL-SIGNALS)
+    // These are high-priority hints to fix failing kernel ACs before other work
+    for hint in &kernel_governance_hints {
+        let ac_id = match &hint.target {
+            hints::HintTarget::Ac { id } => id.clone(),
+            _ => continue,
+        };
+
+        hints.push(AgentHint {
+            // Full schema fields
+            id: hint.id.clone(),
+            kind: "governance".to_string(),
+            priority: "high".to_string(),
+            status: "open".to_string(),
+            reason: hint.reason.clone(),
+            target: hint.target.clone(),
+            tags: hint.tags.clone(),
+            links: hint.links.clone(),
+
+            // Convenience fields for governance hints (AC-focused)
+            task_id: ac_id.clone(), // Use AC ID as task_id for compatibility
+            title: hint.title.clone(),
+            owner: "kernel".to_string(), // Kernel ACs are owned by the kernel
+            labels: hint.tags.clone(),
+            requirement_ids: vec![hint.reason.details.clone()], // Contains REQ info
+            ac_ids: vec![ac_id],
+            recommended_sequence: vec![], // No flow sequence for governance hints
+        });
+    }
 
     // Apply filters
     hints.retain(|hint| {

@@ -774,3 +774,21 @@ tasks:
   summary: Test task
   recommended_flows: []
   depends_on: []
+# BDD Test Fixture for AC-TPL-BUNDLE-REFERENTIAL-INTEGRITY
+# DO NOT REMOVE: Used to verify bundle warns on invalid AC references
+- id: _test_bundle_invalid_refs
+  title: Test fixture for bundle referential integrity
+  requirement: REQ-TPL-HEALTH
+  acs:
+  - AC-NONEXISTENT-TEST-123
+  - AC-TPL-001
+  status: Todo
+  owner: null
+  labels:
+  - test-fixture
+  docs:
+    design: []
+    plan: []
+  summary: BDD test fixture - contains intentionally invalid AC reference
+  recommended_flows: []
+  depends_on: []

@@ -132,6 +132,15 @@ tasks:
       - .llm/contextpack.yaml        # This file
     description: "Project health and governance context"
 
+  # Bundle: _test_bundle_invalid_refs (BDD test fixture)
+  # DO NOT REMOVE: This task is used by @AC-TPL-BUNDLE-REFERENTIAL-INTEGRITY tests
+  # to verify that bundle generation warns on invalid AC references.
+  _test_bundle_invalid_refs:
+    max_bytes: 50000
+    include:
+      - README.md
+    description: "BDD test fixture for bundle referential integrity validation"
+
 # Example: Custom bundle for specific use cases
 #
 # Uncomment and customize for your needs:

@@ -80,10 +80,11 @@ Feature: LLM Bundle Structure
     And "bundle/implement_ac/bundle.yaml" should contain "ac_ids:"
 
   @AC-TPL-BUNDLE-REFERENTIAL-INTEGRITY
-  Scenario: Bundle includes warnings for invalid AC references
+  Scenario: Bundle shows warnings for invalid AC references
     Given I am in the actual workspace
-    And a task with invalid AC reference exists
-    When I run bundle generation for that task
+    When I run "cargo xtask bundle _test_bundle_invalid_refs"
     Then the command should succeed
     And the output should contain "[WARN]"
-    And the bundle manifest should contain "warnings:" if invalid refs exist
+    And the output should contain "AC-NONEXISTENT-TEST-123"
+    And "bundle/_test_bundle_invalid_refs/bundle.yaml" should contain "warnings:"
+    And "bundle/_test_bundle_invalid_refs/bundle.yaml" should contain "AC-NONEXISTENT-TEST-123"
