@@ -9,12 +9,17 @@ stories: [US-TPL-PLT-001]
 requirements: [REQ-PLT-DOCS-CONSISTENCY, REQ-TPL-OPINIONATED-DEFAULTS]
 acs: [AC-PLT-009, AC-PLT-010, AC-TPL-OPINIONS-DOCUMENTED]
 adrs: [ADR-0005]
-last_updated: 2025-12-01
+last_updated: 2025-12-09
 ---
 
 # Kernel Snapshot v3.3.7
 
-**Date:** 2025-12-07 | **Version:** v3.3.7-kernel
+> This snapshot describes the kernel at tag **v3.3.7-kernel**.
+> For machine-readable details, see [`release_evidence/kernel_contract.v3.3.7.json`](../release_evidence/kernel_contract.v3.3.7.json).
+> For AC-level status, see [`docs/feature_status.md`](./feature_status.md).
+> For adoption instructions, see [`docs/how-to/adopt-kernel.md`](./how-to/adopt-kernel.md).
+
+**Date:** 2025-12-09 | **Version:** v3.3.7-kernel
 
 ## Executive Summary
 

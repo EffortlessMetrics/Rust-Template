@@ -1,0 +1,70 @@
+# Friction Entry Template: Fork Dry-Run
+# Copy this file to FRICTION-FORK-DRY-RUN-XXX.yaml and fill in your findings
+# after running a fork adoption dry-run.
+#
+# Purpose: Capture issues discovered during a clean fork from v3.3.7-kernel
+# following docs/how-to/adopt-kernel.md.
+
+id: FRICTION-FORK-DRY-RUN-XXX  # Change XXX to a unique number (e.g., 001)
+date: "YYYY-MM-DD"
+category: devex
+severity: medium  # low | medium | high | critical
+summary: "Fork adoption from v3.3.7-kernel requires undocumented steps"
+
+description: |
+  During a clean fork from v3.3.7-kernel, following docs/how-to/adopt-kernel.md,
+  the following steps were unclear or missing:
+
+  1. [EDIT: Describe the first gap you found]
+  2. [EDIT: Describe the second gap you found]
+  3. [EDIT: Add more as needed]
+
+expected_behavior: |
+  A user should be able to:
+  - Clone the kernel at v3.3.7-kernel
+  - Run `cargo xtask dev-up` and `cargo xtask selftest`
+  - Run `cargo xtask service-init` to change identity
+  - See their new identity in `/platform/status` and `/ui`
+  - All without needing knowledge beyond the docs.
+
+impact: |
+  - [EDIT: List how this affects first-time kernel adopters]
+  - [EDIT: List downstream effects]
+
+context:
+  discovered_by: human  # or agent
+  phase: "fork-dry-run"
+  commands_involved:
+    - "nix develop"
+    - "cargo xtask dev-up"
+    - "cargo xtask selftest"
+    - "cargo xtask service-init"
+  files_involved:
+    - "docs/how-to/adopt-kernel.md"
+    - "specs/service_metadata.yaml"
+  environment:
+    platform: "linux"  # linux | macos | wsl2 | windows
+    shell: "nix develop"
+    notes: "[EDIT: Any relevant environment details]"
+
+workaround: |
+  [EDIT: Describe any workaround you found, or delete this section]
+
+status: open  # open | investigating | resolved | wont-fix
+
+related_items:
+  requirements:
+    - REQ-TPL-PLATFORM-INTROSPECTION
+    - REQ-TPL-OPINIONATED-DEFAULTS
+  acs:
+    - AC-TPL-PLATFORM-DEVEX
+    - AC-TPL-AC-STATUS-CONSISTENCY
+    - AC-TPL-PLATFORM-STATUS-CONTRACT
+  adrs: []
+  issues: []
+  tasks: []
+
+proposed_next_steps:
+  - "[EDIT: Specific doc improvement, e.g., 'Add SPEC_ROOT explanation to adopt-kernel.md']"
+  - "[EDIT: Specific tooling fix, e.g., 'Consider adding xtask fork-smoke command']"
+  - "[EDIT: Specific process change, e.g., 'Add pre-fork validation checklist']"

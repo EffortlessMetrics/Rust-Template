@@ -1,6 +1,12 @@
 # Test Service (v3.3.7)
 
 > **TL;DR:** A governed Rust service template where specs, tests, docs, policies, and CI all agree — and the repo can prove it.
+>
+> **Kernel baseline:** `v3.3.7-kernel`
+> This tag freezes the Rust-as-Spec kernel template (specs, ACs, xtask contracts,
+> and `/platform/*` introspection). Forks inherit this baseline and extend it with
+> domain-specific stories, requirements, and services.
+> See [docs/how-to/adopt-kernel.md](docs/how-to/adopt-kernel.md) for adoption instructions.
 
 ## What This Is
 
