@@ -109,6 +109,8 @@ struct GovernanceStatus {
     friction: FrictionCounts,
     forks: ForkCounts,
     policies: PolicyStatus,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    ac_coverage: Option<AcCoverageInfo>,
 }
 
 #[derive(Serialize)]
@@ -134,6 +136,24 @@ struct DocCounts {
 #[derive(Serialize)]
 struct TaskCounts {
     total: usize,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    by_status: Option<TaskStatusBreakdown>,
+}
+
+#[derive(Serialize)]
+struct TaskStatusBreakdown {
+    todo: usize,
+    in_progress: usize,
+    review: usize,
+    done: usize,
+}
+
+#[derive(Serialize)]
+struct AcCoverageInfo {
+    total: usize,
+    passing: usize,
+    failing: usize,
+    unknown: usize,
 }
 
 #[derive(Serialize)]
@@ -486,7 +506,18 @@ async fn get_status(State(state): State<AppState>) -> Json<PlatformStatus> {
         doc_type_issues,
     };
 
-    let task_counts = TaskCounts { total: tasks_spec.tasks.len() };
+    // Calculate task status breakdown
+    let task_breakdown = calculate_task_breakdown(&tasks_spec);
+    let task_counts = TaskCounts { total: tasks_spec.tasks.len(), by_status: Some(task_breakdown) };
+
+    // Load AC coverage from idp module
+    let ac_cov = idp::load_ac_coverage(root);
+    let ac_coverage = Some(AcCoverageInfo {
+        total: ac_cov.total,
+        passing: ac_cov.passing,
+        failing: ac_cov.failing,
+        unknown: ac_cov.unknown,
+    });
 
     // Load question counts
     let question_counts = load_question_counts(root);
@@ -535,10 +566,27 @@ async fn get_status(State(state): State<AppState>) -> Json<PlatformStatus> {
             friction: friction_counts,
             forks: fork_counts,
             policies: PolicyStatus { status: policy_status },
+            ac_coverage,
         },
         config,
         errors: get_error_summary(),
     })
+}
+
+/// Calculate task counts broken down by status
+fn calculate_task_breakdown(tasks_spec: &spec_runtime::TasksSpec) -> TaskStatusBreakdown {
+    let mut breakdown = TaskStatusBreakdown { todo: 0, in_progress: 0, review: 0, done: 0 };
+    for task in &tasks_spec.tasks {
+        let status = &task.status;
+        match status.to_lowercase().as_str() {
+            "open" | "todo" => breakdown.todo += 1,
+            "inprogress" | "in_progress" | "in-progress" => breakdown.in_progress += 1,
+            "review" => breakdown.review += 1,
+            "done" | "closed" => breakdown.done += 1,
+            _ => breakdown.todo += 1, // Default unknown to todo
+        }
+    }
+    breakdown
 }
 
 /// Load question counts from questions/ directory

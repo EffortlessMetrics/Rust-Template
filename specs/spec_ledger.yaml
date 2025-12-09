@@ -700,6 +700,49 @@ stories:
             tests:
               - { type: ci, tag: "openapi_lint_docs_index", workflow: "ci-openapi.yml" }
 
+      - id: REQ-TPL-INTROSPECTION-PARITY
+        title: "CLI and HTTP status endpoints have parity on key governance fields"
+        tags: [platform, devex, api, observability]
+        must_have_ac: true
+        description: >
+          The CLI status command (cargo xtask status) and the HTTP endpoint
+          (/platform/status) MUST expose the same key governance metrics,
+          ensuring consistent observability regardless of access method.
+          Key fields include AC coverage metrics and task status breakdown.
+        adr: [ADR-0005]
+        acceptance_criteria:
+          - id: AC-TPL-STATUS-PARITY-CLI-HTTP
+            text: >
+              /platform/status and cargo xtask status expose the same key
+              governance metrics: stories, requirements, ACs, AC coverage
+              (pass/fail/unknown), and task status breakdown
+              (Todo/InProgress/Review/Done counts).
+            tags: [kernel, observability]
+            must_have_ac: true
+            tests:
+              - { type: bdd, tag: "@AC-TPL-STATUS-PARITY-CLI-HTTP", file: "specs/features/platform_introspection.feature" }
+
+          - id: AC-TPL-STATUS-AC-COVERAGE
+            text: >
+              /platform/status includes an ac_coverage field in the
+              governance section with total, passing, failing, and
+              unknown counts, derived from BDD test results
+              (target/ac_report.json or fallback to docs/feature_status.md).
+            tags: [kernel, observability]
+            must_have_ac: true
+            tests:
+              - { type: bdd, tag: "@AC-TPL-STATUS-AC-COVERAGE", file: "specs/features/platform_introspection.feature" }
+
+          - id: AC-TPL-STATUS-TASK-BREAKDOWN
+            text: >
+              /platform/status includes task counts broken down by status
+              (todo, in_progress, review, done) in addition to the total count,
+              matching the breakdown shown by cargo xtask status.
+            tags: [kernel, observability]
+            must_have_ac: true
+            tests:
+              - { type: bdd, tag: "@AC-TPL-STATUS-TASK-BREAKDOWN", file: "specs/features/platform_introspection.feature" }
+
       - id: REQ-TPL-METADATA-CONSISTENT
         title: "Platform metadata is coherent and exposed"
         tags: [platform, docs, metadata]
@@ -1570,6 +1613,55 @@ stories:
             tests:
               - { type: unit, tag: "bundle_scope_audit", module: "commands::bundle::tests::bundle_scope_audit", file: "crates/xtask/src/commands/bundle.rs" }
 
+      - id: REQ-TPL-AGENT-ERGONOMICS
+        title: "Agent hints and bundles have referential integrity"
+        tags: [platform, agent, governance, structural]
+        must_have_ac: true
+        description: >
+          The agent hints API and bundle generation MUST validate that all referenced
+          AC IDs, REQ IDs, and task definitions exist in spec_ledger.yaml and tasks.yaml.
+          Invalid references should produce warnings (not silent omission) so agents and
+          humans can detect governance drift. Additionally, hints should surface kernel AC
+          failures as governance signals so agents prioritize fixing breaking changes.
+        adr: [ADR-0004, ADR-0005]
+        acceptance_criteria:
+          - id: AC-TPL-HINTS-REFERENTIAL-INTEGRITY
+            text: >
+              Agent hints (/platform/agent/hints and cargo xtask suggest-next) validate
+              that referenced AC IDs and REQ IDs exist in spec_ledger.yaml. When a task
+              references a non-existent AC or REQ, the response includes a warnings array
+              identifying the invalid reference. Hints with invalid references are excluded
+              or marked with a referential_integrity_warning flag.
+            tags: [kernel, agent-interface, governance]
+            must_have_ac: true
+            tests:
+              - { type: bdd, tag: "@AC-TPL-HINTS-REFERENTIAL-INTEGRITY", file: "specs/features/agent_hints.feature" }
+
+          - id: AC-TPL-HINTS-KERNEL-SIGNALS
+            text: >
+              When kernel-tagged ACs (must_have_ac: true with tags containing kernel)
+              have failing tests in feature_status.md, the hints endpoint surfaces
+              a governance hint with kind: governance, priority: high, and reason.code:
+              KERNEL_AC_FAILING that alerts agents to prioritize fixing the kernel
+              regression before continuing other work.
+            tags: [kernel, agent-interface, governance]
+            must_have_ac: true
+            tests:
+              - { type: bdd, tag: "@AC-TPL-HINTS-KERNEL-SIGNALS", file: "specs/features/agent_hints.feature" }
+
+          - id: AC-TPL-BUNDLE-REFERENTIAL-INTEGRITY
+            text: >
+              Bundle generation (cargo xtask bundle <TASK>) validates that all AC IDs
+              in the task's acs array exist in spec_ledger.yaml before including them in
+              bundle.yaml. Non-existent ACs are logged as warnings and excluded from the
+              manifest's ac_ids array. The bundle command returns exit code 0 with warnings
+              (not silent success) so CI can optionally gate on strict mode via
+              BUNDLE_STRICT_REFS=1.
+            tags: [kernel, template, devex, governance]
+            must_have_ac: true
+            tests:
+              - { type: bdd, tag: "@AC-TPL-BUNDLE-REFERENTIAL-INTEGRITY", file: "specs/features/bundles.feature" }
+
       - id: REQ-TPL-TS-CONFIG-GOVERNANCE
         title: "TypeScript configurations follow modern, enforceable standards"
         tags: [platform, devex, typescript]
@@ -1770,6 +1862,16 @@ stories:
             must_have_ac: true
             tests:
               - { type: bdd, tag: "@AC-TPL-IDP-SNAPSHOT-VALID-JSON", file: "specs/features/xtask_devex.feature" }
+
+          - id: AC-TPL-IDP-CELL-SMOKE
+            text: >
+              The idp-snapshot output matches the IDP Cell Contract shape documented
+              in IDP_CELL_CONTRACT.md, including service_id, template_version,
+              governance_health (with status and ac_coverage), and task_hints fields.
+            tags: [kernel, idp, contract]
+            must_have_ac: true
+            tests:
+              - { type: bdd, tag: "@AC-TPL-IDP-CELL-SMOKE", file: "specs/features/xtask_devex.feature" }
 
   # ============================================================================
   # MYSERV Domain Stories - Example service-specific features

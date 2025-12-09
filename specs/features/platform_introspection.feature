@@ -107,3 +107,37 @@ Feature: Platform Introspection API
     And the field "forks" should be of type "array"
     And the JSON response should have field "total"
     And the field "total" should be of type "number"
+
+  # ============================================================================
+  # CLI/HTTP Parity Scenarios (REQ-TPL-INTROSPECTION-PARITY)
+  # ============================================================================
+
+  @AC-TPL-STATUS-PARITY-CLI-HTTP
+  Scenario: Platform status exposes same key fields as CLI
+    When I GET "http://localhost:8080/platform/status"
+    Then the response status should be 200
+    And the JSON response should have field "governance"
+    And the JSON response should have nested field "governance.ledger.stories"
+    And the JSON response should have nested field "governance.ledger.requirements"
+    And the JSON response should have nested field "governance.ledger.acs"
+    And the JSON response should have nested field "governance.tasks.total"
+
+  @AC-TPL-STATUS-AC-COVERAGE
+  Scenario: Platform status includes AC coverage metrics
+    When I GET "http://localhost:8080/platform/status"
+    Then the response status should be 200
+    And the JSON response should have nested field "governance.ac_coverage"
+    And the JSON response should have nested field "governance.ac_coverage.total"
+    And the JSON response should have nested field "governance.ac_coverage.passing"
+    And the JSON response should have nested field "governance.ac_coverage.failing"
+    And the JSON response should have nested field "governance.ac_coverage.unknown"
+
+  @AC-TPL-STATUS-TASK-BREAKDOWN
+  Scenario: Platform status includes task status breakdown
+    When I GET "http://localhost:8080/platform/status"
+    Then the response status should be 200
+    And the JSON response should have nested field "governance.tasks.total"
+    And the JSON response should have nested field "governance.tasks.by_status"
+    And the JSON response should have nested field "governance.tasks.by_status.todo"
+    And the JSON response should have nested field "governance.tasks.by_status.in_progress"
+    And the JSON response should have nested field "governance.tasks.by_status.done"

@@ -1096,6 +1096,8 @@ docs:
     acs:
       - AC-PLT-015
       - AC-TPL-IDP-SNAPSHOT
+      - AC-TPL-IDP-SNAPSHOT-VALID-JSON
+      - AC-TPL-IDP-CELL-SMOKE
       - AC-TPL-CLI-JSON-CORE
     adrs: [ADR-0004, ADR-0017]
 
