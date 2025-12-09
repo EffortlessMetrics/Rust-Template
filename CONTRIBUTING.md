@@ -302,7 +302,14 @@ Example:
 * `fix/policy-k8s-envfrom`
 * `docs/llm-workflow-clarifications`
 
-### 4.2 Commit messages
+### 4.2 Making documentation changes
+
+For any doc changes, run `cargo xtask docs-check` before pushing.
+CI treats doc issues as hard failures via `XTASK_STRICT_PRECOMMIT=1`.
+
+See [`docs/how-to/change-docs-safely.md`](docs/how-to/change-docs-safely.md) for detailed workflows.
+
+### 4.3 Commit messages
 
 Short, imperative subject:
 

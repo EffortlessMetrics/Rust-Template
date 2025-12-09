@@ -129,6 +129,17 @@ The platform uses a tiered validation approach based on the environment:
 
 ---
 
+## Authoritative Kernel Gate
+
+> **Important:** `tier1-selftest.yml` is the **only** workflow that enforces kernel contracts.
+> It sets `XTASK_STRICT_AC_COVERAGE=1` (on main) and `XTASK_STRICT_PRECOMMIT=1`.
+>
+> Other selftest workflows (`selftest.yml`, `ci-template-selftest.yml`) are convenience
+> or compatibility checks and do not enforce the full kernel contract. They may be
+> relaxed independently without affecting kernel integrity.
+
+---
+
 ## Workflow Inventory
 
 ### Primary Validation Workflows

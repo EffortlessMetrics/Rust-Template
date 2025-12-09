@@ -1,3 +1,10 @@
+# NOTE: This workflow is a convenience selftest runner.
+# The authoritative kernel gate is .github/workflows/tier1-selftest.yml
+# which enforces:
+#   - XTASK_STRICT_AC_COVERAGE=1 (on main branch)
+#   - XTASK_STRICT_PRECOMMIT=1
+# This workflow does NOT set those environment variables, so it is NOT the kernel gate.
+
 name: Self-Test
 on:
   push:
