@@ -105,8 +105,12 @@ pub mod use_cases {
 
 /// Governance domain model for task management.
 ///
-/// This module contains the core domain types for governance workflows,
+/// This module contains the core domain types for production governance workflows,
 /// including task states, transitions, and the governance repository trait.
+///
+/// This is the production governance model with a rich four-state workflow
+/// (Todo → InProgress → Review → Done). It is separate from the example CRUD
+/// model in the `model` crate, which uses a simpler three-state TaskStatus enum.
 pub mod governance {
     use serde::{Deserialize, Serialize};
     use std::fmt;
@@ -117,7 +121,11 @@ pub mod governance {
     #[error("unknown task status: {0}")]
     pub struct TaskStatusParseError(pub String);
 
-    /// Task status in the governance workflow.
+    /// Production governance task status with enforced state transitions.
+    ///
+    /// This is the primary status enum for platform governance workflows, with four
+    /// states and explicit transition rules. For simple CRUD examples, see
+    /// `model::TaskStatus` instead (Pending/InProgress/Completed).
     ///
     /// Defines the allowed states and valid transitions for governance tasks.
     /// Status values are parsed case-insensitively and accept common aliases.

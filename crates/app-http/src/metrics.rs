@@ -3,7 +3,8 @@
 /// This module provides:
 /// - Global metrics registry
 /// - HTTP request counter with labels (method, path, status)
-/// - Middleware to automatically record requests
+/// - HTTP request duration histogram with labels (method, path, status_code)
+/// - Middleware to automatically record requests and latency
 /// - `/metrics` endpoint handler
 use axum::{
     extract::Request,
@@ -12,7 +13,9 @@ use axum::{
     response::{IntoResponse, Response},
 };
 use once_cell::sync::Lazy;
-use prometheus::{Encoder, IntCounterVec, Opts, Registry, TextEncoder};
+use prometheus::{
+    Encoder, HistogramOpts, HistogramVec, IntCounterVec, Opts, Registry, TextEncoder,
+};
 use std::time::Instant;
 
 /// Global Prometheus registry
@@ -34,6 +37,29 @@ static HTTP_REQUESTS_TOTAL: Lazy<IntCounterVec> = Lazy::new(|| {
         .expect("Failed to register HTTP_REQUESTS_TOTAL metric");
 
     counter
+});
+
+/// HTTP request duration histogram
+///
+/// Labels:
+/// - `method`: HTTP method (GET, POST, etc.)
+/// - `path`: Request path
+/// - `status_code`: HTTP status code
+///
+/// Buckets: Standard Prometheus latency buckets (5ms to 10s)
+static HTTP_REQUEST_DURATION_SECONDS: Lazy<HistogramVec> = Lazy::new(|| {
+    let opts =
+        HistogramOpts::new("http_request_duration_seconds", "HTTP request duration in seconds")
+            .buckets(vec![0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0]);
+
+    let histogram = HistogramVec::new(opts, &["method", "path", "status_code"])
+        .expect("Failed to create HTTP_REQUEST_DURATION_SECONDS metric");
+
+    REGISTRY
+        .register(Box::new(histogram.clone()))
+        .expect("Failed to register HTTP_REQUEST_DURATION_SECONDS metric");
+
+    histogram
 });
 
 /// Metrics endpoint handler
@@ -62,6 +88,7 @@ pub async fn metrics_handler() -> impl IntoResponse {
 /// Middleware to record HTTP metrics
 ///
 /// Records each request with method, path, and status labels
+/// Tracks both request count and duration histogram
 pub async fn metrics_middleware(req: Request, next: Next) -> Response {
     let method = req.method().to_string();
     let path = req.uri().path().to_string();
@@ -74,6 +101,9 @@ pub async fn metrics_middleware(req: Request, next: Next) -> Response {
 
     // Record metrics
     HTTP_REQUESTS_TOTAL.with_label_values(&[&method, &path, &status]).inc();
+    HTTP_REQUEST_DURATION_SECONDS
+        .with_label_values(&[&method, &path, &status])
+        .observe(elapsed.as_secs_f64());
 
     tracing::debug!(
         method = %method,

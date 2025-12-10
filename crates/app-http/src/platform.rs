@@ -1,9 +1,8 @@
-use crate::{AppError, AppState, ErrorCode, get_error_summary};
+use crate::{AppError, AppState, get_error_summary};
 use adapters_spec_fs::tasks_state;
 use axum::{
     Json, Router,
     extract::{Query, State},
-    http::StatusCode,
     routing::get,
 };
 use business_core::governance::{TaskId, TaskStatus};
@@ -62,38 +61,17 @@ async fn get_suggest_next(
     Query(q): Query<SuggestNextQuery>,
 ) -> Result<Json<spec_runtime::tasks::SuggestedSequence>, AppError> {
     let root = &state.workspace_root;
-    let tasks_spec = spec_runtime::load_tasks(&root.join("specs/tasks.yaml")).map_err(|err| {
-        AppError::new(
-            StatusCode::INTERNAL_SERVER_ERROR,
-            ErrorCode::InternalError,
-            format!("Failed to load tasks.yaml: {}", err),
-        )
-    })?;
-    let devex_spec =
-        spec_runtime::load_devex_flows(&root.join("specs/devex_flows.yaml")).map_err(|err| {
-            AppError::new(
-                StatusCode::INTERNAL_SERVER_ERROR,
-                ErrorCode::InternalError,
-                format!("Failed to load devex_flows.yaml: {}", err),
-            )
-        })?;
-    let ledger =
-        spec_runtime::load_spec_ledger(&root.join("specs/spec_ledger.yaml")).map_err(|err| {
-            AppError::new(
-                StatusCode::INTERNAL_SERVER_ERROR,
-                ErrorCode::InternalError,
-                format!("Failed to load spec_ledger.yaml: {}", err),
-            )
-        })?;
+    let tasks_spec = spec_runtime::load_tasks(&root.join("specs/tasks.yaml"))
+        .map_err(|e| AppError::spec_load_error("load tasks.yaml", e))?;
+    let devex_spec = spec_runtime::load_devex_flows(&root.join("specs/devex_flows.yaml"))
+        .map_err(|e| AppError::spec_load_error("load devex_flows.yaml", e))?;
+    let ledger = spec_runtime::load_spec_ledger(&root.join("specs/spec_ledger.yaml"))
+        .map_err(|e| AppError::spec_load_error("load spec_ledger.yaml", e))?;
 
     let suggestion =
         spec_runtime::tasks::suggest_next(root, &q.task, &tasks_spec, &devex_spec, &ledger)
-            .map_err(|err| {
-                AppError::new(
-                    StatusCode::INTERNAL_SERVER_ERROR,
-                    ErrorCode::InternalError,
-                    format!("Failed to generate suggestion: {}", err),
-                )
+            .map_err(|e| {
+                AppError::internal_error(format!("Failed to generate suggestion: {}", e))
             })?;
 
     Ok(Json(suggestion))
@@ -324,21 +302,9 @@ async fn debug_info(State(state): State<AppState>) -> Json<DebugInfo> {
 
 async fn get_graph(State(state): State<AppState>) -> Result<Json<spec_runtime::Graph>, AppError> {
     let root = &state.workspace_root;
-    let specs = load_all_specs(root).map_err(|err| {
-        AppError::new(
-            StatusCode::INTERNAL_SERVER_ERROR,
-            ErrorCode::InternalError,
-            format!("Failed to load specs: {}", err),
-        )
-    })?;
-    let graph =
-        spec_runtime::build_graph(&specs.ledger, &specs.devex, &specs.docs).map_err(|err| {
-            AppError::new(
-                StatusCode::INTERNAL_SERVER_ERROR,
-                ErrorCode::InternalError,
-                format!("Failed to build graph: {}", err),
-            )
-        })?;
+    let specs = load_all_specs(root).map_err(|e| AppError::spec_load_error("load specs", e))?;
+    let graph = spec_runtime::build_graph(&specs.ledger, &specs.devex, &specs.docs)
+        .map_err(|e| AppError::internal_error(format!("Failed to build graph: {}", e)))?;
     Ok(Json(graph))
 }
 
@@ -346,21 +312,10 @@ async fn get_devex_flows(
     State(state): State<AppState>,
 ) -> Result<Json<serde_json::Value>, AppError> {
     let root = &state.workspace_root;
-    let devex =
-        spec_runtime::load_devex_flows(&root.join("specs/devex_flows.yaml")).map_err(|err| {
-            AppError::new(
-                StatusCode::INTERNAL_SERVER_ERROR,
-                ErrorCode::InternalError,
-                format!("Failed to load devex flows: {}", err),
-            )
-        })?;
-    let value = serde_json::to_value(devex).map_err(|err| {
-        AppError::new(
-            StatusCode::INTERNAL_SERVER_ERROR,
-            ErrorCode::InternalError,
-            format!("Failed to serialize devex flows: {}", err),
-        )
-    })?;
+    let devex = spec_runtime::load_devex_flows(&root.join("specs/devex_flows.yaml"))
+        .map_err(|e| AppError::spec_load_error("load devex flows", e))?;
+    let value = serde_json::to_value(devex)
+        .map_err(|e| AppError::internal_error(format!("Failed to serialize devex flows: {}", e)))?;
     Ok(Json(value))
 }
 
@@ -404,13 +359,8 @@ async fn get_docs_index(
     State(state): State<AppState>,
 ) -> Result<Json<DocsIndexResponse>, AppError> {
     let root = &state.workspace_root;
-    let docs = spec_runtime::load_doc_index(&root.join("specs/doc_index.yaml")).map_err(|err| {
-        AppError::new(
-            StatusCode::INTERNAL_SERVER_ERROR,
-            ErrorCode::InternalError,
-            format!("Failed to load doc index: {}", err),
-        )
-    })?;
+    let docs = spec_runtime::load_doc_index(&root.join("specs/doc_index.yaml"))
+        .map_err(|e| AppError::spec_load_error("load doc index", e))?;
 
     let mut docs_with_health = Vec::new();
     let mut valid_count = 0;
@@ -536,20 +486,9 @@ fn validate_doc_type_contract(doc: &spec_runtime::DocEntry) -> (bool, Option<Str
 
 async fn get_status(State(state): State<AppState>) -> Result<Json<PlatformStatus>, AppError> {
     let root = &state.workspace_root;
-    let specs = load_all_specs(root).map_err(|err| {
-        AppError::new(
-            StatusCode::INTERNAL_SERVER_ERROR,
-            ErrorCode::InternalError,
-            format!("Failed to load specs: {}", err),
-        )
-    })?;
-    let tasks_spec = spec_runtime::load_tasks(&root.join("specs/tasks.yaml")).map_err(|err| {
-        AppError::new(
-            StatusCode::INTERNAL_SERVER_ERROR,
-            ErrorCode::InternalError,
-            format!("Failed to load tasks: {}", err),
-        )
-    })?;
+    let specs = load_all_specs(root).map_err(|e| AppError::spec_load_error("load specs", e))?;
+    let tasks_spec = spec_runtime::load_tasks(&root.join("specs/tasks.yaml"))
+        .map_err(|e| AppError::spec_load_error("load tasks", e))?;
 
     let ledger_counts = LedgerCounts {
         stories: specs.ledger.stories.len(),
@@ -606,14 +545,8 @@ async fn get_status(State(state): State<AppState>) -> Result<Json<PlatformStatus
         "unknown".to_string()
     };
 
-    let metadata =
-        load_service_metadata(&root.join("specs/service_metadata.yaml")).map_err(|err| {
-            AppError::new(
-                StatusCode::INTERNAL_SERVER_ERROR,
-                ErrorCode::InternalError,
-                format!("Failed to load service_metadata.yaml: {}", err),
-            )
-        })?;
+    let metadata = load_service_metadata(&root.join("specs/service_metadata.yaml"))
+        .map_err(|e| AppError::spec_load_error("load service_metadata.yaml", e))?;
 
     let template_version =
         metadata.template_version.clone().unwrap_or_else(|| env!("CARGO_PKG_VERSION").to_string());
@@ -892,22 +825,11 @@ async fn get_tasks(
     Query(filters): Query<TaskFilters>,
 ) -> Result<Json<TasksResponse>, AppError> {
     let root = &state.workspace_root;
-    let tasks_spec = spec_runtime::load_tasks(&root.join("specs/tasks.yaml")).map_err(|err| {
-        AppError::new(
-            StatusCode::INTERNAL_SERVER_ERROR,
-            ErrorCode::InternalError,
-            format!("Failed to load specs/tasks.yaml: {}", err),
-        )
-    })?;
+    let tasks_spec = spec_runtime::load_tasks(&root.join("specs/tasks.yaml"))
+        .map_err(|e| AppError::spec_load_error("load specs/tasks.yaml", e))?;
 
-    let state_map =
-        tasks_state::get_all_tasks(&root.join("specs/tasks_state.yaml")).map_err(|err| {
-            AppError::new(
-                StatusCode::INTERNAL_SERVER_ERROR,
-                ErrorCode::InternalError,
-                format!("Failed to load task state: {}", err),
-            )
-        })?;
+    let state_map = tasks_state::get_all_tasks(&root.join("specs/tasks_state.yaml"))
+        .map_err(|e| AppError::spec_load_error("load task state", e))?;
 
     let tasks = tasks_spec
         .tasks
@@ -1208,13 +1130,8 @@ async fn get_task_graph(
     Query(query): Query<TaskGraphQuery>,
 ) -> Result<Json<TaskGraphResponse>, AppError> {
     let root = &state.workspace_root;
-    let tasks_spec = spec_runtime::load_tasks(&root.join("specs/tasks.yaml")).map_err(|err| {
-        AppError::new(
-            StatusCode::INTERNAL_SERVER_ERROR,
-            ErrorCode::InternalError,
-            format!("Failed to load specs/tasks.yaml: {}", err),
-        )
-    })?;
+    let tasks_spec = spec_runtime::load_tasks(&root.join("specs/tasks.yaml"))
+        .map_err(|e| AppError::spec_load_error("load specs/tasks.yaml", e))?;
 
     let graph = spec_runtime::tasks::build_task_graph(&tasks_spec);
 
@@ -1238,11 +1155,7 @@ async fn get_ui_contract(
     State(state): State<AppState>,
 ) -> Result<Json<spec_runtime::UiContract>, AppError> {
     let root = &state.workspace_root;
-    spec_runtime::load_ui_contract(&root.join("specs/ui_contract.yaml")).map(Json).map_err(|err| {
-        AppError::new(
-            StatusCode::INTERNAL_SERVER_ERROR,
-            ErrorCode::InternalError,
-            format!("Failed to load UI contract: {}", err),
-        )
-    })
+    spec_runtime::load_ui_contract(&root.join("specs/ui_contract.yaml"))
+        .map(Json)
+        .map_err(|e| AppError::spec_load_error("load UI contract", e))
 }

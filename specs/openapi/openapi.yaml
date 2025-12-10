@@ -15,6 +15,10 @@ info:
     - /platform/status - Governance health, ledger counts, policy status
     - /platform/docs/index - Documentation inventory with validation
     - /platform/ui/contract - Governed UI contract (screens, regions, data-uiid anchors)
+    - /platform/friction - Development friction log (DevEx issues)
+    - /platform/questions - Design questions and ambiguities
+    - /platform/forks - Template forks/branches
+    - /platform/agent/hints - Prioritized work suggestions for AI agents
 
   x-template-version: "3.3.8"
   x-schema-version: "1.0"
@@ -173,6 +177,167 @@ paths:
                   error:
                     type: string
                     example: "Failed to load UI contract"
+
+  /platform/friction:
+    get:
+      summary: Development friction log
+      description: |
+        Returns all development friction entries (DevEx issues, process problems,
+        tooling pain points). Friction entries track obstacles that slow down
+        development and reduce developer experience quality.
+
+        Entries are sourced from `friction/FRICTION-*.yaml` files and include
+        severity levels, categories, and resolution status.
+      operationId: getFriction
+      tags: [platform]
+      security: []
+      responses:
+        "200":
+          description: Friction entries retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FrictionResponse'
+        "500":
+          description: Internal server error (e.g., failed to load friction log)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Failed to load friction log"
+
+  /platform/questions:
+    get:
+      summary: Design questions
+      description: |
+        Returns all design questions and ambiguities with optional status filtering.
+        Questions track design decisions that need clarification, architectural
+        choices under consideration, or unresolved issues.
+
+        Questions can be filtered by status: open, answered, or resolved.
+      operationId: getQuestions
+      tags: [platform]
+      security: []
+      parameters:
+        - name: status
+          in: query
+          description: Filter by question status
+          required: false
+          schema:
+            type: string
+            enum: [open, answered, resolved]
+      responses:
+        "200":
+          description: Questions retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QuestionsResponse'
+        "500":
+          description: Internal server error (e.g., failed to load questions)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Failed to load questions"
+
+  /platform/forks:
+    get:
+      summary: Template forks
+      description: |
+        Returns all registered template forks/branches. Forks represent
+        domain-specific variations of the template, each with its own
+        features, configuration, and evolution path.
+
+        Useful for tracking template variants and understanding the
+        divergence landscape across different use cases.
+      operationId: getForks
+      tags: [platform]
+      security: []
+      responses:
+        "200":
+          description: Forks retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForksResponse'
+        "500":
+          description: Internal server error (e.g., failed to load forks)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Failed to load forks"
+
+  /platform/agent/hints:
+    get:
+      summary: Agent work hints
+      description: |
+        Returns prioritized work suggestions for AI agents based on task status,
+        AC coverage, and kernel health. This endpoint helps agents discover
+        the most valuable work to focus on.
+
+        Hints include:
+        - Task hints: Todo/InProgress tasks with REQ/AC IDs and recommended sequences
+        - Governance hints: Failing kernel ACs that need attention
+        - Policy hints: Policy violations requiring remediation
+
+        Results can be filtered by task owner, label, requirement, or hint kind.
+      operationId: getAgentHints
+      tags: [platform, agent-support]
+      security: []
+      parameters:
+        - name: owner
+          in: query
+          description: Filter by task owner
+          required: false
+          schema:
+            type: string
+        - name: label
+          in: query
+          description: Filter by task label
+          required: false
+          schema:
+            type: string
+        - name: requirement
+          in: query
+          description: Filter by requirement ID
+          required: false
+          schema:
+            type: string
+        - name: kind
+          in: query
+          description: Filter by hint kind
+          required: false
+          schema:
+            type: string
+            enum: [task, governance, policy, flow]
+      responses:
+        "200":
+          description: Agent hints retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentHintsResponse'
+        "500":
+          description: Internal server error (e.g., failed to generate hints)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Failed to generate agent hints"
 
 components:
   securitySchemes:
@@ -712,3 +877,241 @@ components:
         description:
           type: string
           description: "Human-readable description of the region's content"
+
+    # ==========================================================================
+    # Friction Log Schemas
+    # ==========================================================================
+
+    FrictionResponse:
+      type: object
+      description: "Friction log response containing all friction entries"
+      required: [entries, total]
+      properties:
+        entries:
+          type: array
+          items:
+            $ref: '#/components/schemas/FrictionEntry'
+          description: "Array of friction entries"
+        total:
+          type: integer
+          minimum: 0
+          description: "Total number of friction entries"
+
+    FrictionEntry:
+      type: object
+      description: "Individual friction log entry"
+      required: [id, date, category, severity, summary, status]
+      properties:
+        id:
+          type: string
+          description: "Friction entry ID (e.g., FRICTION-XXX-001)"
+          example: "FRICTION-TPL-001"
+        date:
+          type: string
+          format: date
+          description: "Date of friction entry"
+          example: "2025-12-10"
+        category:
+          type: string
+          description: "Friction category"
+          example: "tooling"
+        severity:
+          type: string
+          enum: [low, medium, high, critical]
+          description: "Severity level"
+        summary:
+          type: string
+          description: "Brief description of the friction"
+        description:
+          type: string
+          description: "Detailed description of the friction (optional)"
+        status:
+          type: string
+          enum: [open, resolved]
+          description: "Resolution status"
+        context:
+          type: object
+          additionalProperties: true
+          description: "Additional context (optional)"
+        resolution:
+          type: object
+          additionalProperties: true
+          description: "Resolution details (optional)"
+
+    # ==========================================================================
+    # Questions Schemas
+    # ==========================================================================
+
+    QuestionsResponse:
+      type: object
+      description: "Questions response containing all question entries"
+      required: [questions, total]
+      properties:
+        questions:
+          type: array
+          items:
+            $ref: '#/components/schemas/QuestionEntry'
+          description: "Array of question entries"
+        total:
+          type: integer
+          minimum: 0
+          description: "Total number of questions"
+
+    QuestionEntry:
+      type: object
+      description: "Individual question entry"
+      required: [id, summary, status, flow, phase]
+      properties:
+        id:
+          type: string
+          description: "Question ID (e.g., Q-XXX-001)"
+          example: "Q-TPL-001"
+        summary:
+          type: string
+          description: "Question summary"
+        status:
+          type: string
+          enum: [open, answered, resolved]
+          description: "Question status"
+        flow:
+          type: string
+          description: "Associated DevEx flow"
+        phase:
+          type: string
+          description: "Development phase"
+        created_at:
+          type: string
+          format: date-time
+          description: "When the question was created (ISO 8601)"
+
+    # ==========================================================================
+    # Forks Schemas
+    # ==========================================================================
+
+    ForksResponse:
+      type: object
+      description: "Forks response containing all registered forks"
+      required: [forks, total]
+      properties:
+        forks:
+          type: array
+          items:
+            $ref: '#/components/schemas/ForkEntry'
+          description: "Array of fork entries"
+        total:
+          type: integer
+          minimum: 0
+          description: "Total number of forks"
+
+    ForkEntry:
+      type: object
+      description: "Individual fork entry"
+      required: [id, name, domain, status]
+      properties:
+        id:
+          type: string
+          description: "Fork ID (e.g., FORK-XXX-001)"
+          example: "FORK-AUTH-001"
+        name:
+          type: string
+          description: "Fork name"
+        domain:
+          type: string
+          description: "Domain or use case for the fork"
+        status:
+          type: string
+          enum: [active, archived]
+          description: "Fork status"
+        kernel_version:
+          type: string
+          description: "Kernel version used by the fork (optional)"
+
+    # ==========================================================================
+    # Agent Hints Schemas
+    # ==========================================================================
+
+    AgentHintsResponse:
+      type: object
+      description: "Agent hints response containing prioritized work suggestions"
+      required: [hints]
+      properties:
+        hints:
+          type: array
+          items:
+            $ref: '#/components/schemas/AgentHint'
+          description: "Array of agent hints sorted by priority"
+        warnings:
+          type: array
+          items:
+            type: string
+          description: "Referential integrity warnings (optional)"
+
+    AgentHint:
+      type: object
+      description: "Individual agent hint with work suggestion"
+      required: [id, kind, priority, status, reason]
+      properties:
+        id:
+          type: string
+          description: "Hint ID"
+          example: "hint-001"
+        kind:
+          type: string
+          enum: [task, governance, policy, flow]
+          description: "Hint kind"
+        priority:
+          type: string
+          enum: [low, medium, high]
+          description: "Priority level"
+        status:
+          type: string
+          enum: [open, in_progress, done]
+          description: "Current status"
+        reason:
+          type: object
+          required: [summary]
+          properties:
+            summary:
+              type: string
+              description: "Brief reason for the hint"
+            details:
+              type: string
+              description: "Detailed explanation (optional)"
+            category:
+              type: string
+              description: "Hint category (optional)"
+        task_id:
+          type: string
+          description: "Associated task ID (optional)"
+        title:
+          type: string
+          description: "Task title (optional)"
+        owner:
+          type: string
+          description: "Task owner (optional)"
+        labels:
+          type: array
+          items:
+            type: string
+          description: "Task labels (optional)"
+        requirement_ids:
+          type: array
+          items:
+            type: string
+          description: "Related requirement IDs"
+        ac_ids:
+          type: array
+          items:
+            type: string
+          description: "Related AC IDs"
+        recommended_sequence:
+          type: array
+          items:
+            type: object
+            properties:
+              kind:
+                type: string
+                enum: [command, doc, flow]
+              value:
+                type: string
+          description: "Recommended sequence of actions (optional)"

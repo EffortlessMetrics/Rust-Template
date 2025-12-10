@@ -312,6 +312,40 @@ impl AppError {
         self
     }
 
+    /// Create a spec loading error (500 Internal Server Error)
+    ///
+    /// Helper for spec/configuration file loading failures.
+    /// Context should describe what was being loaded (e.g., "load tasks.yaml").
+    ///
+    /// # Example
+    /// ```rust,ignore
+    /// let spec = load_spec(path).map_err(|e| AppError::spec_load_error("load tasks.yaml", e))?;
+    /// ```
+    pub fn spec_load_error(context: &str, err: impl std::fmt::Display) -> Self {
+        Self::new(
+            StatusCode::INTERNAL_SERVER_ERROR,
+            ErrorCode::InternalError,
+            format!("Failed to {}: {}", context, err),
+        )
+    }
+
+    /// Create an I/O error (500 Internal Server Error)
+    ///
+    /// Helper for file system operation failures.
+    /// Context should describe the operation (e.g., "read forks directory").
+    ///
+    /// # Example
+    /// ```rust,ignore
+    /// let content = fs::read_to_string(path).map_err(|e| AppError::io_error("read config file", e))?;
+    /// ```
+    pub fn io_error(context: &str, err: impl std::fmt::Display) -> Self {
+        Self::new(
+            StatusCode::INTERNAL_SERVER_ERROR,
+            ErrorCode::InternalError,
+            format!("Failed to {}: {}", context, err),
+        )
+    }
+
     /// Log the error with structured fields and record in error tracker.
     fn log_error(&self) {
         // Determine if this is a client error (4xx) or server error (5xx)
@@ -512,5 +546,31 @@ mod tests {
             "message should mention status transition, got: {}",
             app_error.message
         );
+    }
+
+    #[test]
+    fn test_spec_load_error_helper() {
+        let error = AppError::spec_load_error("load tasks.yaml", "file not found");
+        assert_eq!(error.status, StatusCode::INTERNAL_SERVER_ERROR);
+        assert_eq!(error.code, ErrorCode::InternalError);
+        assert_eq!(error.message, "Failed to load tasks.yaml: file not found");
+    }
+
+    #[test]
+    fn test_io_error_helper() {
+        let error = AppError::io_error("read config file", "permission denied");
+        assert_eq!(error.status, StatusCode::INTERNAL_SERVER_ERROR);
+        assert_eq!(error.code, ErrorCode::InternalError);
+        assert_eq!(error.message, "Failed to read config file: permission denied");
+    }
+
+    #[test]
+    fn test_spec_load_error_with_real_io_error() {
+        let io_error = std::io::Error::new(std::io::ErrorKind::NotFound, "file not found");
+        let error = AppError::spec_load_error("load devex_flows.yaml", io_error);
+        assert_eq!(error.status, StatusCode::INTERNAL_SERVER_ERROR);
+        assert_eq!(error.code, ErrorCode::InternalError);
+        assert!(error.message.contains("Failed to load devex_flows.yaml"));
+        assert!(error.message.contains("file not found"));
     }
 }

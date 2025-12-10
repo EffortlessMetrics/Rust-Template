@@ -270,7 +270,7 @@ mod tests {
             related_items: None,
         };
 
-        let json = serde_json::to_string(&fork).unwrap();
+        let json = serde_json::to_string(&fork).expect("fork should serialize to JSON");
         assert!(json.contains("FORK-TEST-001"));
         assert!(json.contains("testing"));
     }
@@ -285,7 +285,8 @@ kernel_version: v3.3.3
 status: active
 "#;
 
-        let fork: ForkEntry = serde_yaml::from_str(yaml).unwrap();
+        let fork: ForkEntry =
+            serde_yaml::from_str(yaml).expect("YAML should deserialize to ForkEntry");
         assert_eq!(fork.id, "FORK-TEST-002");
         assert_eq!(fork.domain, "rust-sdk");
         assert_eq!(fork.status, "active");
@@ -305,7 +306,8 @@ forks:
     file: forks/FORK-TEST-001.yaml
 "#;
 
-        let registry: ForkRegistry = serde_yaml::from_str(yaml).unwrap();
+        let registry: ForkRegistry =
+            serde_yaml::from_str(yaml).expect("YAML should deserialize to ForkRegistry");
         assert_eq!(registry.forks.len(), 1);
         assert_eq!(registry.forks[0].id, "FORK-TEST-001");
     }

@@ -1,3 +1,9 @@
+//! PostgreSQL database adapter using SQLx.
+//!
+//! This crate implements the TaskRepository port from business-core using
+//! SQLx and PostgreSQL, providing async task persistence with UUID-based
+//! IDs and transaction support.
+
 use anyhow::Result;
 use chrono::{DateTime, Utc};
 use sqlx::{PgPool, Row};

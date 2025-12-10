@@ -270,7 +270,7 @@ mod tests {
             resolution: None,
         };
 
-        let json = serde_json::to_string(&question).unwrap();
+        let json = serde_json::to_string(&question).expect("question should serialize to JSON");
         assert!(json.contains("Q-TEST-001"));
         assert!(json.contains("bundle"));
     }
@@ -293,7 +293,8 @@ created_at: "2025-11-26T00:00:00Z"
 status: open
 "#;
 
-        let question: Question = serde_yaml::from_str(yaml).unwrap();
+        let question: Question =
+            serde_yaml::from_str(yaml).expect("YAML should deserialize to Question");
         assert_eq!(question.id, "Q-TEST-002");
         assert_eq!(question.context.flow, "bundle");
         assert_eq!(question.status, "open");
@@ -311,7 +312,8 @@ created_by: flow
 created_at: "2025-11-26T00:00:00Z"
 "#;
 
-        let question: Question = serde_yaml::from_str(yaml).unwrap();
+        let question: Question =
+            serde_yaml::from_str(yaml).expect("YAML should deserialize to Question");
         assert_eq!(question.status, "open");
     }
 }
