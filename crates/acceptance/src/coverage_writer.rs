@@ -6,6 +6,15 @@
 //!
 //! Unlike the JUnit writer which buffers all output until drop, this writer
 //! flushes after each line, making it resilient to process exits.
+//!
+//! ## Atomic Write Pattern
+//!
+//! To prevent corruption from interrupted writes, this writer uses an atomic
+//! write pattern:
+//! 1. Writes go to a `.tmp` file during execution
+//! 2. Each line is flushed immediately for crash safety
+//! 3. On successful completion, the temp file is renamed to the target path
+//! 4. If the process crashes, the temp file is left behind (can be cleaned up)
 
 use cucumber::cli::Empty;
 use cucumber::event::{self, Cucumber, Feature, Rule, Scenario};
@@ -13,7 +22,7 @@ use cucumber::{Event, World as CucumberWorld, Writer};
 use std::fmt::Debug;
 use std::fs::File;
 use std::io::{BufWriter, Write};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 // Re-export AcCoverageRecord from ac-kernel for use by callers
@@ -33,9 +42,22 @@ struct ScenarioState {
 /// This writer captures scenario completion events and writes coverage records
 /// immediately, without relying on Drop semantics. This makes it robust against
 /// cucumber's `*_and_exit` methods which call `std::process::exit()`.
+///
+/// ## Atomic Write Pattern
+///
+/// The writer uses an atomic write pattern to prevent corruption:
+/// - Writes initially go to `{path}.tmp`
+/// - On successful completion, call `finalize()` to rename to the target path
+/// - If the process crashes, the temp file remains (partial data preserved)
 pub struct AcCoverageWriter<W: CucumberWorld> {
     /// Buffered output writer
     out: BufWriter<File>,
+    /// Target path for the final file (after atomic rename)
+    target_path: PathBuf,
+    /// Temporary path during writes
+    temp_path: PathBuf,
+    /// Whether finalize() has been called (prevents double-finalize)
+    finalized: bool,
     /// Current scenario state (feature, rule, scenario context)
     current_feature: Option<Arc<gherkin::Feature>>,
     current_rule: Option<Arc<gherkin::Rule>>,
@@ -47,17 +69,68 @@ pub struct AcCoverageWriter<W: CucumberWorld> {
 }
 
 impl<W: CucumberWorld> AcCoverageWriter<W> {
-    /// Create a new AC coverage writer that writes to the given path.
+    /// Create a new AC coverage writer that writes atomically to the given path.
+    ///
+    /// Writes go to a `.tmp` file first, then are renamed on `finalize()`.
+    /// This prevents corruption from interrupted writes.
     pub fn new<P: AsRef<Path>>(path: P) -> std::io::Result<Self> {
-        let file = File::create(path)?;
+        let target_path = path.as_ref().to_path_buf();
+        let temp_path = {
+            let mut p = target_path.clone();
+            let name = p
+                .file_name()
+                .map(|n| format!("{}.tmp", n.to_string_lossy()))
+                .unwrap_or_else(|| "coverage.jsonl.tmp".to_string());
+            p.set_file_name(name);
+            p
+        };
+
+        // Ensure parent directory exists
+        if let Some(parent) = temp_path.parent() {
+            std::fs::create_dir_all(parent)?;
+        }
+
+        let file = File::create(&temp_path)?;
         Ok(Self {
             out: BufWriter::new(file),
+            target_path,
+            temp_path,
+            finalized: false,
             current_feature: None,
             current_rule: None,
             current_scenario: None,
             scenario_state: ScenarioState::default(),
             _world: std::marker::PhantomData,
         })
+    }
+
+    /// Finalize the coverage file by renaming from `.tmp` to target.
+    ///
+    /// This should be called after all scenarios have been processed.
+    /// The atomic rename ensures the target file is either:
+    /// - Complete (if finalize succeeds), or
+    /// - Non-existent/stale (if process crashed before finalize)
+    pub fn finalize(&mut self) -> std::io::Result<()> {
+        if self.finalized {
+            return Ok(());
+        }
+
+        // Flush any remaining buffered data
+        self.out.flush()?;
+
+        // Sync to disk to ensure durability before rename
+        self.out.get_ref().sync_all()?;
+
+        // Atomic rename from temp to target
+        std::fs::rename(&self.temp_path, &self.target_path)?;
+
+        self.finalized = true;
+        Ok(())
+    }
+
+    /// Get the target path (for logging/diagnostics).
+    pub fn target_path(&self) -> &Path {
+        &self.target_path
     }
 
     /// Collect all tags from the current context (feature + rule + scenario).
@@ -207,7 +280,16 @@ where
         };
 
         match event.value {
-            Cucumber::Started | Cucumber::ParsingFinished { .. } | Cucumber::Finished => {}
+            Cucumber::Started | Cucumber::ParsingFinished { .. } => {}
+
+            Cucumber::Finished => {
+                // Finalize the coverage file by renaming from temp to target.
+                // This happens after all scenarios have completed, providing
+                // atomic visibility: the target file is either complete or missing.
+                if let Err(e) = self.finalize() {
+                    eprintln!("[AcCoverageWriter] Failed to finalize coverage file: {}", e);
+                }
+            }
 
             Cucumber::Feature(feature, feature_event) => match feature_event {
                 Feature::Started => {
@@ -358,5 +440,74 @@ mod tests {
         assert_eq!(ac_ids.len(), 2);
         assert!(ac_ids.contains(&"AC-UPPER-001".to_string()));
         assert!(ac_ids.contains(&"ac-lower-001".to_string()));
+    }
+
+    #[test]
+    fn atomic_write_temp_file_pattern() {
+        use tempfile::TempDir;
+
+        let temp_dir = TempDir::new().unwrap();
+        let target_path = temp_dir.path().join("coverage.jsonl");
+
+        // Create writer - should create .tmp file
+        let writer = AcCoverageWriter::<crate::World>::new(&target_path).unwrap();
+
+        // Verify temp path is correct
+        let expected_temp = temp_dir.path().join("coverage.jsonl.tmp");
+        assert_eq!(writer.temp_path, expected_temp);
+        assert_eq!(writer.target_path(), &target_path);
+
+        // Temp file should exist, target should not (before finalize)
+        assert!(expected_temp.exists(), "temp file should exist during writes");
+        assert!(!target_path.exists(), "target file should not exist before finalize");
+    }
+
+    #[test]
+    fn atomic_write_finalize_renames() {
+        use tempfile::TempDir;
+
+        let temp_dir = TempDir::new().unwrap();
+        let target_path = temp_dir.path().join("coverage.jsonl");
+        let temp_path = temp_dir.path().join("coverage.jsonl.tmp");
+
+        {
+            let mut writer = AcCoverageWriter::<crate::World>::new(&target_path).unwrap();
+
+            // Write something so we have content
+            writeln!(writer.out, "{{\"test\": true}}").unwrap();
+            writer.out.flush().unwrap();
+
+            // Before finalize: temp exists, target doesn't
+            assert!(temp_path.exists());
+            assert!(!target_path.exists());
+
+            // Finalize should rename
+            writer.finalize().unwrap();
+
+            // After finalize: target exists, temp doesn't
+            assert!(target_path.exists(), "target should exist after finalize");
+            assert!(!temp_path.exists(), "temp should be gone after finalize");
+        }
+
+        // Verify content was preserved
+        let content = std::fs::read_to_string(&target_path).unwrap();
+        assert!(content.contains("test"));
+    }
+
+    #[test]
+    fn finalize_is_idempotent() {
+        use tempfile::TempDir;
+
+        let temp_dir = TempDir::new().unwrap();
+        let target_path = temp_dir.path().join("coverage.jsonl");
+
+        let mut writer = AcCoverageWriter::<crate::World>::new(&target_path).unwrap();
+
+        // First finalize should succeed
+        writer.finalize().unwrap();
+        assert!(writer.finalized);
+
+        // Second finalize should be a no-op (not error)
+        writer.finalize().unwrap();
     }
 }

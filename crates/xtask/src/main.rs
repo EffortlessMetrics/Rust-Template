@@ -124,19 +124,30 @@ enum Commands {
     // ============================================================================
     /// Generate AC status report from acceptance tests
     ///
+    /// Two modes of operation:
+    ///   - Write mode (default): Generates/updates docs/feature_status.md
+    ///   - Check mode (--check): Verifies file is up-to-date without writing
+    ///
+    /// The --summary and --json flags produce stdout output only, so --check
+    /// is ignored when combined with these flags.
+    ///
     /// See also: /platform/coverage API for programmatic access
     #[command(next_help_heading = "📋 Acceptance Criteria")]
     AcStatus {
-        /// Print concise summary instead of generating full markdown file
+        /// Print concise summary instead of generating full markdown file.
+        /// Note: When used, --check flag has no effect (no file operation).
         #[arg(long)]
         summary: bool,
-        /// Output in JSON format
+        /// Output in JSON format.
+        /// Note: When used, --check flag has no effect (no file operation).
         #[arg(long)]
         json: bool,
         /// Filter to a specific AC ID (e.g., AC-KERN-001)
         #[arg(long)]
         ac: Option<String>,
-        /// Check mode: verify existing file matches computed state without writing (for CI)
+        /// Check mode: verify existing file matches computed state without writing.
+        /// Used by selftest and CI. Fails if docs/feature_status.md would differ.
+        /// Has no effect when combined with --summary or --json.
         #[arg(long)]
         check: bool,
     },

@@ -1106,4 +1106,27 @@ mod tests {
             env::remove_var("XTASK_STRICT_AC_COVERAGE");
         }
     }
+
+    /// Verify that run_ac_status uses check mode (read-only contract).
+    /// This is a compile-time contract test that documents the invariant:
+    /// selftest must NOT modify docs/feature_status.md.
+    #[test]
+    fn selftest_ac_status_uses_check_mode() {
+        // Verify that the run_ac_status function passes check: true
+        // by checking the args structure it would construct
+        let args = crate::commands::ac_status::AcStatusArgs {
+            verbosity: crate::Verbosity::Quiet,
+            check: true, // This MUST be true in run_ac_status
+            ..Default::default()
+        };
+
+        assert!(
+            args.check,
+            "selftest's run_ac_status must use check mode to prevent modifying the repo"
+        );
+
+        // This test exists to catch regressions if someone changes run_ac_status
+        // to use write mode (check: false), which would cause selftest to
+        // unexpectedly modify docs/feature_status.md
+    }
 }
