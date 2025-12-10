@@ -112,7 +112,7 @@ pub fn run(args: AcSloArgs) -> Result<()> {
     let coverage_ok = latest.coverage_percent >= args.min_coverage;
     let blockers_ok = latest.kernel_blockers.len() <= args.max_blockers;
     let unknown_count = latest.must_have_unknown + latest.optional_unknown;
-    let unknown_ok = args.max_unknown.map_or(true, |max| unknown_count <= max);
+    let unknown_ok = args.max_unknown.is_none_or(|max| unknown_count <= max);
 
     let passed = coverage_ok && blockers_ok && unknown_ok;
 
@@ -322,15 +322,15 @@ mod tests {
         let unknown_count = latest.must_have_unknown + latest.optional_unknown;
 
         // With no limit, should pass
-        let no_limit_ok: bool = None::<usize>.map_or(true, |max| unknown_count <= max);
+        let no_limit_ok: bool = None::<usize>.is_none_or(|max| unknown_count <= max);
         assert!(no_limit_ok);
 
         // With strict limit of 0, should fail (has 3 unknown)
-        let strict_ok = Some(0_usize).map_or(true, |max| unknown_count <= max);
+        let strict_ok = Some(0_usize).is_none_or(|max| unknown_count <= max);
         assert!(!strict_ok);
 
         // With reasonable limit, should pass
-        let reasonable_ok = Some(5_usize).map_or(true, |max| unknown_count <= max);
+        let reasonable_ok = Some(5_usize).is_none_or(|max| unknown_count <= max);
         assert!(reasonable_ok);
     }
 

@@ -370,15 +370,15 @@ fn parse_kernel_ac_counts() -> KernelAcCounts {
         .unwrap_or_else(|_| Regex::new(r"^$").unwrap());
 
     for cap in row_re.captures_iter(&status_content) {
-        if let (Some(ac_id), Some(status)) = (cap.get(1), cap.get(2)) {
-            if kernel_ac_ids.contains(ac_id.as_str()) {
-                counts.total += 1;
-                match status.as_str() {
-                    "PASS" => counts.pass += 1,
-                    "FAIL" => counts.fail += 1,
-                    "UNKNOWN" => counts.unknown += 1,
-                    _ => {}
-                }
+        if let (Some(ac_id), Some(status)) = (cap.get(1), cap.get(2))
+            && kernel_ac_ids.contains(ac_id.as_str())
+        {
+            counts.total += 1;
+            match status.as_str() {
+                "PASS" => counts.pass += 1,
+                "FAIL" => counts.fail += 1,
+                "UNKNOWN" => counts.unknown += 1,
+                _ => {}
             }
         }
     }

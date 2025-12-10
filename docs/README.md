@@ -351,9 +351,9 @@ These documents capture implementation decisions, trade-offs, and rationale for 
 
 ## Roadmap
 
-**Current Status**: v2.4.0 (Pilot-Ready)
+**Current Status**: v3.3.8 (Kernel-Ready)
 
-The template is now in the **Pilot Validation Phase**. We have completed the observability arc and release polish.
+The template is now a **stable kernel baseline** with full governance validation.
 
 ### What's Complete
 - ✅ Complete observability stack (logs, metrics, OTLP traces)
@@ -361,13 +361,16 @@ The template is now in the **Pilot Validation Phase**. We have completed the obs
 - ✅ Governance infrastructure (policy-as-code, specs, BDD)
 - ✅ LLM-native workflow with context bundling
 - ✅ Release polish (docs, friction logs, reliability fixes)
+- ✅ Skills and Agents governance framework
+- ✅ IDP integration contracts (Backstage-ready)
+- ✅ 86%+ AC coverage with full selftest validation
 
-### Current Phase: Pilot Validation
-1. **Execute Pilots**: Teams create services using v2.4.0.
-2. **Collect Friction**: Use `FRICTION_LOG.md` to track real-world issues.
-3. **Iterate**: Release patches (v2.4.x) for blockers, or v2.5.0 for new features.
+### Current Phase: IDP Integration & Fork Adoption
+1. **Fork Creation**: Teams create services from v3.3.8 kernel.
+2. **Collect Friction**: Use friction log system to track real-world issues.
+3. **Iterate**: Release patches for blockers, or v3.4.0 for new features.
 
-Development is now driven by pilot feedback.
+Development is now driven by fork feedback and IDP integration needs.
 
 ---
 
@@ -537,27 +540,23 @@ ls docs/                             # Browse docs locally
 
 ## Version
 
-This documentation is for **Rust Template v2.4.0**.
+This documentation is for **Rust Template v3.3.8**.
 
 **Recent Releases:**
-- **v2.4.0 (2025-11-19)**: Release Prep & Polish
-  - Added `FRICTION_LOG.md` for pilot feedback
-  - Fixed gRPC smoke test reliability
-  - Full documentation consistency check
+- **v3.3.8 (2025-12-09)**: Kernel Baseline
+  - Full governance validation (11/11 selftest steps passing)
+  - Skills and Agents governance framework
+  - IDP integration contracts
+  - 86%+ AC coverage
 
-- **v2.3.0 (2025-11-17)**: OTLP tracing + pilot infrastructure
-  - OTLP export via `telemetry/otlp` feature flag
-  - Pilot project creation script and templates
-  - Release playbook
-
-- **v2.2.0 (2025-11-17)**: Adapter integration + LLM ergonomics
-  - DB adapter integration test
-  - gRPC adapter smoke test
-  - Enhanced LLM contextpack
+- **v3.3.0 (2025-12-01)**: Governance Framework
+  - Skills governance with lint validation
+  - Agents governance with safety modes
+  - Enhanced platform APIs
 
 **Next Steps:**
-- 🔄 Run greenfield pilot project
-- 🔄 Analyze friction logs
-- 🔄 Determine v2.5.0 roadmap based on feedback
+- 🔄 First fork dry-run validation
+- 🔄 IDP adapter integration (Backstage/Port)
+- 🔄 Determine v3.4.0 roadmap based on fork feedback
 
-Further development driven by real pilot feedback.
+Further development driven by fork adoption and IDP integration.

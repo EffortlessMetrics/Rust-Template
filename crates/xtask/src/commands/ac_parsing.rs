@@ -672,7 +672,7 @@ mod tests {
 
         // Scenario is recorded but no pass/fail entry
         assert_eq!(scenarios.len(), 1);
-        assert!(results.get("AC-SKIPPED-001").is_none());
+        assert!(!results.contains_key("AC-SKIPPED-001"));
     }
 
     #[test]

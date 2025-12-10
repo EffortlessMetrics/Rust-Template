@@ -305,18 +305,18 @@ impl HintEngine {
     /// Validate task AC/REQ references and accumulate warnings.
     fn validate_task_references(&mut self, task: &crate::Task) {
         // Validate REQ reference
-        if let Some(ref valid_reqs) = self.valid_req_ids {
-            if !valid_reqs.contains(&task.requirement) {
-                self.warnings.push(ReferentialWarning {
-                    invalid_id: task.requirement.clone(),
-                    ref_type: "requirement".to_string(),
-                    source: task.id.clone(),
-                    message: format!(
-                        "Task {} references non-existent requirement {}",
-                        task.id, task.requirement
-                    ),
-                });
-            }
+        if let Some(ref valid_reqs) = self.valid_req_ids
+            && !valid_reqs.contains(&task.requirement)
+        {
+            self.warnings.push(ReferentialWarning {
+                invalid_id: task.requirement.clone(),
+                ref_type: "requirement".to_string(),
+                source: task.id.clone(),
+                message: format!(
+                    "Task {} references non-existent requirement {}",
+                    task.id, task.requirement
+                ),
+            });
         }
 
         // Validate AC references

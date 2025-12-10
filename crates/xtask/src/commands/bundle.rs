@@ -271,14 +271,14 @@ pub fn run(task_name: &str) -> Result<()> {
     };
 
     // Check BUNDLE_STRICT_REFS environment variable
-    if !warnings.is_empty() {
-        if std::env::var("BUNDLE_STRICT_REFS").map(|v| v == "1").unwrap_or(false) {
-            anyhow::bail!(
-                "Bundle has {} referential integrity warning(s) and BUNDLE_STRICT_REFS=1 is set. \
+    if !warnings.is_empty()
+        && std::env::var("BUNDLE_STRICT_REFS").map(|v| v == "1").unwrap_or(false)
+    {
+        anyhow::bail!(
+            "Bundle has {} referential integrity warning(s) and BUNDLE_STRICT_REFS=1 is set. \
                 Fix the invalid references in specs/tasks.yaml or unset BUNDLE_STRICT_REFS.",
-                warnings.len()
-            );
-        }
+            warnings.len()
+        );
     }
 
     // Load tests from spec_ledger for linked ACs

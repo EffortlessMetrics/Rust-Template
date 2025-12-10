@@ -147,10 +147,10 @@ fn extract_gherkin_steps(text: &str) -> (String, String, String) {
 /// Extract a command invocation from AC text (e.g., `cargo xtask doctor`).
 fn extract_command_from_text(text: &str) -> String {
     // Look for backtick-quoted commands
-    if let Some(start) = text.find('`') {
-        if let Some(end) = text[start + 1..].find('`') {
-            return format!("\"{}\"", &text[start + 1..start + 1 + end]);
-        }
+    if let Some(start) = text.find('`')
+        && let Some(end) = text[start + 1..].find('`')
+    {
+        return format!("\"{}\"", &text[start + 1..start + 1 + end]);
     }
 
     // Fallback: look for "cargo xtask" pattern
@@ -169,12 +169,12 @@ fn extract_command_from_text(text: &str) -> String {
 fn extract_action(text: &str) -> String {
     // Look for GET/POST/etc. patterns
     let upper = text.to_uppercase();
-    if upper.contains("GET ") {
-        if let Some(idx) = upper.find("GET ") {
-            let rest = &text[idx..];
-            let endpoint = rest.split_whitespace().take(2).collect::<Vec<_>>().join(" ");
-            return format!("I send a {}", endpoint);
-        }
+    if upper.contains("GET ")
+        && let Some(idx) = upper.find("GET ")
+    {
+        let rest = &text[idx..];
+        let endpoint = rest.split_whitespace().take(2).collect::<Vec<_>>().join(" ");
+        return format!("I send a {}", endpoint);
     }
 
     // Look for command patterns

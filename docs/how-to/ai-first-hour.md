@@ -239,4 +239,4 @@ cargo xtask selftest
 - [CLAUDE.md](../../CLAUDE.md) - Full agent operating constitution
 - [AGENT_GUIDE.md](../AGENT_GUIDE.md) - Comprehensive agent reference
 - [first-hour.md](./first-hour.md) - Human-focused first hour guide
-- [Platform API Reference](../reference/platform-api.md) - API documentation
+- [Platform API Reference](../reference/platform_api_contract.md) - API documentation

@@ -291,6 +291,73 @@ XTASK_LOW_RESOURCES=1 cargo xtask ac-status
 
 ---
 
+### Q: Empty JUnit reports or sccache fails when using `nix develop -c`
+
+**Symptom:**
+```bash
+$ nix develop -c cargo xtask ac-status
+# Completes silently, but target/junit/acceptance.xml is empty
+# Or shows:
+error while loading shared libraries: libz.so.1: cannot open shared object file
+```
+
+Commands run via `nix develop -c` may fail to generate JUnit reports, leaving `target/junit/acceptance.xml` empty. This causes `ac-status` and `docs/feature_status.md` to show stale or incorrect data.
+
+**Cause:** When running commands via `nix develop -c` (non-interactive mode), the sccache rustc wrapper fails to find libz.so.1. This is a Nix environment composition issue where certain libraries aren't correctly propagated to subprocesses when using the `-c` flag versus being inside an interactive shell.
+
+**Impact:**
+- JUnit report generation fails silently
+- `ac-status` shows stale or incorrect data
+- `docs/feature_status.md` may become out of sync
+- CI pipelines using `nix develop -c` pattern may be affected
+- Confusing behavior difference between `-c` flag and interactive shell
+
+**Diagnostic:**
+```bash
+# Test if sccache can run rustc
+nix develop -c sccache rustc -vV
+# If this fails with libz.so.1 error, you have the issue
+
+# Check if JUnit report is generated
+nix develop -c cargo xtask ac-status
+ls -lh target/junit/acceptance.xml
+# If file is empty or very small, tests didn't run
+```
+
+**Fix (Recommended):** Run inside interactive nix develop shell
+```bash
+# Enter shell first
+nix develop
+
+# Then run commands
+cargo xtask ac-status
+cargo xtask selftest
+```
+
+**Workaround (Option 1):** Disable sccache for the command
+```bash
+RUSTC_WRAPPER="" nix develop -c cargo xtask ac-status
+```
+
+**Workaround (Option 2):** Simulate in-shell environment
+```bash
+IN_NIX_SHELL=1 RUSTC_WRAPPER="" ./target/release/xtask ac-status
+```
+
+**Workaround (Option 3):** Use low-resource mode
+```bash
+XTASK_LOW_RESOURCES=1 nix develop -c cargo xtask ac-status
+```
+
+**Prevention:**
+- Prefer interactive `nix develop` shell for local development
+- Reserve `nix develop -c` for simple, non-nested commands
+- For CI, ensure environment is properly configured or use workarounds
+
+**See also:** `friction/FRICTION-ENV-001.yaml` for detailed tracking of this issue.
+
+---
+
 ### Q: rust-analyzer shows "mismatched ABI" or proc-macro errors
 
 **Symptom:**

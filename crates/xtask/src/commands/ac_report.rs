@@ -125,10 +125,10 @@ impl AcReport {
                     return false;
                 }
                 // Filter by status
-                if let Some(ref status) = args.status {
-                    if ac.status != *status {
-                        return false;
-                    }
+                if let Some(ref status) = args.status
+                    && ac.status != *status
+                {
+                    return false;
                 }
                 true
             })
