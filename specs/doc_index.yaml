@@ -406,6 +406,21 @@ docs:
       - AC-TPL-REL-EVIDENCE
     adrs: [ADR-0001, ADR-0004, ADR-0005]
 
+  # Governance Model
+  - id: EXPLANATION-GOVERNANCE-MODEL
+    file: docs/explanation/governance-model.md
+    title: "Governance Model: How Rust-as-Spec Platform Cells Stay Honest"
+    doc_type: explanation
+    stories: [US-TPL-PLT-001]
+    requirements:
+      - REQ-TPL-BDD-HARNESS
+      - REQ-PLT-DOCS-CONSISTENCY
+      - REQ-TPL-GRAPH-INVARIANTS
+    acs:
+      - AC-TPL-SELFTEST-GATE
+      - AC-TPL-PLATFORM-GRAPH
+    adrs: [ADR-0003, ADR-0005, ADR-0020, ADR-0021]
+
   # Quick Start Guide
   - id: GUIDE-TPL-QUICKSTART-001
     file: docs/QUICKSTART.md

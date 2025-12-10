@@ -1,19 +1,11 @@
 ---
 id: EXPLANATION-GOVERNANCE-MODEL
-title: "Governance Model: How Rust-as-Spec Platform Cells Stay Honest"
 doc_type: explanation
-status: published
-audience: fork-maintainers, platform-engineers, contributors, agents
-tags: [governance, specs, validation, traceability, kernel]
 stories: [US-TPL-PLT-001]
-requirements:
-  - REQ-TPL-BDD-HARNESS
-  - REQ-PLT-DOCS-CONSISTENCY
-  - REQ-TPL-GRAPH-INVARIANTS
+requirements: [REQ-TPL-BDD-HARNESS, REQ-PLT-DOCS-CONSISTENCY, REQ-TPL-GRAPH-INVARIANTS]
+acs: [AC-TPL-SELFTEST-GATE, AC-TPL-PLATFORM-GRAPH]
 adrs: [ADR-0003, ADR-0005, ADR-0020, ADR-0021]
-last_updated: 2025-12-10
 ---
-
 # Governance Model: How Rust-as-Spec Platform Cells Stay Honest
 
 **Template Version:** v3.3.8
