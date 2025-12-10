@@ -12,7 +12,7 @@
 #   3. Browser tests can assert DOM elements match this contract
 
 schema_version: "1.0"
-template_version: "v3.3.7"
+template_version: "v3.3.8"
 
 screens:
   # Main Dashboard - governance health overview

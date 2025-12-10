@@ -320,4 +320,4 @@ For comprehensive troubleshooting, see [TROUBLESHOOTING.md](../TROUBLESHOOTING.m
 
 ---
 
-**Last Updated:** 2025-12-08 (v3.3.7)
+**Last Updated:** 2025-12-08 (v3.3.8)

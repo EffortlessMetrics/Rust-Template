@@ -3,7 +3,7 @@
 # Used for IDP integrations (Backstage, Port.io, etc.)
 
 schema_version: "1.0.0" # doclint:disable orphan-version
-template_version: "3.3.6" # doclint:disable orphan-version
+template_version: "3.3.8" # doclint:disable orphan-version
 last_updated: "2025-12-01"
 
 paths:
@@ -32,7 +32,7 @@ paths:
           type: string
           pattern: "^\\d+\\.\\d+\\.\\d+$"
           description: SemVer template version from spec_ledger.yaml
-          example: "3.3.6"
+          example: "3.3.8"
 
         service_id:
           type: string

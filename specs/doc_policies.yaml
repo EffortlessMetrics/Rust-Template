@@ -3,7 +3,7 @@
 # Purpose: Define when specific documentation types are mandatory based on requirement tags.
 
 schema_version: "1.0"
-template_version: "v2.4.0"
+template_version: "v3.3.8"
 
 rules:
   - id: DOC-REQ-STRUCTURAL

@@ -1,7 +1,7 @@
 <!-- doclint:disable orphan-version -->
 # Feature Flag Test Matrix
 
-**Version:** 3.3.6
+**Version:** 3.3.8
 **Last Updated:** 2025-12-01
 
 ## Overview

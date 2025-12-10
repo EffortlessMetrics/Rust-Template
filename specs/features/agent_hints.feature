@@ -1,4 +1,4 @@
-# Template Version: v3.3.1
+# Template Version: v3.3.8
 # Schema: spec_ledger.yaml v1.0
 # Last Updated: 2025-11-22
 
@@ -56,7 +56,7 @@ Feature: Agent Hints API
     Given the following tasks exist in "specs/tasks.yaml":
       | id                | title                     | status      | requirement           |
       | TASK-HINT-030     | Update dependencies       | Todo        | REQ-TPL-001          |
-    When I send a GET request to "/platform/agent/hints"
+    When I send a GET request to "/platform/agent/hints?kind=task"
     Then the response status code should be 200
     And the JSON response should have field "hints"
     And the first hint should have field "task_id"
@@ -87,7 +87,7 @@ Feature: Agent Hints API
       | id                | title                     | status      | requirement           |
       | TASK-HINT-050     | Complete milestone        | Done        | REQ-TPL-001          |
       | TASK-HINT-051     | Review architecture       | Review      | REQ-TPL-002          |
-    When I send a GET request to "/platform/agent/hints"
+    When I send a GET request to "/platform/agent/hints?kind=task"
     Then the response status code should be 200
     And the JSON should have an empty hints array
 
@@ -96,7 +96,7 @@ Feature: Agent Hints API
     Given the following tasks exist in "specs/tasks.yaml":
       | id                | title                     | status      | requirement           |
       | TASK-HINT-060     | Implement new feature     | Todo        | REQ-TPL-001          |
-    When I send a GET request to "/platform/agent/hints"
+    When I send a GET request to "/platform/agent/hints?kind=task"
     Then the response status code should be 200
     And the JSON response should have field "hints"
     And the first hint should have field "recommended_sequence"

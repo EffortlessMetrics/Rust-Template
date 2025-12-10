@@ -2,7 +2,7 @@
 id: REF-CI-WORKFLOWS-001
 title: "CI Workflows Reference Guide"
 doc_type: reference
-version: 3.3.7
+version: 3.3.8
 stories: [US-TPL-PLT-001]
 requirements:
   - REQ-PLT-DEVEX-CONTRACT
@@ -699,12 +699,12 @@ Version strings in documentation are checked for consistency with `specs/spec_le
    - These are updated automatically by `cargo xtask release-prepare`
 
 2. **Fixed versions** (use `<!-- doclint:disable orphan-version -->`):
-   - Use for version tags that are intentionally frozen (e.g., `v3.3.7-kernel`)
+   - Use for version tags that are intentionally frozen (e.g., `v3.3.8-kernel`)
    - Use for historical references or snapshots
    - Example:
      ```markdown
      <!-- doclint:disable orphan-version -->
-     The kernel baseline is frozen at v3.3.7-kernel.
+     The kernel baseline is frozen at v3.3.8-kernel.
      ```
 
 **When to use which:**
@@ -727,7 +727,7 @@ All governed docs must have YAML front-matter that matches their entry in `specs
 id: UNIQUE-DOC-ID
 title: "Document Title"
 doc_type: reference | how_to | tutorial | explanation | design_doc
-version: 3.3.7  # Must match spec_ledger template_version
+version: 3.3.8  # Must match spec_ledger template_version
 # ... other fields (stories, requirements, acs, adrs)
 ---
 ```

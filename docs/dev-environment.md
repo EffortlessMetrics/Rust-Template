@@ -2,7 +2,7 @@
 <!-- External: This document references external tool versions that are not tied to template version. -->
 # Development Environment
 
-**Version**: v3.3.6
+**Version**: v3.3.8
 **Last Updated**: 2025-11-18
 
 ---

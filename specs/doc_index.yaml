@@ -4,7 +4,7 @@
 # This is the canonical registry for "serious" documentation with front-matter
 
 schema_version: "1.0"
-template_version: "3.3.7"
+template_version: "3.3.8"
 
 docs:
   # Example design doc entry
@@ -469,7 +469,7 @@ docs:
   # Kernel Snapshot (Release Baseline)
   - id: SNAPSHOT-TPL-KERNEL-001
     file: docs/KERNEL_SNAPSHOT.md
-    title: "Kernel Snapshot v3.3.7"
+    title: "Kernel Snapshot v3.3.8"
     doc_type: status
     stories: [US-TPL-PLT-001]
     requirements: [REQ-PLT-DOCS-CONSISTENCY, REQ-TPL-OPINIONATED-DEFAULTS]
@@ -776,10 +776,20 @@ docs:
     acs: [AC-PLT-009, AC-PLT-010]
     adrs: [ADR-0005]
 
+  # AI Agent First Hour Guide
+  - id: HOWTO-AI-FIRST-HOUR-001
+    file: docs/how-to/ai-first-hour.md
+    title: "AI Agent First Hour: Autonomous Onboarding"
+    doc_type: how_to
+    stories: [US-TPL-PLT-001]
+    requirements: [REQ-PLT-ONBOARDING, REQ-PLT-DEVEX-CONTRACT]
+    acs: [AC-PLT-ENV-CHECK, AC-PLT-009, AC-TPL-AGENT-HINTS]
+    adrs: [ADR-0002, ADR-0005]
+
   # Adopt the Rust-as-Spec Kernel
   - id: HOW-TO-ADOPT-KERNEL-001
     file: docs/how-to/adopt-kernel.md
-    title: "Adopt the Rust-as-Spec Kernel (v3.3.7-kernel)"
+    title: "Adopt the Rust-as-Spec Kernel (v3.3.8-kernel)"
     doc_type: how_to
     stories: [US-TPL-PLT-001]
     requirements: [REQ-TPL-PLATFORM-INTROSPECTION]
@@ -1001,6 +1011,32 @@ docs:
     requirements: [REQ-TPL-TS-CONFIG-GOVERNANCE]
     acs: [AC-TPL-TS-CONFIG-VALIDATION]
     adrs: [ADR-0005]
+
+  # CLI/HTTP Introspection Parity
+  - id: DESIGN-TPL-INTROSPECTION-PARITY-001
+    file: docs/design/INTROSPECTION-PARITY.md
+    title: "CLI/HTTP Introspection Parity"
+    doc_type: design_doc
+    stories: [US-TPL-PLT-001]
+    requirements: [REQ-TPL-INTROSPECTION-PARITY]
+    acs:
+      - AC-TPL-STATUS-PARITY-CLI-HTTP
+      - AC-TPL-STATUS-AC-COVERAGE
+      - AC-TPL-STATUS-TASK-BREAKDOWN
+    adrs: [ADR-0005]
+
+  # Agent Hints and Bundles Referential Integrity
+  - id: DESIGN-TPL-AGENT-ERGONOMICS-001
+    file: docs/design/AGENT-ERGONOMICS.md
+    title: "Agent Hints and Bundles Referential Integrity"
+    doc_type: design_doc
+    stories: [US-TPL-PLT-001]
+    requirements: [REQ-TPL-AGENT-ERGONOMICS]
+    acs:
+      - AC-TPL-HINTS-REFERENTIAL-INTEGRITY
+      - AC-TPL-HINTS-KERNEL-SIGNALS
+      - AC-TPL-BUNDLE-REFERENTIAL-INTEGRITY
+    adrs: [ADR-0004, ADR-0005]
 
   # First Fork Runbook
   - id: GUIDE-TPL-FIRST-FORK-001
