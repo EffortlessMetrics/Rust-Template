@@ -489,9 +489,12 @@ pub fn run_with_verbosity(verbosity: crate::Verbosity) -> Result<()> {
 }
 
 fn run_ac_status(verbosity: crate::Verbosity) -> Result<()> {
-    // Use Rust-native AC status implementation
+    // Use check mode to verify AC status file is up-to-date without regenerating.
+    // This prevents selftest from modifying the repo - the pre-commit hook handles
+    // regeneration and staging of docs/feature_status.md.
     crate::commands::ac_status::run(crate::commands::ac_status::AcStatusArgs {
         verbosity,
+        check: true, // Check mode: verify without writing
         ..Default::default()
     })
 }

@@ -606,42 +606,38 @@ fn extract_version_after_v(line: &str) -> Option<String> {
 }
 
 fn check_ac_status_clean() -> Result<()> {
-    // Regenerate feature_status.md in place
-    // Note: We ignore the result because ac-status may fail if ACs are failing,
-    // but we still want to check if the regenerated file differs from what was committed.
-    // The file is written before the failure check, so we can still verify cleanliness.
-    let _ = crate::commands::ac_status::run(crate::commands::ac_status::AcStatusArgs {
+    // Use check mode to verify AC status file matches computed state without writing.
+    // This is cleaner than regenerating + checking git status, and doesn't modify the repo.
+    //
+    // Note: We ignore AC failures (test failures) here - we only care if the file is in sync.
+    // The ac-status command in check mode will fail if the file content differs, which is
+    // what we want to catch. If it fails due to AC test failures, that's a separate concern.
+    match crate::commands::ac_status::run(crate::commands::ac_status::AcStatusArgs {
         verbosity: crate::Verbosity::Quiet,
+        check: true, // Check mode: verify without writing
         ..Default::default()
-    });
-
-    // Check if git tree is dirty (uncommitted changes to tracked files)
-    let output = std::process::Command::new("git")
-        .args(["status", "--porcelain"])
-        .output()
-        .context("Failed to run git status")?;
-
-    let status = String::from_utf8_lossy(&output.stdout);
-
-    // Filter for changes to tracked files only (lines starting with M, D, R, etc., not ??)
-    let tracked_changes: Vec<&str> = status
-        .lines()
-        .filter(|line| {
-            let trimmed = line.trim();
-            !trimmed.is_empty() && !trimmed.starts_with("??")
-        })
-        .collect();
-
-    if !tracked_changes.is_empty() {
-        anyhow::bail!(
-            "Regenerated docs/feature_status.md differs from committed version.\n\
-            Run 'cargo xtask ac-status' and commit the changes.\n\
-            Uncommitted changes:\n{}",
-            tracked_changes.join("\n")
-        );
+    }) {
+        Ok(_) => Ok(()),
+        Err(e) => {
+            // Check if this is a sync error vs an AC failure
+            let err_str = e.to_string();
+            if err_str.contains("out of sync") {
+                // File is out of sync - this is the error we want to surface
+                anyhow::bail!(
+                    "AC status file is out of sync.\n\
+                     Run 'cargo xtask ac-status' to regenerate and commit the changes.\n\
+                     Error: {}",
+                    err_str.lines().next().unwrap_or(&err_str)
+                );
+            } else if err_str.contains("ACs failed") {
+                // ACs failed, but file is in sync - that's fine for docs-check
+                Ok(())
+            } else {
+                // Some other error (file not found, etc.)
+                Err(e)
+            }
+        }
     }
-
-    Ok(())
 }
 
 /// Document front-matter extracted from markdown files
