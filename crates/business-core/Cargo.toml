@@ -6,8 +6,8 @@ publish.workspace = true
 
 [dependencies]
 model = { path = "../model" }
-uuid = { version = "1.18.1", features = ["v4", "serde"] }
-chrono = { version = "0.4.42", features = ["serde"] }
-async-trait = "0.1.89"
-serde = { workspace = true }
-thiserror = { workspace = true }
+uuid.workspace = true
+chrono.workspace = true
+async-trait.workspace = true
+serde.workspace = true
+thiserror.workspace = true
