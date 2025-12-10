@@ -24,8 +24,11 @@ Auto-generated AC status from acceptance (BDD) and unit tests.
 > **How to read this**
 > - `[PASS]` = at least one test (BDD or unit) ran and passed.
 > - `[FAIL]` = at least one test ran and failed.
-> - `[UNKNOWN]` = no local test ran. In this repo, `[UNKNOWN]` is only used
->   for meta / CI-only ACs (see sections at the end).
+> - `[UNKNOWN]` = no local test ran for this AC. Common causes:
+>   - No BDD scenario is tagged with this AC ID (e.g., `@AC-TPL-001`)
+>   - No unit tests are mapped to this AC in `spec_ledger.yaml`
+>   - Coverage file is missing or stale (run `cargo xtask bdd` first)
+>   - The AC is intentionally meta/CI-only (see sections at the end)
 >
 > For formal definitions of `must_have_ac` and AC governance semantics, see
 > [`crates/ac-kernel/README.md`](../crates/ac-kernel/README.md#ac-governance-semantics).

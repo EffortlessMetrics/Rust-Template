@@ -150,6 +150,11 @@ enum Commands {
         /// Has no effect when combined with --summary or --json.
         #[arg(long)]
         check: bool,
+        /// Require coverage data to exist before computing status.
+        /// Fails with helpful guidance if coverage.jsonl is missing or empty.
+        /// Prevents churn from regenerating feature_status.md with incomplete data.
+        #[arg(long)]
+        require_coverage: bool,
     },
 
     /// Create new acceptance criterion
@@ -743,13 +748,14 @@ fn main() -> Result<()> {
     };
 
     match cli.command {
-        Commands::AcStatus { summary, json, ac, check } => {
+        Commands::AcStatus { summary, json, ac, check, require_coverage } => {
             commands::ac_status::run(commands::ac_status::AcStatusArgs {
                 verbosity,
                 summary,
                 json,
                 filter_ac: ac,
                 check,
+                require_coverage,
                 ..Default::default()
             })
         }

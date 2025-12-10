@@ -492,9 +492,41 @@ fn run_ac_status(verbosity: crate::Verbosity) -> Result<()> {
     // Use check mode to verify AC status file is up-to-date without regenerating.
     // This prevents selftest from modifying the repo - the pre-commit hook handles
     // regeneration and staging of docs/feature_status.md.
+    //
+    // We also require coverage to exist (require_coverage: true) because:
+    // - Step 4 (BDD) should have generated fresh coverage
+    // - Without coverage, the computed status would have many [UNKNOWN] entries
+    // - This prevents spurious check failures from stale/missing coverage data
+    let layout = crate::kernel::layout_for_repo();
+
+    // If BDD was skipped (XTASK_SKIP_BDD=1), we can't validate AC status meaningfully
+    // because we have no fresh coverage data to compare against.
+    if std::env::var("XTASK_SKIP_BDD").unwrap_or_default() == "1" {
+        if verbosity.is_verbose() {
+            eprintln!(
+                "  {} AC status check skipped (XTASK_SKIP_BDD=1, no fresh coverage to validate)",
+                "?".yellow()
+            );
+        }
+        return Ok(());
+    }
+
+    // Check if coverage exists - if not, provide a helpful error
+    if !layout.has_coverage() {
+        anyhow::bail!(
+            "Coverage file missing, cannot validate AC status\n\n\
+             Expected: {}\n\n\
+             hint: BDD tests (step 4) should have generated coverage.\n\
+                   If you see this, something went wrong with BDD execution.\n\
+             try:  cargo xtask bdd",
+            layout.coverage_file.display()
+        );
+    }
+
     crate::commands::ac_status::run(crate::commands::ac_status::AcStatusArgs {
         verbosity,
-        check: true, // Check mode: verify without writing
+        check: true,            // Check mode: verify without writing
+        require_coverage: true, // Fail if coverage is missing (guard against churn)
         ..Default::default()
     })
 }
