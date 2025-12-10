@@ -1137,3 +1137,47 @@ docs:
       - AC-TPL-CLI-JSON-CORE
     adrs: [ADR-0004, ADR-0017]
 
+  # Trust a Cell One-Pager
+  - id: HOWTO-TRUST-CELL-001
+    file: docs/how-to/trust-a-cell.md
+    title: "How to Trust a Cell"
+    doc_type: how_to
+    stories: [US-TPL-PLT-001]
+    requirements:
+      - REQ-PLT-PLATFORM-APIS
+      - REQ-TPL-IDP-SNAPSHOT
+    acs:
+      - AC-PLT-015
+      - AC-TPL-IDP-SNAPSHOT
+      - AC-TPL-BDD-EXIT-CODES
+    adrs: [ADR-0005, ADR-0017]
+
+  # Evolve the Kernel Playbook
+  - id: HOWTO-EVOLVE-KERNEL-001
+    file: docs/how-to/evolve-the-kernel.md
+    title: "How to Evolve the Kernel"
+    doc_type: how_to
+    stories: [US-TPL-PLT-001]
+    requirements:
+      - REQ-PLT-DOCS-CONSISTENCY
+      - REQ-PLT-DEVEX-CONTRACT
+    acs:
+      - AC-PLT-009
+      - AC-PLT-010
+      - AC-PLT-011
+    adrs: [ADR-0005, ADR-0017]
+
+  # Conduct Kernel Dry-Run Guide
+  - id: HOWTO-KERNEL-DRY-RUN-001
+    file: docs/how-to/conduct-kernel-dry-run.md
+    title: "How to Conduct a Kernel Dry-Run"
+    doc_type: how_to
+    stories: [US-TPL-PLT-001]
+    requirements:
+      - REQ-PLT-ONBOARDING
+      - REQ-PLT-DEVEX-CONTRACT
+    acs:
+      - AC-PLT-ENV-CHECK
+      - AC-PLT-015
+    adrs: [ADR-0005]
+

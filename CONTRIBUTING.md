@@ -448,7 +448,97 @@ Those tests include comments explaining how to run them explicitly.
 
 ---
 
-## 9. Questions / Discussions
+## 9. How to Evolve the Kernel
+
+This section is for changes that affect the **kernel contract** – the stable surfaces that forks and IDPs rely on.
+
+### 9.1 What's a kernel change?
+
+A change is a **kernel change** if it modifies:
+
+- `must_have_ac` ACs in `specs/spec_ledger.yaml`
+- `/platform/*` endpoint response shapes
+- `xtask` governance commands (selftest, ac-status, kernel-status, idp-snapshot)
+- Schema files (`specs/openapi/**`, `specs/platform_schema.yaml`)
+- Kernel documentation (`docs/KERNEL_SNAPSHOT.md`, `docs/IDP_CELL_CONTRACT.md`)
+
+### 9.2 Kernel change protocol
+
+> **Rule:** Any kernel contract change requires ADR → version bump → kernel tag.
+
+**Step-by-step:**
+
+1. **Draft an ADR** explaining the change:
+
+   ```bash
+   cargo xtask adr-new "Change X in kernel contract"
+   # Edit docs/adr/NNNN-change-x-in-kernel-contract.md
+   ```
+
+2. **Update the canonical version** in `specs/spec_ledger.yaml`:
+
+   ```yaml
+   metadata:
+     template_version: "X.Y.Z"  # Increment appropriately
+     last_updated: "YYYY-MM-DD"
+   ```
+
+3. **Run release automation**:
+
+   ```bash
+   cargo xtask release-prepare X.Y.Z
+   ```
+
+4. **Validate everything**:
+
+   ```bash
+   cargo xtask docs-check
+   cargo xtask selftest
+   ```
+
+5. **Generate release evidence**:
+
+   ```bash
+   cargo xtask release-bundle X.Y.Z
+   ```
+
+6. **Tag the kernel**:
+
+   ```bash
+   git tag -s "vX.Y.Z-kernel" -m "Kernel release vX.Y.Z"
+   git push origin main --tags
+   ```
+
+### 9.3 Version increment rules
+
+| Change Type | Example | Version Bump |
+|-------------|---------|--------------|
+| **Patch** (3.3.8 → 3.3.9) | Bug fixes, doc clarifications, no API changes | Z |
+| **Minor** (3.3.8 → 3.4.0) | New ACs, new endpoints, backward-compatible | Y |
+| **Major** (3.3.8 → 4.0.0) | Breaking changes, removed/renamed endpoints | X |
+
+### 9.4 CODEOWNERS protection
+
+Kernel-critical files are protected by `CODEOWNERS`. Changes to these files require review from kernel maintainers:
+
+- `specs/spec_ledger.yaml`
+- `specs/openapi/**`
+- `docs/KERNEL_SNAPSHOT.md`, `docs/IDP_CELL_CONTRACT.md`
+- `crates/xtask/**`
+- `crates/spec-runtime/**`
+- `.github/workflows/tier1-selftest.yml`
+
+See [`CODEOWNERS`](./CODEOWNERS) for the full list.
+
+### 9.5 More details
+
+- **Detailed maintainer guide:** [`docs/how-to/maintain-kernel.md`](docs/how-to/maintain-kernel.md)
+- **Kernel evolution playbook:** [`docs/how-to/evolve-the-kernel.md`](docs/how-to/evolve-the-kernel.md)
+- **Current kernel snapshot:** [`docs/KERNEL_SNAPSHOT.md`](docs/KERNEL_SNAPSHOT.md)
+
+---
+
+## 10. Questions / Discussions
 
 If you're unsure whether a change fits:
 
