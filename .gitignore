@@ -13,3 +13,4 @@ node_modules/
 
 # Ignore Windows zone identifier files
 *:Zone.Identifier
+*.bak
