@@ -32,6 +32,7 @@ This guide uses a FAQ format organized by problem domain. Use your browser's sea
 - [Policy Test Failures](#policy-test-failures)
 - [BDD/Acceptance Test Issues](#bddacceptance-test-issues)
 - [xtask Command Issues](#xtask-command-issues)
+- [Governance & Coverage](#governance--coverage)
 - [Docker and Container Issues](#docker-and-container-issues)
 - [Performance Issues](#performance-issues)
 
@@ -1441,6 +1442,120 @@ git status
 
 ---
 
+## Governance & Coverage
+
+### Q: AC status / feature_status.md shows unexpected `[UNKNOWN]` values
+
+**Symptoms:**
+
+- `docs/feature_status.md` suddenly flips from mostly `[PASS]` to mostly `[UNKNOWN]`.
+- `cargo xtask ac-status --summary` reports very low coverage (e.g. 10–20 ACs covered).
+- `target/ac/coverage.jsonl` is missing or very small (`wc -l target/ac/coverage.jsonl` shows a low line count).
+- `precommit` prints a warning such as:
+
+  ```text
+  [WARN] Skipping AC status regeneration: coverage.jsonl missing
+    hint: Run 'cargo xtask bdd' to generate coverage first.
+    💡 feature_status.md will be validated (not regenerated) in selftest.
+  ```
+
+**Diagnosis:**
+
+1. **Check coverage artefact**
+
+   ```bash
+   ls -la target/ac/
+   wc -l target/ac/coverage.jsonl
+   ```
+
+   * If `coverage.jsonl` does not exist, or has very few lines, BDD coverage has not been generated yet.
+
+2. **Inspect AC coverage summary**
+
+   ```bash
+   cargo xtask ac-coverage --summary
+   # or
+   cargo xtask ac-status --summary
+   ```
+
+   * Look at `covered_ac` / `total_ac` and the list of `[UNKNOWN]` ACs.
+   * If most service / platform ACs are `[UNKNOWN]`, coverage is stale or missing.
+
+3. **Check if BDD was skipped**
+
+   ```bash
+   echo "${XTASK_SKIP_BDD:-unset}"
+   ```
+
+   * If `XTASK_SKIP_BDD=1`, selftest intentionally skipped BDD and cannot validate AC status.
+   * In this mode, `feature_status.md` is not regenerated; existing contents remain as the last known good snapshot.
+
+**Resolution:**
+
+1. **Regenerate coverage with BDD tests**
+
+   ```bash
+   # Optional: clear old coverage
+   rm -f target/ac/coverage.jsonl
+
+   # Run BDD suite to repopulate coverage
+   cargo xtask bdd
+   ```
+
+   Confirm that coverage was written:
+
+   ```bash
+   wc -l target/ac/coverage.jsonl
+   cargo xtask ac-coverage --summary
+   ```
+
+2. **Recompute AC status with coverage required**
+
+   For inspection only (does **not** rewrite docs):
+
+   ```bash
+   cargo xtask ac-status --summary --require-coverage
+   # or for machine use:
+   cargo xtask ac-status --json --require-coverage
+   ```
+
+   If coverage is missing or empty, this will fail with an error explaining what's wrong and how to fix it.
+
+3. **Regenerate `docs/feature_status.md` (when you're confident)**
+
+   * For local manual regeneration:
+
+     ```bash
+     cargo xtask ac-status --require-coverage
+     ```
+
+   * As part of selftest / CI, `ac-status` is run in `check` mode with `require_coverage=true`.
+     If BDD has not produced coverage, selftest will fail with a clear error message.
+
+4. **Commit the updated snapshot**
+
+   Once the regenerated `docs/feature_status.md` looks correct (e.g. core service and platform ACs are `[PASS]`, and only meta / CI-only ACs are `[UNKNOWN]`):
+
+   ```bash
+   git add docs/feature_status.md target/ac/coverage.jsonl
+   git status
+   ```
+
+   Then proceed with your normal review / commit process.
+
+**Notes:**
+
+* `[UNKNOWN]` in `docs/feature_status.md` means **no local test ran for that AC**. Common causes:
+
+  * No BDD scenario is tagged with that AC ID (e.g. missing `@AC-TPL-001`).
+  * No unit tests are mapped to that AC in `spec_ledger.yaml`.
+  * `target/ac/coverage.jsonl` is missing or stale.
+  * The AC is intentionally meta / CI-only (see the "Meta / CI-only ACs" section in `feature_status.md`).
+
+* To avoid churn, `precommit` will **not** regenerate `feature_status.md` if coverage is missing. It prints a warning instead and relies on `selftest` to validate AC status once coverage is available.
+
+---
+
 ## Docker and Container Issues
 
 ### Q: "Docker daemon not running"
@@ -1756,4 +1871,4 @@ For detailed gate documentation, see [ADR-0017](adr/0017-tier1-selftest-gate.md)
 
 ---
 
-**Last Updated:** 2025-12-08 (v3.3.8)
+**Last Updated:** 2025-12-10 (v3.3.8)
