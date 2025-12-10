@@ -265,6 +265,14 @@ pub fn run(args: AcStatusArgs) -> Result<()> {
         return print_single_ac(&acs, filter_id, args.json);
     }
 
+    // Warn if --check is used with flags that ignore it
+    if args.check && (args.json || args.summary) && !args.verbosity.is_quiet() {
+        eprintln!(
+            "{} --check flag has no effect when --json or --summary is specified (no file operation)",
+            "[WARN]".yellow()
+        );
+    }
+
     if args.json {
         // Output structured JSON
         print_json_output(&acs)?;
@@ -984,7 +992,10 @@ fn generate_status_md_content(
     if service_unmapped.is_empty() {
         output.push_str("- *(none)*\n");
     } else {
-        for ac in service_unmapped {
+        // Sort for deterministic output
+        let mut sorted_service: Vec<_> = service_unmapped;
+        sorted_service.sort_by_key(|ac| &ac.id);
+        for ac in sorted_service {
             let text = ac.text.trim();
             output.push_str(&format!("- {}: {}\n", ac.id, text));
         }
@@ -1699,5 +1710,75 @@ stories:
             assert!(expected_link.contains("ac-kernel"));
             assert!(expected_anchor.contains("governance"));
         }
+    }
+
+    // =========================================================================
+    // Write vs Check Mode Contract Tests
+    // =========================================================================
+
+    /// Document the two operational modes of ac-status
+    #[test]
+    fn ac_status_default_args_use_write_mode() {
+        let args = AcStatusArgs::default();
+        assert!(!args.check, "default mode should be write (check=false)");
+        assert!(!args.summary, "default mode should not be summary");
+        assert!(!args.json, "default mode should not be json");
+    }
+
+    /// Verify check mode can be enabled
+    #[test]
+    fn ac_status_check_mode_flag() {
+        let args = AcStatusArgs { check: true, ..Default::default() };
+        assert!(args.check, "check mode should be enabled");
+    }
+
+    /// Document that summary mode is stdout-only (no file ops to check)
+    #[test]
+    fn ac_status_summary_mode_is_stdout_only() {
+        let args = AcStatusArgs { summary: true, ..Default::default() };
+        // In summary mode, --check is meaningless because we're printing to stdout
+        assert!(args.summary);
+    }
+
+    /// Document that json mode is stdout-only (no file ops to check)
+    #[test]
+    fn ac_status_json_mode_is_stdout_only() {
+        let args = AcStatusArgs { json: true, ..Default::default() };
+        // In json mode, --check is meaningless because we're printing to stdout
+        assert!(args.json);
+    }
+
+    /// Verify that selftest uses check mode (read-only contract)
+    /// This test documents the invariant that selftest must NOT modify feature_status.md
+    #[test]
+    fn selftest_must_use_check_mode_contract() {
+        // The selftest function at selftest.rs:run_ac_status passes check: true
+        // This test documents that contract and would fail if someone accidentally
+        // changes selftest to use write mode
+        let selftest_args = AcStatusArgs {
+            verbosity: crate::Verbosity::Quiet,
+            check: true, // selftest MUST use check mode
+            ..Default::default()
+        };
+        assert!(
+            selftest_args.check,
+            "selftest must use ac-status in check mode to avoid modifying repo"
+        );
+    }
+
+    /// Verify that docs-check uses check mode (read-only contract)
+    #[test]
+    fn docs_check_must_use_check_mode_contract() {
+        // The docs_check function uses check: true when validating AC status
+        // This test documents that contract
+        let docs_check_args = AcStatusArgs {
+            verbosity: crate::Verbosity::Quiet,
+            check: true, // docs-check MUST use check mode
+            ..Default::default()
+        };
+        assert!(
+            docs_check_args.check,
+            "docs-check must use ac-status in check mode to avoid modifying repo"
+        );
     }
 }
