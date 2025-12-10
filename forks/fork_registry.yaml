@@ -7,7 +7,7 @@
 # See forks/fork_schema.yaml for the complete schema definition.
 
 schema_version: "1.0"
-template_version: "v3.3.5"
+template_version: "v3.3.8"
 
 summary:
   total_forks: 2

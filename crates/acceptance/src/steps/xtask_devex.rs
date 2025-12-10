@@ -278,7 +278,39 @@ async fn when_delete_hook(world: &mut World) {
 
 #[when(regex = r#"^I run "([^"]+)"$"#)]
 async fn when_run_command(world: &mut World, command: String) {
-    execute_command(world, &command, &[]).await;
+    // Parse inline environment variables (e.g., "VAR=value cargo xtask ...")
+    let (env_vars, actual_command) = parse_inline_env_vars(&command);
+    let env_refs: Vec<(&str, &str)> =
+        env_vars.iter().map(|(k, v)| (k.as_str(), v.as_str())).collect();
+    execute_command(world, &actual_command, &env_refs).await;
+}
+
+/// Parse inline environment variables from a command string.
+/// Handles format like "VAR1=value1 VAR2=value2 actual_command args..."
+fn parse_inline_env_vars(command: &str) -> (Vec<(String, String)>, String) {
+    let mut env_vars = Vec::new();
+    let mut remaining = command.trim();
+
+    // Parse KEY=VALUE pairs at the start of the command
+    while let Some(eq_pos) = remaining.find('=') {
+        // Check if there's a space before the '=' (means it's not an env var)
+        let before_eq = &remaining[..eq_pos];
+        if before_eq.contains(' ') {
+            break;
+        }
+
+        // Find the end of the value (next space or end of string)
+        let after_eq = &remaining[eq_pos + 1..];
+        let value_end = after_eq.find(' ').unwrap_or(after_eq.len());
+        let value = &after_eq[..value_end];
+
+        env_vars.push((before_eq.to_string(), value.to_string()));
+
+        // Move past this env var
+        remaining = after_eq[value_end..].trim_start();
+    }
+
+    (env_vars, remaining.to_string())
 }
 
 #[when(regex = r#"^I run "([^"]+)" with low-resource mode$"#)]

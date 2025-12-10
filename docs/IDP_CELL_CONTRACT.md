@@ -12,13 +12,15 @@ adrs: [ADR-0004, ADR-0017]
 last_updated: 2025-12-09
 ---
 
+<!-- doclint:disable orphan-version -->
+
 # IDP Cell Contract
 
 > **For platform/IDP teams:** This document is the datasheet for integrating this Rust cell
 > into your Internal Developer Platform. It defines what you can rely on, what to consume,
 > and how to validate cell health.
 
-**Kernel Version:** v3.3.7-kernel | **Template Version:** 3.3.7
+**Kernel Version:** v3.3.8-kernel | **Template Version:** 3.3.8
 
 ---
 
@@ -26,7 +28,7 @@ last_updated: 2025-12-09
 
 This repository is a **governed Rust service cell** designed for IDP integration:
 
-- **72 kernel ACs** validated by `cargo xtask selftest`
+- **72+ kernel ACs** validated by `cargo xtask selftest` (run `cargo xtask ac-status --summary` for exact count)
 - **Stable `/platform/*` introspection APIs** for governance health, tasks, and docs
 - **Machine-readable contracts** via `cargo xtask idp-snapshot` and `kernel_contract.vX.Y.Z.json`
 - **CI-enforced governance** via `tier1-selftest.yml` with strict coverage
@@ -83,13 +85,13 @@ cargo xtask idp-snapshot --pretty
 ```json
 {
   "timestamp": "2025-12-09T12:00:00Z",
-  "template_version": "3.3.7",
+  "template_version": "3.3.8",
   "service_id": "template-service",
   "governance_health": {
     "status": "healthy",
     "ac_coverage": {
-      "total": 65,
-      "passing": 65,
+      "total": 72,
+      "passing": 72,
       "failing": 0,
       "unknown": 0
     },

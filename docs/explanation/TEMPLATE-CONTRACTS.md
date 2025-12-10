@@ -21,7 +21,7 @@ last_updated: 2025-12-01
 
 # Template Contracts: Kernel Requirements and Extension Points
 
-**Template Version:** v3.3.7
+**Template Version:** v3.3.8
 **Schema Version:** spec_ledger.yaml v1.0
 **Last Updated:** 2025-12-07
 

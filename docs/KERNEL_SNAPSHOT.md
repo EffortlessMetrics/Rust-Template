@@ -1,6 +1,6 @@
 ---
 id: SNAPSHOT-TPL-KERNEL-001
-title: Kernel Snapshot v3.3.7
+title: Kernel Snapshot v3.3.8
 doc_type: status
 status: published
 audience: maintainers, platform-engineers, forks
@@ -12,22 +12,22 @@ adrs: [ADR-0005]
 last_updated: 2025-12-09
 ---
 
-# Kernel Snapshot v3.3.7
+# Kernel Snapshot v3.3.8
 
-> This snapshot describes the kernel at tag **v3.3.7-kernel**.
-> For machine-readable details, see [`release_evidence/kernel_contract.v3.3.7.json`](../release_evidence/kernel_contract.v3.3.7.json).
+> This snapshot describes the kernel at tag **v3.3.8-kernel**.
+> For machine-readable details, see [`release_evidence/kernel_contract.v3.3.8.json`](../release_evidence/kernel_contract.v3.3.8.json).
 > For AC-level status, see [`docs/feature_status.md`](./feature_status.md).
 > For adoption instructions, see [`docs/how-to/adopt-kernel.md`](./how-to/adopt-kernel.md).
 
-**Date:** 2025-12-09 | **Version:** v3.3.7-kernel
+**Date:** 2025-12-09 | **Version:** v3.3.8-kernel
 
 ## Executive Summary
 
-This is the frozen kernel baseline (v3.3.7-kernel) for the Rust-as-Spec platform template.
+This is the frozen kernel baseline (v3.3.8-kernel) for the Rust-as-Spec platform template.
 All kernel acceptance criteria pass. All selftest gates pass.
 Day-0 commands work as documented. This is a stable, forkable baseline.
 
-**v3.3.6 highlights:**
+**v3.3.8 highlights:**
 
 - **Manifest-driven versioning** – `specs/version_manifest.yaml` + versioning engine ensures all version-bearing files are updated atomically via `release-prepare`
 - **Versioning ACs enforced** – `AC-TPL-VERSION-MANIFEST`, `AC-TPL-VERSION-DRYRUN`, `AC-TPL-VERSION-ATOMIC` are now kernel contracts
@@ -58,7 +58,7 @@ cargo xtask selftest     # Full governance validation
 
 ---
 
-### Key Kernel Contracts (v3.3.7)
+### Key Kernel Contracts (v3.3.8)
 
 **Philosophy & Governance:**
 
@@ -276,7 +276,7 @@ cargo run -p app-http    # Listening on :8080
 
 ## Fork Readiness
 
-The template is ready to fork. Services inheriting from v3.3.7-kernel get:
+The template is ready to fork. Services inheriting from v3.3.8-kernel get:
 
 - Runtime, APIs, and UI that pass their ACs
 - DevEx tooling for agents and humans
@@ -386,12 +386,12 @@ File issues with `refs: AC-XXX` tags to feed findings back. See [`ROADMAP.md`](.
 
 ---
 
-## Changing the Kernel After v3.3.7-kernel
+## Changing the Kernel After v3.3.8-kernel
 
 <!-- doclint:disable orphan-version -->
 
 The kernel contracts (must_have_ac=true ACs, `/platform/*` APIs, xtask governance commands) are frozen
-at the `v3.3.7-kernel` tag.
+at the `v3.3.8-kernel` tag.
 
 Any change that:
 

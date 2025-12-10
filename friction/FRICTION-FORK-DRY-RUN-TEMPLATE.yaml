@@ -2,17 +2,17 @@
 # Copy this file to FRICTION-FORK-DRY-RUN-XXX.yaml and fill in your findings
 # after running a fork adoption dry-run.
 #
-# Purpose: Capture issues discovered during a clean fork from v3.3.7-kernel
+# Purpose: Capture issues discovered during a clean fork from v3.3.8-kernel
 # following docs/how-to/adopt-kernel.md.
 
 id: FRICTION-FORK-DRY-RUN-XXX  # Change XXX to a unique number (e.g., 001)
 date: "YYYY-MM-DD"
 category: devex
 severity: medium  # low | medium | high | critical
-summary: "Fork adoption from v3.3.7-kernel requires undocumented steps"
+summary: "Fork adoption from v3.3.8-kernel requires undocumented steps"
 
 description: |
-  During a clean fork from v3.3.7-kernel, following docs/how-to/adopt-kernel.md,
+  During a clean fork from v3.3.8-kernel, following docs/how-to/adopt-kernel.md,
   the following steps were unclear or missing:
 
   1. [EDIT: Describe the first gap you found]
@@ -21,7 +21,7 @@ description: |
 
 expected_behavior: |
   A user should be able to:
-  - Clone the kernel at v3.3.7-kernel
+  - Clone the kernel at v3.3.8-kernel
   - Run `cargo xtask dev-up` and `cargo xtask selftest`
   - Run `cargo xtask service-init` to change identity
   - See their new identity in `/platform/status` and `/ui`

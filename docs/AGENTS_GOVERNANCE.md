@@ -2,7 +2,7 @@
 
 **Audience**: Team leads, agent authors, repo maintainers
 **Status**: Governed by REQ-TPL-AGENTS-GOVERNANCE, ADR-0021
-**Version**: 1.0.0 (aligned with template v3.3.6)
+**Version**: v3.3.8
 
 ## 1. Quick Summary
 
@@ -334,4 +334,4 @@ Before committing an agent:
 ---
 
 **Last Updated**: 2025-12-01
-**Template Version**: 3.3.6
+**Template Version**: 3.3.8

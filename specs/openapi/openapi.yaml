@@ -3,7 +3,7 @@ info:
   title: Service API
   version: 1.0.0
   description: |
-    Template-based service API (Template v3.3.6).
+    Template-based service API (Template v3.3.8).
 
     **Template Core Endpoints** (Keep these):
     - /health - Health check (AC-TPL-001)
@@ -16,7 +16,7 @@ info:
     - /platform/docs/index - Documentation inventory with validation
     - /platform/ui/contract - Governed UI contract (screens, regions, data-uiid anchors)
 
-  x-template-version: "3.3.6"
+  x-template-version: "3.3.8"
   x-schema-version: "1.0"
   x-last-updated: "2025-11-17"
   license:
@@ -656,7 +656,7 @@ components:
         template_version:
           type: string
           description: "Template version"
-          example: "v3.3.6"
+          example: "v3.3.8"
         screens:
           type: array
           items:

@@ -5,7 +5,7 @@
 # or agents for resolution, enabling continuous progress.
 
 schema_version: "1.0"
-template_version: "v3.3.3"
+template_version: "v3.3.8"
 
 description: >
   Questions are structured artifacts emitted when automated flows encounter

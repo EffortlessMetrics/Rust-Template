@@ -127,7 +127,7 @@ mod tests {
     fn parses_valid_contract() {
         let yaml = r#"
 schema_version: "1.0"
-template_version: "v3.3.6"
+template_version: "v3.3.8"
 screens:
   - id: test_screen
     route: "/test"
@@ -153,7 +153,7 @@ region_kinds:
     fn detects_duplicate_region_ids() {
         let yaml = r#"
 schema_version: "1.0"
-template_version: "v3.3.6"
+template_version: "v3.3.8"
 screens:
   - id: test_screen
     route: "/test"
@@ -182,7 +182,7 @@ region_kinds: {}
     fn all_region_ids_collects_all() {
         let contract = UiContract {
             schema_version: "1.0".into(),
-            template_version: "v3.3.6".into(),
+            template_version: "v3.3.8".into(),
             screens: vec![
                 Screen {
                     id: "screen1".into(),

@@ -1,7 +1,7 @@
 <!-- doclint:disable orphan-version -->
 # BDD Step Library Reference
 
-**Version:** 3.3.6
+**Version:** 3.3.8
 **Last Updated:** 2025-12-02
 
 This document provides a comprehensive reference for all reusable BDD step definitions available in the acceptance test suite. These steps can be used across all feature files to create readable, maintainable test scenarios.

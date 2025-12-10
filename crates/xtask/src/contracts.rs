@@ -150,10 +150,10 @@ fn compute_ac_counts(repo_root: &Path) -> Result<AcCounts> {
         // Has any test with type: ci
         let has_ci_test = ac.tests.iter().any(|t| t.test_type.as_deref() == Some("ci"));
 
-        // Has tags containing "harness" or "example"
+        // Has tags containing "harness", "example", or "ci-only"
         let has_meta_tag = ac.tags.iter().any(|tag| {
             let t = tag.to_lowercase();
-            t == "harness" || t == "example"
+            t == "harness" || t == "example" || t == "ci-only"
         });
 
         has_ci_test || has_meta_tag

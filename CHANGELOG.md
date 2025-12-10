@@ -9,6 +9,45 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+(empty)
+
+## [3.3.8] - 2025-12-09
+
+### Added
+
+- 
+
+### Changed
+
+- 
+
+### Fixed
+
+- 
+
+
+(empty)
+
+## [3.3.8] - 2025-12-09
+
+### Added
+
+- Agent hints referential integrity validation (`AC-TPL-HINTS-REFERENTIAL-INTEGRITY`)
+- Bundle referential integrity validation (`AC-TPL-BUNDLE-REFERENTIAL-INTEGRITY`)
+- IDP cell smoke test (`AC-TPL-IDP-CELL-SMOKE`)
+- Kernel governance hints for failing ACs (`AC-TPL-HINTS-KERNEL-SIGNALS`)
+
+### Changed
+
+- `is_meta_ac()` now unified across `contracts.rs` and `ac_status.rs` (includes `ci-only` tag)
+- IDP documentation uses dynamic AC count references instead of hardcoded numbers
+- IDP_CELL_CONTRACT.md now indexed in docs/INDEX.md
+
+### Fixed
+
+- Version alignment: specs/tasks.yaml was stuck at 3.3.6, now aligned
+- README.md kernel baseline regex matching in release-prepare
+
 ### IDP Integration & Platform Contract
 
 **Added:**

@@ -54,6 +54,8 @@ pub struct HintsFilters {
     pub owner: Option<String>,
     pub label: Option<String>,
     pub requirement: Option<String>,
+    /// Filter by hint kind: "task" or "governance". If not set, returns all hints.
+    pub kind: Option<String>,
 }
 
 pub fn router(state: AppState) -> Router<AppState> {
@@ -282,6 +284,13 @@ async fn agent_hints(
         // Filter by requirement
         if let Some(ref req_filter) = filters.requirement
             && !hint.requirement_ids.iter().any(|r| r.eq_ignore_ascii_case(req_filter))
+        {
+            return false;
+        }
+
+        // Filter by kind (task or governance)
+        if let Some(ref kind_filter) = filters.kind
+            && !hint.kind.eq_ignore_ascii_case(kind_filter)
         {
             return false;
         }
