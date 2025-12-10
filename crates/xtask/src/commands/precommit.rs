@@ -236,9 +236,23 @@ fn run_agents_lint_if_changed() -> Result<()> {
 }
 
 fn run_ac_status_with_autostage() -> Result<()> {
+    // Check if coverage exists - if not, skip regeneration to prevent churn.
+    // Without fresh coverage, we'd regenerate feature_status.md with many [UNKNOWN] entries,
+    // which would then differ from the committed state and cause spurious diffs.
+    let layout = crate::kernel::layout_for_repo();
+
+    if !layout.has_coverage() {
+        println!("{} Skipping AC status regeneration: coverage.jsonl missing", "[WARN]".yellow());
+        println!("  hint: Run 'cargo xtask bdd' to generate coverage first.");
+        println!("  💡 feature_status.md will be validated (not regenerated) in selftest.");
+        return Ok(());
+    }
+
     // Run AC status to regenerate docs/feature_status.md
+    // We use require_coverage: true to ensure we don't proceed with stale data
     match crate::commands::ac_status::run(crate::commands::ac_status::AcStatusArgs {
         verbosity: crate::Verbosity::Quiet,
+        require_coverage: true, // Guard against regenerating with missing coverage
         ..Default::default()
     }) {
         Ok(_) => {}

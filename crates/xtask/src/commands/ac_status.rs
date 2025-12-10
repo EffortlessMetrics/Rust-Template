@@ -34,6 +34,11 @@ pub struct AcStatusArgs {
     /// Check mode: compare computed status against existing file without writing.
     /// Returns error if the file content would differ. Used by selftest/CI.
     pub check: bool,
+    /// Require coverage data to exist and be non-empty before computing status.
+    /// If true and coverage is missing/empty, returns error instead of continuing
+    /// with Unknown statuses for all BDD ACs. This prevents churn when coverage
+    /// is stale or missing.
+    pub require_coverage: bool,
 }
 
 impl Default for AcStatusArgs {
@@ -51,6 +56,7 @@ impl Default for AcStatusArgs {
             json: false,
             filter_ac: None,
             check: false,
+            require_coverage: false,
         }
     }
 }
@@ -172,6 +178,34 @@ pub fn run(args: AcStatusArgs) -> Result<()> {
             }
         } else if should_print_progress {
             eprintln!("  BDD results regenerated successfully");
+        }
+    }
+
+    // REQUIRE_COVERAGE GUARD: If caller requires coverage and we still don't have it, fail early.
+    // This prevents churn from regenerating feature_status.md with stale/missing coverage data.
+    if args.require_coverage {
+        let has_coverage_now = ReportStatus::from_path(&args.coverage) == ReportStatus::NonEmpty
+            || ReportStatus::from_path(&args.junit) == ReportStatus::NonEmpty
+            || args
+                .json_report
+                .as_ref()
+                .is_some_and(|p| ReportStatus::from_path(p) == ReportStatus::NonEmpty);
+
+        if !has_coverage_now {
+            anyhow::bail!(
+                "Coverage data required but not found (require_coverage=true)\n\n\
+                 Coverage file: {} (status: {})\n\
+                 JUnit file:    {} (status: {})\n\n\
+                 To fix:\n\
+                 1. Run: cargo xtask bdd\n\
+                 2. Then re-run: cargo xtask ac-status\n\n\
+                 hint: Coverage must be fresh before running ac-status in check mode.\n\
+                       This prevents churn from regenerating feature_status.md with incomplete data.",
+                args.coverage.display(),
+                ReportStatus::from_path(&args.coverage),
+                args.junit.display(),
+                ReportStatus::from_path(&args.junit)
+            );
         }
     }
 
@@ -948,9 +982,11 @@ fn generate_status_md_content(
     output.push_str("> **How to read this**\n");
     output.push_str("> - `[PASS]` = at least one test (BDD or unit) ran and passed.\n");
     output.push_str("> - `[FAIL]` = at least one test ran and failed.\n");
-    output
-        .push_str("> - `[UNKNOWN]` = no local test ran. In this repo, `[UNKNOWN]` is only used\n");
-    output.push_str(">   for meta / CI-only ACs (see sections at the end).\n");
+    output.push_str("> - `[UNKNOWN]` = no local test ran for this AC. Common causes:\n");
+    output.push_str(">   - No BDD scenario is tagged with this AC ID (e.g., `@AC-TPL-001`)\n");
+    output.push_str(">   - No unit tests are mapped to this AC in `spec_ledger.yaml`\n");
+    output.push_str(">   - Coverage file is missing or stale (run `cargo xtask bdd` first)\n");
+    output.push_str(">   - The AC is intentionally meta/CI-only (see sections at the end)\n");
     output.push_str(">\n");
     output
         .push_str("> For formal definitions of `must_have_ac` and AC governance semantics, see\n");
