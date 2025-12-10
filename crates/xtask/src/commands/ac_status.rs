@@ -559,11 +559,11 @@ fn update_ac_statuses(
 
         // Set source based on where the result came from
         ac.source = if has_bdd_result {
-            bdd_source.clone()
+            bdd_source
         } else if ac.tests_executed > 0 {
             // Had unit tests but no BDD - still mark with the bdd_source for consistency
             // since unit tests don't have their own source tracking
-            bdd_source.clone()
+            bdd_source
         } else {
             AcSource::Inferred
         };
@@ -792,8 +792,8 @@ fn print_single_ac(acs: &HashMap<String, Ac>, filter_id: &str, json_output: bool
             story_id: ac.story_id.clone(),
             req_id: ac.req_id.clone(),
             text: ac.text.clone(),
-            status: ac.status.clone(),
-            source: ac.source.clone(),
+            status: ac.status,
+            source: ac.source,
             must_have_ac: ac.must_have_ac,
             scenarios: ac.scenarios.clone(),
             tests: ac.tests.clone(),

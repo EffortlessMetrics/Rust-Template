@@ -18,7 +18,7 @@ fn test_set_task_status_persists() {
     let status = TaskStatus::InProgress;
 
     // Set status
-    repo.set_task_status(&task_id, status.clone()).unwrap();
+    repo.set_task_status(&task_id, status).unwrap();
 
     // Verify file exists
     let state_file = specs_dir.join("tasks_state.yaml");
@@ -31,7 +31,7 @@ fn test_set_task_status_persists() {
 
     // Update status
     let new_status = TaskStatus::Done;
-    repo.set_task_status(&task_id, new_status.clone()).unwrap();
+    repo.set_task_status(&task_id, new_status).unwrap();
 
     // Verify update
     let content = fs::read_to_string(specs_dir.join("tasks_state.yaml")).unwrap();

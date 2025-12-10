@@ -67,7 +67,7 @@ pub fn run(args: AcCoverageArgs) -> Result<()> {
     let mut ac_statuses: HashMap<String, AcStatus> = HashMap::new();
     for ac_id in all_acs.keys() {
         if let Some(status) = ac_results.get(ac_id) {
-            ac_statuses.insert(ac_id.clone(), status.clone());
+            ac_statuses.insert(ac_id.clone(), *status);
         } else {
             ac_statuses.insert(ac_id.clone(), AcStatus::Unknown);
         }

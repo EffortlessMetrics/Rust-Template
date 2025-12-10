@@ -3,7 +3,7 @@
 # Purpose: Define operational policies for services (runbooks, SLOs)
 
 schema_version: "1.0"
-template_version: "v2.4.0"
+template_version: "v3.3.8"
 
 policies:
   runbook_required:

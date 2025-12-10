@@ -247,12 +247,7 @@ fn render_markdown_to<W: Write>(
     writeln!(out)?;
 
     // Table
-    let header = if args.must_have {
-        "| Commit | Date | Cov% | Pass | Fail | Unknown |"
-    } else {
-        "| Commit | Date | Cov% | Pass | Fail | Unknown |"
-    };
-    writeln!(out, "{}", header)?;
+    writeln!(out, "| Commit | Date | Cov% | Pass | Fail | Unknown |")?;
     writeln!(out, "|--------|------|------|------|------|---------|")?;
 
     for snapshot in &report.snapshots {

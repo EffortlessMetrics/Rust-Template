@@ -145,7 +145,7 @@ pub struct LoadResult {
 pub fn extract_commit_from_filename(path: &Path) -> Option<String> {
     let stem = path.file_stem()?.to_str()?;
     // Expected format: ac-status-<sha>
-    if let Some(sha) = stem.strip_prefix("ac-status-") { Some(sha.to_string()) } else { None }
+    stem.strip_prefix("ac-status-").map(|sha| sha.to_string())
 }
 
 /// Load all snapshots from a directory.
