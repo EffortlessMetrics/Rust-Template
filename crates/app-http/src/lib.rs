@@ -295,7 +295,16 @@ pub fn resolve_workspace_root() -> PathBuf {
         return PathBuf::from(root);
     }
 
-    PathBuf::from(env!("CARGO_MANIFEST_DIR")).parent().unwrap().parent().unwrap().to_path_buf()
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .and_then(|p| p.parent())
+        .map(|p| p.to_path_buf())
+        .unwrap_or_else(|| {
+            tracing::warn!(
+                "Failed to resolve workspace root from CARGO_MANIFEST_DIR, using current directory"
+            );
+            PathBuf::from(".")
+        })
 }
 
 fn load_validated_config(workspace_root: &Path) -> Option<spec_runtime::ValidatedConfig> {

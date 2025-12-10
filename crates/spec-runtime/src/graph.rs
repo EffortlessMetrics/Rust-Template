@@ -37,6 +37,7 @@ pub struct Edge {
 
 // ... (Edge struct remains same)
 
+#[tracing::instrument(skip(ledger, devex, docs))]
 pub fn build_graph(ledger: &SpecLedger, devex: &DevExFlows, docs: &DocIndex) -> Result<Graph> {
     let mut graph = Graph { nodes: Vec::new(), edges: Vec::new() };
 
@@ -193,6 +194,7 @@ pub struct InvariantReport {
     pub passed: bool,
 }
 
+#[tracing::instrument(skip(graph, devex, ledger))]
 pub fn check_invariants(graph: &Graph, devex: &DevExFlows, ledger: &SpecLedger) -> InvariantReport {
     let mut violations = Vec::new();
     let mut invariants = Vec::new();
@@ -290,6 +292,7 @@ pub fn check_invariants(graph: &Graph, devex: &DevExFlows, ledger: &SpecLedger) 
 }
 
 impl Graph {
+    #[tracing::instrument(skip(self), fields(node_count = self.nodes.len(), edge_count = self.edges.len()))]
     pub fn to_mermaid(&self) -> String {
         let mut out = String::new();
         out.push_str("graph TD\n");

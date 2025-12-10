@@ -13,6 +13,12 @@
 //! - Stable: changes here ripple across the entire workspace
 //!
 
+/// Example CRUD task model for demonstrating basic REST operations.
+///
+/// This is a simple example domain model with a basic three-state lifecycle
+/// (Pending → InProgress → Completed). It is separate from the production
+/// governance model in `business_core::governance`, which uses a different
+/// TaskStatus enum with richer workflow states (Todo/InProgress/Review/Done).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Task {
     pub id: String,
@@ -21,6 +27,10 @@ pub struct Task {
     pub created_at: chrono::DateTime<chrono::Utc>,
 }
 
+/// Basic task status for example CRUD operations.
+///
+/// This enum is used by the example `Task` model above. For production governance
+/// workflows, see `business_core::governance::TaskStatus` instead.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum TaskStatus {
     Pending,

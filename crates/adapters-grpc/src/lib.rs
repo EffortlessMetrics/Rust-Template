@@ -1,3 +1,9 @@
+//! gRPC service adapters for the Rust-as-Spec platform.
+//!
+//! This crate provides Tonic-based gRPC service implementations that expose
+//! core business logic over protocol buffers, including TaskService for
+//! task creation, retrieval, status updates, and listing operations.
+
 use std::sync::Arc;
 
 use tonic::{Request, Response, Status, transport::Server};

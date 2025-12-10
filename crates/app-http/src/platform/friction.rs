@@ -215,7 +215,7 @@ mod tests {
             related_items: None,
         };
 
-        let json = serde_json::to_string(&entry).unwrap();
+        let json = serde_json::to_string(&entry).expect("entry should serialize to JSON");
         assert!(json.contains("FRICTION-TEST-001"));
         assert!(json.contains("testing"));
     }
@@ -232,7 +232,8 @@ description: "Test description"
 status: open
 "#;
 
-        let entry: FrictionEntry = serde_yaml::from_str(yaml).unwrap();
+        let entry: FrictionEntry =
+            serde_yaml::from_str(yaml).expect("YAML should deserialize to FrictionEntry");
         assert_eq!(entry.id, "FRICTION-TEST-002");
         assert_eq!(entry.category, "devex");
         assert_eq!(entry.status, "open");
@@ -249,7 +250,8 @@ summary: "Test"
 description: "Test"
 "#;
 
-        let entry: FrictionEntry = serde_yaml::from_str(yaml).unwrap();
+        let entry: FrictionEntry =
+            serde_yaml::from_str(yaml).expect("YAML should deserialize to FrictionEntry");
         assert_eq!(entry.status, "open");
     }
 }

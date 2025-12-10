@@ -170,6 +170,7 @@ pub struct HintFilter {
 /// let coverage = build_ac_coverage_index(Path::new("docs/feature_status.md"))?;
 /// let kernel_acs = build_kernel_ac_statuses(&ledger, &coverage);
 /// ```
+#[tracing::instrument(skip(ledger, coverage))]
 pub fn build_kernel_ac_statuses(
     ledger: &crate::ledger::SpecLedger,
     coverage: &AcCoverageIndex,
@@ -270,6 +271,7 @@ impl HintEngine {
     ///
     /// Returns high-priority hints with reason.code = "KERNEL_AC_FAILING" for
     /// any kernel AC (must_have_ac=true) that has a failing status.
+    #[tracing::instrument(skip(self))]
     pub fn kernel_governance_hints(&self) -> Vec<Hint> {
         self.kernel_acs
             .iter()
@@ -339,6 +341,7 @@ impl HintEngine {
     /// If validation was enabled via `with_validation()`, this method also validates
     /// task references and accumulates warnings. Call `warnings()` after this to get
     /// any referential integrity issues found.
+    #[tracing::instrument(skip(self))]
     pub fn task_hints(&mut self) -> Vec<Hint> {
         // Clear previous warnings
         self.warnings.clear();
@@ -370,6 +373,7 @@ impl HintEngine {
     }
 
     /// Apply a filter to hints
+    #[tracing::instrument(skip(self, hints, filter), fields(hint_count = hints.len()))]
     pub fn apply_filter(&self, hints: Vec<Hint>, filter: &HintFilter) -> Vec<Hint> {
         let mut filtered = hints;
 
@@ -512,6 +516,7 @@ impl HintEngine {
 ///
 /// Returns Ok with AcCoverageIndex if parsing succeeds, or an error otherwise.
 /// Returns Ok with empty map if the file doesn't exist (not an error).
+#[tracing::instrument]
 pub fn parse_feature_status(path: &Path) -> std::io::Result<AcCoverageIndex> {
     let mut index = AcCoverageIndex::new();
 
