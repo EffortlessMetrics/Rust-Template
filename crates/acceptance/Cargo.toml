@@ -9,19 +9,19 @@ path="tests/acceptance.rs"
 harness=false
 [dependencies]
 serde.workspace = true
-serde_json = "1.0.145"
-serde_yaml = { workspace = true }
-uuid = { version = "1.18.1", features = ["v4"] }
-cucumber = { version = "0.21.1", features = ["output-junit", "output-json"] }
-gherkin = "0.14.0"
-tokio = { version = "1.48.0", features=["rt-multi-thread","macros"] }
-axum = "0.8.7"
-tower = { version = "0.5.2", features = ["util"] }
-http = "1.4.0"
-http-body-util = "0.1.3"
-regex = "1.12.2"
-shell-words = "1.1.0"
-md5 = "0.7.0"
+serde_json.workspace = true
+serde_yaml.workspace = true
+uuid = { workspace = true, features = ["v4"] }
+cucumber.workspace = true
+gherkin.workspace = true
+tokio.workspace = true
+axum.workspace = true
+tower.workspace = true
+http.workspace = true
+http-body-util.workspace = true
+regex.workspace = true
+shell-words.workspace = true
+md5.workspace = true
 
 # Internal crates
 app-http = { path = "../app-http" }
@@ -31,4 +31,4 @@ adapters-spec-fs = { path = "../adapters-spec-fs" }
 spec-runtime = { path = "../spec-runtime" }
 ac-kernel = { path = "../ac-kernel" }
 tracing.workspace = true
-tempfile = "3.23.0"
+tempfile.workspace = true

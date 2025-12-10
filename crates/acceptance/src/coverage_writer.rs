@@ -194,8 +194,7 @@ impl<W: CucumberWorld> AcCoverageWriter<W> {
                 tags: tags.clone(),
             };
 
-            let line = serde_json::to_string(&record)
-                .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))?;
+            let line = serde_json::to_string(&record).map_err(std::io::Error::other)?;
             writeln!(self.out, "{}", line)?;
         }
 

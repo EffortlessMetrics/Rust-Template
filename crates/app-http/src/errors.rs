@@ -87,7 +87,7 @@ pub struct ErrorStats {
 }
 
 /// Error summary surfaced via `/platform/status`.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct ErrorSummary {
     /// Whether any errors have occurred recently (since service start)
     pub has_recent_errors: bool,
@@ -96,12 +96,6 @@ pub struct ErrorSummary {
     pub last_error: Option<LastErrorSummary>,
     /// Aggregated error statistics
     pub stats: ErrorStats,
-}
-
-impl Default for ErrorSummary {
-    fn default() -> Self {
-        Self { has_recent_errors: false, last_error: None, stats: ErrorStats::default() }
-    }
 }
 
 /// Global error tracker (thread-safe singleton).
