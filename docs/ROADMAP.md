@@ -242,16 +242,52 @@ Only a few items remain - all now have documentation or are external dependencie
 |------|--------|-------|
 | **`lazy-trees` Nix warning** | Cosmetic noise in output | Deprecated Nix 2.30+ setting in Determinate installer config. Documented in TROUBLESHOOTING.md with fix instructions. Safe to ignore. |
 
-### 4.4 v3.4.0 – Planned (Future Kernel Closure)
+### 4.4 v3.3.9 – IDP Fit & Finish (Patch Release)
 
-> **Note:** v3.4.0 is the *next planned* kernel closure. The current frozen baseline is `v3.3.8-kernel`.
-> Items below represent future work driven by fork friction, not work completed in this kernel.
+> **Scope:** Bug fixes, documentation polish, and IDP integration improvements discovered through real adoption. No new features or breaking changes.
 
-| Item | Description | Status |
-|------|-------------|--------|
-| **Multi-service orchestration** | Cross-service governance coordination | 🔜 Planned |
-| **Advanced policy packs** | PCI-DSS, HIPAA compliance templates | 🔜 Planned |
-| **Fleet-wide Backstage integration** | Plugin reading `/platform/*` from multiple services | 🔜 Planned |
+**Target:** Next patch after fork validation dry-runs
+
+| Item | Description | Status | Source |
+|------|-------------|--------|--------|
+| **CODEOWNERS file** | Protect kernel-critical files from accidental changes | ✅ Added | Internal |
+| **"Trust a Cell" one-pager** | Quick validation guide for IDP teams | ✅ Added | User feedback |
+| **"Evolve the Kernel" playbook** | ADR → version → tag sequence documentation | ✅ Added | User feedback |
+| **AI first-hour receipt template** | Structured template for agent onboarding validation | ✅ Added | Agent pilots |
+| **Kernel dry-run guide** | How to validate fork-readiness | ✅ Added | Internal |
+| **CONTRIBUTING.md kernel section** | "How to Evolve the Kernel" section | ✅ Added | User feedback |
+| **Fork dry-run validation** | Conduct real dry-run and capture receipt | 🔄 In Progress | Validation |
+| **AI first-hour validation** | Run AI agent through first-hour and capture receipt | 🔄 In Progress | Validation |
+| **IDP adapter stub** | Minimal Backstage/Port adapter consuming `idp-snapshot` | 📋 Backlog | IDP integration |
+| **sccache/libz friction fix** | Resolve FRICTION-ENV-001 affecting some environments | 📋 Backlog | Friction log |
+
+**Criteria for 3.3.9 release:**
+- All "Added" items merged and validated
+- At least one dry-run receipt completed
+- No new kernel AC failures
+- `cargo xtask selftest` green
+
+---
+
+### 4.5 v3.4.0 – Multi-Cell & Registry (Minor Release)
+
+> **Note:** v3.4.0 is the *next minor* kernel closure. The current frozen baseline is `v3.3.8-kernel`.
+> Items below represent future work driven by fork friction, not speculation.
+
+| Item | Description | Status | Priority |
+|------|-------------|--------|----------|
+| **Multi-service orchestration** | Cross-service governance coordination | 🔜 Planned | High |
+| **Advanced policy packs** | PCI-DSS, HIPAA compliance templates | 🔜 Planned | Medium |
+| **Fleet-wide Backstage integration** | Plugin reading `/platform/*` from multiple services | 🔜 Planned | High |
+| **Platform registry spec** | Central registry listing all cells and their `idp-snapshot` endpoints | 🔜 Planned | High |
+| **AI agent feedback loop** | Structured agent → friction → kernel improvement cycle | 🔜 Planned | Medium |
+| **Cross-cell graph queries** | Query governance state across multiple cells | 🔜 Planned | Low |
+
+**Entry criteria for v3.4.0 work:**
+- v3.3.9 released and stable
+- At least 2 forks actively using the kernel
+- Friction log reviewed for v3.4.0 candidates
+- ADR drafted for major items
 
 Items completed in v3.3.8 (now part of the frozen kernel):
 

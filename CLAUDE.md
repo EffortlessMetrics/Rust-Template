@@ -465,6 +465,9 @@ When you are first invoked on this repo:
    - `docs/AGENT_GUIDE.md`
    - `docs/MISSING_MANUAL.md`
    - `docs/explanation/TEMPLATE-CONTRACTS.md`
+   - `docs/how-to/ai-first-hour.md` – your first-hour script for this cell
+   - `docs/how-to/trust-a-cell.md` – how to verify the cell is safe to work in
+   - `docs/how-to/evolve-the-kernel.md` – what to do if a contract needs to change
 
 2. **Check baseline health**
 

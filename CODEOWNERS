@@ -1,0 +1,83 @@
+# CODEOWNERS - Kernel Contract Protection
+#
+# This file defines code ownership for kernel-critical files.
+# Changes to these files require review from kernel maintainers.
+#
+# See: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# =============================================================================
+# KERNEL CONTRACT FILES
+# =============================================================================
+# These files define the kernel contract and require careful review.
+# Changes here may break downstream forks and IDP integrations.
+
+# Spec ledger - canonical source of truth for ACs, REQs, stories
+specs/spec_ledger.yaml                    @EffortlessMetrics/kernel-maintainers
+
+# OpenAPI specifications - platform API contracts
+specs/openapi/**                          @EffortlessMetrics/kernel-maintainers
+
+# Platform schema - response shape definitions
+specs/platform_schema.yaml                @EffortlessMetrics/kernel-maintainers
+
+# Service metadata schema
+specs/service_metadata.yaml               @EffortlessMetrics/kernel-maintainers
+
+# =============================================================================
+# KERNEL DOCUMENTATION
+# =============================================================================
+# Core kernel documentation that IDP/agents rely on.
+
+docs/KERNEL_SNAPSHOT.md                   @EffortlessMetrics/kernel-maintainers
+docs/IDP_CELL_CONTRACT.md                 @EffortlessMetrics/kernel-maintainers
+docs/explanation/TEMPLATE-CONTRACTS.md    @EffortlessMetrics/kernel-maintainers
+
+# =============================================================================
+# CONTROL PLANE (xtask)
+# =============================================================================
+# The xtask crate is the kernel's control surface.
+# Changes here affect all governance commands.
+
+crates/xtask/**                           @EffortlessMetrics/kernel-maintainers
+
+# =============================================================================
+# GOVERNANCE RUNTIME
+# =============================================================================
+# Spec runtime and platform APIs that enforce kernel contracts.
+
+crates/spec-runtime/**                    @EffortlessMetrics/kernel-maintainers
+crates/app-http/src/platform/**           @EffortlessMetrics/kernel-maintainers
+crates/app-http/src/platform.rs           @EffortlessMetrics/kernel-maintainers
+
+# =============================================================================
+# CI AND GOVERNANCE WORKFLOWS
+# =============================================================================
+# CI workflows that enforce kernel contracts.
+
+.github/workflows/tier1-selftest.yml      @EffortlessMetrics/kernel-maintainers
+.github/workflows/selftest.yml            @EffortlessMetrics/kernel-maintainers
+
+# =============================================================================
+# RELEASE ARTIFACTS
+# =============================================================================
+# Release evidence and kernel contracts.
+
+release_evidence/**                       @EffortlessMetrics/kernel-maintainers
+
+# =============================================================================
+# SKILLS AND AGENTS GOVERNANCE
+# =============================================================================
+# Governed LLM workflow definitions.
+
+.claude/skills/**                         @EffortlessMetrics/kernel-maintainers
+.claude/agents/**                         @EffortlessMetrics/kernel-maintainers
+
+# =============================================================================
+# NOTE FOR FORKS
+# =============================================================================
+# When forking this template:
+# 1. Replace @EffortlessMetrics/kernel-maintainers with your team
+# 2. Adjust paths based on your domain-specific extensions
+# 3. Consider adding domain crate owners (e.g., crates/your-domain/**)
+#
+# See docs/how-to/setup-branch-protection.md for branch protection setup.

@@ -19,6 +19,8 @@
 
 See **[IDP Cell Contract](docs/IDP_CELL_CONTRACT.md)** for the full integration datasheet.
 
+**5-minute trust check:** **[How to Trust a Cell](docs/how-to/trust-a-cell.md)**
+
 ---
 
 ## What This Is
