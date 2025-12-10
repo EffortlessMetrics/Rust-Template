@@ -31,6 +31,9 @@ pub struct AcStatusArgs {
     pub json: bool,
     /// Filter to a specific AC ID (e.g., AC-KERN-001)
     pub filter_ac: Option<String>,
+    /// Check mode: compare computed status against existing file without writing.
+    /// Returns error if the file content would differ. Used by selftest/CI.
+    pub check: bool,
 }
 
 impl Default for AcStatusArgs {
@@ -47,6 +50,7 @@ impl Default for AcStatusArgs {
             summary: false,
             json: false,
             filter_ac: None,
+            check: false,
         }
     }
 }
@@ -268,13 +272,21 @@ pub fn run(args: AcStatusArgs) -> Result<()> {
         // Print concise summary instead of generating markdown file
         print_summary(&acs)?;
     } else {
-        // Generate full markdown report
-        if should_print_progress {
-            eprintln!("Generating status: {}", args.output.display());
+        if args.check {
+            // Check mode: compare computed status against existing file without writing
+            if should_print_progress {
+                eprintln!("Checking status against: {}", args.output.display());
+            }
+            check_status_md(&acs, &scenarios, &args.output, should_print_progress)?;
+        } else {
+            // Write mode: Generate full markdown report
+            if should_print_progress {
+                eprintln!("Generating status: {}", args.output.display());
+            }
+            generate_status_md(&acs, &scenarios, &args.output, should_print_progress)?;
         }
-        generate_status_md(&mut acs, &scenarios, &args.output, &args, should_print_progress)?;
 
-        // Check for failures
+        // Check for failures (both modes)
         let failed: Vec<_> = acs
             .values()
             .filter(|ac| ac.status == AcStatus::Fail)
@@ -286,7 +298,9 @@ pub fn run(args: AcStatusArgs) -> Result<()> {
             anyhow::bail!("One or more ACs failed");
         }
 
-        eprintln!("\n{} All ACs passed", "[OK]".green());
+        if should_print_progress {
+            eprintln!("\n{} All ACs passed", "[OK]".green());
+        }
     }
 
     Ok(())
@@ -891,18 +905,11 @@ fn get_last_updated_date() -> Option<String> {
     None
 }
 
-fn generate_status_md(
-    acs: &mut HashMap<String, Ac>,
+/// Generate the markdown content for feature_status.md (shared between write and check modes)
+fn generate_status_md_content(
+    acs: &HashMap<String, Ac>,
     scenarios: &HashMap<String, Scenario>,
-    output_path: &Path,
-    _args: &AcStatusArgs,
-    should_print_progress: bool,
-) -> Result<()> {
-    // Create output directory if needed
-    if let Some(parent) = output_path.parent() {
-        fs::create_dir_all(parent)?;
-    }
-
+) -> String {
     let mut output = String::new();
     output.push_str("<!--\n");
     output.push_str("  AUTO-GENERATED FILE: DO NOT EDIT BY HAND.\n\n");
@@ -1012,9 +1019,84 @@ fn generate_status_md(
         }
     }
 
-    fs::write(output_path, output)?;
+    output
+}
+
+/// Write mode: Generate feature_status.md file
+fn generate_status_md(
+    acs: &HashMap<String, Ac>,
+    scenarios: &HashMap<String, Scenario>,
+    output_path: &Path,
+    should_print_progress: bool,
+) -> Result<()> {
+    // Create output directory if needed
+    if let Some(parent) = output_path.parent() {
+        fs::create_dir_all(parent)?;
+    }
+
+    let content = generate_status_md_content(acs, scenarios);
+    fs::write(output_path, content)?;
+
     if should_print_progress {
         eprintln!("{} Generated {}", "[OK]".green(), output_path.display());
+    }
+
+    Ok(())
+}
+
+/// Check mode: Compare computed status against existing file without writing.
+/// Returns error if the file content would differ.
+fn check_status_md(
+    acs: &HashMap<String, Ac>,
+    scenarios: &HashMap<String, Scenario>,
+    output_path: &Path,
+    should_print_progress: bool,
+) -> Result<()> {
+    let expected = generate_status_md_content(acs, scenarios);
+
+    let actual = fs::read_to_string(output_path).with_context(|| {
+        format!(
+            "AC status file not found: {}\n\n\
+             hint: run 'cargo xtask ac-status' to generate it first",
+            output_path.display()
+        )
+    })?;
+
+    if expected != actual {
+        // Find first differing line for diagnostics
+        let expected_lines: Vec<&str> = expected.lines().collect();
+        let actual_lines: Vec<&str> = actual.lines().collect();
+
+        let diff_line = expected_lines
+            .iter()
+            .zip(actual_lines.iter())
+            .enumerate()
+            .find(|(_, (e, a))| e != a)
+            .map(|(i, _)| i + 1);
+
+        let diff_info = if let Some(line) = diff_line {
+            format!(" (first difference at line {})", line)
+        } else if expected_lines.len() != actual_lines.len() {
+            format!(
+                " (line count differs: expected {}, got {})",
+                expected_lines.len(),
+                actual_lines.len()
+            )
+        } else {
+            String::new()
+        };
+
+        anyhow::bail!(
+            "AC status file is out of sync: {}{}\n\n\
+             hint: run 'cargo xtask ac-status' to regenerate\n\
+             then commit the updated file",
+            output_path.display(),
+            diff_info
+        );
+    }
+
+    if should_print_progress {
+        eprintln!("{} AC status file is up to date", "[OK]".green());
     }
 
     Ok(())

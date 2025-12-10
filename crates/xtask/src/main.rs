@@ -136,6 +136,9 @@ enum Commands {
         /// Filter to a specific AC ID (e.g., AC-KERN-001)
         #[arg(long)]
         ac: Option<String>,
+        /// Check mode: verify existing file matches computed state without writing (for CI)
+        #[arg(long)]
+        check: bool,
     },
 
     /// Create new acceptance criterion
@@ -729,12 +732,13 @@ fn main() -> Result<()> {
     };
 
     match cli.command {
-        Commands::AcStatus { summary, json, ac } => {
+        Commands::AcStatus { summary, json, ac, check } => {
             commands::ac_status::run(commands::ac_status::AcStatusArgs {
                 verbosity,
                 summary,
                 json,
                 filter_ac: ac,
+                check,
                 ..Default::default()
             })
         }

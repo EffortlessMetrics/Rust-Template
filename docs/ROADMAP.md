@@ -51,10 +51,12 @@ Opinions encoded as ACs mean:
 
 ## 1. Kernel v3.3.8 Closure
 
-**Status:** Frozen as of 2025-11-30.
+**Status:** Frozen as of 2025-12-09.
 
-v3.3.3 was the first kernel closure. v3.3.4 is a patch-level closure that stabilizes:
+v3.3.8 is the current stable kernel baseline. It includes:
 
+- **Manifest-driven versioning** – `specs/version_manifest.yaml` + versioning engine
+- **IDP-ready platform contract** – `/platform/status` and introspection APIs are stable
 - **BDD harness exit semantics** (`AC-TPL-BDD-EXIT-CODES`)
 - **Agent hint schema** (`AC-TPL-AGENT-HINTS-SCHEMA`)
 - **Bundle manifest linkage** (`AC-TPL-BUNDLE-MANIFEST-LINKED`, `AC-TPL-BUNDLE-MINIMAL-SCOPE`)
@@ -62,16 +64,16 @@ v3.3.3 was the first kernel closure. v3.3.4 is a patch-level closure that stabil
 
 No new features land here. All forward work targets:
 
-- **Forks**: Build services on v3.3.4 baseline; capture friction
+- **Forks**: Build services on v3.3.8 baseline; capture friction
 - **v3.4.0**: Kernel improvements driven by real fork feedback
 
 This closure is enforced:
 
-- Git tag: `v3.3.4-kernel` marks the frozen baseline
+- Git tag: `v3.3.8-kernel` marks the frozen baseline
 - `ROADMAP.md` updated to reflect closure
 - Selftest gates expanded to 11 steps
 
-To fork from v3.3.4, start with `docs/how-to/FIRST_FORK.md`.
+To fork from v3.3.8, start with `docs/how-to/FIRST_FORK.md`.
 
 ---
 
@@ -371,7 +373,7 @@ See [v3.4.0-plan.md](v3.4.0-plan.md) for scope when v3.4.0 work begins.
 ### 5.3 Option C: Validate (Second Service First) — **Adoption Track, Not Kernel Work**
 
 > This option describes how to use the template in a **separate service repository**.
-> It does not require changes to this repository once `v3.3.4-kernel` is tagged.
+> It does not require changes to this repository once `v3.3.8-kernel` is tagged.
 
 **Goal:** Prove the template works by building a real service from it.
 
@@ -499,7 +501,7 @@ See [v3.4.0-plan.md](v3.4.0-plan.md) for scope when v3.4.0 work begins.
 ## 6. Recommended Path (For Adopters)
 
 > **Scope note:** This section describes what happens **in forks**, not in this repo.
-> The kernel (v3.3.5) is complete. Validation happens when you use it.
+> The kernel (v3.3.8) is complete. Validation happens when you use it.
 
 **Option C (Validate) is recommended** for these reasons:
 
