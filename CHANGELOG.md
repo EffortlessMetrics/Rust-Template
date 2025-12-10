@@ -32,6 +32,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- 
+
+### Changed
+
+- 
+
+### Fixed
+
+- 
+
+
+(empty)
+
+## [3.3.8] - 2025-12-09
+
+### Added
+
 - Agent hints referential integrity validation (`AC-TPL-HINTS-REFERENTIAL-INTEGRITY`)
 - Bundle referential integrity validation (`AC-TPL-BUNDLE-REFERENTIAL-INTEGRITY`)
 - IDP cell smoke test (`AC-TPL-IDP-CELL-SMOKE`)

@@ -359,7 +359,9 @@ fn build_recommended_sequence(
 
     // Process each recommended flow
     for flow_name in recommended_flows {
-        if let Some(flow_value) = flows.get(flow_name)
+        // Convert flow_name to serde_yaml::Value for Mapping lookup
+        let flow_key = serde_yaml::Value::from(flow_name.clone());
+        if let Some(flow_value) = flows.get(&flow_key)
             && let Some(steps_value) = flow_value.get("steps")
             && let Some(steps_seq) = steps_value.as_sequence()
         {
