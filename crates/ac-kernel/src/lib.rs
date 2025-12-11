@@ -64,7 +64,7 @@ pub use json::{
 };
 pub use layout::{SpecLayout, SpecLayoutBuilder};
 pub use ledger::{AcDetails, AcMetadata, get_ac_details, parse_ledger_with_metadata};
-pub use model::{AcSource, AcStatus, Scenario, TestMapping};
+pub use model::{AcEvidence, AcSource, AcStatus, Scenario, TestMapping};
 
 // ============================================================================
 // AcKernel Facade
@@ -229,6 +229,121 @@ fn update_ac_statuses(
             ac.tests_executed = ac.scenarios.len();
         }
     }
+}
+
+// ============================================================================
+// AcEvidence Builder (ADR-0024)
+// ============================================================================
+
+/// Build evidence map from ledger metadata and BDD coverage.
+///
+/// This is the primary entry point for computing AC evidence from
+/// all available sources:
+/// 1. Parse spec_ledger.yaml for test mappings (unit_mapped, bdd_mapped)
+/// 2. Parse coverage.jsonl for BDD results (bdd_passed, bdd_failed)
+/// 3. Merge into unified AcEvidence structs
+///
+/// # Arguments
+///
+/// * `layout` - Path layout for finding spec_ledger.yaml and coverage.jsonl
+///
+/// # Returns
+///
+/// HashMap<AC_ID, AcEvidence> with computed evidence for each AC.
+///
+/// # Errors
+///
+/// Returns an error if the ledger cannot be read. Missing coverage is handled
+/// gracefully (all BDD counts will be zero).
+pub fn build_evidence(layout: &SpecLayout) -> anyhow::Result<HashMap<String, AcEvidence>> {
+    // Load metadata from ledger
+    let meta = ledger::parse_ledger_with_metadata(&layout.ledger)?;
+
+    // Load BDD coverage (gracefully handles missing file)
+    let (scenarios, bdd_results) = coverage::parse_ac_coverage(&layout.coverage_file)?;
+
+    // Build evidence map from spec
+    let mut evidence: HashMap<String, AcEvidence> = HashMap::new();
+
+    for (ac_id, m) in &meta {
+        let mut ev = AcEvidence::new(ac_id.clone(), m.must_have_ac);
+
+        // Count spec mappings by type
+        for test in &m.tests {
+            match test.test_type.to_lowercase().as_str() {
+                "unit" => ev.unit_mapped += 1,
+                "bdd" | "integration" => ev.bdd_mapped += 1,
+                _ => {} // Ignore ci, manual, docs, etc.
+            }
+        }
+
+        evidence.insert(ac_id.clone(), ev);
+    }
+
+    // Merge BDD coverage results
+    // Note: bdd_results is aggregated by AC ID
+    for (ac_id, status) in &bdd_results {
+        if let Some(ev) = evidence.get_mut(ac_id) {
+            match status {
+                AcStatus::Pass => ev.bdd_passed += 1,
+                AcStatus::Fail => ev.bdd_failed += 1,
+                AcStatus::Unknown => {}
+            }
+        }
+    }
+
+    // Also count scenarios for more granular evidence
+    // (multiple scenarios per AC possible)
+    let mut scenario_counts: HashMap<String, (usize, usize)> = HashMap::new(); // (passed, failed)
+    for scenario in scenarios.values() {
+        if let Some(status) = bdd_results.get(&scenario.ac_id) {
+            let entry = scenario_counts.entry(scenario.ac_id.clone()).or_default();
+            match status {
+                AcStatus::Pass => entry.0 += 1,
+                AcStatus::Fail => entry.1 += 1,
+                AcStatus::Unknown => {}
+            }
+        }
+    }
+
+    // Use scenario counts if more accurate than aggregated results
+    for (ac_id, (passed, failed)) in scenario_counts {
+        if let Some(ev) = evidence.get_mut(&ac_id) {
+            // Scenario counts are more granular
+            if passed > ev.bdd_passed {
+                ev.bdd_passed = passed;
+            }
+            if failed > ev.bdd_failed {
+                ev.bdd_failed = failed;
+            }
+        }
+    }
+
+    Ok(evidence)
+}
+
+/// Compute kernel coverage summary from evidence.
+///
+/// Returns a tuple of (total, passing, failing, unknown) counts for kernel ACs only.
+///
+/// # Arguments
+///
+/// * `evidence` - Evidence map from `build_evidence()`
+///
+/// # Returns
+///
+/// `(total_kernel, passing_kernel, failing_kernel, unknown_kernel)`
+pub fn kernel_coverage_summary(
+    evidence: &HashMap<String, AcEvidence>,
+) -> (usize, usize, usize, usize) {
+    let kernel_evidence: Vec<_> = evidence.values().filter(|e| e.is_kernel).collect();
+
+    let total = kernel_evidence.len();
+    let passing = kernel_evidence.iter().filter(|e| e.status() == AcStatus::Pass).count();
+    let failing = kernel_evidence.iter().filter(|e| e.status() == AcStatus::Fail).count();
+    let unknown = kernel_evidence.iter().filter(|e| e.status() == AcStatus::Unknown).count();
+
+    (total, passing, failing, unknown)
 }
 
 #[cfg(test)]

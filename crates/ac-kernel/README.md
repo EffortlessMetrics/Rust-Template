@@ -14,7 +14,7 @@ Core AC governance logic for the Rust-as-Spec platform.
 
 | Module | Responsibility |
 |--------|----------------|
-| `model` | Core types: `AcStatus`, `AcSource`, `Scenario`, `TestMapping` |
+| `model` | Core types: `AcStatus`, `AcSource`, `AcEvidence`, `Scenario`, `TestMapping` |
 | `json` | JSON output schemas: `AcStatusJson`, `Ac`, `AcCategoryStats` |
 | `ledger` | Ledger parsing: `parse_ledger_with_metadata`, `AcMetadata`, `AcDetails` |
 | `coverage` | Coverage parsing: `AcCoverageRecord` from `coverage.jsonl` |
@@ -194,6 +194,56 @@ Each AC can be in one of these states:
 - If an optional AC (`must_have_ac: false`) is `Fail` or `Unknown` → **selftest warns but passes**
 
 This allows incremental adoption: add new ACs as `must_have_ac: false`, implement tests, then flip to `true` when ready.
+
+## AcEvidence Model (ADR-0024)
+
+The `AcEvidence` struct provides a unified view of test evidence for an AC:
+
+```rust
+use ac_kernel::AcEvidence;
+
+let mut ev = AcEvidence::new("AC-KERN-001", true); // kernel AC
+ev.unit_mapped = 2;  // 2 unit tests mapped in spec_ledger.yaml
+ev.bdd_passed = 1;   // 1 BDD scenario passed
+
+// Compute status from evidence
+match ev.status() {
+    AcStatus::Pass => println!("AC is covered"),
+    AcStatus::Fail => println!("AC has failing tests"),
+    AcStatus::Unknown => println!("AC has no test evidence"),
+}
+```
+
+### Evidence Sources
+
+| Source | Field | Meaning |
+|--------|-------|---------|
+| `spec_ledger.yaml` | `unit_mapped` | Unit tests declared for this AC |
+| `spec_ledger.yaml` | `bdd_mapped` | BDD/integration tests declared |
+| `coverage.jsonl` | `bdd_passed` | BDD scenarios that passed at runtime |
+| `coverage.jsonl` | `bdd_failed` | BDD scenarios that failed at runtime |
+
+### Status Classification Rules
+
+The `status()` method follows ADR-0024:
+
+1. **FAIL**: `bdd_failed > 0` (any BDD scenario failed)
+2. **PASS**: `bdd_passed > 0 OR unit_mapped > 0` (evidence exists)
+3. **UNKNOWN**: No evidence
+
+**Why unit_mapped counts as PASS**: Unit tests are presumed to run because `cargo xtask check` (which runs before the AC coverage gate in selftest) executes all unit tests via `cargo test --workspace`.
+
+### Kernel Coverage Gate
+
+Environment variables control the enforcement level:
+
+| Variable | Effect |
+|----------|--------|
+| `XTASK_STRICT_AC_COVERAGE=1` | No unknown kernel ACs allowed (budget=0) |
+| `KERNEL_UNKNOWN_BUDGET=N` | Allow at most N unknown kernel ACs |
+| Neither set | Unlimited unknowns (backward compatible) |
+
+See **ADR-0024** for the full specification of the evidence model and gate semantics.
 
 ## See Also
 

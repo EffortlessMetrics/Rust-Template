@@ -1444,6 +1444,89 @@ git status
 
 ## Governance & Coverage
 
+### Q: "Kernel AC coverage incomplete: N unknown (budget: M)"
+
+**Symptom:**
+```bash
+$ cargo xtask selftest
+...
+error: Kernel AC coverage incomplete: 70 unknown (budget: 65)
+```
+
+**Cause:** More kernel ACs (with `must_have_ac=true`) lack test evidence than the allowed budget.
+
+**Diagnostic:**
+```bash
+# List all unknown kernel ACs
+cargo xtask ac-coverage --todo --must-have
+
+# Check current budget in CI
+grep KERNEL_UNKNOWN_BUDGET .github/workflows/tier1-selftest.yml
+```
+
+**Solutions:**
+
+1. **Add BDD scenarios** (preferred):
+   ```bash
+   # Get suggestions for specific AC
+   cargo xtask ac-suggest-scenarios AC-XXXX
+
+   # Add scenario to feature file with @AC-XXXX tag
+   # Run BDD to verify
+   cargo xtask bdd
+   ```
+
+2. **Add unit test mappings** in `specs/spec_ledger.yaml`:
+   ```yaml
+   acceptance_criteria:
+     - id: AC-XXXX
+       tests:
+         - type: unit
+           tag: "test_function_name"
+           module: "module::path"
+   ```
+
+3. **Demote to non-kernel** (if AC is aspirational):
+   ```yaml
+   acceptance_criteria:
+     - id: AC-XXXX
+       must_have_ac: false  # No longer kernel contract
+   ```
+
+4. **Temporarily raise budget** (emergency only):
+   ```bash
+   KERNEL_UNKNOWN_BUDGET=70 cargo xtask selftest
+   ```
+   Then update `.github/workflows/tier1-selftest.yml` to match.
+
+**See:** ADR-0024 for full AC evidence model and gate semantics.
+
+---
+
+### Q: "Kernel AC coverage incomplete: N failing"
+
+**Symptom:**
+```bash
+$ cargo xtask selftest
+...
+error: Kernel AC coverage incomplete: 2 failing
+```
+
+**Cause:** BDD scenarios tagged with kernel AC IDs are failing.
+
+**Diagnostic:**
+```bash
+# Run BDD tests to see failures
+cargo xtask bdd
+
+# Check specific AC status
+cargo xtask ac-status --json | jq '.acs[] | select(.status == "fail")'
+```
+
+**Fix:** Debug and fix the failing BDD scenarios. This is a hard gate - failing kernel ACs always block selftest.
+
+---
+
 ### Q: AC status / feature_status.md shows unexpected `[UNKNOWN]` values
 
 **Symptoms:**
@@ -1553,6 +1636,84 @@ git status
   * The AC is intentionally meta / CI-only (see the "Meta / CI-only ACs" section in `feature_status.md`).
 
 * To avoid churn, `precommit` will **not** regenerate `feature_status.md` if coverage is missing. It prints a warning instead and relies on `selftest` to validate AC status once coverage is available.
+
+---
+
+### Q: How do I add a new kernel AC safely?
+
+**Context:** Kernel ACs (with `must_have_ac=true` at both requirement AND AC level) require test evidence per ADR-0024. Adding a kernel AC without tests will block selftest.
+
+**Step-by-step process:**
+
+1. **Add AC to `specs/spec_ledger.yaml`** with required fields:
+   ```yaml
+   - id: AC-MY-NEW-001
+     text: "Description of what this acceptance criterion validates"
+     must_have_ac: true  # Makes it a kernel AC (gate-blocking)
+     tests:
+       # At least ONE of: BDD or unit test mapping
+       - { type: bdd, tag: "@AC-MY-NEW-001", file: "specs/features/my.feature" }
+       # OR for structural/internal invariants:
+       - { type: unit, tag: "test_my_function", module: "my_module::tests" }
+   ```
+
+2. **If using BDD, add scenario** in the referenced feature file:
+   ```gherkin
+   @AC-MY-NEW-001
+   Scenario: My new feature validates expected behavior
+     Given some precondition
+     When I perform an action
+     Then the expected outcome occurs
+   ```
+   - **Important:** Don't tag with `@wip` or `@ci-only` if you want local coverage
+
+3. **Verify the mapping passes:**
+   ```bash
+   cargo xtask ac-ensure-kernel-mapped --strict
+   # Should pass with your new AC listed as "mapped"
+   ```
+
+4. **Run BDD tests and check coverage:**
+   ```bash
+   cargo xtask bdd
+   cargo xtask ac-coverage --todo --must-have | grep "MY-NEW-001"
+   # Should NOT appear (meaning it has coverage)
+   ```
+
+5. **Run selftest** to verify the full gate:
+   ```bash
+   KERNEL_UNKNOWN_BUDGET=0 cargo xtask selftest
+   # Your AC should contribute to "passing" count
+   ```
+
+**Alternative: Unit test mapping (when BDD isn't appropriate)**
+
+For structural invariants or internal code contracts, use unit tests:
+
+```yaml
+tests:
+  - { type: unit, tag: "test_my_invariant", module: "crate::module::tests", file: "crates/xyz/src/lib.rs" }
+```
+
+Unit tests are "presumed to run" because `cargo xtask check` (which runs in selftest) executes them via `cargo test --workspace`.
+
+**Important notes:**
+
+- Per ADR-0024, unit test mappings count as **PASS** evidence (no BDD coverage needed)
+- However, `coverage.jsonl` only tracks BDD results - unit test evidence comes from spec mappings
+- If using `@ci-only` tag on BDD scenarios, they won't run locally but WILL run in CI
+- The `KERNEL_UNKNOWN_BUDGET` in CI allows temporary unknowns during development
+
+**Common mistakes:**
+
+| Mistake | Symptom | Fix |
+|---------|---------|-----|
+| Missing test mapping | `ac-ensure-kernel-mapped --strict` fails | Add `tests:` array to AC |
+| @wip tag on scenario | AC shows as UNKNOWN | Remove @wip when scenario is ready |
+| Wrong AC tag in feature | Coverage doesn't match | Verify `@AC-MY-NEW-001` spelling |
+| Missing step definitions | Scenario skipped | Implement missing cucumber steps |
+
+**See:** ADR-0024 for full AC evidence model and gate semantics.
 
 ---
 
