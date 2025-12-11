@@ -28,7 +28,9 @@ stories:
             text: "GET /health returns 200 with status 'ok' when service is healthy"
             tags: [kernel]
             must_have_ac: true
-            tests: [ { type: bdd, tag: "@AC-TPL-005", file: "specs/features/template_core.feature" } ]
+            tests:
+              - { type: bdd, tag: "@AC-TPL-001", file: "specs/features/template_core.feature" }
+              - { type: unit, tag: "test_health_returns_ok", module: "app_http::tests", file: "crates/app-http/src/lib.rs" }
             adr: ADR-0005  # Selftest as single gate
       - id: REQ-TPL-VERSION
         title: "Version Information Endpoint"
@@ -40,7 +42,9 @@ stories:
             text: "GET /version returns build information including version and git SHA"
             tags: [kernel]
             must_have_ac: true
-            tests: [ { type: bdd, tag: "@AC-TPL-002", file: "specs/features/template_core.feature" } ]
+            tests:
+              - { type: bdd, tag: "@AC-TPL-002", file: "specs/features/template_core.feature" }
+              - { type: unit, tag: "test_version_returns_build_info", module: "app_http::tests", file: "crates/app-http/src/lib.rs" }
             adr: ADR-0005  # Selftest as single gate
       - id: REQ-TPL-ERROR-HANDLING
         title: "Error Response Envelope"
@@ -52,13 +56,20 @@ stories:
             text: "All 4xx/5xx responses include an error code, message, and request ID"
             tags: [kernel]
             must_have_ac: true
-            tests: [ { type: bdd, tag: "@AC-TPL-003", file: "specs/features/template_core.feature" } ]
+            tests:
+              - { type: bdd, tag: "@AC-TPL-003", file: "specs/features/template_core.feature" }
+              - { type: unit, tag: "test_error_serialization", module: "errors::tests", file: "crates/app-http/src/errors.rs" }
+              - { type: unit, tag: "test_bad_request_error", module: "errors::tests", file: "crates/app-http/src/errors.rs" }
             adr: ADR-0005  # Selftest as single gate
           - id: AC-TPL-004
             text: "Handlers propagate or generate X-Request-ID and expose it in responses"
             tags: [kernel]
             must_have_ac: true
-            tests: [ { type: bdd, tag: "@AC-TPL-004", file: "specs/features/template_core.feature" } ]
+            tests:
+              - { type: bdd, tag: "@AC-TPL-004", file: "specs/features/template_core.feature" }
+              - { type: unit, tag: "test_request_id_generate", module: "middleware::request_id::tests", file: "crates/app-http/src/middleware/request_id.rs" }
+              - { type: unit, tag: "test_extract_or_generate_from_empty_request", module: "middleware::request_id::tests", file: "crates/app-http/src/middleware/request_id.rs" }
+              - { type: unit, tag: "test_extract_or_generate_from_request_with_header", module: "middleware::request_id::tests", file: "crates/app-http/src/middleware/request_id.rs" }
             adr: ADR-0005  # Selftest as single gate
           - id: AC-TPL-ERROR-MAPPING
             text: >
@@ -81,7 +92,10 @@ stories:
             text: "GET /metrics returns Prometheus-formatted metrics including http_requests_total"
             tags: [kernel]
             must_have_ac: true
-            tests: [ { type: bdd, tag: "@AC-TPL-007", file: "specs/features/metrics.feature" } ]
+            tests:
+              - { type: bdd, tag: "@AC-TPL-007", file: "specs/features/metrics.feature" }
+              - { type: unit, tag: "test_metrics_counter_increments", module: "metrics::tests", file: "crates/app-http/src/metrics.rs" }
+              - { type: unit, tag: "test_metrics_handler_returns_text", module: "metrics::tests", file: "crates/app-http/src/metrics.rs" }
             adr: ADR-0005  # Selftest as single gate
 
   - id: US-TPL-PLT-001
@@ -142,6 +156,9 @@ stories:
             must_have_ac: true
             tests:
               - { type: integration, tag: "@AC-PLT-018", file: "specs/features/xtask_devex.feature" }
+              - { type: unit, tag: "test_dev_up_command_exists", module: "commands::dev_up::tests", file: "crates/xtask/src/commands/dev_up.rs" }
+              - { type: unit, tag: "test_dev_up_required_steps", module: "commands::dev_up::tests", file: "crates/xtask/src/commands/dev_up.rs" }
+              - { type: unit, tag: "test_dev_up_provides_next_steps", module: "commands::dev_up::tests", file: "crates/xtask/src/commands/dev_up.rs" }
 
           - id: AC-PLT-021
             text: >
@@ -153,6 +170,9 @@ stories:
             must_have_ac: true
             tests:
               - { type: integration, tag: "@AC-PLT-021", file: "specs/features/xtask_devex.feature" }
+              - { type: unit, tag: "test_validate_service_id_valid", module: "commands::service_init::tests", file: "crates/xtask/src/commands/service_init.rs" }
+              - { type: unit, tag: "test_validate_service_id_invalid", module: "commands::service_init::tests", file: "crates/xtask/src/commands/service_init.rs" }
+              - { type: unit, tag: "test_validate_service_id_edge_cases", module: "commands::service_init::tests", file: "crates/xtask/src/commands/service_init.rs" }
 
       - id: REQ-PLT-ENV-DIAGNOSTICS
         title: "Environment diagnostics classify issues correctly"
@@ -173,6 +193,8 @@ stories:
             must_have_ac: true
             tests:
               - { type: bdd, tag: "@AC-PLT-ENV-ABI-CHECK", file: "specs/features/xtask_devex.feature" }
+              - { type: unit, tag: "test_extract_version_number", module: "commands::doctor::tests", file: "crates/xtask/src/commands/doctor.rs" }
+              - { type: unit, tag: "test_extract_version_number_handles_malformed", module: "commands::doctor::tests", file: "crates/xtask/src/commands/doctor.rs" }
           - id: AC-PLT-ENV-SCCACHE-WARN
             text: >
               When sccache/libz.so.1 issues are detected, doctor classifies them
@@ -263,6 +285,7 @@ stories:
             must_have_ac: true
             tests:
               - { type: integration, tag: "@AC-PLT-007", file: "specs/features/xtask_devex.feature" }
+              - { type: unit, tag: "test_audit_recovery_has_four_steps", module: "commands::audit::tests", file: "crates/xtask/src/commands/audit.rs" }
 
           - id: AC-PLT-008
             text: "`cargo xtask sbom-local` generates SPDX JSON to target/sbom.spdx.json"
@@ -293,6 +316,7 @@ stories:
             must_have_ac: true
             tests:
               - { type: integration, tag: "@AC-PLT-009", file: "specs/features/xtask_devex.feature" }
+              - { type: unit, tag: "test_docs_check_validates_eight_consumers", module: "commands::docs_check::tests", file: "crates/xtask/src/commands/docs_check.rs" }
 
           - id: AC-PLT-010
             text: >
@@ -420,6 +444,7 @@ stories:
             must_have_ac: true
             tests:
               - { type: bdd, tag: "@AC-TPL-VERSION-MANIFEST", file: "specs/features/xtask_devex.feature" }
+              - { type: unit, tag: "test_manifest_load_from_repo", module: "commands::versioning::tests", file: "crates/xtask/src/commands/versioning.rs" }
 
           - id: AC-TPL-VERSION-DRYRUN
             text: "`cargo xtask release-prepare X.Y.Z --dry-run` shows all changes before applying them, listing each file and the old→new version without modifying files"
@@ -427,6 +452,8 @@ stories:
             must_have_ac: true
             tests:
               - { type: bdd, tag: "@AC-TPL-VERSION-DRYRUN", file: "specs/features/xtask_devex.feature" }
+              - { type: unit, tag: "test_plan_changes_with_temp_files", module: "commands::versioning::tests", file: "crates/xtask/src/commands/versioning.rs" }
+              - { type: unit, tag: "test_apply_changes_dry_run", module: "commands::versioning::tests", file: "crates/xtask/src/commands/versioning.rs" }
 
           - id: AC-TPL-VERSION-ATOMIC
             text: "Version updates are atomic with rollback on failure, ensuring no partial state if any file update fails"
@@ -434,6 +461,8 @@ stories:
             must_have_ac: true
             tests:
               - { type: bdd, tag: "@AC-TPL-VERSION-ATOMIC", file: "specs/features/xtask_devex.feature" }
+              - { type: unit, tag: "test_apply_changes_actual", module: "commands::versioning::tests", file: "crates/xtask/src/commands/versioning.rs" }
+              - { type: unit, tag: "test_apply_changes_atomicity_on_mismatch", module: "commands::versioning::tests", file: "crates/xtask/src/commands/versioning.rs" }
 
       - id: REQ-TPL-EXAMPLE-FORK
         title: "Template fork examples"
@@ -520,6 +549,7 @@ stories:
             adr: ADR-0017
             tests:
               - { type: integration, tag: "@AC-PLT-020", file: "specs/features/xtask_devex.feature" }
+              - { type: unit, tag: "test_check_options_low_resource_mode", module: "commands::check::tests", file: "crates/xtask/src/commands/check.rs" }
 
           - id: AC-TPL-CLI-JSON-OUTPUT
             text: >
@@ -532,6 +562,8 @@ stories:
             must_have_ac: true
             tests:
               - { type: integration, tag: "@AC-TPL-CLI-JSON-OUTPUT", file: "specs/features/xtask_devex.feature" }
+              - { type: unit, tag: "test_cli_json_output_contract", module: "commands::version::tests", file: "crates/xtask/src/commands/version.rs" }
+              - { type: unit, tag: "version_json_shape_is_stable", module: "commands::version::tests", file: "crates/xtask/src/commands/version.rs" }
 
           - id: AC-TPL-XTASK-SPEC-ROOT
             text: >
@@ -567,6 +599,9 @@ stories:
             must_have_ac: true
             tests:
               - { type: bdd, tag: "@AC-TPL-XTASK-NONINTERACTIVE", file: "specs/features/xtask_devex.feature" }
+              - { type: unit, tag: "test_ci_detection_via_ci_var", module: "env::tests", file: "crates/xtask/src/env.rs" }
+              - { type: unit, tag: "test_noninteractive_mode_contract", module: "env::tests", file: "crates/xtask/src/env.rs" }
+              - { type: unit, tag: "test_environment_variables_documented", module: "env::tests", file: "crates/xtask/src/env.rs" }
 
       - id: REQ-TPL-BDD-HARNESS
         title: "Deterministic BDD harness semantics"
@@ -607,6 +642,9 @@ stories:
             must_have_ac: true
             tests:
               - { type: integration, tag: "@AC-PLT-017", file: "specs/features/xtask_devex.feature" }
+              - { type: unit, tag: "test_status_command_exists", module: "commands::status::tests", file: "crates/xtask/src/commands/status.rs" }
+              - { type: unit, tag: "test_status_metrics_categories", module: "commands::status::tests", file: "crates/xtask/src/commands/status.rs" }
+              - { type: unit, tag: "test_count_governance_returns_counts", module: "commands::status::tests", file: "crates/xtask/src/commands/status.rs" }
 
       - id: REQ-TPL-PLATFORM-INTROSPECTION
         title: "Platform Introspection API"
@@ -624,12 +662,15 @@ stories:
             must_have_ac: true
             tests:
               - { type: bdd, tag: "@AC-TPL-PLATFORM-GRAPH", file: "specs/features/platform_introspection.feature" }
+              - { type: unit, tag: "test_platform_endpoints_extraction", file: "crates/xtask/src/contracts.rs" }
           - id: AC-TPL-PLATFORM-DEVEX
             text: "GET /platform/devex/flows returns the canonical flows definition."
             tags: [kernel]
             must_have_ac: true
             tests:
               - { type: bdd, tag: "@AC-TPL-PLATFORM-DEVEX", file: "specs/features/platform_introspection.feature" }
+              - { type: unit, tag: "test_devex_flows_spec_file_exists", file: "crates/xtask/src/commands/help_flows.rs" }
+              - { type: unit, tag: "test_devex_spec_contains_required_categories", file: "crates/xtask/src/commands/help_flows.rs" }
           - id: AC-TPL-PLATFORM-DOCS
             text: "GET /platform/docs/index returns the documentation index."
             tags: [kernel]
@@ -644,7 +685,7 @@ stories:
             tags: [kernel]
             must_have_ac: true
             tests:
-              - { type: bdd, tag: "@AC-TPL-PLATFORM-STATUS" }
+              - { type: bdd, tag: "@AC-TPL-POLICY-STATUS-OVERVIEW", file: "specs/features/platform_rounding.feature" }
 
       - id: REQ-TPL-PLATFORM-SCHEMA
         title: "Machine-readable platform contract"
@@ -666,6 +707,8 @@ stories:
             must_have_ac: true
             tests:
               - { type: bdd, tag: "@AC-TPL-PLATFORM-SCHEMA", file: "specs/features/platform_schema.feature" }
+              - { type: unit, tag: "test_ac_report_schema_exists", file: "crates/xtask/src/validation.rs" }
+              - { type: unit, tag: "test_ac_report_schema_is_valid", file: "crates/xtask/src/validation.rs" }
 
       - id: REQ-TPL-PLATFORM-CONTRACT
         title: "Platform APIs expose a stable, documented governance contract"
@@ -912,6 +955,7 @@ stories:
             tests:
               - { type: bdd, tag: "@AC-TPL-FORKS-STATUS-SUMMARY",
                   file: "specs/features/platform_schema.feature" }
+              - { type: integration, tag: "test_forks_response_is_valid_json", file: "crates/app-http/tests/forks_api.rs" }
 
       - id: REQ-TPL-FLOW-IDEMPOTENCY
         title: "Platform flows are safe to rerun"
@@ -1015,6 +1059,7 @@ stories:
             must_have_ac: true
             tests:
               - { type: bdd, tag: "@AC-TPL-PLATFORM-UI-DASHBOARD", file: "specs/features/platform_ui.feature" }
+              - { type: integration, tag: "test_dashboard_has_contract_regions", file: "crates/app-http/tests/ui_contract_dom.rs" }
 
           - id: AC-TPL-PLATFORM-UI-GRAPH
             text: >
@@ -1024,6 +1069,7 @@ stories:
             must_have_ac: true
             tests:
               - { type: bdd, tag: "@AC-TPL-PLATFORM-UI-GRAPH", file: "specs/features/platform_ui.feature" }
+              - { type: integration, tag: "test_graph_has_contract_regions", file: "crates/app-http/tests/ui_contract_dom.rs" }
 
           - id: AC-TPL-PLATFORM-UI-FLOWS
             text: >
@@ -1033,6 +1079,7 @@ stories:
             must_have_ac: true
             tests:
               - { type: bdd, tag: "@AC-TPL-PLATFORM-UI-FLOWS", file: "specs/features/platform_ui.feature" }
+              - { type: integration, tag: "test_flows_has_contract_regions", file: "crates/app-http/tests/ui_contract_dom.rs" }
 
           - id: AC-TPL-PLATFORM-UI-CONTRACT
             text: >
@@ -1241,6 +1288,7 @@ stories:
             tests:
               - { type: manual, tag: "agent_skill_discovery" }
               - { type: bdd, tag: "@AC-TPL-AGENT-SKILLS", file: "specs/features/xtask_devex.feature" }
+              - { type: unit, tag: "test_skill_name_validation_kebab_case", file: "crates/xtask/src/commands/skills.rs" }
 
           - id: AC-TPL-AGENT-HINTS
             text: >
@@ -1301,6 +1349,7 @@ stories:
             tests:
               - { type: docs, tag: "skills_guide_exists" }
               - { type: bdd, tag: "@AC-TPL-SKILLS-GUIDE-001", file: "specs/features/xtask_devex.feature" }
+              - { type: unit, tag: "test_skills_guide_doc_exists", module: "commands::skills::tests", file: "crates/xtask/src/commands/skills.rs" }
 
           - id: AC-TPL-SKILLS-ALIGN-001
             text: >
@@ -1312,6 +1361,7 @@ stories:
             tests:
               - { type: manual, tag: "skills_alignment_review" }
               - { type: bdd, tag: "@AC-TPL-SKILLS-ALIGN-001", file: "specs/features/xtask_devex.feature" }
+              - { type: unit, tag: "test_skills_align_with_workflows", module: "commands::skills::tests", file: "crates/xtask/src/commands/skills.rs" }
 
       - id: REQ-TPL-SKILLS-TOOLING
         title: "Rust-native Skills formatting and linting"
@@ -1332,6 +1382,8 @@ stories:
             must_have_ac: true
             tests:
               - { type: integration, tag: "@AC-TPL-SKILLS-FMT", file: "specs/features/xtask_devex.feature" }
+              - { type: unit, tag: "test_skill_name_validation_kebab_case", file: "crates/xtask/src/commands/skills.rs" }
+              - { type: unit, tag: "test_skill_name_validation_max_length", file: "crates/xtask/src/commands/skills.rs" }
 
           - id: AC-TPL-SKILLS-LINT
             text: >
@@ -1341,6 +1393,8 @@ stories:
             must_have_ac: true
             tests:
               - { type: integration, tag: "@AC-TPL-SKILLS-LINT", file: "specs/features/xtask_devex.feature" }
+              - { type: unit, tag: "test_skill_name_validation_kebab_case", file: "crates/xtask/src/commands/skills.rs" }
+              - { type: unit, tag: "test_validate_no_secrets_detects_credentials_file", file: "crates/xtask/src/commands/skills.rs" }
 
       - id: REQ-TPL-SKILLS-GOVERNANCE
         title: "Agent Skills are governed artifacts with REQ/AC traceability"
@@ -1462,6 +1516,8 @@ stories:
             tests:
               - { type: docs, tag: "agents_governance_doc_exists" }
               - { type: bdd, tag: "@AC-TPL-AGENTS-GOVERNANCE-001", file: "specs/features/xtask_devex.feature" }
+              - { type: unit, tag: "test_agent_name_validation_kebab_case", file: "crates/xtask/src/commands/agents.rs" }
+              - { type: unit, tag: "test_agent_description_nonempty", file: "crates/xtask/src/commands/agents.rs" }
 
           - id: AC-TPL-AGENTS-GOVERNANCE-002
             text: >
@@ -1473,6 +1529,8 @@ stories:
             tests:
               - { type: manual, tag: "agents_req_ac_alignment" }
               - { type: bdd, tag: "@AC-TPL-AGENTS-GOVERNANCE-002", file: "specs/features/xtask_devex.feature" }
+              - { type: unit, tag: "test_agent_skills_exist", file: "crates/xtask/src/commands/agents.rs" }
+              - { type: unit, tag: "test_agent_permission_mode_valid", file: "crates/xtask/src/commands/agents.rs" }
 
           - id: AC-TPL-AGENTS-TEMPLATE-DOC
             text: >
@@ -1485,6 +1543,8 @@ stories:
             tests:
               - { type: docs, tag: "agents_template_doc_exists" }
               - { type: bdd, tag: "@AC-TPL-AGENTS-TEMPLATE-DOC", file: "specs/features/xtask_devex.feature" }
+              - { type: unit, tag: "test_agent_name_validation_max_length", file: "crates/xtask/src/commands/agents.rs" }
+              - { type: unit, tag: "test_agent_model_aliases", file: "crates/xtask/src/commands/agents.rs" }
 
           - id: AC-TPL-AGENTS-NAME-FORMAT
             text: >
@@ -1574,6 +1634,7 @@ stories:
             note: "Bundle layout is a kernel contract - agents and CI depend on predictable structure."
             tests:
               - { type: bdd, tag: "@AC-TPL-BUNDLE-LAYOUT", file: "specs/features/bundles.feature" }
+              - { type: unit, tag: "bundle_scope_audit", file: "crates/xtask/src/commands/bundle.rs" }
 
           - id: AC-TPL-BUNDLE-MANIFEST
             text: >
@@ -1585,6 +1646,7 @@ stories:
             must_have_ac: true
             tests:
               - { type: bdd, tag: "@AC-TPL-BUNDLE-MANIFEST", file: "specs/features/bundles.feature" }
+              - { type: unit, tag: "bundle_scope_audit", file: "crates/xtask/src/commands/bundle.rs" }
 
           - id: AC-TPL-BUNDLE-MANIFEST-LINKED
             text: >
@@ -1713,6 +1775,7 @@ stories:
             must_have_ac: true
             tests:
               - { type: integration, tag: "@AC-TPL-GOV-WRITE-TASK-STATUS-200" }
+              - { type: integration, tag: "test_set_task_status_persists", file: "crates/adapters-spec-fs/tests/integration_test.rs" }
 
       - id: REQ-TPL-TASK-LIFECYCLE
         title: "Tasks must follow allowed status transitions"
@@ -1838,6 +1901,9 @@ stories:
             must_have_ac: true
             tests:
               - { type: bdd, tag: "@AC-TPL-PLATFORM-GOVERNANCE-APIS", file: "specs/features/platform_introspection.feature" }
+              - { type: integration, tag: "test_get_all_friction_entries", file: "crates/app-http/tests/friction_api.rs" }
+              - { type: integration, tag: "test_get_all_questions", file: "crates/app-http/tests/questions_api.rs" }
+              - { type: integration, tag: "test_get_all_forks", file: "crates/app-http/tests/forks_api.rs" }
 
       - id: REQ-TPL-IDP-SNAPSHOT
         title: "IDP Snapshot Contract"
@@ -1857,6 +1923,10 @@ stories:
             must_have_ac: true
             tests:
               - { type: bdd, tag: "@AC-TPL-IDP-SNAPSHOT", file: "specs/features/xtask_devex.feature" }
+              - { type: unit, tag: "test_idp_snapshot_returns_200", file: "crates/app-http/tests/idp_api.rs" }
+              - { type: unit, tag: "test_idp_snapshot_has_required_fields", file: "crates/app-http/tests/idp_api.rs" }
+              - { type: unit, tag: "test_idp_snapshot_documentation_structure", file: "crates/app-http/tests/idp_api.rs" }
+              - { type: unit, tag: "test_idp_snapshot_template_version", file: "crates/app-http/tests/idp_api.rs" }
           - id: AC-TPL-IDP-SNAPSHOT-VALID-JSON
             text: >
               The idp-snapshot output is valid JSON that can be parsed without errors
@@ -1865,6 +1935,8 @@ stories:
             must_have_ac: true
             tests:
               - { type: bdd, tag: "@AC-TPL-IDP-SNAPSHOT-VALID-JSON", file: "specs/features/xtask_devex.feature" }
+              - { type: unit, tag: "test_idp_snapshot_has_required_fields", file: "crates/app-http/tests/idp_api.rs" }
+              - { type: unit, tag: "test_idp_snapshot_timestamp_format", file: "crates/app-http/tests/idp_api.rs" }
 
           - id: AC-TPL-IDP-CELL-SMOKE
             text: >
@@ -1875,6 +1947,8 @@ stories:
             must_have_ac: true
             tests:
               - { type: bdd, tag: "@AC-TPL-IDP-CELL-SMOKE", file: "specs/features/xtask_devex.feature" }
+              - { type: unit, tag: "test_idp_snapshot_governance_health_structure", file: "crates/app-http/tests/idp_api.rs" }
+              - { type: unit, tag: "test_idp_snapshot_task_hints_structure", file: "crates/app-http/tests/idp_api.rs" }
 
   # ============================================================================
   # MYSERV Domain Stories - Example service-specific features

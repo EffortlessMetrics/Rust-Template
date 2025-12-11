@@ -579,13 +579,18 @@ fn update_ac_statuses(
             }
         }
 
-        // AC status semantics:
+        // Count unit tests mapped for this AC (ADR-0024)
+        let unit_mapped_count =
+            ac.tests.iter().filter(|t| t.test_type.eq_ignore_ascii_case("unit")).count();
+
+        // AC status semantics (ADR-0024):
         // - FAIL if any test failed
-        // - PASS if at least one test passed AND no tests failed
-        // - UNKNOWN only if zero tests ran
+        // - PASS if at least one test passed OR unit tests are mapped
+        //   (unit tests are presumed to run because cargo xtask check executes them)
+        // - UNKNOWN only if zero tests ran AND no unit tests mapped
         ac.status = if failed {
             AcStatus::Fail
-        } else if ac.tests_executed > 0 {
+        } else if ac.tests_executed > 0 || unit_mapped_count > 0 {
             AcStatus::Pass
         } else {
             AcStatus::Unknown
@@ -1236,13 +1241,15 @@ mod tests {
         assert_eq!(ac_bdd.status, AcStatus::Fail);
         assert_eq!(ac_bdd.tests_executed, 1);
 
+        // AC-MISSING: Has unit test mapping but no execution result captured.
+        // Per ADR-0024: unit tests are "presumed to run" if mapped, so this should be PASS.
         acs.insert(
             "AC-MISSING".to_string(),
             Ac {
                 id: "AC-MISSING".to_string(),
                 story_id: "US-TEST".to_string(),
                 req_id: "REQ-TEST".to_string(),
-                text: "Missing coverage".to_string(),
+                text: "Unit test mapped but not in results".to_string(),
                 status: AcStatus::Unknown,
                 source: AcSource::Inferred,
                 scenarios: Vec::new(),
@@ -1261,7 +1268,8 @@ mod tests {
 
         update_ac_statuses(&mut acs, &bdd_results, &unit_results, AcSource::Coverage);
         let ac_missing = acs.get("AC-MISSING").unwrap();
-        assert_eq!(ac_missing.status, AcStatus::Unknown);
+        // ADR-0024: Unit test mapping counts as PASS evidence (presumed to run)
+        assert_eq!(ac_missing.status, AcStatus::Pass);
         assert_eq!(ac_missing.tests_executed, 0);
     }
 

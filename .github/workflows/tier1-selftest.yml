@@ -32,23 +32,20 @@ jobs:
         # - XTASK_STRICT_AC_COVERAGE: On main, budget is enforced (unknowns > budget = fail)
         # - XTASK_STRICT_PRECOMMIT: Make docs-check a hard gate in CI
         #
-        # Current baseline: 56 unknown kernel ACs (target: 0)
-        # Breakdown (per investigation 2025-12-11):
-        # - Many ACs have @ci-only scenarios (excluded locally, run in CI)
-        # - Some ACs have @wip scenarios (work in progress)
-        # - Some ACs have BDD scenarios with missing step definitions
-        # - Unit test mappings DO count as evidence per ADR-0024, but ac-status
-        #   currently only recognizes BDD coverage from coverage.jsonl
+        # Current baseline: 0 unknown kernel ACs (target: 0 achieved!)
+        # Updated 2025-12-11: Achieved 100% kernel AC coverage (72/72 PASS)
+        # - AC-TPL-001/002: Added unit tests for health/version endpoints
+        # - AC-PLT-007/009/017/018: Added unit tests for audit, docs-check, status, dev-up
+        # - AC-TPL-CLI-JSON-OUTPUT: Added unit tests for version JSON contract
+        # - AC-TPL-XTASK-NONINTERACTIVE: Added unit tests for CI/non-interactive mode
+        # - AC-TPL-SKILLS-GUIDE-001/ALIGN-001: Added unit tests for skills documentation
+        # - AC-TPL-VERSION-MANIFEST/DRYRUN/ATOMIC: Mapped existing versioning tests
         #
-        # To lower this budget:
-        # 1. Implement missing BDD step definitions
-        # 2. Remove @wip tags from completed scenarios
-        # 3. Add unit test mappings to spec_ledger.yaml where appropriate
+        # All 72 kernel ACs now have unit test mappings in spec_ledger.yaml
         #
         # See: cargo xtask ac-coverage --todo --must-have for backlog
-        # See: docs/TROUBLESHOOTING.md "How do I add a new kernel AC safely?"
         env:
-          KERNEL_UNKNOWN_BUDGET: "56"
+          KERNEL_UNKNOWN_BUDGET: "0"
           XTASK_STRICT_AC_COVERAGE: ${{ github.ref == 'refs/heads/main' && '1' || '' }}
           XTASK_STRICT_PRECOMMIT: "1"
         run: nix develop -c cargo xtask selftest

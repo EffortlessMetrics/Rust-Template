@@ -450,4 +450,49 @@ mod tests {
         let valid_name = "a".repeat(64);
         assert!(name_re.is_match(&valid_name));
     }
+
+    /// @AC-TPL-SKILLS-GUIDE-001: AGENT_SKILLS.md documentation exists
+    #[test]
+    fn test_skills_guide_doc_exists() {
+        let manifest_dir = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        let root = manifest_dir.parent().unwrap().parent().unwrap();
+        let skills_guide = root.join("docs/AGENT_SKILLS.md");
+
+        // The skills guide document should exist in the docs directory
+        // This validates AC-TPL-SKILLS-GUIDE-001
+        assert!(
+            skills_guide.exists(),
+            "docs/AGENT_SKILLS.md should exist to document the recommended Skill set"
+        );
+    }
+
+    /// @AC-TPL-SKILLS-ALIGN-001: Skills directories match expected governed workflows
+    #[test]
+    fn test_skills_align_with_workflows() {
+        // These are the 5 governed skills that MUST exist per CLAUDE.md
+        let expected_skills = [
+            "bootstrap-dev-env",
+            "governed-feature-dev",
+            "governed-maintenance",
+            "governed-release",
+            "governed-governance-debug",
+        ];
+
+        let manifest_dir = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        let root = manifest_dir.parent().unwrap().parent().unwrap();
+        let skills_dir = root.join(".claude/skills");
+
+        for skill in &expected_skills {
+            let skill_path = skills_dir.join(skill);
+            assert!(
+                skill_path.exists(),
+                "Skill '{}' should exist at {}",
+                skill,
+                skill_path.display()
+            );
+
+            let skill_file = skill_path.join("SKILL.md");
+            assert!(skill_file.exists(), "Skill '{}' should have a SKILL.md file", skill);
+        }
+    }
 }

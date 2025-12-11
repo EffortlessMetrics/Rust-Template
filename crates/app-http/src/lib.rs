@@ -324,3 +324,56 @@ fn load_validated_config(workspace_root: &Path) -> Option<spec_runtime::Validate
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use adapters_spec_fs::FsGovernanceRepository;
+    use axum::{
+        body::Body,
+        http::{Request, StatusCode},
+    };
+    use tower::ServiceExt;
+
+    fn test_workspace_root() -> PathBuf {
+        PathBuf::from(env!("CARGO_MANIFEST_DIR")).parent().unwrap().parent().unwrap().to_path_buf()
+    }
+
+    /// @AC-TPL-001: Health endpoint returns 200 with status 'ok'
+    #[tokio::test]
+    async fn test_health_returns_ok() {
+        let workspace_root = test_workspace_root();
+        let repo = Arc::new(FsGovernanceRepository::new(workspace_root.clone()));
+        let app = app_with_workspace_root(repo, workspace_root);
+
+        let response = app
+            .oneshot(Request::builder().uri("/health").body(Body::empty()).unwrap())
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::OK);
+        let body = axum::body::to_bytes(response.into_body(), usize::MAX).await.unwrap();
+        let json: serde_json::Value = serde_json::from_slice(&body).unwrap();
+        assert_eq!(json["status"].as_str().unwrap(), "ok");
+        assert!(json.get("service").is_some(), "Response should have 'service' field");
+    }
+
+    /// @AC-TPL-002: Version endpoint returns build information
+    #[tokio::test]
+    async fn test_version_returns_build_info() {
+        let workspace_root = test_workspace_root();
+        let repo = Arc::new(FsGovernanceRepository::new(workspace_root.clone()));
+        let app = app_with_workspace_root(repo, workspace_root);
+
+        let response = app
+            .oneshot(Request::builder().uri("/version").body(Body::empty()).unwrap())
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::OK);
+        let body = axum::body::to_bytes(response.into_body(), usize::MAX).await.unwrap();
+        let json: serde_json::Value = serde_json::from_slice(&body).unwrap();
+        assert!(json.get("version").is_some(), "Response should have 'version' field");
+        assert!(json.get("gitSha").is_some(), "Response should have 'gitSha' field");
+    }
+}
