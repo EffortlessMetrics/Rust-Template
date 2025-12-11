@@ -181,3 +181,40 @@ XTASK_STRICT_AC_COVERAGE: "1"
 2. **Per-AC evidence audit**: Could store detailed evidence (which tests ran, when) for compliance reporting.
 
 3. **Coverage quality metrics**: Could weight different test types (BDD > unit for behavioral coverage).
+
+---
+
+## Milestone: Zero Kernel Unknowns (2025-12-11)
+
+On 2025-12-11, this ADR's goals were fully achieved:
+
+- **Kernel Unknowns: 13 → 0** — All 72 kernel ACs now have test evidence (unit or BDD)
+- **Budget set to 0** — `KERNEL_UNKNOWN_BUDGET=0` in tier1-selftest.yml
+- **Strict mode enabled on main** — `XTASK_STRICT_AC_COVERAGE=1` enforced on main branch
+- **Ratchet locked** — Budget can only stay at 0 or be increased with ADR justification
+
+### Tests Added to Reach Zero
+
+The following unit tests were mapped to eliminate the final 13 unknowns:
+
+| AC ID | Test(s) Mapped |
+|-------|---------------|
+| AC-TPL-001 | `test_health_returns_ok` |
+| AC-TPL-002 | `test_version_returns_build_info` |
+| AC-PLT-007 | `test_audit_recovery_has_four_steps` |
+| AC-PLT-009 | `test_docs_check_validates_eight_consumers` |
+| AC-PLT-017 | `test_status_command_exists`, `test_status_metrics_categories`, `test_count_governance_returns_counts` |
+| AC-PLT-018 | `test_dev_up_command_exists`, `test_dev_up_required_steps`, `test_dev_up_provides_next_steps` |
+| AC-TPL-CLI-JSON-OUTPUT | `test_cli_json_output_contract`, `version_json_shape_is_stable` |
+| AC-TPL-XTASK-NONINTERACTIVE | `test_ci_detection_via_ci_var`, `test_noninteractive_mode_contract`, `test_environment_variables_documented` |
+| AC-TPL-SKILLS-GUIDE-001 | `test_skills_guide_doc_exists` |
+| AC-TPL-SKILLS-ALIGN-001 | `test_skills_align_with_workflows` |
+| AC-TPL-VERSION-MANIFEST | `test_manifest_load_from_repo` |
+| AC-TPL-VERSION-DRYRUN | `test_plan_changes_with_temp_files`, `test_apply_changes_dry_run` |
+| AC-TPL-VERSION-ATOMIC | `test_apply_changes_actual`, `test_apply_changes_atomicity_on_mismatch` |
+
+### Guardrails Established
+
+Going forward, any new kernel AC (`must_have_ac: true`) **must** land with at least one mapped test, or:
+1. Go through the AC demotion governance path (set `must_have_ac: false` with ADR justification)
+2. Temporarily increase `KERNEL_UNKNOWN_BUDGET` with review approval (not recommended)

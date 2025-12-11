@@ -3,6 +3,14 @@ use colored::Colorize;
 use std::path::Path;
 use std::process::{Command, Stdio};
 
+/// Steps that dev-up runs during environment setup.
+/// @AC-PLT-018: dev-up runs required steps (install-hooks, docker check, governance check)
+pub const DEV_UP_STEPS: [&str; 3] =
+    ["Pre-commit hooks check", "Docker status check", "Governance check"];
+
+/// Next steps shown after successful dev-up completion.
+pub const DEV_UP_NEXT_STEPS: [&str; 2] = ["cargo run -p app-http", "http://localhost:8080/ui"];
+
 pub fn run() -> Result<()> {
     println!("{}", "🦀 Rust-as-Spec dev-up starting...".bold());
 
@@ -82,16 +90,11 @@ mod tests {
     /// @AC-PLT-018: dev-up runs required steps (install-hooks, docker check, governance check)
     #[test]
     fn test_dev_up_required_steps() {
-        // Document the required steps that dev-up must run:
-        // 1. Install pre-commit hooks (if missing)
-        // 2. Check Docker availability
-        // 3. Run governance check (cargo xtask check)
-        let required_steps = ["Pre-commit hooks check", "Docker status check", "Governance check"];
-
-        assert!(required_steps.len() >= 3, "dev-up must run at least 3 steps");
+        // Uses the shared DEV_UP_STEPS constant that run() also uses
+        assert!(DEV_UP_STEPS.len() >= 3, "dev-up must run at least 3 steps");
 
         // Each step should be meaningful
-        for step in &required_steps {
+        for step in &DEV_UP_STEPS {
             assert!(!step.is_empty(), "Step description should not be empty");
         }
     }
@@ -99,9 +102,7 @@ mod tests {
     /// @AC-PLT-018: dev-up provides next steps guidance on completion
     #[test]
     fn test_dev_up_provides_next_steps() {
-        // Verify that dev-up completion message includes next steps guidance
-        let next_steps = ["cargo run -p app-http", "http://localhost:8080/ui"];
-
-        assert!(next_steps.len() >= 2, "dev-up should suggest at least 2 next steps");
+        // Uses the shared DEV_UP_NEXT_STEPS constant that run() also uses
+        assert!(DEV_UP_NEXT_STEPS.len() >= 2, "dev-up should suggest at least 2 next steps");
     }
 }

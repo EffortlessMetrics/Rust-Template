@@ -29,6 +29,7 @@ Day-0 commands work as documented. This is a stable, forkable baseline.
 
 **v3.3.8 highlights:**
 
+- **Zero kernel unknowns** – All 72 kernel ACs now have test evidence (unit or BDD mappings). `KERNEL_UNKNOWN_BUDGET=0` is enforced in CI. See [ADR-0024](./adr/0024-ac-evidence-and-kernel-gate.md) for the evidence model.
 - **Manifest-driven versioning** – `specs/version_manifest.yaml` + versioning engine ensures all version-bearing files are updated atomically via `release-prepare`
 - **Versioning ACs enforced** – `AC-TPL-VERSION-MANIFEST`, `AC-TPL-VERSION-DRYRUN`, `AC-TPL-VERSION-ATOMIC` are now kernel contracts
 - **IDP-ready platform contract** – `/platform/status` and `/platform/docs/index` are stable, documented kernel contracts

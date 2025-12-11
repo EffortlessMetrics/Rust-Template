@@ -2,6 +2,15 @@ use crate::run_cmd;
 use anyhow::Result;
 use colored::Colorize;
 
+/// Recovery steps displayed when audit finds issues.
+/// @AC-PLT-007: Audit provides 4-step recovery guidance on failure
+pub const RECOVERY_STEPS: [(&str, &str); 4] = [
+    ("Update dependency", "cargo update <crate>"),
+    ("Pin safe version", "in Cargo.toml"),
+    ("Document mitigation", "see ADR-0007"),
+    ("Review", "deny.toml policy configuration"),
+];
+
 pub fn run() -> Result<()> {
     println!("{}", "Running security & dependency audit".blue().bold());
     println!();
@@ -78,10 +87,9 @@ pub fn run() -> Result<()> {
             println!("{} {} issue(s) found", "✗".red().bold(), issues);
             println!();
             println!("{}", "Recovery options:".bold());
-            println!("  • Update dependency: {}", "cargo update <crate>".cyan());
-            println!("  • Pin safe version in Cargo.toml");
-            println!("  • Document mitigation: {}", "see ADR-0007".dimmed());
-            println!("  • Review: {}", "deny.toml policy configuration".dimmed());
+            for (step, detail) in &RECOVERY_STEPS {
+                println!("  • {}: {}", step, detail.cyan());
+            }
         }
         if warnings > 0 {
             println!("{} {} warning(s)", "⚠".yellow(), warnings);
@@ -140,19 +148,13 @@ mod tests {
     #[test]
     fn test_audit_recovery_has_four_steps() {
         // Verify that the recovery guidance includes exactly 4 distinct steps
-        // These steps match the recovery options printed in the run() function:
-        // 1. Update dependency
-        // 2. Pin safe version in Cargo.toml
-        // 3. Document mitigation (see ADR-0007)
-        // 4. Review deny.toml policy configuration
-        let recovery_steps =
-            ["Update dependency", "Pin safe version", "Document mitigation", "Review"];
-
-        assert_eq!(recovery_steps.len(), 4, "Recovery guidance must have exactly 4 steps");
+        // Uses the shared RECOVERY_STEPS constant that run() also uses
+        assert_eq!(RECOVERY_STEPS.len(), 4, "Recovery guidance must have exactly 4 steps");
 
         // Each step should be non-empty and actionable
-        for step in recovery_steps {
-            assert!(!step.is_empty(), "Recovery step should not be empty");
+        for (step, detail) in &RECOVERY_STEPS {
+            assert!(!step.is_empty(), "Recovery step name should not be empty");
+            assert!(!detail.is_empty(), "Recovery step detail should not be empty");
             assert!(step.len() > 3, "Recovery step should be meaningful, not just a placeholder");
         }
     }

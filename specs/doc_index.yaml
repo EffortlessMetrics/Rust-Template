@@ -368,6 +368,20 @@ docs:
     acs: [AC-TPL-GOV-WRITE-TASK-STATUS-200]
     adrs: [ADR-0001]
 
+  # ADR-0024: AC Evidence Model and Kernel Gate
+  - id: ADR-0024
+    file: docs/adr/0024-ac-evidence-and-kernel-gate.md
+    title: "AC Evidence Model and Kernel Coverage Gate"
+    doc_type: adr
+    stories: [US-TPL-PLT-001]
+    requirements:
+      - REQ-PLT-AC-GOVERNANCE
+      - REQ-PLT-DEVEX-CONTRACT
+    acs:
+      - AC-PLT-AC-GOVERNANCE
+      - AC-TPL-SELFTEST-GATE
+    adrs: [ADR-0003, ADR-0005, ADR-0023]
+
   # Template Contracts (Kernel Requirements and Extension Points)
   - id: EXPLANATION-TPL-CONTRACTS-001
     file: docs/explanation/TEMPLATE-CONTRACTS.md

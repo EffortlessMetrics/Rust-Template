@@ -311,6 +311,63 @@ git push origin main --tags                 # 9. Push
 
 ---
 
+## Kernel AC Guardrails
+
+> **Since v3.3.8:** The kernel has achieved **zero unknowns** (all 72 kernel ACs have test evidence).
+> `KERNEL_UNKNOWN_BUDGET=0` is enforced in CI. See [ADR-0024](../adr/0024-ac-evidence-and-kernel-gate.md).
+
+### Adding a New Kernel AC
+
+When adding a new AC with `must_have_ac: true`, you **must** include test mappings:
+
+```yaml
+# specs/spec_ledger.yaml
+acceptance_criteria:
+  - id: AC-NEW-001
+    description: "New kernel capability"
+    must_have_ac: true
+    tags: [kernel]
+    tests:  # <-- REQUIRED for kernel ACs
+      - type: unit
+        file: crates/xtask/src/commands/new.rs
+        function: test_new_capability
+      # Or BDD:
+      - type: bdd
+        file: specs/features/new.feature
+        scenario: "New capability scenario"
+```
+
+**If you cannot provide tests immediately:**
+
+1. **Option A (Recommended):** Use `must_have_ac: false` during development, promote to kernel AC once tests exist
+2. **Option B (Requires Review):** Temporarily increase `KERNEL_UNKNOWN_BUDGET` in CI with justification
+
+### Demoting a Kernel AC
+
+To demote an existing kernel AC (set `must_have_ac: false`):
+
+1. Draft an ADR explaining why the AC is being demoted
+2. Update `specs/spec_ledger.yaml` with `must_have_ac: false`
+3. Document the demotion in the release evidence
+4. This requires review approval as it changes the kernel contract
+
+### Verification
+
+Before committing kernel AC changes:
+
+```bash
+# Check kernel AC coverage
+cargo xtask ac-status --summary
+
+# Verify zero unknowns
+cargo xtask ac-ensure-kernel-mapped
+
+# Run full selftest (will fail if budget exceeded)
+KERNEL_UNKNOWN_BUDGET=0 cargo xtask selftest
+```
+
+---
+
 ## Related Documentation
 
 - **[maintain-kernel.md](./maintain-kernel.md)** – Day-to-day kernel maintenance
@@ -318,3 +375,4 @@ git push origin main --tags                 # 9. Push
 - **[KERNEL_SNAPSHOT.md](../KERNEL_SNAPSHOT.md)** – Current kernel baseline
 - **[RELEASE_PLAYBOOK.md](../RELEASE_PLAYBOOK.md)** – Full release process
 - **[ADR-0005](../adr/0005-xtask-selftest-single-gate.md)** – Selftest as single gate
+- **[ADR-0024](../adr/0024-ac-evidence-and-kernel-gate.md)** – AC evidence model and kernel gate
