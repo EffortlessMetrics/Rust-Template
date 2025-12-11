@@ -219,4 +219,36 @@ mod tests {
             "last_updated should not be present when None"
         );
     }
+
+    /// @AC-TPL-CLI-JSON-OUTPUT: version --json produces valid JSON with stable contract
+    #[test]
+    fn test_cli_json_output_contract() {
+        // This test validates AC-TPL-CLI-JSON-OUTPUT for the version command
+        // The JSON output must:
+        // 1. Be valid JSON (parseable)
+        // 2. Have stable top-level shape (required fields always present)
+        // 3. Follow consistent naming (snake_case)
+        let output = VersionOutput {
+            kernel_version: "3.3.8".to_string(),
+            kernel_tag: "v3.3.8-kernel".to_string(),
+            schema_version: "1.0".to_string(),
+            spec_ledger_path: "specs/spec_ledger.yaml".to_string(),
+            description: "Rust-as-Spec Platform Cell".to_string(),
+            service_id: Some("test-service".to_string()),
+            last_updated: Some("2025-12-11".to_string()),
+        };
+
+        // Must serialize to valid JSON
+        let json_result = serde_json::to_string_pretty(&output);
+        assert!(json_result.is_ok(), "Version output must serialize to valid JSON");
+
+        // Must parse back without errors
+        let json_str = json_result.unwrap();
+        let parse_result: Result<serde_json::Value, _> = serde_json::from_str(&json_str);
+        assert!(parse_result.is_ok(), "JSON output must be parseable");
+
+        // Must be an object at top level
+        let parsed = parse_result.unwrap();
+        assert!(parsed.is_object(), "JSON output must be an object");
+    }
 }

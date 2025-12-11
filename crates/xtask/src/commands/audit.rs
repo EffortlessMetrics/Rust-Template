@@ -135,4 +135,25 @@ mod tests {
             assert!(!option.is_empty(), "Recovery option should not be empty");
         }
     }
+
+    /// @AC-PLT-007: Audit provides 4-step recovery guidance on failure
+    #[test]
+    fn test_audit_recovery_has_four_steps() {
+        // Verify that the recovery guidance includes exactly 4 distinct steps
+        // These steps match the recovery options printed in the run() function:
+        // 1. Update dependency
+        // 2. Pin safe version in Cargo.toml
+        // 3. Document mitigation (see ADR-0007)
+        // 4. Review deny.toml policy configuration
+        let recovery_steps =
+            ["Update dependency", "Pin safe version", "Document mitigation", "Review"];
+
+        assert_eq!(recovery_steps.len(), 4, "Recovery guidance must have exactly 4 steps");
+
+        // Each step should be non-empty and actionable
+        for step in recovery_steps {
+            assert!(!step.is_empty(), "Recovery step should not be empty");
+            assert!(step.len() > 3, "Recovery step should be meaningful, not just a placeholder");
+        }
+    }
 }

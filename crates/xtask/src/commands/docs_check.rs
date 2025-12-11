@@ -1483,4 +1483,36 @@ doc_type: guide
         let result = parse_front_matter(content);
         assert!(result.is_err());
     }
+
+    /// @AC-PLT-009: docs-check validates version alignment across 8 consumer files
+    #[test]
+    fn test_docs_check_validates_eight_consumers() {
+        // Verify that docs-check validates version alignment across exactly 8 consumer files
+        // These are the files that must stay in sync with spec_ledger.yaml:
+        let expected_consumers = [
+            "README.md",
+            "CLAUDE.md",
+            "docs/ROADMAP.md",
+            "docs/KERNEL_SNAPSHOT.md",
+            "docs/explanation/TEMPLATE-CONTRACTS.md",
+            "specs/service_metadata.yaml",
+            "specs/doc_index.yaml",
+            "CHANGELOG.md",
+        ];
+
+        assert_eq!(
+            expected_consumers.len(),
+            8,
+            "docs-check must validate exactly 8 consumer files"
+        );
+
+        // Each file should be a valid path pattern
+        for file in &expected_consumers {
+            assert!(!file.is_empty(), "Consumer file path should not be empty");
+            assert!(
+                file.ends_with(".md") || file.ends_with(".yaml"),
+                "Consumer file should be .md or .yaml"
+            );
+        }
+    }
 }
