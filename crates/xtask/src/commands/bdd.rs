@@ -143,6 +143,11 @@ pub fn run_with_options(options: BddOptions) -> Result<()> {
     // Run with output capture for semantic success detection
     let output = cmd.output().context("failed to run acceptance tests")?;
 
+    // Finalize coverage file: cucumber's filter_run_and_exit calls std::process::exit()
+    // which prevents the AcCoverageWriter's finalize() from running. The coverage data
+    // is written to a .tmp file which we rename here after cucumber exits.
+    finalize_coverage_file();
+
     // Use semantic success detection (see is_bdd_success for details)
     if is_bdd_success(&output) {
         println!("✓ Acceptance tests passed");
@@ -164,6 +169,30 @@ pub fn run_with_options(options: BddOptions) -> Result<()> {
          hint: check BDD output above for failing scenarios",
         output.status.code()
     )
+}
+
+/// Finalize the coverage file by renaming from .tmp to final path.
+///
+/// The AcCoverageWriter uses an atomic write pattern: it writes to coverage.jsonl.tmp
+/// and renames to coverage.jsonl on finalize(). However, cucumber's filter_run_and_exit
+/// calls std::process::exit() which prevents destructors from running.
+///
+/// This function performs the rename that finalize() would have done, ensuring
+/// coverage data is available even when cucumber exits abruptly.
+fn finalize_coverage_file() {
+    let coverage_path = Path::new("target/ac/coverage.jsonl");
+    let temp_path = Path::new("target/ac/coverage.jsonl.tmp");
+
+    if temp_path.exists() {
+        // Rename temp to final (atomic on most filesystems)
+        if let Err(e) = std::fs::rename(temp_path, coverage_path) {
+            eprintln!(
+                "[WARN] Failed to finalize coverage file: {}. \
+                 AC coverage may be incomplete.",
+                e
+            );
+        }
+    }
 }
 
 #[cfg(test)]
