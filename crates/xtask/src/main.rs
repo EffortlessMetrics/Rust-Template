@@ -271,6 +271,20 @@ enum Commands {
         strict: bool,
     },
 
+    /// Lint spec_ledger.yaml for structural integrity
+    ///
+    /// Validates invariants: no duplicate IDs, naming conventions,
+    /// kernel ACs have test mappings, test types are known, etc.
+    #[command(next_help_heading = "📋 Acceptance Criteria")]
+    AcLint {
+        /// Fail on warnings (default: only errors fail)
+        #[arg(long)]
+        strict: bool,
+        /// Check that test file references exist on disk
+        #[arg(long)]
+        check_files: bool,
+    },
+
     // ============================================================================
     // DESIGN & DOCUMENTATION (Docs, ADRs, design docs)
     // ============================================================================
@@ -824,6 +838,13 @@ fn main() -> Result<()> {
                 strict,
             },
         ),
+        Commands::AcLint { strict, check_files } => {
+            commands::ac_lint::run(commands::ac_lint::AcLintArgs {
+                verbose: verbosity.is_verbose(),
+                strict,
+                check_files,
+            })
+        }
         Commands::Bundle { task } => commands::bundle::run(&task),
         Commands::Audit => commands::audit::run(),
         Commands::Coverage => commands::coverage::run(),
