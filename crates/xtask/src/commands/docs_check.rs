@@ -4,6 +4,19 @@ use serde::Deserialize;
 use std::fs;
 use std::path::{Path, PathBuf};
 
+/// Consumer files that must stay in sync with spec_ledger.yaml version.
+/// @AC-PLT-009: docs-check validates version alignment across 8 consumer files
+pub const VERSION_CONSUMERS: [&str; 8] = [
+    "README.md",
+    "CLAUDE.md",
+    "docs/ROADMAP.md",
+    "docs/KERNEL_SNAPSHOT.md",
+    "docs/explanation/TEMPLATE-CONTRACTS.md",
+    "specs/service_metadata.yaml",
+    "specs/doc_index.yaml",
+    "CHANGELOG.md",
+];
+
 /// Version alignment result for a single file
 #[derive(Debug)]
 struct VersionCheck {
@@ -1488,26 +1501,11 @@ doc_type: guide
     #[test]
     fn test_docs_check_validates_eight_consumers() {
         // Verify that docs-check validates version alignment across exactly 8 consumer files
-        // These are the files that must stay in sync with spec_ledger.yaml:
-        let expected_consumers = [
-            "README.md",
-            "CLAUDE.md",
-            "docs/ROADMAP.md",
-            "docs/KERNEL_SNAPSHOT.md",
-            "docs/explanation/TEMPLATE-CONTRACTS.md",
-            "specs/service_metadata.yaml",
-            "specs/doc_index.yaml",
-            "CHANGELOG.md",
-        ];
-
-        assert_eq!(
-            expected_consumers.len(),
-            8,
-            "docs-check must validate exactly 8 consumer files"
-        );
+        // Uses the shared VERSION_CONSUMERS constant that check_version_alignment_v2() also uses
+        assert_eq!(VERSION_CONSUMERS.len(), 8, "docs-check must validate exactly 8 consumer files");
 
         // Each file should be a valid path pattern
-        for file in &expected_consumers {
+        for file in &VERSION_CONSUMERS {
             assert!(!file.is_empty(), "Consumer file path should not be empty");
             assert!(
                 file.ends_with(".md") || file.ends_with(".yaml"),
