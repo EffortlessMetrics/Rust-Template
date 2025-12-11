@@ -4,7 +4,7 @@ doc_type: explanation
 stories: [US-TPL-PLT-001]
 requirements: [REQ-TPL-BDD-HARNESS, REQ-PLT-DOCS-CONSISTENCY, REQ-TPL-GRAPH-INVARIANTS]
 acs: [AC-TPL-SELFTEST-GATE, AC-TPL-PLATFORM-GRAPH]
-adrs: [ADR-0003, ADR-0005, ADR-0020, ADR-0021]
+adrs: [ADR-0003, ADR-0005, ADR-0020, ADR-0021, ADR-0024]
 ---
 # Governance Model: How Rust-as-Spec Platform Cells Stay Honest
 
@@ -386,7 +386,7 @@ cargo xtask selftest
 7. **Policy tests** — Conftest/OPA policies pass
 8. **DevEx contract** — Required commands exist
 9. **Graph invariants** — No broken references
-10. **AC coverage** — All kernel ACs passing
+10. **AC coverage** — All kernel ACs passing (configurable)
 11. **Test coverage** — Advisory check (non-blocking)
 
 **When to use:**
@@ -404,6 +404,85 @@ cargo xtask selftest
 - Fast (~10-20 min vs 2+ hours on Windows)
 
 See [ADR-0017: Tier-1 Selftest as Required Gate on Main Branch](../adr/0017-tier1-selftest-gate.md)
+
+### 4.5 Kernel AC Coverage Enforcement (ADR-0024)
+
+**Step 10** of selftest enforces that kernel ACs (`must_have_ac: true`) have test coverage. This gate uses the **AcEvidence model** defined in ADR-0024 to determine AC status from spec mappings and BDD coverage.
+
+**Status Classification Rules:**
+1. **FAIL**: Any BDD scenario failed for this AC
+2. **PASS**: BDD scenario passed OR unit tests are mapped in spec_ledger.yaml
+3. **UNKNOWN**: No test evidence
+
+The enforcement level is configurable via environment variables:
+
+**Environment Variables:**
+
+| Variable | Default | Effect |
+|----------|---------|--------|
+| `KERNEL_UNKNOWN_BUDGET` | unlimited | Max unknown kernel ACs allowed before selftest fails |
+| `XTASK_STRICT_AC_COVERAGE=1` | off | Equivalent to `KERNEL_UNKNOWN_BUDGET=0` (no unknowns allowed) |
+
+**Enforcement Levels:**
+
+1. **Default (no env vars)** — Unknown kernel ACs are advisory (warning only)
+   ```bash
+   cargo xtask selftest
+   # ⚠ 58 kernel ACs have unknown coverage (advisory)
+   # Selftest passes
+   ```
+
+2. **Budget mode** — Fail if unknown count exceeds budget
+   ```bash
+   KERNEL_UNKNOWN_BUDGET=50 cargo xtask selftest
+   # ❌ Kernel AC coverage gate failed (budget: 50, actual: 58)
+   # Selftest fails
+   ```
+
+3. **Strict mode** — Zero tolerance for unknowns
+   ```bash
+   XTASK_STRICT_AC_COVERAGE=1 cargo xtask selftest
+   # ❌ Kernel AC coverage gate failed (strict mode)
+   # Selftest fails
+   ```
+
+**Ratcheting Strategy:**
+
+To progressively improve kernel AC coverage:
+
+1. Start with current count as budget:
+   ```bash
+   KERNEL_UNKNOWN_BUDGET=58 cargo xtask selftest
+   ```
+
+2. As you add tests, lower the budget:
+   ```bash
+   KERNEL_UNKNOWN_BUDGET=50 cargo xtask selftest
+   ```
+
+3. Eventually reach strict mode:
+   ```bash
+   XTASK_STRICT_AC_COVERAGE=1 cargo xtask selftest
+   ```
+
+**CI Configuration:**
+
+In `.github/workflows/tier1-selftest.yml`:
+```yaml
+# Enable strict mode on main branch
+env:
+  XTASK_STRICT_AC_COVERAGE: ${{ github.ref == 'refs/heads/main' && '1' || '0' }}
+```
+
+**Viewing the Backlog:**
+
+```bash
+# List unknown kernel ACs
+cargo xtask ac-coverage --todo --must-have
+
+# Generate scenarios for an unknown AC
+cargo xtask ac-suggest-scenarios AC-TPL-001
+```
 
 ---
 

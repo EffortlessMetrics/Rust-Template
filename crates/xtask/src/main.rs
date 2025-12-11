@@ -259,6 +259,18 @@ enum Commands {
         format: String,
     },
 
+    /// Verify all kernel ACs have test mappings in spec_ledger.yaml
+    ///
+    /// Kernel ACs (must_have_ac=true) should have at least one test mapping
+    /// (unit, bdd, or integration) to ensure they're not forgotten.
+    /// This is a guardrail per ADR-0024.
+    #[command(next_help_heading = "📋 Acceptance Criteria")]
+    AcEnsureKernelMapped {
+        /// Fail if any kernel ACs are unmapped (default: warn only)
+        #[arg(long)]
+        strict: bool,
+    },
+
     // ============================================================================
     // DESIGN & DOCUMENTATION (Docs, ADRs, design docs)
     // ============================================================================
@@ -806,6 +818,12 @@ fn main() -> Result<()> {
                 format,
             })
         }
+        Commands::AcEnsureKernelMapped { strict } => commands::ac_ensure_kernel_mapped::run(
+            commands::ac_ensure_kernel_mapped::AcEnsureKernelMappedArgs {
+                verbose: verbosity.is_verbose(),
+                strict,
+            },
+        ),
         Commands::Bundle { task } => commands::bundle::run(&task),
         Commands::Audit => commands::audit::run(),
         Commands::Coverage => commands::coverage::run(),

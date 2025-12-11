@@ -400,9 +400,25 @@ pub fn run_with_verbosity(verbosity: crate::Verbosity) -> Result<()> {
     );
     println!();
 
-    // Step 10: AC coverage
+    // Step 10: AC coverage (including kernel mapping validation per ADR-0024)
     println!("{}", "[10/11] Checking AC coverage for v3.0 kernel...".blue());
     let step_start = Instant::now();
+
+    // 10a: Verify all kernel ACs have test mappings (ADR-0024 guardrail)
+    // This ensures no kernel AC is added without at least declaring its tests.
+    let mapping_check_ok = match run_kernel_mapping_check(verbosity) {
+        Ok(_) => {
+            println!("  {} Kernel AC test mappings verified", "✓".green());
+            true
+        }
+        Err(e) => {
+            eprintln!("  {} Kernel AC mapping check failed: {}", "✗".red(), e);
+            eprintln!("    hint: Run `cargo xtask ac-ensure-kernel-mapped --strict` for details");
+            false
+        }
+    };
+
+    // 10b: Verify kernel ACs have runtime evidence (not just mappings)
     let coverage_ok = match run_ac_coverage_check(verbosity) {
         Ok(_) => {
             let elapsed = step_start.elapsed();
@@ -419,7 +435,13 @@ pub fn run_with_verbosity(verbosity: crate::Verbosity) -> Result<()> {
             false
         }
     };
-    results.push("AC coverage", coverage_ok, Some("Run `cargo xtask ac-coverage` for details"));
+    // Step 10 passes only if both mapping check AND coverage check pass
+    let step10_ok = mapping_check_ok && coverage_ok;
+    results.push(
+        "AC coverage",
+        step10_ok,
+        Some("Run `cargo xtask ac-ensure-kernel-mapped --strict` or `cargo xtask ac-coverage`"),
+    );
     println!();
 
     // Step 11: Test coverage (soft gate - advisory only)
@@ -536,6 +558,21 @@ fn run_adr_check(verbosity: crate::Verbosity) -> Result<()> {
         verbosity,
         ..Default::default()
     })
+}
+
+/// Check that all kernel ACs have test mappings in spec_ledger.yaml (ADR-0024 guardrail).
+///
+/// This prevents adding kernel ACs without at least *declaring* tests.
+/// It runs BEFORE the coverage check to catch issues early.
+fn run_kernel_mapping_check(verbosity: crate::Verbosity) -> Result<()> {
+    // Use the ac-ensure-kernel-mapped command in strict mode.
+    // We set strict: true so any unmapped kernel ACs will fail selftest.
+    crate::commands::ac_ensure_kernel_mapped::run(
+        crate::commands::ac_ensure_kernel_mapped::AcEnsureKernelMappedArgs {
+            verbose: verbosity.is_verbose(),
+            strict: true,
+        },
+    )
 }
 
 /// Result of checking devex contract (required commands exist)
@@ -811,10 +848,17 @@ fn run_ac_coverage_check(verbosity: crate::Verbosity) -> Result<()> {
         }
     }
 
-    // Check for strict mode: XTASK_STRICT_AC_COVERAGE=1 fails on Unknown must_have_ac ACs
+    // Check for strict mode and kernel unknown budget
+    // - XTASK_STRICT_AC_COVERAGE=1: equivalent to KERNEL_UNKNOWN_BUDGET=0
+    // - KERNEL_UNKNOWN_BUDGET=N: allow at most N unknown kernel ACs (default: unlimited)
     let strict_mode = env::var("XTASK_STRICT_AC_COVERAGE").unwrap_or_default() == "1";
+    let kernel_unknown_budget: usize = if strict_mode {
+        0 // Strict mode = zero tolerance for unknowns
+    } else {
+        env::var("KERNEL_UNKNOWN_BUDGET").ok().and_then(|v| v.parse().ok()).unwrap_or(usize::MAX) // Default: unlimited (backward compatible)
+    };
 
-    // Fail on explicit failures
+    // Fail on explicit failures (hard gate - always enforced)
     if kernel_failing_count > 0 {
         eprintln!();
         eprintln!("{}", "❌ Kernel AC coverage gate failed".red().bold());
@@ -833,13 +877,22 @@ fn run_ac_coverage_check(verbosity: crate::Verbosity) -> Result<()> {
         anyhow::bail!("Kernel AC coverage incomplete: {} failing", kernel_failing_count);
     }
 
-    // In strict mode, Unknown must_have_ac ACs also fail the gate
-    if strict_mode && kernel_unknown_count > 0 {
+    // Check against kernel unknown budget
+    if kernel_unknown_count > kernel_unknown_budget {
         eprintln!();
-        eprintln!("{}", "❌ Kernel AC coverage gate failed (strict mode)".red().bold());
+        if strict_mode {
+            eprintln!("{}", "❌ Kernel AC coverage gate failed (strict mode)".red().bold());
+        } else {
+            eprintln!(
+                "{} (budget: {}, actual: {})",
+                "❌ Kernel AC coverage gate failed".red().bold(),
+                kernel_unknown_budget,
+                kernel_unknown_count
+            );
+        }
         eprintln!();
 
-        eprintln!("{}", "Unknown must_have_ac ACs (no BDD coverage):".bold());
+        eprintln!("{}", "Unknown must_have_ac ACs (no test coverage):".bold());
         for (ac_id, req_id) in &kernel_unknown {
             eprintln!("  • {} ({})", ac_id, req_id);
         }
@@ -850,39 +903,50 @@ fn run_ac_coverage_check(verbosity: crate::Verbosity) -> Result<()> {
         eprintln!("  2. Generate scenarios: {}", "cargo xtask ac-suggest-scenarios <AC_ID>".cyan());
         eprintln!("  3. Add @<AC_ID> scenarios and rerun: {}", "cargo xtask selftest".cyan());
         eprintln!();
-        eprintln!("{}", "ℹ️  To disable strict mode, unset XTASK_STRICT_AC_COVERAGE".dimmed());
+        if strict_mode {
+            eprintln!("{}", "ℹ️  To disable strict mode, unset XTASK_STRICT_AC_COVERAGE".dimmed());
+        } else {
+            eprintln!(
+                "{}",
+                format!(
+                    "ℹ️  To raise the budget, set KERNEL_UNKNOWN_BUDGET={} or higher",
+                    kernel_unknown_count
+                )
+                .dimmed()
+            );
+        }
 
         anyhow::bail!(
-            "Kernel AC coverage incomplete: {} unknown (strict mode enabled)",
-            kernel_unknown_count
+            "Kernel AC coverage incomplete: {} unknown (budget: {})",
+            kernel_unknown_count,
+            kernel_unknown_budget
         );
     }
 
-    // In non-strict mode, Unknown ACs are advisory
+    // Report advisory status for unknown ACs within budget
     if kernel_unknown_count > 0 {
         println!();
-        if strict_mode {
-            // This branch won't be reached (we'd have failed above), but for completeness
-            println!(
-                "  {} {} kernel ACs have unknown coverage",
-                "⚠".yellow(),
-                kernel_unknown_count
-            );
-        } else {
+        if kernel_unknown_budget == usize::MAX {
             println!(
                 "  {} {} kernel ACs have unknown coverage (advisory)",
                 "⚠".yellow(),
                 kernel_unknown_count
             );
             println!(
-                "    💡 To enforce coverage, set {} and rerun",
-                "XTASK_STRICT_AC_COVERAGE=1".cyan()
+                "    💡 To enforce coverage, set {} or {} and rerun",
+                "XTASK_STRICT_AC_COVERAGE=1".cyan(),
+                "KERNEL_UNKNOWN_BUDGET=N".cyan()
             );
+        } else {
             println!(
-                "    📋 View backlog: {}",
-                "cargo xtask ac-coverage --todo --must-have".cyan()
+                "  {} {} kernel ACs have unknown coverage (within budget of {})",
+                "⚠".yellow(),
+                kernel_unknown_count,
+                kernel_unknown_budget
             );
+            println!("    💡 To tighten, lower {} toward 0", "KERNEL_UNKNOWN_BUDGET".cyan());
         }
+        println!("    📋 View backlog: {}", "cargo xtask ac-coverage --todo --must-have".cyan());
     }
 
     // Provide informational warning about non-kernel ACs if any are failing/unknown
@@ -1106,7 +1170,7 @@ mod tests {
     /// Test that XTASK_STRICT_AC_COVERAGE env var is recognized
     /// This documents the expected behavior of strict mode:
     /// - Default (unset or "0"): Unknown kernel ACs are advisory
-    /// - "1": Unknown kernel ACs fail the gate
+    /// - "1": Unknown kernel ACs fail the gate (equivalent to KERNEL_UNKNOWN_BUDGET=0)
     #[test]
     fn strict_ac_coverage_env_var_parsing() {
         use std::env;
@@ -1136,6 +1200,69 @@ mod tests {
         // Clean up
         unsafe {
             env::remove_var("XTASK_STRICT_AC_COVERAGE");
+        }
+    }
+
+    /// Test that KERNEL_UNKNOWN_BUDGET env var is recognized
+    /// This documents the expected behavior of the kernel unknown budget:
+    /// - Default (unset): unlimited (usize::MAX) - backward compatible
+    /// - "N": allow at most N unknown kernel ACs
+    /// - When XTASK_STRICT_AC_COVERAGE=1: budget is 0 (overrides KERNEL_UNKNOWN_BUDGET)
+    #[test]
+    fn kernel_unknown_budget_env_var_parsing() {
+        use std::env;
+
+        // Test parsing logic (same as in run_ac_coverage_check)
+        let parse_budget = || {
+            let strict_mode = env::var("XTASK_STRICT_AC_COVERAGE").unwrap_or_default() == "1";
+            if strict_mode {
+                0
+            } else {
+                env::var("KERNEL_UNKNOWN_BUDGET")
+                    .ok()
+                    .and_then(|v| v.parse::<usize>().ok())
+                    .unwrap_or(usize::MAX)
+            }
+        };
+
+        // SAFETY: Tests run single-threaded when using these env vars
+        unsafe {
+            env::remove_var("XTASK_STRICT_AC_COVERAGE");
+            env::remove_var("KERNEL_UNKNOWN_BUDGET");
+        }
+
+        // Default behavior: unlimited budget
+        assert_eq!(parse_budget(), usize::MAX, "Default should be unlimited");
+
+        // Explicit budget of 10
+        unsafe {
+            env::set_var("KERNEL_UNKNOWN_BUDGET", "10");
+        }
+        assert_eq!(parse_budget(), 10, "Should parse budget=10");
+
+        // Explicit budget of 0 (same as strict mode)
+        unsafe {
+            env::set_var("KERNEL_UNKNOWN_BUDGET", "0");
+        }
+        assert_eq!(parse_budget(), 0, "Should parse budget=0");
+
+        // Invalid budget (non-numeric) falls back to unlimited
+        unsafe {
+            env::set_var("KERNEL_UNKNOWN_BUDGET", "invalid");
+        }
+        assert_eq!(parse_budget(), usize::MAX, "Invalid should fall back to unlimited");
+
+        // Strict mode overrides any KERNEL_UNKNOWN_BUDGET
+        unsafe {
+            env::set_var("KERNEL_UNKNOWN_BUDGET", "100");
+            env::set_var("XTASK_STRICT_AC_COVERAGE", "1");
+        }
+        assert_eq!(parse_budget(), 0, "Strict mode should override budget to 0");
+
+        // Clean up
+        unsafe {
+            env::remove_var("XTASK_STRICT_AC_COVERAGE");
+            env::remove_var("KERNEL_UNKNOWN_BUDGET");
         }
     }
 
