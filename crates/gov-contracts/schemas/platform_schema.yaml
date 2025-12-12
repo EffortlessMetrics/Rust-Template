@@ -1,0 +1,335 @@
+# Platform API Schema - v1.0.0 # doclint:disable orphan-version
+# This schema defines the contract for all /platform/* endpoints
+# Used for IDP integrations (Backstage, Port.io, etc.)
+
+schema_version: "1.0.0" # doclint:disable orphan-version
+template_version: "3.3.8" # doclint:disable orphan-version
+last_updated: "2025-12-01"
+
+paths:
+  /platform/idp/snapshot:
+    description: |
+      Machine-readable governance snapshot for IDP integrations.
+      Returns consolidated governance health, documentation metrics,
+      and task hints in a single payload.
+    method: GET
+    response:
+      type: object
+      required:
+        - timestamp
+        - template_version
+        - governance_health
+        - documentation
+        - task_hints
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+          description: ISO 8601 (RFC 3339) timestamp of snapshot creation
+          example: "2025-12-01T14:37:00Z"
+
+        template_version:
+          type: string
+          pattern: "^\\d+\\.\\d+\\.\\d+$"
+          description: SemVer template version from spec_ledger.yaml
+          example: "3.3.8"
+
+        service_id:
+          type: string
+          nullable: true
+          description: Optional service identifier from service_metadata.yaml
+
+        governance_health:
+          type: object
+          required:
+            - status
+            - ac_coverage
+            - spec_counts
+          properties:
+            status:
+              type: string
+              enum: [healthy, degraded, failing]
+              description: Overall governance health status
+
+            ac_coverage:
+              type: object
+              required:
+                - total
+                - passing
+                - failing
+                - unknown
+              properties:
+                total:
+                  type: integer
+                  minimum: 0
+                  description: Total number of acceptance criteria
+                passing:
+                  type: integer
+                  minimum: 0
+                  description: ACs with passing tests
+                failing:
+                  type: integer
+                  minimum: 0
+                  description: ACs with failing tests
+                unknown:
+                  type: integer
+                  minimum: 0
+                  description: ACs without test coverage
+
+            spec_counts:
+              type: object
+              required:
+                - stories
+                - requirements
+                - acceptance_criteria
+              properties:
+                stories:
+                  type: integer
+                  minimum: 0
+                requirements:
+                  type: integer
+                  minimum: 0
+                acceptance_criteria:
+                  type: integer
+                  minimum: 0
+
+        documentation:
+          type: object
+          required:
+            - total
+            - valid
+            - with_issues
+          properties:
+            total:
+              type: integer
+              minimum: 0
+              description: Total indexed documents
+            valid:
+              type: integer
+              minimum: 0
+              description: Documents passing validation
+            with_issues:
+              type: integer
+              minimum: 0
+              description: Documents with validation issues
+
+        task_hints:
+          type: object
+          required:
+            - total_pending
+            - total_in_progress
+            - friction_count
+            - question_count
+          properties:
+            total_pending:
+              type: integer
+              minimum: 0
+            total_in_progress:
+              type: integer
+              minimum: 0
+            friction_count:
+              type: integer
+              minimum: 0
+              description: Open friction log entries
+            question_count:
+              type: integer
+              minimum: 0
+              description: Open design questions
+            high_priority:
+              type: array
+              maxItems: 5
+              description: Top 5 high-priority tasks
+              items:
+                type: object
+                required:
+                  - task_id
+                  - title
+                  - status
+                  - requirement_ids
+                  - ac_ids
+                properties:
+                  task_id:
+                    type: string
+                    pattern: "^TASK-[A-Z]+-[A-Z0-9]+-\\d{3}$"
+                  title:
+                    type: string
+                  status:
+                    type: string
+                    enum: [todo, in_progress]
+                  owner:
+                    type: string
+                    nullable: true
+                  requirement_ids:
+                    type: array
+                    items:
+                      type: string
+                  ac_ids:
+                    type: array
+                    items:
+                      type: string
+
+  /platform/status:
+    description: |
+      Full governance status including policies, authentication, counts, and error tracking.
+      Primary endpoint for governance health tiles.
+    method: GET
+    response:
+      type: object
+      required:
+        - template_version
+        - governance
+        - errors
+      properties:
+        template_version:
+          type: string
+        service_id:
+          type: string
+          nullable: true
+        governance:
+          type: object
+          properties:
+            policies:
+              type: object
+              properties:
+                status:
+                  type: string
+                  enum: [passing, failing]
+            ledger:
+              type: object
+              properties:
+                stories:
+                  type: integer
+                requirements:
+                  type: integer
+                acs:
+                  type: integer
+        errors:
+          description: Error tracking summary (AC-TPL-ERROR-MAPPING)
+          type: object
+          required:
+            - has_recent_errors
+            - stats
+          properties:
+            has_recent_errors:
+              type: boolean
+              description: Whether any errors have occurred since service start
+            last_error:
+              type: object
+              nullable: true
+              description: The most recent error (if any)
+              properties:
+                category:
+                  type: string
+                  description: Error category (e.g., 'task_not_found', 'internal')
+                message:
+                  type: string
+                  description: Human-readable error message
+                status_code:
+                  type: integer
+                  description: HTTP status code returned
+                occurred_at:
+                  type: string
+                  format: date-time
+                  description: When the error occurred
+                request_id:
+                  type: string
+                  nullable: true
+                  description: Request ID for correlation
+            stats:
+              type: object
+              required:
+                - total_errors
+                - client_errors
+                - server_errors
+              properties:
+                total_errors:
+                  type: integer
+                  description: Total errors since service start
+                client_errors:
+                  type: integer
+                  description: Number of 4xx client errors
+                server_errors:
+                  type: integer
+                  description: Number of 5xx server errors
+
+  /platform/docs/index:
+    description: |
+      Documentation inventory with validation status.
+      Used for docs health tiles.
+    method: GET
+    response:
+      type: object
+      required:
+        - docs
+        - summary
+      properties:
+        template_version:
+          type: string
+        docs:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              file:
+                type: string
+              doc_type:
+                type: string
+              doc_type_valid:
+                type: boolean
+              doc_type_issue:
+                type: string
+                nullable: true
+        summary:
+          type: object
+          properties:
+            total:
+              type: integer
+            valid:
+              type: integer
+            with_issues:
+              type: integer
+
+  /platform/agent/hints:
+    description: |
+      Prioritized work suggestions for agents.
+      Returns Todo/InProgress tasks with linked requirements.
+    method: GET
+    response:
+      type: object
+      required:
+        - hints
+      properties:
+        hints:
+          type: array
+          items:
+            type: object
+            properties:
+              task_id:
+                type: string
+              title:
+                type: string
+              priority:
+                type: string
+                enum: [low, medium, high]
+              status:
+                type: string
+              requirement_ids:
+                type: array
+                items:
+                  type: string
+              ac_ids:
+                type: array
+                items:
+                  type: string
+
+# Stability contract (from ADR-0016)
+stability:
+  guarantee: additive-only
+  description: |
+    All endpoints follow additive-only evolution within v3.x:
+    - New fields may be added at any time
+    - Existing fields will NOT be removed or renamed
+    - Breaking changes require major version bump
+    - All responses include template_version for compatibility checking
