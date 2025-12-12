@@ -11,6 +11,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 (empty)
 
+## [3.3.10] - 2025-12-12
+
+### Fixed
+
+- CI: Fix SBOM generation by using `cargo-cyclonedx` CLI instead of `cyclonedx-bom` library crate
+  - `cyclonedx-bom` is a library with no binaries; `cargo-cyclonedx` is the actual CLI tool
+  - Updated workflow to generate JSON SBOM with proper verification
+
 ## [3.3.9] - 2025-12-11
 
 ### Fixed

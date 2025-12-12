@@ -1,4 +1,4 @@
-# Test Service (v3.3.9)
+# Test Service (v3.3.10)
 
 > **TL;DR:** A governed Rust service template where specs, tests, docs, policies, and CI all agree — and the repo can prove it.
 >

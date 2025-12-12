@@ -17,10 +17,15 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           cache-on-failure: true
-      - name: Install cyclonedx-bom
-        run: cargo install cyclonedx-bom --locked
-      - name: Generate SBOM
-        run: cyclonedx-bom -o sbom.json
+      - name: Install cargo-cyclonedx
+        # Note: cyclonedx-bom is a library; cargo-cyclonedx is the CLI tool
+        run: cargo install cargo-cyclonedx --locked
+      - name: Print cargo-cyclonedx version
+        run: cargo cyclonedx --version
+      - name: Generate SBOM (JSON)
+        run: |
+          cargo cyclonedx -f json --manifest-path Cargo.toml --override-filename sbom
+          test -s sbom.json && echo "✓ Generated sbom.json ($(wc -c < sbom.json) bytes)"
       # TODO: Implement release notes generation from git tags/commits
       # Consider using: git-cliff, conventional commits, or GitHub release notes API
       - name: Generate release notes (placeholder)
