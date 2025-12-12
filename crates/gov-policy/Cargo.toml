@@ -1,0 +1,16 @@
+[package]
+name = "gov-policy"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+description = "Rego policy bundle and runner for Rust-as-Spec platform"
+
+[dependencies]
+anyhow = { workspace = true }
+thiserror = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+chrono = { workspace = true }
+gov-model = { path = "../gov-model" }

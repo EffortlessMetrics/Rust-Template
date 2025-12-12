@@ -499,6 +499,7 @@ version = "0.1.0"
 dependencies = [
  "async-trait",
  "chrono",
+ "gov-model",
  "model",
  "serde",
  "thiserror 2.0.17",
@@ -1385,6 +1386,62 @@ dependencies = [
  "bitflags",
  "ignore",
  "walkdir",
+]
+
+[[package]]
+name = "gov-contracts"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "gov-model",
+ "serde",
+ "serde_json",
+ "serde_yaml_ng",
+]
+
+[[package]]
+name = "gov-http"
+version = "0.1.0"
+dependencies = [
+ "axum",
+ "gov-contracts",
+ "gov-model",
+ "serde",
+ "serde_json",
+ "tracing",
+]
+
+[[package]]
+name = "gov-model"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "thiserror 2.0.17",
+]
+
+[[package]]
+name = "gov-policy"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "chrono",
+ "gov-model",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.17",
+]
+
+[[package]]
+name = "gov-xtask-core"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "chrono",
+ "gov-model",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "thiserror 2.0.17",
 ]
 
 [[package]]

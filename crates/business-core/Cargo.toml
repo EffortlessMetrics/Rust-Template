@@ -6,6 +6,7 @@ publish.workspace = true
 
 [dependencies]
 model = { path = "../model" }
+gov-model = { path = "../gov-model" }
 uuid.workspace = true
 chrono.workspace = true
 async-trait.workspace = true
