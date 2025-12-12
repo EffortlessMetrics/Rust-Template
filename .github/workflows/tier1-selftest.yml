@@ -16,6 +16,7 @@ jobs:
     timeout-minutes: 60
     permissions:
       contents: read
+      pull-requests: read
 
     steps:
       - name: Checkout repository
@@ -24,10 +25,15 @@ jobs:
           fetch-depth: 0
 
       # Determine if BDD is needed based on changed files
+      # Three-tier model:
+      #   1. docs_only=true AND non_docs!=true → docs-check only (fastest)
+      #   2. bdd_needed!=true AND non_docs=true → cargo xtask check (fast)
+      #   3. bdd_needed=true → full selftest with BDD (complete)
       - name: Check changed files
         uses: dorny/paths-filter@v3
         id: changes
         with:
+          list-files: shell
           filters: |
             bdd_needed:
               - "crates/**"
@@ -35,26 +41,121 @@ jobs:
               - "**/*.feature"
               - "Cargo.toml"
               - "Cargo.lock"
-              - "flake.nix"
-              - "flake.lock"
-              - ".github/actions/**"
-              - ".github/workflows/tier1-selftest.yml"
             docs_only:
               - "docs/**"
               - "**/*.md"
               - "CHANGELOG.md"
               - "LICENSE*"
+            non_docs:
+              - "**"
+              - "!docs/**"
+              - "!**/*.md"
+              - "!CHANGELOG.md"
+              - "!LICENSE*"
+
+      - name: Print change classification
+        if: always()
+        shell: bash
+        run: |
+          echo "=== Event Context ==="
+          echo "event=${{ github.event_name }}"
+          echo "ref=${{ github.ref }}"
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "head_ref=${{ github.head_ref }}"
+            echo "base_ref=${{ github.base_ref }}"
+          fi
+
+          echo ""
+          echo "=== Filter Results ==="
+          echo "bdd_needed=${{ steps.changes.outputs.bdd_needed }} (count=${{ steps.changes.outputs.bdd_needed_count }})"
+          echo "docs_only=${{ steps.changes.outputs.docs_only }} (count=${{ steps.changes.outputs.docs_only_count }})"
+          echo "non_docs=${{ steps.changes.outputs.non_docs }} (count=${{ steps.changes.outputs.non_docs_count }})"
+
+          # Determine which tier will run
+          tier="check"
+          tier_reason="non-BDD changes (fast governance)"
+          if [ "${{ steps.changes.outputs.bdd_needed }}" = "true" ]; then
+            tier="selftest (BDD)"
+            tier_reason="code/specs/features changed"
+          elif [ "${{ steps.changes.outputs.docs_only }}" = "true" ] && [ "${{ steps.changes.outputs.non_docs }}" != "true" ]; then
+            tier="docs-check"
+            tier_reason="docs-only changes"
+          fi
+
+          echo ""
+          echo "=== Tier Decision ==="
+          echo "tier=$tier"
+          echo "reason=$tier_reason"
+
+          # Print file lists (truncated to avoid log noise)
+          max_files=50
+          print_files() {
+            local label="$1"
+            local files="$2"
+            local count="$3"
+
+            # Guard against empty/non-numeric count (prevents -gt exit code 2)
+            count="${count:-0}"
+            if ! [[ "$count" =~ ^[0-9]+$ ]]; then count=0; fi
+
+            echo ""
+            echo "=== $label files (showing first $max_files) ==="
+            printf '%s\n' "$files" | head -n "$max_files"
+            if (( count > max_files )); then
+              echo "(... truncated; total=$count)"
+            fi
+          }
+
+          if [ "${{ steps.changes.outputs.bdd_needed }}" = "true" ]; then
+            print_files "bdd_needed" "${{ steps.changes.outputs.bdd_needed_files }}" "${{ steps.changes.outputs.bdd_needed_count }}"
+          fi
+
+          if [ "${{ steps.changes.outputs.docs_only }}" = "true" ]; then
+            print_files "docs_only" "${{ steps.changes.outputs.docs_only_files }}" "${{ steps.changes.outputs.docs_only_count }}"
+          fi
+
+          if [ "${{ steps.changes.outputs.non_docs }}" = "true" ]; then
+            print_files "non_docs" "${{ steps.changes.outputs.non_docs_files }}" "${{ steps.changes.outputs.non_docs_count }}"
+          fi
+
+          # Write step summary
+          {
+            echo "### tier1-selftest classification"
+            echo ""
+            echo "| Filter | Matched | Count |"
+            echo "|--------|---------|-------|"
+            echo "| bdd_needed | \`${{ steps.changes.outputs.bdd_needed }}\` | ${{ steps.changes.outputs.bdd_needed_count }} |"
+            echo "| docs_only | \`${{ steps.changes.outputs.docs_only }}\` | ${{ steps.changes.outputs.docs_only_count }} |"
+            echo "| non_docs | \`${{ steps.changes.outputs.non_docs }}\` | ${{ steps.changes.outputs.non_docs_count }} |"
+            echo ""
+            echo "**Tier:** \`$tier\` ($tier_reason)"
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Setup Rust + Nix environment
         uses: ./.github/actions/setup-rust-nix
 
-      # Fast governance checks only (docs-only PRs skip BDD)
-      - name: Run governance checks only (no BDD)
-        if: steps.changes.outputs.bdd_needed != 'true'
+      # Docs-only checks (fastest path)
+      # Only runs when ALL changes are docs (no non-docs files changed)
+      - name: Run docs governance only (docs-only)
+        if: >
+          steps.changes.outputs.docs_only == 'true' &&
+          steps.changes.outputs.non_docs != 'true' &&
+          steps.changes.outputs.bdd_needed != 'true'
         env:
           XTASK_STRICT_PRECOMMIT: "1"
         run: |
-          echo "📚 Docs-only change detected - running fast governance checks"
+          echo "Docs-only change - running docs-check"
+          nix develop -c cargo xtask docs-check
+
+      # Fast governance checks (non-BDD changes that aren't docs-only)
+      - name: Run governance checks only (no BDD)
+        if: >
+          steps.changes.outputs.bdd_needed != 'true' &&
+          steps.changes.outputs.non_docs == 'true'
+        env:
+          XTASK_STRICT_PRECOMMIT: "1"
+        run: |
+          echo "Non-BDD change - running fast governance checks"
           nix develop -c cargo xtask check
 
       # Full selftest with BDD (only when code/specs/features changed)
