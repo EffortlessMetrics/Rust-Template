@@ -25,6 +25,10 @@ runs:
       if: inputs.enable-rust-cache == 'true'
       id: rust-cache
       uses: Swatinem/rust-cache@v2
+      with:
+        # Use shared key across all workflows to maximize cache hits
+        shared-key: rust-${{ runner.os }}
+        cache-on-failure: true
 
     - name: Install Nix (cachix)
       if: inputs.nix-installer == 'cachix'

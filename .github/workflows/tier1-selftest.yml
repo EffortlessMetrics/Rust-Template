@@ -13,7 +13,7 @@ concurrency:
 jobs:
   selftest:
     runs-on: ubuntu-latest
-    timeout-minutes: 40
+    timeout-minutes: 60
     permissions:
       contents: read
 
@@ -23,10 +23,44 @@ jobs:
         with:
           fetch-depth: 0
 
+      # Determine if BDD is needed based on changed files
+      - name: Check changed files
+        uses: dorny/paths-filter@v3
+        id: changes
+        with:
+          filters: |
+            bdd_needed:
+              - "crates/**"
+              - "specs/**"
+              - "**/*.feature"
+              - "Cargo.toml"
+              - "Cargo.lock"
+              - "flake.nix"
+              - "flake.lock"
+              - ".github/actions/**"
+              - ".github/workflows/tier1-selftest.yml"
+            docs_only:
+              - "docs/**"
+              - "**/*.md"
+              - "CHANGELOG.md"
+              - "LICENSE*"
+
       - name: Setup Rust + Nix environment
         uses: ./.github/actions/setup-rust-nix
 
+      # Fast governance checks only (docs-only PRs skip BDD)
+      - name: Run governance checks only (no BDD)
+        if: steps.changes.outputs.bdd_needed != 'true'
+        env:
+          XTASK_STRICT_PRECOMMIT: "1"
+        run: |
+          echo "📚 Docs-only change detected - running fast governance checks"
+          nix develop -c cargo xtask check
+
+      # Full selftest with BDD (only when code/specs/features changed)
+      # Consolidates all nix develop calls into a single devshell invocation
       - name: Run kernel selftest (Tier 1)
+        if: steps.changes.outputs.bdd_needed == 'true'
         # Kernel AC coverage gate (ADR-0024):
         # - KERNEL_UNKNOWN_BUDGET: Max unknown kernel ACs allowed (ratchet down over time)
         # - XTASK_STRICT_AC_COVERAGE: On main, budget is enforced (unknowns > budget = fail)
@@ -34,40 +68,46 @@ jobs:
         #
         # Current baseline: 0 unknown kernel ACs (target: 0 achieved!)
         # Updated 2025-12-11: Achieved 100% kernel AC coverage (72/72 PASS)
-        # - AC-TPL-001/002: Added unit tests for health/version endpoints
-        # - AC-PLT-007/009/017/018: Added unit tests for audit, docs-check, status, dev-up
-        # - AC-TPL-CLI-JSON-OUTPUT: Added unit tests for version JSON contract
-        # - AC-TPL-XTASK-NONINTERACTIVE: Added unit tests for CI/non-interactive mode
-        # - AC-TPL-SKILLS-GUIDE-001/ALIGN-001: Added unit tests for skills documentation
-        # - AC-TPL-VERSION-MANIFEST/DRYRUN/ATOMIC: Mapped existing versioning tests
-        #
-        # All 72 kernel ACs now have unit test mappings in spec_ledger.yaml
         #
         # See: cargo xtask ac-coverage --todo --must-have for backlog
         env:
           KERNEL_UNKNOWN_BUDGET: "0"
           XTASK_STRICT_AC_COVERAGE: ${{ github.ref == 'refs/heads/main' && '1' || '' }}
           XTASK_STRICT_PRECOMMIT: "1"
-        run: nix develop -c cargo xtask selftest
+        run: |
+          nix develop -c bash -lc '
+            set -euo pipefail
+
+            # Run full selftest (includes BDD)
+            cargo xtask selftest
+
+            # Generate AC status snapshot
+            mkdir -p artifacts/ac-status
+            cargo xtask ac-status --json > artifacts/ac-status/ac-status-${GITHUB_SHA}.json
+
+            # Run AC SLO gate on main branch
+            if [ "${GITHUB_REF}" = "refs/heads/main" ]; then
+              cargo xtask ac-slo \
+                --dir artifacts/ac-status \
+                --min-coverage 80.0 \
+                --max-blockers 0
+            fi
+          '
 
       - name: Verify artifacts were generated
+        if: steps.changes.outputs.bdd_needed == 'true'
         run: |
           test -f docs/feature_status.md || echo "Warning: feature_status.md not generated"
           test -f .llm/bundle/implement_ac.md || echo "Warning: LLM bundle not generated"
           test -f target/junit/acceptance.xml || echo "Warning: JUnit XML not generated"
 
-      - name: Generate AC status snapshot (JSON)
-        run: |
-          mkdir -p artifacts/ac-status
-          # ac-status uses schema_version=2.0; this is the contract consumers depend on
-          nix develop -c cargo xtask ac-status --json > artifacts/ac-status/ac-status-${GITHUB_SHA}.json
-
       - name: Show sccache stats
         if: always()
         uses: ./.github/actions/sccache-stats
 
+      # Upload artifacts on failure (for debugging) or on main (for audit/trends)
       - name: Upload test artifacts
-        if: always()
+        if: (failure() || github.ref == 'refs/heads/main') && steps.changes.outputs.bdd_needed == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: tier1-selftest-artifacts
@@ -78,26 +118,10 @@ jobs:
           if-no-files-found: warn
 
       - name: Upload AC status snapshot
-        if: always()
+        if: (failure() || github.ref == 'refs/heads/main') && steps.changes.outputs.bdd_needed == 'true'
         uses: actions/upload-artifact@v4
         with:
           # Group by branch for easier time-series analysis
           name: ac-status-${{ github.ref_name }}
           path: artifacts/ac-status/
           retention-days: 30
-
-      # -------------------------------------------------------------------------
-      # AC SLO Gate
-      # Enforces AC coverage Service Level Objectives on main branch.
-      # - Kernel failures (--max-blockers 0): No failing must_have_ac ACs
-      # - Kernel unknowns: Enforced via XTASK_STRICT_AC_COVERAGE in selftest
-      # - Overall coverage (--min-coverage 80.0): Advisory baseline
-      # Note: Optional/non-kernel unknowns are informational and don't block.
-      # -------------------------------------------------------------------------
-      - name: Check AC governance SLO (kernel)
-        if: github.ref == 'refs/heads/main'
-        run: |
-          nix develop -c cargo xtask ac-slo \
-            --dir artifacts/ac-status \
-            --min-coverage 80.0 \
-            --max-blockers 0

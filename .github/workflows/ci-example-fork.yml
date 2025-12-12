@@ -1,28 +1,28 @@
 name: Example Fork Validation
-
+# NOTE: This workflow now runs on tags + nightly only to avoid redundant BDD runs.
+# The path-filtered validation was causing duplicate BDD runs with tier1-selftest.
 on:
   push:
-    paths:
-      - 'examples/fork-customization/**'
-      - 'Cargo.toml'
-      - '.github/workflows/ci-example-fork.yml'
-  pull_request:
-    paths:
-      - 'examples/fork-customization/**'
-      - 'Cargo.toml'
-      - '.github/workflows/ci-example-fork.yml'
+    tags: ["v*"]
+  schedule:
+    # Nightly at 7 AM UTC (offset from selftest.yml)
+    - cron: "0 7 * * *"
+  workflow_dispatch: {}
 
 jobs:
   example-fork:
     runs-on: ubuntu-latest
     name: Example Fork (Linux + Nix)
-    timeout-minutes: 30
+    timeout-minutes: 60
     permissions: { contents: read }
     steps:
       - uses: actions/checkout@v4
         with: { fetch-depth: 0 }
 
       - uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: rust-${{ runner.os }}
+          cache-on-failure: true
 
       # Install Nix for Linux/macOS
       - uses: cachix/install-nix-action@v31
@@ -52,12 +52,24 @@ jobs:
           test -f examples/fork-customization/sample-product-catalog.feature || { echo "Missing sample-product-catalog.feature"; exit 1; }
           echo "✓ All sample files present"
 
-      # Run selftest of the root template (validating the infrastructure a fork would inherit)
-      - name: Run template self-test (validates fork infrastructure)
+      # On tags (releases): run full selftest to ensure release quality
+      # On nightly/manual: run check only (fast validation, tier1-selftest owns BDD)
+      - name: Run full selftest (release tags)
+        if: startsWith(github.ref, 'refs/tags/')
         run: nix develop -c cargo run -p xtask -- selftest
+
+      - name: Run governance checks (nightly/manual)
+        if: "!startsWith(github.ref, 'refs/tags/')"
+        run: |
+          echo "📚 Running fast governance checks (nightly mode)"
+          nix develop -c cargo run -p xtask -- check
 
       - name: Test result
         if: success()
         run: |
           echo "✓ Example fork validation passed"
-          echo "✓ Template selftest passed (confirms fork infrastructure is sound)"
+          if [[ "${{ github.ref }}" == refs/tags/* ]]; then
+            echo "✓ Template selftest passed (confirms fork infrastructure is sound)"
+          else
+            echo "✓ Governance checks passed (nightly validation)"
+          fi
