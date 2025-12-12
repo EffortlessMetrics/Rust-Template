@@ -1,11 +1,14 @@
 ---
 id: ADR-0024
 title: AC Evidence Model and Kernel Coverage Gate
+doc_type: adr
 status: accepted
 date: 2025-12-11
 authors: AI-Assisted Implementation
-related_acs: [AC-PLT-AC-GOVERNANCE, AC-TPL-SELFTEST-GATE]
-relates_to: [ADR-0003, ADR-0005, ADR-0023]
+stories: [US-TPL-PLT-001]
+requirements: [REQ-PLT-AC-GOVERNANCE, REQ-PLT-DEVEX-CONTRACT]
+acs: [AC-PLT-AC-GOVERNANCE, AC-TPL-SELFTEST-GATE]
+adrs: [ADR-0003, ADR-0005, ADR-0023]
 ---
 
 # ADR-0024: AC Evidence Model and Kernel Coverage Gate

@@ -1,7 +1,10 @@
 # Platform API Reference
 
-**Version:** 3.3.8
-**Last Updated:** 2025-12-10
+<!-- doclint:disable orphan-version -->
+<!-- Contains example API responses with placeholder versions (e.g., 0.1.0) -->
+
+**Version:** 3.3.9
+**Last Updated:** 2025-12-12
 
 This document provides a comprehensive reference for all `/platform/*` API endpoints and related introspection endpoints in the Rust-as-Spec template.
 
@@ -759,6 +762,7 @@ curl http://localhost:8080/version
 ```
 
 **Response:**
+<!-- doclint:disable orphan-version -->
 ```json
 {
   "version": "0.1.0",
@@ -1006,4 +1010,4 @@ secrets:
 
 ---
 
-**Note:** This reference is generated from the codebase at template version 3.3.8. For the most current endpoint definitions, refer to the source code in `/home/steven/code/Rust/Rust-Template/crates/app-http/src/`.
+**Note:** This reference is generated from the codebase at template version 3.3.9. For the most current endpoint definitions, refer to the source code in `crates/app-http/src/`.

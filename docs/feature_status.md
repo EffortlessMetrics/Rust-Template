@@ -38,9 +38,9 @@ Auto-generated AC status from acceptance (BDD) and unit tests.
 | AC-MYSERV-001 | US-MYSERV-001 | REQ-MYSERV-LIST-TODOS | [PASS] pass | 1 / 1 |
 | AC-MYSERV-002 | US-MYSERV-001 | REQ-MYSERV-LIST-TODOS | [PASS] pass | 1 / 1 |
 | AC-MYSERV-003 | US-MYSERV-001 | REQ-MYSERV-ERROR-HANDLING | [PASS] pass | 1 / 1 |
-| AC-MYSERV-004 | US-MYSERV-001 | REQ-MYSERV-DELETE-TODOS | [PASS] pass | 1 / 1 |
-| AC-MYSERV-005 | US-MYSERV-001 | REQ-MYSERV-ERROR-HANDLING | [PASS] pass | 1 / 1 |
-| AC-MYSERV-006 | US-MYSERV-001 | REQ-MYSERV-ERROR-HANDLING | [PASS] pass | 1 / 1 |
+| AC-MYSERV-004 | US-MYSERV-001 | REQ-MYSERV-DELETE-TODOS | [UNKNOWN] unknown | 0 / 1 |
+| AC-MYSERV-005 | US-MYSERV-001 | REQ-MYSERV-ERROR-HANDLING | [UNKNOWN] unknown | 0 / 1 |
+| AC-MYSERV-006 | US-MYSERV-001 | REQ-MYSERV-ERROR-HANDLING | [UNKNOWN] unknown | 0 / 1 |
 | AC-PLT-001 | US-TPL-PLT-001 | REQ-PLT-ONBOARDING | [PASS] pass | 0 / 3 |
 | AC-PLT-002 | US-TPL-PLT-001 | REQ-PLT-ONBOARDING | [PASS] pass | 0 / 3 |
 | AC-PLT-003 | US-TPL-PLT-001 | REQ-PLT-ONBOARDING | [PASS] pass | 0 / 3 |
@@ -173,6 +173,9 @@ Auto-generated AC status from acceptance (BDD) and unit tests.
 
 *(This list SHOULD be empty in this repo. If anything appears here, it's a bug.)*
 
+- AC-MYSERV-004: DELETE /todos/:id removes the todo from the list
+- AC-MYSERV-005: POST /todos rejects duplicate todo ID with 409 Conflict
+- AC-MYSERV-006: POST /todos validates title is non-empty and not exceeding 256 characters
 - AC-PLT-001: `cargo xtask doctor` validates Rust, Nix, conftest, git and provides next-steps guidance
 - AC-PLT-002: `cargo xtask help-flows` renders categorized command map from specs/devex_flows.yaml
 - AC-PLT-003: `cargo xtask check` runs fmt + clippy + tests as fast dev loop
