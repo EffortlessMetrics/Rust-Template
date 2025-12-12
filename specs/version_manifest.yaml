@@ -73,6 +73,17 @@ files:
     required: true
     priority: 1
 
+  - path: "specs/service_policies.yaml"
+    description: "Service policies with template version reference"
+    patterns:
+      - marker: "template_version:"
+        type: yaml_value
+        format: "prefixed"  # Uses v3.3.5 format
+        line_pattern: "^template_version: \"v[\\d.]+\"$"
+        example: "template_version: \"v3.3.5\""
+    required: true
+    priority: 1
+
   # BDD feature files
   - path: "specs/features/*.feature"
     description: "Gherkin feature files with version and date headers"
