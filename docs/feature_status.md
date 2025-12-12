@@ -35,12 +35,12 @@ Auto-generated AC status from acceptance (BDD) and unit tests.
 
 | AC ID | Story | Requirement | Status | Tests (executed/total) |
 |-------|-------|-------------|--------|------------------------|
-| AC-MYSERV-001 | US-MYSERV-001 | REQ-MYSERV-LIST-TODOS | [PASS] pass | 1 / 1 |
-| AC-MYSERV-002 | US-MYSERV-001 | REQ-MYSERV-LIST-TODOS | [PASS] pass | 1 / 1 |
-| AC-MYSERV-003 | US-MYSERV-001 | REQ-MYSERV-ERROR-HANDLING | [PASS] pass | 1 / 1 |
-| AC-MYSERV-004 | US-MYSERV-001 | REQ-MYSERV-DELETE-TODOS | [PASS] pass | 1 / 1 |
-| AC-MYSERV-005 | US-MYSERV-001 | REQ-MYSERV-ERROR-HANDLING | [PASS] pass | 1 / 1 |
-| AC-MYSERV-006 | US-MYSERV-001 | REQ-MYSERV-ERROR-HANDLING | [PASS] pass | 1 / 1 |
+| AC-MYSERV-001 | US-MYSERV-001 | REQ-MYSERV-LIST-TODOS | [UNKNOWN] unknown | 0 / 1 |
+| AC-MYSERV-002 | US-MYSERV-001 | REQ-MYSERV-LIST-TODOS | [UNKNOWN] unknown | 0 / 1 |
+| AC-MYSERV-003 | US-MYSERV-001 | REQ-MYSERV-ERROR-HANDLING | [UNKNOWN] unknown | 0 / 1 |
+| AC-MYSERV-004 | US-MYSERV-001 | REQ-MYSERV-DELETE-TODOS | [UNKNOWN] unknown | 0 / 1 |
+| AC-MYSERV-005 | US-MYSERV-001 | REQ-MYSERV-ERROR-HANDLING | [UNKNOWN] unknown | 0 / 1 |
+| AC-MYSERV-006 | US-MYSERV-001 | REQ-MYSERV-ERROR-HANDLING | [UNKNOWN] unknown | 0 / 1 |
 | AC-PLT-001 | US-TPL-PLT-001 | REQ-PLT-ONBOARDING | [PASS] pass | 0 / 3 |
 | AC-PLT-002 | US-TPL-PLT-001 | REQ-PLT-ONBOARDING | [PASS] pass | 0 / 3 |
 | AC-PLT-003 | US-TPL-PLT-001 | REQ-PLT-ONBOARDING | [PASS] pass | 0 / 3 |
@@ -70,10 +70,10 @@ Auto-generated AC status from acceptance (BDD) and unit tests.
 | AC-TPL-002 | US-TPL-001 | REQ-TPL-VERSION | [PASS] pass | 0 / 2 |
 | AC-TPL-003 | US-TPL-001 | REQ-TPL-ERROR-HANDLING | [PASS] pass | 0 / 3 |
 | AC-TPL-004 | US-TPL-001 | REQ-TPL-ERROR-HANDLING | [PASS] pass | 0 / 4 |
-| AC-TPL-007 | US-TPL-001 | REQ-TPL-METRICS | [PASS] pass | 1 / 3 |
+| AC-TPL-007 | US-TPL-001 | REQ-TPL-METRICS | [PASS] pass | 0 / 3 |
 | AC-TPL-AC-STATUS-CONSISTENCY | US-TPL-PLT-001 | REQ-PLT-DOCS-CONSISTENCY | [PASS] pass | 0 / 2 |
 | AC-TPL-AGENT-HINTS | US-TPL-PLT-001 | REQ-TPL-AGENT-INTERFACE | [PASS] pass | 1 / 1 |
-| AC-TPL-AGENT-HINTS-SCHEMA | US-TPL-PLT-001 | REQ-TPL-AGENT-INTERFACE | [PASS] pass | 1 / 2 |
+| AC-TPL-AGENT-HINTS-SCHEMA | US-TPL-PLT-001 | REQ-TPL-AGENT-INTERFACE | [PASS] pass | 0 / 2 |
 | AC-TPL-AGENT-SKILLS | US-TPL-PLT-001 | REQ-TPL-AGENT-INTERFACE | [PASS] pass | 0 / 2 |
 | AC-TPL-AGENTS-DESCRIPTION-QUALITY | US-TPL-PLT-001 | REQ-TPL-AGENTS-GOVERNANCE | [UNKNOWN] unknown | 0 / 0 |
 | AC-TPL-AGENTS-GOVERNANCE-001 | US-TPL-PLT-001 | REQ-TPL-AGENTS-GOVERNANCE | [PASS] pass | 0 / 3 |
@@ -86,30 +86,30 @@ Auto-generated AC status from acceptance (BDD) and unit tests.
 | AC-TPL-AGENTS-TOOLS-PERMISSION-SAFETY | US-TPL-PLT-001 | REQ-TPL-AGENTS-GOVERNANCE | [UNKNOWN] unknown | 0 / 0 |
 | AC-TPL-ARTIFACTS-HAVE-REFS | US-TPL-PLT-001 | REQ-TPL-GOV-ARTIFACTS | [PASS] pass | 1 / 2 |
 | AC-TPL-BDD-EXIT-CODES | US-TPL-PLT-001 | REQ-TPL-BDD-HARNESS | [PASS] pass | 2 / 2 |
-| AC-TPL-BUNDLE-LAYOUT | US-TPL-PLT-001 | REQ-TPL-BUNDLE-CONTRACT | [PASS] pass | 1 / 2 |
-| AC-TPL-BUNDLE-MANIFEST | US-TPL-PLT-001 | REQ-TPL-BUNDLE-CONTRACT | [PASS] pass | 1 / 2 |
-| AC-TPL-BUNDLE-MANIFEST-LINKED | US-TPL-PLT-001 | REQ-TPL-BUNDLE-CONTRACT | [PASS] pass | 1 / 2 |
+| AC-TPL-BUNDLE-LAYOUT | US-TPL-PLT-001 | REQ-TPL-BUNDLE-CONTRACT | [PASS] pass | 0 / 2 |
+| AC-TPL-BUNDLE-MANIFEST | US-TPL-PLT-001 | REQ-TPL-BUNDLE-CONTRACT | [PASS] pass | 0 / 2 |
+| AC-TPL-BUNDLE-MANIFEST-LINKED | US-TPL-PLT-001 | REQ-TPL-BUNDLE-CONTRACT | [PASS] pass | 0 / 2 |
 | AC-TPL-BUNDLE-MINIMAL-SCOPE | US-TPL-PLT-001 | REQ-TPL-BUNDLE-CONTRACT | [PASS] pass | 1 / 1 |
-| AC-TPL-BUNDLE-REFERENTIAL-INTEGRITY | US-TPL-PLT-001 | REQ-TPL-AGENT-ERGONOMICS | [PASS] pass | 1 / 1 |
+| AC-TPL-BUNDLE-REFERENTIAL-INTEGRITY | US-TPL-PLT-001 | REQ-TPL-AGENT-ERGONOMICS | [UNKNOWN] unknown | 0 / 1 |
 | AC-TPL-CLI-JSON-CORE | US-TPL-PHILOSOPHY-001 | REQ-TPL-AI-IDP-COMPAT | [PASS] pass | 1 / 3 |
 | AC-TPL-CLI-JSON-OUTPUT | US-TPL-PLT-001 | REQ-PLT-DEVEX-CONTRACT | [PASS] pass | 0 / 3 |
-| AC-TPL-CONFIG-VALIDATION | US-TPL-PLT-001 | REQ-TPL-CONFIG-INTEGRITY | [PASS] pass | 2 / 2 |
-| AC-TPL-ERROR-MAPPING | US-TPL-001 | REQ-TPL-ERROR-HANDLING | [PASS] pass | 1 / 2 |
+| AC-TPL-CONFIG-VALIDATION | US-TPL-PLT-001 | REQ-TPL-CONFIG-INTEGRITY | [PASS] pass | 1 / 2 |
+| AC-TPL-ERROR-MAPPING | US-TPL-001 | REQ-TPL-ERROR-HANDLING | [PASS] pass | 0 / 2 |
 | AC-TPL-EXAMPLE-FORK-BUILDS | US-TPL-PLT-001 | REQ-TPL-EXAMPLE-FORK | [UNKNOWN] unknown | 0 / 0 |
-| AC-TPL-FLOW-IDEMPOTENT | US-TPL-PLT-001 | REQ-TPL-FLOW-IDEMPOTENCY | [PASS] pass | 1 / 1 |
-| AC-TPL-FORKS-STATUS-SUMMARY | US-TPL-PLT-001 | REQ-TPL-FORK-VISIBILITY | [PASS] pass | 2 / 2 |
-| AC-TPL-GOV-FORKS | US-TPL-PLT-001 | REQ-TPL-GOV-ARTIFACTS | [PASS] pass | 1 / 1 |
-| AC-TPL-GOV-FRICTION | US-TPL-PLT-001 | REQ-TPL-GOV-ARTIFACTS | [PASS] pass | 1 / 1 |
-| AC-TPL-GOV-WRITE-TASK-STATUS-200 | US-TPL-PLATFORM-V3 | REQ-TPL-GOV-WRITE-001 | [PASS] pass | 2 / 2 |
+| AC-TPL-FLOW-IDEMPOTENT | US-TPL-PLT-001 | REQ-TPL-FLOW-IDEMPOTENCY | [UNKNOWN] unknown | 0 / 1 |
+| AC-TPL-FORKS-STATUS-SUMMARY | US-TPL-PLT-001 | REQ-TPL-FORK-VISIBILITY | [UNKNOWN] unknown | 0 / 2 |
+| AC-TPL-GOV-FORKS | US-TPL-PLT-001 | REQ-TPL-GOV-ARTIFACTS | [UNKNOWN] unknown | 0 / 1 |
+| AC-TPL-GOV-FRICTION | US-TPL-PLT-001 | REQ-TPL-GOV-ARTIFACTS | [UNKNOWN] unknown | 0 / 1 |
+| AC-TPL-GOV-WRITE-TASK-STATUS-200 | US-TPL-PLATFORM-V3 | REQ-TPL-GOV-WRITE-001 | [UNKNOWN] unknown | 0 / 2 |
 | AC-TPL-GRAPH-AC-HAS-TEST | US-TPL-PLT-001 | REQ-TPL-GRAPH-INVARIANTS | [PASS] pass | 1 / 1 |
 | AC-TPL-GRAPH-COMMAND-REACHABLE | US-TPL-PLT-001 | REQ-TPL-GRAPH-INVARIANTS | [PASS] pass | 1 / 1 |
 | AC-TPL-GRAPH-INVARIANTS | US-TPL-PLT-001 | REQ-TPL-GRAPH-INVARIANTS | [UNKNOWN] unknown | 0 / 1 |
-| AC-TPL-GRAPH-MERMAID | US-TPL-PLT-001 | REQ-TPL-GRAPH-VISUALIZATION | [PASS] pass | 2 / 2 |
+| AC-TPL-GRAPH-MERMAID | US-TPL-PLT-001 | REQ-TPL-GRAPH-VISUALIZATION | [PASS] pass | 1 / 2 |
 | AC-TPL-GRAPH-REQ-HAS-AC | US-TPL-PLT-001 | REQ-TPL-GRAPH-INVARIANTS | [PASS] pass | 1 / 1 |
 | AC-TPL-GRAPH-SELFTEST | US-TPL-PLT-001 | REQ-TPL-GRAPH-INVARIANTS | [PASS] pass | 3 / 4 |
-| AC-TPL-HINTS-KERNEL-SIGNALS | US-TPL-PLT-001 | REQ-TPL-AGENT-ERGONOMICS | [PASS] pass | 1 / 2 |
-| AC-TPL-HINTS-REFERENTIAL-INTEGRITY | US-TPL-PLT-001 | REQ-TPL-AGENT-ERGONOMICS | [PASS] pass | 1 / 3 |
-| AC-TPL-HOOKS-INSTALL | US-TPL-PLT-001 | REQ-TPL-GOV-HOOKS | [PASS] pass | 1 / 1 |
+| AC-TPL-HINTS-KERNEL-SIGNALS | US-TPL-PLT-001 | REQ-TPL-AGENT-ERGONOMICS | [PASS] pass | 0 / 2 |
+| AC-TPL-HINTS-REFERENTIAL-INTEGRITY | US-TPL-PLT-001 | REQ-TPL-AGENT-ERGONOMICS | [PASS] pass | 0 / 3 |
+| AC-TPL-HOOKS-INSTALL | US-TPL-PLT-001 | REQ-TPL-GOV-HOOKS | [UNKNOWN] unknown | 0 / 1 |
 | AC-TPL-IAC-COMPOSE-ALIGN | US-TPL-PLT-001 | REQ-TPL-IAC-ALIGNMENT | [PASS] pass | 1 / 1 |
 | AC-TPL-IAC-K8S-ALIGN | US-TPL-PLT-001 | REQ-TPL-IAC-ALIGNMENT | [PASS] pass | 1 / 1 |
 | AC-TPL-IAC-TF-ALIGN | US-TPL-PLT-001 | REQ-TPL-IAC-ALIGNMENT | [PASS] pass | 1 / 1 |
@@ -118,24 +118,24 @@ Auto-generated AC status from acceptance (BDD) and unit tests.
 | AC-TPL-IDP-SNAPSHOT-VALID-JSON | US-TPL-PHILOSOPHY-001 | REQ-TPL-IDP-SNAPSHOT | [PASS] pass | 2 / 3 |
 | AC-TPL-KERNEL-CONTRACT-EMITTED | US-TPL-PLT-001 | REQ-TPL-REL-BUNDLE | [UNKNOWN] unknown | 0 / 1 |
 | AC-TPL-LOCAL-DOCKER | US-TPL-PLT-001 | REQ-TPL-LOCAL-RUNTIME | [PASS] pass | 1 / 1 |
-| AC-TPL-LOG-NO-SECRETS | US-TPL-PLT-001 | REQ-TPL-LOG-HYGIENE | [PASS] pass | 2 / 2 |
-| AC-TPL-METADATA-COMPLETE | US-TPL-PLT-001 | REQ-TPL-METADATA-CONSISTENT | [PASS] pass | 1 / 1 |
-| AC-TPL-OPINIONS-DOCUMENTED | US-TPL-PHILOSOPHY-001 | REQ-TPL-OPINIONATED-DEFAULTS | [PASS] pass | 1 / 1 |
-| AC-TPL-OVERRIDE-DOC | US-TPL-PHILOSOPHY-001 | REQ-TPL-OVERRIDE-PATH | [PASS] pass | 1 / 1 |
-| AC-TPL-OVERRIDE-TRACEABLE | US-TPL-PHILOSOPHY-001 | REQ-TPL-OVERRIDE-PATH | [PASS] pass | 1 / 1 |
-| AC-TPL-PLATFORM-AUTH-BASIC | US-TPL-PLT-001 | REQ-TPL-PLATFORM-AUTH | [PASS] pass | 1 / 1 |
-| AC-TPL-PLATFORM-DEVEX | US-TPL-PLT-001 | REQ-TPL-PLATFORM-INTROSPECTION | [PASS] pass | 1 / 3 |
-| AC-TPL-PLATFORM-DOCS | US-TPL-PLT-001 | REQ-TPL-PLATFORM-INTROSPECTION | [PASS] pass | 1 / 1 |
+| AC-TPL-LOG-NO-SECRETS | US-TPL-PLT-001 | REQ-TPL-LOG-HYGIENE | [PASS] pass | 1 / 2 |
+| AC-TPL-METADATA-COMPLETE | US-TPL-PLT-001 | REQ-TPL-METADATA-CONSISTENT | [UNKNOWN] unknown | 0 / 1 |
+| AC-TPL-OPINIONS-DOCUMENTED | US-TPL-PHILOSOPHY-001 | REQ-TPL-OPINIONATED-DEFAULTS | [UNKNOWN] unknown | 0 / 1 |
+| AC-TPL-OVERRIDE-DOC | US-TPL-PHILOSOPHY-001 | REQ-TPL-OVERRIDE-PATH | [UNKNOWN] unknown | 0 / 1 |
+| AC-TPL-OVERRIDE-TRACEABLE | US-TPL-PHILOSOPHY-001 | REQ-TPL-OVERRIDE-PATH | [UNKNOWN] unknown | 0 / 1 |
+| AC-TPL-PLATFORM-AUTH-BASIC | US-TPL-PLT-001 | REQ-TPL-PLATFORM-AUTH | [UNKNOWN] unknown | 0 / 1 |
+| AC-TPL-PLATFORM-DEVEX | US-TPL-PLT-001 | REQ-TPL-PLATFORM-INTROSPECTION | [PASS] pass | 0 / 3 |
+| AC-TPL-PLATFORM-DOCS | US-TPL-PLT-001 | REQ-TPL-PLATFORM-INTROSPECTION | [UNKNOWN] unknown | 0 / 1 |
 | AC-TPL-PLATFORM-DOCS-CONTRACT | US-TPL-PLT-001 | REQ-TPL-PLATFORM-CONTRACT | [UNKNOWN] unknown | 0 / 0 |
-| AC-TPL-PLATFORM-GOVERNANCE-APIS | US-TPL-PHILOSOPHY-001 | REQ-TPL-AI-IDP-COMPAT | [PASS] pass | 4 / 4 |
-| AC-TPL-PLATFORM-GRAPH | US-TPL-PLT-001 | REQ-TPL-PLATFORM-INTROSPECTION | [PASS] pass | 1 / 2 |
-| AC-TPL-PLATFORM-SCHEMA | US-TPL-PLT-001 | REQ-TPL-PLATFORM-SCHEMA | [PASS] pass | 1 / 3 |
+| AC-TPL-PLATFORM-GOVERNANCE-APIS | US-TPL-PHILOSOPHY-001 | REQ-TPL-AI-IDP-COMPAT | [UNKNOWN] unknown | 0 / 4 |
+| AC-TPL-PLATFORM-GRAPH | US-TPL-PLT-001 | REQ-TPL-PLATFORM-INTROSPECTION | [PASS] pass | 0 / 2 |
+| AC-TPL-PLATFORM-SCHEMA | US-TPL-PLT-001 | REQ-TPL-PLATFORM-SCHEMA | [PASS] pass | 0 / 3 |
 | AC-TPL-PLATFORM-STATUS-CONTRACT | US-TPL-PLT-001 | REQ-TPL-PLATFORM-CONTRACT | [UNKNOWN] unknown | 0 / 0 |
 | AC-TPL-PLATFORM-UI-CONTRACT | US-TPL-PLT-001 | REQ-TPL-PLATFORM-UI | [PASS] pass | 0 / 4 |
-| AC-TPL-PLATFORM-UI-DASHBOARD | US-TPL-PLT-001 | REQ-TPL-PLATFORM-UI | [PASS] pass | 2 / 2 |
+| AC-TPL-PLATFORM-UI-DASHBOARD | US-TPL-PLT-001 | REQ-TPL-PLATFORM-UI | [UNKNOWN] unknown | 0 / 2 |
 | AC-TPL-PLATFORM-UI-FLOWS | US-TPL-PLT-001 | REQ-TPL-PLATFORM-UI | [UNKNOWN] unknown | 0 / 2 |
-| AC-TPL-PLATFORM-UI-GRAPH | US-TPL-PLT-001 | REQ-TPL-PLATFORM-UI | [PASS] pass | 2 / 2 |
-| AC-TPL-POLICY-STATUS-OVERVIEW | US-TPL-PLT-001 | REQ-TPL-PLATFORM-INTROSPECTION | [PASS] pass | 1 / 1 |
+| AC-TPL-PLATFORM-UI-GRAPH | US-TPL-PLT-001 | REQ-TPL-PLATFORM-UI | [UNKNOWN] unknown | 0 / 2 |
+| AC-TPL-POLICY-STATUS-OVERVIEW | US-TPL-PLT-001 | REQ-TPL-PLATFORM-INTROSPECTION | [UNKNOWN] unknown | 0 / 1 |
 | AC-TPL-QUESTIONS-LOGGED | US-TPL-PLT-001 | REQ-TPL-GOV-ARTIFACTS | [UNKNOWN] unknown | 0 / 1 |
 | AC-TPL-REL-CHANGELOG | US-TPL-PLT-001 | REQ-TPL-REL-BUNDLE | [UNKNOWN] unknown | 0 / 1 |
 | AC-TPL-REL-EVIDENCE | US-TPL-PLT-001 | REQ-TPL-REL-BUNDLE | [UNKNOWN] unknown | 0 / 1 |
@@ -151,17 +151,17 @@ Auto-generated AC status from acceptance (BDD) and unit tests.
 | AC-TPL-SKILLS-LIFECYCLE-DOCS | US-TPL-PLT-001 | REQ-TPL-SKILLS-GOVERNANCE | [UNKNOWN] unknown | 0 / 0 |
 | AC-TPL-SKILLS-LINT | US-TPL-PLT-001 | REQ-TPL-SKILLS-TOOLING | [PASS] pass | 0 / 3 |
 | AC-TPL-SKILLS-NAME-FORMAT | US-TPL-PLT-001 | REQ-TPL-SKILLS-GOVERNANCE | [UNKNOWN] unknown | 0 / 1 |
-| AC-TPL-STATUS-AC-COVERAGE | US-TPL-PLT-001 | REQ-TPL-INTROSPECTION-PARITY | [PASS] pass | 1 / 1 |
-| AC-TPL-STATUS-PARITY-CLI-HTTP | US-TPL-PLT-001 | REQ-TPL-INTROSPECTION-PARITY | [PASS] pass | 1 / 1 |
-| AC-TPL-STATUS-TASK-BREAKDOWN | US-TPL-PLT-001 | REQ-TPL-INTROSPECTION-PARITY | [PASS] pass | 1 / 1 |
-| AC-TPL-SUGGEST-NEXT-CLI | US-TPL-PLT-001 | REQ-TPL-SUGGEST-NEXT | [PASS] pass | 1 / 1 |
-| AC-TPL-SUGGEST-NEXT-HTTP | US-TPL-PLT-001 | REQ-TPL-SUGGEST-NEXT | [PASS] pass | 1 / 1 |
-| AC-TPL-TASK-STATUS-MODEL | US-TPL-PLATFORM-V3 | REQ-TPL-TASK-LIFECYCLE | [PASS] pass | 1 / 5 |
+| AC-TPL-STATUS-AC-COVERAGE | US-TPL-PLT-001 | REQ-TPL-INTROSPECTION-PARITY | [UNKNOWN] unknown | 0 / 1 |
+| AC-TPL-STATUS-PARITY-CLI-HTTP | US-TPL-PLT-001 | REQ-TPL-INTROSPECTION-PARITY | [UNKNOWN] unknown | 0 / 1 |
+| AC-TPL-STATUS-TASK-BREAKDOWN | US-TPL-PLT-001 | REQ-TPL-INTROSPECTION-PARITY | [UNKNOWN] unknown | 0 / 1 |
+| AC-TPL-SUGGEST-NEXT-CLI | US-TPL-PLT-001 | REQ-TPL-SUGGEST-NEXT | [UNKNOWN] unknown | 0 / 1 |
+| AC-TPL-SUGGEST-NEXT-HTTP | US-TPL-PLT-001 | REQ-TPL-SUGGEST-NEXT | [UNKNOWN] unknown | 0 / 1 |
+| AC-TPL-TASK-STATUS-MODEL | US-TPL-PLATFORM-V3 | REQ-TPL-TASK-LIFECYCLE | [PASS] pass | 0 / 5 |
 | AC-TPL-TASK-TRANSITIONS | US-TPL-PLATFORM-V3 | REQ-TPL-TASK-LIFECYCLE | [PASS] pass | 2 / 2 |
-| AC-TPL-TASKS-CLI | US-TPL-PLT-001 | REQ-TPL-PLATFORM-TASKS | [PASS] pass | 1 / 1 |
-| AC-TPL-TASKS-CREATE-CLI | US-TPL-PLT-001 | REQ-TPL-PLATFORM-TASKS | [PASS] pass | 1 / 1 |
-| AC-TPL-TASKS-HTTP | US-TPL-PLT-001 | REQ-TPL-PLATFORM-TASKS | [PASS] pass | 1 / 1 |
-| AC-TPL-TASKS-UPDATE-CLI | US-TPL-PLT-001 | REQ-TPL-PLATFORM-TASKS | [PASS] pass | 1 / 1 |
+| AC-TPL-TASKS-CLI | US-TPL-PLT-001 | REQ-TPL-PLATFORM-TASKS | [UNKNOWN] unknown | 0 / 1 |
+| AC-TPL-TASKS-CREATE-CLI | US-TPL-PLT-001 | REQ-TPL-PLATFORM-TASKS | [UNKNOWN] unknown | 0 / 1 |
+| AC-TPL-TASKS-HTTP | US-TPL-PLT-001 | REQ-TPL-PLATFORM-TASKS | [UNKNOWN] unknown | 0 / 1 |
+| AC-TPL-TASKS-UPDATE-CLI | US-TPL-PLT-001 | REQ-TPL-PLATFORM-TASKS | [UNKNOWN] unknown | 0 / 1 |
 | AC-TPL-TS-CONFIG-VALIDATION | US-TPL-PLT-001 | REQ-TPL-TS-CONFIG-GOVERNANCE | [UNKNOWN] unknown | 0 / 0 |
 | AC-TPL-VERSION-ATOMIC | US-TPL-PLT-001 | REQ-TPL-VERSIONING-ENGINE | [PASS] pass | 0 / 3 |
 | AC-TPL-VERSION-DRYRUN | US-TPL-PLT-001 | REQ-TPL-VERSIONING-ENGINE | [PASS] pass | 0 / 3 |
@@ -173,6 +173,12 @@ Auto-generated AC status from acceptance (BDD) and unit tests.
 
 *(This list SHOULD be empty in this repo. If anything appears here, it's a bug.)*
 
+- AC-MYSERV-001: GET /todos returns a JSON array of the user's todos
+- AC-MYSERV-002: GET /todos returns an empty array when no todos exist
+- AC-MYSERV-003: Invalid payload returns 400 with structured error message
+- AC-MYSERV-004: DELETE /todos/:id removes the todo from the list
+- AC-MYSERV-005: POST /todos rejects duplicate todo ID with 409 Conflict
+- AC-MYSERV-006: POST /todos validates title is non-empty and not exceeding 256 characters
 - AC-PLT-001: `cargo xtask doctor` validates Rust, Nix, conftest, git and provides next-steps guidance
 - AC-PLT-002: `cargo xtask help-flows` renders categorized command map from specs/devex_flows.yaml
 - AC-PLT-003: `cargo xtask check` runs fmt + clippy + tests as fast dev loop
@@ -198,16 +204,56 @@ Auto-generated AC status from acceptance (BDD) and unit tests.
 - AC-TPL-002: GET /version returns build information including version and git SHA
 - AC-TPL-003: All 4xx/5xx responses include an error code, message, and request ID
 - AC-TPL-004: Handlers propagate or generate X-Request-ID and expose it in responses
+- AC-TPL-007: GET /metrics returns Prometheus-formatted metrics including http_requests_total
 - AC-TPL-AC-STATUS-CONSISTENCY: `docs/feature_status.md` is regenerated by `cargo xtask ac-status` from `spec_ledger.yaml` and test results. The header MUST include schema_version, template_version, and a cross-reference to governance semantics in `crates/ac-kernel/README.md`. `cargo xtask docs-check` validates this alignment.
+- AC-TPL-AGENT-HINTS-SCHEMA: Hints returned from `/platform/agent/hints` MUST be objects with fields:
+  - `id`: stable hint identifier (string)
+  - `kind`: category of hint (e.g., `task`, `governance`, `policy`)
+  - `priority`: one of `low`, `medium`, `high`
+  - `status`: one of `open`, `in_progress`, `done`
+  - `reason`: object with `code` and `details`
+  - `target`: object describing what the hint is about
+    (e.g., `{ "type": "task", "id": "TASK-…" }`)
+  - `tags`: array of strings (labels)
+  - `links`: object with optional `spec`, `task`, `docs`,
+    `adrs`, and `extra` entries
+
+The CLI command `cargo xtask suggest-next --format json` MAY project this into a simpler structure (`task_id`, `title`, `status`, `owner`, `labels`, `requirement_ids`, `ac_ids`, `reason`), but it MUST preserve the same underlying semantics (priority, status, linkage to REQs/ACs).
 - AC-TPL-AGENT-SKILLS: The .claude/skills directory contains executable skill definitions for feature development, release, and maintenance workflows, each referencing the appropriate xtask commands and platform APIs.
 - AC-TPL-AGENTS-GOVERNANCE-001: docs/AGENTS_GOVERNANCE.md exists and documents the agent governance spec, lifecycle (create/maintain/retire), validation rules, and ADR-0021 principles for this repo.
 - AC-TPL-AGENTS-GOVERNANCE-002: Each project agent in .claude/agents/* has a corresponding REQ in spec_ledger.yaml and at least one AC defining its configuration and system prompt requirements.
 - AC-TPL-AGENTS-NAME-FORMAT: Agent names MUST be kebab-case, contain only lowercase letters/digits/hyphens, max 64 characters, and be unique within the project. agents-lint enforces this.
 - AC-TPL-AGENTS-TEMPLATE-DOC: docs/AGENTS_TEMPLATE.md exists and provides a copy-paste template for creating new agents with checklist for name format, description quality (what + when), tools/permissionMode safety, model selection, and skills references.
+- AC-TPL-BUNDLE-LAYOUT: `cargo xtask bundle <TASK>` creates `bundle/<TASK>/` with: (1) `bundle.yaml` manifest listing task_id, requirement_ids, ac_ids, referenced spec_ledger sections, docs, and tests; (2) `context.md` with bundled file contents (markdown format); (3) manifest includes bundle_version, git_sha, and timestamp for reproducibility.
+- AC-TPL-BUNDLE-MANIFEST: `bundle.yaml` contains bundle_version (current: 1), task_id, requirement_ids, ac_ids, spec sections (with file paths and line anchors), referenced docs (with paths), and test handles (type, tag, file). Manifest is machine-readable and governs bundle scope boundaries.
+- AC-TPL-BUNDLE-MANIFEST-LINKED: When the bundle task name exists in specs/tasks.yaml, bundle.yaml MUST populate requirement_ids from the task's `requirement` field, ac_ids from the task's `acs` array, and tests from the spec_ledger.yaml tests mapping for those ACs. If the task is not in tasks.yaml, these fields remain empty arrays.
+- AC-TPL-BUNDLE-REFERENTIAL-INTEGRITY: Bundle generation (cargo xtask bundle <TASK>) validates that all AC IDs in the task's acs array exist in spec_ledger.yaml before including them in bundle.yaml. Non-existent ACs are logged as warnings and excluded from the manifest's ac_ids array. The bundle command returns exit code 0 with warnings (not silent success) so CI can optionally gate on strict mode via BUNDLE_STRICT_REFS=1.
 - AC-TPL-CLI-JSON-OUTPUT: For core reporting commands (`ac-status`, `version`, `friction-list`, `questions-list`, `fork-list`), passing `--json` produces a single valid JSON document on stdout with a stable top-level shape, and exit codes follow the success/failure of the operation.
+- AC-TPL-ERROR-MAPPING: Platform governance errors are mapped consistently from domain errors to HTTP responses and surfaced via /platform/status. TaskNotFound returns 404, invalid transitions return 400, and repository/configuration errors return 5xx. /platform/status exposes a summary of recent governance errors.
+- AC-TPL-FLOW-IDEMPOTENT: Running cargo xtask selftest or cargo xtask suggest-next multiple times without changes produces stable outputs and no duplicate artifacts.
+- AC-TPL-FORKS-STATUS-SUMMARY: /platform/status includes governance.forks.total and a forks.ids array when forks/fork_registry.yaml exists, and `cargo xtask fork-list --json` reflects that state.
+- AC-TPL-GOV-FORKS: Fork metadata is stored under forks/fork_registry.yaml, can be managed via `cargo xtask fork-register`/`fork-list`, and is exposed via /platform/forks and /platform/forks/{name}.
+- AC-TPL-GOV-FRICTION: Friction log entries are stored as structured files under friction/, can be created and listed via `cargo xtask friction-new`/`friction-list`, and are exposed via /platform/friction and /platform/friction/{id}.
+- AC-TPL-GOV-WRITE-TASK-STATUS-200: set_task_status writes durable state reflected in the governance graph.
+- AC-TPL-HINTS-KERNEL-SIGNALS: When kernel-tagged ACs (must_have_ac: true with tags containing kernel) have failing tests in feature_status.md, the hints endpoint surfaces a governance hint with kind: governance, priority: high, and reason.code: KERNEL_AC_FAILING that alerts agents to prioritize fixing the kernel regression before continuing other work.
+- AC-TPL-HINTS-REFERENTIAL-INTEGRITY: Agent hints (/platform/agent/hints and cargo xtask suggest-next) validate that referenced AC IDs and REQ IDs exist in spec_ledger.yaml. When a task references a non-existent AC or REQ, the response includes a warnings array identifying the invalid reference. Hints with invalid references are excluded or marked with a referential_integrity_warning flag.
+- AC-TPL-HOOKS-INSTALL: The 'cargo xtask install-hooks' command creates a pre-commit hook that runs 'cargo run -p xtask -- precommit' inside the Nix devshell when available; failures are advisory and do not block commits.
 - AC-TPL-KERNEL-CONTRACT-EMITTED: `cargo xtask release-bundle X.Y.Z` writes `release_evidence/kernel_contract.vX.Y.Z.json` describing xtask commands, /platform/* endpoints, and governance schemas for that version.
+- AC-TPL-METADATA-COMPLETE: service_metadata.yaml includes service_id, template_version, URLs, and tags; /platform/status returns the same identifiers; the UI links to runbook, roadmap, agent guide, feature status, and platform support docs.
+- AC-TPL-OPINIONS-DOCUMENTED: docs/QUICKSTART.md and docs/ROADMAP.md include a 'Defaults & Opinions' section listing at least: environment model (Nix-first, Tier-1/Tier-2 split), CI gate (selftest as required), governance artifacts (questions, friction, forks), and agent surfaces (/platform/*, bundles, xtask CLI).
+- AC-TPL-OVERRIDE-DOC: docs/how-to/change-template-opinion.md exists and describes the recommended override path: (1) Identify story/REQ/AC in spec_ledger.yaml, (2) Update AC text/tags/must_have_ac in the fork, (3) Update BDD scenarios, (4) Run selftest + ac-status, (5) Optionally log friction/question if the kernel made this hard.
+- AC-TPL-OVERRIDE-TRACEABLE: specs/doc_index.yaml registers the override doc with tag 'override_path', and /platform/docs/index exposes it under a 'Kernel Overrides' category.
+- AC-TPL-PLATFORM-AUTH-BASIC: When PLATFORM_AUTH_MODE=basic, write endpoints under /platform/* reject unauthenticated requests with 401/403 and accept requests with the configured credential header; read endpoints may remain open or use the same guard.
+- AC-TPL-PLATFORM-DEVEX: GET /platform/devex/flows returns the canonical flows definition.
+- AC-TPL-PLATFORM-DOCS: GET /platform/docs/index returns the documentation index.
+- AC-TPL-PLATFORM-GOVERNANCE-APIS: /platform/questions, /platform/friction, and /platform/forks return JSON payloads that match their schemas and are linked from /platform/schema.
+- AC-TPL-PLATFORM-GRAPH: GET /platform/graph returns the full governance graph in JSON format.
+- AC-TPL-PLATFORM-SCHEMA: GET /platform/schema (or /platform/openapi) returns a JSON schema/OpenAPI document that includes /platform/status, /platform/graph, /platform/tasks, and /platform/agent/hints.
 - AC-TPL-PLATFORM-UI-CONTRACT: The platform provides a governed UI contract (specs/ui_contract.yaml) defining screens and regions, a /platform/ui/contract endpoint exposing the contract as JSON, and data-uiid attributes in HTML matching the contract. The cargo xtask ui-contract-check command validates YAML structure and DOM anchors, and selftest includes this check.
+- AC-TPL-PLATFORM-UI-DASHBOARD: GET / or /ui serves an HTML dashboard showing platform status, including governance health metrics from /platform/status.
 - AC-TPL-PLATFORM-UI-FLOWS: The UI provides a flows and tasks view displaying DevEx flows and available tasks from the platform APIs.
+- AC-TPL-PLATFORM-UI-GRAPH: The UI provides a graph visualization rendering the governance graph (stories, requirements, ACs, docs, commands) using Mermaid.js.
+- AC-TPL-POLICY-STATUS-OVERVIEW: GET /platform/status includes governance.policies.status field derived from the last policy-test run (pass/fail/unknown), read from target/policy_status.json.
 - AC-TPL-QUESTIONS-LOGGED: Ambiguity during automated flows or suggest-next emits a structured question (file/PR comment/status entry) that can be surfaced to humans or agents without halting progress.
 - AC-TPL-REL-CHANGELOG: Evidence file includes distinct sections (Tasks, Specs/ACs, ADRs, Git log, Governance signals) adequate for LLM formatting into Keep a Changelog format.
 - AC-TPL-REL-EVIDENCE: `cargo xtask release-bundle X.Y.Z` writes `release_evidence/vX.Y.Z.md` containing: all tasks completed in this version, linked REQs/ACs/ADRs, git log since last tag, selftest summary, policy status, resolved friction entries.
@@ -216,6 +262,16 @@ Auto-generated AC status from acceptance (BDD) and unit tests.
 - AC-TPL-SKILLS-GUIDE-001: docs/AGENT_SKILLS.md exists and documents the recommended Skill set, SKILL.md templates, and best practices for this repo.
 - AC-TPL-SKILLS-LINT: `cargo run -p xtask -- skills-lint` validates Skills frontmatter and content (name/description rules, references to flows and APIs).
 - AC-TPL-SKILLS-NAME-FORMAT: Skill names MUST be kebab-case, contain only lowercase letters/digits/hyphens, max 64 characters, and be unique within the project. skills-lint enforces this.
+- AC-TPL-STATUS-AC-COVERAGE: /platform/status includes an ac_coverage field in the governance section with total, passing, failing, and unknown counts, derived from BDD test results (target/ac_report.json or fallback to docs/feature_status.md).
+- AC-TPL-STATUS-PARITY-CLI-HTTP: /platform/status and cargo xtask status expose the same key governance metrics: stories, requirements, ACs, AC coverage (pass/fail/unknown), and task status breakdown (Todo/InProgress/Review/Done counts).
+- AC-TPL-STATUS-TASK-BREAKDOWN: /platform/status includes task counts broken down by status (todo, in_progress, review, done) in addition to the total count, matching the breakdown shown by cargo xtask status.
+- AC-TPL-SUGGEST-NEXT-CLI: cargo xtask suggest-next --task <ID> prints a structured sequence of recommended commands and edits for the given task, based on its recommended_flows.
+- AC-TPL-SUGGEST-NEXT-HTTP: GET /platform/tasks/suggest-next?task=<ID> returns a JSON payload with task metadata and a recommended_sequence of steps (commands/edits) for that task.
+- AC-TPL-TASK-STATUS-MODEL: Task status values (Todo, InProgress, Review, Done) have a single canonical representation in business_core::governance::TaskStatus. All adapters, CLIs, and HTTP surfaces parse status strings through this model via FromStr and reject unknown status strings consistently.
+- AC-TPL-TASKS-CLI: cargo xtask tasks-list prints all tasks with their IDs, titles, status, and requirement IDs (no filters implemented yet).
+- AC-TPL-TASKS-CREATE-CLI: cargo xtask task-create creates a new task in specs/tasks.yaml, validates that the requirement and ACs exist in spec_ledger.yaml, and rejects duplicate task IDs.
+- AC-TPL-TASKS-HTTP: GET /platform/tasks returns a JSON representation of tasks.yaml, including id, title, requirement, acs, status, owner, labels, and docs fields, and supports status/requirement filters. POST /platform/tasks/{id}/status updates task status via HTTP (no POST /platform/tasks or PUT /platform/tasks/{id} implemented yet).
+- AC-TPL-TASKS-UPDATE-CLI: cargo xtask task-update updates task fields (status, title, owner) in specs/tasks.yaml, enforces valid status transitions, and persists changes to the task definition.
 - AC-TPL-VERSION-ATOMIC: Version updates are atomic with rollback on failure, ensuring no partial state if any file update fails
 - AC-TPL-VERSION-DRYRUN: `cargo xtask release-prepare X.Y.Z --dry-run` shows all changes before applying them, listing each file and the old→new version without modifying files
 - AC-TPL-VERSION-MANIFEST: Version locations declared in specs/version_manifest.yaml listing all files and extraction patterns; release-prepare reads this manifest to update all version-bearing files
