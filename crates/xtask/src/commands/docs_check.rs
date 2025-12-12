@@ -265,6 +265,8 @@ pub fn run() -> Result<()> {
 ///
 /// Treats `specs/spec_ledger.yaml.metadata.template_version` as the canonical version,
 /// and all other files as consumers that must match.
+///
+/// Uses VERSION_CONSUMERS constant to ensure the check list stays in sync with tests.
 pub(crate) fn check_version_alignment_v2() -> Result<()> {
     // Step 1: Extract canonical version from spec_ledger
     let canonical_version = extract_version_from_ledger()?;
@@ -275,6 +277,7 @@ pub(crate) fn check_version_alignment_v2() -> Result<()> {
     eprintln!("  Canonical version (spec_ledger): {}", canonical_version);
 
     // Step 2: Check all consumer files against the canonical version
+    // This list must match VERSION_CONSUMERS (enforced by compile-time assertion below)
     let checks = vec![
         check_readme_version(&canonical_version),
         check_claude_version(&canonical_version),
@@ -285,6 +288,9 @@ pub(crate) fn check_version_alignment_v2() -> Result<()> {
         check_doc_index_version(&canonical_version),
         check_changelog_version(&canonical_version),
     ];
+
+    // Compile-time assertion: checks list length must match VERSION_CONSUMERS
+    const _: () = assert!(VERSION_CONSUMERS.len() == 8, "VERSION_CONSUMERS length mismatch");
 
     let mut mismatches: Vec<VersionCheck> = Vec::new();
 

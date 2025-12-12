@@ -117,6 +117,15 @@ commands:
       contributing_flow: false
       claude_golden_path: false
 
+  ac-lint:
+    category: design_ac
+    summary: "Lint spec_ledger.yaml for structural issues (naming, duplicates, test types)"
+    required: true
+    docs:
+      readme_table: false
+      contributing_flow: false
+      claude_golden_path: false
+
   bundle:
     category: design_ac
     summary: "Generate LLM context bundle"
@@ -391,7 +400,7 @@ flows:
     description: "Explore available commands and flows"
     required: true
     documented_in: ["README.md"]
-    steps: ["help-flows", "ac-status", "tasks-list", "graph-export"]
+    steps: ["help-flows", "ac-status", "ac-lint", "tasks-list", "graph-export"]
 
   platform_exploration:
     name: "Platform Exploration"
