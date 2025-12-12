@@ -56,6 +56,12 @@ crates/app-http/src/platform.rs           @EffortlessMetrics/kernel-maintainers
 
 .github/workflows/tier1-selftest.yml      @EffortlessMetrics/kernel-maintainers
 .github/workflows/selftest.yml            @EffortlessMetrics/kernel-maintainers
+.github/workflows/ci-template-selftest.yml @EffortlessMetrics/kernel-maintainers
+.github/workflows/release-sbom-sign.yml   @EffortlessMetrics/kernel-maintainers
+.github/workflows/ci-supply-chain.yml     @EffortlessMetrics/kernel-maintainers
+
+# Composite actions (used by multiple workflows)
+.github/actions/**                        @EffortlessMetrics/kernel-maintainers
 
 # =============================================================================
 # RELEASE ARTIFACTS
