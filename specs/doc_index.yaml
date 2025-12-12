@@ -1210,3 +1210,17 @@ docs:
       - AC-PLT-015
     adrs: [ADR-0005]
 
+  # Release Readiness Checklist
+  - id: HOW-TO-RELEASE-READINESS
+    file: docs/how-to/release-readiness-checklist.md
+    title: "Release Readiness Checklist"
+    doc_type: how_to
+    stories: [US-TPL-PLT-001]
+    requirements:
+      - REQ-PLT-RELEASE-SAFETY
+      - REQ-PLT-SECURITY-GOVERNANCE
+    acs:
+      - AC-PLT-019
+      - AC-PLT-020
+    adrs: [ADR-0017]
+

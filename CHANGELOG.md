@@ -11,6 +11,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 (empty)
 
+## [3.3.12] - 2025-12-12
+
+### Added
+
+- **Release Readiness Checklist** (`docs/how-to/release-readiness-checklist.md`)
+  - One-page actionable guide for release validation, tagging, and verification
+  - Documents branch protection requirements and tiering model reference
+  - Includes troubleshooting section for common CI issues
+
+### Changed
+
+- **CI: Three-tier path filtering in `tier1-selftest.yml`**
+  - **docs-check tier:** Only `docs/**` and `*.md` changes → `cargo xtask docs-check` (fastest)
+  - **check tier:** Non-BDD changes (workflows, configs) → `cargo xtask check` (fast)
+  - **selftest tier:** Code/specs/features changes → full `cargo xtask selftest` (complete)
+  - Adds step summary table showing tier classification per PR
+  - Prevents redundant BDD runs on config-only or docs-only changes
+
+- **CI: De-duplicated redundant BDD runs**
+  - `tier1-selftest.yml` is now the authoritative kernel gate
+  - Other selftest workflows are convenience checks, not kernel enforcement
+  - Release tags (`v*`) run full selftest via `ci-example-fork.yml`
+
+- **CI: Improved caching with shared rust-cache key**
+  - Composite actions (`.github/actions/setup-rust-nix`, `.github/actions/sccache-stats`)
+  - Consistent cache keys across workflows reduce cold-start times
+
+- **CODEOWNERS: Extended coverage for supply-chain workflows**
+  - Added `ci-template-selftest.yml`, `release-sbom-sign.yml`, `ci-supply-chain.yml`
+  - Added `.github/actions/**` for composite actions
+
+### Documentation
+
+- Updated CI governance documentation in `docs/reference/ci-workflows.md`
+- Added "Authoritative Kernel Gate" and "How an IDP Can Trust a Cell" sections
+
 ## [3.3.11] - 2025-12-12
 
 ### Fixed
