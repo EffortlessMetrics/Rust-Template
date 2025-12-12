@@ -1,8 +1,8 @@
-# Test Service (v3.3.8)
+# Test Service (v3.3.9)
 
 > **TL;DR:** A governed Rust service template where specs, tests, docs, policies, and CI all agree — and the repo can prove it.
 >
-> **Kernel baseline:** `v3.3.8-kernel`
+> **Kernel baseline:** `v3.3.9-kernel`
 > This tag freezes the Rust-as-Spec kernel template (specs, ACs, xtask contracts,
 > and `/platform/*` introspection). Forks inherit this baseline and extend it with
 > domain-specific stories, requirements, and services.
@@ -14,7 +14,7 @@
 
 - Exposes `/platform/*` introspection APIs and `cargo xtask idp-snapshot` for IDP tiles
 - Guarantees 65 kernel ACs via `tier1-selftest` + CI enforcement
-- Ships a stable kernel contract at `v3.3.8-kernel`
+- Ships a stable kernel contract at `v3.3.9-kernel`
 - Validates cell readiness via `cargo xtask kernel-status`
 
 See **[IDP Cell Contract](docs/IDP_CELL_CONTRACT.md)** for the full integration datasheet.
@@ -88,7 +88,7 @@ Forks inherit the kernel as-is and extend with domain-specific specs, ACs, and c
 
 ---
 
-**Template Version:** v3.3.8 | **Kernel Baseline:** [v3.3.5-kernel](./docs/KERNEL_SNAPSHOT.md)
+**Template Version:** v3.3.9 | **Kernel Baseline:** [v3.3.5-kernel](./docs/KERNEL_SNAPSHOT.md)
 
 > **Using this as a template?** Start here:
 > - **[Quick Start Guide](docs/QUICKSTART.md) – Get productive in 15 minutes**
@@ -742,7 +742,7 @@ Technical references and command documentation:
 
 ## 13. Current Status & Roadmap
 
-**Kernel Version:** v3.3.8-kernel (see [KERNEL_SNAPSHOT.md](docs/KERNEL_SNAPSHOT.md) for what you inherit)
+**Kernel Version:** v3.3.9-kernel (see [KERNEL_SNAPSHOT.md](docs/KERNEL_SNAPSHOT.md) for what you inherit)
 
 **AC Health:** See:
 

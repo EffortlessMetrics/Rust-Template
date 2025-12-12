@@ -13,8 +13,14 @@ jobs:
     permissions: { contents: read }
     steps:
       - uses: actions/checkout@v4
-      - run: cargo install cyclonedx-bom --locked || true
-      - run: cyclonedx-bom -o sbom.json
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          cache-on-failure: true
+      - name: Install cyclonedx-bom
+        run: cargo install cyclonedx-bom --locked
+      - name: Generate SBOM
+        run: cyclonedx-bom -o sbom.json
       # TODO: Implement release notes generation from git tags/commits
       # Consider using: git-cliff, conventional commits, or GitHub release notes API
       - name: Generate release notes (placeholder)

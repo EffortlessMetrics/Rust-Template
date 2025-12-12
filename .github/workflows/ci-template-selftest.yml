@@ -70,7 +70,8 @@ jobs:
       - name: Run governance checks (Tier 2 - Windows)
         if: runner.os == 'Windows'
         shell: pwsh
-        run: cargo run -p xtask -- check
+        # Use --release to avoid stack overflow on Windows (smaller default stack in debug builds)
+        run: cargo run -p xtask --release -- check
 
       - name: Run workspace tests (Tier 2 - Windows)
         if: runner.os == 'Windows'
