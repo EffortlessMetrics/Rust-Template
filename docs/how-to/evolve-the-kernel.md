@@ -356,6 +356,9 @@ To demote an existing kernel AC (set `must_have_ac: false`):
 Before committing kernel AC changes:
 
 ```bash
+# Lint the spec ledger for structural issues
+cargo xtask ac-lint --strict
+
 # Check kernel AC coverage
 cargo xtask ac-status --summary
 
@@ -365,6 +368,32 @@ cargo xtask ac-ensure-kernel-mapped
 # Run full selftest (will fail if budget exceeded)
 KERNEL_UNKNOWN_BUDGET=0 cargo xtask selftest
 ```
+
+### Spec Ledger Lint (`ac-lint`)
+
+The `ac-lint` command validates `specs/spec_ledger.yaml` for structural issues:
+
+| Check | Description |
+|-------|-------------|
+| **Duplicate IDs** | No story, REQ, or AC can have the same ID |
+| **Naming conventions** | Stories must start with `US-`, REQs with `REQ-`, ACs with `AC-` |
+| **Test types** | Only allowed types: `unit`, `bdd`, `integration`, `docs`, `manual`, `ci`, `contract`, `e2e` |
+| **Kernel coverage** | Kernel ACs (`must_have_ac: true`) must have at least one test mapping |
+
+**Usage:**
+
+```bash
+# Basic lint (errors only)
+cargo xtask ac-lint
+
+# Strict mode (warnings become errors)
+cargo xtask ac-lint --strict
+
+# Also check that test files exist on disk
+cargo xtask ac-lint --strict --check-files
+```
+
+**Integrated into selftest:** Step 10 runs `ac-lint --strict` automatically.
 
 ---
 

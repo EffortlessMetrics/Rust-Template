@@ -14,8 +14,9 @@ pub const DEV_UP_NEXT_STEPS: [&str; 2] = ["cargo run -p app-http", "http://local
 pub fn run() -> Result<()> {
     println!("{}", "🦀 Rust-as-Spec dev-up starting...".bold());
 
-    // 1. Install pre-commit hooks if missing
-    println!("→ Pre-commit hooks check...");
+    // Run each step from DEV_UP_STEPS
+    // Step 1: Pre-commit hooks check
+    println!("→ {}...", DEV_UP_STEPS[0]);
     let hook_path = Path::new(".git").join("hooks").join("pre-commit");
     if !hook_path.exists() {
         println!("  Installing pre-commit hooks...");
@@ -24,8 +25,8 @@ pub fn run() -> Result<()> {
         println!("  {}", "✓ Pre-commit hooks already installed".green());
     }
 
-    // 2. Check Docker availability
-    println!("→ Docker status check...");
+    // Step 2: Docker status check
+    println!("→ {}...", DEV_UP_STEPS[1]);
     let docker_ok = Command::new("docker")
         .arg("ps")
         .stdout(Stdio::null())
@@ -46,8 +47,8 @@ pub fn run() -> Result<()> {
         println!("  Docker status: running (no docker-compose.yaml found)");
     }
 
-    // 3. Light governance check (low-resource mode)
-    println!("→ Running governance check...");
+    // Step 3: Governance check (low-resource mode)
+    println!("→ {}...", DEV_UP_STEPS[2]);
     let low_resource_mode = std::env::var("XTASK_LOW_RESOURCES").unwrap_or_default() == "1";
     if low_resource_mode {
         println!("  Running in low-resource mode");
@@ -66,12 +67,12 @@ pub fn run() -> Result<()> {
         return Err(anyhow!("governance check failed"));
     }
 
-    // 4. Print next steps
+    // Print next steps from DEV_UP_NEXT_STEPS
     println!();
     println!("{}", "✅ dev-up complete.".green().bold());
     println!("Next steps:");
-    println!("  1. {}", "cargo run -p app-http".cyan());
-    println!("  2. Open {}", "http://localhost:8080/ui".cyan());
+    println!("  1. {}", DEV_UP_NEXT_STEPS[0].cyan());
+    println!("  2. Open {}", DEV_UP_NEXT_STEPS[1].cyan());
 
     Ok(())
 }

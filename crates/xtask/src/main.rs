@@ -1099,10 +1099,12 @@ fn format_command(cmd: &Command) -> String {
 /// Used by devex contract check to validate required commands exist
 pub fn all_command_names() -> Vec<&'static str> {
     vec![
+        "ac-ensure-kernel-mapped",
         "ac-history",
+        "ac-lint",
+        "ac-new",
         "ac-slo",
         "ac-status",
-        "ac-new",
         "adr-check",
         "adr-new",
         "check",

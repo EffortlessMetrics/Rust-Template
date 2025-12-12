@@ -404,7 +404,21 @@ pub fn run_with_verbosity(verbosity: crate::Verbosity) -> Result<()> {
     println!("{}", "[10/11] Checking AC coverage for v3.0 kernel...".blue());
     let step_start = Instant::now();
 
-    // 10a: Verify all kernel ACs have test mappings (ADR-0024 guardrail)
+    // 10a: Spec ledger structural lint (ac-lint)
+    // Validates naming conventions, duplicate IDs, test types, and kernel AC mappings.
+    let lint_ok = match run_spec_ledger_lint(verbosity) {
+        Ok(_) => {
+            println!("  {} Spec ledger structure validated", "✓".green());
+            true
+        }
+        Err(e) => {
+            eprintln!("  {} Spec ledger lint failed: {}", "✗".red(), e);
+            eprintln!("    hint: Run `cargo xtask ac-lint --strict` for details");
+            false
+        }
+    };
+
+    // 10b: Verify all kernel ACs have test mappings (ADR-0024 guardrail)
     // This ensures no kernel AC is added without at least declaring its tests.
     let mapping_check_ok = match run_kernel_mapping_check(verbosity) {
         Ok(_) => {
@@ -418,7 +432,7 @@ pub fn run_with_verbosity(verbosity: crate::Verbosity) -> Result<()> {
         }
     };
 
-    // 10b: Verify kernel ACs have runtime evidence (not just mappings)
+    // 10c: Verify kernel ACs have runtime evidence (not just mappings)
     let coverage_ok = match run_ac_coverage_check(verbosity) {
         Ok(_) => {
             let elapsed = step_start.elapsed();
@@ -435,12 +449,12 @@ pub fn run_with_verbosity(verbosity: crate::Verbosity) -> Result<()> {
             false
         }
     };
-    // Step 10 passes only if both mapping check AND coverage check pass
-    let step10_ok = mapping_check_ok && coverage_ok;
+    // Step 10 passes only if lint, mapping check, AND coverage check pass
+    let step10_ok = lint_ok && mapping_check_ok && coverage_ok;
     results.push(
         "AC coverage",
         step10_ok,
-        Some("Run `cargo xtask ac-ensure-kernel-mapped --strict` or `cargo xtask ac-coverage`"),
+        Some("Run `cargo xtask ac-lint --strict` or `cargo xtask ac-coverage`"),
     );
     println!();
 
@@ -557,6 +571,22 @@ fn run_adr_check(verbosity: crate::Verbosity) -> Result<()> {
     crate::commands::adr_check::run(crate::commands::adr_check::AdrCheckArgs {
         verbosity,
         ..Default::default()
+    })
+}
+
+/// Run the spec ledger linter to validate structure and invariants.
+///
+/// This catches:
+/// - Duplicate story/REQ/AC IDs
+/// - Invalid naming conventions (US-, REQ-, AC- prefixes)
+/// - Invalid test types
+/// - Kernel ACs without test mappings (when --strict)
+fn run_spec_ledger_lint(verbosity: crate::Verbosity) -> Result<()> {
+    // Use ac-lint in strict mode to catch all issues
+    crate::commands::ac_lint::run(crate::commands::ac_lint::AcLintArgs {
+        verbose: verbosity.is_verbose(),
+        strict: true,
+        check_files: false, // Skip file existence checks for speed
     })
 }
 
