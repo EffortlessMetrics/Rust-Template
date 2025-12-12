@@ -86,8 +86,8 @@ Auto-generated AC status from acceptance (BDD) and unit tests.
 | AC-TPL-AGENTS-TOOLS-PERMISSION-SAFETY | US-TPL-PLT-001 | REQ-TPL-AGENTS-GOVERNANCE | [UNKNOWN] unknown | 0 / 0 |
 | AC-TPL-ARTIFACTS-HAVE-REFS | US-TPL-PLT-001 | REQ-TPL-GOV-ARTIFACTS | [PASS] pass | 1 / 2 |
 | AC-TPL-BDD-EXIT-CODES | US-TPL-PLT-001 | REQ-TPL-BDD-HARNESS | [PASS] pass | 2 / 2 |
-| AC-TPL-BUNDLE-LAYOUT | US-TPL-PLT-001 | REQ-TPL-BUNDLE-CONTRACT | [PASS] pass | 1 / 2 |
-| AC-TPL-BUNDLE-MANIFEST | US-TPL-PLT-001 | REQ-TPL-BUNDLE-CONTRACT | [PASS] pass | 1 / 2 |
+| AC-TPL-BUNDLE-LAYOUT | US-TPL-PLT-001 | REQ-TPL-BUNDLE-CONTRACT | [PASS] pass | 0 / 2 |
+| AC-TPL-BUNDLE-MANIFEST | US-TPL-PLT-001 | REQ-TPL-BUNDLE-CONTRACT | [PASS] pass | 0 / 2 |
 | AC-TPL-BUNDLE-MANIFEST-LINKED | US-TPL-PLT-001 | REQ-TPL-BUNDLE-CONTRACT | [PASS] pass | 0 / 2 |
 | AC-TPL-BUNDLE-MINIMAL-SCOPE | US-TPL-PLT-001 | REQ-TPL-BUNDLE-CONTRACT | [PASS] pass | 1 / 1 |
 | AC-TPL-BUNDLE-REFERENTIAL-INTEGRITY | US-TPL-PLT-001 | REQ-TPL-AGENT-ERGONOMICS | [UNKNOWN] unknown | 0 / 1 |
@@ -107,8 +107,8 @@ Auto-generated AC status from acceptance (BDD) and unit tests.
 | AC-TPL-GRAPH-MERMAID | US-TPL-PLT-001 | REQ-TPL-GRAPH-VISUALIZATION | [PASS] pass | 1 / 2 |
 | AC-TPL-GRAPH-REQ-HAS-AC | US-TPL-PLT-001 | REQ-TPL-GRAPH-INVARIANTS | [PASS] pass | 1 / 1 |
 | AC-TPL-GRAPH-SELFTEST | US-TPL-PLT-001 | REQ-TPL-GRAPH-INVARIANTS | [PASS] pass | 3 / 4 |
-| AC-TPL-HINTS-KERNEL-SIGNALS | US-TPL-PLT-001 | REQ-TPL-AGENT-ERGONOMICS | [PASS] pass | 1 / 2 |
-| AC-TPL-HINTS-REFERENTIAL-INTEGRITY | US-TPL-PLT-001 | REQ-TPL-AGENT-ERGONOMICS | [PASS] pass | 1 / 3 |
+| AC-TPL-HINTS-KERNEL-SIGNALS | US-TPL-PLT-001 | REQ-TPL-AGENT-ERGONOMICS | [PASS] pass | 0 / 2 |
+| AC-TPL-HINTS-REFERENTIAL-INTEGRITY | US-TPL-PLT-001 | REQ-TPL-AGENT-ERGONOMICS | [PASS] pass | 0 / 3 |
 | AC-TPL-HOOKS-INSTALL | US-TPL-PLT-001 | REQ-TPL-GOV-HOOKS | [UNKNOWN] unknown | 0 / 1 |
 | AC-TPL-IAC-COMPOSE-ALIGN | US-TPL-PLT-001 | REQ-TPL-IAC-ALIGNMENT | [PASS] pass | 1 / 1 |
 | AC-TPL-IAC-K8S-ALIGN | US-TPL-PLT-001 | REQ-TPL-IAC-ALIGNMENT | [PASS] pass | 1 / 1 |
@@ -211,6 +211,8 @@ Auto-generated AC status from acceptance (BDD) and unit tests.
 - AC-TPL-AGENTS-GOVERNANCE-002: Each project agent in .claude/agents/* has a corresponding REQ in spec_ledger.yaml and at least one AC defining its configuration and system prompt requirements.
 - AC-TPL-AGENTS-NAME-FORMAT: Agent names MUST be kebab-case, contain only lowercase letters/digits/hyphens, max 64 characters, and be unique within the project. agents-lint enforces this.
 - AC-TPL-AGENTS-TEMPLATE-DOC: docs/AGENTS_TEMPLATE.md exists and provides a copy-paste template for creating new agents with checklist for name format, description quality (what + when), tools/permissionMode safety, model selection, and skills references.
+- AC-TPL-BUNDLE-LAYOUT: `cargo xtask bundle <TASK>` creates `bundle/<TASK>/` with: (1) `bundle.yaml` manifest listing task_id, requirement_ids, ac_ids, referenced spec_ledger sections, docs, and tests; (2) `context.md` with bundled file contents (markdown format); (3) manifest includes bundle_version, git_sha, and timestamp for reproducibility.
+- AC-TPL-BUNDLE-MANIFEST: `bundle.yaml` contains bundle_version (current: 1), task_id, requirement_ids, ac_ids, spec sections (with file paths and line anchors), referenced docs (with paths), and test handles (type, tag, file). Manifest is machine-readable and governs bundle scope boundaries.
 - AC-TPL-BUNDLE-MANIFEST-LINKED: When the bundle task name exists in specs/tasks.yaml, bundle.yaml MUST populate requirement_ids from the task's `requirement` field, ac_ids from the task's `acs` array, and tests from the spec_ledger.yaml tests mapping for those ACs. If the task is not in tasks.yaml, these fields remain empty arrays.
 - AC-TPL-BUNDLE-REFERENTIAL-INTEGRITY: Bundle generation (cargo xtask bundle <TASK>) validates that all AC IDs in the task's acs array exist in spec_ledger.yaml before including them in bundle.yaml. Non-existent ACs are logged as warnings and excluded from the manifest's ac_ids array. The bundle command returns exit code 0 with warnings (not silent success) so CI can optionally gate on strict mode via BUNDLE_STRICT_REFS=1.
 - AC-TPL-CLI-JSON-OUTPUT: For core reporting commands (`ac-status`, `version`, `friction-list`, `questions-list`, `fork-list`), passing `--json` produces a single valid JSON document on stdout with a stable top-level shape, and exit codes follow the success/failure of the operation.
@@ -220,6 +222,8 @@ Auto-generated AC status from acceptance (BDD) and unit tests.
 - AC-TPL-GOV-FORKS: Fork metadata is stored under forks/fork_registry.yaml, can be managed via `cargo xtask fork-register`/`fork-list`, and is exposed via /platform/forks and /platform/forks/{name}.
 - AC-TPL-GOV-FRICTION: Friction log entries are stored as structured files under friction/, can be created and listed via `cargo xtask friction-new`/`friction-list`, and are exposed via /platform/friction and /platform/friction/{id}.
 - AC-TPL-GOV-WRITE-TASK-STATUS-200: set_task_status writes durable state reflected in the governance graph.
+- AC-TPL-HINTS-KERNEL-SIGNALS: When kernel-tagged ACs (must_have_ac: true with tags containing kernel) have failing tests in feature_status.md, the hints endpoint surfaces a governance hint with kind: governance, priority: high, and reason.code: KERNEL_AC_FAILING that alerts agents to prioritize fixing the kernel regression before continuing other work.
+- AC-TPL-HINTS-REFERENTIAL-INTEGRITY: Agent hints (/platform/agent/hints and cargo xtask suggest-next) validate that referenced AC IDs and REQ IDs exist in spec_ledger.yaml. When a task references a non-existent AC or REQ, the response includes a warnings array identifying the invalid reference. Hints with invalid references are excluded or marked with a referential_integrity_warning flag.
 - AC-TPL-HOOKS-INSTALL: The 'cargo xtask install-hooks' command creates a pre-commit hook that runs 'cargo run -p xtask -- precommit' inside the Nix devshell when available; failures are advisory and do not block commits.
 - AC-TPL-KERNEL-CONTRACT-EMITTED: `cargo xtask release-bundle X.Y.Z` writes `release_evidence/kernel_contract.vX.Y.Z.json` describing xtask commands, /platform/* endpoints, and governance schemas for that version.
 - AC-TPL-METADATA-COMPLETE: service_metadata.yaml includes service_id, template_version, URLs, and tags; /platform/status returns the same identifiers; the UI links to runbook, roadmap, agent guide, feature status, and platform support docs.
