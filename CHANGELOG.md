@@ -1,4 +1,4 @@
-<!-- markdownlint-disable MD007 MD024 MD032 MD036 -->
+<!-- markdownlint-disable MD007 MD013 MD024 MD032 MD036 -->
 
 # Changelog
 
@@ -25,8 +25,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - CI: Fix Windows stack overflow by using `--release` mode for xtask in Tier 2 workflow
 - CI: Fix `cyclonedx-bom` installation in release SBOM workflow by adding proper Rust toolchain setup
-
-
 
 ## [3.3.8] - 2025-12-09
 
