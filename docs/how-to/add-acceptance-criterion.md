@@ -1,5 +1,8 @@
 # How-to: Add an Acceptance Criterion
 
+<!-- doclint:disable orphan-version -->
+<!-- Contains example gherkin snippets with template version headers -->
+
 This guide walks you through adding a new Acceptance Criterion (AC) to the template, from spec definition through test validation.
 
 **What you'll learn:**
@@ -215,9 +218,9 @@ Create or edit a `.feature` file in `specs/features/`. Follow Gherkin syntax and
 File: `specs/features/tasks.feature`
 
 ```gherkin
-# Template Version: v3.3.8
+# Template Version: v3.3.9
 # Schema: spec_ledger.yaml v1.0
-# Last Updated: 2025-12-10
+# Last Updated: 2025-12-12
 
 Feature: Task Management
   As a developer
@@ -721,7 +724,7 @@ stories:
 ### BDD scenario template
 
 ```gherkin
-# Template Version: v3.3.8
+# Template Version: v3.3.9
 # Schema: spec_ledger.yaml v1.0
 # Last Updated: YYYY-MM-DD
 

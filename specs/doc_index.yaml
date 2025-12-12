@@ -433,7 +433,7 @@ docs:
     acs:
       - AC-TPL-SELFTEST-GATE
       - AC-TPL-PLATFORM-GRAPH
-    adrs: [ADR-0003, ADR-0005, ADR-0020, ADR-0021]
+    adrs: [ADR-0003, ADR-0005, ADR-0020, ADR-0021, ADR-0024]
 
   # Quick Start Guide
   - id: GUIDE-TPL-QUICKSTART-001
@@ -498,7 +498,7 @@ docs:
   # Kernel Snapshot (Release Baseline)
   - id: SNAPSHOT-TPL-KERNEL-001
     file: docs/KERNEL_SNAPSHOT.md
-    title: "Kernel Snapshot v3.3.8"
+    title: "Kernel Snapshot v3.3.9"
     doc_type: status
     stories: [US-TPL-PLT-001]
     requirements: [REQ-PLT-DOCS-CONSISTENCY, REQ-TPL-OPINIONATED-DEFAULTS]
@@ -818,7 +818,7 @@ docs:
   # Adopt the Rust-as-Spec Kernel
   - id: HOW-TO-ADOPT-KERNEL-001
     file: docs/how-to/adopt-kernel.md
-    title: "Adopt the Rust-as-Spec Kernel (v3.3.8-kernel)"
+    title: "Adopt the Rust-as-Spec Kernel (v3.3.9-kernel)"
     doc_type: how_to
     stories: [US-TPL-PLT-001]
     requirements: [REQ-TPL-PLATFORM-INTROSPECTION]
