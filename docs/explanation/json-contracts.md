@@ -23,7 +23,7 @@ last_updated: 2025-12-01
 
 # JSON Contracts for CLI and Platform APIs
 
-**Template Version:** v3.3.8
+**Template Version:** v3.3.9
 
 This document defines the JSON contracts for all machine-readable outputs from the Rust-as-Spec platform cell. These contracts enable AI agents, IDPs (Internal Developer Portals), and automation tools to integrate with the platform reliably.
 
