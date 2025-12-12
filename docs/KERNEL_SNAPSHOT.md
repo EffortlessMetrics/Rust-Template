@@ -1,6 +1,6 @@
 ---
 id: SNAPSHOT-TPL-KERNEL-001
-title: Kernel Snapshot v3.3.9
+title: Kernel Snapshot v3.3.10
 doc_type: status
 status: published
 audience: maintainers, platform-engineers, forks
@@ -12,14 +12,14 @@ adrs: [ADR-0005]
 last_updated: 2025-12-09
 ---
 
-# Kernel Snapshot v3.3.9
+# Kernel Snapshot v3.3.10
 
 > This snapshot describes the kernel at tag **v3.3.8-kernel**.
 > For machine-readable details, see [`release_evidence/kernel_contract.v3.3.8.json`](../release_evidence/kernel_contract.v3.3.8.json).
 > For AC-level status, see [`docs/feature_status.md`](./feature_status.md).
 > For adoption instructions, see [`docs/how-to/adopt-kernel.md`](./how-to/adopt-kernel.md).
 
-**Date:** 2025-12-11 | **Version:** v3.3.8-kernel
+**Date:** 2025-12-12 | **Version:** v3.3.10-kernel
 
 ## Executive Summary
 

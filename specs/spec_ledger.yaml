@@ -3,7 +3,7 @@
 
 metadata:
   schema_version: "1.0"
-  template_version: "3.3.9"
+  template_version: "3.3.10"
   last_updated: "2025-12-07"
   description: "Template core capabilities - v2.4.0 includes health, version, errors, metrics, and supply chain hardening"
   # Template-wide ADRs (not tied to specific stories/requirements)
