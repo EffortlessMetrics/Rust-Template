@@ -1,9 +1,14 @@
 name: Example Fork Validation
-# NOTE: This workflow now runs on tags + nightly only to avoid redundant BDD runs.
-# The path-filtered validation was causing duplicate BDD runs with tier1-selftest.
+# PRs touching example paths: run structure validation only (fast, no BDD)
+# Tags: run full selftest to ensure release quality
+# Nightly/manual: governance checks only
 on:
   push:
     tags: ["v*"]
+  pull_request:
+    paths:
+      - "examples/fork-customization/**"
+      - ".github/workflows/ci-example-fork.yml"
   schedule:
     # Nightly at 7 AM UTC (offset from selftest.yml)
     - cron: "0 7 * * *"
@@ -19,27 +24,7 @@ jobs:
       - uses: actions/checkout@v4
         with: { fetch-depth: 0 }
 
-      - uses: Swatinem/rust-cache@v2
-        with:
-          shared-key: rust-${{ runner.os }}
-          cache-on-failure: true
-
-      # Install Nix for Linux/macOS
-      - uses: cachix/install-nix-action@v31
-
-      # Enable sccache for build caching
-      - name: Enable sccache
-        run: |
-          if nix develop -c sh -c 'command -v sccache >/dev/null 2>&1'; then
-            echo "RUSTC_WRAPPER=sccache" >> $GITHUB_ENV
-            echo "SCCACHE_GHA_ENABLED=1" >> $GITHUB_ENV
-            echo "CARGO_INCREMENTAL=0" >> $GITHUB_ENV
-            nix develop -c sccache --start-server || true
-          else
-            echo "Warning: sccache not found in nix devshell, skipping"
-          fi
-
-      # Validate example fork structure
+      # Validate example fork structure (runs on all events - fast, no deps)
       - name: Validate example fork structure
         run: |
           echo "✓ Example fork directory exists: examples/fork-customization/"
@@ -52,23 +37,48 @@ jobs:
           test -f examples/fork-customization/sample-product-catalog.feature || { echo "Missing sample-product-catalog.feature"; exit 1; }
           echo "✓ All sample files present"
 
+      # PRs: structure validation only (above step) - skip Rust/Nix setup
+      # Tags + nightly/manual: need full environment for selftest/check
+      - uses: Swatinem/rust-cache@v2
+        if: github.event_name != 'pull_request'
+        with:
+          shared-key: rust-${{ runner.os }}
+          cache-on-failure: true
+
+      - uses: cachix/install-nix-action@v31
+        if: github.event_name != 'pull_request'
+
+      - name: Enable sccache
+        if: github.event_name != 'pull_request'
+        run: |
+          if nix develop -c sh -c 'command -v sccache >/dev/null 2>&1'; then
+            echo "RUSTC_WRAPPER=sccache" >> $GITHUB_ENV
+            echo "SCCACHE_GHA_ENABLED=1" >> $GITHUB_ENV
+            echo "CARGO_INCREMENTAL=0" >> $GITHUB_ENV
+            nix develop -c sccache --start-server || true
+          else
+            echo "Warning: sccache not found in nix devshell, skipping"
+          fi
+
       # On tags (releases): run full selftest to ensure release quality
-      # On nightly/manual: run check only (fast validation, tier1-selftest owns BDD)
       - name: Run full selftest (release tags)
         if: startsWith(github.ref, 'refs/tags/')
         run: nix develop -c cargo run -p xtask -- selftest
 
+      # On nightly/manual: run check only (fast validation, tier1-selftest owns BDD)
       - name: Run governance checks (nightly/manual)
-        if: "!startsWith(github.ref, 'refs/tags/')"
+        if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
         run: |
-          echo "📚 Running fast governance checks (nightly mode)"
+          echo "📋 Running fast governance checks (nightly mode)"
           nix develop -c cargo run -p xtask -- check
 
       - name: Test result
         if: success()
         run: |
           echo "✓ Example fork validation passed"
-          if [[ "${{ github.ref }}" == refs/tags/* ]]; then
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            echo "✓ Structure validation passed (PR fast path)"
+          elif [[ "${{ github.ref }}" == refs/tags/* ]]; then
             echo "✓ Template selftest passed (confirms fork infrastructure is sound)"
           else
             echo "✓ Governance checks passed (nightly validation)"
