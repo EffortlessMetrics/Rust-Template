@@ -4,7 +4,7 @@
 # This is the canonical registry for "serious" documentation with front-matter
 
 schema_version: "1.0"
-template_version: "3.3.10"
+template_version: "3.3.11"
 
 docs:
   # Example design doc entry

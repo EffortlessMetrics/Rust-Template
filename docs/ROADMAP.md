@@ -12,7 +12,7 @@ adrs: [ADR-0005]
 last_updated: 2025-12-01
 ---
 
-# Roadmap: Rust-as-Spec Platform Cell (v3.3.10)
+# Roadmap: Rust-as-Spec Platform Cell (v3.3.11)
 
 This document describes the current state of the **v3.3.8 kernel** and what remains to be done.
 
@@ -49,7 +49,7 @@ Opinions encoded as ACs mean:
 
 ---
 
-## 1. Kernel v3.3.10 Closure
+## 1. Kernel v3.3.11 Closure
 
 **Status:** Frozen as of 2025-12-09.
 

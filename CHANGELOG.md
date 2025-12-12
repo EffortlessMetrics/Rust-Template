@@ -11,6 +11,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 (empty)
 
+## [3.3.11] - 2025-12-12
+
+### Fixed
+
+- CI: sbom-sign workflow now copies workspace SBOM output to repo root for signing/upload
+  - `cargo-cyclonedx` writes SBOMs next to each workspace member's `Cargo.toml`, not at repo root
+  - Workflow now copies canonical `crates/app-http/sbom.json` to `./sbom.json`
+
 ## [3.3.10] - 2025-12-12
 
 ### Fixed
