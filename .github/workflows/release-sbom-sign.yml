@@ -23,9 +23,44 @@ jobs:
       - name: Print cargo-cyclonedx version
         run: cargo cyclonedx --version
       - name: Generate SBOM (JSON)
+        shell: bash
         run: |
+          set -euxo pipefail
+
+          # Clean any previous leftovers in repo root
+          rm -f sbom.json bom.json sbom bom *.cdx.json *.cdx.xml || true
+
+          # Generate SBOMs (cargo-cyclonedx writes next to Cargo.toml files in workspace)
           cargo cyclonedx -f json --manifest-path Cargo.toml --override-filename sbom
-          test -s sbom.json && echo "✓ Generated sbom.json ($(wc -c < sbom.json) bytes)"
+
+          echo "== Candidate SBOM files (top 3 levels) =="
+          find . -maxdepth 3 -type f \( \
+            -name 'sbom.json' -o -name 'bom.json' -o -name '*.cdx.json' -o \
+            -name 'sbom' -o -name 'bom' \
+          \) -print || true
+
+          # cargo-cyclonedx generates per-crate SBOMs in workspace members, not at root.
+          # Prefer the main app crate's SBOM, then fall back to first found.
+          if [ -s "./sbom.json" ]; then
+            echo "Found ./sbom.json at repo root"
+          elif [ -s "./crates/app-http/sbom.json" ]; then
+            cp ./crates/app-http/sbom.json ./sbom.json
+            echo "Copied app-http SBOM to root"
+          elif [ -s "./bom.json" ]; then
+            mv ./bom.json ./sbom.json
+          else
+            # Fall back: pick the first sbom/bom json found in workspace
+            f="$(find . -type f \( -name 'sbom.json' -o -name 'bom.json' -o -name '*.cdx.json' \) | head -n 1 || true)"
+            if [ -z "$f" ]; then
+              echo "ERROR: No SBOM JSON produced anywhere in workspace."
+              exit 1
+            fi
+            cp "$f" ./sbom.json
+            echo "Copied $f to root"
+          fi
+
+          test -s ./sbom.json
+          echo "✓ Generated sbom.json ($(wc -c < ./sbom.json) bytes)"
       # TODO: Implement release notes generation from git tags/commits
       # Consider using: git-cliff, conventional commits, or GitHub release notes API
       - name: Generate release notes (placeholder)
