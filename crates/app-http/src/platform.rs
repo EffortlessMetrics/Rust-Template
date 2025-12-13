@@ -1,11 +1,9 @@
 use crate::{AppError, AppState, get_error_summary};
-use adapters_spec_fs::tasks_state;
 use axum::{
     Json, Router,
     extract::{Query, State},
     routing::get,
 };
-use business_core::governance::{TaskId, TaskStatus};
 use serde::{Deserialize, Serialize};
 use spec_runtime::{ValidatedConfig, load_all_specs, load_service_metadata};
 use std::collections::HashMap;
@@ -52,30 +50,15 @@ pub fn ui_router(state: AppState) -> Router<AppState> {
         .with_state(state)
 }
 
-#[derive(Deserialize)]
-struct SuggestNextQuery {
-    task: String,
-}
-
 async fn get_suggest_next(
     State(state): State<AppState>,
-    Query(q): Query<SuggestNextQuery>,
+    Query(q): Query<gov_http::SuggestNextQuery>,
 ) -> Result<Json<spec_runtime::tasks::SuggestedSequence>, AppError> {
-    let root = &state.workspace_root;
-    let tasks_spec = spec_runtime::load_tasks(&root.join("specs/tasks.yaml"))
-        .map_err(|e| AppError::spec_load_error("load tasks.yaml", e))?;
-    let devex_spec = spec_runtime::load_devex_flows(&root.join("specs/devex_flows.yaml"))
-        .map_err(|e| AppError::spec_load_error("load devex_flows.yaml", e))?;
-    let ledger = spec_runtime::load_spec_ledger(&root.join("specs/spec_ledger.yaml"))
-        .map_err(|e| AppError::spec_load_error("load spec_ledger.yaml", e))?;
-
-    let suggestion =
-        spec_runtime::tasks::suggest_next(root, &q.task, &tasks_spec, &devex_spec, &ledger)
-            .map_err(|e| {
-                AppError::internal_error(format!("Failed to generate suggestion: {}", e))
-            })?;
-
-    Ok(Json(suggestion))
+    // Delegate to gov-http handler (preserves PlatformError status codes)
+    let arc_state = Arc::new(state);
+    gov_http::handlers::get_suggest_next(axum::extract::State(arc_state), axum::extract::Query(q))
+        .await
+        .map_err(AppError::from)
 }
 
 #[derive(Serialize)]
@@ -302,21 +285,19 @@ async fn debug_info(State(state): State<AppState>) -> Json<DebugInfo> {
 }
 
 async fn get_graph(State(state): State<AppState>) -> Result<Json<spec_runtime::Graph>, AppError> {
-    // Delegate to gov-http handler
+    // Delegate to gov-http handler (preserves PlatformError status codes)
     let arc_state = Arc::new(state);
-    gov_http::handlers::get_graph(axum::extract::State(arc_state))
-        .await
-        .map_err(|e| AppError::internal_error(e.to_string()))
+    gov_http::handlers::get_graph(axum::extract::State(arc_state)).await.map_err(AppError::from)
 }
 
 async fn get_devex_flows(
     State(state): State<AppState>,
 ) -> Result<Json<serde_json::Value>, AppError> {
-    // Delegate to gov-http handler
+    // Delegate to gov-http handler (preserves PlatformError status codes)
     let arc_state = Arc::new(state);
     gov_http::handlers::get_devex_flows(axum::extract::State(arc_state))
         .await
-        .map_err(|e| AppError::internal_error(e.to_string()))
+        .map_err(AppError::from)
 }
 
 /// Response for /platform/docs/index with health info
@@ -778,100 +759,18 @@ fn load_fork_counts(root: &std::path::Path) -> ForkCounts {
     }
 }
 
-#[derive(Deserialize)]
-pub struct TaskFilters {
-    pub status: Option<String>,
-    pub req: Option<String>,
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct TasksResponse {
-    pub tasks: Vec<TaskOut>,
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct TaskOut {
-    pub id: String,
-    pub title: String,
-    pub requirement: String,
-    pub acs: Vec<String>,
-    pub status: String,
-    pub owner: Option<String>,
-    pub labels: Vec<String>,
-    pub docs: Option<TaskDocsOut>,
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct TaskDocsOut {
-    pub design: Vec<String>,
-    pub plan: Vec<String>,
-}
-
-/// Normalize a raw status string to its canonical display form.
-/// Uses the canonical `FromStr` implementation from `TaskStatus`.
-fn normalize_status(raw: &str) -> String {
-    raw.parse::<TaskStatus>().map(|s| s.to_string()).unwrap_or_else(|_| {
-        tracing::warn!(
-            raw_status = raw,
-            normalized_status = "Todo",
-            "Unknown task status provided; defaulting to Todo"
-        );
-        TaskStatus::Todo.to_string()
-    })
-}
+// Re-export task types from gov-http for backwards compatibility
+pub use gov_http::{TaskDocsOut, TaskFilters, TaskOut, TasksResponse};
 
 async fn get_tasks(
     State(state): State<AppState>,
-    Query(filters): Query<TaskFilters>,
-) -> Result<Json<TasksResponse>, AppError> {
-    let root = &state.workspace_root;
-    let tasks_spec = spec_runtime::load_tasks(&root.join("specs/tasks.yaml"))
-        .map_err(|e| AppError::spec_load_error("load specs/tasks.yaml", e))?;
-
-    let state_map = tasks_state::get_all_tasks(&root.join("specs/tasks_state.yaml"))
-        .map_err(|e| AppError::spec_load_error("load task state", e))?;
-
-    let tasks = tasks_spec
-        .tasks
-        .into_iter()
-        .filter_map(|t| {
-            let effective_status = state_map
-                .get(&TaskId(t.id.clone()))
-                .cloned()
-                .map(task_status_to_string)
-                .unwrap_or_else(|| normalize_status(&t.status));
-
-            if filters.status.as_ref().is_some_and(|s| !effective_status.eq_ignore_ascii_case(s)) {
-                return None;
-            }
-
-            if filters.req.as_ref().is_some_and(|r| t.requirement != *r) {
-                return None;
-            }
-
-            let mut task_out: TaskOut = t.into();
-            task_out.status = effective_status;
-
-            Some(task_out)
-        })
-        .collect();
-
-    Ok(Json(TasksResponse { tasks }))
-}
-
-impl From<spec_runtime::Task> for TaskOut {
-    fn from(t: spec_runtime::Task) -> Self {
-        TaskOut {
-            id: t.id,
-            title: t.title,
-            requirement: t.requirement,
-            acs: t.acs,
-            status: t.status,
-            owner: t.owner,
-            labels: t.labels,
-            docs: t.docs.map(|d| TaskDocsOut { design: d.design, plan: d.plan }),
-        }
-    }
+    Query(filters): Query<gov_http::TaskFilters>,
+) -> Result<Json<gov_http::TasksResponse>, AppError> {
+    // Delegate to gov-http handler (preserves PlatformError status codes)
+    let arc_state = Arc::new(state);
+    gov_http::handlers::get_tasks(axum::extract::State(arc_state), axum::extract::Query(filters))
+        .await
+        .map_err(AppError::from)
 }
 
 // Coverage types are now in gov-http crate
@@ -894,10 +793,6 @@ async fn get_schema_by_name_handler(
     spec_runtime::get_schema_by_name(&name)
         .map(Json)
         .ok_or_else(|| AppError::not_found(format!("Schema '{}' not found", name)))
-}
-
-fn task_status_to_string(status: TaskStatus) -> String {
-    format!("{status:?}")
 }
 
 #[cfg(test)]
@@ -935,54 +830,21 @@ mod tests {
         assert!(summary.auth.token_present);
     }
 
-    #[test]
-    fn normalizes_common_status_variants() {
-        assert_eq!(normalize_status("open"), "Todo");
-        assert_eq!(normalize_status("in_progress"), "InProgress");
-        assert_eq!(normalize_status("in-progress"), "InProgress");
-        assert_eq!(normalize_status("review"), "Review");
-        assert_eq!(normalize_status("done"), "Done");
-        assert_eq!(normalize_status("InProgress"), "InProgress");
-    }
-
-    #[test]
-    fn defaults_unknown_statuses_to_todo() {
-        assert_eq!(normalize_status("blocked"), "Todo");
-        assert_eq!(normalize_status(""), "Todo");
-    }
+    // Note: normalize_status tests moved to gov-http::handlers tests
 }
 
-#[derive(Deserialize)]
-struct TaskGraphQuery {
-    format: Option<String>,
-}
-
-#[derive(Serialize)]
-#[serde(untagged)]
-enum TaskGraphResponse {
-    Json(spec_runtime::tasks::TaskGraph),
-    Mermaid { mermaid: String },
-}
+// Re-export task graph types from gov-http for backwards compatibility
+pub use gov_http::{TaskGraphQuery, TaskGraphResponse};
 
 async fn get_task_graph(
     State(state): State<AppState>,
-    Query(query): Query<TaskGraphQuery>,
-) -> Result<Json<TaskGraphResponse>, AppError> {
-    let root = &state.workspace_root;
-    let tasks_spec = spec_runtime::load_tasks(&root.join("specs/tasks.yaml"))
-        .map_err(|e| AppError::spec_load_error("load specs/tasks.yaml", e))?;
-
-    let graph = spec_runtime::tasks::build_task_graph(&tasks_spec);
-
-    let response = match query.format.as_deref() {
-        Some("mermaid") => {
-            let mermaid = spec_runtime::tasks::generate_mermaid_diagram(&graph);
-            TaskGraphResponse::Mermaid { mermaid }
-        }
-        _ => TaskGraphResponse::Json(graph),
-    };
-
-    Ok(Json(response))
+    Query(query): Query<gov_http::TaskGraphQuery>,
+) -> Result<Json<gov_http::TaskGraphResponse>, AppError> {
+    // Delegate to gov-http handler (preserves PlatformError status codes)
+    let arc_state = Arc::new(state);
+    gov_http::handlers::get_task_graph(axum::extract::State(arc_state), axum::extract::Query(query))
+        .await
+        .map_err(AppError::from)
 }
 
 /// UI Contract endpoint - returns the governed UI surface definitions.

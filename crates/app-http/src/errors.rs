@@ -462,6 +462,23 @@ impl From<business_core::governance::GovernanceError> for AppError {
     }
 }
 
+/// Convert gov-http PlatformError to AppError with proper status codes.
+///
+/// This ensures that status codes from PlatformError are preserved:
+/// - NotFound → 404
+/// - SpecLoad → 500
+/// - Internal → 500
+impl From<gov_http::PlatformError> for AppError {
+    fn from(error: gov_http::PlatformError) -> Self {
+        use gov_http::PlatformError::*;
+        match error {
+            NotFound(msg) => AppError::not_found(msg),
+            SpecLoad { context, source } => AppError::spec_load_error(context, source),
+            Internal(msg) => AppError::internal_error(msg),
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

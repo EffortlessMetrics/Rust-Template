@@ -27,7 +27,8 @@ pub mod state;
 pub use error::PlatformError;
 pub use handlers::{
     CoverageDetail, CoverageResponse, CoverageSummary, DocHealthSummary, DocInfoWithHealth,
-    DocsIndexResponse,
+    DocsIndexResponse, SuggestNextQuery, TaskDocsOut, TaskFilters, TaskGraphQuery,
+    TaskGraphResponse, TaskOut, TasksResponse,
 };
 pub use state::{DefaultPlatformState, PlatformState};
 
@@ -94,6 +95,10 @@ where
         .route("/graph", get(handlers::get_graph::<S>))
         .route("/devex/flows", get(handlers::get_devex_flows::<S>))
         .route("/coverage", get(handlers::get_coverage::<S>))
+        // Tasks endpoints
+        .route("/tasks", get(handlers::get_tasks::<S>))
+        .route("/tasks/suggest-next", get(handlers::get_suggest_next::<S>))
+        .route("/tasks/graph", get(handlers::get_task_graph::<S>))
 }
 
 /// Build a minimal platform router with only health/status endpoints.
