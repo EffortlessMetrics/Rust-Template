@@ -2,7 +2,12 @@
 
 use crate::error::PlatformError;
 use crate::state::PlatformState;
-use axum::{Json, extract::State, response::IntoResponse};
+use axum::{
+    Json,
+    extract::{Query, State},
+    response::IntoResponse,
+};
+use gov_model::TaskStatus;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -365,7 +370,7 @@ where
     S: PlatformState,
 {
     let ctx = state.context();
-    let root = &ctx.workspace_root;
+    let root = ctx.root();
 
     // Load spec ledger to get all ACs
     let specs = match spec_runtime::load_all_specs_with_context(ctx) {
@@ -474,4 +479,200 @@ where
         summary: CoverageSummary { passing, failing, unknown, total },
         details,
     })
+}
+
+// =============================================================================
+// Tasks Endpoints
+// =============================================================================
+
+/// Query parameters for filtering tasks.
+#[derive(Debug, Deserialize)]
+pub struct TaskFilters {
+    pub status: Option<String>,
+    pub req: Option<String>,
+}
+
+/// Response for /platform/tasks.
+#[derive(Debug, Serialize, Deserialize)]
+pub struct TasksResponse {
+    pub tasks: Vec<TaskOut>,
+}
+
+/// Task output DTO with full metadata.
+#[derive(Debug, Serialize, Deserialize)]
+pub struct TaskOut {
+    pub id: String,
+    pub title: String,
+    pub requirement: String,
+    pub acs: Vec<String>,
+    pub status: String,
+    pub owner: Option<String>,
+    pub labels: Vec<String>,
+    pub docs: Option<TaskDocsOut>,
+}
+
+/// Task docs output DTO.
+#[derive(Debug, Serialize, Deserialize)]
+pub struct TaskDocsOut {
+    pub design: Vec<String>,
+    pub plan: Vec<String>,
+}
+
+impl From<spec_runtime::Task> for TaskOut {
+    fn from(t: spec_runtime::Task) -> Self {
+        TaskOut {
+            id: t.id,
+            title: t.title,
+            requirement: t.requirement,
+            acs: t.acs,
+            status: t.status,
+            owner: t.owner,
+            labels: t.labels,
+            docs: t.docs.map(|d| TaskDocsOut { design: d.design, plan: d.plan }),
+        }
+    }
+}
+
+/// Normalize a raw status string to its canonical display form.
+fn normalize_status(raw: &str) -> String {
+    raw.parse::<TaskStatus>().map(|s| s.to_string()).unwrap_or_else(|_| {
+        tracing::warn!(
+            raw_status = raw,
+            normalized_status = "Todo",
+            "Unknown task status provided; defaulting to Todo"
+        );
+        TaskStatus::Todo.to_string()
+    })
+}
+
+/// Convert TaskStatus to string for display.
+fn task_status_to_string(status: TaskStatus) -> String {
+    status.to_string()
+}
+
+/// Get all tasks with optional filtering.
+///
+/// Returns tasks from specs/tasks.yaml with status overlay from the governance repository.
+pub async fn get_tasks<S>(
+    State(state): State<Arc<S>>,
+    Query(filters): Query<TaskFilters>,
+) -> Result<Json<TasksResponse>, PlatformError>
+where
+    S: PlatformState,
+{
+    let ctx = state.context();
+    let repo = state.governance_repo();
+
+    // Load task definitions from spec (has full metadata)
+    let tasks_spec = spec_runtime::load_tasks_with_context(ctx)
+        .map_err(|e| PlatformError::spec_load("tasks.yaml", e))?;
+
+    // Get status overlay from governance repository
+    let all_tasks = repo
+        .find_all_tasks()
+        .map_err(|e| PlatformError::internal(format!("Failed to load task states: {}", e)))?;
+
+    let status_map: HashMap<String, TaskStatus> =
+        all_tasks.into_iter().map(|t| (t.id.0, t.status)).collect();
+
+    // Merge and filter
+    let tasks = tasks_spec
+        .tasks
+        .into_iter()
+        .filter_map(|t| {
+            let effective_status = status_map
+                .get(&t.id)
+                .cloned()
+                .map(task_status_to_string)
+                .unwrap_or_else(|| normalize_status(&t.status));
+
+            // Apply filters
+            if filters.status.as_ref().is_some_and(|s| !effective_status.eq_ignore_ascii_case(s)) {
+                return None;
+            }
+            if filters.req.as_ref().is_some_and(|r| t.requirement != *r) {
+                return None;
+            }
+
+            let mut task_out: TaskOut = t.into();
+            task_out.status = effective_status;
+            Some(task_out)
+        })
+        .collect();
+
+    Ok(Json(TasksResponse { tasks }))
+}
+
+/// Query parameters for suggest-next endpoint.
+#[derive(Debug, Deserialize)]
+pub struct SuggestNextQuery {
+    pub task: String,
+}
+
+/// Get suggested next task sequence.
+///
+/// Returns a sequence of suggested tasks based on the current task and workflow dependencies.
+pub async fn get_suggest_next<S>(
+    State(state): State<Arc<S>>,
+    Query(q): Query<SuggestNextQuery>,
+) -> Result<Json<spec_runtime::tasks::SuggestedSequence>, PlatformError>
+where
+    S: PlatformState,
+{
+    let ctx = state.context();
+
+    let tasks_spec = spec_runtime::load_tasks_with_context(ctx)
+        .map_err(|e| PlatformError::spec_load("tasks.yaml", e))?;
+    let devex_spec = spec_runtime::load_devex_flows_with_context(ctx)
+        .map_err(|e| PlatformError::spec_load("devex_flows.yaml", e))?;
+    let ledger = spec_runtime::load_spec_ledger_with_context(ctx)
+        .map_err(|e| PlatformError::spec_load("spec_ledger.yaml", e))?;
+
+    let suggestion =
+        spec_runtime::tasks::suggest_next(ctx.root(), &q.task, &tasks_spec, &devex_spec, &ledger)
+            .map_err(|e| PlatformError::internal(format!("Failed to generate suggestion: {}", e)))?;
+
+    Ok(Json(suggestion))
+}
+
+/// Query parameters for task graph endpoint.
+#[derive(Debug, Deserialize)]
+pub struct TaskGraphQuery {
+    pub format: Option<String>,
+}
+
+/// Response for /platform/tasks/graph.
+#[derive(Debug, Serialize)]
+#[serde(untagged)]
+pub enum TaskGraphResponse {
+    Json(spec_runtime::tasks::TaskGraph),
+    Mermaid { mermaid: String },
+}
+
+/// Get task dependency graph.
+///
+/// Returns the task dependency graph in JSON or Mermaid format.
+pub async fn get_task_graph<S>(
+    State(state): State<Arc<S>>,
+    Query(query): Query<TaskGraphQuery>,
+) -> Result<Json<TaskGraphResponse>, PlatformError>
+where
+    S: PlatformState,
+{
+    let ctx = state.context();
+
+    let tasks_spec = spec_runtime::load_tasks_with_context(ctx)
+        .map_err(|e| PlatformError::spec_load("tasks.yaml", e))?;
+
+    let graph = spec_runtime::tasks::build_task_graph(&tasks_spec);
+
+    let response = match query.format.as_deref() {
+        Some("mermaid") => {
+            let mermaid = spec_runtime::tasks::generate_mermaid_diagram(&graph);
+            TaskGraphResponse::Mermaid { mermaid }
+        }
+        _ => TaskGraphResponse::Json(graph),
+    };
+
+    Ok(Json(response))
 }
