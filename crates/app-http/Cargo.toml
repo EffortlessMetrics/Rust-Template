@@ -22,7 +22,7 @@ gov-model = { path = "../gov-model" }
 
 # Web framework
 axum.workspace = true
-tokio = { workspace = true, features = ["net"] }
+tokio = { workspace = true, features = ["net", "signal"] }
 tower.workspace = true
 tower-http = { version = "0.6.8", features = ["metrics", "trace"] }
 

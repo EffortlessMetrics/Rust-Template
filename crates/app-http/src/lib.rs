@@ -15,6 +15,7 @@ pub mod metrics;
 pub mod middleware;
 pub mod platform;
 pub mod security;
+pub mod shutdown;
 pub mod tasks;
 pub mod todos;
 
