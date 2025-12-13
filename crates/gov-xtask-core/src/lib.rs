@@ -12,4 +12,7 @@ pub mod selftest;
 pub mod validation;
 
 pub use env::{describe_mode, is_ci, is_low_resources, is_noninteractive, should_skip_bdd};
-pub use selftest::{SelftestResult, SelftestStep, run_selftest_pipeline};
+pub use selftest::{
+    SELFTEST_STEP_COUNT, SELFTEST_STEPS, SelftestResult, SelftestStep, StepResult, make_step,
+    run_selftest_pipeline, run_step,
+};

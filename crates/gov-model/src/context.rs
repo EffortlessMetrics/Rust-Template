@@ -115,6 +115,21 @@ impl RepoContext {
         self.spec_file("ui_contract.yaml")
     }
 
+    /// Get the tasks spec path.
+    pub fn tasks_path(&self) -> PathBuf {
+        self.spec_file("tasks.yaml")
+    }
+
+    /// Get the service metadata path.
+    pub fn service_metadata_path(&self) -> PathBuf {
+        self.spec_file("service_metadata.yaml")
+    }
+
+    /// Get the feature status path (in docs directory).
+    pub fn feature_status_path(&self) -> PathBuf {
+        self.docs_dir().join("feature_status.md")
+    }
+
     /// Get the workspace root.
     pub fn root(&self) -> &Path {
         &self.workspace_root
