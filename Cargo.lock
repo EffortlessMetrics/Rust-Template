@@ -3574,6 +3574,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "chrono",
+ "gov-model",
  "serde",
  "serde_json",
  "serde_yaml_ng",
@@ -5195,6 +5196,7 @@ dependencies = [
  "clap",
  "colored",
  "glob",
+ "gov-xtask-core",
  "ignore",
  "jsonschema",
  "once_cell",
