@@ -73,14 +73,16 @@ mod tests {
     }
 
     fn app_state(mode: crate::security::PlatformAuthMode, token: Option<&str>) -> AppState {
+        let workspace_root = PathBuf::new();
         AppState {
             governance_repo: Arc::new(NoopRepo),
-            workspace_root: PathBuf::new(),
+            workspace_root: workspace_root.clone(),
             config: None,
             platform_auth: crate::security::PlatformAuthConfig {
                 mode,
                 token: token.map(|t| t.to_string()),
             },
+            repo_context: gov_model::RepoContext::new(&workspace_root),
         }
     }
 

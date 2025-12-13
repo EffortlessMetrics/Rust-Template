@@ -23,6 +23,7 @@ pub use errors::{AppError, ErrorCode, ErrorSummary, get_error_summary};
 pub use middleware::{REQUEST_ID_HEADER, RequestId};
 
 use business_core::governance::GovernanceRepository;
+use gov_model::RepoContext;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
@@ -32,6 +33,19 @@ pub struct AppState {
     pub workspace_root: PathBuf,
     pub config: Option<spec_runtime::ValidatedConfig>,
     pub platform_auth: security::PlatformAuthConfig,
+    /// Repository context for gov-http integration.
+    pub repo_context: RepoContext,
+}
+
+// Implement PlatformState for AppState so we can use gov-http handlers
+impl gov_http::PlatformState for AppState {
+    fn context(&self) -> &RepoContext {
+        &self.repo_context
+    }
+
+    fn governance_repo(&self) -> Arc<dyn gov_model::GovernanceRepository> {
+        Arc::clone(&self.governance_repo)
+    }
 }
 
 impl AppState {
@@ -50,7 +64,10 @@ impl AppState {
         let platform_auth = security::PlatformAuthConfig::from_sources(config.as_ref());
         platform_auth.warn_if_misconfigured();
 
-        Self { governance_repo, workspace_root, config, platform_auth }
+        // Create RepoContext for gov-http integration
+        let repo_context = RepoContext::new(&workspace_root);
+
+        Self { governance_repo, workspace_root, config, platform_auth, repo_context }
     }
 }
 

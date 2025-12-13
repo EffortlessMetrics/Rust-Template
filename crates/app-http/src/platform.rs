@@ -10,6 +10,7 @@ use serde::{Deserialize, Serialize};
 use spec_runtime::{ValidatedConfig, load_all_specs, load_service_metadata};
 use std::collections::HashMap;
 use std::fs;
+use std::sync::Arc;
 
 mod forks;
 mod friction;
@@ -301,22 +302,21 @@ async fn debug_info(State(state): State<AppState>) -> Json<DebugInfo> {
 }
 
 async fn get_graph(State(state): State<AppState>) -> Result<Json<spec_runtime::Graph>, AppError> {
-    let root = &state.workspace_root;
-    let specs = load_all_specs(root).map_err(|e| AppError::spec_load_error("load specs", e))?;
-    let graph = spec_runtime::build_graph(&specs.ledger, &specs.devex, &specs.docs)
-        .map_err(|e| AppError::internal_error(format!("Failed to build graph: {}", e)))?;
-    Ok(Json(graph))
+    // Delegate to gov-http handler
+    let arc_state = Arc::new(state);
+    gov_http::handlers::get_graph(axum::extract::State(arc_state))
+        .await
+        .map_err(|e| AppError::internal_error(e.to_string()))
 }
 
 async fn get_devex_flows(
     State(state): State<AppState>,
 ) -> Result<Json<serde_json::Value>, AppError> {
-    let root = &state.workspace_root;
-    let devex = spec_runtime::load_devex_flows(&root.join("specs/devex_flows.yaml"))
-        .map_err(|e| AppError::spec_load_error("load devex flows", e))?;
-    let value = serde_json::to_value(devex)
-        .map_err(|e| AppError::internal_error(format!("Failed to serialize devex flows: {}", e)))?;
-    Ok(Json(value))
+    // Delegate to gov-http handler
+    let arc_state = Arc::new(state);
+    gov_http::handlers::get_devex_flows(axum::extract::State(arc_state))
+        .await
+        .map_err(|e| AppError::internal_error(e.to_string()))
 }
 
 /// Response for /platform/docs/index with health info
@@ -874,175 +874,14 @@ impl From<spec_runtime::Task> for TaskOut {
     }
 }
 
-#[derive(Serialize)]
-pub struct CoverageSummary {
-    pub passing: usize,
-    pub failing: usize,
-    pub unknown: usize,
-    pub total: usize,
-}
+// Coverage types are now in gov-http crate
+// Re-export for backwards compatibility if needed
+pub use gov_http::{CoverageDetail, CoverageResponse, CoverageSummary};
 
-#[derive(Serialize)]
-pub struct CoverageDetail {
-    pub id: String,
-    pub title: String,
-    pub status: String,
-    pub story: String,
-    pub requirement: String,
-    pub scenarios: Vec<String>,
-}
-
-#[derive(Serialize)]
-pub struct CoverageResponse {
-    pub summary: CoverageSummary,
-    pub details: Vec<CoverageDetail>,
-}
-
-// Cucumber JSON format structures for parsing BDD output
-#[derive(Debug, Deserialize)]
-struct CucumberReport(Vec<CucumberFeature>);
-
-#[derive(Debug, Deserialize)]
-struct CucumberFeature {
-    #[allow(dead_code)]
-    uri: String,
-    elements: Vec<CucumberElement>,
-}
-
-#[derive(Debug, Deserialize)]
-struct CucumberElement {
-    name: String,
-    #[serde(rename = "type")]
-    element_type: String,
-    tags: Vec<CucumberTag>,
-    steps: Vec<CucumberStep>,
-}
-
-#[derive(Debug, Deserialize)]
-struct CucumberTag {
-    name: String,
-}
-
-#[derive(Debug, Deserialize)]
-struct CucumberStep {
-    result: CucumberStepResult,
-}
-
-#[derive(Debug, Deserialize)]
-struct CucumberStepResult {
-    status: String,
-}
-
-async fn get_coverage(State(state): State<AppState>) -> Json<CoverageResponse> {
-    let root = &state.workspace_root;
-
-    // Load spec ledger to get all ACs
-    let specs = match load_all_specs(root) {
-        Ok(s) => s,
-        Err(_) => {
-            // Return empty response if specs can't be loaded
-            return Json(CoverageResponse {
-                summary: CoverageSummary { passing: 0, failing: 0, unknown: 0, total: 0 },
-                details: vec![],
-            });
-        }
-    };
-
-    // Build a map of all ACs from the ledger
-    let mut ac_map: HashMap<String, (String, String, String)> = HashMap::new();
-    for story in &specs.ledger.stories {
-        for req in &story.requirements {
-            for ac in &req.acceptance_criteria {
-                ac_map.insert(ac.id.clone(), (story.id.clone(), req.id.clone(), ac.text.clone()));
-            }
-        }
-    }
-
-    // Try to parse BDD results from JSON report
-    let bdd_json_path = root.join("target/ac_report.json");
-    let mut ac_status: HashMap<String, String> = HashMap::new();
-    let mut ac_scenarios: HashMap<String, Vec<String>> = HashMap::new();
-
-    if bdd_json_path.exists()
-        && let Ok(content) = fs::read_to_string(&bdd_json_path)
-        && let Ok(report) = serde_json::from_str::<CucumberReport>(&content)
-    {
-        for feature in report.0 {
-            for element in feature.elements {
-                // Only process scenarios
-                if element.element_type == "scenario" {
-                    // Extract AC IDs from tags
-                    let ac_ids: Vec<String> = element
-                        .tags
-                        .iter()
-                        .filter_map(|tag| {
-                            // Tags in Cucumber JSON include an @ prefix - normalize before matching
-                            let tag_name = tag.name.trim_start_matches('@');
-                            if tag_name.starts_with("AC-") {
-                                Some(tag_name.to_string())
-                            } else {
-                                None
-                            }
-                        })
-                        .collect();
-
-                    // Determine if scenario passed (all steps passed)
-                    let passed = element.steps.iter().all(|step| step.result.status == "passed");
-
-                    // Update status and scenarios for each AC
-                    for ac_id in ac_ids {
-                        // Track scenario name
-                        ac_scenarios.entry(ac_id.clone()).or_default().push(element.name.clone());
-
-                        // Update status (if any scenario fails, AC fails)
-                        let current_status = ac_status.entry(ac_id.clone()).or_insert_with(|| {
-                            if passed { "passing".to_string() } else { "failing".to_string() }
-                        });
-
-                        if !passed {
-                            *current_status = "failing".to_string();
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    // Build details and compute summary
-    let mut passing = 0;
-    let mut failing = 0;
-    let mut unknown = 0;
-    let mut details = Vec::new();
-
-    for (ac_id, (story_id, req_id, title)) in &ac_map {
-        let status = ac_status.get(ac_id).cloned().unwrap_or_else(|| "unknown".to_string());
-        let scenarios = ac_scenarios.get(ac_id).cloned().unwrap_or_default();
-
-        match status.as_str() {
-            "passing" => passing += 1,
-            "failing" => failing += 1,
-            _ => unknown += 1,
-        }
-
-        details.push(CoverageDetail {
-            id: ac_id.clone(),
-            title: title.clone(),
-            status,
-            story: story_id.clone(),
-            requirement: req_id.clone(),
-            scenarios,
-        });
-    }
-
-    // Sort details by ID for consistent output
-    details.sort_by(|a, b| a.id.cmp(&b.id));
-
-    let total = passing + failing + unknown;
-
-    Json(CoverageResponse {
-        summary: CoverageSummary { passing, failing, unknown, total },
-        details,
-    })
+async fn get_coverage(State(state): State<AppState>) -> Json<gov_http::CoverageResponse> {
+    // Delegate to gov-http handler
+    let arc_state = Arc::new(state);
+    gov_http::handlers::get_coverage(axum::extract::State(arc_state)).await
 }
 
 async fn get_schema() -> Json<spec_runtime::PlatformSchemas> {
