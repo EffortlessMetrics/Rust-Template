@@ -22,7 +22,14 @@ pub fn run() -> Result<()> {
         anyhow::bail!("Database adapter crate not found at {}", crate_dir.display());
     }
 
-    println!("{}", "📦 Running sqlx migrate run...".blue());
+    // Verify migrations directory exists
+    let migrations_dir = crate_dir.join("migrations");
+    if !migrations_dir.exists() {
+        anyhow::bail!(
+            "Migrations directory not found at {}. Create migrations using sqlx migrate add.",
+            migrations_dir.display()
+        );
+    }
 
     println!("{}", "📦 Running sqlx migrate run...".blue());
 
@@ -40,7 +47,6 @@ pub fn run() -> Result<()> {
 
     // Check for cargo-sqlx binary to run prepare
     if which::which("cargo-sqlx").is_ok() {
-        println!("{}", "🔄 Regenerating sqlx types...".blue());
         println!("{}", "🔄 Regenerating sqlx types...".blue());
         let mut cmd = crate::cargo_cmd("sqlx", &["prepare", "--", "--lib"]);
         cmd.current_dir(&crate_dir);

@@ -45,7 +45,10 @@ async fn main() -> anyhow::Result<()> {
     info!("Listening on {}", addr);
 
     let listener = tokio::net::TcpListener::bind(&addr).await?;
-    axum::serve(listener, app).await?;
+    axum::serve(listener, app)
+        .with_graceful_shutdown(app_http::shutdown::shutdown_signal())
+        .await?;
 
+    info!("Server shutdown complete");
     Ok(())
 }

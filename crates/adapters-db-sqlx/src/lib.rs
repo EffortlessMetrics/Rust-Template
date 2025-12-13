@@ -3,9 +3,20 @@
 //! This crate implements the TaskRepository port from business-core using
 //! SQLx and PostgreSQL, providing async task persistence with UUID-based
 //! IDs and transaction support.
+//!
+//! # Migrations
+//!
+//! Database migrations are embedded at compile time from the `migrations/`
+//! directory. Use [`run_migrations`] to apply pending migrations.
+//!
+//! ```ignore
+//! let pool = PgPool::connect(&database_url).await?;
+//! adapters_db_sqlx::run_migrations(&pool).await?;
+//! ```
 
 use anyhow::Result;
 use chrono::{DateTime, Utc};
+use sqlx::migrate::Migrator;
 use sqlx::{PgPool, Row};
 use std::env;
 use tracing::info;
@@ -13,6 +24,48 @@ use uuid::Uuid;
 
 use business_core::ports::TaskRepository;
 use model::{Task, TaskStatus};
+
+/// Embedded migrations from the migrations/ directory.
+///
+/// Migrations are compiled into the binary at build time, ensuring
+/// the application always has access to its schema definitions.
+static MIGRATOR: Migrator = sqlx::migrate!();
+
+/// Run all pending database migrations.
+///
+/// This function applies any unapplied migrations from the embedded
+/// migration set. It's idempotent - already-applied migrations are skipped.
+///
+/// # Arguments
+///
+/// * `pool` - The PostgreSQL connection pool to run migrations on
+///
+/// # Errors
+///
+/// Returns an error if any migration fails to apply.
+///
+/// # Example
+///
+/// ```ignore
+/// let pool = PgPool::connect(&database_url).await?;
+/// run_migrations(&pool).await?;
+/// ```
+pub async fn run_migrations(pool: &PgPool) -> Result<()> {
+    info!("Running database migrations...");
+    MIGRATOR.run(pool).await?;
+    info!("Database migrations complete");
+    Ok(())
+}
+
+/// Get the pool for running migrations (creates a new connection).
+///
+/// Useful when you need to run migrations without an existing repository.
+pub async fn create_pool() -> Result<PgPool> {
+    let database_url =
+        env::var("DATABASE_URL").map_err(|_| anyhow::anyhow!("DATABASE_URL must be set"))?;
+    let pool = PgPool::connect(&database_url).await?;
+    Ok(pool)
+}
 
 pub struct PostgresTaskRepository {
     pool: PgPool,
