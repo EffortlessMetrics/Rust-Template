@@ -1,40 +1,59 @@
 use crate::{AppError, AppState, get_error_summary};
-use axum::{
-    Json, Router,
-    extract::{Query, State},
-    routing::get,
-};
+use axum::{Json, Router, extract::State, routing::get};
 use serde::{Deserialize, Serialize};
 use spec_runtime::{ValidatedConfig, load_all_specs, load_service_metadata};
 use std::collections::HashMap;
 use std::fs;
-use std::sync::Arc;
 
-mod forks;
-mod friction;
 mod idp;
-mod questions;
 mod ui;
 
+// Re-export gov-http types for backwards compatibility with downstream consumers
+pub use gov_http::{
+    // Coverage types
+    CoverageDetail,
+    CoverageResponse,
+    CoverageSummary,
+    // Docs types
+    DocHealthSummary,
+    DocInfoWithHealth,
+    DocsIndexResponse,
+    // Forks types
+    ForkEntry,
+    ForkSummary,
+    ForksListResponse,
+    // Friction types
+    FrictionContext,
+    FrictionEntry,
+    FrictionListResponse,
+    // Question types
+    Question,
+    QuestionContext,
+    QuestionFilters,
+    QuestionSummary,
+    QuestionsListResponse,
+    // Query types
+    SuggestNextQuery,
+    // Task types
+    TaskDocsOut,
+    TaskFilters,
+    TaskGraphQuery,
+    TaskGraphResponse,
+    TaskOut,
+    TasksResponse,
+};
+
 /// Platform API routes (mounted at /platform)
+///
+/// Uses gov-http's `platform_routes_no_status` for governance-generic endpoints,
+/// then adds service-specific endpoints like rich `/status` and debug info.
 pub fn router(state: AppState) -> Router<AppState> {
-    Router::new()
-        // API routes
+    // Start with gov-http routes (includes friction, questions, forks)
+    gov_http::platform_routes_no_status::<AppState>()
+        // Service-specific endpoints
         .route("/debug/info", get(debug_info))
-        .route("/graph", get(get_graph))
-        .route("/schema", get(get_schema))
-        .route("/schema/{name}", get(get_schema_by_name_handler))
-        .route("/devex/flows", get(get_devex_flows))
-        .route("/docs/index", get(get_docs_index))
         .route("/status", get(get_status))
-        .route("/coverage", get(get_coverage))
-        .route("/tasks", get(get_tasks))
-        .route("/tasks/suggest-next", get(get_suggest_next))
-        .route("/tasks/graph", get(get_task_graph))
-        .route("/ui/contract", get(get_ui_contract))
-        .merge(friction::router())
-        .merge(questions::router())
-        .merge(forks::router())
+        // Service-specific sub-routers
         .merge(idp::router())
         .with_state(state)
 }
@@ -48,17 +67,6 @@ pub fn ui_router(state: AppState) -> Router<AppState> {
         .route("/ui/flows", get(ui::flows_view))
         .route("/ui/coverage", get(ui::coverage_view))
         .with_state(state)
-}
-
-async fn get_suggest_next(
-    State(state): State<AppState>,
-    Query(q): Query<gov_http::SuggestNextQuery>,
-) -> Result<Json<spec_runtime::tasks::SuggestedSequence>, AppError> {
-    // Delegate to gov-http handler (preserves PlatformError status codes)
-    let arc_state = Arc::new(state);
-    gov_http::handlers::get_suggest_next(axum::extract::State(arc_state), axum::extract::Query(q))
-        .await
-        .map_err(AppError::from)
 }
 
 #[derive(Serialize)]
@@ -148,11 +156,12 @@ struct QuestionCounts {
     resolved: usize,
     total: usize,
     #[serde(skip_serializing_if = "Vec::is_empty", default)]
-    top_open: Vec<QuestionSummary>,
+    top_open: Vec<StatusQuestionBrief>,
 }
 
+/// Question summary for status endpoint (different from gov_http::QuestionSummary)
 #[derive(Serialize)]
-struct QuestionSummary {
+struct StatusQuestionBrief {
     id: String,
     summary: String,
     flow: String,
@@ -284,104 +293,10 @@ async fn debug_info(State(state): State<AppState>) -> Json<DebugInfo> {
     Json(DebugInfo { kernel_version: env!("CARGO_PKG_VERSION").to_string(), template_version })
 }
 
-async fn get_graph(State(state): State<AppState>) -> Result<Json<spec_runtime::Graph>, AppError> {
-    // Delegate to gov-http handler (preserves PlatformError status codes)
-    let arc_state = Arc::new(state);
-    gov_http::handlers::get_graph(axum::extract::State(arc_state)).await.map_err(AppError::from)
-}
-
-async fn get_devex_flows(
-    State(state): State<AppState>,
-) -> Result<Json<serde_json::Value>, AppError> {
-    // Delegate to gov-http handler (preserves PlatformError status codes)
-    let arc_state = Arc::new(state);
-    gov_http::handlers::get_devex_flows(axum::extract::State(arc_state))
-        .await
-        .map_err(AppError::from)
-}
-
-/// Response for /platform/docs/index with health info
-#[derive(Serialize)]
-struct DocsIndexResponse {
-    schema_version: String,
-    template_version: String,
-    docs: Vec<DocInfoWithHealth>,
-    summary: DocHealthSummary,
-}
-
-#[derive(Serialize)]
-struct DocInfoWithHealth {
-    id: String,
-    file: String,
-    doc_type: String,
-    #[serde(default)]
-    stories: Vec<String>,
-    #[serde(default)]
-    requirements: Vec<String>,
-    #[serde(default)]
-    acs: Vec<String>,
-    #[serde(default)]
-    adrs: Vec<String>,
-    /// Doc type contract validation result
-    doc_type_valid: bool,
-    /// Issue description if doc_type_valid is false
-    #[serde(skip_serializing_if = "Option::is_none")]
-    doc_type_issue: Option<String>,
-}
-
-#[derive(Serialize)]
-struct DocHealthSummary {
-    total: usize,
-    valid: usize,
-    with_issues: usize,
-}
-
-async fn get_docs_index(
-    State(state): State<AppState>,
-) -> Result<Json<DocsIndexResponse>, AppError> {
-    let root = &state.workspace_root;
-    let docs = spec_runtime::load_doc_index(&root.join("specs/doc_index.yaml"))
-        .map_err(|e| AppError::spec_load_error("load doc index", e))?;
-
-    let mut docs_with_health = Vec::new();
-    let mut valid_count = 0;
-    let mut issue_count = 0;
-
-    for doc in docs.docs {
-        let (doc_type_valid, doc_type_issue) = validate_doc_type_contract(&doc);
-        if doc_type_valid {
-            valid_count += 1;
-        } else {
-            issue_count += 1;
-        }
-
-        docs_with_health.push(DocInfoWithHealth {
-            id: doc.id,
-            file: doc.file,
-            doc_type: doc.doc_type,
-            stories: doc.stories,
-            requirements: doc.requirements,
-            acs: doc.acs,
-            adrs: doc.adrs,
-            doc_type_valid,
-            doc_type_issue,
-        });
-    }
-
-    Ok(Json(DocsIndexResponse {
-        schema_version: docs.schema_version,
-        template_version: docs.template_version,
-        docs: docs_with_health,
-        summary: DocHealthSummary {
-            total: valid_count + issue_count,
-            valid: valid_count,
-            with_issues: issue_count,
-        },
-    }))
-}
-
-/// Validate doc_type contract for a single document
-/// Returns (is_valid, issue_description)
+/// Validate doc_type contract for a single document.
+///
+/// Used by status endpoint to count doc_type issues.
+/// Returns (is_valid, issue_description).
 fn validate_doc_type_contract(doc: &spec_runtime::DocEntry) -> (bool, Option<String>) {
     // Normalize doc_type: treat "how-to" as "how_to"
     let doc_type = doc.doc_type.replace('-', "_");
@@ -461,7 +376,6 @@ fn validate_doc_type_contract(doc: &spec_runtime::DocEntry) -> (bool, Option<Str
             return (false, Some(format!("Unknown doc_type '{}'", doc.doc_type)));
         }
     }
-
     (true, None)
 }
 
@@ -624,7 +538,7 @@ fn load_question_counts(root: &std::path::Path) -> QuestionCounts {
                 match question.status.as_str() {
                     "open" => {
                         open += 1;
-                        open_questions.push(QuestionSummary {
+                        open_questions.push(StatusQuestionBrief {
                             id: question.id,
                             summary: question.summary,
                             flow: question.context.flow,
@@ -759,42 +673,6 @@ fn load_fork_counts(root: &std::path::Path) -> ForkCounts {
     }
 }
 
-// Re-export task types from gov-http for backwards compatibility
-pub use gov_http::{TaskDocsOut, TaskFilters, TaskOut, TasksResponse};
-
-async fn get_tasks(
-    State(state): State<AppState>,
-    Query(filters): Query<gov_http::TaskFilters>,
-) -> Result<Json<gov_http::TasksResponse>, AppError> {
-    // Delegate to gov-http handler (preserves PlatformError status codes)
-    let arc_state = Arc::new(state);
-    gov_http::handlers::get_tasks(axum::extract::State(arc_state), axum::extract::Query(filters))
-        .await
-        .map_err(AppError::from)
-}
-
-// Coverage types are now in gov-http crate
-// Re-export for backwards compatibility if needed
-pub use gov_http::{CoverageDetail, CoverageResponse, CoverageSummary};
-
-async fn get_coverage(State(state): State<AppState>) -> Json<gov_http::CoverageResponse> {
-    // Delegate to gov-http handler
-    let arc_state = Arc::new(state);
-    gov_http::handlers::get_coverage(axum::extract::State(arc_state)).await
-}
-
-async fn get_schema() -> Json<spec_runtime::PlatformSchemas> {
-    Json(spec_runtime::get_all_schemas())
-}
-
-async fn get_schema_by_name_handler(
-    axum::extract::Path(name): axum::extract::Path<String>,
-) -> Result<Json<spec_runtime::SchemaInfo>, AppError> {
-    spec_runtime::get_schema_by_name(&name)
-        .map(Json)
-        .ok_or_else(|| AppError::not_found(format!("Schema '{}' not found", name)))
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -831,32 +709,4 @@ mod tests {
     }
 
     // Note: normalize_status tests moved to gov-http::handlers tests
-}
-
-// Re-export task graph types from gov-http for backwards compatibility
-pub use gov_http::{TaskGraphQuery, TaskGraphResponse};
-
-async fn get_task_graph(
-    State(state): State<AppState>,
-    Query(query): Query<gov_http::TaskGraphQuery>,
-) -> Result<Json<gov_http::TaskGraphResponse>, AppError> {
-    // Delegate to gov-http handler (preserves PlatformError status codes)
-    let arc_state = Arc::new(state);
-    gov_http::handlers::get_task_graph(axum::extract::State(arc_state), axum::extract::Query(query))
-        .await
-        .map_err(AppError::from)
-}
-
-/// UI Contract endpoint - returns the governed UI surface definitions.
-///
-/// Returns the UI contract specification which defines screens, regions,
-/// and stable `data-uiid` identifiers that agents, tests, and consumers
-/// can rely on.
-async fn get_ui_contract(
-    State(state): State<AppState>,
-) -> Result<Json<spec_runtime::UiContract>, AppError> {
-    let root = &state.workspace_root;
-    spec_runtime::load_ui_contract(&root.join("specs/ui_contract.yaml"))
-        .map(Json)
-        .map_err(|e| AppError::spec_load_error("load UI contract", e))
 }

@@ -108,14 +108,22 @@ async fn test_get_friction_by_id_not_found() {
     let body = axum::body::to_bytes(response.into_body(), usize::MAX).await.unwrap();
     let json: Value = serde_json::from_slice(&body).unwrap();
 
-    // Verify error response structure
+    // Verify error response structure matches platform contract (AC-TPL-ERROR-MAPPING)
+    // gov-http now returns { error, message, requestId } for consistent error handling
     assert!(json.get("error").is_some(), "Error response should have 'error' field");
     assert!(json.get("message").is_some(), "Error response should have 'message' field");
     assert!(json.get("requestId").is_some(), "Error response should have 'requestId' field");
 
+    let error_type = json["error"].as_str().unwrap();
+    assert_eq!(error_type, "not_found", "Error type should be 'not_found'");
+
     let message = json["message"].as_str().unwrap();
     assert!(message.contains("FRICTION-NONEXISTENT-999"));
     assert!(message.contains("not found"));
+
+    // Verify requestId is a valid UUID format
+    let request_id = json["requestId"].as_str().unwrap();
+    assert!(!request_id.is_empty(), "requestId should not be empty");
 }
 
 #[tokio::test]

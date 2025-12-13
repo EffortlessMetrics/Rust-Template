@@ -21,19 +21,27 @@
 //! ```
 
 pub mod error;
+pub mod forks;
+pub mod friction;
 pub mod handlers;
+pub mod questions;
 pub mod state;
 
 pub use error::PlatformError;
+pub use forks::{ForkEntry, ForkSummary, ForksListResponse, Maintainer};
+pub use friction::{FrictionContext, FrictionEntry, FrictionListResponse, Resolution};
 pub use handlers::{
     CoverageDetail, CoverageResponse, CoverageSummary, DocHealthSummary, DocInfoWithHealth,
     DocsIndexResponse, SuggestNextQuery, TaskDocsOut, TaskFilters, TaskGraphQuery,
     TaskGraphResponse, TaskOut, TasksResponse,
 };
+pub use questions::{
+    Question, QuestionContext, QuestionFilters, QuestionOption, QuestionResolution,
+    QuestionSummary, QuestionsListResponse, Recommendation,
+};
 pub use state::{DefaultPlatformState, PlatformState};
 
 use axum::{Router, routing::get};
-use std::sync::Arc;
 
 /// Build the platform router with all governance endpoints (with state provided).
 ///
@@ -58,9 +66,9 @@ use std::sync::Arc;
 ///
 /// - `/health` - Health check
 /// - `/status` - Governance status (simplified)
-pub fn platform_router<S>(state: Arc<S>) -> Router
+pub fn platform_router<S>(state: S) -> Router
 where
-    S: PlatformState + 'static,
+    S: PlatformState + Clone + Send + Sync + 'static,
 {
     platform_routes().with_state(state)
 }
@@ -74,13 +82,13 @@ where
 /// # Example
 ///
 /// ```ignore
-/// let gov_routes = gov_http::platform_routes::<Arc<AppState>>();
-/// let app_routes = my_app_routes::<Arc<AppState>>();
-/// let combined = gov_routes.merge(app_routes).with_state(arc_state);
+/// let gov_routes = gov_http::platform_routes::<AppState>();
+/// let app_routes = my_app_routes::<AppState>();
+/// let combined = gov_routes.merge(app_routes).with_state(state);
 /// ```
-pub fn platform_routes<S>() -> Router<Arc<S>>
+pub fn platform_routes<S>() -> Router<S>
 where
-    S: PlatformState + 'static,
+    S: PlatformState + Clone + Send + Sync + 'static,
 {
     Router::new()
         // Core endpoints
@@ -99,6 +107,46 @@ where
         .route("/tasks", get(handlers::get_tasks::<S>))
         .route("/tasks/suggest-next", get(handlers::get_suggest_next::<S>))
         .route("/tasks/graph", get(handlers::get_task_graph::<S>))
+}
+
+/// Build the platform router excluding the simplified `/status` endpoint.
+///
+/// Use this when your service provides its own richer `/status` endpoint
+/// but wants to reuse all other governance endpoints from gov-http.
+///
+/// # Example
+///
+/// ```ignore
+/// let gov_routes = gov_http::platform_routes_no_status::<AppState>();
+/// let app = Router::new()
+///     .merge(gov_routes)
+///     .route("/status", get(my_rich_status_handler))
+///     .with_state(state);
+/// ```
+pub fn platform_routes_no_status<S>() -> Router<S>
+where
+    S: PlatformState + Clone + Send + Sync + 'static,
+{
+    Router::new()
+        // Core endpoints (excluding /status)
+        .route("/health", get(handlers::health))
+        // Contract anchor endpoints
+        .route("/schema", get(handlers::get_schema))
+        .route("/schema/{name}", get(handlers::get_schema_by_name))
+        .route("/docs/index", get(handlers::get_docs_index::<S>))
+        .route("/ui/contract", get(handlers::get_ui_contract::<S>))
+        // Governance introspection endpoints
+        .route("/graph", get(handlers::get_graph::<S>))
+        .route("/devex/flows", get(handlers::get_devex_flows::<S>))
+        .route("/coverage", get(handlers::get_coverage::<S>))
+        // Tasks endpoints
+        .route("/tasks", get(handlers::get_tasks::<S>))
+        .route("/tasks/suggest-next", get(handlers::get_suggest_next::<S>))
+        .route("/tasks/graph", get(handlers::get_task_graph::<S>))
+        // Governance artifact endpoints
+        .merge(friction::router::<S>())
+        .merge(questions::router::<S>())
+        .merge(forks::router::<S>())
 }
 
 /// Build a minimal platform router with only health/status endpoints.

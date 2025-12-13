@@ -1,4 +1,9 @@
 //! Error types for gov-http handlers.
+//!
+//! Error responses follow the platform contract (AC-TPL-ERROR-MAPPING):
+//! - `error`: Machine-readable error code
+//! - `message`: Human-readable error message
+//! - `requestId`: Unique request ID for correlation
 
 use axum::{
     Json,
@@ -6,12 +11,21 @@ use axum::{
     response::{IntoResponse, Response},
 };
 use serde::Serialize;
+use uuid::Uuid;
 
-/// Error response DTO.
+/// Error response DTO matching platform contract.
+///
+/// This format is required by AC-TPL-ERROR-MAPPING for consistent
+/// error handling across all platform endpoints.
 #[derive(Debug, Serialize)]
 pub struct ErrorResponse {
+    /// Machine-readable error code (e.g., "not_found", "spec_load_error")
     pub error: String,
+    /// Human-readable error message
     pub message: String,
+    /// Request ID for correlation (AC-TPL-004)
+    #[serde(rename = "requestId")]
+    pub request_id: String,
 }
 
 /// Platform API error type.
@@ -63,7 +77,10 @@ impl IntoResponse for PlatformError {
             }
         };
 
-        let body = Json(ErrorResponse { error: error_type.to_string(), message });
+        // Generate request ID for correlation (AC-TPL-004)
+        let request_id = Uuid::new_v4().to_string();
+
+        let body = Json(ErrorResponse { error: error_type.to_string(), message, request_id });
 
         (status, body).into_response()
     }
