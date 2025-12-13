@@ -25,15 +25,19 @@ pub mod handlers;
 pub mod state;
 
 pub use error::PlatformError;
-pub use handlers::{DocHealthSummary, DocInfoWithHealth, DocsIndexResponse};
+pub use handlers::{
+    CoverageDetail, CoverageResponse, CoverageSummary, DocHealthSummary, DocInfoWithHealth,
+    DocsIndexResponse,
+};
 pub use state::{DefaultPlatformState, PlatformState};
 
 use axum::{Router, routing::get};
 use std::sync::Arc;
 
-/// Build the platform router with all governance endpoints.
+/// Build the platform router with all governance endpoints (with state provided).
 ///
 /// Mount this at `/platform` in your service's router.
+/// This version provides state directly and returns a stateless router.
 ///
 /// # Contract Anchor Endpoints
 ///
@@ -43,11 +47,37 @@ use std::sync::Arc;
 /// - `/docs/index` - Documentation inventory with health validation
 /// - `/ui/contract` - UI contract specification
 ///
+/// # Governance Introspection Endpoints
+///
+/// - `/graph` - Full governance graph (stories → REQs → ACs → tests → docs)
+/// - `/devex/flows` - Developer experience flows and commands
+/// - `/coverage` - AC coverage from BDD test results
+///
 /// # Core Endpoints
 ///
 /// - `/health` - Health check
 /// - `/status` - Governance status (simplified)
 pub fn platform_router<S>(state: Arc<S>) -> Router
+where
+    S: PlatformState + 'static,
+{
+    platform_routes().with_state(state)
+}
+
+/// Build the platform router without state (for composition with other routers).
+///
+/// Use this when you need to merge the platform router with other routers
+/// that share the same state type. Call `.with_state(state)` on the final
+/// merged router.
+///
+/// # Example
+///
+/// ```ignore
+/// let gov_routes = gov_http::platform_routes::<Arc<AppState>>();
+/// let app_routes = my_app_routes::<Arc<AppState>>();
+/// let combined = gov_routes.merge(app_routes).with_state(arc_state);
+/// ```
+pub fn platform_routes<S>() -> Router<Arc<S>>
 where
     S: PlatformState + 'static,
 {
@@ -60,7 +90,10 @@ where
         .route("/schema/{name}", get(handlers::get_schema_by_name))
         .route("/docs/index", get(handlers::get_docs_index::<S>))
         .route("/ui/contract", get(handlers::get_ui_contract::<S>))
-        .with_state(state)
+        // Governance introspection endpoints
+        .route("/graph", get(handlers::get_graph::<S>))
+        .route("/devex/flows", get(handlers::get_devex_flows::<S>))
+        .route("/coverage", get(handlers::get_coverage::<S>))
 }
 
 /// Build a minimal platform router with only health/status endpoints.
