@@ -11,9 +11,11 @@ description = "Platform HTTP router for Rust-as-Spec governance endpoints"
 axum = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
+serde_yaml = { workspace = true }
 tracing = { workspace = true }
 anyhow = { workspace = true }
 thiserror = { workspace = true }
+uuid = { workspace = true }
 gov-model = { path = "../gov-model" }
 gov-contracts = { path = "../gov-contracts" }
 spec-runtime = { path = "../spec-runtime" }

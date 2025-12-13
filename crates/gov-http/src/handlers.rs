@@ -10,7 +10,6 @@ use axum::{
 use gov_model::TaskStatus;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::sync::Arc;
 
 /// Health check response.
 #[derive(Serialize)]
@@ -66,7 +65,7 @@ pub async fn get_schema_by_name(
 /// Returns the governed UI surface definitions with screens, regions,
 /// and stable `data-uiid` identifiers.
 pub async fn get_ui_contract<S>(
-    State(state): State<Arc<S>>,
+    State(state): State<S>,
 ) -> Result<Json<spec_runtime::UiContract>, PlatformError>
 where
     S: PlatformState,
@@ -121,7 +120,7 @@ pub struct DocHealthSummary {
 ///
 /// Returns the documentation inventory with doc_type contract validation.
 pub async fn get_docs_index<S>(
-    State(state): State<Arc<S>>,
+    State(state): State<S>,
 ) -> Result<Json<DocsIndexResponse>, PlatformError>
 where
     S: PlatformState,
@@ -261,7 +260,7 @@ fn validate_doc_type_contract(doc: &spec_runtime::DocEntry) -> (bool, Option<Str
 ///
 /// Returns the full governance graph (stories → REQs → ACs → tests → docs).
 pub async fn get_graph<S>(
-    State(state): State<Arc<S>>,
+    State(state): State<S>,
 ) -> Result<Json<spec_runtime::Graph>, PlatformError>
 where
     S: PlatformState,
@@ -282,7 +281,7 @@ where
 ///
 /// Returns the developer experience flows and commands specification.
 pub async fn get_devex_flows<S>(
-    State(state): State<Arc<S>>,
+    State(state): State<S>,
 ) -> Result<Json<serde_json::Value>, PlatformError>
 where
     S: PlatformState,
@@ -365,7 +364,7 @@ struct CucumberStepResult {
 ///
 /// Returns a summary and details of acceptance criteria coverage
 /// based on Cucumber JSON reports.
-pub async fn get_coverage<S>(State(state): State<Arc<S>>) -> Json<CoverageResponse>
+pub async fn get_coverage<S>(State(state): State<S>) -> Json<CoverageResponse>
 where
     S: PlatformState,
 {
@@ -554,7 +553,7 @@ fn task_status_to_string(status: TaskStatus) -> String {
 ///
 /// Returns tasks from specs/tasks.yaml with status overlay from the governance repository.
 pub async fn get_tasks<S>(
-    State(state): State<Arc<S>>,
+    State(state): State<S>,
     Query(filters): Query<TaskFilters>,
 ) -> Result<Json<TasksResponse>, PlatformError>
 where
@@ -613,7 +612,7 @@ pub struct SuggestNextQuery {
 ///
 /// Returns a sequence of suggested tasks based on the current task and workflow dependencies.
 pub async fn get_suggest_next<S>(
-    State(state): State<Arc<S>>,
+    State(state): State<S>,
     Query(q): Query<SuggestNextQuery>,
 ) -> Result<Json<spec_runtime::tasks::SuggestedSequence>, PlatformError>
 where
@@ -653,7 +652,7 @@ pub enum TaskGraphResponse {
 ///
 /// Returns the task dependency graph in JSON or Mermaid format.
 pub async fn get_task_graph<S>(
-    State(state): State<Arc<S>>,
+    State(state): State<S>,
     Query(query): Query<TaskGraphQuery>,
 ) -> Result<Json<TaskGraphResponse>, PlatformError>
 where
@@ -675,4 +674,44 @@ where
     };
 
     Ok(Json(response))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn normalizes_common_status_variants() {
+        // Standard canonical forms
+        assert_eq!(normalize_status("Todo"), "Todo");
+        assert_eq!(normalize_status("InProgress"), "InProgress");
+        assert_eq!(normalize_status("Review"), "Review");
+        assert_eq!(normalize_status("Done"), "Done");
+
+        // Case-insensitive variants
+        assert_eq!(normalize_status("todo"), "Todo");
+        assert_eq!(normalize_status("TODO"), "Todo");
+        assert_eq!(normalize_status("inprogress"), "InProgress");
+        assert_eq!(normalize_status("INPROGRESS"), "InProgress");
+
+        // Alternative spellings
+        assert_eq!(normalize_status("in_progress"), "InProgress");
+        assert_eq!(normalize_status("in-progress"), "InProgress");
+        assert_eq!(normalize_status("In_Progress"), "InProgress");
+
+        // Legacy aliases
+        assert_eq!(normalize_status("open"), "Todo");
+        assert_eq!(normalize_status("Open"), "Todo");
+        assert_eq!(normalize_status("closed"), "Done");
+        assert_eq!(normalize_status("Closed"), "Done");
+    }
+
+    #[test]
+    fn defaults_unknown_statuses_to_todo() {
+        // Unknown statuses should default to Todo with a warning log
+        assert_eq!(normalize_status("garbage"), "Todo");
+        assert_eq!(normalize_status("unknown"), "Todo");
+        assert_eq!(normalize_status(""), "Todo");
+        assert_eq!(normalize_status("Pending"), "Todo");
+    }
 }

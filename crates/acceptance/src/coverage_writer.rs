@@ -292,7 +292,7 @@ where
 
             Cucumber::Feature(feature, feature_event) => match feature_event {
                 Feature::Started => {
-                    self.current_feature = Some(feature);
+                    self.current_feature = Some(feature.into());
                     self.current_rule = None;
                 }
                 Feature::Finished => {
@@ -301,18 +301,18 @@ where
                 }
                 Feature::Rule(rule, rule_event) => match rule_event {
                     Rule::Started => {
-                        self.current_rule = Some(rule);
+                        self.current_rule = Some(rule.into());
                     }
                     Rule::Finished => {
                         self.current_rule = None;
                     }
                     Rule::Scenario(scenario, retryable_scenario) => {
-                        self.current_scenario = Some(scenario);
+                        self.current_scenario = Some(scenario.into());
                         self.handle_scenario_event(&retryable_scenario.event);
                     }
                 },
                 Feature::Scenario(scenario, retryable_scenario) => {
-                    self.current_scenario = Some(scenario);
+                    self.current_scenario = Some(scenario.into());
                     self.handle_scenario_event(&retryable_scenario.event);
                 }
             },
