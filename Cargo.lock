@@ -1403,11 +1403,14 @@ dependencies = [
 name = "gov-http"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "axum",
  "gov-contracts",
  "gov-model",
  "serde",
  "serde_json",
+ "spec-runtime",
+ "thiserror 2.0.17",
  "tracing",
 ]
 

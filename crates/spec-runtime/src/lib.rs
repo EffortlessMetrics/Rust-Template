@@ -77,6 +77,9 @@ pub use service_metadata::{ServiceMetadata, load_service_metadata};
 pub use tasks::*;
 pub use ui_contract::{Region, Screen, UiContract, load_ui_contract};
 
+// Re-export RepoContext for convenience
+pub use gov_model::RepoContext;
+
 /// Load all governance specs from the workspace root.
 ///
 /// This is a convenience function that loads the three core spec files:
@@ -148,6 +151,63 @@ pub fn load_all_specs_with_context(ctx: &gov_model::RepoContext) -> Result<AllSp
         devex: load_devex_flows(&ctx.devex_flows_path())?,
         docs: load_doc_index(&ctx.doc_index_path())?,
     })
+}
+
+// =============================================================================
+// Individual loader _with_context variants
+// =============================================================================
+
+/// Load spec ledger using RepoContext.
+///
+/// Convenience wrapper that uses [`RepoContext::spec_ledger_path`].
+pub fn load_spec_ledger_with_context(ctx: &gov_model::RepoContext) -> Result<SpecLedger> {
+    load_spec_ledger(&ctx.spec_ledger_path())
+}
+
+/// Load devex flows using RepoContext.
+///
+/// Convenience wrapper that uses [`RepoContext::devex_flows_path`].
+pub fn load_devex_flows_with_context(ctx: &gov_model::RepoContext) -> Result<DevExFlows> {
+    load_devex_flows(&ctx.devex_flows_path())
+}
+
+/// Load doc index using RepoContext.
+///
+/// Convenience wrapper that uses [`RepoContext::doc_index_path`].
+pub fn load_doc_index_with_context(ctx: &gov_model::RepoContext) -> Result<DocIndex> {
+    load_doc_index(&ctx.doc_index_path())
+}
+
+/// Load tasks spec using RepoContext.
+///
+/// Convenience wrapper that uses [`RepoContext::tasks_path`].
+pub fn load_tasks_with_context(ctx: &gov_model::RepoContext) -> Result<TasksSpec> {
+    load_tasks(&ctx.tasks_path())
+}
+
+/// Load service metadata using RepoContext.
+///
+/// Convenience wrapper that uses [`RepoContext::service_metadata_path`].
+pub fn load_service_metadata_with_context(ctx: &gov_model::RepoContext) -> Result<ServiceMetadata> {
+    load_service_metadata(&ctx.service_metadata_path())
+}
+
+/// Load UI contract using RepoContext.
+///
+/// Convenience wrapper that uses [`RepoContext::ui_contract_path`].
+pub fn load_ui_contract_with_context(ctx: &gov_model::RepoContext) -> Result<UiContract> {
+    load_ui_contract(&ctx.ui_contract_path())
+}
+
+/// Validate config using RepoContext.
+///
+/// Uses the config schema from [`RepoContext::config_schema_path`] and
+/// validates against the specified config file.
+pub fn validate_config_with_context(
+    ctx: &gov_model::RepoContext,
+    config_path: &std::path::Path,
+) -> Result<ValidatedConfig> {
+    validate_config(&ctx.config_schema_path(), config_path)
 }
 
 /// Container for all governance specs.

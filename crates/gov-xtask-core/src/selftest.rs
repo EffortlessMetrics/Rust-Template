@@ -61,19 +61,25 @@ impl SelftestResult {
 }
 
 /// Standard selftest step definitions.
+///
+/// These 11 steps define the governance validation pipeline.
+/// Order and naming must match the actual xtask selftest implementation.
 pub const SELFTEST_STEPS: &[(&str, &str)] = &[
     ("Core checks", "fmt, clippy, unit tests"),
     ("Skills governance", "skills-lint validation"),
     ("Agents governance", "agents-lint validation"),
-    ("AC lint", "spec_ledger.yaml validation"),
-    ("AC kernel mapping", "kernel ACs have test mappings"),
-    ("Contracts check", "governed facts synchronization"),
-    ("ADR check", "ADR reference validation"),
-    ("Docs check", "documentation consistency"),
     ("BDD acceptance", "Gherkin acceptance tests"),
-    ("Audit", "cargo-audit + cargo-deny"),
-    ("Coverage", "test coverage baseline"),
+    ("AC/ADR mapping", "AC status and ADR reference validation"),
+    ("LLM bundler", "context bundle generation"),
+    ("Policy tests", "conftest policy validation"),
+    ("DevEx contract", "required commands exist"),
+    ("Governance graph & UI", "graph invariants and UI contract"),
+    ("AC coverage", "kernel AC test coverage"),
+    ("Test coverage", "code coverage baseline (advisory)"),
 ];
+
+/// Total number of selftest steps.
+pub const SELFTEST_STEP_COUNT: usize = 11;
 
 /// Run a function as a selftest step.
 pub fn run_step<F>(step: SelftestStep, f: F) -> StepResult
@@ -95,19 +101,73 @@ where
 /// Run the full selftest pipeline with the given context.
 ///
 /// This is the main entry point for service repos.
-/// Pass a closure for each step that returns Result<()>.
+/// The `step_runner` closure receives a step index (0-based) and step definition,
+/// and should return `Ok(())` on success or an error on failure.
+///
+/// # Arguments
+///
+/// * `_ctx` - Repository context (currently unused, reserved for future use)
+/// * `_verbosity` - Verbosity level for output (currently unused, reserved for future use)
+/// * `step_runner` - Closure that executes each step
+///
+/// # Example
+///
+/// ```ignore
+/// use gov_xtask_core::selftest::{run_selftest_pipeline, SELFTEST_STEPS};
+/// use gov_model::RepoContext;
+///
+/// let ctx = RepoContext::new("/workspace");
+/// let result = run_selftest_pipeline(&ctx, Verbosity::Normal, |step| {
+///     println!("{}", step.header());
+///     // Run step implementation...
+///     Ok(())
+/// });
+/// ```
 pub fn run_selftest_pipeline<F>(
     _ctx: &RepoContext,
     _verbosity: Verbosity,
-    _step_runner: F,
+    step_runner: F,
 ) -> SelftestResult
 where
     F: Fn(&SelftestStep) -> Result<()>,
 {
-    let start = Instant::now();
-    let steps = Vec::new();
+    let pipeline_start = Instant::now();
+    let total = SELFTEST_STEPS.len();
+    let mut results = Vec::with_capacity(total);
 
-    // Placeholder - actual implementation delegates to service xtask
+    for (i, (name, description)) in SELFTEST_STEPS.iter().enumerate() {
+        let step = SelftestStep {
+            number: i + 1,
+            total,
+            name: (*name).to_string(),
+            description: (*description).to_string(),
+        };
 
-    SelftestResult { steps, total_duration: start.elapsed(), all_passed: true }
+        let step_start = Instant::now();
+        let result = step_runner(&step);
+        let duration = step_start.elapsed();
+
+        results.push(StepResult {
+            step,
+            passed: result.is_ok(),
+            duration,
+            error: result.err().map(|e| e.to_string()),
+        });
+    }
+
+    let all_passed = results.iter().all(|r| r.passed);
+
+    SelftestResult { steps: results, total_duration: pipeline_start.elapsed(), all_passed }
+}
+
+/// Create a step definition for a given index.
+///
+/// Useful when you need to construct a step outside the pipeline.
+pub fn make_step(index: usize) -> Option<SelftestStep> {
+    SELFTEST_STEPS.get(index).map(|(name, description)| SelftestStep {
+        number: index + 1,
+        total: SELFTEST_STEPS.len(),
+        name: (*name).to_string(),
+        description: (*description).to_string(),
+    })
 }

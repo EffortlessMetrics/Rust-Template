@@ -12,5 +12,8 @@ axum = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 tracing = { workspace = true }
+anyhow = { workspace = true }
+thiserror = { workspace = true }
 gov-model = { path = "../gov-model" }
 gov-contracts = { path = "../gov-contracts" }
+spec-runtime = { path = "../spec-runtime" }
