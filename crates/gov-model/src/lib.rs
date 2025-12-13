@@ -172,6 +172,14 @@ pub trait GovernanceRepository: Send + Sync {
     ///
     /// Returns an error if the task is not found or the update fails.
     fn set_task_status(&self, task_id: &TaskId, status: TaskStatus) -> Result<(), GovernanceError>;
+
+    /// Get basic health status of the governance system.
+    ///
+    /// Default implementation returns `true`. Override to provide repository-specific
+    /// health checks (e.g., connection status, file system access).
+    fn is_healthy(&self) -> bool {
+        true
+    }
 }
 
 impl GovernanceRepository for std::sync::Arc<dyn GovernanceRepository> {
@@ -185,6 +193,10 @@ impl GovernanceRepository for std::sync::Arc<dyn GovernanceRepository> {
 
     fn set_task_status(&self, task_id: &TaskId, status: TaskStatus) -> Result<(), GovernanceError> {
         (**self).set_task_status(task_id, status)
+    }
+
+    fn is_healthy(&self) -> bool {
+        (**self).is_healthy()
     }
 }
 

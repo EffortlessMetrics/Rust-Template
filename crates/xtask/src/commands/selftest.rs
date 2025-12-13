@@ -1,3 +1,11 @@
+//! Selftest command - full 11-step governance validation.
+//!
+//! This module implements the selftest pipeline using environment detection
+//! from gov-xtask-core for consistent CI/resource-aware behavior.
+//!
+//! Environment detection (is_ci, is_low_resources, should_skip_bdd) is now
+//! delegated to gov-xtask-core via crate::env module.
+
 use anyhow::Result;
 use colored::Colorize;
 use std::env;
@@ -42,9 +50,9 @@ pub fn run() -> Result<()> {
 pub fn run_with_verbosity(verbosity: crate::Verbosity) -> Result<()> {
     let start_time = Instant::now();
 
-    // Check for low-resource mode
-    let low_resource_mode = env::var("XTASK_LOW_RESOURCES").unwrap_or_default() == "1";
-    let skip_bdd = env::var("XTASK_SKIP_BDD").unwrap_or_default() == "1";
+    // Check for low-resource mode (using gov-xtask-core via crate::env)
+    let low_resource_mode = crate::env::is_low_resources();
+    let skip_bdd = crate::env::should_skip_bdd();
 
     println!("{}", "======================================".blue());
     println!("{}", "  Template Self-Test Suite".blue());
@@ -537,7 +545,7 @@ fn run_ac_status(verbosity: crate::Verbosity) -> Result<()> {
 
     // If BDD was skipped (XTASK_SKIP_BDD=1), we can't validate AC status meaningfully
     // because we have no fresh coverage data to compare against.
-    if std::env::var("XTASK_SKIP_BDD").unwrap_or_default() == "1" {
+    if crate::env::should_skip_bdd() {
         if verbosity.is_verbose() {
             eprintln!(
                 "  {} AC status check skipped (XTASK_SKIP_BDD=1, no fresh coverage to validate)",
@@ -728,7 +736,7 @@ fn run_ac_coverage_check(verbosity: crate::Verbosity) -> Result<()> {
 
     // When BDD execution is explicitly skipped (e.g., in harnesses to avoid recursion),
     // there is no fresh acceptance report to evaluate, so treat coverage as informational.
-    let bdd_skipped = std::env::var("XTASK_SKIP_BDD").unwrap_or_default() == "1";
+    let bdd_skipped = crate::env::should_skip_bdd();
     if bdd_skipped {
         println!(
             "  {} AC coverage skipped (XTASK_SKIP_BDD=1; acceptance results not generated)",

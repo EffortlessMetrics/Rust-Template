@@ -110,6 +110,46 @@ pub fn load_all_specs(root: &Path) -> Result<AllSpecs> {
     })
 }
 
+/// Load all governance specs using a `RepoContext`.
+///
+/// This variant uses [`gov_model::RepoContext`] for path resolution instead of
+/// explicit root directory. This is the preferred approach for kernel crates
+/// that need unified workspace path handling.
+///
+/// Loads the three core spec files:
+/// - `specs/spec_ledger.yaml` (governance ledger)
+/// - `specs/devex_flows.yaml` (developer flows)
+/// - `specs/doc_index.yaml` (documentation index)
+///
+/// # Arguments
+///
+/// * `ctx` - Repository context providing workspace paths
+///
+/// # Returns
+///
+/// Returns [`AllSpecs`] containing the parsed spec files.
+///
+/// # Errors
+///
+/// Returns an error if any spec file is missing, malformed, or fails validation.
+///
+/// # Example
+///
+/// ```ignore
+/// use gov_model::RepoContext;
+///
+/// let ctx = RepoContext::new("/workspace");
+/// let specs = load_all_specs_with_context(&ctx)?;
+/// println!("Loaded {} stories", specs.ledger.stories.len());
+/// ```
+pub fn load_all_specs_with_context(ctx: &gov_model::RepoContext) -> Result<AllSpecs> {
+    Ok(AllSpecs {
+        ledger: load_spec_ledger(&ctx.spec_ledger_path())?,
+        devex: load_devex_flows(&ctx.devex_flows_path())?,
+        docs: load_doc_index(&ctx.doc_index_path())?,
+    })
+}
+
 /// Container for all governance specs.
 ///
 /// This struct aggregates the core spec files used by the platform runtime:
