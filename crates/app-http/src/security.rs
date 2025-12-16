@@ -1,6 +1,9 @@
-use jsonwebtoken::{Algorithm, DecodingKey, EncodingKey, Header, Validation, decode, encode};
+use jsonwebtoken::{Algorithm, DecodingKey, Validation, decode};
+#[cfg(test)]
+use jsonwebtoken::{EncodingKey, Header, encode};
 use serde::{Deserialize, Serialize};
 use spec_runtime::ValidatedConfig;
+#[cfg(test)]
 use std::time::{SystemTime, UNIX_EPOCH};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -128,6 +131,7 @@ impl PlatformAuthConfig {
 /// Validate a JWT token with the provided secret
 fn validate_jwt_token(token: &str, secret: &str) -> bool {
     let mut validation = Validation::new(Algorithm::HS256);
+    validation.required_spec_claims.insert("exp".to_string());
     validation.validate_exp = true;
     validation.leeway = 0;
 
@@ -142,8 +146,9 @@ fn validate_jwt_token(token: &str, secret: &str) -> bool {
     }
 }
 
-/// Create a JWT token with the provided secret and claims
-pub fn create_jwt_token(
+/// Create a JWT token with the provided secret and claims (test-only helper)
+#[cfg(test)]
+pub(crate) fn create_jwt_token(
     secret: &str,
     subject: &str,
     issuer: &str,
@@ -175,12 +180,12 @@ impl From<&str> for PlatformAuthMode {
 
 // Simple constant-time comparison to avoid leaking length/case differences in tokens.
 fn constant_time_eq(a: &str, b: &str) -> bool {
-    if a.len() != b.len() {
-        return false;
-    }
+    let mut result = (a.len() ^ b.len()) as u8;
+    let max_len = a.len().max(b.len());
 
-    let mut result = 0u8;
-    for (x, y) in a.bytes().zip(b.bytes()) {
+    for i in 0..max_len {
+        let x = a.as_bytes().get(i).copied().unwrap_or(0);
+        let y = b.as_bytes().get(i).copied().unwrap_or(0);
         result |= x ^ y;
     }
 
@@ -188,7 +193,7 @@ fn constant_time_eq(a: &str, b: &str) -> bool {
 }
 
 fn token_kind(token: &str) -> TokenKind<'_> {
-    if token.split('.').count() == 3 { TokenKind::Jwt(token) } else { TokenKind::Basic(token) }
+    if token.matches('.').count() == 2 { TokenKind::Jwt(token) } else { TokenKind::Basic(token) }
 }
 
 #[cfg(test)]
