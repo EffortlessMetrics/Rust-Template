@@ -32,6 +32,13 @@ variable "platform_redact_secrets" {
   description = "Whether to redact secrets from status/UI output"
 }
 
+# Database Configuration
+variable "database_auto_migrate" {
+  type        = bool
+  default     = false
+  description = "Whether to automatically run database migrations on startup"
+}
+
 # Secrets (should be provided via environment or secure backend)
 variable "db_url" {
   type        = string
@@ -50,4 +57,11 @@ variable "platform_auth_token" {
   default     = ""
   sensitive   = true
   description = "Shared secret for platform basic auth mode"
+}
+
+variable "platform_jwt_secret" {
+  type        = string
+  default     = ""
+  sensitive   = true
+  description = "JWT secret key for platform JWT auth mode"
 }

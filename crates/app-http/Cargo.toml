@@ -17,6 +17,7 @@ model = { path = "../model" }
 telemetry = { path = "../telemetry" }
 spec-runtime = { path = "../spec-runtime" }
 adapters-spec-fs = { path = "../adapters-spec-fs" }
+adapters-db-sqlx = { path = "../adapters-db-sqlx" }
 gov-http = { path = "../gov-http" }
 gov-model = { path = "../gov-model" }
 
@@ -42,6 +43,9 @@ maud = "0.27.0"
 
 # HTTP body utilities
 http-body-util.workspace = true
+
+# JWT authentication
+jsonwebtoken = { version = "10.2.0", features = ["rust_crypto"] }
 
 [dev-dependencies]
 tokio.workspace = true

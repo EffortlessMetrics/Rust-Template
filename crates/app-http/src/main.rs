@@ -1,6 +1,6 @@
 use app_http::{AppState, app_with_state, resolve_workspace_root};
 use std::net::SocketAddr;
-use tracing::info;
+use tracing::{error, info};
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -27,6 +27,19 @@ async fn main() -> anyhow::Result<()> {
         }
     };
 
+    // Run database migrations if enabled
+    if should_run_migrations(&validated_config) {
+        info!("Database auto-migration enabled, running migrations...");
+        if let Err(err) = run_database_migrations().await {
+            error!("Database migration failed: {}", err);
+            eprintln!("Database migration failed: {}", err);
+            std::process::exit(1);
+        }
+        info!("Database migrations completed successfully");
+    } else {
+        info!("Database auto-migration disabled, skipping migrations");
+    }
+
     // Initialize governance repository
     let specs_dir = workspace_root.join("specs");
     let governance_repo =
@@ -50,5 +63,21 @@ async fn main() -> anyhow::Result<()> {
         .await?;
 
     info!("Server shutdown complete");
+    Ok(())
+}
+
+/// Check if database migrations should be run based on configuration
+fn should_run_migrations(config: &spec_runtime::ValidatedConfig) -> bool {
+    config.settings.get("database.auto_migrate").and_then(|v| v.as_bool()).unwrap_or(false)
+}
+
+/// Run database migrations using the existing database configuration
+async fn run_database_migrations() -> anyhow::Result<()> {
+    // Create a database pool using the existing configuration
+    let pool = adapters_db_sqlx::create_pool().await?;
+
+    // Run migrations
+    adapters_db_sqlx::run_migrations(&pool).await?;
+
     Ok(())
 }
