@@ -694,6 +694,7 @@ mod tests {
         let auth = PlatformAuthConfig {
             mode: PlatformAuthMode::Basic,
             token: Some("super-secret-token".into()),
+            jwt_secret: None,
         };
         let summary = ConfigSummary::from_parts(&config, &auth);
 

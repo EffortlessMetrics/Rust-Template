@@ -19,13 +19,18 @@ settings:
     required: false
   - key: platform.auth_mode
     type: string
-    description: "Authentication mode for platform endpoints (open|basic)"
+    description: "Authentication mode for platform endpoints (open|basic|jwt)"
     default: "open"
     required: false
   - key: platform.redact_secrets
     type: bool
     description: "Whether to redact secrets from status/UI output"
     default: true
+    required: false
+  - key: database.auto_migrate
+    type: bool
+    description: "Whether to automatically run database migrations on startup"
+    default: false
     required: false
 
 secrets:
@@ -39,4 +44,8 @@ secrets:
   - key: platform.auth_token
     type: string
     description: "Shared secret for platform basic auth mode"
+    required: false
+  - key: platform.jwt_secret
+    type: string
+    description: "JWT secret key for platform JWT auth mode"
     required: false

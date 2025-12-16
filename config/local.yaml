@@ -4,7 +4,9 @@ settings:
   telemetry.otlp_endpoint: "http://localhost:4317"
   platform.auth_mode: "open"
   platform.redact_secrets: true
+  database.auto_migrate: true
 secrets:
   db.url: "postgres://postgres:postgres@localhost:5432/app"
   auth.jwt_signing_key: "dev-secret-key"
   platform.auth_token: "dev-platform-token"
+  platform.jwt_secret: "dev-jwt-secret-key"
