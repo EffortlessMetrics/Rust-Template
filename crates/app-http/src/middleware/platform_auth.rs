@@ -6,7 +6,7 @@ use crate::{AppError, AppState, ErrorCode};
 pub const PLATFORM_AUTH_HEADER: &str = "x-platform-token";
 pub const AUTHORIZATION_HEADER: &str = "authorization";
 
-/// Enforces platform auth for write endpoints when PLATFORM_AUTH_MODE=basic or jwt.
+/// Enforces platform auth for write endpoints when PLATFORM_AUTH_MODE requires auth.
 pub async fn platform_auth_guard(
     State(state): State<AppState>,
     request: Request<Body>,
@@ -20,7 +20,7 @@ pub async fn platform_auth_guard(
         return Ok(next.run(request).await);
     }
 
-    let provided = extract_auth_token(&request, &state.platform_auth);
+    let provided = extract_auth_token(&request);
 
     if state.platform_auth.is_authorized(provided) {
         return Ok(next.run(request).await);
@@ -33,29 +33,16 @@ pub async fn platform_auth_guard(
     ))
 }
 
-/// Extract authentication token from request based on auth mode
-fn extract_auth_token<'a>(
-    request: &'a Request<Body>,
-    config: &crate::security::PlatformAuthConfig,
-) -> Option<&'a str> {
-    match config.mode {
-        crate::security::PlatformAuthMode::Basic => {
-            request.headers().get(PLATFORM_AUTH_HEADER).and_then(|v| v.to_str().ok())
-        }
-        crate::security::PlatformAuthMode::Jwt => {
-            // Try Authorization header first (Bearer token)
-            if let Some(auth_header) = request.headers().get(AUTHORIZATION_HEADER) {
-                if let Ok(auth_str) = auth_header.to_str() {
-                    if let Some(bearer_token) = auth_str.strip_prefix("Bearer ") {
-                        return Some(bearer_token);
-                    }
-                }
-            }
-            // Fallback to x-platform-token header for backward compatibility
-            request.headers().get(PLATFORM_AUTH_HEADER).and_then(|v| v.to_str().ok())
-        }
-        crate::security::PlatformAuthMode::Open => None,
-    }
+/// Extract authentication token, preferring Authorization over the legacy header.
+fn extract_auth_token<'a>(request: &'a Request<Body>) -> Option<&'a str> {
+    request
+        .headers()
+        .get(AUTHORIZATION_HEADER)
+        .and_then(|v| v.to_str().ok())
+        .and_then(|auth_str| {
+            auth_str.strip_prefix("Bearer ").or_else(|| auth_str.strip_prefix("bearer "))
+        })
+        .or_else(|| request.headers().get(PLATFORM_AUTH_HEADER).and_then(|v| v.to_str().ok()))
 }
 
 #[cfg(test)]
@@ -70,7 +57,12 @@ mod tests {
     use business_core::governance::{
         GovernanceError, GovernanceRepository, Task, TaskId, TaskStatus,
     };
-    use std::{path::PathBuf, sync::Arc};
+    use jsonwebtoken::{EncodingKey, Header};
+    use std::{
+        path::PathBuf,
+        sync::Arc,
+        time::{SystemTime, UNIX_EPOCH},
+    };
     use tower::ServiceExt;
 
     #[derive(Clone)]
@@ -171,6 +163,26 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn accepts_jwt_when_basic_token_is_enabled() {
+        let secret = "test-secret";
+        let token =
+            crate::security::create_jwt_token(secret, "user123", "rust-template", 3600).unwrap();
+        let state =
+            app_state(crate::security::PlatformAuthMode::Basic, Some("legacy-token"), Some(secret));
+        let app = guarded_router(state);
+
+        let request = Request::builder()
+            .method(Method::POST)
+            .uri("/platform/protected")
+            .header(AUTHORIZATION_HEADER, format!("Bearer {}", token))
+            .body(Body::empty())
+            .unwrap();
+
+        let response = app.oneshot(request).await.expect("handler should respond");
+        assert_eq!(response.status(), StatusCode::OK);
+    }
+
+    #[tokio::test]
     async fn rejects_post_without_token_in_jwt_mode() {
         let state = app_state(crate::security::PlatformAuthMode::Jwt, None, Some("secret"));
         let app = guarded_router(state);
@@ -183,6 +195,24 @@ mod tests {
 
         let response = app.oneshot(request).await.expect("handler should respond");
         assert_eq!(response.status(), StatusCode::UNAUTHORIZED);
+    }
+
+    #[tokio::test]
+    async fn accepts_post_with_basic_token_when_jwt_secret_is_present() {
+        let secret = "test-secret";
+        let state =
+            app_state(crate::security::PlatformAuthMode::Jwt, Some("legacy-token"), Some(secret));
+        let app = guarded_router(state);
+
+        let request = Request::builder()
+            .method(Method::POST)
+            .uri("/platform/protected")
+            .header(PLATFORM_AUTH_HEADER, "legacy-token")
+            .body(Body::empty())
+            .unwrap();
+
+        let response = app.oneshot(request).await.expect("handler should respond");
+        assert_eq!(response.status(), StatusCode::OK);
     }
 
     #[tokio::test]
@@ -232,6 +262,59 @@ mod tests {
             .method(Method::POST)
             .uri("/platform/protected")
             .header(AUTHORIZATION_HEADER, "Bearer invalid.jwt.token")
+            .body(Body::empty())
+            .unwrap();
+
+        let response = app.oneshot(request).await.expect("handler should respond");
+        assert_eq!(response.status(), StatusCode::UNAUTHORIZED);
+    }
+
+    #[tokio::test]
+    async fn authorization_header_takes_precedence_over_platform_header() {
+        let state = app_state(
+            crate::security::PlatformAuthMode::Basic,
+            Some("legacy-token"),
+            Some("secret"),
+        );
+        let app = guarded_router(state);
+
+        let request = Request::builder()
+            .method(Method::POST)
+            .uri("/platform/protected")
+            .header(AUTHORIZATION_HEADER, "Bearer invalid.jwt.token")
+            .header(PLATFORM_AUTH_HEADER, "legacy-token")
+            .body(Body::empty())
+            .unwrap();
+
+        let response = app.oneshot(request).await.expect("handler should respond");
+        assert_eq!(response.status(), StatusCode::UNAUTHORIZED);
+    }
+
+    #[tokio::test]
+    async fn rejects_expired_jwt_tokens() {
+        let secret = "test-secret";
+        let now = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs();
+        let claims = crate::security::Claims {
+            sub: "user123".to_string(),
+            exp: (now - 60) as usize,
+            iat: (now - 120) as usize,
+            iss: "rust-template".to_string(),
+        };
+        let token = jsonwebtoken::encode(
+            &Header::default(),
+            &claims,
+            &EncodingKey::from_secret(secret.as_ref()),
+        )
+        .unwrap();
+
+        let state =
+            app_state(crate::security::PlatformAuthMode::Jwt, Some("legacy-token"), Some(secret));
+        let app = guarded_router(state);
+
+        let request = Request::builder()
+            .method(Method::POST)
+            .uri("/platform/protected")
+            .header(AUTHORIZATION_HEADER, format!("Bearer {}", token))
             .body(Body::empty())
             .unwrap();
 

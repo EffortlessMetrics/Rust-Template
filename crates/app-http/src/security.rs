@@ -25,6 +25,12 @@ pub struct Claims {
     pub iss: String,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum TokenKind<'a> {
+    Basic(&'a str),
+    Jwt(&'a str),
+}
+
 impl PlatformAuthConfig {
     pub fn from_sources(config: Option<&ValidatedConfig>) -> Self {
         let mode_raw = std::env::var("PLATFORM_AUTH_MODE")
@@ -57,16 +63,17 @@ impl PlatformAuthConfig {
             return true;
         }
 
-        match self.mode {
-            PlatformAuthMode::Basic => match (self.token.as_deref(), provided) {
-                (Some(expected), Some(candidate)) => constant_time_eq(expected, candidate),
-                _ => false,
-            },
-            PlatformAuthMode::Jwt => match (self.jwt_secret.as_deref(), provided) {
-                (Some(secret), Some(token)) => validate_jwt_token(token, secret),
-                _ => false,
-            },
-            PlatformAuthMode::Open => true,
+        let Some(token) = provided else { return false };
+
+        match token_kind(token) {
+            TokenKind::Basic(candidate) => self
+                .token
+                .as_deref()
+                .map_or(false, |expected| constant_time_eq(expected, candidate)),
+            TokenKind::Jwt(candidate) => self
+                .jwt_secret
+                .as_deref()
+                .map_or(false, |secret| validate_jwt_token(candidate, secret)),
         }
     }
 
@@ -79,11 +86,11 @@ impl PlatformAuthConfig {
     }
 
     pub fn token_present(&self) -> bool {
+        let has_basic = self.has_basic_token();
+        let has_jwt = self.has_jwt_secret();
+
         match self.mode {
-            PlatformAuthMode::Basic => self.token.as_ref().map(|t| !t.is_empty()).unwrap_or(false),
-            PlatformAuthMode::Jwt => {
-                self.jwt_secret.as_ref().map(|s| !s.is_empty()).unwrap_or(false)
-            }
+            PlatformAuthMode::Basic | PlatformAuthMode::Jwt => has_basic || has_jwt,
             PlatformAuthMode::Open => true,
         }
     }
@@ -93,26 +100,14 @@ impl PlatformAuthConfig {
     /// Returns `true` when a warning was emitted so tests can assert the behavior without
     /// scraping logs.
     pub fn warn_if_misconfigured(&self) -> bool {
-        let misconfigured = match self.mode {
-            PlatformAuthMode::Basic => {
-                self.token.is_none() || self.token.as_ref().unwrap().is_empty()
-            }
-            PlatformAuthMode::Jwt => {
-                self.jwt_secret.is_none() || self.jwt_secret.as_ref().unwrap().is_empty()
-            }
-            PlatformAuthMode::Open => false,
-        };
+        let misconfigured =
+            self.requires_auth() && !(self.has_basic_token() || self.has_jwt_secret());
 
         if misconfigured {
             match self.mode {
-                PlatformAuthMode::Basic => {
+                PlatformAuthMode::Basic | PlatformAuthMode::Jwt => {
                     tracing::warn!(
-                        "Platform auth is set to basic but no token was provided; writes will be rejected"
-                    );
-                }
-                PlatformAuthMode::Jwt => {
-                    tracing::warn!(
-                        "Platform auth is set to jwt but no secret was provided; writes will be rejected"
+                        "Platform auth is enabled but no PLATFORM_AUTH_TOKEN or PLATFORM_JWT_SECRET was provided; writes will be rejected"
                     );
                 }
                 PlatformAuthMode::Open => {}
@@ -120,11 +115,22 @@ impl PlatformAuthConfig {
         }
         misconfigured
     }
+
+    fn has_basic_token(&self) -> bool {
+        self.token.as_ref().map(|t| !t.is_empty()).unwrap_or(false)
+    }
+
+    fn has_jwt_secret(&self) -> bool {
+        self.jwt_secret.as_ref().map(|s| !s.is_empty()).unwrap_or(false)
+    }
 }
 
 /// Validate a JWT token with the provided secret
 fn validate_jwt_token(token: &str, secret: &str) -> bool {
-    let validation = Validation::new(Algorithm::HS256);
+    let mut validation = Validation::new(Algorithm::HS256);
+    validation.validate_exp = true;
+    validation.leeway = 0;
+
     let decoding_key = DecodingKey::from_secret(secret.as_ref());
 
     match decode::<Claims>(token, &decoding_key, &validation) {
@@ -179,6 +185,10 @@ fn constant_time_eq(a: &str, b: &str) -> bool {
     }
 
     result == 0
+}
+
+fn token_kind(token: &str) -> TokenKind<'_> {
+    if token.split('.').count() == 3 { TokenKind::Jwt(token) } else { TokenKind::Basic(token) }
 }
 
 #[cfg(test)]
