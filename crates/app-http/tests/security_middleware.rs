@@ -8,83 +8,82 @@ use axum::{
     http::{Method, Request, StatusCode},
 };
 use business_core::governance::{GovernanceError, GovernanceRepository, Task, TaskId, TaskStatus};
-use std::{collections::HashMap, path::PathBuf, sync::Arc};
-use tokio::sync::OnceCell;
+use std::{
+    env,
+    path::PathBuf,
+    sync::{Arc, OnceLock},
+};
+use tokio::sync::{Mutex, MutexGuard};
 use tower::ServiceExt;
 
 use app_http::app_with_workspace_root;
 
-// Global environment lock to serialize test access to environment variables
-static ENV_LOCK: OnceCell<tokio::sync::Mutex<()>> = OnceCell::const_new();
+/// All env vars that these tests read/write (keep in sync with `clean_env_vars()`).
+const TEST_ENV_VARS: &[&str] = &[
+    // App environment
+    "ENV",
+    // CORS middleware
+    "CORS_ENABLED",
+    "CORS_ALLOWED_ORIGINS",
+    "CORS_ALLOWED_METHODS",
+    "CORS_ALLOWED_HEADERS",
+    "CORS_ALLOW_CREDENTIALS",
+    "CORS_MAX_AGE",
+    // Security headers middleware
+    "SECURITY_HEADERS_ENABLED",
+    "CSP_HEADER",
+    "X_FRAME_OPTIONS",
+    "X_CONTENT_TYPE_OPTIONS",
+    "X_XSS_PROTECTION",
+    "STRICT_TRANSPORT_SECURITY",
+    "REFERRER_POLICY",
+    "PERMISSIONS_POLICY",
+    "CROSS_ORIGIN_EMBEDDER_POLICY",
+    "CROSS_ORIGIN_OPENER_POLICY",
+    "CROSS_ORIGIN_RESOURCE_POLICY",
+];
 
-async fn get_env_lock() -> &'static tokio::sync::Mutex<()> {
-    ENV_LOCK.get_or_init(|| async { tokio::sync::Mutex::new(()) }).await
+// Global environment lock to serialize test access to environment variables.
+static ENV_LOCK: OnceLock<Mutex<()>> = OnceLock::new();
+
+async fn get_env_lock() -> MutexGuard<'static, ()> {
+    ENV_LOCK.get_or_init(|| Mutex::new(())).lock().await
 }
 
 /// RAII guard for environment variable management
 struct EnvVarGuard {
-    original_vars: HashMap<String, Option<String>>,
-    _guard: tokio::sync::MutexGuard<'static, ()>,
+    _lock: MutexGuard<'static, ()>,
+    snapshot: Vec<(&'static str, Option<String>)>,
 }
 
 impl EnvVarGuard {
     /// Create a new guard that snapshots current environment and cleans it
     async fn new() -> Self {
-        let guard = get_env_lock().await.lock().await;
+        let lock = get_env_lock().await;
 
         // Snapshot current environment variables
-        let mut original_vars = HashMap::new();
-        let vars_to_track = vec![
-            "CORS_ENABLED",
-            "CORS_ALLOWED_ORIGINS",
-            "CORS_ALLOWED_METHODS",
-            "CORS_ALLOWED_HEADERS",
-            "CORS_ALLOW_CREDENTIALS",
-            "CORS_MAX_AGE",
-            "SECURITY_HEADERS_ENABLED",
-            "CSP_HEADER",
-            "X_FRAME_OPTIONS",
-            "X_CONTENT_TYPE_OPTIONS",
-            "X_XSS_PROTECTION",
-            "STRICT_TRANSPORT_SECURITY",
-            "REFERRER_POLICY",
-            "PERMISSIONS_POLICY",
-            "CROSS_ORIGIN_EMBEDDER_POLICY",
-            "CROSS_ORIGIN_OPENER_POLICY",
-            "CROSS_ORIGIN_RESOURCE_POLICY",
-            "ENV",
-        ];
-
-        for var in vars_to_track {
-            original_vars.insert(var.to_string(), std::env::var(var).ok());
-        }
+        let snapshot = TEST_ENV_VARS.iter().copied().map(|k| (k, env::var(k).ok())).collect();
 
         // Clean environment
         clean_env_vars();
 
-        Self { original_vars, _guard: guard }
+        Self { _lock: lock, snapshot }
     }
 
     /// Set an environment variable during the test
-    fn set_var(&mut self, key: &str, value: &str) {
-        unsafe {
-            std::env::set_var(key, value);
-        }
+    fn set_var(&self, key: &'static str, value: &str) {
+        unsafe { env::set_var(key, value) };
     }
 }
 
 impl Drop for EnvVarGuard {
     fn drop(&mut self) {
-        // Restore original environment variables
-        for (key, original_value) in &self.original_vars {
-            match original_value {
-                Some(value) => unsafe {
-                    std::env::set_var(key, value);
-                },
-                None => unsafe {
-                    std::env::remove_var(key);
-                },
-            }
+        // Restore exactly what we observed before the test ran.
+        for (key, value) in self.snapshot.iter() {
+            match value {
+                Some(val) => unsafe { env::set_var(*key, val) },
+                None => unsafe { env::remove_var(*key) },
+            };
         }
     }
 }
@@ -116,25 +115,8 @@ fn test_workspace_root() -> PathBuf {
 
 /// Clean environment variables that might affect test isolation
 fn clean_env_vars() {
-    unsafe {
-        std::env::remove_var("CORS_ENABLED");
-        std::env::remove_var("CORS_ALLOWED_ORIGINS");
-        std::env::remove_var("CORS_ALLOWED_METHODS");
-        std::env::remove_var("CORS_ALLOWED_HEADERS");
-        std::env::remove_var("CORS_ALLOW_CREDENTIALS");
-        std::env::remove_var("CORS_MAX_AGE");
-        std::env::remove_var("SECURITY_HEADERS_ENABLED");
-        std::env::remove_var("CSP_HEADER");
-        std::env::remove_var("X_FRAME_OPTIONS");
-        std::env::remove_var("X_CONTENT_TYPE_OPTIONS");
-        std::env::remove_var("X_XSS_PROTECTION");
-        std::env::remove_var("STRICT_TRANSPORT_SECURITY");
-        std::env::remove_var("REFERRER_POLICY");
-        std::env::remove_var("PERMISSIONS_POLICY");
-        std::env::remove_var("CROSS_ORIGIN_EMBEDDER_POLICY");
-        std::env::remove_var("CROSS_ORIGIN_OPENER_POLICY");
-        std::env::remove_var("CROSS_ORIGIN_RESOURCE_POLICY");
-        std::env::remove_var("ENV");
+    for &k in TEST_ENV_VARS {
+        unsafe { env::remove_var(k) };
     }
 }
 
@@ -240,6 +222,9 @@ async fn test_security_headers_present_in_response() {
 
 #[tokio::test]
 async fn test_csp_header_contains_directives() {
+    // Use environment guard to serialize access and ensure clean state
+    let _env_guard = EnvVarGuard::new().await;
+
     let workspace_root = test_workspace_root();
     let repo = Arc::new(NoopRepo);
     let app = app_with_workspace_root(repo, workspace_root);
@@ -260,6 +245,9 @@ async fn test_csp_header_contains_directives() {
 
 #[tokio::test]
 async fn test_permissions_policy_restricts_features() {
+    // Use environment guard to serialize access and ensure clean state
+    let _env_guard = EnvVarGuard::new().await;
+
     let workspace_root = test_workspace_root();
     let repo = Arc::new(NoopRepo);
     let app = app_with_workspace_root(repo, workspace_root);
@@ -284,6 +272,9 @@ async fn test_permissions_policy_restricts_features() {
 
 #[tokio::test]
 async fn test_cross_origin_headers_present() {
+    // Use environment guard to serialize access and ensure clean state
+    let _env_guard = EnvVarGuard::new().await;
+
     let workspace_root = test_workspace_root();
     let repo = Arc::new(NoopRepo);
     let app = app_with_workspace_root(repo, workspace_root);
@@ -304,7 +295,7 @@ async fn test_cross_origin_headers_present() {
 #[tokio::test]
 async fn test_hsts_header_in_production() {
     // Use environment guard to serialize access and ensure clean state
-    let mut env_guard = EnvVarGuard::new().await;
+    let env_guard = EnvVarGuard::new().await;
 
     // Test with production environment
     env_guard.set_var("ENV", "production");
@@ -333,7 +324,7 @@ async fn test_hsts_header_in_production() {
 #[tokio::test]
 async fn test_no_hsts_header_in_development() {
     // Use environment guard to serialize access and ensure clean state
-    let mut env_guard = EnvVarGuard::new().await;
+    let env_guard = EnvVarGuard::new().await;
 
     // Test with development environment
     env_guard.set_var("ENV", "development");
@@ -356,7 +347,7 @@ async fn test_no_hsts_header_in_development() {
 #[tokio::test]
 async fn test_cors_config_custom_origins() {
     // Use environment guard to serialize access and ensure clean state
-    let mut env_guard = EnvVarGuard::new().await;
+    let env_guard = EnvVarGuard::new().await;
 
     // Test custom CORS configuration
     env_guard.set_var("CORS_ALLOWED_ORIGINS", "https://example.com,https://api.example.com");
@@ -387,7 +378,7 @@ async fn test_cors_config_custom_origins() {
 #[tokio::test]
 async fn test_security_headers_can_be_disabled() {
     // Use environment guard to serialize access and ensure clean state
-    let mut env_guard = EnvVarGuard::new().await;
+    let env_guard = EnvVarGuard::new().await;
 
     // Test with security headers disabled
     env_guard.set_var("SECURITY_HEADERS_ENABLED", "false");
@@ -412,7 +403,7 @@ async fn test_security_headers_can_be_disabled() {
 #[tokio::test]
 async fn test_cors_can_be_disabled() {
     // Use environment guard to serialize access and ensure clean state
-    let mut env_guard = EnvVarGuard::new().await;
+    let env_guard = EnvVarGuard::new().await;
 
     // Test with CORS disabled
     env_guard.set_var("CORS_ENABLED", "false");
