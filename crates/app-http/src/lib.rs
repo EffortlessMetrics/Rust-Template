@@ -5,7 +5,6 @@ use axum::{
     routing::{get, post},
 };
 use serde::{Deserialize, Serialize};
-use tower_http::trace::TraceLayer;
 use tracing::{info, instrument};
 
 // Public modules
@@ -34,6 +33,10 @@ pub struct AppState {
     pub workspace_root: PathBuf,
     pub config: Option<spec_runtime::ValidatedConfig>,
     pub platform_auth: security::PlatformAuthConfig,
+    /// CORS configuration
+    pub cors_config: middleware::CorsConfig,
+    /// Security headers configuration
+    pub security_headers_config: middleware::SecurityHeadersConfig,
     /// Repository context for gov-http integration.
     pub repo_context: RepoContext,
 }
@@ -65,10 +68,23 @@ impl AppState {
         let platform_auth = security::PlatformAuthConfig::from_sources(config.as_ref());
         platform_auth.warn_if_misconfigured();
 
+        // Initialize security configurations
+        let cors_config = middleware::CorsConfig::from_sources(config.as_ref());
+        let security_headers_config =
+            middleware::SecurityHeadersConfig::from_sources(config.as_ref());
+
         // Create RepoContext for gov-http integration
         let repo_context = RepoContext::new(&workspace_root);
 
-        Self { governance_repo, workspace_root, config, platform_auth, repo_context }
+        Self {
+            governance_repo,
+            workspace_root,
+            config,
+            platform_auth,
+            cors_config,
+            security_headers_config,
+            repo_context,
+        }
     }
 }
 
@@ -98,6 +114,7 @@ pub fn app_with_state(app_state: AppState) -> Router {
 fn build_router(app_state: AppState) -> Router {
     let auth_state = app_state.clone();
     let platform_state = app_state.clone();
+
     let platform_router = Router::new()
         .with_state(platform_state.clone())
         .merge(platform::router(platform_state.clone()))
@@ -126,19 +143,17 @@ fn build_router(app_state: AppState) -> Router {
         .merge(agent_router)
         .merge(todos_router)
         // Middleware layers (applied in reverse order - bottom to top)
-        .layer(axum::middleware::from_fn(metrics::metrics_middleware))
+        // Request ID middleware (outermost - applied first to request)
         .layer(axum::middleware::from_fn(middleware::request_id_middleware))
-        .layer(
-            // Configure TraceLayer to include request_id field
-            TraceLayer::new_for_http().make_span_with(|request: &axum::extract::Request| {
-                tracing::info_span!(
-                    "http_request",
-                    method = %request.method(),
-                    uri = %request.uri(),
-                    request_id = tracing::field::Empty, // Will be filled by request_id middleware
-                )
-            }),
-        )
+        // Metrics middleware
+        .layer(axum::middleware::from_fn(metrics::metrics_middleware))
+        // CORS middleware
+        .layer(axum::middleware::from_fn_with_state(app_state.clone(), middleware::cors_middleware))
+        // Security headers (innermost - applied first to response)
+        .layer(axum::middleware::from_fn_with_state(
+            app_state.clone(),
+            middleware::security_headers_middleware,
+        ))
         .with_state(app_state)
 }
 

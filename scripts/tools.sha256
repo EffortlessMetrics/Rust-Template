@@ -1,3 +1,16 @@
-# oasdiff <sha256>
-# buf <sha256>
-# atlas <sha256>
+# Tool checksums for bootstrap-tools.sh integrity verification
+# Generated: 2025-12-18T10:19:00Z
+# Format: <tool_name> <sha256_checksum>
+# To update: curl -sSfL <tool_url> | sha256sum
+
+# oasdiff v1.11.7 - OpenAPI Specification diff tool
+# Linux AMD64: https://github.com/oasdiff/oasdiff/releases/download/v1.11.7/oasdiff_1.11.7_linux_amd64.tar.gz
+oasdiff 97f1052365f74e6fd6f4d8fa108606e09391aebb8ecbf3b5e7a4059d54327224
+
+# buf v1.45.0 - Protocol Buffers toolchain
+# Linux AMD64: https://github.com/bufbuild/buf/releases/download/v1.45.0/buf-Linux-x86_64
+buf 79d530a1b9690f2e78a103bbfcaeaa129fe7b51887a10ee64a44c16d67e4837b
+
+# atlas latest - Database schema management tool
+# Linux AMD64: https://release.ariga.io/atlas/atlas-linux-amd64-latest
+atlas 440474307d87fe5b05b1c9b4167e0383f4f9ffb9413dc377209a9f43d657ba69

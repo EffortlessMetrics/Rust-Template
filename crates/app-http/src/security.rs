@@ -1,9 +1,6 @@
-use jsonwebtoken::{Algorithm, DecodingKey, Validation, decode};
-#[cfg(test)]
-use jsonwebtoken::{EncodingKey, Header, encode};
+use jsonwebtoken::{Algorithm, DecodingKey, EncodingKey, Header, Validation, decode, encode};
 use serde::{Deserialize, Serialize};
 use spec_runtime::ValidatedConfig;
-#[cfg(test)]
 use std::time::{SystemTime, UNIX_EPOCH};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -133,12 +130,42 @@ fn validate_jwt_token(token: &str, secret: &str) -> bool {
     let mut validation = Validation::new(Algorithm::HS256);
     validation.required_spec_claims.insert("exp".to_string());
     validation.validate_exp = true;
-    validation.leeway = 0;
+
+    // Set leeway to 60 seconds to handle clock skew between servers
+    // This prevents valid tokens from being rejected due to minor time differences
+    validation.leeway = 60;
+
+    // Also validate nbf (not before) claim if present
+    validation.validate_nbf = true;
 
     let decoding_key = DecodingKey::from_secret(secret.as_ref());
 
     match decode::<Claims>(token, &decoding_key, &validation) {
-        Ok(_) => true,
+        Ok(token_data) => {
+            // Additional validation checks
+            let claims = token_data.claims;
+
+            // Validate issuer is present and not empty
+            if claims.iss.is_empty() {
+                tracing::debug!("JWT validation failed: missing issuer");
+                return false;
+            }
+
+            // Validate subject is present and not empty
+            if claims.sub.is_empty() {
+                tracing::debug!("JWT validation failed: missing subject");
+                return false;
+            }
+
+            // Validate issued at time is not too far in the future (beyond 5 minutes)
+            let now = jsonwebtoken::get_current_timestamp();
+            if claims.iat as u64 > now + 300 {
+                tracing::debug!("JWT validation failed: token issued too far in the future");
+                return false;
+            }
+
+            true
+        }
         Err(e) => {
             tracing::debug!("JWT validation failed: {}", e);
             false
@@ -147,8 +174,7 @@ fn validate_jwt_token(token: &str, secret: &str) -> bool {
 }
 
 /// Create a JWT token with the provided secret and claims (test-only helper)
-#[cfg(test)]
-pub(crate) fn create_jwt_token(
+pub fn create_jwt_token(
     secret: &str,
     subject: &str,
     issuer: &str,

@@ -19,18 +19,26 @@ if [ -f "$ck" ]; then
     echo "Checksum OK for $key"
   else
     if [ "${ENFORCE_CHECKSUMS:-0}" = "1" ]; then
-      echo "Checksum enforcement active but no entry for $key in scripts/tools.sha256" >&2
+      echo "🚨 SECURITY ERROR: Checksum enforcement active but no entry for $key in scripts/tools.sha256" >&2
+      echo "   This indicates a security configuration issue - tool integrity cannot be verified" >&2
+      echo "   Action required: Add checksum for $key to scripts/tools.sha256" >&2
       exit 1
     else
-      echo "No checksum entry for $key; skipping verification"
+      echo "⚠️  WARNING: No checksum entry for $key; skipping verification"
+      echo "   Security risk: Tool integrity not verified" >&2
+      echo "   Recommendation: Set ENFORCE_CHECKSUMS=1 for production builds" >&2
     fi
   fi
 else
   if [ "${ENFORCE_CHECKSUMS:-0}" = "1" ]; then
-    echo "Checksum enforcement active but scripts/tools.sha256 not present" >&2
+    echo "🚨 SECURITY ERROR: Checksum enforcement active but scripts/tools.sha256 not present" >&2
+    echo "   This indicates a critical security configuration issue" >&2
+    echo "   Action required: Create scripts/tools.sha256 with tool checksums" >&2
     exit 1
   else
-    echo "No scripts/tools.sha256 provided; skipping verification"
+    echo "⚠️  WARNING: No scripts/tools.sha256 provided; skipping verification"
+    echo "   Security risk: All tool integrity verification disabled" >&2
+    echo "   Recommendation: Create scripts/tools.sha256 and set ENFORCE_CHECKSUMS=1" >&2
   fi
 fi
 }

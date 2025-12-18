@@ -1,0 +1,65 @@
+# Configuration template for local development
+# Copy this file to local.yaml and replace placeholder values with actual secrets
+
+env: dev
+settings:
+  http.port: 8080
+  telemetry.otlp_endpoint: "http://localhost:4317"
+  platform.auth_mode: "open"
+  platform.redact_secrets: true
+  database.auto_migrate: true
+  
+  # CORS configuration (optional - defaults to secure values)
+  cors.enabled: true
+  cors.allowed_origins: 
+    - "http://localhost:3000"
+    - "http://localhost:8080"
+  cors.allowed_methods:
+    - "GET"
+    - "POST"
+    - "PUT"
+    - "DELETE"
+    - "OPTIONS"
+    - "PATCH"
+  cors.allowed_headers:
+    - "authorization"
+    - "content-type"
+    - "x-request-id"
+    - "x-platform-token"
+    - "accept"
+    - "origin"
+  cors.allow_credentials: false
+  cors.max_age: 86400
+  
+  # Security headers configuration (optional - defaults to secure values)
+  security_headers.enabled: true
+  security_headers.content_security_policy: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self'; frame-ancestors 'none';"
+  security_headers.x_frame_options: "DENY"
+  security_headers.x_content_type_options: "nosniff"
+  security_headers.x_xss_protection: "1; mode=block"
+  security_headers.referrer_policy: "strict-origin-when-cross-origin"
+  security_headers.permissions_policy: "geolocation=(), microphone=(), camera=(), payment=(), usb=(), magnetometer=(), gyroscope=(), accelerometer=(), autoplay=(), encrypted-media=(), fullscreen=(), picture-in-picture=()"
+  security_headers.cross_origin_embedder_policy: "require-corp"
+  security_headers.cross_origin_opener_policy: "same-origin"
+  security_headers.cross_origin_resource_policy: "same-origin"
+
+# Secrets - Replace these placeholder values with actual secrets in production
+# For development, you can use these placeholder values
+secrets:
+  # Database connection string
+  # Format: postgres://username:password@host:port/database
+  db.url: "postgres://CHANGE_ME:CHANGE_ME@localhost:5432/CHANGE_ME"
+  
+  # JWT signing key for authentication
+  # Use a strong, randomly generated secret in production
+  # Generate with: openssl rand -base64 32
+  auth.jwt_signing_key: "CHANGE_ME_GENERATE_STRONG_RANDOM_SECRET"
+  
+  # Platform authentication token
+  # Use a strong, randomly generated token in production
+  platform.auth_token: "CHANGE_ME_GENERATE_STRONG_RANDOM_TOKEN"
+  
+  # JWT secret for platform authentication
+  # Use a strong, randomly generated secret in production
+  # Generate with: openssl rand -base64 32
+  platform.jwt_secret: "CHANGE_ME_GENERATE_STRONG_RANDOM_JWT_SECRET"
