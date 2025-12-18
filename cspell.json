@@ -23,6 +23,7 @@
     "anyhow",
     "app-http",
     "fenix",
+    "jsonwebtoken",
     "appuser",
     "architecting",
     "Autoscaler",
