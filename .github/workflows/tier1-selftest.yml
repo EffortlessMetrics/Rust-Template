@@ -134,6 +134,11 @@ jobs:
       - name: Setup Rust + Nix environment
         uses: ./.github/actions/setup-rust-nix
 
+      # Verify tool checksums early to catch security issues
+      - name: Verify tool checksums
+        run: |
+          nix develop -c cargo xtask tools-checksum-verify
+
       # Docs-only checks (fastest path)
       # Only runs when ALL changes are docs (no non-docs files changed)
       - name: Run docs governance only (docs-only)

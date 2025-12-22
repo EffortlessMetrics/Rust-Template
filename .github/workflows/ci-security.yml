@@ -55,3 +55,58 @@ jobs:
             export PATH="$HOME/.cargo/bin:$PATH"
             cargo xtask audit
           '
+  tool-checksums:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions: { contents: read }
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check tools.sha256 exists and is not empty
+        run: |
+          if [ ! -f "scripts/tools.sha256" ]; then
+            echo "🚨 SECURITY ERROR: scripts/tools.sha256 does not exist"
+            echo "   Action required: Run 'cargo xtask tools-checksum-update' to create it"
+            exit 1
+          fi
+          
+          if [ ! -s "scripts/tools.sha256" ]; then
+            echo "🚨 SECURITY ERROR: scripts/tools.sha256 is empty"
+            echo "   Action required: Run 'cargo xtask tools-checksum-update' to populate it"
+            exit 1
+          fi
+          
+          # Count actual checksum entries (non-comment, non-empty)
+          checksum_entries=$(grep -c '^[a-zA-Z0-9-]*-[0-9a-zA-Z.-]* [a-f0-9]\{64\}$' scripts/tools.sha256 || echo "0")
+          echo "Found $checksum_entries checksum entries"
+          
+          if [ "$checksum_entries" -lt 12 ]; then
+            echo "🚨 SECURITY ERROR: scripts/tools.sha256 has insufficient checksum entries"
+            echo "   Expected at least 12 entries (3 tools × 4 platforms minimum)"
+            echo "   Action required: Run 'cargo xtask tools-checksum-update' to update it"
+            exit 1
+          fi
+          
+          echo "✓ Checksum file validation passed"
+      - name: Validate checksum format
+        run: |
+          # Check that all required tools have checksum entries
+          required_tools=("oasdiff" "buf" "atlas")
+          for tool in "${required_tools[@]}"; do
+            if ! grep -q "^$tool-[0-9a-zA-Z.-]* [a-f0-9]\{64\}$" scripts/tools.sha256; then
+              echo "🚨 SECURITY ERROR: Missing checksum entries for $tool"
+              echo "   Action required: Run 'cargo xtask tools-checksum-update' to add missing entries"
+              exit 1
+            fi
+          done
+          
+          echo "✓ Checksum format validation passed"
+      - name: Test checksum enforcement
+        run: |
+          # Test that bootstrap script enforces checksums when ENFORCE_CHECKSUMS=1
+          if ! ENFORCE_CHECKSUMS=1 ./bootstrap-tools.sh 2>/dev/null; then
+            echo "🚨 SECURITY ERROR: Checksum enforcement is not working"
+            echo "   bootstrap-tools.sh should fail when ENFORCE_CHECKSUMS=1 and checksums are missing"
+            exit 1
+          fi
+          
+          echo "✓ Checksum enforcement validation passed"

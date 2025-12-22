@@ -71,7 +71,7 @@ install_oasdiff() {
     echo "Installing oasdiff ${v} from ${url}..."
     curl -sSfL "$url" | tar -xz -C "$BIN" oasdiff
     chmod +x "$BIN/oasdiff"
-    sha_check "$BIN/oasdiff" "oasdiff"
+    sha_check "$BIN/oasdiff" "oasdiff-${v}-${os}-${oas_arch}"
   fi
 }
 install_buf() {
@@ -81,7 +81,7 @@ install_buf() {
   local bin="buf-${os_cap}-${buf_arch}"
   local url="https://github.com/bufbuild/buf/releases/download/v${v}/${bin}"
   if ! [ -x "$BIN/buf" ]; then
-    curl -sSL "$url" -o "$BIN/buf"; chmod +x "$BIN/buf"; sha_check "$BIN/buf" "buf"
+    curl -sSL "$url" -o "$BIN/buf"; chmod +x "$BIN/buf"; sha_check "$BIN/buf" "buf-${v}-${os}-${buf_arch}"
   fi
 }
 install_atlas() {
@@ -90,7 +90,7 @@ install_atlas() {
   local v="${ATLAS_VERSION:-latest}"
   local url="https://release.ariga.io/atlas/atlas-${os}-${arch}-${v}"
   if ! [ -x "$BIN/atlas" ]; then
-    curl -sSfL "$url" -o "$BIN/atlas"; chmod +x "$BIN/atlas"; sha_check "$BIN/atlas" "atlas"
+    curl -sSfL "$url" -o "$BIN/atlas"; chmod +x "$BIN/atlas"; sha_check "$BIN/atlas" "atlas-${v}-${os}-${arch}"
   fi
 }
 install_oasdiff; install_buf; install_atlas

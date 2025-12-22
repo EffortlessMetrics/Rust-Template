@@ -39,13 +39,15 @@ run_test() {
 echo "1. CHECKSUM FILE VALIDATION TESTS"
 echo "==============================="
 
-run_test "Checksum file exists and is readable" "[ -f scripts/tools.sha256 ]"
+run_test "Checksum file exists and is readable" "[ -f /home/steven/code/Rust/Rust-Template/scripts/tools.sha256 ]"
 
-run_test "Checksum file contains actual checksum entries" "grep -q '^[a-f0-9]' scripts/tools.sha256"
+run_test "Checksum file contains actual checksum entries" "grep -q '^[a-zA-Z0-9-]*-[0-9a-zA-Z.-]* [a-f0-9]' /home/steven/code/Rust/Rust-Template/scripts/tools.sha256"
 
-run_test "All required tools have checksum entries" "[ \$(grep -c '^[a-f0-9]' scripts/tools.sha256) -eq 3 ]"
+run_test "All required tools have checksum entries" "[ \$(grep -c '^[a-zA-Z0-9-]*-[0-9a-zA-Z.-]* [a-f0-9]' /home/steven/code/Rust/Rust-Template/scripts/tools.sha256) -ge 12 ]"
 
-run_test "Checksum format is valid" "grep -q '^oasdiff [a-f0-9]\{64\}\$' scripts/tools.sha256 && grep -q '^buf [a-f0-9]\{64\}\$' scripts/tools.sha256 && grep -q '^atlas [a-f0-9]\{64\}\$' scripts/tools.sha256"
+run_test "Checksum format is valid (new format with version and platform)" "grep -q '^oasdiff-1.11.7-.* [a-f0-9]\{64\}\$' /home/steven/code/Rust/Rust-Template/scripts/tools.sha256 && grep -q '^buf-1.45.0-.* [a-f0-9]\{64\}\$' /home/steven/code/Rust/Rust-Template/scripts/tools.sha256 && grep -q '^atlas-latest-.* [a-f0-9]\{64\}\$' /home/steven/code/Rust/Rust-Template/scripts/tools.sha256"
+
+run_test "All platforms are covered for main tools" "[ \$(grep -c 'oasdiff-1.11.7-linux-\|oasdiff-1.11.7-darwin-' /home/steven/code/Rust/Rust-Template/scripts/tools.sha256) -eq 3 ] && [ \$(grep -c 'buf-1.45.0-linux-\|buf-1.45.0-darwin-' /home/steven/code/Rust/Rust-Template/scripts/tools.sha256) -eq 4 ] && [ \$(grep -c 'atlas-latest-linux-\|atlas-latest-darwin-' /home/steven/code/Rust/Rust-Template/scripts/tools.sha256) -eq 4 ]"
 
 # 2. Rust Version Consistency Tests
 echo "2. RUST VERSION CONSISTENCY TESTS"
@@ -86,11 +88,11 @@ run_test "Ignored advisories have next review dates" "grep -c '# Next review: 20
 echo "5. BOOTSTRAP TOOLS SECURITY TESTS"
 echo "================================="
 
-run_test "bootstrap-tools.sh exists and is executable" "[ -x bootstrap-tools.sh ]"
+run_test "bootstrap-tools.sh exists and is executable" "[ -x /home/steven/code/Rust/Rust-Template/bootstrap-tools.sh ]"
 
-run_test "Bootstrap script has enhanced security messages" "grep -q '🚨 SECURITY ERROR' bootstrap-tools.sh"
+run_test "Bootstrap script has enhanced security messages" "grep -q '🚨 SECURITY ERROR' /home/steven/code/Rust/Rust-Template/bootstrap-tools.sh"
 
-run_test "Bootstrap script provides actionable recommendations" "grep -q 'Action required:' bootstrap-tools.sh"
+run_test "Bootstrap script provides actionable recommendations" "grep -q 'Action required:' /home/steven/code/Rust/Rust-Template/bootstrap-tools.sh"
 
 # 6. Build Process Integration Tests
 echo "6. BUILD PROCESS INTEGRATION TESTS"
@@ -107,7 +109,7 @@ echo "7. FUNCTIONAL VALIDATION TESTS"
 echo "============================="
 
 # Test checksum validation with ENFORCE_CHECKSUMS=1
-run_test "Checksum enforcement works correctly" "ENFORCE_CHECKSUMS=1 ./bootstrap-tools.sh 2>/dev/null"
+run_test "Checksum enforcement works correctly" "ENFORCE_CHECKSUMS=1 /home/steven/code/Rust/Rust-Template/bootstrap-tools.sh 2>/dev/null"
 
 # Test MSRV validation
 run_test "MSRV validation passes with correct version" "cargo +1.89.0 check --workspace --quiet"

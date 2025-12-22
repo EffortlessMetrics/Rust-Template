@@ -13,13 +13,23 @@ if [ -f "scripts/tools.sha256" ]; then
     echo "   Lines: $line_count"
     
     # Count actual checksum entries (non-comment, non-empty)
-    checksum_entries=$(grep -c '^[a-f0-9]' "scripts/tools.sha256" 2>/dev/null || echo "0")
+    checksum_entries=$(grep -c '^[a-zA-Z0-9-]*-[0-9a-zA-Z.-]* [a-f0-9]' "scripts/tools.sha256" 2>/dev/null || echo "0")
     echo "   Actual checksum entries: $checksum_entries"
+    
+    # Count platform coverage for main tools
+    oasdiff_platforms=$(grep -c 'oasdiff-1.11.7-' "scripts/tools.sha256" 2>/dev/null || echo "0")
+    buf_platforms=$(grep -c 'buf-1.45.0-' "scripts/tools.sha256" 2>/dev/null || echo "0")
+    atlas_platforms=$(grep -c 'atlas-latest-' "scripts/tools.sha256" 2>/dev/null || echo "0")
+    echo "   Platform coverage: oasdiff=$oasdiff_platforms, buf=$buf_platforms, atlas=$atlas_platforms"
     
     if [ "$checksum_entries" -eq 0 ]; then
         echo "   ❌ CRITICAL: No actual checksums found - only placeholders"
+    elif [ "$checksum_entries" -lt 12 ]; then
+        echo "   ⚠️  WARNING: Insufficient checksum entries (expected >= 12, found $checksum_entries)"
+    elif [ "$oasdiff_platforms" -lt 3 ] || [ "$buf_platforms" -lt 4 ] || [ "$atlas_platforms" -lt 4 ]; then
+        echo "   ⚠️  WARNING: Incomplete platform coverage"
     else
-        echo "   ✅ Checksum entries found"
+        echo "   ✅ Checksum entries found with full platform coverage"
     fi
 else
     echo "   ❌ CRITICAL: Checksum file not found"

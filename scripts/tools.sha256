@@ -1,16 +1,35 @@
 # Tool checksums for bootstrap-tools.sh integrity verification
-# Generated: 2025-12-18T10:19:00Z
-# Format: <tool_name> <sha256_checksum>
-# To update: curl -sSfL <tool_url> | sha256sum
+# Generated: 2025-12-19T18:54:06Z
+# Format: <tool_name>-<version>-<platform> <sha256_checksum>
+# To update: cargo xtask tools-checksum-update
+
 
 # oasdiff v1.11.7 - OpenAPI Specification diff tool
-# Linux AMD64: https://github.com/oasdiff/oasdiff/releases/download/v1.11.7/oasdiff_1.11.7_linux_amd64.tar.gz
-oasdiff 97f1052365f74e6fd6f4d8fa108606e09391aebb8ecbf3b5e7a4059d54327224
+# GitHub releases: https://github.com/oasdiff/oasdiff/releases
+oasdiff-1.11.7-linux-amd64 97f1052365f74e6fd6f4d8fa108606e09391aebb8ecbf3b5e7a4059d54327224
+oasdiff-1.11.7-linux-arm64 6a7394ec7129ccfbfcf4837db8426198b79e933341a96adf53b0f33498846b45
+oasdiff-1.11.7-darwin-all 2aab1d33f3b9f9c28cd6c1977f63b1aa43ba83f9ab94887f3097fcac152d20a1
+oasdiff-1.11.7-windows-amd64 5327e48ac9926d8b63c63b6768b7599369f890aac768780621a8315fd3beb2cb
 
 # buf v1.45.0 - Protocol Buffers toolchain
-# Linux AMD64: https://github.com/bufbuild/buf/releases/download/v1.45.0/buf-Linux-x86_64
-buf 79d530a1b9690f2e78a103bbfcaeaa129fe7b51887a10ee64a44c16d67e4837b
+# GitHub releases: https://github.com/bufbuild/buf/releases
+buf-1.45.0-linux-amd64 79d530a1b9690f2e78a103bbfcaeaa129fe7b51887a10ee64a44c16d67e4837b
+buf-1.45.0-linux-arm64 bd2c37ec7ba6b12fc3660a138d6bfbceb28493ceec202c098d15b84a530482d9
+buf-1.45.0-darwin-amd64 0542b62eabf4bdaa67d53b8a9aed43c8674d5e447a8c353e8e25cfcb358464cb
+buf-1.45.0-darwin-arm64 7c4131ee7af0e1a9c34acf6a7e5b7f82123bf44726f0eac1ccae31eed7ebb094
+buf-1.45.0-windows-amd64 656f38ecdd7633af9eaf8c15e0e15402c5a4852307515951fbcf7d91a37ff5b3
 
 # atlas latest - Database schema management tool
-# Linux AMD64: https://release.ariga.io/atlas/atlas-linux-amd64-latest
-atlas 440474307d87fe5b05b1c9b4167e0383f4f9ffb9413dc377209a9f43d657ba69
+# Release server: https://release.ariga.io/atlas/
+atlas-latest-linux-amd64 6d5e15776eb386fefae640c541e0d9e448197dcdebaca014e658948658b5b4d4
+atlas-latest-linux-arm64 c4be1aebbf9411c698bb7de86bb4bf3d21254345ec72d05028592d55f01f5d79
+atlas-latest-darwin-amd64 a5cea028b49a09d0dbccb86331f333d985afab59fe0c941536a18579c645218f
+atlas-latest-darwin-arm64 5dba0f60cdeb82dad38e4563f78240526cc354d7b54db0d0cc60a46856146b5d
+atlas-latest-windows-amd64 3bc0d2f69f5fdb8bf993875c856a9f87c6aba658bc16eb511287d85889121142
+
+# gitleaks v8.21.2 - Secret scanning tool (CI-only)
+# GitHub releases: https://github.com/gitleaks/gitleaks/releases
+gitleaks-8.21.2-linux-amd64 5bc41815076e6ed6ef8fbecc9d9b75bcae31f39029ceb55da08086315316e3ba
+gitleaks-8.21.2-darwin-amd64 5b42c6e4b1fd693eaeb2b5b7faa5f17a1434299d4deb2de63d4b2efd7c753128
+gitleaks-8.21.2-darwin-arm64 cad3de5dc9a4d5447d967a70a4d49499c557f04db028274cc324f9ff983f6502
+gitleaks-8.21.2-windows-amd64 f238c85e5f47e18fac779ce71ee11091cf70a0a8fb4415f165efba2800eef133

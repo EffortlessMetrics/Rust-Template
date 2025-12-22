@@ -38,6 +38,12 @@ jobs:
       - uses: cachix/install-nix-action@v31
         if: runner.os != 'Windows'
 
+      # Verify tool checksums early to catch security issues
+      - name: Verify tool checksums
+        if: runner.os != 'Windows'
+        run: |
+          nix develop -c cargo xtask tools-checksum-verify
+
       - name: Enable sccache (Linux/macOS)
         if: runner.os != 'Windows'
         run: |

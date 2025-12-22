@@ -667,6 +667,14 @@ enum Commands {
     #[command(next_help_heading = "🔧 Infrastructure & Utilities")]
     FmtAll,
 
+    /// Update tool checksums in scripts/tools.sha256
+    #[command(next_help_heading = "🔧 Infrastructure & Utilities")]
+    ToolsChecksumUpdate,
+
+    /// Verify tool checksums are present and valid
+    #[command(next_help_heading = "🔧 Infrastructure & Utilities")]
+    ToolsChecksumVerify,
+
     /// Clean workspace (remove target/, generated docs, etc.)
     #[command(next_help_heading = "🔧 Infrastructure & Utilities")]
     Clean,
@@ -885,6 +893,8 @@ fn main() -> Result<()> {
             commands::tasks::update_task(&id, title, owner, status)
         }
         Commands::TasksList => commands::tasks_list::run(),
+        Commands::ToolsChecksumUpdate => commands::tools_checksum_update::run(),
+        Commands::ToolsChecksumVerify => commands::tools_checksum_verify::run(),
         Commands::FmtAll => commands::fmt_all::run(),
         Commands::Hakari => commands::hakari::run(),
         Commands::Migrate => commands::migrate::run(),
@@ -1158,6 +1168,8 @@ pub fn all_command_names() -> Vec<&'static str> {
         "task-update",
         "tasks-list",
         "test-ac",
+        "tools-checksum-update",
+        "tools-checksum-verify",
         "test-changed",
         "ui-contract-check",
         "service-descriptor",
