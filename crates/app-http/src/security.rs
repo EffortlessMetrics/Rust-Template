@@ -85,12 +85,15 @@ impl PlatformAuthConfig {
         }
     }
 
+    /// Returns true if the required credential for the current auth mode is present.
+    ///
+    /// - Basic mode: requires a basic token
+    /// - JWT mode: requires a JWT secret
+    /// - Open mode: always returns true (no credentials required)
     pub fn token_present(&self) -> bool {
-        let has_basic = self.has_basic_token();
-        let has_jwt = self.has_jwt_secret();
-
         match self.mode {
-            PlatformAuthMode::Basic | PlatformAuthMode::Jwt => has_basic || has_jwt,
+            PlatformAuthMode::Basic => self.has_basic_token(),
+            PlatformAuthMode::Jwt => self.has_jwt_secret(),
             PlatformAuthMode::Open => true,
         }
     }
@@ -346,5 +349,86 @@ mod tests {
         let config =
             PlatformAuthConfig { mode: PlatformAuthMode::Jwt, token: None, jwt_secret: None };
         assert_eq!(config.mode_label(), "jwt");
+    }
+
+    // AC-TPL-PLATFORM-AUTH-BASIC: token_present() validates by mode
+    #[test]
+    fn token_present_basic_mode_requires_basic_token() {
+        // Basic mode with basic token: should return true
+        let config = PlatformAuthConfig {
+            mode: PlatformAuthMode::Basic,
+            token: Some("secret".into()),
+            jwt_secret: None,
+        };
+        assert!(config.token_present(), "Basic mode with basic token should be present");
+
+        // Basic mode with JWT secret only: should return false (wrong credential type)
+        let config = PlatformAuthConfig {
+            mode: PlatformAuthMode::Basic,
+            token: None,
+            jwt_secret: Some("jwt-secret".into()),
+        };
+        assert!(!config.token_present(), "Basic mode with only JWT secret should NOT be present");
+
+        // Basic mode with no credentials: should return false
+        let config =
+            PlatformAuthConfig { mode: PlatformAuthMode::Basic, token: None, jwt_secret: None };
+        assert!(!config.token_present(), "Basic mode with no credentials should NOT be present");
+
+        // Basic mode with empty token: should return false
+        let config = PlatformAuthConfig {
+            mode: PlatformAuthMode::Basic,
+            token: Some("".into()),
+            jwt_secret: None,
+        };
+        assert!(!config.token_present(), "Basic mode with empty token should NOT be present");
+    }
+
+    #[test]
+    fn token_present_jwt_mode_requires_jwt_secret() {
+        // JWT mode with JWT secret: should return true
+        let config = PlatformAuthConfig {
+            mode: PlatformAuthMode::Jwt,
+            token: None,
+            jwt_secret: Some("jwt-secret".into()),
+        };
+        assert!(config.token_present(), "JWT mode with JWT secret should be present");
+
+        // JWT mode with basic token only: should return false (wrong credential type)
+        let config = PlatformAuthConfig {
+            mode: PlatformAuthMode::Jwt,
+            token: Some("basic-token".into()),
+            jwt_secret: None,
+        };
+        assert!(!config.token_present(), "JWT mode with only basic token should NOT be present");
+
+        // JWT mode with no credentials: should return false
+        let config =
+            PlatformAuthConfig { mode: PlatformAuthMode::Jwt, token: None, jwt_secret: None };
+        assert!(!config.token_present(), "JWT mode with no credentials should NOT be present");
+
+        // JWT mode with empty secret: should return false
+        let config = PlatformAuthConfig {
+            mode: PlatformAuthMode::Jwt,
+            token: None,
+            jwt_secret: Some("".into()),
+        };
+        assert!(!config.token_present(), "JWT mode with empty secret should NOT be present");
+    }
+
+    #[test]
+    fn token_present_open_mode_always_true() {
+        // Open mode with no credentials: should return true
+        let config =
+            PlatformAuthConfig { mode: PlatformAuthMode::Open, token: None, jwt_secret: None };
+        assert!(config.token_present(), "Open mode should always be present");
+
+        // Open mode with credentials: should still return true
+        let config = PlatformAuthConfig {
+            mode: PlatformAuthMode::Open,
+            token: Some("ignored".into()),
+            jwt_secret: Some("also-ignored".into()),
+        };
+        assert!(config.token_present(), "Open mode with credentials should still be present");
     }
 }

@@ -65,4 +65,5 @@ pub mod tools_checksum_update;
 pub mod tools_checksum_verify;
 pub mod ui_contract_check;
 pub mod version;
+pub mod version_check;
 pub mod versioning;

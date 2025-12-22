@@ -14,13 +14,28 @@ pub fn run() -> Result<()> {
         fs::read_to_string("bootstrap-tools.sh").context("Failed to read bootstrap-tools.sh")?;
 
     // Extract tool names from the script
+    // Handle both function definitions (install_foo() {) and calls (install_foo; install_bar)
     let mut installed_tools = HashSet::new();
     for line in bootstrap_script.lines() {
-        if line.trim().starts_with("install_") {
-            let tool_name =
-                line.trim().strip_prefix("install_").unwrap_or("").split('(').next().unwrap_or("");
-            if !tool_name.is_empty() {
-                installed_tools.insert(tool_name.to_string());
+        let trimmed = line.trim();
+        // Skip empty lines and comments
+        if trimmed.is_empty() || trimmed.starts_with('#') {
+            continue;
+        }
+
+        // Handle function calls like: install_foo; install_bar; install_baz
+        // Also handle function definitions like: install_foo() {
+        for segment in trimmed.split(';') {
+            let segment = segment.trim();
+            if let Some(after_install) = segment.strip_prefix("install_") {
+                // Extract just the function name (before any parentheses or whitespace)
+                let tool_name = after_install
+                    .split(|c: char| c == '(' || c.is_whitespace())
+                    .next()
+                    .unwrap_or("");
+                if !tool_name.is_empty() {
+                    installed_tools.insert(tool_name.to_string());
+                }
             }
         }
     }

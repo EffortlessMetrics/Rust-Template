@@ -139,6 +139,11 @@ jobs:
         run: |
           nix develop -c cargo xtask tools-checksum-verify
 
+      # Verify version consistency early to catch version drift
+      - name: Verify version consistency
+        run: |
+          nix develop -c cargo xtask version-check
+
       # Docs-only checks (fastest path)
       # Only runs when ALL changes are docs (no non-docs files changed)
       - name: Run docs governance only (docs-only)

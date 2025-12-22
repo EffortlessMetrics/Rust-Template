@@ -1,5 +1,5 @@
 # Tool checksums for bootstrap-tools.sh integrity verification
-# Generated: 2025-12-19T18:54:06Z
+# Generated: 2025-12-22T19:21:15Z
 # Format: <tool_name>-<version>-<platform> <sha256_checksum>
 # To update: cargo xtask tools-checksum-update
 
@@ -21,11 +21,11 @@ buf-1.45.0-windows-amd64 656f38ecdd7633af9eaf8c15e0e15402c5a4852307515951fbcf7d9
 
 # atlas latest - Database schema management tool
 # Release server: https://release.ariga.io/atlas/
-atlas-latest-linux-amd64 6d5e15776eb386fefae640c541e0d9e448197dcdebaca014e658948658b5b4d4
-atlas-latest-linux-arm64 c4be1aebbf9411c698bb7de86bb4bf3d21254345ec72d05028592d55f01f5d79
-atlas-latest-darwin-amd64 a5cea028b49a09d0dbccb86331f333d985afab59fe0c941536a18579c645218f
-atlas-latest-darwin-arm64 5dba0f60cdeb82dad38e4563f78240526cc354d7b54db0d0cc60a46856146b5d
-atlas-latest-windows-amd64 3bc0d2f69f5fdb8bf993875c856a9f87c6aba658bc16eb511287d85889121142
+atlas-latest-linux-amd64 724decd2d39b7c9870301ee4cbad2297b8538199c2936e15ca4366a33581430d
+atlas-latest-linux-arm64 0ff4218b8c51d640d749fc49cde128eb4ae2043878238d13ab84748b22f266ab
+atlas-latest-darwin-amd64 812c91b97f3ff4670e342ad46c3ce6af34fdfb54f71c19719fd7ba9baacb28c9
+atlas-latest-darwin-arm64 8ae3f2093059a2d2959c03dcc2c5cde9e64b192a7b87de450b4e30fa2c92567b
+atlas-latest-windows-amd64 13156b55ed5da072b3370427b0f73f2717a0edbfcd9264211d4db10e3ba8b354
 
 # gitleaks v8.21.2 - Secret scanning tool (CI-only)
 # GitHub releases: https://github.com/gitleaks/gitleaks/releases

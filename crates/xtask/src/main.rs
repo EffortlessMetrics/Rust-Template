@@ -727,6 +727,14 @@ enum Commands {
         json: bool,
     },
 
+    /// Validate version consistency across all version-bearing files
+    #[command(next_help_heading = "ℹ️ Status & Metadata")]
+    VersionCheck {
+        /// Output in JSON format
+        #[arg(long)]
+        json: bool,
+    },
+
     /// Show environment detection mode (CI, noninteractive, low-resources)
     #[command(next_help_heading = "ℹ️ Status & Metadata")]
     EnvMode {
@@ -1003,6 +1011,9 @@ fn main() -> Result<()> {
         }
         Commands::Version { json } => {
             commands::version::run(commands::version::VersionArgs { json })
+        }
+        Commands::VersionCheck { json } => {
+            commands::version_check::run(commands::version_check::VersionCheckArgs { json })
         }
         Commands::EnvMode { json } => {
             commands::env_mode::run(commands::env_mode::EnvModeArgs { json })
