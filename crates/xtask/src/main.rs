@@ -1,3 +1,37 @@
+//! CLI entry point for development tasks and CI orchestration.
+//!
+//! This is the `xtask` binary that provides a single entrypoint for all dev and CI operations.
+//! It follows the `cargo-xtask` pattern: a binary crate in the workspace that acts as a
+//! task runner for development workflows.
+//!
+//! # Command categories
+//!
+//! - **Onboarding**: Environment setup and validation (`doctor`, `dev-up`, `install-hooks`)
+//! - **Validation Gates**: Checks and tests (`selftest`, `check`, `precommit`, `bdd`)
+//! - **Acceptance Criteria**: AC management and testing (`ac-status`, `ac-new`, `test-ac`)
+//! - **Design & Documentation**: ADRs, design docs, spellcheck (`adr-new`, `docs-check`)
+//! - **Governance Artifacts**: Skills, agents, friction log, questions (`skills-lint`, `friction-list`)
+//! - **Tasks & Hints**: Work tracking and agent guidance (`tasks-list`, `suggest-next`)
+//! - **Releases**: Version management and release process (`release-prepare`, `release-bundle`)
+//! - **Security & Policy**: Audits and policy testing (`audit`, `policy-test`, `coverage`)
+//! - **LLM/Agent Support**: Context bundles and workflows (`bundle`, `help-flows`)
+//! - **Infrastructure**: Build, cleanup, and utilities (`clean`, `graph-export`, `migrate`)
+//!
+//! # Usage
+//!
+//! ```bash
+//! cargo xtask <command> [options]
+//! ```
+//!
+//! For a list of all commands, run:
+//!
+//! ```bash
+//! cargo xtask --help
+//! ```
+//!
+//! The tool automatically wraps execution in `nix develop` when Nix is available,
+//! ensuring hermetic builds and perfect CI/local parity per ADR-0002.
+
 use anyhow::{Context, Result};
 use clap::{Parser, Subcommand};
 use colored::Colorize;

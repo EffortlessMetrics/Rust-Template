@@ -1,7 +1,9 @@
 # doclint:disable orphan-version
 # Service Metadata
 # This file provides a self-description of the service for tooling and orchestration.
-# Copy this template to your service root as SERVICE_METADATA.yaml and fill in the values.
+# NOTE: This is an EXAMPLE with an older schema. The authoritative service metadata
+# is located at specs/service_metadata.yaml using the current schema format.
+# Refer to specs/service_metadata.yaml for the canonical structure.
 
 service:
   # Unique identifier for this service
