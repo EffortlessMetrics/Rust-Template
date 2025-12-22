@@ -196,13 +196,36 @@ pub fn create_jwt_token(
     encode(&Header::default(), &claims, &encoding_key)
 }
 
+impl PlatformAuthMode {
+    /// Parse an auth mode string, returning an error for invalid values.
+    ///
+    /// This is a strict validation that fails loudly on invalid input,
+    /// unlike the `From<&str>` implementation which falls back to `Open`.
+    pub fn parse_strict(value: &str) -> Result<Self, String> {
+        match value.to_ascii_lowercase().as_str() {
+            "basic" => Ok(PlatformAuthMode::Basic),
+            "jwt" => Ok(PlatformAuthMode::Jwt),
+            "none" | "open" => Ok(PlatformAuthMode::Open),
+            other => {
+                Err(format!("Invalid auth mode '{}'. Valid options: basic, jwt, none, open", other))
+            }
+        }
+    }
+}
+
 impl From<&str> for PlatformAuthMode {
     fn from(value: &str) -> Self {
         match value.to_ascii_lowercase().as_str() {
             "basic" => PlatformAuthMode::Basic,
             "jwt" => PlatformAuthMode::Jwt,
-            "none" => PlatformAuthMode::Open,
-            _ => PlatformAuthMode::Open,
+            "none" | "open" => PlatformAuthMode::Open,
+            other => {
+                tracing::warn!(
+                    "Invalid PLATFORM_AUTH_MODE '{}' falling back to 'open'. Valid options: basic, jwt, none, open",
+                    other
+                );
+                PlatformAuthMode::Open
+            }
         }
     }
 }
@@ -333,7 +356,53 @@ mod tests {
         assert_eq!(PlatformAuthMode::from("jwt"), PlatformAuthMode::Jwt);
         assert_eq!(PlatformAuthMode::from("none"), PlatformAuthMode::Open);
         assert_eq!(PlatformAuthMode::from("open"), PlatformAuthMode::Open);
+        // Invalid mode falls back to Open with a warning
         assert_eq!(PlatformAuthMode::from("invalid"), PlatformAuthMode::Open);
+    }
+
+    #[test]
+    fn parse_strict_validates_auth_modes() {
+        // Valid modes should succeed
+        assert_eq!(PlatformAuthMode::parse_strict("basic").unwrap(), PlatformAuthMode::Basic);
+        assert_eq!(PlatformAuthMode::parse_strict("jwt").unwrap(), PlatformAuthMode::Jwt);
+        assert_eq!(PlatformAuthMode::parse_strict("none").unwrap(), PlatformAuthMode::Open);
+        assert_eq!(PlatformAuthMode::parse_strict("open").unwrap(), PlatformAuthMode::Open);
+
+        // Case insensitive
+        assert_eq!(PlatformAuthMode::parse_strict("BASIC").unwrap(), PlatformAuthMode::Basic);
+        assert_eq!(PlatformAuthMode::parse_strict("JWT").unwrap(), PlatformAuthMode::Jwt);
+        assert_eq!(PlatformAuthMode::parse_strict("None").unwrap(), PlatformAuthMode::Open);
+
+        // Invalid modes should fail
+        let result = PlatformAuthMode::parse_strict("invalid");
+        assert!(result.is_err());
+        let err_msg = result.unwrap_err();
+        assert!(err_msg.contains("Invalid auth mode 'invalid'"));
+        assert!(err_msg.contains("basic, jwt, none, open"));
+
+        let result = PlatformAuthMode::parse_strict("bearer");
+        assert!(result.is_err());
+
+        let result = PlatformAuthMode::parse_strict("");
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn from_str_logs_warning_for_invalid_mode() {
+        // Initialize tracing for test to capture logs
+        let _ = tracing_subscriber::fmt().with_test_writer().try_init();
+
+        // Invalid mode should fall back to Open and log a warning
+        let mode = PlatformAuthMode::from("invalid-mode");
+        assert_eq!(mode, PlatformAuthMode::Open);
+
+        // Another invalid mode
+        let mode = PlatformAuthMode::from("bearer");
+        assert_eq!(mode, PlatformAuthMode::Open);
+
+        // Valid modes should not log warnings
+        let mode = PlatformAuthMode::from("basic");
+        assert_eq!(mode, PlatformAuthMode::Basic);
     }
 
     #[test]

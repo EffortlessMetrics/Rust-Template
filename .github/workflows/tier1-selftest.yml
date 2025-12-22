@@ -134,6 +134,12 @@ jobs:
       - name: Setup Rust + Nix environment
         uses: ./.github/actions/setup-rust-nix
 
+      - name: Setup Rust cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: rust-${{ runner.os }}
+          cache-on-failure: true
+
       # Verify tool checksums early to catch security issues
       - name: Verify tool checksums
         run: |

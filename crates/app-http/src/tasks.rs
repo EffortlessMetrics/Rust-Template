@@ -9,6 +9,7 @@ use axum::{
 };
 use business_core::governance::{TaskId, TaskService, TaskStatus};
 use serde::Deserialize;
+use tracing::instrument;
 
 use crate::AppState;
 
@@ -17,6 +18,7 @@ pub struct UpdateTaskStatusRequest {
     status: TaskStatus,
 }
 
+#[instrument(skip(state, headers, body), fields(task_id = %id))]
 pub async fn update_task_status(
     State(state): State<AppState>,
     Path(id): Path<String>,

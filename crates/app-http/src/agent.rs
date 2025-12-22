@@ -6,6 +6,7 @@ use axum::{
 use business_core::governance::TaskService;
 use serde::{Deserialize, Serialize};
 use spec_runtime::hints::{self, HintEngine, HintLinks, HintReason, HintTarget};
+use tracing::instrument;
 
 use crate::AppState;
 
@@ -62,6 +63,7 @@ pub fn router(state: AppState) -> Router<AppState> {
     Router::new().route("/platform/agent/hints", get(agent_hints)).with_state(state)
 }
 
+#[instrument(skip(state, filters), fields(owner = ?filters.owner, label = ?filters.label, requirement = ?filters.requirement, kind = ?filters.kind))]
 async fn agent_hints(
     State(state): State<AppState>,
     Query(filters): Query<HintsFilters>,

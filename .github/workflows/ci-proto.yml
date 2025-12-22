@@ -13,7 +13,7 @@ jobs:
     timeout-minutes: 25
     permissions: { contents: read }
     env:
-      ENFORCE_CHECKSUMS: "0"  # TODO: Enable once tools.sha256 has real checksums
+      ENFORCE_CHECKSUMS: "1"
     steps:
       - uses: actions/checkout@v4
         with: { fetch-depth: 0 }

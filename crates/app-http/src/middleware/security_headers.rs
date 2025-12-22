@@ -71,7 +71,19 @@ impl SecurityHeadersConfig {
     pub fn from_sources(config: Option<&ValidatedConfig>) -> Self {
         let enabled = std::env::var("SECURITY_HEADERS_ENABLED")
             .ok()
-            .and_then(|v| v.parse().ok())
+            .and_then(|v| {
+                v.parse()
+                    .map_err(|e| {
+                        tracing::warn!(
+                            env_var = "SECURITY_HEADERS_ENABLED",
+                            value = %v,
+                            error = %e,
+                            "Failed to parse environment variable, using default"
+                        );
+                        e
+                    })
+                    .ok()
+            })
             .or_else(|| {
                 config
                     .and_then(|cfg| cfg.settings.get("security_headers.enabled"))

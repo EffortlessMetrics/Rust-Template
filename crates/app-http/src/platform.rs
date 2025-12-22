@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 use spec_runtime::{ValidatedConfig, load_all_specs, load_service_metadata};
 use std::collections::HashMap;
 use std::fs;
+use tracing::instrument;
 
 mod idp;
 mod ui;
@@ -379,6 +380,7 @@ fn validate_doc_type_contract(doc: &spec_runtime::DocEntry) -> (bool, Option<Str
     (true, None)
 }
 
+#[instrument(skip(state))]
 async fn get_status(State(state): State<AppState>) -> Result<Json<PlatformStatus>, AppError> {
     let root = &state.workspace_root;
     let specs = load_all_specs(root).map_err(|e| AppError::spec_load_error("load specs", e))?;

@@ -67,7 +67,19 @@ impl CorsConfig {
     pub fn from_sources(config: Option<&ValidatedConfig>) -> Self {
         let enabled = std::env::var("CORS_ENABLED")
             .ok()
-            .and_then(|v| v.parse().ok())
+            .and_then(|v| {
+                v.parse()
+                    .map_err(|e| {
+                        tracing::warn!(
+                            env_var = "CORS_ENABLED",
+                            value = %v,
+                            error = %e,
+                            "Failed to parse environment variable, using default"
+                        );
+                        e
+                    })
+                    .ok()
+            })
             .or_else(|| {
                 config.and_then(|cfg| cfg.settings.get("cors.enabled")).and_then(|v| v.as_bool())
             })
@@ -138,7 +150,19 @@ impl CorsConfig {
 
         let allow_credentials = std::env::var("CORS_ALLOW_CREDENTIALS")
             .ok()
-            .and_then(|v| v.parse().ok())
+            .and_then(|v| {
+                v.parse()
+                    .map_err(|e| {
+                        tracing::warn!(
+                            env_var = "CORS_ALLOW_CREDENTIALS",
+                            value = %v,
+                            error = %e,
+                            "Failed to parse environment variable, using default"
+                        );
+                        e
+                    })
+                    .ok()
+            })
             .or_else(|| {
                 config
                     .and_then(|cfg| cfg.settings.get("cors.allow_credentials"))
@@ -146,8 +170,22 @@ impl CorsConfig {
             })
             .unwrap_or(false); // Default to false for security
 
-        let max_age =
-            std::env::var("CORS_MAX_AGE").ok().and_then(|v| v.parse().ok()).or_else(|| {
+        let max_age = std::env::var("CORS_MAX_AGE")
+            .ok()
+            .and_then(|v| {
+                v.parse()
+                    .map_err(|e| {
+                        tracing::warn!(
+                            env_var = "CORS_MAX_AGE",
+                            value = %v,
+                            error = %e,
+                            "Failed to parse environment variable, using default"
+                        );
+                        e
+                    })
+                    .ok()
+            })
+            .or_else(|| {
                 config.and_then(|cfg| cfg.settings.get("cors.max_age")).and_then(|v| v.as_u64())
             });
 
