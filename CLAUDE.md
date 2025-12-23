@@ -1,6 +1,6 @@
-# CLAUDE.md – Test Service (v3.3.11)
+# CLAUDE.md – Test Service (v3.3.12)
 
-**Template Version:** v3.3.11
+**Template Version:** v3.3.12
 
 You are an autonomous engineer working **inside** a Rust-as-Spec platform cell.
 

@@ -351,7 +351,7 @@ These documents capture implementation decisions, trade-offs, and rationale for 
 
 ## Roadmap
 
-**Current Status**: v3.3.8 (Kernel-Ready)
+**Current Status**: v3.3.12 (Kernel-Ready)
 
 The template is now a **stable kernel baseline** with full governance validation.
 
@@ -366,7 +366,7 @@ The template is now a **stable kernel baseline** with full governance validation
 - ✅ 86%+ AC coverage with full selftest validation
 
 ### Current Phase: IDP Integration & Fork Adoption
-1. **Fork Creation**: Teams create services from v3.3.8 kernel.
+1. **Fork Creation**: Teams create services from v3.3.12 kernel.
 2. **Collect Friction**: Use friction log system to track real-world issues.
 3. **Iterate**: Release patches for blockers, or v3.4.0 for new features.
 
@@ -540,9 +540,15 @@ ls docs/                             # Browse docs locally
 
 ## Version
 
-This documentation is for **Rust Template v3.3.8**.
+This documentation is for **Rust Template v3.3.12**.
 
 **Recent Releases:**
+- **v3.3.12 (2025-12-22)**: Security Fixes and Version Consistency
+  - Updated Rust toolchain to 1.89.0
+  - Tool checksum validation and security advisory management
+  - Security middleware and infrastructure hardening
+  - Version consistency improvements
+
 - **v3.3.8 (2025-12-09)**: Kernel Baseline
   - Full governance validation (11/11 selftest steps passing)
   - Skills and Agents governance framework

@@ -1,3 +1,130 @@
+//! HTTP application layer for the Rust-as-Spec platform.
+//!
+//! This crate implements the HTTP interface for the platform, serving as the primary
+//! adapter between external HTTP clients and the core business logic. It provides a
+//! complete web application with routing, middleware, security, and observability.
+//!
+//! # Architecture
+//!
+//! The crate follows hexagonal/clean architecture principles:
+//!
+//! - **HTTP Layer (this crate)**: Handles HTTP concerns (routing, serialization, status codes)
+//!   and translates between HTTP requests/responses and domain operations.
+//! - **Domain Layer** (`business-core`): Pure business logic with no HTTP knowledge.
+//! - **Model Layer** (`gov-model`): Domain entities and value objects shared across layers.
+//! - **Telemetry** (`telemetry`): Cross-cutting observability concerns.
+//!
+//! Dependencies point inward: `app-http` → `business-core` (correct), never the reverse.
+//!
+//! # Main Components
+//!
+//! ## Router and Handlers
+//!
+//! The application provides several categories of endpoints:
+//!
+//! - **Core Template Endpoints**: `/health`, `/version`, `/metrics` - operational endpoints
+//! - **Platform Introspection**: `/platform/*` - governance graph, specs, tasks, docs
+//! - **Platform UI**: `/ui/*` - web interfaces for tasks and governance visualization
+//! - **Domain Endpoints**: `/api/todos`, `/api/agent/*` - business logic endpoints
+//!
+//! ## Middleware Stack
+//!
+//! Applied in reverse order (bottom-to-top in code):
+//!
+//! 1. **Request ID** (`middleware::request_id_middleware`): Generates or propagates correlation IDs
+//! 2. **Metrics** (`metrics::metrics_middleware`): Tracks request latency and counts
+//! 3. **CORS** (`middleware::cors_middleware`): Configurable cross-origin resource sharing
+//! 4. **Security Headers** (`middleware::security_headers_middleware`): CSP, X-Frame-Options, HSTS
+//!
+//! ## Security Features
+//!
+//! - **Platform Authentication**: JWT-based auth for `/platform/*` endpoints via `platform_auth_guard`
+//! - **Security Headers**: Comprehensive security header configuration (CSP, HSTS, X-Content-Type-Options)
+//! - **CORS**: Configurable origin validation and credentials handling
+//! - **Request ID Propagation**: Correlation IDs for request tracing and audit trails
+//!
+//! ## Error Handling
+//!
+//! The `errors` module provides a comprehensive error handling system:
+//!
+//! - **Machine-readable error codes** (`ErrorCode` enum)
+//! - **AC/Feature ID tracking** for governance alignment
+//! - **Structured logging** with request correlation
+//! - **JSON error envelopes** with consistent format and context
+//!
+//! See [`errors::AppError`] for details.
+//!
+//! # Integration with Other Crates
+//!
+//! ## `business-core`
+//!
+//! Provides domain logic accessed by handlers. The HTTP layer calls into core services
+//! and translates domain errors into HTTP responses.
+//!
+//! ## `gov-http`
+//!
+//! Provides `/platform/*` endpoints for governance introspection. This crate implements
+//! the `gov_http::PlatformState` trait on `AppState` to enable integration.
+//!
+//! ## `gov-model`
+//!
+//! Provides governance data structures (`RepoContext`, `GovernanceRepository`) used
+//! throughout the platform endpoints.
+//!
+//! ## `spec-runtime`
+//!
+//! Validates configuration files (`config/local.yaml` against `specs/config_schema.yaml`)
+//! at startup, providing type-safe config access.
+//!
+//! ## `telemetry`
+//!
+//! Initialized at application startup to provide structured logging, tracing, and metrics.
+//! Handlers use `#[instrument]` for automatic span creation and request correlation.
+//!
+//! # Usage
+//!
+//! ## Creating an Application
+//!
+//! ```rust,no_run
+//! use app_http::app;
+//! use adapters_spec_fs::FsGovernanceRepository;
+//! use std::sync::Arc;
+//!
+//! # async fn example() {
+//! let repo = Arc::new(FsGovernanceRepository::new("/workspace/root".into()));
+//! let router = app(repo);
+//!
+//! // Serve with axum
+//! let listener = tokio::net::TcpListener::bind("0.0.0.0:8080").await.unwrap();
+//! axum::serve(listener, router).await.unwrap();
+//! # }
+//! ```
+//!
+//! ## Custom Configuration
+//!
+//! ```rust,no_run
+//! use app_http::{AppState, app_with_state};
+//! use adapters_spec_fs::FsGovernanceRepository;
+//! use std::sync::Arc;
+//! use std::path::PathBuf;
+//!
+//! # fn example() {
+//! let workspace_root = PathBuf::from("/workspace/root");
+//! let repo = Arc::new(FsGovernanceRepository::new(workspace_root.clone()));
+//! let state = AppState::with_config(repo, workspace_root, None);
+//! let router = app_with_state(state);
+//! # }
+//! ```
+//!
+//! # Key Features
+//!
+//! - **Governance-first**: All endpoints integrate with the platform's governance system
+//! - **Observability**: Request IDs, structured logs, metrics, distributed tracing
+//! - **Security**: JWT auth, security headers, CORS, defense-in-depth
+//! - **Type-safe Config**: Schema-validated YAML configuration via `spec-runtime`
+//! - **AC Traceability**: Error responses link to Acceptance Criteria IDs
+//! - **Developer Experience**: Clear error messages, comprehensive docs, testing utilities
+
 use axum::{
     Router,
     extract::{Extension, Json},
@@ -5,7 +132,6 @@ use axum::{
     routing::{get, post},
 };
 use serde::{Deserialize, Serialize};
-use tower_http::trace::TraceLayer;
 use tracing::{info, instrument};
 
 // Public modules
@@ -34,6 +160,10 @@ pub struct AppState {
     pub workspace_root: PathBuf,
     pub config: Option<spec_runtime::ValidatedConfig>,
     pub platform_auth: security::PlatformAuthConfig,
+    /// CORS configuration
+    pub cors_config: middleware::CorsConfig,
+    /// Security headers configuration
+    pub security_headers_config: middleware::SecurityHeadersConfig,
     /// Repository context for gov-http integration.
     pub repo_context: RepoContext,
 }
@@ -65,10 +195,23 @@ impl AppState {
         let platform_auth = security::PlatformAuthConfig::from_sources(config.as_ref());
         platform_auth.warn_if_misconfigured();
 
+        // Initialize security configurations
+        let cors_config = middleware::CorsConfig::from_sources(config.as_ref());
+        let security_headers_config =
+            middleware::SecurityHeadersConfig::from_sources(config.as_ref());
+
         // Create RepoContext for gov-http integration
         let repo_context = RepoContext::new(&workspace_root);
 
-        Self { governance_repo, workspace_root, config, platform_auth, repo_context }
+        Self {
+            governance_repo,
+            workspace_root,
+            config,
+            platform_auth,
+            cors_config,
+            security_headers_config,
+            repo_context,
+        }
     }
 }
 
@@ -98,6 +241,7 @@ pub fn app_with_state(app_state: AppState) -> Router {
 fn build_router(app_state: AppState) -> Router {
     let auth_state = app_state.clone();
     let platform_state = app_state.clone();
+
     let platform_router = Router::new()
         .with_state(platform_state.clone())
         .merge(platform::router(platform_state.clone()))
@@ -126,19 +270,17 @@ fn build_router(app_state: AppState) -> Router {
         .merge(agent_router)
         .merge(todos_router)
         // Middleware layers (applied in reverse order - bottom to top)
-        .layer(axum::middleware::from_fn(metrics::metrics_middleware))
+        // Request ID middleware (outermost - applied first to request)
         .layer(axum::middleware::from_fn(middleware::request_id_middleware))
-        .layer(
-            // Configure TraceLayer to include request_id field
-            TraceLayer::new_for_http().make_span_with(|request: &axum::extract::Request| {
-                tracing::info_span!(
-                    "http_request",
-                    method = %request.method(),
-                    uri = %request.uri(),
-                    request_id = tracing::field::Empty, // Will be filled by request_id middleware
-                )
-            }),
-        )
+        // Metrics middleware
+        .layer(axum::middleware::from_fn(metrics::metrics_middleware))
+        // CORS middleware
+        .layer(axum::middleware::from_fn_with_state(app_state.clone(), middleware::cors_middleware))
+        // Security headers (innermost - applied first to response)
+        .layer(axum::middleware::from_fn_with_state(
+            app_state.clone(),
+            middleware::security_headers_middleware,
+        ))
         .with_state(app_state)
 }
 

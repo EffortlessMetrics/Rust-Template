@@ -21,7 +21,8 @@ use axum::{
     routing::{delete, get},
 };
 use serde::{Deserialize, Serialize};
-use std::sync::{Arc, RwLock};
+use std::sync::Arc;
+use tokio::sync::RwLock;
 use tracing::{info, instrument, warn};
 
 use crate::{AppError, AppState, ErrorCode};
@@ -58,47 +59,31 @@ impl TodosState {
     }
 
     /// Get all todos
-    fn get_all(&self) -> Result<Vec<Todo>, AppError> {
-        self.todos
-            .read()
-            .map_err(|e| AppError::internal_error(format!("Failed to acquire read lock: {}", e)))
-            .map(|guard| guard.clone())
+    async fn get_all(&self) -> Vec<Todo> {
+        self.todos.read().await.clone()
     }
 
     /// Add a new todo
-    fn add(&self, todo: Todo) -> Result<(), AppError> {
-        self.todos
-            .write()
-            .map_err(|e| AppError::internal_error(format!("Failed to acquire write lock: {}", e)))
-            .map(|mut guard| guard.push(todo))
+    async fn add(&self, todo: Todo) {
+        self.todos.write().await.push(todo);
     }
 
     /// Check if a todo with the given ID exists
-    fn exists(&self, id: &str) -> Result<bool, AppError> {
-        self.todos
-            .read()
-            .map_err(|e| AppError::internal_error(format!("Failed to acquire read lock: {}", e)))
-            .map(|guard| guard.iter().any(|t| t.id == id))
+    async fn exists(&self, id: &str) -> bool {
+        self.todos.read().await.iter().any(|t| t.id == id)
     }
 
     /// Delete a todo by ID, returns true if found and deleted
-    fn delete(&self, id: &str) -> Result<bool, AppError> {
-        self.todos
-            .write()
-            .map_err(|e| AppError::internal_error(format!("Failed to acquire write lock: {}", e)))
-            .map(|mut guard| {
-                let original_len = guard.len();
-                guard.retain(|t| t.id != id);
-                guard.len() < original_len
-            })
+    async fn delete(&self, id: &str) -> bool {
+        let mut guard = self.todos.write().await;
+        let original_len = guard.len();
+        guard.retain(|t| t.id != id);
+        guard.len() < original_len
     }
 
     /// Clear all todos (for AC-MYSERV-002 testing)
-    fn clear(&self) -> Result<(), AppError> {
-        self.todos
-            .write()
-            .map_err(|e| AppError::internal_error(format!("Failed to acquire write lock: {}", e)))
-            .map(|mut guard| guard.clear())
+    async fn clear(&self) {
+        self.todos.write().await.clear();
     }
 }
 
@@ -139,7 +124,7 @@ async fn list_todos(
 ) -> Result<impl IntoResponse, AppError> {
     info!("Listing all todos");
 
-    let todos = state.1.get_all()?;
+    let todos = state.1.get_all().await;
 
     info!(count = todos.len(), "Retrieved todos");
 
@@ -206,7 +191,7 @@ async fn create_todo(
     }
 
     // AC-MYSERV-005: Check for duplicate ID
-    if state.1.exists(&payload.id)? {
+    if state.1.exists(&payload.id).await {
         warn!(id = %payload.id, "Duplicate todo ID");
         return Err(AppError::new(
             StatusCode::CONFLICT,
@@ -218,7 +203,7 @@ async fn create_todo(
 
     let todo = Todo { id: payload.id.clone(), title: payload.title.clone() };
 
-    state.1.add(todo.clone())?;
+    state.1.add(todo.clone()).await;
 
     info!(id = %payload.id, "Todo created successfully");
 
@@ -242,7 +227,7 @@ async fn delete_todo(
 ) -> Result<impl IntoResponse, AppError> {
     info!(id = %id, "Deleting todo");
 
-    let deleted = state.1.delete(&id)?;
+    let deleted = state.1.delete(&id).await;
 
     if deleted {
         info!(id = %id, "Todo deleted successfully");
@@ -265,7 +250,7 @@ async fn clear_todos(
 ) -> Result<impl IntoResponse, AppError> {
     info!("Clearing all todos");
 
-    state.1.clear()?;
+    state.1.clear().await;
 
     info!("All todos cleared");
     Ok(StatusCode::NO_CONTENT)
@@ -275,20 +260,20 @@ async fn clear_todos(
 mod tests {
     use super::*;
 
-    #[test]
-    fn test_todos_state_initialization() {
+    #[tokio::test]
+    async fn test_todos_state_initialization() {
         let state = TodosState::new();
-        let todos = state.get_all().expect("Should get todos");
+        let todos = state.get_all().await;
 
         assert_eq!(todos.len(), 2);
         assert_eq!(todos[0].id, "todo-1");
         assert_eq!(todos[0].title, "Learn Rust-as-Spec patterns");
     }
 
-    #[test]
-    fn test_todo_has_required_fields() {
+    #[tokio::test]
+    async fn test_todo_has_required_fields() {
         let state = TodosState::new();
-        let todos = state.get_all().expect("Should get todos");
+        let todos = state.get_all().await;
 
         // AC-MYSERV-001: Each todo must have id and title
         for todo in todos {
@@ -297,49 +282,49 @@ mod tests {
         }
     }
 
-    #[test]
-    fn test_empty_todos_state() {
+    #[tokio::test]
+    async fn test_empty_todos_state() {
         // AC-MYSERV-002: Empty list is valid
         let state = TodosState::empty();
-        let todos = state.get_all().expect("Should get todos");
+        let todos = state.get_all().await;
 
         assert_eq!(todos.len(), 0);
     }
 
-    #[test]
-    fn test_add_todo() {
+    #[tokio::test]
+    async fn test_add_todo() {
         let state = TodosState::empty();
         let todo = Todo { id: "test-1".to_string(), title: "Test todo".to_string() };
 
-        state.add(todo).expect("Should add todo");
+        state.add(todo).await;
 
-        let todos = state.get_all().expect("Should get todos");
+        let todos = state.get_all().await;
         assert_eq!(todos.len(), 1);
         assert_eq!(todos[0].id, "test-1");
     }
 
-    #[test]
-    fn test_delete_todo() {
+    #[tokio::test]
+    async fn test_delete_todo() {
         // AC-MYSERV-004: Delete removes todo from list
         let state = TodosState::new();
 
-        let deleted = state.delete("todo-1").expect("Should delete");
+        let deleted = state.delete("todo-1").await;
         assert!(deleted, "Todo should be found and deleted");
 
-        let todos = state.get_all().expect("Should get todos");
+        let todos = state.get_all().await;
         assert_eq!(todos.len(), 1);
         assert_eq!(todos[0].id, "todo-2");
     }
 
-    #[test]
-    fn test_delete_nonexistent_todo() {
+    #[tokio::test]
+    async fn test_delete_nonexistent_todo() {
         // AC-MYSERV-004: Deleting non-existent todo returns false
         let state = TodosState::new();
 
-        let deleted = state.delete("non-existent").expect("Should execute");
+        let deleted = state.delete("non-existent").await;
         assert!(!deleted, "Non-existent todo should not be found");
 
-        let todos = state.get_all().expect("Should get todos");
+        let todos = state.get_all().await;
         assert_eq!(todos.len(), 2); // Original count unchanged
     }
 }

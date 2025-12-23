@@ -1,3 +1,5 @@
+# This file is the source of truth for the Rust version used across the repository.
+# All other configuration files should reference this version.
 [toolchain]
-channel = "1.91.1"
+channel = "1.89.0"
 components = ["clippy", "rustfmt", "llvm-tools-preview"]

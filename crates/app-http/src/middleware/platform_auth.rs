@@ -105,6 +105,8 @@ mod tests {
                 token: token.map(|t| t.to_string()),
                 jwt_secret: jwt_secret.map(|s| s.to_string()),
             },
+            cors_config: crate::middleware::CorsConfig::default(),
+            security_headers_config: crate::middleware::SecurityHeadersConfig::default(),
             repo_context: gov_model::RepoContext::new(&workspace_root),
         }
     }
@@ -296,8 +298,8 @@ mod tests {
         let now = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs();
         let claims = crate::security::Claims {
             sub: "user123".to_string(),
-            exp: (now - 60) as usize,
-            iat: (now - 120) as usize,
+            exp: (now - 3600) as usize, // Expired 1 hour ago (beyond leeway)
+            iat: (now - 7200) as usize,
             iss: "rust-template".to_string(),
         };
         let token = jsonwebtoken::encode(

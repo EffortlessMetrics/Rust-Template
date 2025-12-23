@@ -19,18 +19,26 @@ if [ -f "$ck" ]; then
     echo "Checksum OK for $key"
   else
     if [ "${ENFORCE_CHECKSUMS:-0}" = "1" ]; then
-      echo "Checksum enforcement active but no entry for $key in scripts/tools.sha256" >&2
+      echo "🚨 SECURITY ERROR: Checksum enforcement active but no entry for $key in scripts/tools.sha256" >&2
+      echo "   This indicates a security configuration issue - tool integrity cannot be verified" >&2
+      echo "   Action required: Add checksum for $key to scripts/tools.sha256" >&2
       exit 1
     else
-      echo "No checksum entry for $key; skipping verification"
+      echo "⚠️  WARNING: No checksum entry for $key; skipping verification"
+      echo "   Security risk: Tool integrity not verified" >&2
+      echo "   Recommendation: Set ENFORCE_CHECKSUMS=1 for production builds" >&2
     fi
   fi
 else
   if [ "${ENFORCE_CHECKSUMS:-0}" = "1" ]; then
-    echo "Checksum enforcement active but scripts/tools.sha256 not present" >&2
+    echo "🚨 SECURITY ERROR: Checksum enforcement active but scripts/tools.sha256 not present" >&2
+    echo "   This indicates a critical security configuration issue" >&2
+    echo "   Action required: Create scripts/tools.sha256 with tool checksums" >&2
     exit 1
   else
-    echo "No scripts/tools.sha256 provided; skipping verification"
+    echo "⚠️  WARNING: No scripts/tools.sha256 provided; skipping verification"
+    echo "   Security risk: All tool integrity verification disabled" >&2
+    echo "   Recommendation: Create scripts/tools.sha256 and set ENFORCE_CHECKSUMS=1" >&2
   fi
 fi
 }
@@ -63,7 +71,7 @@ install_oasdiff() {
     echo "Installing oasdiff ${v} from ${url}..."
     curl -sSfL "$url" | tar -xz -C "$BIN" oasdiff
     chmod +x "$BIN/oasdiff"
-    sha_check "$BIN/oasdiff" "oasdiff"
+    sha_check "$BIN/oasdiff" "oasdiff-${v}-${os}-${oas_arch}"
   fi
 }
 install_buf() {
@@ -73,7 +81,7 @@ install_buf() {
   local bin="buf-${os_cap}-${buf_arch}"
   local url="https://github.com/bufbuild/buf/releases/download/v${v}/${bin}"
   if ! [ -x "$BIN/buf" ]; then
-    curl -sSL "$url" -o "$BIN/buf"; chmod +x "$BIN/buf"; sha_check "$BIN/buf" "buf"
+    curl -sSL "$url" -o "$BIN/buf"; chmod +x "$BIN/buf"; sha_check "$BIN/buf" "buf-${v}-${os}-${buf_arch}"
   fi
 }
 install_atlas() {
@@ -82,7 +90,7 @@ install_atlas() {
   local v="${ATLAS_VERSION:-latest}"
   local url="https://release.ariga.io/atlas/atlas-${os}-${arch}-${v}"
   if ! [ -x "$BIN/atlas" ]; then
-    curl -sSfL "$url" -o "$BIN/atlas"; chmod +x "$BIN/atlas"; sha_check "$BIN/atlas" "atlas"
+    curl -sSfL "$url" -o "$BIN/atlas"; chmod +x "$BIN/atlas"; sha_check "$BIN/atlas" "atlas-${v}-${os}-${arch}"
   fi
 }
 install_oasdiff; install_buf; install_atlas
