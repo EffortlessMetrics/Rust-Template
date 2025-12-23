@@ -348,7 +348,6 @@ Only a few items remain - all now have documentation or are external dependencie
 | Item                           | Description                                               | Notes                                     |
 | ------------------------------ | --------------------------------------------------------- | ----------------------------------------- |
 | **IDP adapter stub**           | Backstage/Port adapter consuming `idp-snapshot`           | v3.4.0 territory — needs IDP-ready contract first |
-| **sccache/libz friction**      | FRICTION-ENV-001 affecting some environments              | Logged as "known issue"; fix when painful enough |
 
 **Definition of Done for v3.3.13:**
 
