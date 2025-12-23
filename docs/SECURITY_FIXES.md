@@ -356,7 +356,6 @@ secrets:
 
 ### Development Configuration
 
-<!-- doclint:disable orphan-version -->
 ```yaml
 env: dev
 settings:
@@ -368,7 +367,6 @@ settings:
   cors.allowed_origins:
     - "http://localhost:3000"
     - "http://localhost:8080"
-    - "http://127.0.0.1:3000"  # doclint:disable orphan-version
   cors.allow_credentials: false
   
   # Development security headers - more permissive
