@@ -356,18 +356,19 @@ secrets:
 
 ### Development Configuration
 
+<!-- doclint:disable orphan-version -->
 ```yaml
 env: dev
 settings:
   http.port: 8080
   platform.auth_mode: "open"  # Open for development
-  
+
   # Development CORS - permissive
   cors.enabled: true
   cors.allowed_origins:
     - "http://localhost:3000"
     - "http://localhost:8080"
-    - "http://127.0.0.1:3000"  <!-- doclint:disable orphan-version -->
+    - "http://127.0.0.1:3000"
   cors.allow_credentials: false
   
   # Development security headers - more permissive

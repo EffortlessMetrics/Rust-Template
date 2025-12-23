@@ -294,7 +294,7 @@ Only a few items remain - all now have documentation or are external dependencie
 
 **Entry criteria for v3.4.0 work:**
 
-* v3.3.12 released and stable ✅ (Status: Done)
+* v3.3.12 released and stable ✅
 * At least 2 forks actively using the kernel
 * Friction log reviewed for v3.4.0 candidates
 * ADR drafted for major items

@@ -486,6 +486,7 @@ docs:
     stories: [US-TPL-PLT-001]
     requirements: [REQ-PLT-DOCS-CONSISTENCY]
     acs: [AC-PLT-009, AC-PLT-010]
+    adrs: [ADR-0005]
 
   # Kernel Snapshot (Release Baseline)
   - id: SNAPSHOT-TPL-KERNEL-001
