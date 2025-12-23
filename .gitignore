@@ -20,3 +20,6 @@ node_modules/
 tarpaulin-report.*
 ac_coverage_*.json
 ac_coverage_*.md
+
+# Toolchain crash logs
+rustc-ice-*.txt

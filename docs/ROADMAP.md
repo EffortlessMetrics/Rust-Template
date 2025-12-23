@@ -9,12 +9,12 @@ stories: [US-TPL-PLT-001]
 requirements: [REQ-PLT-DOCS-CONSISTENCY]
 acs: [AC-PLT-009, AC-PLT-010]
 adrs: [ADR-0005]
-last_updated: 2025-12-01
+last_updated: 2025-12-22
 ---
 
-# Roadmap: Rust-as-Spec Platform Cell (v3.3.11)
+# Roadmap: Rust-as-Spec Platform Cell (v3.3.12)
 
-This document describes the current state of the **v3.3.8 kernel** and what remains to be done.
+This document describes the current state of the template (v3.3.12) and the frozen baseline kernel (v3.3.9-kernel tag).
 
 > For the conceptual model behind Rust-as-Spec, see [`docs/explanation/rust-as-spec-overview.md`](explanation/rust-as-spec-overview.md).
 
@@ -49,11 +49,11 @@ Opinions encoded as ACs mean:
 
 ---
 
-## 1. Kernel v3.3.11 Closure
+## 1. Kernel v3.3.9 Closure
 
 **Status:** Frozen as of 2025-12-09.
 
-v3.3.8 is the current stable kernel baseline. It includes:
+v3.3.9 is the current stable kernel baseline. It includes:
 
 - **Manifest-driven versioning** – `specs/version_manifest.yaml` + versioning engine
 - **IDP-ready platform contract** – `/platform/status` and introspection APIs are stable
@@ -64,24 +64,30 @@ v3.3.8 is the current stable kernel baseline. It includes:
 
 No new features land here. All forward work targets:
 
-- **Forks**: Build services on v3.3.8 baseline; capture friction
+- **Forks**: Build services on v3.3.9 baseline; capture friction
 - **v3.4.0**: Kernel improvements driven by real fork feedback
 
 This closure is enforced:
 
-- Git tag: `v3.3.8-kernel` marks the frozen baseline
+- Git tag: `v3.3.9-kernel` marks the frozen baseline
 - `ROADMAP.md` updated to reflect closure
 - Selftest gates expanded to 11 steps
 
-To fork from v3.3.8, start with `docs/how-to/FIRST_FORK.md`.
+To fork from v3.3.9, start with `docs/how-to/FIRST_FORK.md`.
 
 ---
 
-## 2. Current State (v3.3.8)
+## 2. Current State (v3.3.12)
 
-The kernel has reached a stable, forkable baseline. All acceptance criteria pass, all selftest gates pass.
+The template is at v3.3.12, building on the frozen v3.3.9-kernel baseline. All acceptance criteria pass, all selftest gates pass.
 
-**v3.3.8 Highlights:**
+**Template Version (v3.3.12):**
+
+This is the current active template version with ongoing improvements and documentation polish.
+
+**Frozen Kernel Baseline (v3.3.9-kernel tag):**
+
+The v3.3.9-kernel tag marks the stable, frozen baseline that includes:
 
 - **Manifest-driven versioning engine** – `specs/version_manifest.yaml` declares all version-bearing files; `release-prepare` uses this manifest to update versions atomically
 - **Versioning ACs enforced** – `AC-TPL-VERSION-MANIFEST`, `AC-TPL-VERSION-DRYRUN`, `AC-TPL-VERSION-ATOMIC` promoted from deferred to kernel contracts
@@ -127,7 +133,7 @@ The kernel has reached a stable, forkable baseline. All acceptance criteria pass
 - Policy tests (OPA/Rego) for configuration compliance
 - Pre-commit hooks with auto-staging
 - AC/ADR bidirectional mapping
-- **Docs-as-Code v2:** `spec_ledger.yaml` is the version authority; `docs-check` enforces alignment across 8 consumer files; `xtask version --json` is the machine surface
+- **Docs-as-Code v2:** `spec_ledger.yaml` is the version authority; `docs-check` enforces alignment across consumer files; `xtask version --json` is the machine surface
 
 **v3.3.4 Additions:**
 
@@ -145,7 +151,7 @@ cargo xtask ac-status      # All kernel ACs PASS
 cargo run -p app-http      # Listening on :8080
 ```
 
-> **Version authority:** `specs/spec_ledger.yaml → metadata.template_version` is the canonical kernel version. All other docs (README, CLAUDE, ROADMAP, KERNEL_SNAPSHOT, TEMPLATE-CONTRACTS, service_metadata, doc_index, CHANGELOG) are validated against it by `cargo xtask docs-check`.
+> **Version authority:** `specs/spec_ledger.yaml → metadata.template_version` is the canonical template version. All other docs (README, CLAUDE, ROADMAP, KERNEL_SNAPSHOT, TEMPLATE-CONTRACTS, service_metadata, doc_index, CHANGELOG) are validated against it by `cargo xtask docs-check`.
 
 ---
 
@@ -155,67 +161,67 @@ The following gaps have been addressed:
 
 ### 3.1 Documentation ✅
 
-| Item | Status | Location |
-|------|--------|----------|
-| **IDP positioning doc** | ✅ Complete | `docs/explanation/idp-positioning.md` |
-| **Brownfield adoption guide** | ✅ Complete | `docs/guides/brownfield-adoption.md` |
-| **Fork feedback workflow** | ✅ Complete | `docs/how-to/report-fork-feedback.md` |
-| **Quick start guide** | ✅ Complete | `docs/QUICKSTART.md` |
-| **Troubleshooting guide** | ✅ Complete | `docs/TROUBLESHOOTING.md` |
-| **Windows development guide** | ✅ Complete | `docs/how-to/windows-development.md` |
-| **CI workflows reference** | ✅ Complete | `docs/reference/ci-workflows.md` |
-| **Branch protection setup** | ✅ Complete | `docs/how-to/setup-branch-protection.md` |
-| **Tag signing setup** | ✅ Complete | `docs/how-to/setup-tag-signing.md` |
-| **Environment setup guide** | ✅ Complete | `docs/reference/environment.md` |
+| Item                          | Status     | Location                                 |
+| ----------------------------- | ---------- | ---------------------------------------- |
+| **IDP positioning doc**       | ✅ Complete | `docs/explanation/idp-positioning.md`    |
+| **Brownfield adoption guide** | ✅ Complete | `docs/guides/brownfield-adoption.md`     |
+| **Fork feedback workflow**    | ✅ Complete | `docs/how-to/report-fork-feedback.md`    |
+| **Quick start guide**         | ✅ Complete | `docs/QUICKSTART.md`                     |
+| **Troubleshooting guide**     | ✅ Complete | `docs/TROUBLESHOOTING.md`                |
+| **Windows development guide** | ✅ Complete | `docs/how-to/windows-development.md`     |
+| **CI workflows reference**    | ✅ Complete | `docs/reference/ci-workflows.md`         |
+| **Branch protection setup**   | ✅ Complete | `docs/how-to/setup-branch-protection.md` |
+| **Tag signing setup**         | ✅ Complete | `docs/how-to/setup-tag-signing.md`       |
+| **Environment setup guide**   | ✅ Complete | `docs/reference/environment.md`          |
 
 ### 3.2 Operational Tooling ✅
 
-| Item | Status | Command/Endpoint |
-|------|--------|------------------|
-| **Questions-as-artifacts** | ✅ Complete | `cargo xtask question-new`, `questions-list` |
-| **Friction log API** | ✅ Complete | `GET /platform/friction`, `/platform/friction/{id}` |
-| **Fork registry** | ✅ Complete | `cargo xtask fork-list`, `fork-register` |
-| **Version command** | ✅ Complete | `cargo xtask version` (with `--json`) |
-| **Friction CLI** | ✅ Complete | `cargo xtask friction-new`, `friction-list` |
-| **Release AC deltas** | ✅ Complete | `cargo xtask release-bundle` now includes AC changes |
-| **Branch protection script** | ✅ Complete | `.github/scripts/setup-branch-protection.sh` |
-| **Service-init command** | ✅ Complete | `cargo xtask service-init` - single command fork branding |
-| **JSON CLI outputs** | ✅ Complete | `--json` flag on `ac-status`, `friction-list`, `questions-list`, `fork-list` |
-| **Questions HTTP API** | ✅ Complete | `GET /platform/questions`, `/platform/questions/{id}` |
-| **Forks HTTP API** | ✅ Complete | `GET /platform/forks`, `/platform/forks/{name}` |
+| Item                         | Status     | Command/Endpoint                                                             |
+| ---------------------------- | ---------- | ---------------------------------------------------------------------------- |
+| **Questions-as-artifacts**   | ✅ Complete | `cargo xtask question-new`, `questions-list`                                 |
+| **Friction log API**         | ✅ Complete | `GET /platform/friction`, `/platform/friction/{id}`                          |
+| **Fork registry**            | ✅ Complete | `cargo xtask fork-list`, `fork-register`                                     |
+| **Version command**          | ✅ Complete | `cargo xtask version` (with `--json`)                                        |
+| **Friction CLI**             | ✅ Complete | `cargo xtask friction-new`, `friction-list`                                  |
+| **Release AC deltas**        | ✅ Complete | `cargo xtask release-bundle` now includes AC changes                         |
+| **Branch protection script** | ✅ Complete | `.github/scripts/setup-branch-protection.sh`                                 |
+| **Service-init command**     | ✅ Complete | `cargo xtask service-init` - single command fork branding                    |
+| **JSON CLI outputs**         | ✅ Complete | `--json` flag on `ac-status`, `friction-list`, `questions-list`, `fork-list` |
+| **Questions HTTP API**       | ✅ Complete | `GET /platform/questions`, `/platform/questions/{id}`                        |
+| **Forks HTTP API**           | ✅ Complete | `GET /platform/forks`, `/platform/forks/{name}`                              |
 
 ### 3.3 Editor Integration ✅
 
-| Item | Status | Location |
-|------|--------|----------|
-| **VS Code extensions** | ✅ Complete | `.vscode/extensions.json` |
-| **VS Code tasks** | ✅ Complete | `.vscode/tasks.json` |
-| **VS Code launch configs** | ✅ Complete | `.vscode/launch.json` |
-| **VS Code settings** | ✅ Complete | `.vscode/settings.json` |
+| Item                       | Status     | Location                  |
+| -------------------------- | ---------- | ------------------------- |
+| **VS Code extensions**     | ✅ Complete | `.vscode/extensions.json` |
+| **VS Code tasks**          | ✅ Complete | `.vscode/tasks.json`      |
+| **VS Code launch configs** | ✅ Complete | `.vscode/launch.json`     |
+| **VS Code settings**       | ✅ Complete | `.vscode/settings.json`   |
 
 ### 3.4 Test Isolation ✅
 
-| Item | Status | Notes |
-|------|--------|-------|
+| Item                   | Status  | Notes                                 |
+| ---------------------- | ------- | ------------------------------------- |
 | **BDD test isolation** | ✅ Fixed | Tests no longer pollute tracked files |
 
 ### 3.5 Technical Debt ✅
 
-| Item | Status | Notes |
-|------|--------|-------|
-| **ADR numbering duplicates** | ✅ Fixed | Removed test scaffolds, renumbered 0007→0019 |
-| **Release evidence incomplete** | ✅ Fixed | AC delta tracking added to release-bundle |
+| Item                            | Status  | Notes                                        |
+| ------------------------------- | ------- | -------------------------------------------- |
+| **ADR numbering duplicates**    | ✅ Fixed | Removed test scaffolds, renumbered 0007→0019 |
+| **Release evidence incomplete** | ✅ Fixed | AC delta tracking added to release-bundle    |
 
 ### 3.6 v3.3.4 Polish (Harness, Hints, Bundles) ✅
 
-| Item | Status | Notes |
-|------|--------|-------|
-| **BDD harness semantics** | ✅ Complete | `bdd.rs` + `is_bdd_success()` (`AC-TPL-BDD-EXIT-CODES`) |
-| **Agent Hint schema** | ✅ Complete | `AC-TPL-AGENT-HINTS-SCHEMA` + BDD + unit tests |
-| **Bundle manifest v1.5** | ✅ Complete | `AC-TPL-BUNDLE-MANIFEST-LINKED` + `AC-TPL-BUNDLE-MINIMAL-SCOPE` |
-| **SPEC_ROOT contract** | ✅ Complete | `AC-TPL-XTASK-SPEC-ROOT` — `spec_root()` honors env var |
-| **Pre-commit auto-fix** | ✅ Complete | Hook runs `xtask precommit`, auto-fixes fmt/skills/feature_status |
-| **Docs-as-Code v2** | ✅ Complete | `AC-PLT-009` + `AC-PLT-010` — see `docs/explanation/TEMPLATE-CONTRACTS.md` |
+| Item                      | Status     | Notes                                                                      |
+| ------------------------- | ---------- | -------------------------------------------------------------------------- |
+| **BDD harness semantics** | ✅ Complete | `bdd.rs` + `is_bdd_success()` (`AC-TPL-BDD-EXIT-CODES`)                    |
+| **Agent Hint schema**     | ✅ Complete | `AC-TPL-AGENT-HINTS-SCHEMA` + BDD + unit tests                             |
+| **Bundle manifest v1.5**  | ✅ Complete | `AC-TPL-BUNDLE-MANIFEST-LINKED` + `AC-TPL-BUNDLE-MINIMAL-SCOPE`            |
+| **SPEC_ROOT contract**    | ✅ Complete | `AC-TPL-XTASK-SPEC-ROOT` — `spec_root()` honors env var                    |
+| **Pre-commit auto-fix**   | ✅ Complete | Hook runs `xtask precommit`, auto-fixes fmt/skills/feature_status          |
+| **Docs-as-Code v2**       | ✅ Complete | `AC-PLT-009` + `AC-PLT-010` — see `docs/explanation/TEMPLATE-CONTRACTS.md` |
 
 ---
 
@@ -225,84 +231,86 @@ Only a few items remain - all now have documentation or are external dependencie
 
 ### 4.1 Manual Configuration Required
 
-| Item | Impact | Documentation | Action Required |
-|------|--------|---------------|-----------------|
-| **Branch protection** | CI can be bypassed | `docs/how-to/setup-branch-protection.md` | Run `.github/scripts/setup-branch-protection.sh` |
-| **Tag signing** | Releases not cryptographically verified | `docs/how-to/setup-tag-signing.md` | Set up GPG key and configure Git |
+| Item                  | Impact                                  | Documentation                            | Action Required                                  |
+| --------------------- | --------------------------------------- | ---------------------------------------- | ------------------------------------------------ |
+| **Branch protection** | CI can be bypassed                      | `docs/how-to/setup-branch-protection.md` | Run `.github/scripts/setup-branch-protection.sh` |
+| **Tag signing**       | Releases not cryptographically verified | `docs/how-to/setup-tag-signing.md`       | Set up GPG key and configure Git                 |
 
 ### 4.2 External Validation (Out of Scope for This Repo)
 
-| Gap | Impact | Effort | Notes |
-|-----|--------|--------|-------|
-| **No second service built yet** | Template assumptions untested in a real fork | High | Requires building a service in another repo using this template as a baseline |
+| Gap                             | Impact                                       | Effort | Notes                                                                         |
+| ------------------------------- | -------------------------------------------- | ------ | ----------------------------------------------------------------------------- |
+| **No second service built yet** | Template assumptions untested in a real fork | High   | Requires building a service in another repo using this template as a baseline |
 
 > This is intentionally **outside the scope of this repository**. This roadmap tracks it as a recommended next step for adopters, not as work to be done here. The kernel is complete; validation happens in forks.
 
 ### 4.3 External Dependencies
 
-| Item | Impact | Notes |
-|------|--------|-------|
+| Item                         | Impact                   | Notes                                                                                                                                 |
+| ---------------------------- | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------- |
 | **`lazy-trees` Nix warning** | Cosmetic noise in output | Deprecated Nix 2.30+ setting in Determinate installer config. Documented in TROUBLESHOOTING.md with fix instructions. Safe to ignore. |
 
-### 4.4 v3.3.9 – IDP Fit & Finish (Patch Release)
+### 4.4 v3.3.13 – IDP Fit & Finish (Patch Release)
 
 > **Scope:** Bug fixes, documentation polish, and IDP integration improvements discovered through real adoption. No new features or breaking changes.
 
 **Target:** Next patch after fork validation dry-runs
 
-| Item | Description | Status | Source |
-|------|-------------|--------|--------|
-| **CODEOWNERS file** | Protect kernel-critical files from accidental changes | ✅ Added | Internal |
-| **"Trust a Cell" one-pager** | Quick validation guide for IDP teams | ✅ Added | User feedback |
-| **"Evolve the Kernel" playbook** | ADR → version → tag sequence documentation | ✅ Added | User feedback |
-| **AI first-hour receipt template** | Structured template for agent onboarding validation | ✅ Added | Agent pilots |
-| **Kernel dry-run guide** | How to validate fork-readiness | ✅ Added | Internal |
-| **CONTRIBUTING.md kernel section** | "How to Evolve the Kernel" section | ✅ Added | User feedback |
-| **Fork dry-run validation** | Conduct real dry-run and capture receipt | 🔄 In Progress | Validation |
-| **AI first-hour validation** | Run AI agent through first-hour and capture receipt | 🔄 In Progress | Validation |
-| **IDP adapter stub** | Minimal Backstage/Port adapter consuming `idp-snapshot` | 📋 Backlog | IDP integration |
-| **sccache/libz friction fix** | Resolve FRICTION-ENV-001 affecting some environments | 📋 Backlog | Friction log |
+| Item                               | Description                                             | Status         | Source          |
+| ---------------------------------- | ------------------------------------------------------- | -------------- | --------------- |
+| **CODEOWNERS file**                | Protect kernel-critical files from accidental changes   | ✅ Added        | Internal        |
+| **"Trust a Cell" one-pager**       | Quick validation guide for IDP teams                    | ✅ Added        | User feedback   |
+| **"Evolve the Kernel" playbook**   | ADR → version → tag sequence documentation              | ✅ Added        | User feedback   |
+| **AI first-hour receipt template** | Structured template for agent onboarding validation     | ✅ Added        | Agent pilots    |
+| **Kernel dry-run guide**           | How to validate fork-readiness                          | ✅ Added        | Internal        |
+| **CONTRIBUTING.md kernel section** | "How to Evolve the Kernel" section                      | ✅ Added        | User feedback   |
+| **Fork dry-run validation**        | Conduct real dry-run and capture receipt                | 🔄 In Progress | Validation      |
+| **AI first-hour validation**       | Run AI agent through first-hour and capture receipt     | 🔄 In Progress | Validation      |
+| **IDP adapter stub**               | Minimal Backstage/Port adapter consuming `idp-snapshot` | 📋 Backlog     | IDP integration |
+| **sccache/libz friction fix**      | Resolve FRICTION-ENV-001 affecting some environments    | 📋 Backlog     | Friction log    |
 
-**Criteria for 3.3.9 release:**
-- All "Added" items merged and validated
-- At least one dry-run receipt completed
-- No new kernel AC failures
-- `cargo xtask selftest` green
+**Criteria for 3.3.13 release:**
+
+* All "Added" items merged and validated
+* At least one dry-run receipt completed
+* No new kernel AC failures
+* `cargo xtask selftest` green
 
 ---
 
 ### 4.5 v3.4.0 – Multi-Cell & Registry (Minor Release)
 
-> **Note:** v3.4.0 is the *next minor* kernel closure. The current frozen baseline is `v3.3.8-kernel`.
+> **Note:** v3.4.0 is the *next minor* kernel closure. The current frozen baseline is `v3.3.9-kernel`.
 > Items below represent future work driven by fork friction, not speculation.
 
-| Item | Description | Status | Priority |
-|------|-------------|--------|----------|
-| **Multi-service orchestration** | Cross-service governance coordination | 🔜 Planned | High |
-| **Advanced policy packs** | PCI-DSS, HIPAA compliance templates | 🔜 Planned | Medium |
-| **Fleet-wide Backstage integration** | Plugin reading `/platform/*` from multiple services | 🔜 Planned | High |
-| **Platform registry spec** | Central registry listing all cells and their `idp-snapshot` endpoints | 🔜 Planned | High |
-| **AI agent feedback loop** | Structured agent → friction → kernel improvement cycle | 🔜 Planned | Medium |
-| **Cross-cell graph queries** | Query governance state across multiple cells | 🔜 Planned | Low |
+| Item                                 | Description                                                           | Status     | Priority |
+| ------------------------------------ | --------------------------------------------------------------------- | ---------- | -------- |
+| **Multi-service orchestration**      | Cross-service governance coordination                                 | 🔜 Planned | High     |
+| **Advanced policy packs**            | PCI-DSS, HIPAA compliance templates                                   | 🔜 Planned | Medium   |
+| **Fleet-wide Backstage integration** | Plugin reading `/platform/*` from multiple services                   | 🔜 Planned | High     |
+| **Platform registry spec**           | Central registry listing all cells and their `idp-snapshot` endpoints | 🔜 Planned | High     |
+| **AI agent feedback loop**           | Structured agent → friction → kernel improvement cycle                | 🔜 Planned | Medium   |
+| **Cross-cell graph queries**         | Query governance state across multiple cells                          | 🔜 Planned | Low      |
 
 **Entry criteria for v3.4.0 work:**
-- v3.3.9 released and stable
-- At least 2 forks actively using the kernel
-- Friction log reviewed for v3.4.0 candidates
-- ADR drafted for major items
 
-Items completed in v3.3.8 (now part of the frozen kernel):
+* v3.3.12 released and stable ✅
+* At least 2 forks actively using the kernel
+* Friction log reviewed for v3.4.0 candidates
+* ADR drafted for major items
 
-| Item | Description | Status |
-|------|-------------|--------|
-| **IDP Snapshot Contract** | `cargo xtask idp-snapshot` + `/platform/idp/snapshot` emit stable JSON | ✅ In v3.3.7 |
-| **Platform Schema** | `specs/platform_schema.yaml` defines all endpoint responses | ✅ In v3.3.7 |
-| **Docs-as-Code v3** | Bidirectional `doc_index.yaml` ↔ front-matter sync | ✅ In v3.3.7 |
-| **Feature-status invariants** | `feature_status.md` header matches spec_ledger version | ✅ In v3.3.7 |
-| **Centralized Env Helpers** | `crate::env::is_ci()`, `is_noninteractive()` reduce duplication | ✅ In v3.3.7 |
-| **Example fork CI** | `examples/fork-customization/` with CI template | ✅ In v3.3.7 |
+Items completed in v3.3.9 (now part of the frozen kernel):
 
-See [v3.4.0-plan.md](v3.4.0-plan.md) for scope when v3.4.0 work begins.
+| Item                          | Description                                                            | Status      |
+| ----------------------------- | ---------------------------------------------------------------------- | ----------- |
+| **IDP Snapshot Contract**     | `cargo xtask idp-snapshot` + `/platform/idp/snapshot` emit stable JSON | ✅ In v3.3.7 |
+| **Platform Schema**           | `specs/platform_schema.yaml` defines all endpoint responses            | ✅ In v3.3.7 |
+| **Docs-as-Code v3**           | Bidirectional `doc_index.yaml` ↔ front-matter sync                     | ✅ In v3.3.7 |
+| **Feature-status invariants** | `feature_status.md` header matches spec_ledger version                 | ✅ In v3.3.7 |
+| **Centralized Env Helpers**   | `crate::env::is_ci()`, `is_noninteractive()` reduce duplication        | ✅ In v3.3.7 |
+| **Example fork CI**           | `examples/fork-customization/` with CI template                        | ✅ In v3.3.7 |
+
+See [v3.4.0-plan.md](archive/v3.4.0-plan.md) for scope when v3.4.0 work begins.
 
 ---
 
@@ -315,8 +323,10 @@ See [v3.4.0-plan.md](v3.4.0-plan.md) for scope when v3.4.0 work begins.
 **Actions:**
 
 1. Configure GitHub branch protection (require selftest, no direct pushes)
-   - **Run:** `.github/scripts/setup-branch-protection.sh`
-   - **Docs:** `docs/how-to/setup-branch-protection.md`
+
+   * **Run:** `.github/scripts/setup-branch-protection.sh`
+   * **Docs:** `docs/how-to/setup-branch-protection.md`
+
 2. Tag the current kernel:
 
    ```bash
@@ -324,22 +334,24 @@ See [v3.4.0-plan.md](v3.4.0-plan.md) for scope when v3.4.0 work begins.
    ```
 
 3. Fork for Knowledge Hub or other service
+
 4. Capture friction in `FRICTION_LOG.md`
+
 5. Only update kernel when friction is systematic
 
 **Timeline:** Immediate
 
 **Pros:**
 
-- Fastest path to value
-- Real usage reveals actual gaps
-- Avoids over-engineering
+* Fastest path to value
+* Real usage reveals actual gaps
+* Avoids over-engineering
 
 **Cons:**
 
-- Known gaps remain
-- Documentation incomplete
-- May hit issues in first fork
+* Known gaps remain
+* Documentation incomplete
+* May hit issues in first fork
 
 ### 5.2 Option B: Consolidate (Fill Documentation Gaps) — *Historical*
 
@@ -360,20 +372,20 @@ See [v3.4.0-plan.md](v3.4.0-plan.md) for scope when v3.4.0 work begins.
 
 **Pros:**
 
-- Better onboarding for new teams
-- Cleaner starting point
-- Reduces "figure it out" friction
+* Better onboarding for new teams
+* Cleaner starting point
+* Reduces "figure it out" friction
 
 **Cons:**
 
-- Delays first real usage
-- Documentation may not match reality
-- Speculative improvements
+* Delays first real usage
+* Documentation may not match reality
+* Speculative improvements
 
 ### 5.3 Option C: Validate (Second Service First) — **Adoption Track, Not Kernel Work**
 
 > This option describes how to use the template in a **separate service repository**.
-> It does not require changes to this repository once `v3.3.8-kernel` is tagged.
+> It does not require changes to this repository once `v3.3.9-kernel` is tagged.
 
 **Goal:** Prove the template works by building a real service from it.
 
@@ -389,15 +401,15 @@ See [v3.4.0-plan.md](v3.4.0-plan.md) for scope when v3.4.0 work begins.
 
 **Pros:**
 
-- Documentation grounded in reality
-- Discovers actual problems
-- Template improvements earned, not assumed
+* Documentation grounded in reality
+* Discovers actual problems
+* Template improvements earned, not assumed
 
 **Cons:**
 
-- Friction during development
-- May need kernel changes mid-service
-- More churn before stability
+* Friction during development
+* May need kernel changes mid-service
+* More churn before stability
 
 ---
 
@@ -411,18 +423,18 @@ See [v3.4.0-plan.md](v3.4.0-plan.md) for scope when v3.4.0 work begins.
 
 **Activities:**
 
-- Fork template into new service using `v3.3.8-kernel` tag
-- Run `nix develop && cargo xtask doctor && cargo xtask selftest` to validate baseline
-- Wire in service identity via `specs/service_metadata.yaml`
-- Add domain stories/REQs/ACs to `specs/spec_ledger.yaml`
-- Capture friction in fork's `FRICTION_LOG.md` and surface via `/platform/friction` API
-- Use `docs/how-to/report-fork-feedback.md` to report kernel issues upstream
+* Fork template into new service using `v3.3.9-kernel` tag
+* Run `nix develop && cargo xtask doctor && cargo xtask selftest` to validate baseline
+* Wire in service identity via `specs/service_metadata.yaml`
+* Add domain stories/REQs/ACs to `specs/spec_ledger.yaml`
+* Capture friction in fork's `FRICTION_LOG.md` and surface via `/platform/friction` API
+* Use `docs/how-to/report-fork-feedback.md` to report kernel issues upstream
 
 **Success Criteria:**
 
-- Selftest green on every PR in fork repo
-- Friction systematically logged and categorized
-- Service builds and runs with template governance intact
+* Selftest green on every PR in fork repo
+* Friction systematically logged and categorized
+* Service builds and runs with template governance intact
 
 ### Phase 2: IDP Tile Integration
 
@@ -430,20 +442,23 @@ See [v3.4.0-plan.md](v3.4.0-plan.md) for scope when v3.4.0 work begins.
 
 **Activities:**
 
-- Build **Governance Health tile** using `/platform/status` endpoint
-  - Show AC pass/fail counts, policy status, selftest gate results
-- Build **Docs Health tile** using `/platform/docs/index` endpoint
-  - Show doc types, coverage, staleness, missing entries
-- (Optional) Add **Task/Hints tile** using `/platform/agent/hints` endpoint
-  - Surface prioritized work items for teams and agents
-- Reference `docs/explanation/json-contracts.md` for JSON schema contracts
-- Validate tile data against fork services (Phase 1 outputs)
+* Build **Governance Health tile** using `/platform/status` endpoint
+
+  * Show AC pass/fail counts, policy status, selftest gate results
+* Build **Docs Health tile** using `/platform/docs/index` endpoint
+
+  * Show doc types, coverage, staleness, missing entries
+* (Optional) Add **Task/Hints tile** using `/platform/agent/hints` endpoint
+
+  * Surface prioritized work items for teams and agents
+* Reference `docs/explanation/json-contracts.md` for JSON schema contracts
+* Validate tile data against fork services (Phase 1 outputs)
 
 **Success Criteria:**
 
-- Template-based services visible in IDP with health metrics
-- Teams can see governance drift in real-time
-- Documentation health surfaced without manual audits
+* Template-based services visible in IDP with health metrics
+* Teams can see governance drift in real-time
+* Documentation health surfaced without manual audits
 
 ### Phase 3: Governed Agent Pilot
 
@@ -451,22 +466,23 @@ See [v3.4.0-plan.md](v3.4.0-plan.md) for scope when v3.4.0 work begins.
 
 **Activities:**
 
-- Deploy Claude Code agents to 2-3 fork repos from Phase 1
-- Use Skills: `bootstrap-dev-env`, `governed-feature-dev`, `governed-maintenance`
-- Agent workflow loop:
+* Deploy Claude Code agents to 2-3 fork repos from Phase 1
+* Use Skills: `bootstrap-dev-env`, `governed-feature-dev`, `governed-maintenance`
+* Agent workflow loop:
+
   1. Query `/platform/agent/hints` for prioritized tasks
   2. Generate context bundle via `cargo xtask bundle <task_name>`
   3. Edit code/tests/docs within bundle scope
   4. Validate with `cargo xtask test-ac <AC_ID>`
   5. Gate on `cargo xtask selftest` before PR
-- Require AC/REQ/Doc invariants green (`docs-check` + `selftest`)
-- Capture agent friction separately from human developer friction
+* Require AC/REQ/Doc invariants green (`docs-check` + `selftest`)
+* Capture agent friction separately from human developer friction
 
 **Success Criteria:**
 
-- Agents productive in 2-3 real service repos without human intervention
-- Agent-generated PRs pass selftest on first attempt >80% of the time
-- Clear friction log distinguishing agent vs. human developer pain points
+* Agents productive in 2-3 real service repos without human intervention
+* Agent-generated PRs pass selftest on first attempt >80% of the time
+* Clear friction log distinguishing agent vs. human developer pain points
 
 ### Phase 4: Kernel vNext (Demand-Driven)
 
@@ -474,41 +490,40 @@ See [v3.4.0-plan.md](v3.4.0-plan.md) for scope when v3.4.0 work begins.
 
 **Activities:**
 
-- Review friction logs from Phases 1-3 (fork usage + IDP + agents)
-- Categorize feedback:
-  - **Kernel fixes:** gaps in `spec_ledger.yaml`, broken contracts, missing flows
-  - **Soft → hard promotions:** checks validated in real usage, ready to gate
-  - **JSON contract refinements:** IDP/agent usage reveals schema gaps
-  - **Out-of-scope:** fork-specific needs, not generalizable
-- Promote soft checks to hard gates after validation (e.g., `docs-check` strictness)
-- Refine JSON contracts based on IDP tile and agent integration patterns
-- Implement versioning engine refactor if `release-prepare` friction is systematic
-- Add new patterns discovered in forks (e.g., common service types, IAC extensions)
+* Review friction logs from Phases 1-3 (fork usage + IDP + agents)
+* Categorize feedback:
+
+  * **Kernel fixes:** gaps in `spec_ledger.yaml`, broken contracts, missing flows
+  * **Soft → hard promotions:** checks validated in real usage, ready to gate
+  * **JSON contract refinements:** IDP/agent usage reveals schema gaps
+  * **Out-of-scope:** fork-specific needs, not generalizable
+* Promote soft checks to hard gates after validation (e.g., `docs-check` strictness)
+* Refine JSON contracts based on IDP tile and agent integration patterns
+* Implement versioning engine refactor if `release-prepare` friction is systematic
+* Add new patterns discovered in forks (e.g., common service types, IAC extensions)
 
 **Success Criteria:**
 
-- v3.4.0 (or v4.0.0) released with changes **driven by friction**, not speculation
-- All promoted hard gates have evidence from ≥2 fork repos
-- JSON contracts validated by real IDP/agent consumers
-- Kernel changelog clearly attributes improvements to fork feedback
+* v3.4.0 (or v4.0.0) released with changes **driven by friction**, not speculation
+* All promoted hard gates have evidence from ≥2 fork repos
+* JSON contracts validated by real IDP/agent consumers
+* Kernel changelog clearly attributes improvements to fork feedback
 
 ---
 
-**Note:** These phases are **adoption-driven** and happen outside this kernel repository. Kernel improvements are batched at phase gates (especially Phase 4) rather than landed speculatively. The v3.3.8-kernel is complete; validation and evolution happen through real usage.
+**Note:** These phases are **adoption-driven** and happen outside this kernel repository. Kernel improvements are batched at phase gates (especially Phase 4) rather than landed speculatively. The v3.3.9-kernel is complete; validation and evolution happen through real usage.
 
 ---
 
 ## 6. Recommended Path (For Adopters)
 
 > **Scope note:** This section describes what happens **in forks**, not in this repo.
-> The kernel (v3.3.8) is complete. Validation happens when you use it.
+> The kernel (v3.3.9) is complete. Validation happens when you use it.
 
 **Option C (Validate) is recommended** for these reasons:
 
 1. **100% AC pass doesn't mean ready.** The ACs test what we said we'd build, not what services actually need.
-
 2. **Documentation written after use is better.** We'll know what to document because we'll have hit the gaps.
-
 3. **Friction is valuable signal.** The first fork will generate a friction log that tells us exactly what to fix.
 
 ### Recommended Sequence (In Your Fork)
@@ -609,11 +624,12 @@ The template kernel is "done" when:
 1. **All kernel ACs pass** (`must_have_ac: true` in `spec_ledger.yaml`)
 2. **`cargo xtask selftest` is green** on Tier-1 (Nix devshell) and enforced in CI
 3. **Docs-as-Code invariants hold:**
-   - Version alignment (`AC-PLT-009`, `AC-PLT-010`, extended with feature-status invariants)
-   - `doc_index.yaml` ↔ front-matter sync (`AC-PLT-DOC-INDEX-FRONTMATTER`)
+
+   * Version alignment (`AC-PLT-009`, `AC-PLT-010`, extended with feature-status invariants)
+   * `doc_index.yaml` ↔ front-matter sync (`AC-PLT-DOC-INDEX-FRONTMATTER`)
 4. **Example fork passes** (`examples/fork-customization/`) is validated and demonstrates fork extensibility in CI (`AC-TPL-EXAMPLE-FORK-BUILDS`)
 
-**Status:** v3.3.8-kernel is the current IDP-ready closure. All governance surface items wired into specs and CI.
+**Status:** v3.3.9-kernel is the current IDP-ready closure. All governance surface items wired into specs and CI.
 
 ### 8.2 Adoption Definition of Done (Other Repos)
 
@@ -624,12 +640,12 @@ The template is "production ready" when:
 3. **Platform teams can integrate it** via documented APIs and artifacts
 4. **New teams can onboard in < 1 hour** with written docs alone
 
-> This is evaluated in forks, not in this repository. Until adoption criteria are met, v3.3.8-kernel remains a stable baseline suitable for early adopters who accept some friction.
+> This is evaluated in forks, not in this repository. Until adoption criteria are met, v3.3.9-kernel remains a stable baseline suitable for early adopters who accept some friction.
 
 ---
 
 ## 9. Summary
 
-**v3.3.8-kernel** is a stable, selftest-green kernel. All **kernel ACs** (`must_have_ac: true`) pass; non-kernel ACs are tracked as soft gates and may be failing or unknown without blocking selftest. But "selftest green" and "ready for production" are different bars. The gaps are documented above.
+**v3.3.9-kernel** is a stable, selftest-green kernel. All **kernel ACs** (`must_have_ac: true`) pass; non-kernel ACs are tracked as soft gates and may be failing or unknown without blocking selftest. But "selftest green" and "ready for production" are different bars. The gaps are documented above.
 
 The recommended path: fork immediately, capture friction, fix what matters, document what you learned. Don't try to anticipate every need—let real usage tell you what's missing.

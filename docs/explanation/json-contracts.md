@@ -18,12 +18,12 @@ acs:
   - AC-TPL-PLATFORM-GRAPH
   - AC-TPL-PLATFORM-DEVEX
 adrs: [ADR-0001, ADR-0005]
-last_updated: 2025-12-01
+last_updated: 2025-12-22
 ---
 
 # JSON Contracts for CLI and Platform APIs
 
-**Template Version:** v3.3.11
+**Template Version:** v3.3.12
 
 This document defines the JSON contracts for all machine-readable outputs from the Rust-as-Spec platform cell. These contracts enable AI agents, IDPs (Internal Developer Portals), and automation tools to integrate with the platform reliably.
 

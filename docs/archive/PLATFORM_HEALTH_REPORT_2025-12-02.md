@@ -1,3 +1,4 @@
+<!-- doclint:disable orphan-version -->
 # Platform Health Report: Rust-as-Spec Template Cell
 **Generated**: 2025-12-02T09:22:00Z
 **Platform Version**: v3.3.6

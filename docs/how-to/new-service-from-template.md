@@ -9,7 +9,7 @@ stories: [US-TPL-PLT-001]
 requirements: [REQ-PLT-ONBOARDING, REQ-PLT-DOC-TEMPLATES]
 acs: [AC-PLT-001, AC-PLT-008]
 adrs: [ADR-0005]
-last_updated: 2025-11-26
+last_updated: 2025-12-22
 ---
 <!-- doclint:disable orphan-version -->
 
@@ -51,7 +51,7 @@ Edit these files with your service identity:
 service_id: "knowledge-hub"                    # Was: template-service
 display_name: "Knowledge Hub"                  # Was: Rust-as-Spec Template Service
 description: "Central repository for domain knowledge and entity definitions"
-template_version: v3.3.8                       # Keep as-is for traceability
+template_version: v3.3.12                      # Keep as-is for traceability
 # Keep ownership, lifecycle, links, tags - update as needed for your team
 ```
 

@@ -10,14 +10,14 @@ stories: [US-TPL-PLT-001]
 requirements: [REQ-PLT-ONBOARDING, REQ-PLT-DEVEX-CONTRACT]
 acs: [AC-PLT-ENV-CHECK, AC-PLT-015]
 adrs: [ADR-0005]
-last_updated: 2025-12-09
+last_updated: 2025-12-22
 ---
 
 # How to Conduct a Kernel Dry-Run
 
 > **For kernel maintainers and adopters:** This guide explains how to validate that the kernel is fork-ready by conducting a systematic dry-run.
 
-**Kernel Version:** v3.3.8-kernel
+**Kernel Version:** v3.3.9-kernel
 
 ---
 
@@ -73,7 +73,7 @@ git clone https://github.com/EffortlessMetrics/Rust-Template.git dry-run-$(date 
 cd dry-run-$(date +%Y%m%d)
 
 # Checkout the kernel tag
-git checkout v3.3.8-kernel
+git checkout v3.3.9-kernel
 ```
 
 **Record in receipt:**
@@ -285,7 +285,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: v3.3.8-kernel
+          ref: v3.3.9-kernel
       - uses: DeterminateSystems/nix-installer-action@main
       - run: nix develop --command cargo xtask dev-up
       - run: nix develop --command cargo xtask selftest

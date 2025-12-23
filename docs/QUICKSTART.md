@@ -9,7 +9,7 @@ stories: [US-TPL-PLT-001]
 requirements: [REQ-PLT-ONBOARDING, REQ-PLT-DEVEX-CONTRACT]
 acs: [AC-PLT-001, AC-PLT-015, AC-PLT-019]
 adrs: [ADR-0002, ADR-0005]
-last_updated: 2025-11-26
+last_updated: 2025-12-22
 ---
 
 # Quick Start Guide

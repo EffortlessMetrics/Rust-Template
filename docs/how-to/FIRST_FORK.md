@@ -9,7 +9,7 @@ stories: [US-TPL-PLT-001]
 requirements: [REQ-PLT-ONBOARDING]
 acs: [AC-PLT-001, AC-PLT-008]
 adrs: []
-last_updated: 2025-11-27
+last_updated: 2025-12-22
 ---
 
 # First Fork Runbook

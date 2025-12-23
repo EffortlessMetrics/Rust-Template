@@ -9,7 +9,7 @@ stories: [US-TPL-PLT-001]
 requirements: [REQ-PLT-ONBOARDING, REQ-PLT-DEVEX-CONTRACT]
 acs: [AC-PLT-015, AC-PLT-016, AC-PLT-019, AC-PLT-020]
 adrs: [ADR-0002, ADR-0005, ADR-0017]
-last_updated: 2025-11-26
+last_updated: 2025-12-22
 ---
 <!-- doclint:disable orphan-version -->
 
@@ -2032,4 +2032,4 @@ For detailed gate documentation, see [ADR-0017](adr/0017-tier1-selftest-gate.md)
 
 ---
 
-**Last Updated:** 2025-12-10 (v3.3.8)
+**Last Updated:** 2025-12-22 (v3.3.12)
