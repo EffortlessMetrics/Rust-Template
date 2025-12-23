@@ -10,14 +10,14 @@ stories: [US-TPL-PLT-001]
 requirements: [REQ-PLT-PLATFORM-APIS, REQ-TPL-IDP-SNAPSHOT]
 acs: [AC-PLT-015, AC-TPL-IDP-SNAPSHOT, AC-TPL-BDD-EXIT-CODES]
 adrs: [ADR-0005, ADR-0017]
-last_updated: 2025-12-09
+last_updated: 2025-12-22
 ---
 
 # How to Trust a Cell
 
 > **For IDP teams and platform engineers:** This one-pager shows how to verify that a Rust-as-Spec cell is healthy and trustworthy in under 5 minutes.
 
-**Kernel Version:** v3.3.8-kernel
+**Kernel Version:** v3.3.9-kernel
 
 ---
 
@@ -99,8 +99,8 @@ cargo xtask kernel-status
 ```
 
 **Expected output sections:**
-- `Template version: v3.3.8` – matches expected kernel version
-- `Kernel tag: v3.3.8-kernel (HEAD is at tag: yes)` – at kernel tag
+- `Template version: v3.3.12` – matches expected kernel version
+- `Kernel tag: v3.3.9-kernel (HEAD is at tag: yes)` – at kernel tag
 - `Tree clean: yes` – no uncommitted changes
 - `Kernel ACs: Total: 72, PASS: 72` – all passing
 - `Docs-as-Code: version alignment: OK` – docs match spec_ledger
@@ -124,7 +124,7 @@ cargo xtask idp-snapshot --pretty
 **Key fields to check:**
 ```json
 {
-  "template_version": "3.3.8",
+  "template_version": "3.3.12",
   "governance_health": {
     "status": "healthy",
     "ac_coverage": {
@@ -195,7 +195,7 @@ curl -s http://localhost:8080/platform/status | jq '.governance'
    - If version drift: run `cargo xtask docs-check`
 
 3. **idp-snapshot fails:**
-   - Ensure you're on the kernel tag: `git checkout v3.3.8-kernel`
+   - Ensure you're on the kernel tag: `git checkout v3.3.9-kernel`
    - Run `cargo build -p xtask` to rebuild
    - Check `cargo xtask idp-snapshot 2>&1` for errors
 

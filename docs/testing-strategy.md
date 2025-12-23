@@ -1,7 +1,7 @@
 # Testing Strategy
 
-**Version**: v3.3.11
-**Last Updated**: 2025-11-30
+**Version**: v3.3.12
+**Last Updated**: 2025-12-22
 
 This repo ships with a layered test strategy:
 

@@ -9,7 +9,7 @@ stories: [US-TPL-PLT-001]
 requirements: [REQ-PLT-PLATFORM-APIS, REQ-TPL-IDP-SNAPSHOT, REQ-TPL-AI-IDP-COMPAT]
 acs: [AC-PLT-015, AC-TPL-IDP-SNAPSHOT, AC-TPL-IDP-SNAPSHOT-VALID-JSON, AC-TPL-IDP-CELL-SMOKE, AC-TPL-CLI-JSON-CORE]
 adrs: [ADR-0004, ADR-0017]
-last_updated: 2025-12-09
+last_updated: 2025-12-22
 ---
 
 <!-- doclint:disable orphan-version -->
@@ -20,7 +20,7 @@ last_updated: 2025-12-09
 > into your Internal Developer Platform. It defines what you can rely on, what to consume,
 > and how to validate cell health.
 
-**Kernel Version:** v3.3.8-kernel | **Template Version:** 3.3.8
+**Kernel Version:** v3.3.9-kernel | **Template Version:** 3.3.12
 
 ---
 
@@ -85,7 +85,7 @@ cargo xtask idp-snapshot --pretty
 ```json
 {
   "timestamp": "2025-12-09T12:00:00Z",
-  "template_version": "3.3.8",
+  "template_version": "3.3.12",
   "service_id": "template-service",
   "governance_health": {
     "status": "healthy",

@@ -11,8 +11,8 @@ adrs: [ADR-0003, ADR-0005, ADR-0020, ADR-0021, ADR-0024]
 
 # Governance Model: How Rust-as-Spec Platform Cells Stay Honest
 
-**Template Version:** v3.3.9
-**Last Updated:** 2025-12-12
+**Template Version:** v3.3.12
+**Last Updated:** 2025-12-22
 
 > **TL;DR:** This template uses specs, BDD tests, policies, and graph invariants to create a **self-governing platform cell** where code, docs, and contracts must agree — and the repo can prove it via `cargo xtask selftest`.
 
@@ -898,7 +898,7 @@ cargo xtask kernel-smoke  # All kernel ACs should pass
 cargo xtask fork-register \
   --name "Knowledge Hub" \
   --domain ml-documentation \
-  --kernel-version v3.3.9
+  --kernel-version v3.3.12
 
 # 4. Add domain-specific specs
 # Edit specs/spec_ledger.yaml:

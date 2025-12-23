@@ -1,13 +1,13 @@
 <!-- doclint:disable orphan-version -->
 
-# AI Agent First-Hour Receipt – v3.3.8-kernel
+# AI Agent First-Hour Receipt – v3.3.12
 
 > **Template:** Copy this file and rename to `AI_FIRST_HOUR_YYYY-MM-DD.md` to record
 > your AI agent's first-hour onboarding results. The goal is to prove that an AI agent
 > can autonomously orient and begin work using the platform's structured APIs.
 
 **Agent Type:** [Claude Code | Custom Agent | Other]
-**Source kernel:** EffortlessMetrics/Rust-Template@v3.3.8-kernel
+**Source kernel:** EffortlessMetrics/Rust-Template@v3.3.9-kernel
 **Date:** YYYY-MM-DD
 **Session ID:** [optional session identifier]
 

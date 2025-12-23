@@ -1,3 +1,15 @@
+---
+id: GUIDE-TPL-AGENT-001
+title: Agent Guide - Operating the Rust-as-Spec Platform Cell
+doc_type: guide
+status: published
+audience: agents, developers
+tags: [agent, llm, automation, platform, governance]
+stories: [US-TPL-PLT-001]
+requirements: [REQ-PLT-DOCS-CONSISTENCY]
+acs: [AC-PLT-009, AC-PLT-010]
+last_updated: 2025-12-22
+---
 <!-- doclint:disable orphan-version -->
 # Agent Guide: Operating the Rust-as-Spec Platform Cell
 
@@ -1060,7 +1072,7 @@ curl http://localhost:8080/platform/forks/FORK-KHUB-001
       "name": "Knowledge Hub",
       "domain": "ml-documentation",
       "status": "active",
-      "kernel_version": "v3.3.6"
+      "kernel_version": "v3.3.9-kernel"
     }
   ],
   "total": 1
@@ -1073,7 +1085,7 @@ curl http://localhost:8080/platform/forks/FORK-KHUB-001
   "id": "FORK-KHUB-001",
   "name": "Knowledge Hub",
   "domain": "ml-documentation",
-  "kernel_version": "v3.3.6",
+  "kernel_version": "v3.3.9-kernel",
   "status": "active",
   "url": "https://github.com/org/knowledge-hub",
   "maintainer": {
@@ -1405,7 +1417,7 @@ cargo xtask friction-new --category X --severity Y --summary "..."
 cargo xtask friction-list
 cargo xtask question-new --category X --summary "..." --flow F --phase P --description "..."
 cargo xtask questions-list
-cargo xtask fork-register --name "Name" --domain "domain" --kernel-version "v3.3.6" ...
+cargo xtask fork-register --name "Name" --domain "domain" --kernel-version "v3.3.9-kernel" ...
 cargo xtask fork-list
 
 # Introspection

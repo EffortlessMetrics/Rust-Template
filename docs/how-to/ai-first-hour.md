@@ -9,7 +9,7 @@ stories: [US-TPL-PLT-001]
 requirements: [REQ-PLT-ONBOARDING, REQ-PLT-DEVEX-CONTRACT]
 acs: [AC-PLT-ENV-CHECK, AC-PLT-009, AC-TPL-AGENT-HINTS]
 adrs: [ADR-0002, ADR-0005]
-last_updated: 2025-12-09
+last_updated: 2025-12-22
 ---
 
 # AI Agent First Hour: Autonomous Onboarding
@@ -18,7 +18,7 @@ last_updated: 2025-12-09
 > orient, discover work, and validate changes using the platform's structured APIs
 > rather than browsing files.
 
-**Kernel Version:** v3.3.8-kernel | **Template Version:** 3.3.8
+**Kernel Version:** v3.3.9-kernel | **Template Version:** v3.3.12
 
 ---
 

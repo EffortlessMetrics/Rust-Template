@@ -1,13 +1,13 @@
 <!-- doclint:disable orphan-version -->
 
-# Fork Dry-Run Receipt – v3.3.8-kernel
+# Fork Dry-Run Receipt – v3.3.9-kernel
 
 > **Template:** Copy this file and rename to `FORK_DRY_RUN_YYYY-MM-DD.md` to record
 > your fork adoption dry-run results. The goal is to prove that a competent user
 > can adopt the kernel following only the docs.
 
 **Service:** [YOUR-SERVICE-NAME]
-**Source kernel:** EffortlessMetrics/Rust-Template@v3.3.8-kernel
+**Source kernel:** EffortlessMetrics/Rust-Template@v3.3.9-kernel
 **Date:** YYYY-MM-DD
 **Performed by:** [human | agent]
 
@@ -32,7 +32,7 @@
 ```bash
 git clone https://github.com/EffortlessMetrics/Rust-Template.git [service-name]
 cd [service-name]
-git checkout v3.3.8-kernel
+git checkout v3.3.9-kernel
 ```
 
 **Outcome:** [OK | ISSUES]

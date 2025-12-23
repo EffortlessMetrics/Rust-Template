@@ -1,8 +1,9 @@
 ---
 id: HOW-TO-ADOPT-KERNEL-001
-title: "Adopt the Rust-as-Spec Kernel (v3.3.8-kernel)"
+title: "Adopt the Rust-as-Spec Kernel (v3.3.9-kernel)"
 doc_type: how_to
-version: 3.3.8
+version: 3.3.12
+last_updated: 2025-12-22
 stories: [US-TPL-PLT-001]
 requirements: [REQ-TPL-PLATFORM-INTROSPECTION]
 acs: [AC-TPL-KERNEL-CONTRACT-EMITTED, AC-TPL-AC-STATUS-CONSISTENCY]
@@ -14,7 +15,7 @@ adrs: [ADR-0005]
 # How to Adopt the Rust-as-Spec Kernel
 
 This guide shows how to start a **new service** from the kernel baseline
-tagged as **`v3.3.8-kernel`**.
+tagged as **`v3.3.9-kernel`**.
 
 You'll:
 
@@ -42,7 +43,7 @@ You should have:
 ```bash
 git clone https://github.com/EffortlessMetrics/Rust-Template.git my-service
 cd my-service
-git checkout v3.3.8-kernel
+git checkout v3.3.9-kernel
 
 nix develop
 cargo xtask dev-up
@@ -72,15 +73,15 @@ Start from a clean directory:
 ```bash
 git clone https://github.com/EffortlessMetrics/Rust-Template.git my-service
 cd my-service
-git checkout v3.3.8-kernel
+git checkout v3.3.9-kernel
 ```
 
 This guarantees you're inheriting the frozen kernel, not a moving `main`.
 
-If you run `git tag -l 'v3.3.7*'` you should see:
+If you run `git tag -l 'v3.3.9*'` you should see:
 
 ```text
-v3.3.8-kernel
+v3.3.9-kernel
 ```
 
 ---
@@ -105,7 +106,7 @@ You should see:
 - All 11 selftest steps green
 - Kernel AC summary showing all kernel ACs passing, 0 unknown (run `cargo xtask ac-status --summary` for exact count)
 
-If this is not true on a clean clone of `v3.3.8-kernel`, treat it as a bug and
+If this is not true on a clean clone of `v3.3.9-kernel`, treat it as a bug and
 capture it in a friction entry or issue.
 
 ---
@@ -192,7 +193,7 @@ and should be done upstream with:
 
 - An ADR,
 - Spec/BDD/test changes,
-- And a new `v3.3.x-kernel` tag with updated evidence.
+- And a new `v3.3.9-kernel` or later tag with updated evidence.
 
 ---
 

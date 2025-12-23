@@ -10,14 +10,14 @@ stories: [US-TPL-PLT-001]
 requirements: [REQ-PLT-DOCS-CONSISTENCY, REQ-PLT-DEVEX-CONTRACT]
 acs: [AC-PLT-009, AC-PLT-010, AC-PLT-011]
 adrs: [ADR-0005, ADR-0017]
-last_updated: 2025-12-09
+last_updated: 2025-12-22
 ---
 
 # How to Evolve the Kernel
 
 > **For kernel maintainers:** This playbook shows the complete ADR → AC → version → tag sequence for evolving the kernel contract.
 
-**Kernel Version:** v3.3.8-kernel
+**Kernel Version:** v3.3.9-kernel
 
 ---
 
@@ -138,9 +138,9 @@ paths:
 
 | Change Type | Example | Bump |
 |-------------|---------|------|
-| **Patch** | Bug fix, doc clarification, no API change | 3.3.8 → 3.3.9 |
-| **Minor** | New AC, new endpoint, backward-compatible | 3.3.8 → 3.4.0 |
-| **Major** | Breaking change, removed endpoint, renamed AC | 3.3.8 → 4.0.0 |
+| **Patch** | Bug fix, doc clarification, no API change | 3.3.12 → 3.3.13 |
+| **Minor** | New AC, new endpoint, backward-compatible | 3.3.12 → 3.4.0 |
+| **Major** | Breaking change, removed endpoint, renamed AC | 3.3.12 → 4.0.0 |
 
 **Guidance:**
 - If forks can upgrade without code changes → Patch or Minor
@@ -313,7 +313,7 @@ git push origin main --tags                 # 9. Push
 
 ## Kernel AC Guardrails
 
-> **Since v3.3.8:** The kernel has achieved **zero unknowns** (all 72 kernel ACs have test evidence).
+> **Since v3.3.9:** The kernel has achieved **zero unknowns** (all 72 kernel ACs have test evidence).
 > `KERNEL_UNKNOWN_BUDGET=0` is enforced in CI. See [ADR-0024](../adr/0024-ac-evidence-and-kernel-gate.md).
 
 ### Adding a New Kernel AC
