@@ -32,7 +32,27 @@ enum TokenKind<'a> {
 }
 
 impl PlatformAuthConfig {
+    /// Create auth config from environment and validated config sources.
+    ///
+    /// # Panics
+    ///
+    /// Panics if PLATFORM_AUTH_MODE is set to an invalid value.
+    /// Valid values: "basic", "jwt", "none", "open" (case-insensitive).
+    /// This is fail-closed behavior to prevent silent fallback to unauthenticated mode.
     pub fn from_sources(config: Option<&ValidatedConfig>) -> Self {
+        match Self::try_from_sources(config) {
+            Ok(cfg) => cfg,
+            Err(e) => {
+                panic!("FATAL: Invalid platform auth configuration: {}", e);
+            }
+        }
+    }
+
+    /// Try to create auth config, returning an error on invalid configuration.
+    ///
+    /// This is the fallible version of `from_sources()` for contexts where
+    /// panicking is not appropriate (e.g., testing, graceful error handling).
+    pub fn try_from_sources(config: Option<&ValidatedConfig>) -> Result<Self, String> {
         let mode_raw = std::env::var("PLATFORM_AUTH_MODE")
             .ok()
             .or_else(|| {
@@ -43,6 +63,9 @@ impl PlatformAuthConfig {
             })
             .unwrap_or_else(|| "open".to_string());
 
+        // Fail-closed: invalid auth mode is a hard error, not a silent fallback
+        let mode = PlatformAuthMode::parse_strict(&mode_raw)?;
+
         let token = std::env::var("PLATFORM_AUTH_TOKEN")
             .ok()
             .or_else(|| config.and_then(|cfg| cfg.secrets.get("platform.auth_token").cloned()));
@@ -51,7 +74,7 @@ impl PlatformAuthConfig {
             .ok()
             .or_else(|| config.and_then(|cfg| cfg.secrets.get("platform.jwt_secret").cloned()));
 
-        Self { mode: PlatformAuthMode::from(mode_raw.as_str()), token, jwt_secret }
+        Ok(Self { mode, token, jwt_secret })
     }
 
     pub fn requires_auth(&self) -> bool {
@@ -499,5 +522,48 @@ mod tests {
             jwt_secret: Some("also-ignored".into()),
         };
         assert!(config.token_present(), "Open mode with credentials should still be present");
+    }
+
+    // Tests for fail-closed auth configuration
+    #[test]
+    fn try_from_sources_valid_modes_succeed() {
+        // Valid modes should parse without error (testing via parse_strict which try_from_sources uses)
+        assert!(PlatformAuthMode::parse_strict("basic").is_ok());
+        assert!(PlatformAuthMode::parse_strict("jwt").is_ok());
+        assert!(PlatformAuthMode::parse_strict("open").is_ok());
+        assert!(PlatformAuthMode::parse_strict("none").is_ok());
+    }
+
+    #[test]
+    fn try_from_sources_invalid_mode_fails() {
+        // Invalid mode should return an error, not silently default to open
+        let result = PlatformAuthMode::parse_strict("invalid-mode");
+        assert!(result.is_err(), "Invalid auth mode should fail, not silently default to open");
+
+        let err = result.unwrap_err();
+        assert!(err.contains("Invalid auth mode"), "Error should mention invalid auth mode");
+        assert!(err.contains("basic, jwt, none, open"), "Error should list valid options");
+    }
+
+    #[test]
+    fn from_sources_defaults_to_open_when_no_env_set() {
+        // When PLATFORM_AUTH_MODE is not set, default to "open" which is valid
+        // Save original value
+        let original = std::env::var("PLATFORM_AUTH_MODE").ok();
+
+        // Remove the env var to test default behavior
+        // SAFETY: This test runs in isolation and we restore the original value after
+        unsafe { std::env::remove_var("PLATFORM_AUTH_MODE") };
+
+        // Should succeed with default "open" mode
+        let result = PlatformAuthConfig::try_from_sources(None);
+        assert!(result.is_ok(), "Default 'open' mode should be valid");
+        assert_eq!(result.unwrap().mode, PlatformAuthMode::Open);
+
+        // Restore original value if it existed
+        // SAFETY: Restoring the original environment state
+        if let Some(val) = original {
+            unsafe { std::env::set_var("PLATFORM_AUTH_MODE", val) };
+        }
     }
 }
