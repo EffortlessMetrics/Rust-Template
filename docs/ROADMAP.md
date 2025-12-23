@@ -55,7 +55,8 @@ This roadmap tracks three distinct layers that evolve at different rates:
 
 ### Layer 1: Release Train (Template Versions)
 
-Template versions (v3.3.12, v3.3.13, etc.) represent the current state of this repository. They include all features, docs, and tooling available on `main`.
+Template versions (v3.3.12, v3.3.13, etc.) are **tagged snapshots** of this repository.
+`main` may contain post-tag docs/tooling that will ship in the next tag.
 
 | Version | Status | Focus |
 |---------|--------|-------|
@@ -115,7 +116,11 @@ To fork from v3.3.9, start with `docs/how-to/FIRST_FORK.md`.
 
 ## 2. Current State (v3.3.12)
 
-The template is at v3.3.12, building on the frozen v3.3.9-kernel baseline. All acceptance criteria pass, all selftest gates pass.
+The template is at v3.3.12, building on the frozen v3.3.9-kernel baseline.
+
+- **Kernel ACs** (`must_have_ac: true`): All passing
+- **Selftest**: Green (11/11 gates)
+- **Non-kernel ACs**: Soft gates, may be UNKNOWN depending on test capture
 
 **Template Version (v3.3.12):**
 
@@ -181,11 +186,7 @@ The v3.3.9-kernel tag marks the stable, frozen baseline that includes:
 - **Hint Schema**: `/platform/agent/hints` and `xtask suggest-next --format json` share canonical Hint types
 - **Bundle Manifests**: `bundle.yaml` links to REQs/ACs/tests with soft scope audit
 
-**v3.3.12+ Additions (Current Development):**
-
-- **Security Hardening**: CORS middleware, security headers (CSP, HSTS, X-Frame-Options), enhanced JWT validation with 60s leeway and claim validation, fail-closed auth configuration
-- **Governance Architecture**: `gov-model` crate (pure domain types), `gov-http` crate (reusable Axum router), `PlatformState` trait for dependency injection, `RepoContext` for workspace path resolution
-- **CI Improvements**: Three-tier path filtering (docs-check/check/selftest), shared rust-cache, supply chain security (CodeQL, Gitleaks, cargo-audit)
+**v3.3.12 Additions:** See [§3.7](#37-v3312-security--architecture-) for release highlights (security, governance arch, CI).
 
 ### 2.3 Verification
 
@@ -332,14 +333,7 @@ Only a few items remain - all now have documentation or are external dependencie
 
 **Target:** Next tag after v3.3.12
 
-#### Already Complete (Now in v3.3.12)
-
-The following platform work landed in v3.3.12 and is **not** v3.3.13 scope:
-
-- Security middleware (CORS, headers, JWT validation, fail-closed auth) — PR #33
-- Governance architecture (gov-model, gov-http, handler modularization) — Refactoring
-- Supply chain CI (CodeQL, Gitleaks, cargo-audit) — PR #33
-- Documentation templates (Trust a Cell, Evolve the Kernel, AI first-hour receipt template)
+> **Note:** Platform work (security, architecture, CI) shipped in v3.3.12. See [§3.7](#37-v3312-security--architecture-).
 
 #### Blockers (Must Ship)
 

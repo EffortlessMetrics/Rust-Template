@@ -63,10 +63,10 @@ pub fn run(args: VersionCheckArgs) -> Result<()> {
         let result = extract_version(source);
 
         // First source (Cargo.toml) is canonical
-        if canonical_version.is_none() {
-            if let Some(ref v) = result.version {
-                canonical_version = Some(v.clone());
-            }
+        if canonical_version.is_none()
+            && let Some(ref v) = result.version
+        {
+            canonical_version = Some(v.clone());
         }
 
         results.push(result);
@@ -169,15 +169,15 @@ fn extract_version(source: &VersionSource) -> SourceResult {
 
     // Search line by line for multiline patterns
     for line in content.lines() {
-        if let Some(caps) = re.captures(line) {
-            if let Some(version) = caps.get(1) {
-                return SourceResult {
-                    path: source.path.to_string(),
-                    description: source.description.to_string(),
-                    version: Some(version.as_str().to_string()),
-                    error: None,
-                };
-            }
+        if let Some(caps) = re.captures(line)
+            && let Some(version) = caps.get(1)
+        {
+            return SourceResult {
+                path: source.path.to_string(),
+                description: source.description.to_string(),
+                version: Some(version.as_str().to_string()),
+                error: None,
+            };
         }
     }
 

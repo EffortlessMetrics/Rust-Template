@@ -214,17 +214,16 @@ impl CorsConfig {
                 return true;
             }
             // Handle subdomain wildcards like "https://*.example.com"
-            if let Some(pos) = allowed.find("*.") {
-                if pos == 0
+            if let Some(pos) = allowed.find("*.")
+                && (pos == 0
                     || (pos == 8 && allowed.starts_with("https://"))
-                    || (pos == 7 && allowed.starts_with("http://"))
-                {
-                    let wildcard_domain = &allowed[pos + 2..];
-                    if origin.starts_with("https://") && allowed.starts_with("https://") {
-                        return origin.ends_with(wildcard_domain);
-                    } else if origin.starts_with("http://") && allowed.starts_with("http://") {
-                        return origin.ends_with(wildcard_domain);
-                    }
+                    || (pos == 7 && allowed.starts_with("http://")))
+            {
+                let wildcard_domain = &allowed[pos + 2..];
+                if origin.starts_with("https://") && allowed.starts_with("https://") {
+                    return origin.ends_with(wildcard_domain);
+                } else if origin.starts_with("http://") && allowed.starts_with("http://") {
+                    return origin.ends_with(wildcard_domain);
                 }
             }
             false
@@ -276,27 +275,24 @@ pub async fn cors_middleware(
     let mut response = next.run(request).await;
 
     // Add CORS headers to regular responses
-    if let Some(origin) = origin {
-        if state.cors_config.is_origin_allowed(&origin) {
-            if let Ok(header_value) = HeaderValue::from_str(&origin) {
-                response.headers_mut().insert(header::ACCESS_CONTROL_ALLOW_ORIGIN, header_value);
-            }
+    if let Some(origin) = origin
+        && state.cors_config.is_origin_allowed(&origin)
+    {
+        if let Ok(header_value) = HeaderValue::from_str(&origin) {
+            response.headers_mut().insert(header::ACCESS_CONTROL_ALLOW_ORIGIN, header_value);
+        }
 
-            if state.cors_config.allow_credentials {
-                response.headers_mut().insert(
-                    header::ACCESS_CONTROL_ALLOW_CREDENTIALS,
-                    HeaderValue::from_static("true"),
-                );
-            }
+        if state.cors_config.allow_credentials {
+            response
+                .headers_mut()
+                .insert(header::ACCESS_CONTROL_ALLOW_CREDENTIALS, HeaderValue::from_static("true"));
+        }
 
-            // Add exposed headers
-            if !state.cors_config.exposed_headers.is_empty() {
-                let exposed_headers = state.cors_config.exposed_headers.join(", ");
-                if let Ok(header_value) = HeaderValue::from_str(&exposed_headers) {
-                    response
-                        .headers_mut()
-                        .insert(header::ACCESS_CONTROL_EXPOSE_HEADERS, header_value);
-                }
+        // Add exposed headers
+        if !state.cors_config.exposed_headers.is_empty() {
+            let exposed_headers = state.cors_config.exposed_headers.join(", ");
+            if let Ok(header_value) = HeaderValue::from_str(&exposed_headers) {
+                response.headers_mut().insert(header::ACCESS_CONTROL_EXPOSE_HEADERS, header_value);
             }
         }
     }
@@ -360,10 +356,10 @@ fn handle_preflight(
     }
 
     // Set max age
-    if let Some(max_age) = config.max_age {
-        if let Ok(header_value) = HeaderValue::from_str(&max_age.to_string()) {
-            response.headers_mut().insert(header::ACCESS_CONTROL_MAX_AGE, header_value);
-        }
+    if let Some(max_age) = config.max_age
+        && let Ok(header_value) = HeaderValue::from_str(&max_age.to_string())
+    {
+        response.headers_mut().insert(header::ACCESS_CONTROL_MAX_AGE, header_value);
     }
 
     response
