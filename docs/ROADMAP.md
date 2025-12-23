@@ -9,7 +9,7 @@ stories: [US-TPL-PLT-001]
 requirements: [REQ-PLT-DOCS-CONSISTENCY]
 acs: [AC-PLT-009, AC-PLT-010]
 adrs: [ADR-0005]
-last_updated: 2025-12-22
+last_updated: 2025-12-23
 ---
 
 # Roadmap: Rust-as-Spec Platform Cell (v3.3.12)
@@ -97,11 +97,13 @@ The v3.3.9-kernel tag marks the stable, frozen baseline that includes:
 
 | Metric | Value |
 |--------|-------|
-| **Kernel ACs** | All passing (see `docs/feature_status_notes.md` for current count) |
-| **Non-kernel ACs** | Soft gates (tracked, not enforced) |
+| **Total ACs** | 133 |
+| **Kernel ACs** | 72/72 passing (`must_have_ac: true`) |
+| **Template ACs** | 42 (soft gates, not enforced) |
+| **Meta/CI-only ACs** | 19 (CI tests, harness, example tags) |
 | **Selftest Gates** | 11/11 passing |
 | **Policy Tests** | 22/22 passing |
-| **BDD Scenarios** | 170+ passing |
+| **BDD Scenarios** | 230+ passing |
 
 > **Note:** Selftest only gates on **kernel ACs** (`must_have_ac: true`). Non-kernel ACs are tracked as soft gates and may be failing or unknown without blocking merges. See `docs/feature_status_notes.md` for exact counts and AC classification details.
 
@@ -140,6 +142,12 @@ The v3.3.9-kernel tag marks the stable, frozen baseline that includes:
 - **BDD Harness**: Semantic exit detection via `is_bdd_success()` - stable across runs
 - **Hint Schema**: `/platform/agent/hints` and `xtask suggest-next --format json` share canonical Hint types
 - **Bundle Manifests**: `bundle.yaml` links to REQs/ACs/tests with soft scope audit
+
+**v3.3.12+ Additions (Current Development):**
+
+- **Security Hardening**: CORS middleware, security headers (CSP, HSTS, X-Frame-Options), enhanced JWT validation with 60s leeway and claim validation, fail-closed auth configuration
+- **Governance Architecture**: `gov-model` crate (pure domain types), `gov-http` crate (reusable Axum router), `PlatformState` trait for dependency injection, `RepoContext` for workspace path resolution
+- **CI Improvements**: Three-tier path filtering (docs-check/check/selftest), shared rust-cache, supply chain security (CodeQL, Gitleaks, cargo-audit)
 
 ### 2.3 Verification
 
@@ -223,6 +231,36 @@ The following gaps have been addressed:
 | **Pre-commit auto-fix**   | ✅ Complete | Hook runs `xtask precommit`, auto-fixes fmt/skills/feature_status          |
 | **Docs-as-Code v2**       | ✅ Complete | `AC-PLT-009` + `AC-PLT-010` — see `docs/explanation/TEMPLATE-CONTRACTS.md` |
 
+### 3.7 v3.3.12 Security & Architecture ✅
+
+#### Security Hardening
+
+| Item                        | Status     | Notes                                                                |
+| --------------------------- | ---------- | -------------------------------------------------------------------- |
+| **Security headers**        | ✅ Complete | CSP, HSTS, X-Frame-Options, X-Content-Type-Options, Permissions-Policy |
+| **CORS middleware**         | ✅ Complete | Configurable origins, methods, headers with secure defaults          |
+| **Enhanced JWT validation** | ✅ Complete | 60s leeway, claim validation (iss, sub, iat), expiration enforcement |
+| **Fail-closed auth**        | ✅ Complete | Invalid auth modes fail loudly instead of falling back to "open"     |
+| **Supply chain CI**         | ✅ Complete | CodeQL, Gitleaks, cargo-audit, cargo-deny, checksum enforcement      |
+
+#### Governance Architecture Refactoring
+
+| Item                         | Status     | Notes                                                               |
+| ---------------------------- | ---------- | ------------------------------------------------------------------- |
+| **gov-model crate**          | ✅ Complete | Pure domain types: Task, TaskStatus, GovernanceRepository trait     |
+| **gov-http crate**           | ✅ Complete | Reusable Axum router for all `/platform/*` endpoints                |
+| **PlatformState trait**      | ✅ Complete | Dependency injection abstraction for HTTP handlers                  |
+| **RepoContext centralized**  | ✅ Complete | Workspace path resolution unified across kernel crates              |
+| **Handler modularization**   | ✅ Complete | friction, questions, forks as composable router submodules          |
+
+#### CI Improvements
+
+| Item                         | Status     | Notes                                                               |
+| ---------------------------- | ---------- | ------------------------------------------------------------------- |
+| **Three-tier path filtering**| ✅ Complete | docs-check / check / selftest tiers based on changed files          |
+| **Shared rust-cache**        | ✅ Complete | Composite actions for consistent caching across workflows           |
+| **Release readiness guide**  | ✅ Complete | `docs/how-to/release-readiness-checklist.md`                        |
+
 ---
 
 ## 4. What's Still Needed
@@ -250,11 +288,26 @@ Only a few items remain - all now have documentation or are external dependencie
 | ---------------------------- | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------- |
 | **`lazy-trees` Nix warning** | Cosmetic noise in output | Deprecated Nix 2.30+ setting in Determinate installer config. Documented in TROUBLESHOOTING.md with fix instructions. Safe to ignore. |
 
-### 4.4 v3.3.13 – IDP Fit & Finish (Patch Release)
+### 4.4 v3.3.13 – Security & IDP Fit (Patch Release)
 
-> **Scope:** Bug fixes, documentation polish, and IDP integration improvements discovered through real adoption. No new features or breaking changes.
+> **Scope:** Security hardening, governance architecture improvements, and IDP integration polish. This release focuses on production-readiness.
 
-**Target:** Next patch after fork validation dry-runs
+**Target:** Current development (on main)
+
+#### Security & Architecture (New in this cycle)
+
+| Item                               | Description                                             | Status         | Source          |
+| ---------------------------------- | ------------------------------------------------------- | -------------- | --------------- |
+| **Security headers middleware**    | CSP, HSTS, X-Frame-Options, Permissions-Policy          | ✅ Complete     | PR #33          |
+| **CORS middleware**                | Configurable cross-origin with secure defaults          | ✅ Complete     | PR #33          |
+| **Enhanced JWT validation**        | 60s leeway, claim validation, expiration enforcement    | ✅ Complete     | PR #33          |
+| **Fail-closed auth config**        | Invalid auth modes fail loudly, not silently            | ✅ Complete     | PR #33          |
+| **Supply chain CI workflow**       | CodeQL, Gitleaks, cargo-audit, checksum enforcement     | ✅ Complete     | PR #33          |
+| **gov-model crate**                | Pure domain types for governance (Repository trait)     | ✅ Complete     | Refactoring     |
+| **gov-http crate**                 | Reusable Axum router for `/platform/*` endpoints        | ✅ Complete     | Refactoring     |
+| **Handler modularization**         | friction, questions, forks as composable routers        | ✅ Complete     | Refactoring     |
+
+#### IDP Fit & Finish (Carried forward)
 
 | Item                               | Description                                             | Status         | Source          |
 | ---------------------------------- | ------------------------------------------------------- | -------------- | --------------- |
@@ -271,10 +324,11 @@ Only a few items remain - all now have documentation or are external dependencie
 
 **Criteria for 3.3.13 release:**
 
-* All "Added" items merged and validated
-* At least one dry-run receipt completed
-* No new kernel AC failures
-* `cargo xtask selftest` green
+- All security middleware tested and documented
+- Gov-model/gov-http architecture validated
+- At least one dry-run receipt completed
+- No new kernel AC failures
+- `cargo xtask selftest` green
 
 ---
 
