@@ -8,6 +8,7 @@ tags: [agent, llm, automation, platform, governance]
 stories: [US-TPL-PLT-001]
 requirements: [REQ-PLT-DOCS-CONSISTENCY]
 acs: [AC-PLT-009, AC-PLT-010]
+adrs: [ADR-0005]
 last_updated: 2025-12-22
 ---
 <!-- doclint:disable orphan-version -->
