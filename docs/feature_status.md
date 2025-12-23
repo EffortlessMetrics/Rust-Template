@@ -14,8 +14,9 @@
   To update this file, modify specs or BDD scenarios, then run:
     cargo xtask ac-status
 
-  Note: The "executed" count in the Tests column is volatile (depends on
-  which tests ran locally). Only "total" (spec-derived) is stable.
+  Note: The "executed" count (and sometimes PASS/UNKNOWN classification) in
+  the Tests column is volatile (depends on which tests ran locally). Only
+  "total" (spec-derived) is stable.
   See issue #35 for discussion of removing volatile fields from committed output.
 -->
 
