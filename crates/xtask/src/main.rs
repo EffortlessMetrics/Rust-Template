@@ -1,3 +1,37 @@
+//! CLI entry point for development tasks and CI orchestration.
+//!
+//! This is the `xtask` binary that provides a single entrypoint for all dev and CI operations.
+//! It follows the `cargo-xtask` pattern: a binary crate in the workspace that acts as a
+//! task runner for development workflows.
+//!
+//! # Command categories
+//!
+//! - **Onboarding**: Environment setup and validation (`doctor`, `dev-up`, `install-hooks`)
+//! - **Validation Gates**: Checks and tests (`selftest`, `check`, `precommit`, `bdd`)
+//! - **Acceptance Criteria**: AC management and testing (`ac-status`, `ac-new`, `test-ac`)
+//! - **Design & Documentation**: ADRs, design docs, spellcheck (`adr-new`, `docs-check`)
+//! - **Governance Artifacts**: Skills, agents, friction log, questions (`skills-lint`, `friction-list`)
+//! - **Tasks & Hints**: Work tracking and agent guidance (`tasks-list`, `suggest-next`)
+//! - **Releases**: Version management and release process (`release-prepare`, `release-bundle`)
+//! - **Security & Policy**: Audits and policy testing (`audit`, `policy-test`, `coverage`)
+//! - **LLM/Agent Support**: Context bundles and workflows (`bundle`, `help-flows`)
+//! - **Infrastructure**: Build, cleanup, and utilities (`clean`, `graph-export`, `migrate`)
+//!
+//! # Usage
+//!
+//! ```bash
+//! cargo xtask <command> [options]
+//! ```
+//!
+//! For a list of all commands, run:
+//!
+//! ```bash
+//! cargo xtask --help
+//! ```
+//!
+//! The tool automatically wraps execution in `nix develop` when Nix is available,
+//! ensuring hermetic builds and perfect CI/local parity per ADR-0002.
+
 use anyhow::{Context, Result};
 use clap::{Parser, Subcommand};
 use colored::Colorize;
@@ -667,6 +701,14 @@ enum Commands {
     #[command(next_help_heading = "🔧 Infrastructure & Utilities")]
     FmtAll,
 
+    /// Update tool checksums in scripts/tools.sha256
+    #[command(next_help_heading = "🔧 Infrastructure & Utilities")]
+    ToolsChecksumUpdate,
+
+    /// Verify tool checksums are present and valid
+    #[command(next_help_heading = "🔧 Infrastructure & Utilities")]
+    ToolsChecksumVerify,
+
     /// Clean workspace (remove target/, generated docs, etc.)
     #[command(next_help_heading = "🔧 Infrastructure & Utilities")]
     Clean,
@@ -714,6 +756,14 @@ enum Commands {
     /// Show kernel/template version
     #[command(next_help_heading = "ℹ️ Status & Metadata")]
     Version {
+        /// Output in JSON format
+        #[arg(long)]
+        json: bool,
+    },
+
+    /// Validate version consistency across all version-bearing files
+    #[command(next_help_heading = "ℹ️ Status & Metadata")]
+    VersionCheck {
         /// Output in JSON format
         #[arg(long)]
         json: bool,
@@ -885,6 +935,8 @@ fn main() -> Result<()> {
             commands::tasks::update_task(&id, title, owner, status)
         }
         Commands::TasksList => commands::tasks_list::run(),
+        Commands::ToolsChecksumUpdate => commands::tools_checksum_update::run(),
+        Commands::ToolsChecksumVerify => commands::tools_checksum_verify::run(),
         Commands::FmtAll => commands::fmt_all::run(),
         Commands::Hakari => commands::hakari::run(),
         Commands::Migrate => commands::migrate::run(),
@@ -993,6 +1045,9 @@ fn main() -> Result<()> {
         }
         Commands::Version { json } => {
             commands::version::run(commands::version::VersionArgs { json })
+        }
+        Commands::VersionCheck { json } => {
+            commands::version_check::run(commands::version_check::VersionCheckArgs { json })
         }
         Commands::EnvMode { json } => {
             commands::env_mode::run(commands::env_mode::EnvModeArgs { json })
@@ -1158,6 +1213,8 @@ pub fn all_command_names() -> Vec<&'static str> {
         "task-update",
         "tasks-list",
         "test-ac",
+        "tools-checksum-update",
+        "tools-checksum-verify",
         "test-changed",
         "ui-contract-check",
         "service-descriptor",

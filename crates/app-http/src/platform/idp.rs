@@ -2,9 +2,10 @@ use crate::{AppError, AppState};
 use axum::{Json, Router, extract::State, routing::get};
 use serde::{Deserialize, Serialize};
 use std::fs;
+use tracing::instrument;
 
 /// IDP snapshot output structure (machine-readable contract for IDPs)
-#[derive(Debug, Serialize)]
+#[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct IdpSnapshot {
     /// ISO 8601 timestamp of snapshot creation
     pub timestamp: String,
@@ -21,7 +22,7 @@ pub struct IdpSnapshot {
     pub task_hints: TaskHints,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct GovernanceHealth {
     /// Overall status: "healthy", "degraded", or "failing"
     pub status: String,
@@ -31,7 +32,7 @@ pub struct GovernanceHealth {
     pub spec_counts: SpecCounts,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct AcCoverage {
     pub total: usize,
     pub passing: usize,
@@ -39,21 +40,21 @@ pub struct AcCoverage {
     pub unknown: usize,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct SpecCounts {
     pub stories: usize,
     pub requirements: usize,
     pub acceptance_criteria: usize,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct DocumentationMetrics {
     pub total: usize,
     pub valid: usize,
     pub with_issues: usize,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct TaskHints {
     pub total_pending: usize,
     pub total_in_progress: usize,
@@ -63,7 +64,7 @@ pub struct TaskHints {
     pub high_priority: Vec<TaskHint>,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct TaskHint {
     pub task_id: String,
     pub title: String,
@@ -170,6 +171,7 @@ pub fn router() -> Router<AppState> {
 
 /// GET /platform/idp/snapshot - Get IDP snapshot with governance health and task hints
 #[allow(clippy::result_large_err)]
+#[instrument(skip(state))]
 async fn get_idp_snapshot(State(state): State<AppState>) -> Result<Json<IdpSnapshot>, AppError> {
     let root = &state.workspace_root;
 

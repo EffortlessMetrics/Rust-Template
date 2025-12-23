@@ -15,8 +15,23 @@ yanked = "deny"
 #   - We use the latest testcontainers version
 #
 ignore = [
-    "RUSTSEC-2025-0057",  # fxhash - dev-only, awaiting selectors fix
-    "RUSTSEC-2025-0134",  # rustls-pemfile - dev-only, awaiting bollard fix
+    # RUSTSEC-2025-0057 (fxhash unmaintained)
+    #   - Path: selectors → scraper → app-http (dev-dependencies only)
+    #   - Risk: Unmaintained dependency, not directly exploitable
+    #   - Last reviewed: 2025-12-18
+    #   - Next review: 2026-03-18 (quarterly)
+    #   - Action: Monitor upstream selectors crate for fix
+    #   - Tracking: https://github.com/servo/selectors/issues
+    "RUSTSEC-2025-0057",
+    
+    # RUSTSEC-2025-0134 (rustls-pemfile unmaintained)
+    #   - Path: bollard → testcontainers → adapters-db-sqlx (dev-dependencies only)
+    #   - Risk: Unmaintained dependency, not directly exploitable
+    #   - Last reviewed: 2025-12-18
+    #   - Next review: 2026-03-18 (quarterly)
+    #   - Action: Monitor upstream bollard crate for fix
+    #   - Tracking: https://github.com/testcontainers/testcontainers-rs/issues
+    "RUSTSEC-2025-0134",
 ]
 
 [licenses]

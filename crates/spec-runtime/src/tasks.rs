@@ -1,6 +1,6 @@
 use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::path::Path;
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -62,6 +62,18 @@ pub fn load_tasks(path: &Path) -> Result<TasksSpec> {
         .with_context(|| format!("Failed to parse tasks file: {}", path.display()))
 }
 
+/// Build a HashSet of all AC IDs from the ledger for O(1) lookup.
+/// This replaces O(n³) triple-nested iteration with O(n) construction + O(1) lookup.
+fn build_ac_id_set(ledger: &crate::SpecLedger) -> HashSet<&str> {
+    ledger
+        .stories
+        .iter()
+        .flat_map(|s| s.requirements.iter())
+        .flat_map(|r| r.acceptance_criteria.iter())
+        .map(|ac| ac.id.as_str())
+        .collect()
+}
+
 pub fn suggest_next(
     root: &Path,
     task_id: &str,
@@ -75,6 +87,9 @@ pub fn suggest_next(
         .find(|t| t.id == task_id)
         .context(format!("Task not found: {}", task_id))?;
 
+    // Build AC ID set once for O(1) lookups throughout this function
+    let valid_acs = build_ac_id_set(ledger);
+
     let mut sequence = Vec::new();
 
     for flow_name in &task.recommended_flows {
@@ -85,14 +100,9 @@ pub fn suggest_next(
 
                 match step.as_str() {
                     "ac-new" => {
-                        // Check if any AC in the task exists in the ledger
-                        let ac_exists = task.acs.iter().any(|ac_id| {
-                            ledger.stories.iter().any(|s| {
-                                s.requirements
-                                    .iter()
-                                    .any(|r| r.acceptance_criteria.iter().any(|a| a.id == *ac_id))
-                            })
-                        });
+                        // Check if any AC in the task exists in the ledger (O(1) HashSet lookup)
+                        let ac_exists =
+                            task.acs.iter().any(|ac_id| valid_acs.contains(ac_id.as_str()));
                         if ac_exists {
                             status = StepStatus::Satisfied;
                         }
@@ -179,14 +189,8 @@ pub fn suggest_next(
 
             // Add specific edit hints based on flow
             if flow_name == "ac_first" {
-                // Check if ACs are in ledger (re-use logic)
-                let ac_exists = task.acs.iter().any(|ac_id| {
-                    ledger.stories.iter().any(|s| {
-                        s.requirements
-                            .iter()
-                            .any(|r| r.acceptance_criteria.iter().any(|a| a.id == *ac_id))
-                    })
-                });
+                // Check if ACs are in ledger (O(1) HashSet lookup)
+                let ac_exists = task.acs.iter().any(|ac_id| valid_acs.contains(ac_id.as_str()));
 
                 sequence.insert(
                     1,

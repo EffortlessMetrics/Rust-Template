@@ -2,11 +2,14 @@
 name = "adapters-grpc"
 version = "0.1.0"
 edition.workspace = true
+rust-version.workspace = true
 publish.workspace = true
 
 [lib]
 name = "adapters_grpc"
 path = "src/lib.rs"
+# Note: lib name uses underscores (adapters_grpc) as required by Rust,
+# while package name uses hyphens (adapters-grpc) following Cargo conventions
 
 [dependencies]
 tonic = { workspace = true, features = ["transport"] }

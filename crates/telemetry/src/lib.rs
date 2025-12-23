@@ -1,3 +1,28 @@
+//! Telemetry and observability for the platform.
+//!
+//! This crate provides tracing initialization with:
+//! - Environment-based log filtering via `RUST_LOG`
+//! - Optional OTLP export for distributed tracing (feature: `otlp`)
+//! - Console tracing fallback when OTLP is unavailable
+//!
+//! # Configuration
+//!
+//! - `RUST_LOG`: Log level filter (e.g., `debug`, `app_http=trace`)
+//! - `OTLP_ENDPOINT`: OTLP collector endpoint (e.g., `http://localhost:4317`)
+//!
+//! # Examples
+//!
+//! ```no_run
+//! # use telemetry::init_tracing;
+//! init_tracing("my-service");
+//! ```
+//!
+//! For OTLP export, enable the `otlp` feature and set the endpoint:
+//!
+//! ```bash
+//! OTLP_ENDPOINT=http://localhost:4317 cargo run --features telemetry/otlp
+//! ```
+
 /// Initialize tracing with env-based log filtering and optional OTLP export
 ///
 /// Respects `RUST_LOG` environment variable for filtering.

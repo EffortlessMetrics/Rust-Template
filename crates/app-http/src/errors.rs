@@ -48,7 +48,8 @@ use axum::{
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::sync::{Mutex, OnceLock};
+use std::sync::OnceLock;
+use tokio::sync::Mutex;
 use tracing::{error, warn};
 
 use crate::middleware::request_id::RequestId;
@@ -107,8 +108,12 @@ fn error_tracker() -> &'static Mutex<ErrorSummary> {
 }
 
 /// Record an error in the global tracker.
+///
+/// Note: This uses try_lock() to avoid blocking the async runtime.
+/// If the lock is contended, we skip recording rather than blocking.
+/// This is acceptable because error tracking is best-effort and shouldn't block request processing.
 fn record_error(code: &ErrorCode, status: StatusCode, message: &str, request_id: Option<&str>) {
-    if let Ok(mut tracker) = error_tracker().lock() {
+    if let Ok(mut tracker) = error_tracker().try_lock() {
         tracker.has_recent_errors = true;
         tracker.stats.total_errors += 1;
 
@@ -126,11 +131,16 @@ fn record_error(code: &ErrorCode, status: StatusCode, message: &str, request_id:
             request_id: request_id.map(String::from),
         });
     }
+    // If lock is contended, skip recording (best-effort tracking)
 }
 
 /// Get the current error summary for `/platform/status`.
+///
+/// Note: This uses try_lock() to avoid blocking the async runtime.
+/// If the lock is contended, we return a default summary.
+/// This is acceptable because the summary is best-effort observability data.
 pub fn get_error_summary() -> ErrorSummary {
-    error_tracker().lock().map(|t| t.clone()).unwrap_or_default()
+    error_tracker().try_lock().map(|t| t.clone()).unwrap_or_default()
 }
 
 /// Map an error code to a category string for the error summary.

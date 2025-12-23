@@ -1,3 +1,19 @@
+//! Infrastructure-as-code xtask utilities.
+//!
+//! This crate provides core utilities for Rust IaC project scaffolding:
+//! - Project initialization (brownfield and greenfield modes)
+//! - Self-test validation of project structure
+//! - Configuration management via `RUST_IAC.toml`
+//! - Specification ledger scaffolding (`specs/spec_ledger.yaml`)
+//!
+//! # Main exports
+//!
+//! - [`init`]: Initialize project structure in brownfield or greenfield mode
+//! - [`selftest`]: Verify project structure and configuration
+//! - [`InitMode`]: Choose between brownfield (existing project) or greenfield (new project)
+//! - [`config`]: Configuration types and defaults for `RUST_IAC.toml`
+//! - [`commands`]: Command implementations for IaC operations
+
 use anyhow::{Context, Result};
 use colored::Colorize;
 use std::fs;
