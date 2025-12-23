@@ -546,24 +546,15 @@ mod tests {
     }
 
     #[test]
-    fn from_sources_defaults_to_open_when_no_env_set() {
-        // When PLATFORM_AUTH_MODE is not set, default to "open" which is valid
-        // Save original value
-        let original = std::env::var("PLATFORM_AUTH_MODE").ok();
-
-        // Remove the env var to test default behavior
-        // SAFETY: This test runs in isolation and we restore the original value after
-        unsafe { std::env::remove_var("PLATFORM_AUTH_MODE") };
-
-        // Should succeed with default "open" mode
-        let result = PlatformAuthConfig::try_from_sources(None);
-        assert!(result.is_ok(), "Default 'open' mode should be valid");
-        assert_eq!(result.unwrap().mode, PlatformAuthMode::Open);
-
-        // Restore original value if it existed
-        // SAFETY: Restoring the original environment state
-        if let Some(val) = original {
-            unsafe { std::env::set_var("PLATFORM_AUTH_MODE", val) };
+    fn try_from_sources_defaults_to_open_when_env_not_set() {
+        // Rust 2024: mutating process env in tests is unsafe; avoid it.
+        // This test is intentionally read-only and skips if the env var is set.
+        if std::env::var("PLATFORM_AUTH_MODE").is_ok() {
+            eprintln!("Skipping: PLATFORM_AUTH_MODE is set in this process");
+            return;
         }
+
+        let cfg = PlatformAuthConfig::try_from_sources(None).expect("default mode should be valid");
+        assert_eq!(cfg.mode, PlatformAuthMode::Open);
     }
 }
