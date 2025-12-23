@@ -979,6 +979,12 @@ fn generate_status_md_content(
     output.push_str("    \n");
     output.push_str("  To update this file, modify specs or BDD scenarios, then run:\n");
     output.push_str("    cargo xtask ac-status\n");
+    output.push_str("\n");
+    output.push_str("  Note: The \"executed\" count in the Tests column is volatile (depends on\n");
+    output.push_str("  which tests ran locally). Only \"total\" (spec-derived) is stable.\n");
+    output.push_str(
+        "  See issue #35 for discussion of removing volatile fields from committed output.\n",
+    );
     output.push_str("-->\n\n");
     output.push_str("# Feature Status\n\n");
     output.push_str("Auto-generated AC status from acceptance (BDD) and unit tests.\n\n");
