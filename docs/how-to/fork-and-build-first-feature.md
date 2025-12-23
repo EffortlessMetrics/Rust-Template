@@ -15,7 +15,7 @@ related_docs:
   - docs/tutorials/day-1-first-change.md
   - docs/tutorials/day-7-first-real-feature.md
 created: 2025-12-08
-updated: 2025-12-08
+updated: 2025-12-22
 ---
 <!-- doclint:disable orphan-version -->
 
@@ -320,4 +320,4 @@ For comprehensive troubleshooting, see [TROUBLESHOOTING.md](../TROUBLESHOOTING.m
 
 ---
 
-**Last Updated:** 2025-12-08 (v3.3.8)
+**Last Updated:** 2025-12-22 (v3.3.12)

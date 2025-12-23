@@ -2,7 +2,7 @@
 id: REF-CI-WORKFLOWS-001
 title: "CI Workflows Reference Guide"
 doc_type: reference
-version: 3.3.11
+version: 3.3.12
 stories: [US-TPL-PLT-001]
 requirements:
   - REQ-PLT-DEVEX-CONTRACT
@@ -20,7 +20,7 @@ adrs:
   - ADR-0002
   - ADR-0005
   - ADR-0017
-last_updated: 2025-12-09
+last_updated: 2025-12-22
 ---
 
 # CI Workflows Reference
@@ -545,7 +545,7 @@ cargo update -p <dependency-name>
 
 #### `ci-supply-chain.yml` - SBOM and Provenance
 **Purpose:** Generate SBOM and sign release artifacts
-**Triggers:** Git tags matching `v*.*.*` (e.g., `v3.3.6`)
+**Triggers:** Git tags matching `v*.*.*` (e.g., `v3.3.12`)
 **Runtime:** 15-20 minutes
 **Blocks Merges:** N/A (release workflow)
 
@@ -555,8 +555,8 @@ cargo update -p <dependency-name>
 3. **Source Tarball:** Signed release archive
 
 **Artifacts:**
-- `rust-template-v3.3.6.tar.gz` - Source archive
-- `rust-template-v3.3.6-sbom.spdx.json` - SBOM
+- `rust-template-v3.3.12.tar.gz` - Source archive
+- `rust-template-v3.3.12-sbom.spdx.json` - SBOM
 - Provenance attestations (GitHub Attestations API)
 
 **Permissions Required:**
@@ -567,8 +567,8 @@ cargo update -p <dependency-name>
 **How to use:**
 ```bash
 # Create release
-git tag v3.3.6
-git push origin v3.3.6
+git tag v3.3.12
+git push origin v3.3.12
 
 # Workflow automatically:
 # - Builds release artifacts
@@ -699,12 +699,12 @@ Version strings in documentation are checked for consistency with `specs/spec_le
    - These are updated automatically by `cargo xtask release-prepare`
 
 2. **Fixed versions** (use `<!-- doclint:disable orphan-version -->`):
-   - Use for version tags that are intentionally frozen (e.g., `v3.3.8-kernel`)
+   - Use for version tags that are intentionally frozen (e.g., `v3.3.9-kernel`)
    - Use for historical references or snapshots
    - Example:
      ```markdown
      <!-- doclint:disable orphan-version -->
-     The kernel baseline is frozen at v3.3.8-kernel.
+     The kernel baseline is frozen at v3.3.9-kernel.
      ```
 
 **When to use which:**
@@ -727,7 +727,7 @@ All governed docs must have YAML front-matter that matches their entry in `specs
 id: UNIQUE-DOC-ID
 title: "Document Title"
 doc_type: reference | how_to | tutorial | explanation | design_doc
-version: 3.3.8  # Must match spec_ledger template_version
+version: 3.3.12  # Must match spec_ledger template_version
 # ... other fields (stories, requirements, acs, adrs)
 ---
 ```

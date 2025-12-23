@@ -1,6 +1,6 @@
 ---
 id: SNAPSHOT-TPL-KERNEL-001
-title: Kernel Snapshot v3.3.11
+title: Kernel Snapshot v3.3.12
 doc_type: status
 status: published
 audience: maintainers, platform-engineers, forks
@@ -9,25 +9,25 @@ stories: [US-TPL-PLT-001]
 requirements: [REQ-PLT-DOCS-CONSISTENCY, REQ-TPL-OPINIONATED-DEFAULTS]
 acs: [AC-PLT-009, AC-PLT-010, AC-TPL-OPINIONS-DOCUMENTED]
 adrs: [ADR-0005]
-last_updated: 2025-12-09
+last_updated: 2025-12-22
 ---
 
-# Kernel Snapshot v3.3.11
+# Kernel Snapshot v3.3.12
 
-> This snapshot describes the kernel at tag **v3.3.8-kernel**.
-> For machine-readable details, see [`release_evidence/kernel_contract.v3.3.8.json`](../release_evidence/kernel_contract.v3.3.8.json).
+> This snapshot describes the kernel at tag **v3.3.9-kernel**.
+> For machine-readable details, see [`release_evidence/kernel_contract.v3.3.9.json`](../release_evidence/kernel_contract.v3.3.9.json).
 > For AC-level status, see [`docs/feature_status.md`](./feature_status.md).
 > For adoption instructions, see [`docs/how-to/adopt-kernel.md`](./how-to/adopt-kernel.md).
 
-**Date:** 2025-12-12 | **Version:** v3.3.11-kernel
+**Date:** 2025-12-22 | **Version:** v3.3.12-kernel
 
 ## Executive Summary
 
-This is the frozen kernel baseline (v3.3.8-kernel) for the Rust-as-Spec platform template.
+This is the frozen kernel baseline (v3.3.9-kernel) for the Rust-as-Spec platform template.
 All kernel acceptance criteria pass. All selftest gates pass.
 Day-0 commands work as documented. This is a stable, forkable baseline.
 
-**v3.3.8 highlights:**
+**v3.3.9 highlights:**
 
 - **Zero kernel unknowns** – All 72 kernel ACs now have test evidence (unit or BDD mappings). `KERNEL_UNKNOWN_BUDGET=0` is enforced in CI. See [ADR-0024](./adr/0024-ac-evidence-and-kernel-gate.md) for the evidence model.
 - **Manifest-driven versioning** – `specs/version_manifest.yaml` + versioning engine ensures all version-bearing files are updated atomically via `release-prepare`
@@ -59,7 +59,7 @@ cargo xtask selftest     # Full governance validation
 
 ---
 
-### Key Kernel Contracts (v3.3.8)
+### Key Kernel Contracts (v3.3.9)
 
 **Philosophy & Governance:**
 
@@ -277,7 +277,7 @@ cargo run -p app-http    # Listening on :8080
 
 ## Fork Readiness
 
-The template is ready to fork. Services inheriting from v3.3.8-kernel get:
+The template is ready to fork. Services inheriting from v3.3.9-kernel get:
 
 - Runtime, APIs, and UI that pass their ACs
 - DevEx tooling for agents and humans
@@ -387,12 +387,12 @@ File issues with `refs: AC-XXX` tags to feed findings back. See [`ROADMAP.md`](.
 
 ---
 
-## Changing the Kernel After v3.3.8-kernel
+## Changing the Kernel After v3.3.9-kernel
 
 <!-- doclint:disable orphan-version -->
 
 The kernel contracts (must_have_ac=true ACs, `/platform/*` APIs, xtask governance commands) are frozen
-at the `v3.3.8-kernel` tag.
+at the `v3.3.9-kernel` tag.
 
 Any change that:
 

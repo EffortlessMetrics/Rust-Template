@@ -1,3 +1,4 @@
+<!-- doclint:disable orphan-version -->
 # Rust Template v1.1.0 Release Notes
 
 **Release Date:** November 15, 2025
