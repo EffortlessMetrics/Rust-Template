@@ -980,8 +980,11 @@ fn generate_status_md_content(
     output.push_str("  To update this file, modify specs or BDD scenarios, then run:\n");
     output.push_str("    cargo xtask ac-status\n");
     output.push_str("\n");
-    output.push_str("  Note: The \"executed\" count in the Tests column is volatile (depends on\n");
-    output.push_str("  which tests ran locally). Only \"total\" (spec-derived) is stable.\n");
+    output.push_str(
+        "  Note: The \"executed\" count (and sometimes PASS/UNKNOWN classification) in\n",
+    );
+    output.push_str("  the Tests column is volatile (depends on which tests ran locally). Only\n");
+    output.push_str("  \"total\" (spec-derived) is stable.\n");
     output.push_str(
         "  See issue #35 for discussion of removing volatile fields from committed output.\n",
     );
