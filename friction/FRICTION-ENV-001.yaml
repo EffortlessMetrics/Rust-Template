@@ -51,7 +51,15 @@ context:
     - "target/junit/acceptance.xml"
     - "docs/feature_status.md"
 
-status: open
+status: resolved
+
+resolution: |
+  Fixed by adding Nix-managed sccache to the devshell in flake.nix.
+  The Nix sccache is statically linked and doesn't require libz.so.1.
+  Also explicitly set RUSTC_WRAPPER to use Nix's sccache, ensuring
+  consistent behavior in both interactive and `nix develop -c` modes.
+
+resolved_date: "2025-12-26"
 
 related_items:
   adrs: []
