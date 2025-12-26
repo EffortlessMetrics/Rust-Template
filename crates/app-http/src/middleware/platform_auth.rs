@@ -34,7 +34,7 @@ pub async fn platform_auth_guard(
 }
 
 /// Extract authentication token, preferring Authorization over the legacy header.
-fn extract_auth_token<'a>(request: &'a Request<Body>) -> Option<&'a str> {
+fn extract_auth_token(request: &Request<Body>) -> Option<&str> {
     request
         .headers()
         .get(AUTHORIZATION_HEADER)

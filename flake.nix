@@ -35,6 +35,7 @@
           pkgs.cargo-nextest
           pkgs.protobuf
           pkgs.zlib  # Required for rustc/sccache on systems without zlib1g
+          pkgs.sccache  # Nix-managed sccache ensures zlib linkage works
         ]
         # cargo-llvm-cov is marked broken on Darwin in nixpkgs; include only on Linux
         ++ pkgs.lib.optionals (!pkgs.stdenv.isDarwin) [
@@ -47,6 +48,8 @@
           # Prefer user cargo-installed tools (cargo-audit, cargo-deny, etc.)
           export PATH="$HOME/.cargo/bin:$PWD/.tools/bin:$PATH"
           export LD_LIBRARY_PATH="${pkgs.lib.makeLibraryPath [ pkgs.zlib ]}:$LD_LIBRARY_PATH"
+          # Use Nix-provided sccache for proper zlib linkage
+          export RUSTC_WRAPPER="${pkgs.sccache}/bin/sccache"
           echo "DevShell ready — try: just checks"
         '';
       };

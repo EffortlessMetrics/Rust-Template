@@ -4,7 +4,7 @@
 //! and includes appropriate leeway to prevent rejection of valid tokens.
 
 use app_http::security::{PlatformAuthConfig, PlatformAuthMode, create_jwt_token};
-use jsonwebtoken::{DecodingKey, EncodingKey, Header, Validation, decode};
+use jsonwebtoken::{EncodingKey, Header};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 #[test]
