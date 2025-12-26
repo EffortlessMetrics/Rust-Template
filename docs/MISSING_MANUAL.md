@@ -157,7 +157,7 @@ IN_NIX_SHELL=1 RUSTC_WRAPPER="" ./target/release/xtask ac-status
 XTASK_LOW_RESOURCES=1 cargo xtask ac-status
 ```
 
-**See:** FRICTION-ENV-001 in `friction/` and `docs/TROUBLESHOOTING.md` for details.
+**Status:** This issue has been **resolved** in v3.3.12+. The flake.nix now ensures Nix-managed sccache is used via PATH ordering. See `friction/FRICTION-ENV-001.yaml` for resolution details.
 
 ### rust-analyzer ABI Mismatches
 

@@ -71,13 +71,15 @@ Create a YAML file in `friction/` following the schema in `specs/friction_schema
 
 ### Open
 
-- **FRICTION-ENV-001** (2025-12-01) - Nix devshell sccache/libz.so.1 breaks xtask wrapper
-  - **Category:** tooling
-  - **Severity:** medium
-  - **Status:** Open
-  - **Details:** [friction/FRICTION-ENV-001.yaml](friction/FRICTION-ENV-001.yaml)
+*No open friction entries.*
 
 ### Resolved
+
+- **FRICTION-ENV-001** (2025-12-01, resolved 2025-12-26) - Nix devshell sccache/libz.so.1 breaks xtask wrapper
+  - **Category:** tooling
+  - **Severity:** medium
+  - **Resolution:** Fixed by adding Nix-managed sccache to devshell and enforcing PATH order
+  - **Details:** [friction/FRICTION-ENV-001.yaml](friction/FRICTION-ENV-001.yaml)
 
 - **FRICTION-AGENT-001** (2025-11-20) - UI/API inconsistency - tasks not shown in UI/hints when tasks_state.yaml missing
   - **Category:** api

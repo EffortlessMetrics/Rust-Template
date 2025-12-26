@@ -114,7 +114,12 @@ gantt
 |--------|-----------|-------------|--------------|
 | docs/api/ directory empty | Medium | Reference OpenAPI spec directly | v3.3.13 or v3.4.0 |
 | Version inconsistencies in some files | Medium | Manual verification | v3.3.13 |
-| sccache/libz friction (FRICTION-ENV-001) | Low | Documented in TROUBLESHOOTING.md | When painful enough |
+
+### Recently Resolved
+
+| Issue | Resolution | Version |
+|--------|------------|---------|
+| sccache/libz friction (FRICTION-ENV-001) | Nix sccache in PATH + RUSTC_WRAPPER | v3.3.12 |
 
 ---
 

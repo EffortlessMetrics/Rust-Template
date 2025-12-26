@@ -356,6 +356,11 @@ The following platform work landed in v3.3.12 and is **not** v3.3.13 scope. See 
 | ------------------------------ | --------------------------------------------------------- | ----------------------------------------- |
 | **IDP adapter stub**           | Backstage/Port adapter consuming `idp-snapshot`           | v3.4.0 territory — needs IDP-ready contract first |
 
+#### Recently Resolved
+
+| Item                           | Description                                               | Resolution                                |
+| ------------------------------ | --------------------------------------------------------- | ----------------------------------------- |
+| **sccache/libz friction**      | FRICTION-ENV-001 affecting `nix develop -c` commands      | ✅ Fixed in v3.3.12 — Nix sccache in PATH + RUSTC_WRAPPER |
 
 **Definition of Done for v3.3.13:**
 
