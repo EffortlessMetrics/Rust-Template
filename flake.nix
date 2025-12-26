@@ -49,8 +49,11 @@
           # This ensures `which sccache` resolves to Nix version, not cargo-installed
           export PATH="${pkgs.sccache}/bin:$HOME/.cargo/bin:$PWD/.tools/bin:$PATH"
           export LD_LIBRARY_PATH="${pkgs.lib.makeLibraryPath [ pkgs.zlib ]}:$LD_LIBRARY_PATH"
-          # Explicit RUSTC_WRAPPER for builds (belt-and-suspenders with PATH)
-          export RUSTC_WRAPPER="${pkgs.sccache}/bin/sccache"
+          # Set RUSTC_WRAPPER to Nix sccache, but respect custom wrappers (e.g., profilers)
+          # Only override if unset or already pointing to sccache
+          if [ -z "''${RUSTC_WRAPPER:-}" ] || [ "$(basename "''${RUSTC_WRAPPER:-}")" = "sccache" ]; then
+            export RUSTC_WRAPPER="${pkgs.sccache}/bin/sccache"
+          fi
           echo "DevShell ready — try: just checks"
         '';
       };

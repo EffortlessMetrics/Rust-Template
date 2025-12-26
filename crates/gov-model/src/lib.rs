@@ -29,7 +29,7 @@ pub struct TaskStatusParseError(pub String);
 ///
 /// This is the primary status enum for platform governance workflows, with four
 /// states and explicit transition rules. For simple CRUD examples, see
-/// `model::TaskStatus` instead (Pending/InProgress/Completed).
+/// `model::ExampleTaskStatus` instead (Pending/InProgress/Completed).
 ///
 /// Defines the allowed states and valid transitions for governance tasks.
 /// Status values are parsed case-insensitively and accept common aliases.
