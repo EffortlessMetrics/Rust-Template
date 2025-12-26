@@ -979,7 +979,7 @@ fn generate_status_md_content(
     output.push_str("    \n");
     output.push_str("  To update this file, modify specs or BDD scenarios, then run:\n");
     output.push_str("    cargo xtask ac-status\n");
-    output.push_str("\n");
+    output.push('\n');
     output.push_str(
         "  Note: The \"executed\" count (and sometimes PASS/UNKNOWN classification) in\n",
     );

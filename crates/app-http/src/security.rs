@@ -89,14 +89,13 @@ impl PlatformAuthConfig {
         let Some(token) = provided else { return false };
 
         match token_kind(token) {
-            TokenKind::Basic(candidate) => self
-                .token
-                .as_deref()
-                .map_or(false, |expected| constant_time_eq(expected, candidate)),
+            TokenKind::Basic(candidate) => {
+                self.token.as_deref().is_some_and(|expected| constant_time_eq(expected, candidate))
+            }
             TokenKind::Jwt(candidate) => self
                 .jwt_secret
                 .as_deref()
-                .map_or(false, |secret| validate_jwt_token(candidate, secret)),
+                .is_some_and(|secret| validate_jwt_token(candidate, secret)),
         }
     }
 
