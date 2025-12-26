@@ -45,10 +45,11 @@
           # libiconv is needed on Darwin for linking (macOS doesn't include it in system libs)
           ++ pkgs.lib.optionals pkgs.stdenv.isDarwin [ pkgs.libiconv ];
         shellHook = ''
-          # Prefer user cargo-installed tools (cargo-audit, cargo-deny, etc.)
-          export PATH="$HOME/.cargo/bin:$PWD/.tools/bin:$PATH"
+          # Prefer Nix sccache (for proper zlib linkage), then user cargo-installed tools
+          # This ensures `which sccache` resolves to Nix version, not cargo-installed
+          export PATH="${pkgs.sccache}/bin:$HOME/.cargo/bin:$PWD/.tools/bin:$PATH"
           export LD_LIBRARY_PATH="${pkgs.lib.makeLibraryPath [ pkgs.zlib ]}:$LD_LIBRARY_PATH"
-          # Use Nix-provided sccache for proper zlib linkage
+          # Explicit RUSTC_WRAPPER for builds (belt-and-suspenders with PATH)
           export RUSTC_WRAPPER="${pkgs.sccache}/bin/sccache"
           echo "DevShell ready — try: just checks"
         '';
