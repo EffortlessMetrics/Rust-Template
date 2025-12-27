@@ -366,7 +366,7 @@ The template is now a **stable kernel baseline** with full governance validation
 - ✅ 86%+ AC coverage with full selftest validation
 
 ### Current Phase: IDP Integration & Fork Adoption
-1. **Fork Creation**: Teams create services from v3.3.13 kernel.
+1. **Fork Creation**: Teams create services from the **v3.3.9-kernel** baseline (using **template v3.3.13**).
 2. **Collect Friction**: Use friction log system to track real-world issues.
 3. **Iterate**: Release patches for blockers, or v3.4.0 for new features.
 
@@ -542,12 +542,13 @@ ls docs/                             # Browse docs locally
 
 This documentation is for **Rust Template v3.3.13**.
 
-**Recent Releases:**
-- **v3.3.13 (2025-12-27)**: Adoption Receipts and Docs Polish
+**Upcoming Release:**
+- **v3.3.13 (planned)**: Adoption Receipts and Docs Polish
   - Documentation consistency improvements
   - Version alignment across all docs
   - Preparation for fork validation receipts
 
+**Recent Releases:**
 - **v3.3.12 (2025-12-22)**: Security Fixes and Version Consistency
   - Updated Rust toolchain to 1.89.0
   - Tool checksum validation and security advisory management

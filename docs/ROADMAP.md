@@ -331,15 +331,15 @@ Only a few items remain - all now have documentation or are external dependencie
 
 > **Scope:** Evidence-driven validation. The platform work (security, architecture) is complete. This release proves it works via real fork and agent receipts.
 
-**Status:** Release candidate ready (PR #39 on `release/v3.3.13-prep`)
+**Status:** Release candidate in progress
 
-#### Already Complete (v3.3.13 Work)
+#### In This Release Candidate
 
-| Item | Description | PR/Commit |
-|------|-------------|-----------|
-| **Docs version alignment** | All docs updated to v3.3.13 references | PR #39 |
-| **Security configuration doc** | Auth modes, CORS, JWT, headers, fail-closed | PR #38 |
-| **Selftest green** | 11/11 gates passing | Local validation |
+| Item | Description | Status |
+|------|-------------|--------|
+| **Docs version alignment** | All docs updated to v3.3.13 references | 🔄 This PR |
+| **Security configuration doc** | Auth modes, CORS, JWT, headers, fail-closed | ✅ Merged |
+| **Selftest green** | 11/11 gates passing | ✅ Local validation |
 
 #### Already Complete (From v3.3.12)
 
@@ -370,8 +370,8 @@ Phase 1: External Validation (in fork repo)
 
 Phase 2: Finalize Release (in this repo)
   [ ] Add evidence bundle: cargo xtask release-bundle 3.3.13
-  [ ] Commit evidence to PR #39
-  [ ] Merge PR #39 to main
+  [ ] Commit evidence to release candidate PR
+  [ ] Merge release candidate PR to main
   [ ] Tag: git tag v3.3.13 -m "v3.3.13"
   [ ] Push: git push --follow-tags
 ```
@@ -387,7 +387,7 @@ Phase 2: Finalize Release (in this repo)
 | Item | Description | Resolution |
 |------|-------------|------------|
 | **sccache/libz friction** | FRICTION-ENV-001 affecting `nix develop -c` | ✅ Fixed in v3.3.12 |
-| **Docs version drift** | Multiple docs referenced v3.3.12 | ✅ Fixed in v3.3.13 |
+| **Docs version drift** | Multiple docs referenced v3.3.12 | ✅ Fixed in this release candidate |
 
 **Definition of Done for v3.3.13:**
 
@@ -791,10 +791,10 @@ The template is "production ready" when:
 
 **Current State:**
 
-| Layer | Version | Status |
-|-------|---------|--------|
-| **Template** | v3.3.13 | Release candidate ready (PR #39) |
-| **Kernel** | v3.3.9-kernel | Frozen baseline |
+| Layer        | Version         | Status                          |
+|--------------|-----------------|--------------------------------|
+| **Template** | v3.3.13         | Release candidate in progress  |
+| **Kernel**   | v3.3.9-kernel   | Frozen baseline                |
 
 **v3.3.9-kernel** is a stable, selftest-green kernel. All **kernel ACs** (`must_have_ac: true`) pass; non-kernel ACs are tracked as soft gates and may be failing or unknown without blocking selftest.
 

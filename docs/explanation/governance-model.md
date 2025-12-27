@@ -898,7 +898,7 @@ cargo xtask kernel-smoke  # All kernel ACs should pass
 cargo xtask fork-register \
   --name "Knowledge Hub" \
   --domain ml-documentation \
-  --kernel-version v3.3.13
+  --kernel-version v3.3.9-kernel
 
 # 4. Add domain-specific specs
 # Edit specs/spec_ledger.yaml:
