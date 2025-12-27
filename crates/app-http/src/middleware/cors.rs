@@ -220,9 +220,11 @@ impl CorsConfig {
                     || (pos == 7 && allowed.starts_with("http://")))
             {
                 let wildcard_domain = &allowed[pos + 2..];
-                if origin.starts_with("https://") && allowed.starts_with("https://") {
-                    return origin.ends_with(wildcard_domain);
-                } else if origin.starts_with("http://") && allowed.starts_with("http://") {
+                // Origin scheme must match allowed scheme for wildcard matching
+                let schemes_match = (origin.starts_with("https://")
+                    && allowed.starts_with("https://"))
+                    || (origin.starts_with("http://") && allowed.starts_with("http://"));
+                if schemes_match {
                     return origin.ends_with(wildcard_domain);
                 }
             }
@@ -368,12 +370,7 @@ fn handle_preflight(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use axum::{
-        body::Body,
-        http::{HeaderMap, Method},
-        response::Response,
-    };
-    use tower::ServiceExt;
+    use axum::http::Method;
 
     #[test]
     fn test_cors_config_default() {
