@@ -11,6 +11,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 (empty)
 
+## [3.3.13] - 2025-12-27
+
+### Added
+
+- **Security configuration how-to guide** (`docs/how-to/security-configuration.md`)
+  - Documents `PLATFORM_AUTH_MODE=basic` token configuration
+  - Covers production hardening, environment variable setup, and verification steps
+
+### Changed
+
+- **Release versioning infrastructure**
+  - Split README template version and kernel baseline into separate lines
+    to prevent accidental kernel baseline updates during template releases
+  - Updated `version_manifest.yaml` patterns for safer release-prepare automation
+  - Fixed KERNEL_SNAPSHOT.md semantics to clearly distinguish Template Version
+    from frozen Kernel Baseline (v3.3.9-kernel)
+
+### Fixed
+
+- **Nix devshell**: Added sccache to devshell for faster incremental builds
+- **Clippy warnings**: Resolved clippy warnings and aligned docs with sccache changes
+- **Feature status docs**: Clarified that `docs/feature_status.md` is volatile and
+  PASS/UNKNOWN classifications may change between runs
+
 ## [3.3.12] - 2025-12-12
 
 ### Added

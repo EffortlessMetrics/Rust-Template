@@ -2,7 +2,7 @@
 
 **Audience**: Team leads, agent authors, repo maintainers
 **Status**: Governed by REQ-TPL-AGENTS-GOVERNANCE, ADR-0021
-**Version**: v3.3.12
+**Version**: v3.3.13
 
 ## 1. Quick Summary
 

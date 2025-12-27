@@ -1,6 +1,6 @@
 ---
 id: SNAPSHOT-TPL-KERNEL-001
-title: Kernel Snapshot v3.3.12
+title: Kernel Snapshot v3.3.13
 doc_type: status
 status: published
 audience: maintainers, platform-engineers, forks
@@ -9,17 +9,17 @@ stories: [US-TPL-PLT-001]
 requirements: [REQ-PLT-DOCS-CONSISTENCY, REQ-TPL-OPINIONATED-DEFAULTS]
 acs: [AC-PLT-009, AC-PLT-010, AC-TPL-OPINIONS-DOCUMENTED]
 adrs: [ADR-0005]
-last_updated: 2025-12-22
+last_updated: 2025-12-27
 ---
 
-# Kernel Snapshot v3.3.12
+# Kernel Snapshot v3.3.13
 
 > This snapshot describes the kernel at tag **v3.3.9-kernel**.
 > For machine-readable details, see [`release_evidence/kernel_contract.v3.3.9.json`](../release_evidence/kernel_contract.v3.3.9.json).
 > For AC-level status, see [`docs/feature_status.md`](./feature_status.md).
 > For adoption instructions, see [`docs/how-to/adopt-kernel.md`](./how-to/adopt-kernel.md).
 
-**Date:** 2025-12-22 | **Version:** v3.3.12-kernel
+**Last Updated:** 2025-12-27 | **Template Version:** v3.3.13 | **Kernel Baseline:** v3.3.9-kernel
 
 ## Executive Summary
 
