@@ -1205,3 +1205,14 @@ docs:
       - AC-PLT-019
       - AC-PLT-020
 
+  # Security Configuration Guide
+  - id: HOWTO-SECURITY-CONFIG-001
+    file: docs/how-to/security-configuration.md
+    title: "Security Configuration"
+    doc_type: how_to
+    stories: [US-TPL-PLT-001]
+    requirements:
+      - REQ-PLT-PLATFORM-APIS
+    acs: []
+    adrs: []
+

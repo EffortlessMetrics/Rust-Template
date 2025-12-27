@@ -27,6 +27,7 @@ This guide uses a FAQ format organized by problem domain. Use your browser's sea
 - [Build Failures](#build-failures)
 - [Test Failures](#test-failures)
 - [CI/CD Failures](#cicd-failures)
+- [Security Configuration Issues](#security-configuration-issues)
 - [Pre-commit Hook Issues](#pre-commit-hook-issues)
 - [Windows-Specific Issues](#windows-specific-issues)
 - [Policy Test Failures](#policy-test-failures)
@@ -911,6 +912,129 @@ docker system prune -af
 # Make a test PR
 # Check that required checks appear in PR status section
 ```
+
+---
+
+## Security Configuration Issues
+
+### Q: Service startup panics with "Invalid platform auth configuration"
+
+**Symptom:**
+```
+FATAL: Invalid platform auth configuration: Invalid auth mode 'bearer'.
+Valid options: basic, jwt, none, open
+```
+
+**Cause:** `PLATFORM_AUTH_MODE` set to an unrecognized value
+
+**Fix:**
+```bash
+# Use a valid auth mode
+export PLATFORM_AUTH_MODE=jwt    # or: basic, open, none
+```
+
+**Note:** This is intentional fail-closed behavior. The service refuses to start with invalid auth config to prevent silent fallback to open mode.
+
+---
+
+### Q: Write requests return 401 Unauthorized
+
+**Symptom:**
+```bash
+curl -X POST http://localhost:8080/platform/tasks/TASK-001/status \
+  -H "Content-Type: application/json" \
+  -d '{"status":"Done"}'
+# Returns: 401 Unauthorized
+```
+
+**Cause:** Auth enabled but credentials not provided or invalid
+
+**Diagnostic:**
+```bash
+# Check current auth mode
+curl -s http://localhost:8080/platform/status | jq '.config.auth // .auth // empty'
+```
+
+**Fix:**
+```bash
+# For basic auth
+curl -X POST http://localhost:8080/platform/tasks/TASK-001/status \
+  -H "x-platform-token: $PLATFORM_AUTH_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"status":"Done"}'
+
+# For JWT auth
+curl -X POST http://localhost:8080/platform/tasks/TASK-001/status \
+  -H "Authorization: Bearer $JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"status":"Done"}'
+```
+
+---
+
+### Q: CORS preflight fails (403 Forbidden)
+
+**Symptom:** Browser console shows CORS errors, preflight returns 403
+
+**Cause:** Origin not in allowed list
+
+**Diagnostic:**
+```bash
+# Check if your origin is allowed
+curl -X OPTIONS http://localhost:8080/api/echo \
+  -H "Origin: https://your-app.com" \
+  -H "Access-Control-Request-Method: POST" \
+  -I
+```
+
+**Fix:**
+```bash
+# Add your origin
+export CORS_ALLOWED_ORIGINS="https://your-app.com,http://localhost:3000"
+```
+
+---
+
+### Q: JWT validation fails despite valid-looking token
+
+**Common causes:**
+1. **Clock skew:** Token `exp` or `iat` out of sync (60s leeway applies)
+2. **Missing claims:** JWT must include `sub`, `iss`, `exp`, `iat`
+3. **Wrong secret:** Signing secret doesn't match `PLATFORM_JWT_SECRET`
+
+**Diagnostic:**
+```bash
+# Enable debug logging
+export RUST_LOG=debug
+cargo run -p app-http
+# Look for "JWT validation failed:" in logs
+```
+
+**Fix:** Ensure JWT contains all required claims:
+```json
+{
+  "sub": "user-id",
+  "iss": "your-issuer",
+  "iat": 1735200000,
+  "exp": 1735203600
+}
+```
+
+---
+
+### Q: Security headers breaking UI/embedding
+
+**Symptom:** UI won't load in iframe, or CSP blocks resources
+
+**Common issues:**
+
+| Header | Problem | Fix |
+|--------|---------|-----|
+| `X-Frame-Options: DENY` | Blocks all iframes | `export X_FRAME_OPTIONS=SAMEORIGIN` |
+| CSP blocks CDN | External scripts fail | Add CDN to `CSP_HEADER` |
+| HSTS on HTTP | Browser rejects | Only use HSTS with HTTPS |
+
+**Full guide:** [how-to/security-configuration.md](how-to/security-configuration.md)
 
 ---
 

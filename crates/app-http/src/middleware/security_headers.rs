@@ -324,6 +324,7 @@ pub async fn security_headers_middleware(
 mod tests {
     use super::*;
     use axum::{body::Body, http::HeaderValue, response::Response};
+    use serial_test::serial;
 
     #[test]
     fn test_security_headers_config_default() {
@@ -389,6 +390,7 @@ mod tests {
     // }
 
     #[test]
+    #[serial]
     fn test_development_csp() {
         // Test that development CSP is more permissive
         unsafe {
@@ -407,6 +409,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_production_csp() {
         // Test that production CSP is stricter
         unsafe {
@@ -425,6 +428,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_hsts_disabled_in_development() {
         unsafe {
             std::env::set_var("ENV", "development");
