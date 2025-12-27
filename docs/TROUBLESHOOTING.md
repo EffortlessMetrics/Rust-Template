@@ -941,7 +941,9 @@ export PLATFORM_AUTH_MODE=jwt    # or: basic, open, none
 
 **Symptom:**
 ```bash
-curl -X POST http://localhost:8080/platform/tasks/TASK-001/status -d '{"status":"Done"}'
+curl -X POST http://localhost:8080/platform/tasks/TASK-001/status \
+  -H "Content-Type: application/json" \
+  -d '{"status":"Done"}'
 # Returns: 401 Unauthorized
 ```
 
@@ -950,7 +952,7 @@ curl -X POST http://localhost:8080/platform/tasks/TASK-001/status -d '{"status":
 **Diagnostic:**
 ```bash
 # Check current auth mode
-curl -s http://localhost:8080/platform/status | jq '.auth'
+curl -s http://localhost:8080/platform/status | jq '.config.auth // .auth // empty'
 ```
 
 **Fix:**

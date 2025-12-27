@@ -95,16 +95,16 @@ Auto-generated AC status from acceptance (BDD) and unit tests.
 | AC-TPL-BUNDLE-MANIFEST | US-TPL-PLT-001 | REQ-TPL-BUNDLE-CONTRACT | [PASS] pass | 1 / 2 |
 | AC-TPL-BUNDLE-MANIFEST-LINKED | US-TPL-PLT-001 | REQ-TPL-BUNDLE-CONTRACT | [PASS] pass | 1 / 2 |
 | AC-TPL-BUNDLE-MINIMAL-SCOPE | US-TPL-PLT-001 | REQ-TPL-BUNDLE-CONTRACT | [PASS] pass | 1 / 1 |
-| AC-TPL-BUNDLE-REFERENTIAL-INTEGRITY | US-TPL-PLT-001 | REQ-TPL-AGENT-ERGONOMICS | [PASS] pass | 1 / 1 |
+| AC-TPL-BUNDLE-REFERENTIAL-INTEGRITY | US-TPL-PLT-001 | REQ-TPL-AGENT-ERGONOMICS | [UNKNOWN] unknown | 0 / 1 |
 | AC-TPL-CLI-JSON-CORE | US-TPL-PHILOSOPHY-001 | REQ-TPL-AI-IDP-COMPAT | [PASS] pass | 1 / 3 |
 | AC-TPL-CLI-JSON-OUTPUT | US-TPL-PLT-001 | REQ-PLT-DEVEX-CONTRACT | [PASS] pass | 0 / 3 |
-| AC-TPL-CONFIG-VALIDATION | US-TPL-PLT-001 | REQ-TPL-CONFIG-INTEGRITY | [PASS] pass | 2 / 2 |
+| AC-TPL-CONFIG-VALIDATION | US-TPL-PLT-001 | REQ-TPL-CONFIG-INTEGRITY | [PASS] pass | 1 / 2 |
 | AC-TPL-ERROR-MAPPING | US-TPL-001 | REQ-TPL-ERROR-HANDLING | [PASS] pass | 0 / 2 |
 | AC-TPL-EXAMPLE-FORK-BUILDS | US-TPL-PLT-001 | REQ-TPL-EXAMPLE-FORK | [UNKNOWN] unknown | 0 / 0 |
-| AC-TPL-FLOW-IDEMPOTENT | US-TPL-PLT-001 | REQ-TPL-FLOW-IDEMPOTENCY | [PASS] pass | 1 / 1 |
+| AC-TPL-FLOW-IDEMPOTENT | US-TPL-PLT-001 | REQ-TPL-FLOW-IDEMPOTENCY | [UNKNOWN] unknown | 0 / 1 |
 | AC-TPL-FORKS-STATUS-SUMMARY | US-TPL-PLT-001 | REQ-TPL-FORK-VISIBILITY | [UNKNOWN] unknown | 0 / 2 |
-| AC-TPL-GOV-FORKS | US-TPL-PLT-001 | REQ-TPL-GOV-ARTIFACTS | [PASS] pass | 1 / 1 |
-| AC-TPL-GOV-FRICTION | US-TPL-PLT-001 | REQ-TPL-GOV-ARTIFACTS | [PASS] pass | 1 / 1 |
+| AC-TPL-GOV-FORKS | US-TPL-PLT-001 | REQ-TPL-GOV-ARTIFACTS | [UNKNOWN] unknown | 0 / 1 |
+| AC-TPL-GOV-FRICTION | US-TPL-PLT-001 | REQ-TPL-GOV-ARTIFACTS | [UNKNOWN] unknown | 0 / 1 |
 | AC-TPL-GOV-WRITE-TASK-STATUS-200 | US-TPL-PLATFORM-V3 | REQ-TPL-GOV-WRITE-001 | [UNKNOWN] unknown | 0 / 3 |
 | AC-TPL-GRAPH-AC-HAS-TEST | US-TPL-PLT-001 | REQ-TPL-GRAPH-INVARIANTS | [PASS] pass | 1 / 1 |
 | AC-TPL-GRAPH-COMMAND-REACHABLE | US-TPL-PLT-001 | REQ-TPL-GRAPH-INVARIANTS | [PASS] pass | 1 / 1 |
@@ -216,9 +216,13 @@ Auto-generated AC status from acceptance (BDD) and unit tests.
 - AC-TPL-AGENTS-GOVERNANCE-002: Each project agent in .claude/agents/* has a corresponding REQ in spec_ledger.yaml and at least one AC defining its configuration and system prompt requirements.
 - AC-TPL-AGENTS-NAME-FORMAT: Agent names MUST be kebab-case, contain only lowercase letters/digits/hyphens, max 64 characters, and be unique within the project. agents-lint enforces this.
 - AC-TPL-AGENTS-TEMPLATE-DOC: docs/AGENTS_TEMPLATE.md exists and provides a copy-paste template for creating new agents with checklist for name format, description quality (what + when), tools/permissionMode safety, model selection, and skills references.
+- AC-TPL-BUNDLE-REFERENTIAL-INTEGRITY: Bundle generation (cargo xtask bundle <TASK>) validates that all AC IDs in the task's acs array exist in spec_ledger.yaml before including them in bundle.yaml. Non-existent ACs are logged as warnings and excluded from the manifest's ac_ids array. The bundle command returns exit code 0 with warnings (not silent success) so CI can optionally gate on strict mode via BUNDLE_STRICT_REFS=1.
 - AC-TPL-CLI-JSON-OUTPUT: For core reporting commands (`ac-status`, `version`, `friction-list`, `questions-list`, `fork-list`), passing `--json` produces a single valid JSON document on stdout with a stable top-level shape, and exit codes follow the success/failure of the operation.
 - AC-TPL-ERROR-MAPPING: Platform governance errors are mapped consistently from domain errors to HTTP responses and surfaced via /platform/status. TaskNotFound returns 404, invalid transitions return 400, and repository/configuration errors return 5xx. /platform/status exposes a summary of recent governance errors.
+- AC-TPL-FLOW-IDEMPOTENT: Running cargo xtask selftest or cargo xtask suggest-next multiple times without changes produces stable outputs and no duplicate artifacts.
 - AC-TPL-FORKS-STATUS-SUMMARY: /platform/status includes governance.forks.total and a forks.ids array when forks/fork_registry.yaml exists, and `cargo xtask fork-list --json` reflects that state.
+- AC-TPL-GOV-FORKS: Fork metadata is stored under forks/fork_registry.yaml, can be managed via `cargo xtask fork-register`/`fork-list`, and is exposed via /platform/forks and /platform/forks/{name}.
+- AC-TPL-GOV-FRICTION: Friction log entries are stored as structured files under friction/, can be created and listed via `cargo xtask friction-new`/`friction-list`, and are exposed via /platform/friction and /platform/friction/{id}.
 - AC-TPL-GOV-WRITE-TASK-STATUS-200: set_task_status writes durable state reflected in the governance graph.
 - AC-TPL-HOOKS-INSTALL: The 'cargo xtask install-hooks' command creates a pre-commit hook that runs 'cargo run -p xtask -- precommit' inside the Nix devshell when available; failures are advisory and do not block commits.
 - AC-TPL-KERNEL-CONTRACT-EMITTED: `cargo xtask release-bundle X.Y.Z` writes `release_evidence/kernel_contract.vX.Y.Z.json` describing xtask commands, /platform/* endpoints, and governance schemas for that version.

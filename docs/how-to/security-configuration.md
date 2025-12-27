@@ -24,7 +24,7 @@ The platform supports three authentication modes for write operations on `/platf
 
 | Mode | Env Var | Required Credentials | Behavior |
 |------|---------|---------------------|----------|
-| `open` | `PLATFORM_AUTH_MODE=open` | None | All requests allowed (default) |
+| `open` / `none` | `PLATFORM_AUTH_MODE=open` (or `none`) | None | All requests allowed (default) |
 | `basic` | `PLATFORM_AUTH_MODE=basic` | `PLATFORM_AUTH_TOKEN` | Static token validation |
 | `jwt` | `PLATFORM_AUTH_MODE=jwt` | `PLATFORM_JWT_SECRET` | JWT signature + claims validation |
 
@@ -74,7 +74,7 @@ JWT tokens must include:
 
 Validation includes:
 - 60-second clock skew leeway
-- Required: `exp`, `sub`, `iss`
+- Required: `exp`, `sub`, `iss`, `iat`
 - `iat` must not be >5 minutes in the future
 
 ---
@@ -190,7 +190,7 @@ Run these commands to validate your security configuration:
 
 ```bash
 # Should return governance status with auth_mode
-curl -s http://localhost:8080/platform/status | jq '.auth'
+curl -s http://localhost:8080/platform/status | jq '.config.auth // .auth // empty'
 # Expected: { "mode": "jwt", "token_present": true }
 ```
 
@@ -254,7 +254,7 @@ export CORS_ALLOWED_ORIGINS="https://app.example.com"
 export ENV=production
 ```
 
-### Disable Security (Development Only)
+### Minimal Development Config
 
 ```bash
 export PLATFORM_AUTH_MODE=open
