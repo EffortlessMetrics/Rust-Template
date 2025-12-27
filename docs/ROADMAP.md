@@ -331,9 +331,17 @@ Only a few items remain - all now have documentation or are external dependencie
 
 > **Scope:** Evidence-driven validation. The platform work (security, architecture) is complete. This release proves it works via real fork and agent receipts.
 
-**Target:** Next tag after v3.3.12
+**Status:** Release candidate ready (PR #39 on `release/v3.3.13-prep`)
 
-#### Already Complete (Now in v3.3.12)
+#### Already Complete (v3.3.13 Work)
+
+| Item | Description | PR/Commit |
+|------|-------------|-----------|
+| **Docs version alignment** | All docs updated to v3.3.13 references | PR #39 |
+| **Security configuration doc** | Auth modes, CORS, JWT, headers, fail-closed | PR #38 |
+| **Selftest green** | 11/11 gates passing | Local validation |
+
+#### Already Complete (From v3.3.12)
 
 The following platform work landed in v3.3.12 and is **not** v3.3.13 scope. See [§3.7](#37-v3312-security--architecture-) for details:
 
@@ -342,33 +350,54 @@ The following platform work landed in v3.3.12 and is **not** v3.3.13 scope. See 
 - Supply chain CI (CodeQL, Gitleaks, cargo-audit) — PR #33
 - Documentation templates (Trust a Cell, Evolve the Kernel, AI first-hour receipt template)
 
-#### Blockers (Must Ship)
+#### Remaining Blockers
 
-| Item                           | Description                                               | Status         | Definition of Done                                      |
-| ------------------------------ | --------------------------------------------------------- | -------------- | ------------------------------------------------------- |
-| **Fork dry-run receipt**       | Real fork from `v3.3.9-kernel`, full ladder green         | 🔄 In Progress | Receipt checked into fork repo (or linked from issue)   |
-| **AI first-hour receipt**      | Agent run through `ai-first-hour.md`, measurable pass     | 🔄 In Progress | Receipt checked into fork repo (or linked from issue)   |
-| **Security configuration doc** | One page: auth modes, CORS, JWT, headers, fail-closed     | ✅ Done        | `docs/how-to/security-configuration.md` merged in PR #38 |
+| Item | Description | Status | Definition of Done |
+|------|-------------|--------|-------------------|
+| **Fork dry-run receipt** | Real fork from `v3.3.9-kernel`, full ladder green | 🔜 Pending | Receipt in fork repo |
+| **AI first-hour receipt** | Agent run through `ai-first-hour.md`, measurable pass | 🔜 Pending | Receipt in fork repo |
+
+#### Release Checklist
+
+```text
+Phase 1: External Validation (in fork repo)
+  [ ] Create fork from v3.3.9-kernel tag
+  [ ] Run: nix develop && cargo xtask dev-up
+  [ ] Run: cargo xtask selftest (must be green)
+  [ ] Commit fork-dry-run receipt (docs/receipts/fork-dry-run.md)
+  [ ] Follow docs/how-to/ai-first-hour.md
+  [ ] Commit AI first-hour receipt (docs/receipts/ai-first-hour.md)
+
+Phase 2: Finalize Release (in this repo)
+  [ ] Add evidence bundle: cargo xtask release-bundle 3.3.13
+  [ ] Commit evidence to PR #39
+  [ ] Merge PR #39 to main
+  [ ] Tag: git tag v3.3.13 -m "v3.3.13"
+  [ ] Push: git push --follow-tags
+```
 
 #### Deferred (Known Issues, Not Blockers)
 
-| Item                           | Description                                               | Notes                                     |
-| ------------------------------ | --------------------------------------------------------- | ----------------------------------------- |
-| **IDP adapter stub**           | Backstage/Port adapter consuming `idp-snapshot`           | v3.4.0 territory — needs IDP-ready contract first |
+| Item | Description | Notes |
+|------|-------------|-------|
+| **IDP adapter stub** | Backstage/Port adapter consuming `idp-snapshot` | v3.4.0 territory |
 
 #### Recently Resolved
 
-| Item                           | Description                                               | Resolution                                |
-| ------------------------------ | --------------------------------------------------------- | ----------------------------------------- |
-| **sccache/libz friction**      | FRICTION-ENV-001 affecting `nix develop -c` commands      | ✅ Fixed in v3.3.12 — Nix sccache in PATH + RUSTC_WRAPPER |
+| Item | Description | Resolution |
+|------|-------------|------------|
+| **sccache/libz friction** | FRICTION-ENV-001 affecting `nix develop -c` | ✅ Fixed in v3.3.12 |
+| **Docs version drift** | Multiple docs referenced v3.3.12 | ✅ Fixed in v3.3.13 |
 
 **Definition of Done for v3.3.13:**
 
 1. Fork dry-run receipt exists (fork repo or linked issue)
 2. AI first-hour receipt exists (fork repo or linked issue)
-3. Security config doc merged and referenced from QUICKSTART/TROUBLESHOOTING
-4. `cargo xtask selftest` green in both fork and upstream template
-5. No new kernel AC failures
+3. Security config doc merged ✅
+4. Docs version alignment complete ✅
+5. `cargo xtask selftest` green ✅
+6. Evidence bundle committed
+7. Tag pushed
 
 ---
 
@@ -390,8 +419,8 @@ v3.4.0 is not a feature list. It's the point where Backstage/Port consumers can 
 #### Entry Criteria (Gate Before Starting v3.4.0)
 
 - v3.3.12 released ✅
-- v3.3.13 released (receipts exist)
-- At least one real fork exists and is actively used (not just "planned")
+- v3.3.13 released with receipts 🔄 (in progress — see §4.4)
+- At least one real fork exists and is actively used
 - Friction log reviewed; v3.4.0 candidates tagged
 
 #### Planned Work (Demand-Driven)
@@ -432,71 +461,45 @@ See [v3.4.0-plan.md](archive/v3.4.0-plan.md) for scope when v3.4.0 work begins.
 
 ## 5. Path Forward Options
 
-### 5.1 Option A: Minimal (Lock and Fork)
+> **Current State (v3.3.13):** The template has completed security hardening, architecture refactoring, and documentation polish. The next step is external validation via fork receipts. See §4.4 for v3.3.13 release checklist.
+
+### 5.1 Option A: Minimal (Lock and Fork) — *Active*
 
 **Goal:** Freeze the kernel as-is, use it for services, let friction drive improvements.
 
-**Actions:**
+**Status:** This is the current path. v3.3.9-kernel is frozen; v3.3.13 adds validation receipts.
 
-1. Configure GitHub branch protection (require selftest, no direct pushes)
+**Immediate Next Steps:**
 
-   * **Run:** `.github/scripts/setup-branch-protection.sh`
-   * **Docs:** `docs/how-to/setup-branch-protection.md`
+1. ✅ Kernel frozen at v3.3.9-kernel
+2. ✅ Branch protection configured
+3. ✅ Documentation complete (v3.3.12 → v3.3.13)
+4. 🔜 Create fork from v3.3.9-kernel tag
+5. 🔜 Complete fork dry-run and AI first-hour receipts
+6. 🔜 Tag v3.3.13 with evidence bundle
 
-2. Tag the current kernel:
+**After v3.3.13:**
 
-   ```bash
-   git tag "$(cargo xtask version --json | jq -r .kernel_tag)" -m "Kernel closure"
-   ```
+- Fork for real service development
+- Capture friction in `FRICTION_LOG.md`
+- Report kernel issues via `docs/how-to/report-fork-feedback.md`
+- Kernel improvements batch into v3.4.0 based on real friction
 
-3. Fork for Knowledge Hub or other service
+### 5.2 Option B: Consolidate (Fill Documentation Gaps) — *Complete*
 
-4. Capture friction in `FRICTION_LOG.md`
+> **Note:** Option B was executed during v3.3.3 → v3.3.12. All items complete.
 
-5. Only update kernel when friction is systematic
+**Completed Items:**
 
-**Timeline:** Immediate
+1. ✅ `docs/explanation/idp-positioning.md`
+2. ✅ `docs/how-to/brownfield-adoption.md`
+3. ✅ Branch protection setup documented
+4. ✅ Windows Tier-2 flow documented
+5. ✅ ADR numbering cleaned up
+6. ✅ Security configuration doc (v3.3.13)
+7. ✅ Version alignment across all docs (v3.3.13)
 
-**Pros:**
-
-* Fastest path to value
-* Real usage reveals actual gaps
-* Avoids over-engineering
-
-**Cons:**
-
-* Known gaps remain
-* Documentation incomplete
-* May hit issues in first fork
-
-### 5.2 Option B: Consolidate (Fill Documentation Gaps) — *Historical*
-
-> **Note:** Option B was largely executed during the 3.3.3 → 3.3.4 cycle. It's kept here to explain how we closed the documentation gaps.
-
-**Goal:** Complete documentation before first fork.
-
-**Actions (mostly done in v3.3.4):**
-
-1. Write `docs/explanation/idp-positioning.md` ✅
-2. Write `docs/how-to/brownfield-adoption.md` ✅
-3. Configure branch protection (see `docs/how-to/setup-branch-protection.md`) ✅
-4. Windows Tier-2 flow documented ✅ (see `docs/how-to/windows-development.md`)
-5. ADR numbering duplicates cleaned up ✅
-6. (Optional ongoing) Keep Tier-2 Windows notes fresh as friction is discovered
-
-**Timeline:** Mostly complete; ongoing maintenance only
-
-**Pros:**
-
-* Better onboarding for new teams
-* Cleaner starting point
-* Reduces "figure it out" friction
-
-**Cons:**
-
-* Delays first real usage
-* Documentation may not match reality
-* Speculative improvements
+**Result:** Documentation is comprehensive. Onboarding friction should be minimal.
 
 ### 5.3 Option C: Validate (Second Service First) — **Adoption Track, Not Kernel Work**
 
@@ -634,7 +637,7 @@ See [v3.4.0-plan.md](archive/v3.4.0-plan.md) for scope when v3.4.0 work begins.
 ## 6. Recommended Path (For Adopters)
 
 > **Scope note:** This section describes what happens **in forks**, not in this repo.
-> The kernel (v3.3.9) is complete. Validation happens when you use it.
+> The kernel (v3.3.9) is frozen. Template is at v3.3.13. Validation happens when you use it.
 
 **Option C (Validate) is recommended** for these reasons:
 
@@ -642,27 +645,51 @@ See [v3.4.0-plan.md](archive/v3.4.0-plan.md) for scope when v3.4.0 work begins.
 2. **Documentation written after use is better.** We'll know what to document because we'll have hit the gaps.
 3. **Friction is valuable signal.** The first fork will generate a friction log that tells us exactly what to fix.
 
+### Getting Started (For New Adopters)
+
+```bash
+# 1. Fork from the kernel baseline
+git clone --branch v3.3.9-kernel <your-fork-url>
+cd your-service
+
+# 2. Validate the baseline works
+nix develop
+cargo xtask dev-up          # One-command setup + validation
+
+# 3. Brand your service
+cargo xtask service-init \
+  --id my-service \
+  --name "My Service" \
+  --description "Service description"
+
+# 4. Start developing
+cargo xtask help-flows      # See available workflows
+```
+
 ### Recommended Sequence (In Your Fork)
 
 ```text
-Week 1: Fork for your service
-        - Use only documented flows and commands
-        - Capture friction immediately
-        - Don't fix kernel, just document
+Day 1: Fork and validate
+       - Fork from v3.3.9-kernel tag
+       - Run cargo xtask dev-up (must pass)
+       - Run cargo xtask selftest (must be green)
 
-Week 2: Service development
-        - Add domain REQs/ACs to fork
-        - Use bundler and agent hints
-        - Continue friction capture
+Days 2-5: Service development
+       - Add domain REQs/ACs to specs/spec_ledger.yaml
+       - Use bundler: cargo xtask bundle implement_ac
+       - Use agent hints: curl localhost:8080/platform/agent/hints
+       - Capture friction immediately in FRICTION_LOG.md
 
-Week 3: Kernel retrospective
-        - Review friction log
-        - Categorize: kernel fix vs. service-specific vs. doc-only
-        - Report kernel issues via docs/how-to/report-fork-feedback.md
+Week 2: First feature complete
+       - AC-first development workflow validated
+       - Domain BDD scenarios in specs/features/
+       - cargo xtask selftest green with domain ACs
 
-Week 4: Documentation
-        - Write docs based on actual experience
-        - Kernel fixes (if any) batch into v3.4.0 here
+Week 3+: Kernel feedback
+       - Review friction log
+       - Categorize: kernel fix vs. service-specific vs. doc-only
+       - Report kernel issues via docs/how-to/report-fork-feedback.md
+       - Kernel fixes batch into v3.4.0
 ```
 
 ---
@@ -762,6 +789,22 @@ The template is "production ready" when:
 
 ## 9. Summary
 
-**v3.3.9-kernel** is a stable, selftest-green kernel. All **kernel ACs** (`must_have_ac: true`) pass; non-kernel ACs are tracked as soft gates and may be failing or unknown without blocking selftest. But "selftest green" and "ready for production" are different bars. The gaps are documented above.
+**Current State:**
+
+| Layer | Version | Status |
+|-------|---------|--------|
+| **Template** | v3.3.13 | Release candidate ready (PR #39) |
+| **Kernel** | v3.3.9-kernel | Frozen baseline |
+
+**v3.3.9-kernel** is a stable, selftest-green kernel. All **kernel ACs** (`must_have_ac: true`) pass; non-kernel ACs are tracked as soft gates and may be failing or unknown without blocking selftest.
+
+**v3.3.13** adds documentation polish, version alignment, and security configuration docs. The remaining gates are external validation receipts (fork dry-run + AI first-hour).
+
+**Next Steps:**
+
+1. Complete fork validation receipts (see §4.4 Release Checklist)
+2. Tag v3.3.13 with evidence bundle
+3. Fork for real service development
+4. Capture friction → batch improvements into v3.4.0
 
 The recommended path: fork immediately, capture friction, fix what matters, document what you learned. Don't try to anticipate every need—let real usage tell you what's missing.
