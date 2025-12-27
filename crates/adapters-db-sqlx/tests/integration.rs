@@ -1,6 +1,6 @@
 use adapters_db_sqlx::PostgresTaskRepository;
-use business_core::ports::TaskRepository;
-use model::{Task, TaskStatus};
+use business_core::ports::ExampleTaskRepository;
+use model::{ExampleTask, ExampleTaskStatus};
 use sqlx::PgPool;
 use testcontainers::runners::AsyncRunner;
 use testcontainers::{GenericImage, ImageExt};
@@ -52,10 +52,10 @@ async fn test_postgres_repository_roundtrip() {
 
     // Test 1: Create a task (manually, as we're testing the repository layer directly)
     let task_title = "Integration test task".to_string();
-    let task = Task {
+    let task = ExampleTask {
         id: uuid::Uuid::new_v4().to_string(),
         title: task_title.clone(),
-        status: TaskStatus::Pending,
+        status: ExampleTaskStatus::Pending,
         created_at: chrono::Utc::now(),
     };
     let task_id = task.id.clone();
@@ -68,32 +68,32 @@ async fn test_postgres_repository_roundtrip() {
 
     assert_eq!(fetched_task.id, task_id);
     assert_eq!(fetched_task.title, task_title);
-    assert_eq!(fetched_task.status, TaskStatus::Pending);
+    assert_eq!(fetched_task.status, ExampleTaskStatus::Pending);
 
     // Test 3: Update task status
     let updated_task = repo
-        .update_status(&task_id, TaskStatus::InProgress)
+        .update_status(&task_id, ExampleTaskStatus::InProgress)
         .await
         .expect("Failed to update task status")
         .expect("Updated task not found");
 
-    assert_eq!(updated_task.status, TaskStatus::InProgress);
+    assert_eq!(updated_task.status, ExampleTaskStatus::InProgress);
 
     // Test 4: Find all tasks
     let all_tasks = repo.find_all().await.expect("Failed to find all tasks");
 
     assert_eq!(all_tasks.len(), 1);
     assert_eq!(all_tasks[0].id, task_id);
-    assert_eq!(all_tasks[0].status, TaskStatus::InProgress);
+    assert_eq!(all_tasks[0].status, ExampleTaskStatus::InProgress);
 
     // Test 5: Update to completed
     let completed_task = repo
-        .update_status(&task_id, TaskStatus::Completed)
+        .update_status(&task_id, ExampleTaskStatus::Completed)
         .await
         .expect("Failed to update to completed")
         .expect("Completed task not found");
 
-    assert_eq!(completed_task.status, TaskStatus::Completed);
+    assert_eq!(completed_task.status, ExampleTaskStatus::Completed);
 
     // Cleanup: close pool
     pool.close().await;
