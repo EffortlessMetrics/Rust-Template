@@ -9,12 +9,12 @@ stories: [US-TPL-PLT-001]
 requirements: [REQ-PLT-DOCS-CONSISTENCY]
 acs: [AC-PLT-009, AC-PLT-010]
 adrs: [ADR-0005]
-last_updated: 2025-12-23
+last_updated: 2025-12-27
 ---
 
 # Roadmap: Rust-as-Spec Platform Cell (v3.3.13)
 
-This document describes the current state of the template (v3.3.12) and the frozen baseline kernel (v3.3.9-kernel tag).
+This document describes the current state of the template (v3.3.13) and the frozen baseline kernel (v3.3.9-kernel tag).
 
 > For the conceptual model behind Rust-as-Spec, see [`docs/explanation/rust-as-spec-overview.md`](explanation/rust-as-spec-overview.md).
 
@@ -61,7 +61,7 @@ Template versions (v3.3.12, v3.3.13, etc.) are **tagged snapshots** of this repo
 | Version | Status | Focus |
 |---------|--------|-------|
 | v3.3.12 | Tagged | Security hardening, governance architecture, CI improvements |
-| v3.3.13 | Next   | Adoption receipts + docs polish (see §4.4) |
+| v3.3.13 | Current | Adoption receipts + docs polish (see §4.4) |
 
 ### Layer 2: Kernel Baseline (Frozen Tags)
 
@@ -114,17 +114,17 @@ To fork from v3.3.9, start with `docs/how-to/FIRST_FORK.md`.
 
 ---
 
-## 2. Current State (v3.3.12)
+## 2. Current State (v3.3.13)
 
-The template is at v3.3.12, building on the frozen v3.3.9-kernel baseline.
+The template is at v3.3.13, building on the frozen v3.3.9-kernel baseline.
 
 - **Kernel ACs** (`must_have_ac: true`): All passing
 - **Selftest**: Green (11/11 gates)
 - **Non-kernel ACs**: Soft gates, may be UNKNOWN depending on test capture
 
-**Template Version (v3.3.12):**
+**Template Version (v3.3.13):**
 
-This is the current active template version with ongoing improvements and documentation polish.
+This is the current active template version with adoption receipts and documentation polish.
 
 **Frozen Kernel Baseline (v3.3.9-kernel tag):**
 

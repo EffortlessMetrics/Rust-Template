@@ -2,8 +2,8 @@
 id: HOW-TO-ADOPT-KERNEL-001
 title: "Adopt the Rust-as-Spec Kernel (v3.3.9-kernel)"
 doc_type: how_to
-version: 3.3.12
-last_updated: 2025-12-22
+version: 3.3.13
+last_updated: 2025-12-27
 stories: [US-TPL-PLT-001]
 requirements: [REQ-TPL-PLATFORM-INTROSPECTION]
 acs: [AC-TPL-KERNEL-CONTRACT-EMITTED, AC-TPL-AC-STATUS-CONSISTENCY]
