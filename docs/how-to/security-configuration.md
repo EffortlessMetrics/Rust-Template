@@ -28,7 +28,7 @@ The platform supports three authentication modes for write operations on `/platf
 | `basic` | `PLATFORM_AUTH_MODE=basic` | `PLATFORM_AUTH_TOKEN` | Static token validation |
 | `jwt` | `PLATFORM_AUTH_MODE=jwt` | `PLATFORM_JWT_SECRET` | JWT signature + claims validation |
 
-### Environment Variables
+### Auth Environment Variables
 
 ```bash
 # Auth mode (required for protected endpoints)
@@ -49,7 +49,7 @@ openssl rand -base64 64   # For basic token
 
 **Invalid auth mode = startup panic.** The platform refuses to start if `PLATFORM_AUTH_MODE` is set to an unrecognized value. This prevents silent fallback to open mode.
 
-```
+```text
 FATAL: Invalid platform auth configuration: Invalid auth mode 'typo'.
 Valid options: basic, jwt, none, open
 ```
@@ -83,7 +83,7 @@ Validation includes:
 
 CORS is **enabled by default** with localhost origins for development.
 
-### Environment Variables
+### CORS Environment Variables
 
 ```bash
 # Enable/disable
@@ -148,7 +148,7 @@ Security headers are **enabled by default** with production-safe values.
 | `Strict-Transport-Security` | 1 year | HTTPS enforcement |
 | `Referrer-Policy` | `strict-origin-when-cross-origin` | Control referrer leakage |
 
-### Environment Variables
+### Headers Environment Variables
 
 ```bash
 # Enable/disable all headers
