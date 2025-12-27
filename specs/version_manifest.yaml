@@ -106,21 +106,19 @@ files:
   - path: "README.md"
     description: "Repository README with multiple version references"
     patterns:
-      - marker: "# Rust-as-Spec Platform Cell (v"
+      - marker: "# Test Service (v"
         type: heading_version
         format: "prefixed_paren"  # (v3.3.5)
-        line_pattern: "^# Rust-as-Spec Platform Cell \\(v[\\d.]+.*\\)$"
-        example: "# Rust-as-Spec Platform Cell (v3.3.5)"
+        line_pattern: "^# Test Service \\(v[\\d.]+\\)$"
+        example: "# Test Service (v3.3.5)"
+      # NOTE: Template Version is now on its own line (split from Kernel Baseline for safe updates)
       - marker: "**Template Version:**"
         type: inline_version
         format: "prefixed"  # v3.3.5
-        line_pattern: "^\\*\\*Template Version:\\*\\* v[\\d.]+.*"
-        example: "**Template Version:** v3.3.5 | **Kernel Baseline:** [v3.3.5-kernel](./docs/KERNEL_SNAPSHOT.md)"
-      - marker: "Kernel Baseline:**"
-        type: badge_version
-        format: "link_version"  # [v3.3.5-kernel]
-        line_pattern: "\\*\\*Kernel Baseline:\\*\\* \\[v[\\d.]+-kernel\\]"
-        example: "**Kernel Baseline:** [v3.3.5-kernel](./docs/KERNEL_SNAPSHOT.md)"
+        line_pattern: "^\\*\\*Template Version:\\*\\* v[\\d.]+$"
+        example: "**Template Version:** v3.3.5"
+      # NOTE: Kernel Baseline is FROZEN at v3.3.9-kernel and NOT updated by release-prepare
+      # It is now on its own line to prevent accidental updates
     required: true
     priority: 2
 
@@ -171,11 +169,12 @@ files:
         format: "prefixed"  # v3.3.5
         line_pattern: "^# Kernel Snapshot v[\\d.]+.*$"
         example: "# Kernel Snapshot v3.3.5"
-      - marker: "**Version:**"
+      # NOTE: The inline version line now separates Template Version (updatable) from Kernel Baseline (frozen at v3.3.9)
+      - marker: "**Template Version:**"
         type: inline_version
-        format: "kernel_suffixed"  # v3.3.5-kernel
-        line_pattern: "^\\*\\*Date:\\*\\* [\\d-]+ \\| \\*\\*Version:\\*\\* v[\\d.]+-kernel$"
-        example: "**Date:** 2025-12-01 | **Version:** v3.3.5-kernel"
+        format: "prefixed"  # v3.3.5
+        line_pattern: "^\\*\\*Last Updated:\\*\\* [\\d-]+ \\| \\*\\*Template Version:\\*\\* v[\\d.]+ \\| \\*\\*Kernel Baseline:\\*\\* v3\\.3\\.9-kernel$"
+        example: "**Last Updated:** 2025-12-22 | **Template Version:** v3.3.5 | **Kernel Baseline:** v3.3.9-kernel"
     required: true
     priority: 2
 
@@ -187,12 +186,8 @@ files:
         format: "prefixed_paren"  # (v3.3.5)
         line_pattern: "^# Roadmap: Rust-as-Spec Platform Cell \\(v[\\d.]+.*\\)$"
         example: "# Roadmap: Rust-as-Spec Platform Cell (v3.3.5)"
-      - marker: "## 1. Kernel v"
-        type: heading_version
-        format: "prefixed"  # v3.3.4 (describes previous/current kernel)
-        line_pattern: "^## \\d+\\. Kernel v[\\d.]+.*"
-        example: "## 1. Kernel v3.3.4 Closure"
-        notes: "May reference previous kernel version, handle with care"
+      # NOTE: "## 1. Kernel v3.3.9 Closure" is HISTORICAL - do NOT auto-update.
+      # This section documents the v3.3.9-kernel baseline closure and must stay frozen.
     required: true
     priority: 3
 

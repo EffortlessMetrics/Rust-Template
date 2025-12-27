@@ -19,7 +19,7 @@ last_updated: 2025-12-22
 > For AC-level status, see [`docs/feature_status.md`](./feature_status.md).
 > For adoption instructions, see [`docs/how-to/adopt-kernel.md`](./how-to/adopt-kernel.md).
 
-**Date:** 2025-12-22 | **Version:** v3.3.12-kernel
+**Last Updated:** 2025-12-22 | **Template Version:** v3.3.12 | **Kernel Baseline:** v3.3.9-kernel
 
 ## Executive Summary
 
