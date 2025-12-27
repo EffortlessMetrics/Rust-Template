@@ -333,5 +333,5 @@ Before committing an agent:
 
 ---
 
-**Last Updated**: 2025-12-22
-**Template Version**: 3.3.12
+**Last Updated**: 2025-12-27
+**Template Version**: 3.3.13
