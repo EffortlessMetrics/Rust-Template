@@ -1,4 +1,4 @@
-# Test Service (v3.3.12)
+# Test Service (v3.3.13)
 
 > **TL;DR:** A governed Rust service template where specs, tests, docs, policies, and CI all agree — and the repo can prove it.
 >
@@ -88,7 +88,9 @@ Forks inherit the kernel as-is and extend with domain-specific specs, ACs, and c
 
 ---
 
-**Template Version:** v3.3.12 | **Kernel Baseline:** [v3.3.9-kernel](./docs/KERNEL_SNAPSHOT.md)
+**Template Version:** v3.3.13
+
+**Kernel Baseline:** [v3.3.9-kernel](./docs/KERNEL_SNAPSHOT.md)
 
 > **Using this as a template?** Start here:
 > - **[Quick Start Guide](docs/QUICKSTART.md) – Get productive in 15 minutes**

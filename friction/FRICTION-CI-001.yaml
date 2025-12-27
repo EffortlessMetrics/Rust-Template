@@ -1,0 +1,53 @@
+# Friction Entry: GitHub Actions intentionally disabled during release prep
+# Created by agent at 2025-12-27
+# Status: open
+
+id: FRICTION-CI-001
+date: "2025-12-27"
+category: ci
+severity: medium
+summary: "GitHub Actions intentionally disabled during v3.3.13 release preparation"
+
+description: |
+  GitHub Actions workflows are intentionally disabled during the v3.3.13
+  release preparation phase. This is a deliberate choice to:
+  1. Avoid CI consumption during iterative release-prep work
+  2. Allow local validation via selftest as the authority
+  3. Gather external adoption receipts (fork dry-run, AI first-hour) before re-enabling
+
+  This is a temporary state, not a bug or misconfiguration.
+
+expected_behavior: |
+  Once external adoption receipts are gathered and the release is tagged,
+  CI workflows should be re-enabled and the PR should show passing checks.
+
+workaround: |
+  Local selftest serves as the temporary branch protection:
+  - Run `cargo xtask docs-check` and `cargo xtask selftest` locally
+  - Paste outputs into PR description as receipts
+  - Reviewers verify local selftest passed before approving
+
+impact: |
+  - PR will not show CI status checks
+  - Reviewers must trust local selftest receipts
+  - Cannot use GitHub's "Require status checks" protection during this period
+
+context:
+  discovered_by: agent
+  phase: "release"
+  commands_involved:
+    - "cargo xtask selftest"
+    - "cargo xtask docs-check"
+  files_involved:
+    - ".github/workflows/*.yml"
+
+status: open
+
+resolution: null
+resolved_date: null
+
+related_items:
+  adrs: []
+  issues: []
+  tasks:
+    - "TASK-RECEIPTS-001"
