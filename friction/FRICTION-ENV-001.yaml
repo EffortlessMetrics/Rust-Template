@@ -1,6 +1,6 @@
 # Friction Entry: Nix devshell sccache/libz.so.1 breaks xtask JUnit generation
 # Created by agent at 2025-12-01
-# Status: open
+# Status: resolved (2025-12-26)
 
 id: FRICTION-ENV-001
 date: "2025-12-01"

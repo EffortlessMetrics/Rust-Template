@@ -22,8 +22,8 @@ use std::env;
 use tracing::info;
 use uuid::Uuid;
 
-use business_core::ports::TaskRepository;
-use model::{Task, TaskStatus};
+use business_core::ports::ExampleTaskRepository;
+use model::{ExampleTask, ExampleTaskStatus};
 
 /// Embedded migrations from the migrations/ directory.
 ///
@@ -87,14 +87,14 @@ impl PostgresTaskRepository {
 }
 
 #[async_trait::async_trait]
-impl TaskRepository for PostgresTaskRepository {
-    async fn save(&self, task: &Task) -> Result<(), String> {
+impl ExampleTaskRepository for PostgresTaskRepository {
+    async fn save(&self, task: &ExampleTask) -> Result<(), String> {
         let id = Uuid::parse_str(&task.id).map_err(|e| e.to_string())?;
         let created_at = task.created_at;
         let status_str = match task.status {
-            TaskStatus::Pending => "PENDING",
-            TaskStatus::InProgress => "IN_PROGRESS",
-            TaskStatus::Completed => "COMPLETED",
+            ExampleTaskStatus::Pending => "PENDING",
+            ExampleTaskStatus::InProgress => "IN_PROGRESS",
+            ExampleTaskStatus::Completed => "COMPLETED",
         };
 
         sqlx::query(
@@ -115,7 +115,7 @@ impl TaskRepository for PostgresTaskRepository {
         Ok(())
     }
 
-    async fn find_by_id(&self, id: &str) -> Result<Option<Task>, String> {
+    async fn find_by_id(&self, id: &str) -> Result<Option<ExampleTask>, String> {
         let uuid = Uuid::parse_str(id).map_err(|e| e.to_string())?;
         let row = sqlx::query(
             r#"
@@ -135,19 +135,19 @@ impl TaskRepository for PostgresTaskRepository {
             let status_str: String = row.get("status");
             let created_at: DateTime<Utc> = row.get("created_at");
             let status = match status_str.as_str() {
-                "PENDING" => TaskStatus::Pending,
-                "IN_PROGRESS" => TaskStatus::InProgress,
-                "COMPLETED" => TaskStatus::Completed,
-                _ => TaskStatus::Pending,
+                "PENDING" => ExampleTaskStatus::Pending,
+                "IN_PROGRESS" => ExampleTaskStatus::InProgress,
+                "COMPLETED" => ExampleTaskStatus::Completed,
+                _ => ExampleTaskStatus::Pending,
             };
 
-            Some(Task { id: id.to_string(), title, status, created_at })
+            Some(ExampleTask { id: id.to_string(), title, status, created_at })
         } else {
             None
         })
     }
 
-    async fn find_all(&self) -> Result<Vec<Task>, String> {
+    async fn find_all(&self) -> Result<Vec<ExampleTask>, String> {
         let rows = sqlx::query(
             r#"
             SELECT id, title, status, created_at
@@ -167,24 +167,28 @@ impl TaskRepository for PostgresTaskRepository {
                 let status_str: String = row.get("status");
                 let created_at: DateTime<Utc> = row.get("created_at");
                 let status = match status_str.as_str() {
-                    "PENDING" => TaskStatus::Pending,
-                    "IN_PROGRESS" => TaskStatus::InProgress,
-                    "COMPLETED" => TaskStatus::Completed,
-                    _ => TaskStatus::Pending,
+                    "PENDING" => ExampleTaskStatus::Pending,
+                    "IN_PROGRESS" => ExampleTaskStatus::InProgress,
+                    "COMPLETED" => ExampleTaskStatus::Completed,
+                    _ => ExampleTaskStatus::Pending,
                 };
-                Task { id: id.to_string(), title, status, created_at }
+                ExampleTask { id: id.to_string(), title, status, created_at }
             })
             .collect();
 
         Ok(tasks)
     }
 
-    async fn update_status(&self, id: &str, status: TaskStatus) -> Result<Option<Task>, String> {
+    async fn update_status(
+        &self,
+        id: &str,
+        status: ExampleTaskStatus,
+    ) -> Result<Option<ExampleTask>, String> {
         let uuid = Uuid::parse_str(id).map_err(|e| e.to_string())?;
         let status_str = match status {
-            TaskStatus::Pending => "PENDING",
-            TaskStatus::InProgress => "IN_PROGRESS",
-            TaskStatus::Completed => "COMPLETED",
+            ExampleTaskStatus::Pending => "PENDING",
+            ExampleTaskStatus::InProgress => "IN_PROGRESS",
+            ExampleTaskStatus::Completed => "COMPLETED",
         };
 
         sqlx::query(

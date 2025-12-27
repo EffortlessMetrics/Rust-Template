@@ -333,7 +333,14 @@ Only a few items remain - all now have documentation or are external dependencie
 
 **Target:** Next tag after v3.3.12
 
-> **Note:** Platform work (security, architecture, CI) shipped in v3.3.12. See [§3.7](#37-v3312-security--architecture-).
+#### Already Complete (Now in v3.3.12)
+
+The following platform work landed in v3.3.12 and is **not** v3.3.13 scope. See [§3.7](#37-v3312-security--architecture-) for details:
+
+- Security middleware (CORS, headers, JWT validation, fail-closed auth) — PR #33
+- Governance architecture (gov-model, gov-http, handler modularization) — Refactoring
+- Supply chain CI (CodeQL, Gitleaks, cargo-audit) — PR #33
+- Documentation templates (Trust a Cell, Evolve the Kernel, AI first-hour receipt template)
 
 #### Blockers (Must Ship)
 
@@ -348,7 +355,12 @@ Only a few items remain - all now have documentation or are external dependencie
 | Item                           | Description                                               | Notes                                     |
 | ------------------------------ | --------------------------------------------------------- | ----------------------------------------- |
 | **IDP adapter stub**           | Backstage/Port adapter consuming `idp-snapshot`           | v3.4.0 territory — needs IDP-ready contract first |
-| **sccache/libz friction**      | FRICTION-ENV-001 affecting some environments              | Logged as "known issue"; fix when painful enough |
+
+#### Recently Resolved
+
+| Item                           | Description                                               | Resolution                                |
+| ------------------------------ | --------------------------------------------------------- | ----------------------------------------- |
+| **sccache/libz friction**      | FRICTION-ENV-001 affecting `nix develop -c` commands      | ✅ Fixed in v3.3.12 — Nix sccache in PATH + RUSTC_WRAPPER |
 
 **Definition of Done for v3.3.13:**
 

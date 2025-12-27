@@ -19,20 +19,26 @@
 /// (Pending → InProgress → Completed). It is separate from the production
 /// governance model in `business_core::governance`, which uses a different
 /// TaskStatus enum with richer workflow states (Todo/InProgress/Review/Done).
+///
+/// **Note:** This type is intentionally named `ExampleTask` (not just `Task`)
+/// to avoid confusion with `gov_model::Task` used in production governance.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Task {
+pub struct ExampleTask {
     pub id: String,
     pub title: String,
-    pub status: TaskStatus,
+    pub status: ExampleTaskStatus,
     pub created_at: chrono::DateTime<chrono::Utc>,
 }
 
 /// Basic task status for example CRUD operations.
 ///
-/// This enum is used by the example `Task` model above. For production governance
-/// workflows, see `business_core::governance::TaskStatus` instead.
+/// This enum is used by the example `ExampleTask` model above. For production
+/// governance workflows, see `gov_model::TaskStatus` instead.
+///
+/// **Note:** This type is intentionally named `ExampleTaskStatus` (not just
+/// `TaskStatus`) to avoid confusion with `gov_model::TaskStatus`.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub enum TaskStatus {
+pub enum ExampleTaskStatus {
     Pending,
     InProgress,
     Completed,

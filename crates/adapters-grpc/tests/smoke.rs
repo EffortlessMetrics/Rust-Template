@@ -2,41 +2,45 @@ use adapters_grpc::spawn;
 use adapters_grpc::task::v1::task_service_client::TaskServiceClient;
 use adapters_grpc::task::v1::{CreateTaskRequest, GetTaskRequest, ListTasksRequest};
 use async_trait::async_trait;
-use business_core::ports::TaskRepository;
-use model::{Task, TaskStatus};
+use business_core::ports::ExampleTaskRepository;
+use model::{ExampleTask, ExampleTaskStatus};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
-/// In-memory task repository for testing
-struct InMemoryTaskRepository {
-    tasks: Mutex<HashMap<String, Task>>,
+/// In-memory example task repository for testing
+struct InMemoryExampleTaskRepository {
+    tasks: Mutex<HashMap<String, ExampleTask>>,
 }
 
-impl InMemoryTaskRepository {
+impl InMemoryExampleTaskRepository {
     fn new() -> Self {
         Self { tasks: Mutex::new(HashMap::new()) }
     }
 }
 
 #[async_trait]
-impl TaskRepository for InMemoryTaskRepository {
-    async fn save(&self, task: &Task) -> Result<(), String> {
+impl ExampleTaskRepository for InMemoryExampleTaskRepository {
+    async fn save(&self, task: &ExampleTask) -> Result<(), String> {
         let mut tasks = self.tasks.lock().unwrap();
         tasks.insert(task.id.clone(), task.clone());
         Ok(())
     }
 
-    async fn find_by_id(&self, id: &str) -> Result<Option<Task>, String> {
+    async fn find_by_id(&self, id: &str) -> Result<Option<ExampleTask>, String> {
         let tasks = self.tasks.lock().unwrap();
         Ok(tasks.get(id).cloned())
     }
 
-    async fn find_all(&self) -> Result<Vec<Task>, String> {
+    async fn find_all(&self) -> Result<Vec<ExampleTask>, String> {
         let tasks = self.tasks.lock().unwrap();
         Ok(tasks.values().cloned().collect())
     }
 
-    async fn update_status(&self, id: &str, status: TaskStatus) -> Result<Option<Task>, String> {
+    async fn update_status(
+        &self,
+        id: &str,
+        status: ExampleTaskStatus,
+    ) -> Result<Option<ExampleTask>, String> {
         let mut tasks = self.tasks.lock().unwrap();
         if let Some(task) = tasks.get_mut(id) {
             task.status = status;
@@ -57,7 +61,7 @@ impl TaskRepository for InMemoryTaskRepository {
 #[ignore = "gRPC smoke test; run with cargo test -- --ignored"]
 async fn test_grpc_service_create_task() {
     // Create in-memory repository
-    let repo: Arc<dyn TaskRepository> = Arc::new(InMemoryTaskRepository::new());
+    let repo: Arc<dyn ExampleTaskRepository> = Arc::new(InMemoryExampleTaskRepository::new());
 
     // Start gRPC server on random port
     // Start gRPC server on random port

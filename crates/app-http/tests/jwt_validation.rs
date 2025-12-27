@@ -126,7 +126,7 @@ fn test_jwt_validation_rejects_missing_issuer() {
     let now = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs();
 
     // Create token with empty issuer
-    let mut claims = app_http::security::Claims {
+    let claims = app_http::security::Claims {
         sub: "user123".to_string(),
         exp: (now + 3600) as usize,
         iat: now as usize,
@@ -153,7 +153,7 @@ fn test_jwt_validation_rejects_missing_subject() {
     let now = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs();
 
     // Create token with empty subject
-    let mut claims = app_http::security::Claims {
+    let claims = app_http::security::Claims {
         sub: "".to_string(), // Empty subject
         exp: (now + 3600) as usize,
         iat: now as usize,
@@ -225,7 +225,7 @@ fn test_jwt_validation_with_nbf_claim() {
     let future_time = now + 30; // Not valid until 30 seconds in future
 
     // Create custom claims with nbf (not before)
-    let mut claims = app_http::security::Claims {
+    let claims = app_http::security::Claims {
         sub: "user123".to_string(),
         exp: (now + 3600) as usize,
         iat: now as usize,
@@ -306,7 +306,7 @@ fn test_jwt_validation_with_different_algorithms() {
     };
 
     // Try to encode with different algorithm (should still work for encoding)
-    let mut header = Header::new(jsonwebtoken::Algorithm::HS256);
+    let header = Header::new(jsonwebtoken::Algorithm::HS256);
     let encoding_key = EncodingKey::from_secret(secret.as_ref());
     let token = jsonwebtoken::encode(&header, &claims, &encoding_key).unwrap();
 

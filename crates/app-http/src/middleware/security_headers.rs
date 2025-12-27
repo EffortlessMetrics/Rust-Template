@@ -323,11 +323,7 @@ pub async fn security_headers_middleware(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use axum::{
-        body::Body,
-        http::{HeaderMap, HeaderValue},
-        response::Response,
-    };
+    use axum::{body::Body, http::HeaderValue, response::Response};
 
     #[test]
     fn test_security_headers_config_default() {
