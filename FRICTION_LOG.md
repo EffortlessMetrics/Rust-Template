@@ -71,7 +71,11 @@ Create a YAML file in `friction/` following the schema in `specs/friction_schema
 
 ### Open
 
-*No open friction entries.*
+- **FRICTION-CI-001** (2025-12-27) - GitHub Actions intentionally disabled during v3.3.13 release prep
+  - **Category:** ci
+  - **Severity:** medium
+  - **Workaround:** Use local selftest receipts as temporary branch protection
+  - **Details:** [friction/FRICTION-CI-001.yaml](friction/FRICTION-CI-001.yaml)
 
 ### Resolved
 

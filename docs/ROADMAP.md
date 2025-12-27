@@ -12,7 +12,7 @@ adrs: [ADR-0005]
 last_updated: 2025-12-23
 ---
 
-# Roadmap: Rust-as-Spec Platform Cell (v3.3.12)
+# Roadmap: Rust-as-Spec Platform Cell (v3.3.13)
 
 This document describes the current state of the template (v3.3.12) and the frozen baseline kernel (v3.3.9-kernel tag).
 
@@ -348,7 +348,7 @@ The following platform work landed in v3.3.12 and is **not** v3.3.13 scope. See 
 | ------------------------------ | --------------------------------------------------------- | -------------- | ------------------------------------------------------- |
 | **Fork dry-run receipt**       | Real fork from `v3.3.9-kernel`, full ladder green         | 🔄 In Progress | Receipt checked into fork repo (or linked from issue)   |
 | **AI first-hour receipt**      | Agent run through `ai-first-hour.md`, measurable pass     | 🔄 In Progress | Receipt checked into fork repo (or linked from issue)   |
-| **Security configuration doc** | One page: auth modes, CORS, JWT, headers, fail-closed     | 📋 Todo        | Merged, linked from QUICKSTART and TROUBLESHOOTING      |
+| **Security configuration doc** | One page: auth modes, CORS, JWT, headers, fail-closed     | ✅ Done        | `docs/how-to/security-configuration.md` merged in PR #38 |
 
 #### Deferred (Known Issues, Not Blockers)
 

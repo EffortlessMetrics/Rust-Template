@@ -1,7 +1,7 @@
 service_id: test-service
 display_name: Test Service
 description: A test service
-template_version: v3.3.12
+template_version: v3.3.13
 ownership:
   team: plat-governance
   email: platform-governance@example.com

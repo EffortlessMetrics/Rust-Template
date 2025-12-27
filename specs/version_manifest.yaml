@@ -125,11 +125,11 @@ files:
   - path: "CLAUDE.md"
     description: "Agent instructions with template version"
     patterns:
-      - marker: "# CLAUDE.md – Rust-as-Spec Platform Cell (v"
+      - marker: "# CLAUDE.md – Test Service (v"
         type: heading_version
         format: "prefixed_paren"  # (v3.3.5)
-        line_pattern: "^# CLAUDE\\.md – Rust-as-Spec Platform Cell \\(v[\\d.]+.*\\)$"
-        example: "# CLAUDE.md – Rust-as-Spec Platform Cell (v3.3.5)"
+        line_pattern: "^# CLAUDE\\.md – Test Service \\(v[\\d.]+\\)$"
+        example: "# CLAUDE.md – Test Service (v3.3.5)"
       - marker: "**Template Version:**"
         type: inline_version
         format: "prefixed"  # v3.3.5
