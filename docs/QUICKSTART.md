@@ -126,6 +126,19 @@ curl http://localhost:8080/health
 # Expected: {"status":"ok"}
 ```
 
+### Security Configuration
+
+By default, the service starts in **open mode** (no authentication required). For production:
+
+```bash
+# Enable JWT authentication for write endpoints
+export PLATFORM_AUTH_MODE=jwt
+export PLATFORM_JWT_SECRET=$(openssl rand -base64 32)
+cargo run -p app-http
+```
+
+See [how-to/security-configuration.md](how-to/security-configuration.md) for auth modes, CORS, and security headers.
+
 ---
 
 ## Run Tests
