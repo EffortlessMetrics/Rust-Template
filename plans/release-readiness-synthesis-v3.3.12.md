@@ -14,7 +14,7 @@ This document synthesizes findings from all previous analyses to provide a defin
 **Overall Release Readiness Status: READY FOR RELEASE**
 
 - **Critical Blockers:** 0 items
-- **High Priority Issues:** 2 items
+- **High Priority Issues:** 1 item (security config doc)
 - **Medium Priority Issues:** 5 items
 - **Low Priority Issues:** 4 items
 
@@ -65,25 +65,11 @@ The following inaccuracies in previous assessments have been corrected:
 
 ---
 
-#### Gap 2: Empty docs/api/ Directory
+#### ~~Gap 2: Empty docs/api/ Directory~~ (Resolved)
 
-**Description:** The `docs/api/` directory exists but is empty, despite OpenAPI specifications being available in `specs/openapi/`.
+**Description:** The `docs/api/` directory was empty.
 
-**Impact:**
-- API documentation not discoverable in expected location
-- Poor developer experience for API consumers
-- Inconsistency between OpenAPI specs and docs structure
-
-**Evidence:**
-- `docs/api/` directory exists but contains no files
-- `specs/openapi/openapi.yaml` contains complete API specifications
-
-**Effort to Resolve:** Low
-- Copy or generate API documentation from OpenAPI specs
-- Add index page linking to endpoint documentation
-
-**Dependencies:** None
-**Risk if Not Addressed:** Low - API specs exist, just not in docs location
+**Resolution:** Directory was removed. API documentation lives in `specs/openapi/` (the canonical location).
 
 ---
 
@@ -316,7 +302,7 @@ The following inaccuracies in previous assessments have been corrected:
 | Criterion | Status | Evidence |
 |-----------|--------|----------|
 | Security configuration documentation | ❌ Incomplete | Listed as TODO in ROADMAP |
-| API documentation in docs/api/ | ❌ Incomplete | Directory is empty |
+| ~~API documentation in docs/api/~~ | ✅ Resolved | Directory removed; specs/openapi/ is canonical |
 | Version consistency in docs | ⚠️ Partial | Some inconsistencies remain |
 
 ### 3.3 Could-Have Criteria (Nice to Have)
@@ -416,9 +402,9 @@ Per ROADMAP.md, v3.4.0 focuses on IDP integration:
 
 ### 6.3 Remaining Gaps
 
-1. **High Priority (2 items)**
+1. **High Priority (1 item)**
    - Security configuration documentation
-   - Empty docs/api/ directory
+   - ~~Empty docs/api/ directory~~ (Resolved - directory removed)
 
 2. **Medium Priority (5 items)**
    - Version inconsistencies in docs
@@ -458,9 +444,8 @@ Per ROADMAP.md, v3.4.0 focuses on IDP integration:
    - Reference existing middleware implementations
    - Link from QUICKSTART and TROUBLESHOOTING
 
-2. **Populate docs/api/ directory** (HIGH PRIORITY)
-   - Generate or copy API documentation from OpenAPI specs
-   - Add index page for discoverability
+2. **~~Populate docs/api/ directory~~** (RESOLVED)
+   - Directory was removed; `specs/openapi/` is the canonical API docs location
 
 3. **Complete adoption receipts**
    - Fork dry-run receipt
@@ -509,7 +494,7 @@ The Rust template repository at v3.3.12 demonstrates exceptional engineering mat
 - Strong CI/CD pipeline with supply chain security
 
 **Remaining Work:**
-- 2 high-priority items (security config doc, docs/api/) deferred to v3.3.13
+- 1 high-priority item (security config doc) deferred to v3.3.13 (docs/api/ resolved)
 - 5 medium-priority items (integration tests, E2E, performance, etc.) for v3.4.0+
 - 4 low-priority items (Dockerfile, automated deployment, etc.) for future releases
 
@@ -524,7 +509,7 @@ The project is well-positioned for release with strong foundations for enterpris
 | ID | Gap | Severity | Impact | Effort | Dependencies | Risk |
 |-----|-------|---------|-------|-------------|-------|
 | G1 | Security configuration documentation | High | Medium | None | Medium |
-| G2 | Empty docs/api/ directory | High | Low | None | Low |
+| ~~G2~~ | ~~Empty docs/api/ directory~~ | ~~High~~ | ~~Low~~ | ~~None~~ | ~~Low~~ (Resolved) |
 | G3 | Version inconsistencies in docs | Medium | Low | None | Low |
 | G4 | No integration test suite | Medium | Medium | None | Medium |
 | G5 | Limited E2E testing | Medium | High | G4 | Medium |

@@ -193,10 +193,10 @@ graph TD
 
 #### Concerns
 
-1. **Dual Task Models**
-   - [`model::TaskStatus`](../crates/model/) (3-state: Pending/InProgress/Completed) for CRUD examples
-   - [`gov-model::TaskStatus`](../crates/gov-model/src/lib.rs:49) (4-state: Todo/InProgress/Review/Done) for production governance
-   - This creates potential confusion about which to use
+1. **~~Dual Task Models~~ (Recently Addressed)**
+   - Previously: [`model::Task`](../crates/model/) and [`gov-model::Task`](../crates/gov-model/) had naming collision
+   - **Resolved in v3.3.12**: Renamed CRUD example type to `ExampleTask` and `ExampleTaskStatus` to disambiguate
+   - [`gov-model::Task`](../crates/gov-model/src/lib.rs) is the canonical governance type
 
 2. **Re-exports in business-core**
    - [`business-core`](../crates/business-core/src/lib.rs) re-exports [`gov-model`](../crates/gov-model/) types for backward compatibility
@@ -313,9 +313,9 @@ specs/
 
 ### 5.2 Architectural Debt
 
-1. **Dual Task Models (Minor)**
-   - Two different `TaskStatus` enums exist
-   - Recommendation: Document when to use each, or consolidate if possible
+1. **~~Dual Task Models~~ (Resolved in v3.3.12)**
+   - Previously: naming collision between CRUD example `Task` and governance `Task`
+   - **Fixed**: CRUD example renamed to `ExampleTask`/`ExampleTaskStatus`
 
 2. **Re-exports in business-core (Minor)**
    - Creates unnecessary dependency on gov-model
@@ -345,9 +345,9 @@ specs/
 
 ### 6.1 Before Release
 
-1. **Document Dual Task Models**
-   - Add clear guidance in [`business-core`](../crates/business-core/src/lib.rs) documentation
-   - Explain when to use `model::TaskStatus` vs `gov-model::TaskStatus`
+1. **~~Document Dual Task Models~~ (Completed)**
+   - Resolved by renaming CRUD example to `ExampleTask`/`ExampleTaskStatus`
+   - `gov-model::Task` is now the unambiguous canonical governance type
 
 2. **Validate Dependency Graph**
    - Run `cargo xtask ac-status` to ensure all mappings are correct
@@ -359,9 +359,8 @@ specs/
 
 ### 6.2 Post-Release
 
-1. **Consolidate Task Models**
-   - Evaluate if dual models are necessary
-   - Consider migration path if consolidation is desired
+1. **~~Consolidate Task Models~~ (Completed in v3.3.12)**
+   - CRUD example renamed to `ExampleTask` to avoid confusion with governance `Task`
 
 2. **Add Architectural Linting**
    - Implement custom clippy lints for layering violations
@@ -389,7 +388,7 @@ The Rust-Template architecture is well-designed, mature, and ready for release. 
 - Extensive xtask CLI for all workflows
 
 **Minor Concerns:**
-- Dual task models (documented, not blocking)
+- ~~Dual task models~~ (resolved in v3.3.12 by renaming to `ExampleTask`)
 - Re-exports creating unnecessary dependencies
 - State separation complexity (acknowledged in ADR-0019)
 
