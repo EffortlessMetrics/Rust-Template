@@ -2,7 +2,7 @@
 id: HOW-TO-RELEASE-READINESS
 title: "Release Readiness Checklist"
 doc_type: how_to
-version: 3.3.12
+version: 3.3.13
 stories: [US-TPL-PLT-001]
 requirements:
   - REQ-PLT-RELEASE-SAFETY
@@ -10,7 +10,7 @@ requirements:
 acs:
   - AC-PLT-019
   - AC-PLT-020
-last_updated: 2025-12-12
+last_updated: 2025-12-27
 ---
 
 # Release Readiness Checklist

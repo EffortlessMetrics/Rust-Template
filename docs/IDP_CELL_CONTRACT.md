@@ -20,7 +20,7 @@ last_updated: 2025-12-22
 > into your Internal Developer Platform. It defines what you can rely on, what to consume,
 > and how to validate cell health.
 
-**Kernel Version:** v3.3.9-kernel | **Template Version:** 3.3.12
+**Kernel Version:** v3.3.9-kernel | **Template Version:** 3.3.13
 
 ---
 
@@ -85,7 +85,7 @@ cargo xtask idp-snapshot --pretty
 ```json
 {
   "timestamp": "2025-12-09T12:00:00Z",
-  "template_version": "3.3.12",
+  "template_version": "3.3.13",
   "service_id": "template-service",
   "governance_health": {
     "status": "healthy",
