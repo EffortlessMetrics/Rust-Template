@@ -15,7 +15,8 @@ last_updated: 2025-12-22
 
 # How to Trust a Cell
 
-> **For IDP teams and platform engineers:** This one-pager shows how to verify that a Rust-as-Spec cell is healthy and trustworthy in under 5 minutes.
+> **For IDP teams and platform engineers:** This one-pager shows how to verify that a Rust-as-Spec cell
+> is healthy and trustworthy in under 5 minutes.
 
 **Kernel Version:** v3.3.9-kernel
 
@@ -25,8 +26,8 @@ last_updated: 2025-12-22
 
 A cell built on this template is **trustworthy** when all of these pass:
 
-| # | Check | Command | Expected |
-|---|-------|---------|----------|
+| #   | Check   | Command | Expected |
+| --- | ------- | ------- | -------- |
 | 1 | **tier1-selftest CI is green** | Check GitHub Actions | `tier1-selftest` workflow passing on `main` |
 | 2 | **kernel-status is healthy** | `cargo xtask kernel-status` | All sections green, no red flags |
 | 3 | **idp-snapshot returns valid JSON** | `cargo xtask idp-snapshot` | Valid JSON with `governance_health.status: "healthy"` |
@@ -94,12 +95,13 @@ echo "=== Validation Complete ==="
 **Why:** Quick local validation of kernel health without running full selftest.
 
 **Command:**
+
 ```bash
 cargo xtask kernel-status
 ```
 
 **Expected output sections:**
-- `Template version: v3.3.13` – matches expected kernel version
+- `Template version: v3.3.13` – matches expected template version
 - `Kernel tag: v3.3.9-kernel (HEAD is at tag: yes)` – at kernel tag
 - `Tree clean: yes` – no uncommitted changes
 - `Kernel ACs: Total: 72, PASS: 72` – all passing
@@ -117,11 +119,13 @@ cargo xtask kernel-status
 **Why:** This is the contract surface for IDP integrations. If it returns valid JSON with healthy status, the cell is consumable.
 
 **Command:**
+
 ```bash
 cargo xtask idp-snapshot --pretty
 ```
 
 **Key fields to check:**
+
 ```json
 {
   "template_version": "3.3.13",
@@ -148,11 +152,13 @@ cargo xtask idp-snapshot --pretty
 **Why:** Validates the running service exposes correct governance state.
 
 **Command:**
+
 ```bash
 curl -s http://localhost:8080/platform/status | jq '.governance'
 ```
 
 **Key fields:**
+
 ```json
 {
   "selftest_status": "pass",
@@ -172,8 +178,8 @@ curl -s http://localhost:8080/platform/status | jq '.governance'
 
 ## When to Validate
 
-| Scenario | Recommended Checks |
-|----------|-------------------|
+| Scenario                     | Recommended Checks             |
+| ---------------------------- | ------------------------------ |
 | **Before forking** | All 4 checks |
 | **Before IDP integration** | idp-snapshot + platform/status |
 | **Daily health check** | kernel-status |
