@@ -337,9 +337,9 @@ Only a few items remain - all now have documentation or are external dependencie
 
 | Item | Description | Status |
 |------|-------------|--------|
-| **Docs version alignment** | All docs updated to v3.3.13 references | 🔄 This PR |
-| **Security configuration doc** | Auth modes, CORS, JWT, headers, fail-closed | ✅ Merged |
-| **Selftest green** | 11/11 gates passing | ✅ Local validation |
+| **Docs version alignment** | All docs updated to v3.3.13 references | ✅ Merged (PR #40) |
+| **Security configuration doc** | Auth modes, CORS, JWT, headers, fail-closed | ✅ Merged (PR #38) |
+| **Selftest green** | 11/11 gates passing | ✅ Verified |
 
 #### Already Complete (From v3.3.12)
 
@@ -387,17 +387,17 @@ Phase 2: Finalize Release (in this repo)
 | Item | Description | Resolution |
 |------|-------------|------------|
 | **sccache/libz friction** | FRICTION-ENV-001 affecting `nix develop -c` | ✅ Fixed in v3.3.12 |
-| **Docs version drift** | Multiple docs referenced v3.3.12 | ✅ Fixed in this release candidate |
+| **Docs version drift** | Multiple docs referenced v3.3.12 | ✅ Fixed, merged (PR #40) |
 
 **Definition of Done for v3.3.13:**
 
-1. Fork dry-run receipt exists (fork repo or linked issue)
-2. AI first-hour receipt exists (fork repo or linked issue)
-3. Security config doc merged ✅
-4. Docs version alignment complete ✅
-5. `cargo xtask selftest` green ✅
-6. Evidence bundle committed
-7. Tag pushed
+1. Fork dry-run receipt exists (fork repo or linked issue) — pending
+2. AI first-hour receipt exists (fork repo or linked issue) — pending
+3. Security config doc merged — ✅ complete (PR #38)
+4. Docs version alignment merged — ✅ complete (PR #40)
+5. `cargo xtask selftest` green — ✅ verified
+6. Evidence bundle committed — pending
+7. Tag pushed — pending v3.3.13 tag
 
 ---
 
