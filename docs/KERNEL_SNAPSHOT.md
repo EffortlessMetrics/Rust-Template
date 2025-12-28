@@ -1,6 +1,7 @@
 ---
 id: SNAPSHOT-TPL-KERNEL-001
 title: Kernel Snapshot v3.3.9-kernel
+template_version: "3.3.13"
 doc_type: status
 status: published
 audience: maintainers, platform-engineers, forks
