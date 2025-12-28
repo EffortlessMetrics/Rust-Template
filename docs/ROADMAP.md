@@ -76,11 +76,11 @@ Kernel baseline tags (e.g., `v3.3.9-kernel`) mark frozen API/contract points tha
 
 Adoption evidence lives **outside this repo** — in forks, IDP integrations, and agent pilots. Receipts prove the kernel works; friction from real usage drives kernel evolution.
 
-| Evidence | Location | Status |
-|----------|----------|--------|
-| Fork dry-run receipt | Fork repo | Required for v3.3.13 |
-| AI first-hour receipt | Fork repo | Required for v3.3.13 |
-| IDP tile demo | IDP repo | Required for v3.4.0 |
+| Evidence              | Location  | Status               |
+| --------------------- | --------- | -------------------- |
+| Fork dry-run receipt  | Fork repo | Required for v3.4.0  |
+| AI first-hour receipt | Fork repo | Required for v3.4.0  |
+| IDP tile demo         | IDP repo  | Required for v3.4.0  |
 
 > **Why three layers?** Template patches (v3.3.x) happen frequently. Kernel closures happen rarely. Adoption evidence is captured in other repos. Keeping them separate prevents the roadmap from mixing "what changed on main" with "what's frozen" with "what's proven in real usage."
 
@@ -327,77 +327,73 @@ Only a few items remain - all now have documentation or are external dependencie
 | ---------------------------- | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------- |
 | **`lazy-trees` Nix warning** | Cosmetic noise in output | Deprecated Nix 2.30+ setting in Determinate installer config. Documented in TROUBLESHOOTING.md with fix instructions. Safe to ignore. |
 
-### 4.4 v3.3.13 – Adoption Receipts & Docs Polish (Patch Release)
+### 4.4 v3.3.13 – Docs Polish & Release Tooling (Patch Release)
 
-> **Scope:** Evidence-driven validation. The platform work (security, architecture) is complete. This release proves it works via real fork and agent receipts.
+> **Scope:** Documentation alignment and release tooling hardening. The platform work (security,
+> architecture) is complete. Adoption receipts are tracked in v3.4.0 entry criteria, not as
+> v3.3.13 blockers.
 
-**Status:** Release candidate in progress
+**Status:** Ready for tag
 
 #### In This Release Candidate
 
-| Item | Description | Status |
-|------|-------------|--------|
+| Item                         | Description                                   | Status              |
+| ---------------------------- | --------------------------------------------- | ------------------- |
 | **Docs version alignment** | All docs updated to v3.3.13 references | ✅ Merged (PR #40) |
 | **Security configuration doc** | Auth modes, CORS, JWT, headers, fail-closed | ✅ Merged (PR #38) |
 | **Selftest green** | 11/11 gates passing | ✅ Verified |
 
 #### Already Complete (From v3.3.12)
 
-The following platform work landed in v3.3.12 and is **not** v3.3.13 scope. See [§3.7](#37-v3312-security--architecture-) for details:
+The following platform work landed in v3.3.12 and is **not** v3.3.13 scope.
+See [§3.7](#37-v3312-security--architecture-) for details:
 
 - Security middleware (CORS, headers, JWT validation, fail-closed auth) — PR #33
 - Governance architecture (gov-model, gov-http, handler modularization) — Refactoring
 - Supply chain CI (CodeQL, Gitleaks, cargo-audit) — PR #33
 - Documentation templates (Trust a Cell, Evolve the Kernel, AI first-hour receipt template)
 
-#### Remaining Blockers
-
-| Item | Description | Status | Definition of Done |
-|------|-------------|--------|-------------------|
-| **Fork dry-run receipt** | Real fork from `v3.3.9-kernel`, full ladder green | 🔜 Pending | Receipt in fork repo |
-| **AI first-hour receipt** | Agent run through `ai-first-hour.md`, measurable pass | 🔜 Pending | Receipt in fork repo |
-
 #### Release Checklist
 
 ```text
-Phase 1: External Validation (in fork repo)
-  [ ] Create fork from v3.3.9-kernel tag
-  [ ] Run: nix develop && cargo xtask dev-up
-  [ ] Run: cargo xtask selftest (must be green)
-  [ ] Commit fork-dry-run receipt (docs/receipts/fork-dry-run.md)
-  [ ] Follow docs/how-to/ai-first-hour.md
-  [ ] Commit AI first-hour receipt (docs/receipts/ai-first-hour.md)
-
-Phase 2: Finalize Release (in this repo)
-  [ ] Add evidence bundle: cargo xtask release-bundle 3.3.13
-  [ ] Commit evidence to release candidate PR
-  [ ] Merge release candidate PR to main
-  [ ] Tag: git tag v3.3.13 -m "v3.3.13"
-  [ ] Push: git push --follow-tags
+[ ] Add evidence bundle: cargo xtask release-bundle 3.3.13
+[ ] Commit evidence and merge to main
+[ ] Tag: git tag v3.3.13 -m "v3.3.13"
+[ ] Push: git push --follow-tags
 ```
+
+#### Adoption Track (v3.4.0 Entry Criteria)
+
+These receipts validate the template in real use but are **not** v3.3.13 blockers:
+
+| Item | Description | Status | Notes |
+| ---- | ----------- | ------ | ----- |
+| **Fork dry-run receipt** | Real fork from `v3.3.9-kernel`, full ladder green | 🔜 Pending | Required before v3.4.0 work |
+| **AI first-hour receipt** | Agent run through `ai-first-hour.md` | 🔜 Pending | Required before v3.4.0 work |
 
 #### Deferred (Known Issues, Not Blockers)
 
-| Item | Description | Notes |
-|------|-------------|-------|
+| Item                 | Description                                     | Notes            |
+| -------------------- | ----------------------------------------------- | ---------------- |
 | **IDP adapter stub** | Backstage/Port adapter consuming `idp-snapshot` | v3.4.0 territory |
 
 #### Recently Resolved
 
-| Item | Description | Resolution |
-|------|-------------|------------|
-| **sccache/libz friction** | FRICTION-ENV-001 affecting `nix develop -c` | ✅ Fixed in v3.3.12 |
-| **Docs version drift** | Multiple docs referenced v3.3.12 | ✅ Fixed, merged (PR #40) |
+| Item                       | Description                                 | Resolution              |
+| -------------------------- | ------------------------------------------- | ----------------------- |
+| **sccache/libz friction**  | FRICTION-ENV-001 affecting `nix develop -c` | ✅ Fixed in v3.3.12     |
+| **Docs version drift**     | Multiple docs referenced v3.3.12            | ✅ Fixed, merged (PR #40) |
 
 **Definition of Done for v3.3.13:**
 
-1. Fork dry-run receipt exists (fork repo or linked issue) — pending
-2. AI first-hour receipt exists (fork repo or linked issue) — pending
-3. Security config doc merged — ✅ complete (PR #38)
-4. Docs version alignment merged — ✅ complete (PR #40)
-5. `cargo xtask selftest` green — ✅ verified
-6. Evidence bundle committed — pending
-7. Tag pushed — pending v3.3.13 tag
+1. Security config doc merged — ✅ complete (PR #38)
+2. Docs version alignment merged — ✅ complete (PR #40)
+3. `cargo xtask selftest` green — ✅ verified
+4. Evidence bundle committed — pending
+5. Tag pushed — pending v3.3.13 tag
+
+> **Note:** Fork and AI receipts moved to v3.4.0 entry criteria. v3.3.13 is a docs/tooling
+> polish release; adoption validation happens before v3.4.0 work begins.
 
 ---
 
