@@ -61,7 +61,7 @@ Template versions (v3.3.12, v3.3.13, etc.) are **tagged snapshots** of this repo
 | Version | Status | Focus |
 |---------|--------|-------|
 | v3.3.12 | Tagged | Security hardening, governance architecture, CI improvements |
-| v3.3.13 | Current | Adoption receipts + docs polish (see §4.4) |
+| v3.3.13 | Tagged | Docs polish + release tooling hardening (see §4.4) |
 
 ### Layer 2: Kernel Baseline (Frozen Tags)
 
@@ -356,10 +356,10 @@ See [§3.7](#37-v3312-security--architecture-) for details:
 #### Release Checklist
 
 ```text
-[ ] Add evidence bundle: cargo xtask release-bundle 3.3.13
-[ ] Commit evidence and merge to main
-[ ] Tag: git tag v3.3.13 -m "v3.3.13"
-[ ] Push: git push --follow-tags
+[x] Add evidence bundle: cargo xtask release-bundle 3.3.13
+[x] Commit evidence and merge to main
+[x] Tag: git tag v3.3.13 -m "v3.3.13"
+[x] Push: git push --follow-tags
 ```
 
 #### Adoption Track (v3.4.0 Entry Criteria)
@@ -389,11 +389,10 @@ These receipts validate the template in real use but are **not** v3.3.13 blocker
 1. Security config doc merged — ✅ complete (PR #38)
 2. Docs version alignment merged — ✅ complete (PR #40)
 3. `cargo xtask selftest` green — ✅ verified
-4. Evidence bundle committed — pending
-5. Tag pushed — pending v3.3.13 tag
+4. Evidence bundle committed — ✅ complete (PR #41)
+5. Tag pushed — ✅ complete (v3.3.13)
 
-> **Note:** Fork and AI receipts moved to v3.4.0 entry criteria. v3.3.13 is a docs/tooling
-> polish release; adoption validation happens before v3.4.0 work begins.
+> **Status:** v3.3.13 is **released**. Fork and AI receipts are v3.4.0 entry criteria.
 
 ---
 
