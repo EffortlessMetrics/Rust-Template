@@ -41,7 +41,9 @@ echo "🔍 Running pre-commit governance checks..."
 
 {}# Always use cargo run -p xtask to invoke the xtask crate
 # The xtask binary itself has the Nix wrapper logic
-if ! cargo run -p xtask -- precommit; then
+# --mode fast: change-aware routing for speed
+# --staged-only: only check files being committed
+if ! cargo run -p xtask -- precommit --mode fast --staged-only; then
   echo "[WARN] Pre-commit checks failed (non-blocking); fix before pushing."
 fi
 "#,
@@ -61,7 +63,7 @@ fi
     println!("{} Installed .git/hooks/pre-commit", "[OK]".green());
     println!(
         "   The hook will run {} before each commit",
-        "cargo run -p xtask -- precommit".cyan()
+        "cargo run -p xtask -- precommit --mode fast --staged-only".cyan()
     );
     println!("   Failures are advisory; fix issues before pushing even if commit proceeds.");
     println!("   (xtask handles Nix environment automatically)");

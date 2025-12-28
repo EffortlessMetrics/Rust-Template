@@ -2,8 +2,133 @@ use anyhow::{Context, Result};
 use colored::Colorize;
 use std::process::Command;
 
-pub fn run() -> Result<()> {
-    println!("{}", "Running pre-commit checks...".blue().bold());
+/// Detect what categories of files have changed
+#[derive(Debug, Default)]
+struct ChangeCategories {
+    rust: bool,
+    docs: bool,
+    claude: bool,
+    specs: bool,
+}
+
+impl ChangeCategories {
+    fn detect(staged_only: bool) -> Self {
+        let changed = get_changed_files(staged_only);
+        let mut cats = ChangeCategories::default();
+
+        for file in &changed {
+            if file.ends_with(".rs") {
+                cats.rust = true;
+            }
+            if file.starts_with("docs/")
+                || file.ends_with(".md")
+                || file == "README.md"
+                || file == "CLAUDE.md"
+            {
+                cats.docs = true;
+            }
+            if file.starts_with(".claude/") {
+                cats.claude = true;
+            }
+            if file.starts_with("specs/") || file.ends_with(".feature") {
+                cats.specs = true;
+            }
+        }
+
+        cats
+    }
+}
+
+fn get_changed_files(staged_only: bool) -> Vec<String> {
+    // Get staged changes
+    let staged = Command::new("git")
+        .args(["diff", "--cached", "--name-only"])
+        .output()
+        .map(|o| String::from_utf8_lossy(&o.stdout).to_string())
+        .unwrap_or_default();
+
+    let mut files: Vec<String> =
+        staged.lines().map(|s| s.trim().to_string()).filter(|s| !s.is_empty()).collect();
+
+    // Also include unstaged changes unless staged_only is set
+    if !staged_only {
+        let unstaged = Command::new("git")
+            .args(["diff", "--name-only"])
+            .output()
+            .map(|o| String::from_utf8_lossy(&o.stdout).to_string())
+            .unwrap_or_default();
+
+        files.extend(unstaged.lines().map(|s| s.trim().to_string()).filter(|s| !s.is_empty()));
+    }
+
+    files.sort();
+    files.dedup();
+    files
+}
+
+pub fn run(mode: &str, staged_only: bool) -> Result<()> {
+    match mode {
+        "full" => run_full(),
+        _ => run_fast(staged_only),
+    }
+}
+
+/// Fast mode: change-aware routing
+fn run_fast(staged_only: bool) -> Result<()> {
+    let mode_desc = if staged_only { "fast mode, staged only" } else { "fast mode" };
+    println!("{}", format!("Running pre-commit checks ({})...", mode_desc).blue().bold());
+
+    let cats = ChangeCategories::detect(staged_only);
+
+    if !cats.rust && !cats.docs && !cats.claude && !cats.specs {
+        println!("{} No significant changes detected", "⊘".cyan());
+        println!("{}", "Pre-commit checks completed".green().bold());
+        return Ok(());
+    }
+
+    println!(
+        "  Changes: {}{}{}{}",
+        if cats.rust { "rust " } else { "" },
+        if cats.docs { "docs " } else { "" },
+        if cats.claude { "claude " } else { "" },
+        if cats.specs { "specs " } else { "" }
+    );
+
+    // Rust changes: fmt + clippy + test-changed
+    if cats.rust {
+        run_fmt_with_autostage()?;
+        run_clippy()?;
+        run_test_changed()?;
+    }
+
+    // Claude changes: skills/agents lint
+    if cats.claude {
+        run_skills_lint_if_changed()?;
+        run_agents_lint_if_changed()?;
+    }
+
+    // Specs/features changes: ac-status regen
+    if cats.specs {
+        run_ac_status_with_autostage()?;
+    }
+
+    // Docs or specs changes: docs-check (run once for either)
+    if cats.docs || cats.specs {
+        run_docs_check_soft()?;
+    }
+
+    // Docs changes: spellcheck
+    if cats.docs {
+        run_spellcheck_soft()?;
+    }
+
+    println!("{}", "Pre-commit checks completed".green().bold());
+    Ok(())
+}
+
+/// Full mode: all checks (current behavior)
+fn run_full() -> Result<()> {
+    println!("{}", "Running pre-commit checks (full mode)...".blue().bold());
 
     // 0. Auto-fix fmt first, then let check run on clean tree
     run_fmt_with_autostage()?;
@@ -21,46 +146,78 @@ pub fn run() -> Result<()> {
     run_ac_status_with_autostage()?;
 
     // Run docs-check and spellcheck in soft mode (warnings only, unless XTASK_STRICT_PRECOMMIT=1)
+    run_docs_check_soft()?;
+    run_spellcheck_soft()?;
+
+    println!("{}", "Pre-commit checks completed".green().bold());
+    Ok(())
+}
+
+fn run_clippy() -> Result<()> {
+    println!("{}", "Running clippy...".blue());
+    let status = Command::new("cargo")
+        .args(["clippy", "--all-targets", "--all-features", "--", "-D", "warnings"])
+        .status()
+        .context("failed to run clippy")?;
+
+    if !status.success() {
+        anyhow::bail!("clippy found warnings");
+    }
+    Ok(())
+}
+
+fn run_test_changed() -> Result<()> {
+    println!("{}", "Running test-changed...".blue());
+    crate::commands::test_changed::run(crate::commands::test_changed::TestChangedArgs::default())?;
+    Ok(())
+}
+
+fn run_docs_check_soft() -> Result<()> {
     let strict = std::env::var("XTASK_STRICT_PRECOMMIT").unwrap_or_default() == "1";
 
     if std::env::var("XTASK_SKIP_DOCS_CHECK").unwrap_or_default() == "1" {
         println!("{} Skipping docs-check because XTASK_SKIP_DOCS_CHECK=1", "[WARN]".yellow());
-    } else {
-        match crate::commands::docs_check::run() {
-            Ok(_) => {}
-            Err(e) => {
-                if strict {
-                    println!("{} docs-check failed (strict mode enabled)", "[FAIL]".red());
-                    return Err(e);
-                } else {
-                    println!("{} docs-check failed (continuing in soft mode)", "[WARN]".yellow());
-                    println!("  {}", e.to_string().lines().next().unwrap_or(""));
-                    println!("  💡 To fail on docs issues: XTASK_STRICT_PRECOMMIT=1");
-                }
+        return Ok(());
+    }
+
+    match crate::commands::docs_check::run() {
+        Ok(_) => Ok(()),
+        Err(e) => {
+            if strict {
+                println!("{} docs-check failed (strict mode enabled)", "[FAIL]".red());
+                Err(e)
+            } else {
+                println!("{} docs-check failed (continuing in soft mode)", "[WARN]".yellow());
+                println!("  {}", e.to_string().lines().next().unwrap_or(""));
+                println!("  💡 To fail on docs issues: XTASK_STRICT_PRECOMMIT=1");
+                Ok(())
             }
         }
     }
+}
+
+fn run_spellcheck_soft() -> Result<()> {
+    let strict = std::env::var("XTASK_STRICT_PRECOMMIT").unwrap_or_default() == "1";
 
     if std::env::var("XTASK_SKIP_SPELLCHECK").unwrap_or_default() == "1" {
         println!("{} Skipping spellcheck because XTASK_SKIP_SPELLCHECK=1", "[WARN]".yellow());
-    } else {
-        match crate::commands::spellcheck::run_with_default_targets() {
-            Ok(_) => {}
-            Err(e) => {
-                if strict {
-                    println!("{} spellcheck failed (strict mode enabled)", "[FAIL]".red());
-                    return Err(e);
-                } else {
-                    println!("{} spellcheck failed (continuing in soft mode)", "[WARN]".yellow());
-                    println!("  {}", e.to_string().lines().next().unwrap_or(""));
-                    println!("  💡 To fail on spelling issues: XTASK_STRICT_PRECOMMIT=1");
-                }
+        return Ok(());
+    }
+
+    match crate::commands::spellcheck::run_with_default_targets() {
+        Ok(_) => Ok(()),
+        Err(e) => {
+            if strict {
+                println!("{} spellcheck failed (strict mode enabled)", "[FAIL]".red());
+                Err(e)
+            } else {
+                println!("{} spellcheck failed (continuing in soft mode)", "[WARN]".yellow());
+                println!("  {}", e.to_string().lines().next().unwrap_or(""));
+                println!("  💡 To fail on spelling issues: XTASK_STRICT_PRECOMMIT=1");
+                Ok(())
             }
         }
     }
-
-    println!("{}", "Pre-commit checks completed".green().bold());
-    Ok(())
 }
 
 fn stage_skill_docs_if_modified() -> Result<()> {

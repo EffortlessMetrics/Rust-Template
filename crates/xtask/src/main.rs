@@ -139,8 +139,21 @@ enum Commands {
     Check,
 
     /// Run pre-commit guardrail checks (fmt/clippy/tests/docs/spellcheck)
+    ///
+    /// Modes:
+    ///   - full (default): All checks regardless of what changed
+    ///   - fast: Change-aware routing (only check affected categories)
+    ///
+    /// The git hook uses --mode fast --staged-only for speed.
     #[command(next_help_heading = "✅ Validation Gates")]
-    Precommit,
+    Precommit {
+        /// Precommit mode: full (all checks) or fast (change-aware routing)
+        #[arg(long, default_value = "full", value_parser = ["fast", "full"])]
+        mode: String,
+        /// Only consider staged changes (for git hooks)
+        #[arg(long)]
+        staged_only: bool,
+    },
 
     /// Run tests affected by git changes (selective testing for faster iteration)
     #[command(next_help_heading = "✅ Validation Gates")]
@@ -856,7 +869,7 @@ fn main() -> Result<()> {
         }),
         Commands::AdrNew { title } => commands::adr_new::run(&title),
         Commands::Check => commands::check::run(),
-        Commands::Precommit => commands::precommit::run(),
+        Commands::Precommit { mode, staged_only } => commands::precommit::run(&mode, staged_only),
         Commands::Bdd => commands::bdd::run(),
         Commands::AcReport { must_have, status, by_story, format } => {
             commands::ac_report::run(commands::ac_report::AcReportArgs {
