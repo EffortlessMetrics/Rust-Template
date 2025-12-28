@@ -17,7 +17,8 @@ last_updated: 2025-12-27
 **Time:** 15-30 minutes
 **Prerequisites:** Repository admin access, `gh` CLI installed and authenticated
 
-This checklist document queues up the enforcement steps to apply when CI is back online. Follow these steps in order to fully secure the `main` branch.
+This checklist document queues up the enforcement steps to apply when CI is back online.
+Follow these steps in order to fully secure the `main` branch.
 
 ---
 
@@ -73,6 +74,7 @@ After CI completes:
 - [ ] `ci-policy-verify` workflow ran (if policy paths changed)
 
 Clean up:
+
 ```bash
 # Close PR without merging (we don't need the warmup file)
 gh pr close test/ci-warmup --delete-branch
@@ -104,7 +106,7 @@ The script configures:
 3. Enable these settings:
 
 | Setting | Value |
-|---------|-------|
+| ------- | ----- |
 | **Require a pull request before merging** | Enabled |
 | Required approvals | 1 |
 | Dismiss stale reviews | Enabled |
@@ -120,7 +122,7 @@ The script configures:
 | **Allow force pushes** | Disabled |
 | **Allow deletions** | Disabled |
 
-4. Click **Create** or **Save changes**
+1. Click **Create** or **Save changes**
 
 ### Option C: Manual gh API Command
 
@@ -216,8 +218,8 @@ These additional workflows can be required based on your team's needs:
 
 ### Recommended for Most Teams
 
-| Workflow | File | When to Require |
-|----------|------|-----------------|
+| Workflow      | File              | When to Require                        |
+| ------------- | ----------------- | -------------------------------------- |
 | `ci-coverage` | `ci-coverage.yml` | When coverage thresholds are important |
 | `ci-lints` | `ci-lints.yml` | For stricter clippy enforcement |
 | `ci-skills` | `ci-skills.yml` | When modifying Skills definitions |
@@ -299,6 +301,7 @@ gh issue create \
 **Cause:** GitHub token lacks `repo` scope.
 
 **Solution:**
+
 ```bash
 gh auth refresh -s repo
 ```
@@ -322,6 +325,7 @@ gh auth refresh -s repo
 Use this checklist to verify all enforcement is in place:
 
 ### Branch Protection
+
 - [ ] Direct push to `main` blocked
 - [ ] PR required before merging
 - [ ] At least 1 approval required
@@ -338,12 +342,14 @@ Use this checklist to verify all enforcement is in place:
 - [ ] Branch deletion disabled
 
 ### Tag Signing
+
 - [ ] GPG key configured in Git
 - [ ] Public key added to GitHub
 - [ ] `tag.gpgSign = true` in Git config
 - [ ] Test tag verified locally
 
 ### Team Communication
+
 - [ ] CONTRIBUTING.md updated
 - [ ] Team notified via issue or announcement
 
