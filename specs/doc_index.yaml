@@ -1216,3 +1216,20 @@ docs:
     acs: []
     adrs: []
 
+  - id: GUIDE-TPL-ENABLE-PROTECTION-001
+    file: docs/how-to/enable-branch-protection.md
+    title: "Enable Branch Protection When CI Returns"
+    doc_type: how_to
+    stories: [US-TPL-PLT-001]
+    requirements:
+      - REQ-PLT-RELEASE-SAFETY
+      - REQ-PLT-SECURITY-GOVERNANCE
+    acs:
+      - AC-PLT-011
+      - AC-PLT-012
+      - AC-PLT-013
+    adrs:
+      - ADR-0005
+      - ADR-0006
+      - ADR-0017
+

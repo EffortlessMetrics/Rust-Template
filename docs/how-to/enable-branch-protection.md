@@ -1,7 +1,7 @@
 ---
 id: GUIDE-TPL-ENABLE-PROTECTION-001
 title: Enable Branch Protection When CI Returns
-doc_type: how-to
+doc_type: how_to
 status: published
 audience: maintainers, platform-engineers
 tags: [security, github, branch-protection, ci, enforcement, governance]
