@@ -9,12 +9,14 @@ struct ChangeCategories {
     docs: bool,
     claude: bool,
     specs: bool,
+    /// The actual list of changed files (for targeted operations)
+    files: Vec<String>,
 }
 
 impl ChangeCategories {
     fn detect(staged_only: bool) -> Result<Self> {
         let changed = get_changed_files(staged_only)?;
-        let mut cats = ChangeCategories::default();
+        let mut cats = ChangeCategories { files: changed.clone(), ..Default::default() };
 
         for file in &changed {
             if file.ends_with(".rs") {
@@ -36,6 +38,41 @@ impl ChangeCategories {
         }
 
         Ok(cats)
+    }
+
+    /// Check if any skills-related files changed
+    fn has_skills_changes(&self) -> bool {
+        self.files.iter().any(|f| {
+            f.starts_with(".claude/skills/")
+                || (f.starts_with("docs/SKILLS_") && f.ends_with(".md"))
+                || f == "specs/spec_ledger.yaml"
+                || f == "crates/xtask/src/commands/skills.rs"
+        })
+    }
+
+    /// Check if any agents-related files changed
+    fn has_agents_changes(&self) -> bool {
+        self.files.iter().any(|f| {
+            f.starts_with(".claude/agents/")
+                || (f.starts_with("docs/AGENTS_") && f.ends_with(".md"))
+                || f == "specs/spec_ledger.yaml"
+                || f == "crates/xtask/src/commands/agents.rs"
+        })
+    }
+
+    /// Get changed doc files for targeted spellcheck
+    fn changed_spellcheck_targets(&self) -> Vec<String> {
+        self.files
+            .iter()
+            .filter(|f| {
+                f.ends_with(".md")
+                    && (f.starts_with("docs/")
+                        || f.starts_with("specs/")
+                        || f.as_str() == "README.md"
+                        || f.as_str() == "CLAUDE.md")
+            })
+            .cloned()
+            .collect()
     }
 }
 
@@ -119,10 +156,17 @@ fn run_fast(staged_only: bool) -> Result<()> {
         }
     }
 
-    // Claude changes: skills/agents lint
-    if cats.claude {
-        run_skills_lint_if_changed()?;
-        run_agents_lint_if_changed()?;
+    // Claude changes: skills/agents lint (use file-based detection, not git calls)
+    if cats.has_skills_changes() {
+        run_skills_lint()?;
+    } else if cats.claude {
+        println!("{} No Skills changes detected, skipping skills-lint", "⊘".cyan());
+    }
+
+    if cats.has_agents_changes() {
+        run_agents_lint()?;
+    } else if cats.claude {
+        println!("{} No Agents changes detected, skipping agents-lint", "⊘".cyan());
     }
 
     // Specs/features changes: ac-status regen
@@ -135,37 +179,60 @@ fn run_fast(staged_only: bool) -> Result<()> {
         run_docs_check_soft()?;
     }
 
-    // Docs changes: spellcheck
+    // Docs changes: targeted spellcheck (only check changed doc files)
     if cats.docs {
-        run_spellcheck_soft()?;
+        let targets = cats.changed_spellcheck_targets();
+        run_spellcheck_soft_for_files(&targets)?;
     }
 
     println!("{}", "Pre-commit checks completed".green().bold());
     Ok(())
 }
 
-/// Full mode: all checks (current behavior)
+/// Full mode: all checks with change-aware routing
 fn run_full() -> Result<()> {
     println!("{}", "Running pre-commit checks (full mode)...".blue().bold());
 
-    // 0. Auto-fix fmt first, then let check run on clean tree
-    run_fmt_with_autostage()?;
+    // Detect what changed (staged + unstaged for full mode)
+    let cats = ChangeCategories::detect(false)?;
 
-    // 1. Core checks (fmt --check, clippy, tests)
-    crate::commands::check::run()?;
+    // Only run Rust checks if Rust or specs changed
+    if cats.rust || cats.specs {
+        // 0. Auto-fix fmt first, then let check run on clean tree
+        run_fmt_with_autostage()?;
+
+        // 1. Core checks (fmt --check, clippy, tests)
+        crate::commands::check::run()?;
+    } else {
+        println!("{} No Rust/specs changes, skipping fmt/clippy/tests", "⊘".cyan());
+    }
 
     // Run Skills format and lint if relevant files changed
-    run_skills_lint_if_changed()?;
+    if cats.has_skills_changes() {
+        run_skills_lint()?;
+    } else {
+        println!("{} No Skills changes detected, skipping skills-lint", "⊘".cyan());
+    }
 
     // Run Agents lint if relevant files changed
-    run_agents_lint_if_changed()?;
+    if cats.has_agents_changes() {
+        run_agents_lint()?;
+    } else {
+        println!("{} No Agents changes detected, skipping agents-lint", "⊘".cyan());
+    }
 
-    // Run AC status and auto-stage feature_status.md if it changed
-    run_ac_status_with_autostage()?;
+    // Run AC status and auto-stage feature_status.md if specs/features changed
+    if cats.specs {
+        run_ac_status_with_autostage()?;
+    }
 
     // Run docs-check and spellcheck in soft mode (warnings only, unless XTASK_STRICT_PRECOMMIT=1)
-    run_docs_check_soft()?;
-    run_spellcheck_soft()?;
+    if cats.docs || cats.specs {
+        run_docs_check_soft()?;
+        run_spellcheck_soft()?;
+    } else {
+        println!("{} No docs/specs changes, skipping docs-check/spellcheck", "⊘".cyan());
+    }
 
     println!("{}", "Pre-commit checks completed".green().bold());
     Ok(())
@@ -230,6 +297,32 @@ fn run_spellcheck_soft() -> Result<()> {
     Ok(())
 }
 
+/// Targeted spellcheck for fast mode - only check the specified files
+fn run_spellcheck_soft_for_files(files: &[String]) -> Result<()> {
+    let strict = std::env::var("XTASK_STRICT_PRECOMMIT").unwrap_or_default() == "1";
+
+    if std::env::var("XTASK_SKIP_SPELLCHECK").unwrap_or_default() == "1" {
+        println!("{} Skipping spellcheck because XTASK_SKIP_SPELLCHECK=1", "[WARN]".yellow());
+        return Ok(());
+    }
+
+    if files.is_empty() {
+        println!("{} No doc files to spellcheck", "⊘".cyan());
+        return Ok(());
+    }
+
+    if let Err(e) = crate::commands::spellcheck::run_for_files(files) {
+        if strict {
+            println!("{} spellcheck failed (strict mode enabled)", "[FAIL]".red());
+            return Err(e);
+        }
+        println!("{} spellcheck failed (continuing in soft mode)", "[WARN]".yellow());
+        println!("  {}", e.to_string().lines().next().unwrap_or(""));
+        println!("  💡 To fail on spelling issues: XTASK_STRICT_PRECOMMIT=1");
+    }
+    Ok(())
+}
+
 fn stage_skill_docs_if_modified() -> Result<()> {
     let out = Command::new("git")
         .args(["diff", "--name-only", "--", ".claude/skills"])
@@ -251,45 +344,8 @@ fn stage_skill_docs_if_modified() -> Result<()> {
     Ok(())
 }
 
-fn run_skills_lint_if_changed() -> Result<()> {
-    // Check if any Skills-related files have changed (both staged and unstaged)
-    let paths_to_check = [
-        ".claude/skills/**",
-        "docs/SKILLS_*.md",
-        "specs/spec_ledger.yaml",
-        "crates/xtask/src/commands/skills.rs",
-    ];
-
-    let mut has_changes = false;
-
-    for pattern in &paths_to_check {
-        // Check staged changes
-        let staged_output = Command::new("git")
-            .args(["diff", "--cached", "--name-only", "--", pattern])
-            .output()?;
-
-        let staged_str = String::from_utf8_lossy(&staged_output.stdout);
-        if !staged_str.trim().is_empty() {
-            has_changes = true;
-            break;
-        }
-
-        // Check unstaged changes
-        let unstaged_output =
-            Command::new("git").args(["diff", "--name-only", "--", pattern]).output()?;
-
-        let unstaged_str = String::from_utf8_lossy(&unstaged_output.stdout);
-        if !unstaged_str.trim().is_empty() {
-            has_changes = true;
-            break;
-        }
-    }
-
-    if !has_changes {
-        println!("{} No Skills changes detected, skipping skills-lint", "⊘".cyan());
-        return Ok(());
-    }
-
+/// Run Skills fmt/lint (called when we already know there are changes)
+fn run_skills_lint() -> Result<()> {
     // Run Skills format first
     match crate::commands::skills::run_fmt() {
         Ok(_) => {}
@@ -337,45 +393,8 @@ fn stage_agent_docs_if_modified() -> Result<()> {
     Ok(())
 }
 
-fn run_agents_lint_if_changed() -> Result<()> {
-    // Check if any Agents-related files have changed (both staged and unstaged)
-    let paths_to_check = [
-        ".claude/agents/**",
-        "docs/AGENTS_*.md",
-        "specs/spec_ledger.yaml",
-        "crates/xtask/src/commands/agents.rs",
-    ];
-
-    let mut has_changes = false;
-
-    for pattern in &paths_to_check {
-        // Check staged changes
-        let staged_output = Command::new("git")
-            .args(["diff", "--cached", "--name-only", "--", pattern])
-            .output()?;
-
-        let staged_str = String::from_utf8_lossy(&staged_output.stdout);
-        if !staged_str.trim().is_empty() {
-            has_changes = true;
-            break;
-        }
-
-        // Check unstaged changes
-        let unstaged_output =
-            Command::new("git").args(["diff", "--name-only", "--", pattern]).output()?;
-
-        let unstaged_str = String::from_utf8_lossy(&unstaged_output.stdout);
-        if !unstaged_str.trim().is_empty() {
-            has_changes = true;
-            break;
-        }
-    }
-
-    if !has_changes {
-        println!("{} No Agents changes detected, skipping agents-lint", "⊘".cyan());
-        return Ok(());
-    }
-
+/// Run Agents fmt/lint (called when we already know there are changes)
+fn run_agents_lint() -> Result<()> {
     // Run Agents format first
     match crate::commands::agents::run_fmt() {
         Ok(_) => {}
