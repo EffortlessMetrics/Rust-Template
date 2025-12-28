@@ -12,8 +12,8 @@ struct ChangeCategories {
 }
 
 impl ChangeCategories {
-    fn detect(staged_only: bool) -> Self {
-        let changed = get_changed_files(staged_only);
+    fn detect(staged_only: bool) -> Result<Self> {
+        let changed = get_changed_files(staged_only)?;
         let mut cats = ChangeCategories::default();
 
         for file in &changed {
@@ -35,35 +35,44 @@ impl ChangeCategories {
             }
         }
 
-        cats
+        Ok(cats)
     }
 }
 
-fn get_changed_files(staged_only: bool) -> Vec<String> {
-    // Get staged changes
-    let staged = Command::new("git")
-        .args(["diff", "--cached", "--name-only"])
+/// Run git with --name-only and return the list of files, failing loudly on errors
+fn git_name_only(args: &[&str], what: &str) -> Result<Vec<String>> {
+    let out = Command::new("git")
+        .args(args)
         .output()
-        .map(|o| String::from_utf8_lossy(&o.stdout).to_string())
-        .unwrap_or_default();
+        .with_context(|| format!("failed to run git for {}", what))?;
 
-    let mut files: Vec<String> =
-        staged.lines().map(|s| s.trim().to_string()).filter(|s| !s.is_empty()).collect();
+    if !out.status.success() {
+        anyhow::bail!(
+            "git {} failed: {}",
+            args.join(" "),
+            String::from_utf8_lossy(&out.stderr).trim()
+        );
+    }
+
+    Ok(String::from_utf8_lossy(&out.stdout)
+        .lines()
+        .map(|s| s.trim().to_string())
+        .filter(|s| !s.is_empty())
+        .collect())
+}
+
+fn get_changed_files(staged_only: bool) -> Result<Vec<String>> {
+    // Get staged changes - fail loudly if git isn't available or we're outside a repo
+    let mut files = git_name_only(&["diff", "--cached", "--name-only"], "staged changes")?;
 
     // Also include unstaged changes unless staged_only is set
     if !staged_only {
-        let unstaged = Command::new("git")
-            .args(["diff", "--name-only"])
-            .output()
-            .map(|o| String::from_utf8_lossy(&o.stdout).to_string())
-            .unwrap_or_default();
-
-        files.extend(unstaged.lines().map(|s| s.trim().to_string()).filter(|s| !s.is_empty()));
+        files.extend(git_name_only(&["diff", "--name-only"], "unstaged changes")?);
     }
 
     files.sort();
     files.dedup();
-    files
+    Ok(files)
 }
 
 pub fn run(mode: &str, staged_only: bool) -> Result<()> {
@@ -78,7 +87,7 @@ fn run_fast(staged_only: bool) -> Result<()> {
     let mode_desc = if staged_only { "fast mode, staged only" } else { "fast mode" };
     println!("{}", format!("Running pre-commit checks ({})...", mode_desc).blue().bold());
 
-    let cats = ChangeCategories::detect(staged_only);
+    let cats = ChangeCategories::detect(staged_only)?;
 
     if !cats.rust && !cats.docs && !cats.claude && !cats.specs {
         println!("{} No significant changes detected", "⊘".cyan());
@@ -95,10 +104,19 @@ fn run_fast(staged_only: bool) -> Result<()> {
     );
 
     // Rust changes: fmt + clippy + test-changed
+    // In staged-only mode, skip Rust compilation checks to avoid tripping on unstaged WIP
     if cats.rust {
-        run_fmt_with_autostage()?;
-        run_clippy()?;
-        run_test_changed()?;
+        if staged_only {
+            println!(
+                "{} Rust changes staged; fast --staged-only skips fmt/clippy/tests to avoid tripping on unstaged WIP.",
+                "[WARN]".yellow()
+            );
+            println!("  💡 Run: cargo xtask precommit --mode full  (receipt-grade)");
+        } else {
+            run_fmt_with_autostage()?;
+            run_clippy()?;
+            run_test_changed()?;
+        }
     }
 
     // Claude changes: skills/agents lint
@@ -180,20 +198,16 @@ fn run_docs_check_soft() -> Result<()> {
         return Ok(());
     }
 
-    match crate::commands::docs_check::run() {
-        Ok(_) => Ok(()),
-        Err(e) => {
-            if strict {
-                println!("{} docs-check failed (strict mode enabled)", "[FAIL]".red());
-                Err(e)
-            } else {
-                println!("{} docs-check failed (continuing in soft mode)", "[WARN]".yellow());
-                println!("  {}", e.to_string().lines().next().unwrap_or(""));
-                println!("  💡 To fail on docs issues: XTASK_STRICT_PRECOMMIT=1");
-                Ok(())
-            }
+    if let Err(e) = crate::commands::docs_check::run() {
+        if strict {
+            println!("{} docs-check failed (strict mode enabled)", "[FAIL]".red());
+            return Err(e);
         }
+        println!("{} docs-check failed (continuing in soft mode)", "[WARN]".yellow());
+        println!("  {}", e.to_string().lines().next().unwrap_or(""));
+        println!("  💡 To fail on docs issues: XTASK_STRICT_PRECOMMIT=1");
     }
+    Ok(())
 }
 
 fn run_spellcheck_soft() -> Result<()> {
@@ -204,20 +218,16 @@ fn run_spellcheck_soft() -> Result<()> {
         return Ok(());
     }
 
-    match crate::commands::spellcheck::run_with_default_targets() {
-        Ok(_) => Ok(()),
-        Err(e) => {
-            if strict {
-                println!("{} spellcheck failed (strict mode enabled)", "[FAIL]".red());
-                Err(e)
-            } else {
-                println!("{} spellcheck failed (continuing in soft mode)", "[WARN]".yellow());
-                println!("  {}", e.to_string().lines().next().unwrap_or(""));
-                println!("  💡 To fail on spelling issues: XTASK_STRICT_PRECOMMIT=1");
-                Ok(())
-            }
+    if let Err(e) = crate::commands::spellcheck::run_with_default_targets() {
+        if strict {
+            println!("{} spellcheck failed (strict mode enabled)", "[FAIL]".red());
+            return Err(e);
         }
+        println!("{} spellcheck failed (continuing in soft mode)", "[WARN]".yellow());
+        println!("  {}", e.to_string().lines().next().unwrap_or(""));
+        println!("  💡 To fail on spelling issues: XTASK_STRICT_PRECOMMIT=1");
     }
+    Ok(())
 }
 
 fn stage_skill_docs_if_modified() -> Result<()> {
