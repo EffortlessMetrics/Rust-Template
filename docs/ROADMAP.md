@@ -414,17 +414,23 @@ These receipts validate the template in real use but are **not** v3.3.13 blocker
 | **Staged-only semantics** | `--staged-only` flag limits checks to staged files only | ✅ Merged (PR #43) |
 | **Targeted spellcheck** | Spellcheck runs only on changed `.md` files in fast mode | ✅ Merged (PR #43) |
 | **docs-check alignment** | Consistent behavior between precommit and CI | ✅ Merged (PR #43) |
+| **Blocking hook** | Pre-commit hook now blocks on failure (escape hatch: `--no-verify`) | 🔄 PR #45 |
+| **Staged-only Rust policy** | Requires clean Rust worktree when staging Rust changes | 🔄 PR #45 |
+| **Worktree cleanup** | Acceptance tests clean up git worktrees properly (fixes ENOENT spam) | 🔄 PR #45 |
 
 #### Hook Behavior (Design Decision)
 
-The pre-commit hook is **advisory by default**. This is intentional:
+The pre-commit hook is **blocking by default**. This ensures bad commits don't slip through:
 
-- **The hook wrapper is non-blocking** — if checks fail, it echoes a warning but doesn't abort the commit
-- **Fast mode is still a gate** — the precommit command itself returns non-zero on failures
-- **Commits are cheap guardrails** — quick format/lint, don't block flow
-- **Pushes are where you pay full price** — CI runs full selftest
+- **Hook blocks on failure** — if checks fail, the commit is aborted
+- **Fast mode runs in hook** — quick format/lint/clippy, not full selftest
+- **Auto-fix what's mechanical** — fmt and skill/agent formatting auto-stage changes
+- **Escape hatch available** — `git commit --no-verify` bypasses when truly needed
+- **Full mode for receipts** — `cargo xtask precommit --mode full` runs CI-grade checks
 
-To get stricter local behavior:
+**Staged-only Rust policy:** When staging Rust changes with `--staged-only`, the worktree must be clean for Rust-affecting files. This prevents fmt from auto-fixing unstaged files or clippy from failing on WIP code. If you have unstaged Rust changes, the hook will error with clear remediation steps.
+
+To customize hook strictness:
 
 - `cargo xtask precommit --mode full` — runs receipt-grade checks (same as CI)
 - `XTASK_STRICT_PRECOMMIT=1` — makes docs-check and spellcheck hard-fail instead of warn

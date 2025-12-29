@@ -94,6 +94,7 @@
     "EAGAIN",
     "EFGH",
     "EMBEDDER",
+    "ENOENT",
     "elif",
     "Elgamal",
     "env-filter",
