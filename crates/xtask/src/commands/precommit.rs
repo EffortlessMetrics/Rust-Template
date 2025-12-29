@@ -2,12 +2,12 @@ use anyhow::{Context, Result};
 use colored::Colorize;
 use std::process::Command;
 
-/// Check if a file affects the Rust build (source, config, or toolchain)
+/// Check if a file affects the Rust build or formatting (source, config, or toolchain)
 ///
 /// This includes not just `.rs` files but also Cargo manifests, lock files,
-/// toolchain configuration, and clippy/deny configs. Missing these would
-/// cause full mode to incorrectly skip Rust checks when only `Cargo.toml`
-/// or `Cargo.lock` changed.
+/// toolchain configuration, clippy/deny configs, and formatting configs.
+/// Missing these would cause full mode to incorrectly skip Rust checks when
+/// only `Cargo.toml` or formatting config changed.
 fn is_rust_affecting(path: &str) -> bool {
     path.ends_with(".rs")
         || path.ends_with(".rs.in")
@@ -18,6 +18,10 @@ fn is_rust_affecting(path: &str) -> bool {
         || path.starts_with(".cargo/")
         || path == "clippy.toml"
         || path == "deny.toml"
+        // Formatting configs affect rustfmt output
+        || path == "rustfmt.toml"
+        || path == ".rustfmt.toml"
+        || path == ".editorconfig"
 }
 
 /// Detect what categories of files have changed
