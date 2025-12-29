@@ -6,6 +6,17 @@ pub fn run_with_default_targets() -> Result<()> {
     run(&["docs", "specs", "README.md", "CLAUDE.md"])
 }
 
+/// Run spellcheck only on the specified files (for fast, targeted checking)
+pub fn run_for_files(files: &[String]) -> Result<()> {
+    if files.is_empty() {
+        println!("{} No files to spellcheck", "⊘".cyan());
+        return Ok(());
+    }
+
+    let targets: Vec<&str> = files.iter().map(|s| s.as_str()).collect();
+    run(&targets)
+}
+
 pub fn run(targets: &[&str]) -> Result<()> {
     println!("{}", "Running spellcheck (cspell)...".blue().bold());
 

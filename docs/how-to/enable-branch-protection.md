@@ -73,6 +73,31 @@ After CI completes:
 - [ ] `ci-docs` workflow ran (if docs paths changed)
 - [ ] `ci-policy-verify` workflow ran (if policy paths changed)
 
+**Before closing the PR, discover the exact check names (this is critical!):**
+
+```bash
+# Get the PR number
+PR_NUM=$(gh pr view test/ci-warmup --json number -q .number)
+
+# List ALL check runs and their exact names
+gh api "/repos/$(gh repo view --json nameWithOwner -q .nameWithOwner)/commits/$(git rev-parse HEAD)/check-runs" \
+  --jq '.check_runs[] | {name: .name, status: .status, conclusion: .conclusion}' | jq -s '.'
+
+# Or use the simpler PR checks view
+gh pr checks test/ci-warmup
+```
+
+**Record the exact check names you see.** They are typically the **job name** from the workflow, not the workflow file name. For example:
+- Workflow file: `tier1-selftest.yml` → Check name might be: `selftest` or `tier1-selftest / build`
+- Workflow file: `ci-security.yml` → Check name might be: `security-scan` or `audit`
+
+Common patterns:
+- If workflow has `jobs: { build: ... }` → check name is `build`
+- If workflow has `jobs: { selftest: ... }` → check name is `selftest`
+- Matrix jobs appear as `job-name (matrix-value)`
+
+**Save these names** - you'll need them for branch protection configuration.
+
 Clean up:
 
 ```bash
@@ -85,15 +110,22 @@ git checkout main
 
 ## Phase 2: Enable Branch Protection
 
-### Option A: Use the Setup Script (Recommended)
+> **⚠️ Critical:** Use the exact check names you discovered in Phase 1, NOT the workflow file names.
+> Using incorrect names causes "Expected — waiting for status to be reported" errors that block all PRs.
+
+### Option A: Use the Setup Script (After Discovering Check Names)
 
 ```bash
-# From repository root
+# First, edit the script to use YOUR discovered check names
+# Look for the REQUIRED_CHECKS variable and update it
+nano .github/scripts/setup-branch-protection.sh
+
+# Then run the script
 .github/scripts/setup-branch-protection.sh
 ```
 
 The script configures:
-- Required status checks: `tier1-selftest`, `ci-security`, `ci-docs`, `ci-policy-verify`
+- Required status checks: **(must match your discovered check names)**
 - Required approvals: 1
 - Dismiss stale reviews: enabled
 - Enforce for admins: enabled
@@ -112,10 +144,7 @@ The script configures:
 | Dismiss stale reviews | Enabled |
 | **Require status checks to pass** | Enabled |
 | Require branches to be up to date | Enabled |
-| Status checks (search and add): | `tier1-selftest` |
-| | `ci-security` |
-| | `ci-docs` |
-| | `ci-policy-verify` |
+| Status checks (search and add): | *(use your discovered check names from Phase 1)* |
 | **Require conversation resolution** | Enabled |
 | **Do not allow bypassing the above settings** | Enabled |
 | **Restrict who can push** | Enabled (leave list empty) |
@@ -129,11 +158,16 @@ The script configures:
 ```bash
 REPO=$(gh repo view --json nameWithOwner -q .nameWithOwner)
 
+# Replace these with YOUR discovered check names from Phase 1
+CHECK1="your-first-check-name"
+CHECK2="your-second-check-name"
+# Add more as needed...
+
 gh api \
   --method PUT \
   -H "Accept: application/vnd.github+json" \
   "/repos/$REPO/branches/main/protection" \
-  -f required_status_checks='{"strict":true,"contexts":["tier1-selftest","ci-security","ci-docs","ci-policy-verify"]}' \
+  -f required_status_checks="{\"strict\":true,\"contexts\":[\"$CHECK1\",\"$CHECK2\"]}" \
   -f enforce_admins=true \
   -f required_pull_request_reviews='{"dismiss_stale_reviews":true,"required_approving_review_count":1}' \
   -f restrictions=null \
@@ -252,7 +286,7 @@ Add or verify this section exists:
 The `main` branch is protected. All changes require:
 
 1. **Pull request** with at least 1 approval
-2. **Passing status checks**: tier1-selftest, ci-security, ci-docs, ci-policy-verify
+2. **Passing status checks** (see required checks in Settings > Branches)
 3. **Resolved conversations**
 4. **No direct pushes** (even for admins)
 
@@ -272,7 +306,7 @@ gh issue create \
 ## What Changed
 - Direct pushes to main are now blocked
 - PRs require at least 1 approval
-- Required status checks: tier1-selftest, ci-security, ci-docs, ci-policy-verify
+- Required status checks are now enforced (see Settings > Branches)
 - Force pushes and branch deletion are disabled
 
 ## Action Required
@@ -295,6 +329,23 @@ gh issue create \
 **Cause:** The workflow has never run, so GitHub doesn't know about it.
 
 **Solution:** Create a PR that triggers the workflow, wait for it to complete, then add the check.
+
+### "Expected — waiting for status to be reported" (PR blocked forever)
+
+**Cause:** The required check name doesn't match any actual check run. This is the most common mistake - using workflow file names instead of job names.
+
+**Solution:**
+1. Go to any recent PR and look at the Checks tab
+2. Note the exact check names (they're job names, not file names)
+3. Update branch protection to use those exact names
+
+```bash
+# Discover actual check names from a recent commit
+gh api "/repos/$(gh repo view --json nameWithOwner -q .nameWithOwner)/commits/$(git rev-parse main)/check-runs" \
+  --jq '.check_runs[].name' | sort -u
+```
+
+Then update branch protection with the correct names.
 
 ### "Resource not accessible by integration"
 
@@ -330,11 +381,7 @@ Use this checklist to verify all enforcement is in place:
 - [ ] PR required before merging
 - [ ] At least 1 approval required
 - [ ] Stale reviews dismissed on new commits
-- [ ] Required status checks configured:
-  - [ ] `tier1-selftest`
-  - [ ] `ci-security`
-  - [ ] `ci-docs`
-  - [ ] `ci-policy-verify`
+- [ ] Required status checks configured (using exact names from Phase 1)
 - [ ] Branches must be up to date before merging
 - [ ] Conversation resolution required
 - [ ] Admin bypass disabled
