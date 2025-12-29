@@ -11,6 +11,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 (empty)
 
+## [3.3.14] - 2025-12-29
+
+### Changed
+
+- **Pre-commit hook behavior**
+  - Hook is **blocking** by default (`--mode fast --staged-only`)
+  - Escape hatch: `git commit --no-verify` bypasses the hook
+  - Only significant changes (Rust, BDD features, specs) trigger checks
+  - Auto-formats and auto-stages mechanical fixes (rustfmt, skills-fmt)
+  - Staged-only Rust commits require no unstaged Rust-affecting changes
+
+- **Pre-commit xtask improvements**
+  - Added `--mode fast|full` flag (fast is default)
+  - Added `--staged-only` flag to check only staged files
+  - Smart change detection skips checks when no significant files changed
+  - Clearer output indicating mode and scope
+
+- **Acceptance test cleanup**
+  - Worktree cleanup on test completion to prevent temp directory accumulation
+  - Proper cleanup on both success and failure paths
+
+### Docs
+
+- Updated ROADMAP §4.4.1 to reflect blocking hook behavior
+- Clarified hook knobs and behavior model in documentation
+
 ## [3.3.13] - 2025-12-27
 
 ### Added
