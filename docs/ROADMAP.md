@@ -9,7 +9,7 @@ stories: [US-TPL-PLT-001]
 requirements: [REQ-PLT-DOCS-CONSISTENCY]
 acs: [AC-PLT-009, AC-PLT-010]
 adrs: [ADR-0005]
-last_updated: 2025-12-28
+last_updated: 2025-12-29
 ---
 
 # Roadmap: Rust-as-Spec Platform Cell (v3.3.13)
@@ -417,11 +417,17 @@ These receipts validate the template in real use but are **not** v3.3.13 blocker
 
 #### Hook Behavior (Design Decision)
 
-The pre-commit hook is **non-blocking by default** (fast mode). This is intentional:
+The pre-commit hook is **advisory by default**. This is intentional:
 
+- **The hook wrapper is non-blocking** — if checks fail, it echoes a warning but doesn't abort the commit
+- **Fast mode is still a gate** — the precommit command itself returns non-zero on failures
 - **Commits are cheap guardrails** — quick format/lint, don't block flow
 - **Pushes are where you pay full price** — CI runs full selftest
-- Use `XTASK_FULL_PRECOMMIT=1` for full validation locally if desired
+
+To get stricter local behavior:
+
+- `cargo xtask precommit --mode full` — runs receipt-grade checks (same as CI)
+- `XTASK_STRICT_PRECOMMIT=1` — makes docs-check and spellcheck hard-fail instead of warn
 
 #### Release Checklist
 
