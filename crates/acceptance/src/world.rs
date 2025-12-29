@@ -1,7 +1,55 @@
 use axum::Router;
 use cucumber::World as CucumberWorld;
 use http::HeaderMap;
-use std::{collections::HashMap, fs, path::Path};
+use std::{collections::HashMap, fs, path::Path, path::PathBuf, process::Command};
+
+/// RAII guard for git worktrees created during tests.
+///
+/// Ensures worktrees are properly removed from git metadata when dropped,
+/// preventing stale worktree references that cause ENOENT spam in tools
+/// like VS Code git integration.
+#[derive(Debug)]
+pub struct TempWorktree {
+    /// The repository root where the worktree was created from
+    repo_root: PathBuf,
+    /// Path to the worktree directory
+    worktree_path: PathBuf,
+}
+
+impl TempWorktree {
+    /// Create a new temporary worktree guard.
+    ///
+    /// This does NOT create the worktree - it only sets up the guard for cleanup.
+    /// The caller is responsible for actually running `git worktree add`.
+    pub fn new(repo_root: PathBuf, worktree_path: PathBuf) -> Self {
+        Self { repo_root, worktree_path }
+    }
+
+    /// Get the path to the worktree directory
+    pub fn path(&self) -> &Path {
+        &self.worktree_path
+    }
+}
+
+impl Drop for TempWorktree {
+    fn drop(&mut self) {
+        // Best-effort cleanup; never panic in Drop.
+        // First, try to remove the worktree cleanly
+        let _ = Command::new("git")
+            .arg("-C")
+            .arg(&self.repo_root)
+            .args(["worktree", "remove", "--force"])
+            .arg(&self.worktree_path)
+            .status();
+
+        // Then prune any stale worktree metadata
+        let _ = Command::new("git")
+            .arg("-C")
+            .arg(&self.repo_root)
+            .args(["worktree", "prune", "--expire", "now"])
+            .status();
+    }
+}
 
 /// Test world state - includes real HTTP router for integration testing
 #[derive(Debug, CucumberWorld)]
@@ -34,6 +82,8 @@ pub struct World {
     pub platform_auth_mode: Option<String>,
     /// Per-scenario platform auth token (for isolation from parallel scenarios)
     pub platform_auth_token: Option<String>,
+    /// Temporary git worktree guard (cleans up worktree metadata on drop)
+    pub temp_worktree: Option<TempWorktree>,
 }
 
 /// Context for xtask command execution
@@ -159,6 +209,7 @@ impl Default for World {
             cli_json_output: None,
             platform_auth_mode: None,
             platform_auth_token: None,
+            temp_worktree: None,
         }
     }
 }

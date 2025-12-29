@@ -43,9 +43,8 @@ echo "🔍 Running pre-commit governance checks..."
 # The xtask binary itself has the Nix wrapper logic
 # --mode fast: change-aware routing for speed
 # --staged-only: only check files being committed
-if ! cargo run -p xtask -- precommit --mode fast --staged-only; then
-  echo "[WARN] Pre-commit checks failed (non-blocking); fix before pushing."
-fi
+# Hook is BLOCKING by default. Use `git commit --no-verify` to bypass if truly needed.
+cargo run -p xtask -- precommit --mode fast --staged-only
 "#,
         low_res_export
     );
