@@ -9,7 +9,7 @@ stories: [US-TPL-PLT-001]
 requirements: [REQ-PLT-DOCS-CONSISTENCY]
 acs: [AC-PLT-009, AC-PLT-010]
 adrs: [ADR-0005]
-last_updated: 2025-12-27
+last_updated: 2025-12-29
 ---
 
 # Roadmap: Rust-as-Spec Platform Cell (v3.3.13)
@@ -59,9 +59,12 @@ Template versions (v3.3.12, v3.3.13, etc.) are **tagged snapshots** of this repo
 `main` may contain post-tag docs/tooling that will ship in the next tag.
 
 | Version | Status | Focus |
-|---------|--------|-------|
+| ------- | ------ | ----- |
 | v3.3.12 | Tagged | Security hardening, governance architecture, CI improvements |
 | v3.3.13 | Tagged | Docs polish + release tooling hardening (see §4.4) |
+| v3.3.14 | On main | DevEx loop: faster precommit, staged-only semantics (see §4.4.1) |
+| v3.4.0 | Planned | External validation: IDP consumer, contract tests, API docs (see §4.5) |
+| v3.5.0+ | Vision | Surface minimization: crate extraction (see §4.6) |
 
 ### Layer 2: Kernel Baseline (Frozen Tags)
 
@@ -124,7 +127,7 @@ The template is at v3.3.13, building on the frozen v3.3.9-kernel baseline.
 
 **Template Version (v3.3.13):**
 
-This is the current active template version with adoption receipts and documentation polish.
+This is the current released template version with docs polish and release tooling hardening. Adoption receipts are v3.4.0 entry criteria.
 
 **Frozen Kernel Baseline (v3.3.9-kernel tag):**
 
@@ -333,9 +336,9 @@ Only a few items remain - all now have documentation or are external dependencie
 > architecture) is complete. Adoption receipts are tracked in v3.4.0 entry criteria, not as
 > v3.3.13 blockers.
 
-**Status:** Ready for tag
+**Status:** Released (tag: v3.3.13)
 
-#### In This Release Candidate
+#### Shipped in v3.3.13
 
 | Item                         | Description                                   | Status              |
 | ---------------------------- | --------------------------------------------- | ------------------- |
@@ -396,46 +399,147 @@ These receipts validate the template in real use but are **not** v3.3.13 blocker
 
 ---
 
-### 4.5 v3.4.0 – IDP-Ready (Minor Release)
+### 4.4.1 v3.3.14 – DevEx Loop (Patch Release)
+
+> **Scope:** Developer experience improvements merged after v3.3.13 tag.
+> These changes are already on `main` and will ship in the next patch tag.
+
+**Status:** On main, pending tag
+
+#### Merged (Post-v3.3.13)
+
+| Item | Description | Status |
+| ---- | ----------- | ------ |
+| **Faster precommit** | Default mode changed from full to fast; ~10x speedup for typical commits | ✅ Merged (PR #43) |
+| **Staged-only semantics** | `--staged-only` flag limits checks to staged files only | ✅ Merged (PR #43) |
+| **Targeted spellcheck** | Spellcheck runs only on changed `.md` files in fast mode | ✅ Merged (PR #43) |
+| **docs-check alignment** | Consistent behavior between precommit and CI | ✅ Merged (PR #43) |
+| **Blocking hook** | Pre-commit hook now blocks on failure (escape hatch: `--no-verify`) | 🔄 PR #45 |
+| **Staged-only Rust policy** | Requires clean Rust worktree when staging Rust changes | 🔄 PR #45 |
+| **Worktree cleanup** | Acceptance tests clean up git worktrees properly (fixes ENOENT spam) | 🔄 PR #45 |
+
+#### Hook Behavior (Design Decision)
+
+The pre-commit hook is **blocking by default**. This ensures bad commits don't slip through:
+
+- **Hook blocks on failure** — if checks fail, the commit is aborted
+- **Fast mode runs in hook** — quick format/lint/clippy, not full selftest
+- **Auto-fix what's mechanical** — fmt and skill/agent formatting auto-stage changes
+- **Escape hatch available** — `git commit --no-verify` bypasses when truly needed
+- **Full mode for receipts** — `cargo xtask precommit --mode full` runs CI-grade checks
+
+**Staged-only Rust policy:** When staging Rust changes with `--staged-only`, the worktree must be clean for Rust-affecting files. This prevents fmt from auto-fixing unstaged files or clippy from failing on WIP code. If you have unstaged Rust changes, the hook will error with clear remediation steps.
+
+To customize hook strictness:
+
+- `cargo xtask precommit --mode full` — runs receipt-grade checks (same as CI)
+- `XTASK_STRICT_PRECOMMIT=1` — makes docs-check and spellcheck hard-fail instead of warn
+
+#### Release Checklist
+
+```text
+[ ] Verify selftest green: cargo xtask selftest
+[ ] Add evidence bundle: cargo xtask release-bundle 3.3.14
+[ ] Commit evidence and merge to main
+[ ] Tag: git tag v3.3.14 -m "v3.3.14"
+[ ] Push: git push --follow-tags
+```
+
+#### Optional Follow-ups (Not Blocking Tag)
+
+| Item | Description | Notes |
+| ---- | ----------- | ----- |
+| **pre-push hook option** | Install hooks could optionally add a pre-push hook for full validation | Keeps commits fast, pushes safe |
+| **Untracked file detection** | Include `git ls-files --others` in non-staged mode | Catches new files that aren't staged |
+| **Spellcheck specs YAML** | Extend spellcheck targets to include `specs/*.yaml` | Currently markdown-only |
+
+---
+
+### 4.5 v3.4.0 – External Validation (Minor Release)
 
 > **Note:** v3.4.0 is the *next minor* kernel closure. The current frozen baseline is `v3.3.9-kernel`.
 
-#### What "IDP-Ready" Means (Contract)
+#### What v3.4.0 Proves
 
-v3.4.0 is not a feature list. It's the point where Backstage/Port consumers can **reliably ingest** `/platform/*` from cells.
+v3.4.0 is explicitly the **"external proof" release**. It demonstrates that the template works beyond selftest:
 
-| Criterion                             | Definition of Done                                                              |
-| ------------------------------------- | ------------------------------------------------------------------------------- |
-| **Stable `idp-snapshot` schema**      | Schema versioned; breaking changes require major version bump                   |
-| **Example IDP tile(s)**               | At least: governance health tile + docs health tile consuming `/platform/*`    |
-| **Multi-service story exists**        | Registry *spec* for multiple cells (even if static YAML initially)             |
-| **Receipts-driven hardening loop**    | Friction taxonomy + workflow for promoting soft gates → hard gates             |
+| Criterion | Definition of Done |
+| --------- | ------------------ |
+| **One reference consumer** | A real IDP tile (Backstage or similar) consuming `/platform/*` endpoints |
+| **Contract tests for `/platform/*`** | Schema-level regression detection for API stability |
+| **Multi-service registry spec** | Even static YAML for listing cells + one aggregator query (fleet view) |
+| **Curl-first API examples** | 2-3 examples per endpoint (happy path + auth failure + schema link) |
+| **Receipts validate adoption** | Fork dry-run + AI first-hour receipts captured in real forks |
+
+The gap v3.4.0 closes: **"tests are green" vs "ship survives real load"**.
 
 #### Entry Criteria (Gate Before Starting v3.4.0)
 
 - v3.3.12 released ✅
-- v3.3.13 released with receipts 🔄 (in progress — see §4.4)
+- v3.3.13 released ✅
+- v3.3.14 released (pending tag) 🔜
+- Fork dry-run receipt 🔜 pending
+- AI first-hour receipt 🔜 pending
 - At least one real fork exists and is actively used
 - Friction log reviewed; v3.4.0 candidates tagged
 
 #### Planned Work (Demand-Driven)
 
-| Item                                 | Description                                                           | Status     | Priority |
-| ------------------------------------ | --------------------------------------------------------------------- | ---------- | -------- |
-| **Multi-service registry spec**      | Static YAML registry listing cells and their `idp-snapshot` endpoints | 🔜 Planned | High     |
-| **IDP tile reference implementation**| Example Backstage tiles for governance + docs health                  | 🔜 Planned | High     |
-| **Friction taxonomy + promotion**    | Workflow for soft → hard gate promotion based on fork feedback        | 🔜 Planned | Medium   |
-| **AI agent feedback loop**           | Structured agent → friction → kernel improvement cycle                | 🔜 Planned | Medium   |
+| Item | Description | Status | Priority |
+| ---- | ----------- | ------ | -------- |
+| **Reference IDP consumer** | Real Backstage tile consuming `/platform/status` + `/platform/docs/index` | 🔜 Planned | High |
+| **Contract tests** | OpenAPI schema validation tests for `/platform/*` endpoints | 🔜 Planned | High |
+| **Multi-service registry spec** | Static YAML registry listing cells + `idp-snapshot` endpoints | 🔜 Planned | High |
+| **API docs curl examples** | Expand `docs/api/README.md` with curl-first examples per endpoint | 🔜 Planned | Medium |
+| **Friction taxonomy + promotion** | Workflow for soft → hard gate promotion based on fork feedback | 🔜 Planned | Medium |
 
 #### Deferred to v3.5.0+
 
 These belong in later releases unless adoption pressure forces them earlier:
 
-| Item                                 | Description                                                           | Rationale                        |
-| ------------------------------------ | --------------------------------------------------------------------- | -------------------------------- |
-| **Cross-cell graph queries**         | Query governance state across multiple cells                          | Needs registry + real multi-cell usage |
-| **Advanced policy packs**            | PCI-DSS, HIPAA compliance templates                                   | Domain-specific; not core        |
-| **Fleet-wide Backstage integration** | Plugin reading `/platform/*` from N services                          | v3.5.0 after registry is proven  |
+| Item | Description | Rationale |
+| ---- | ----------- | --------- |
+| **Crate extraction** | Publish `gov-model`, `gov-http` as standalone crates | See §4.6 Surface Minimization |
+| **Cross-cell graph queries** | Query governance state across multiple cells | Needs registry + real multi-cell usage |
+| **Advanced policy packs** | PCI-DSS, HIPAA compliance templates | Domain-specific; not core |
+| **Fleet-wide Backstage integration** | Plugin reading `/platform/*` from N services | v3.5.0 after registry is proven |
+
+---
+
+### 4.6 v3.5.0+ – Surface Minimization (Future)
+
+> **Goal:** Reduce fork burden by extracting reusable machinery into published crates.
+
+#### The Problem
+
+Right now "template" implies copying lots of repo machinery forward. Forks drag half the factory with them, making upgrades painful and creating forever-forks.
+
+#### The Solution
+
+Separate **reusable crates** from the **template skeleton**:
+
+| Crate | Purpose | Current Location |
+| ----- | ------- | ---------------- |
+| `gov-model` | Pure domain types: Task, TaskStatus, GovernanceRepository trait | `crates/gov-model/` |
+| `gov-http` | Reusable Axum router for `/platform/*` endpoints | `crates/gov-http/` |
+| `ac-kernel` | AC/test mapping, spec_ledger parsing, BDD harness | `crates/ac-kernel/` |
+| `versioning` | Manifest-driven version engine | Parts of `crates/xtask/` |
+
+#### End State
+
+- **Published crates:** Adopters depend on crates via Cargo, not vendoring
+- **Thin template:** Focused on composition + governance + domain examples
+- **Easier upgrades:** Bump crate version, not merge entire repo
+
+#### Entry Criteria
+
+- v3.4.0 shipped with real IDP consumer
+- At least 2 active forks experiencing upgrade friction
+- Clear boundary between "kernel machinery" and "template examples"
+
+#### Not Yet Planned
+
+This is a **vision**, not a commitment. Work here is demand-driven by real fork friction, not speculative.
 
 #### Already in v3.3.9-kernel
 
@@ -456,24 +560,26 @@ See [v3.4.0-plan.md](archive/v3.4.0-plan.md) for scope when v3.4.0 work begins.
 
 ## 5. Path Forward Options
 
-> **Current State (v3.3.13):** The template has completed security hardening, architecture refactoring, and documentation polish. The next step is external validation via fork receipts. See §4.4 for v3.3.13 release checklist.
+> **Current State:** Template v3.3.13 is released. v3.3.14 (DevEx improvements) is on main, pending tag. The next step is external validation via fork receipts (v3.4.0 entry criteria).
 
 ### 5.1 Option A: Minimal (Lock and Fork) — *Active*
 
 **Goal:** Freeze the kernel as-is, use it for services, let friction drive improvements.
 
-**Status:** This is the current path. v3.3.9-kernel is frozen; v3.3.13 adds validation receipts.
+**Status:** This is the current path. v3.3.9-kernel is frozen; v3.3.13 is released; v3.3.14 is on main.
 
 **Immediate Next Steps:**
 
 1. ✅ Kernel frozen at v3.3.9-kernel
 2. ✅ Branch protection configured
 3. ✅ Documentation complete (v3.3.12 → v3.3.13)
-4. 🔜 Create fork from v3.3.9-kernel tag
-5. 🔜 Complete fork dry-run and AI first-hour receipts
-6. 🔜 Tag v3.3.13 with evidence bundle
+4. ✅ v3.3.13 tagged with evidence bundle
+5. 🔜 Tag v3.3.14 (DevEx improvements)
+6. 🔜 Create fork from v3.3.9-kernel tag
+7. 🔜 Complete fork dry-run and AI first-hour receipts (v3.4.0 gate)
+8. 🔜 v3.4.0: External validation (reference consumer, contract tests, API examples)
 
-**After v3.3.13:**
+**After v3.3.14:**
 
 - Fork for real service development
 - Capture friction in `FRICTION_LOG.md`
@@ -786,20 +892,35 @@ The template is "production ready" when:
 
 **Current State:**
 
-| Layer        | Version         | Status                          |
-|--------------|-----------------|--------------------------------|
-| **Template** | v3.3.13         | Release candidate in progress  |
-| **Kernel**   | v3.3.9-kernel   | Frozen baseline                |
+| Layer | Version | Status |
+| ----- | ------- | ------ |
+| **Template** | v3.3.13 | Released (tag: v3.3.13) |
+| **Kernel** | v3.3.9-kernel | Frozen baseline |
+| **Next Patch** | v3.3.14 | On main, pending tag (see §4.4.1) |
+| **Next Minor** | v3.4.0 | External validation release (see §4.5) |
+| **Future** | v3.5.0+ | Surface minimization / crate extraction (see §4.6) |
 
 **v3.3.9-kernel** is a stable, selftest-green kernel. All **kernel ACs** (`must_have_ac: true`) pass; non-kernel ACs are tracked as soft gates and may be failing or unknown without blocking selftest.
 
-**v3.3.13** adds documentation polish, version alignment, and security configuration docs. The remaining gates are external validation receipts (fork dry-run + AI first-hour).
+**v3.3.13** shipped documentation polish, version alignment, and security configuration docs.
 
-**Next Steps:**
+**v3.3.14** (on main) includes faster precommit defaults, staged-only semantics, and targeted spellcheck.
 
-1. Complete fork validation receipts (see §4.4 Release Checklist)
-2. Tag v3.3.13 with evidence bundle
+**v3.4.0** is the "external proof" release: reference IDP consumer, contract tests, and real fork receipts.
+
+**v3.5.0+** is the vision for crate extraction—reducing fork burden by publishing reusable machinery.
+
+**Immediate Next Steps:**
+
+1. Tag v3.3.14 (DevEx improvements on main)
+2. Collect fork dry-run + AI first-hour receipts (v3.4.0 gate)
 3. Fork for real service development
 4. Capture friction → batch improvements into v3.4.0
+
+**What's Still Missing (Honest Assessment):**
+
+- **Green ≠ proven.** Selftest passes, but the template hasn't yet survived real adoption load.
+- **API docs are an index, not a guide.** Curl-first examples are a v3.4.0 item.
+- **Fork surface is large.** Crate extraction (v3.5.0+) will address this, but only after real friction justifies it.
 
 The recommended path: fork immediately, capture friction, fix what matters, document what you learned. Don't try to anticipate every need—let real usage tell you what's missing.
