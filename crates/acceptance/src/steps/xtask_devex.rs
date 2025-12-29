@@ -1,4 +1,4 @@
-use crate::world::World;
+use crate::world::{TempWorktree, World};
 use cucumber::{given, then, when};
 use regex::Regex;
 use std::{fs, path::Path, process::Command};
@@ -91,7 +91,13 @@ async fn given_temp_worktree(world: &mut World) {
         .xtask_context_mut()
         .env
         .insert("CARGO_TARGET_DIR".to_string(), root.join("target").display().to_string());
-    world.xtask_context_mut().test_repo_path = Some(worktree_path);
+
+    // Store worktree path for xtask tests to use
+    world.xtask_context_mut().test_repo_path = Some(worktree_path.clone());
+
+    // Create RAII guard to ensure proper cleanup when World is dropped.
+    // This prevents git worktree metadata leaks that cause ENOENT spam in VS Code.
+    world.temp_worktree = Some(TempWorktree::new(root, worktree_path));
 }
 
 #[given("the pre-commit hook does not exist")]
