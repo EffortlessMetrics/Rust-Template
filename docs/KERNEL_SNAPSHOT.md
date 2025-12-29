@@ -1,7 +1,7 @@
 ---
 id: SNAPSHOT-TPL-KERNEL-001
-title: Kernel Snapshot v3.3.13
-template_version: "3.3.13"
+title: Kernel Snapshot v3.3.14
+template_version: "3.3.14"
 doc_type: status
 status: published
 audience: maintainers, platform-engineers, forks
@@ -13,7 +13,7 @@ adrs: [ADR-0005]
 last_updated: 2025-12-27
 ---
 
-# Kernel Snapshot v3.3.13
+# Kernel Snapshot v3.3.14
 
 **Kernel Baseline:** v3.3.9-kernel
 
@@ -22,7 +22,7 @@ last_updated: 2025-12-27
 > For AC-level status, see [`docs/feature_status.md`](./feature_status.md).
 > For adoption instructions, see [`docs/how-to/adopt-kernel.md`](./how-to/adopt-kernel.md).
 
-**Last Updated:** 2025-12-27 | **Template Version:** v3.3.13 | **Kernel Baseline:** v3.3.9-kernel
+**Last Updated:** 2025-12-29 | **Template Version:** v3.3.14 | **Kernel Baseline:** v3.3.9-kernel
 
 ## Executive Summary
 
