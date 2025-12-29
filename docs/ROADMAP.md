@@ -12,9 +12,9 @@ adrs: [ADR-0005]
 last_updated: 2025-12-29
 ---
 
-# Roadmap: Rust-as-Spec Platform Cell (v3.3.13)
+# Roadmap: Rust-as-Spec Platform Cell (v3.3.14)
 
-This document describes the current state of the template (v3.3.13) and the frozen baseline kernel (v3.3.9-kernel tag).
+This document describes the current state of the template (v3.3.14) and the frozen baseline kernel (v3.3.9-kernel tag).
 
 > For the conceptual model behind Rust-as-Spec, see [`docs/explanation/rust-as-spec-overview.md`](explanation/rust-as-spec-overview.md).
 
@@ -117,17 +117,17 @@ To fork from v3.3.9, start with `docs/how-to/FIRST_FORK.md`.
 
 ---
 
-## 2. Current State (v3.3.13)
+## 2. Current State (v3.3.14)
 
-The template is at v3.3.13, building on the frozen v3.3.9-kernel baseline.
+The template is at v3.3.14, building on the frozen v3.3.9-kernel baseline.
 
 - **Kernel ACs** (`must_have_ac: true`): All passing
 - **Selftest**: Green (11/11 gates)
 - **Non-kernel ACs**: Soft gates, may be UNKNOWN depending on test capture
 
-**Template Version (v3.3.13):**
+**Template Version (v3.3.14):**
 
-This is the current released template version with docs polish and release tooling hardening. Adoption receipts are v3.4.0 entry criteria.
+This is the current released template version with DevEx improvements (faster precommit, staged-only semantics). Adoption receipts are v3.4.0 entry criteria.
 
 **Frozen Kernel Baseline (v3.3.9-kernel tag):**
 
@@ -560,13 +560,13 @@ See [v3.4.0-plan.md](archive/v3.4.0-plan.md) for scope when v3.4.0 work begins.
 
 ## 5. Path Forward Options
 
-> **Current State:** Template v3.3.13 is released. v3.3.14 (DevEx improvements) is on main, pending tag. The next step is external validation via fork receipts (v3.4.0 entry criteria).
+> **Current State:** Template v3.3.14 is released. The next step is external validation via fork receipts (v3.4.0 entry criteria).
 
 ### 5.1 Option A: Minimal (Lock and Fork) — *Active*
 
 **Goal:** Freeze the kernel as-is, use it for services, let friction drive improvements.
 
-**Status:** This is the current path. v3.3.9-kernel is frozen; v3.3.13 is released; v3.3.14 is on main.
+**Status:** This is the current path. v3.3.9-kernel is frozen; v3.3.14 is released.
 
 **Immediate Next Steps:**
 
@@ -894,9 +894,8 @@ The template is "production ready" when:
 
 | Layer | Version | Status |
 | ----- | ------- | ------ |
-| **Template** | v3.3.13 | Released (tag: v3.3.13) |
+| **Template** | v3.3.14 | Released (tag: v3.3.14) |
 | **Kernel** | v3.3.9-kernel | Frozen baseline |
-| **Next Patch** | v3.3.14 | On main, pending tag (see §4.4.1) |
 | **Next Minor** | v3.4.0 | External validation release (see §4.5) |
 | **Future** | v3.5.0+ | Surface minimization / crate extraction (see §4.6) |
 
@@ -904,7 +903,7 @@ The template is "production ready" when:
 
 **v3.3.13** shipped documentation polish, version alignment, and security configuration docs.
 
-**v3.3.14** (on main) includes faster precommit defaults, staged-only semantics, and targeted spellcheck.
+**v3.3.14** shipped faster precommit defaults, staged-only semantics, and targeted spellcheck.
 
 **v3.4.0** is the "external proof" release: reference IDP consumer, contract tests, and real fork receipts.
 
@@ -912,7 +911,7 @@ The template is "production ready" when:
 
 **Immediate Next Steps:**
 
-1. Tag v3.3.14 (DevEx improvements on main)
+1. ✅ Tag v3.3.14 (DevEx improvements)
 2. Collect fork dry-run + AI first-hour receipts (v3.4.0 gate)
 3. Fork for real service development
 4. Capture friction → batch improvements into v3.4.0
