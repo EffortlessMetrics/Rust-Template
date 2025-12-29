@@ -347,9 +347,9 @@ stories:
               `spec_ledger.yaml` and test results. The header MUST include schema_version,
               template_version, and a cross-reference to governance semantics in
               `crates/ac-kernel/README.md`. `cargo xtask docs-check` validates this alignment.
-            tags: [kernel, governance]
+            tags: [kernel, governance, ci-only]
             must_have_ac: true
-            note: "Ensures the AC status report is governed and traceable to kernel contracts."
+            note: "Ensures the AC status report is governed and traceable to kernel contracts. Tests are in xtask (excluded from ac-status collection)."
             tests:
               - { type: unit, tag: "test_feature_status_has_governance_link", module: "commands::ac_status::tests", file: "crates/xtask/src/commands/ac_status.rs" }
               - { type: bdd, tag: "@AC-TPL-AC-STATUS-CONSISTENCY", file: "specs/features/xtask_devex.feature" }
@@ -595,8 +595,9 @@ stories:
               XTASK_NONINTERACTIVE=1 guarantees:
               - no interactive prompts, and
               - exit code 0 on success, non-zero on failure.
-            tags: [kernel]
+            tags: [kernel, ci-only]
             must_have_ac: true
+            note: "Tests are in xtask (excluded from ac-status collection)."
             tests:
               - { type: bdd, tag: "@AC-TPL-XTASK-NONINTERACTIVE", file: "specs/features/xtask_devex.feature" }
               - { type: unit, tag: "test_ci_detection_via_ci_var", module: "env::tests", file: "crates/xtask/src/env.rs" }
