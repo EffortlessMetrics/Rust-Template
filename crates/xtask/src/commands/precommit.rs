@@ -134,6 +134,15 @@ fn get_changed_files(staged_only: bool) -> Result<Vec<String>> {
     Ok(files)
 }
 
+/// Check if there are any unstaged Rust-affecting changes.
+///
+/// This is used to enforce that staged-only Rust commits require a clean Rust worktree.
+/// If you have unstaged Rust changes, fmt/clippy could fail or auto-fix the wrong files.
+fn has_unstaged_rust_changes() -> Result<bool> {
+    let unstaged = git_name_only(&["diff", "--name-only"], "unstaged changes")?;
+    Ok(unstaged.iter().any(|f| is_rust_affecting(f)))
+}
+
 pub fn run(mode: &str, staged_only: bool) -> Result<()> {
     match mode {
         "full" => run_full(),
@@ -163,19 +172,23 @@ fn run_fast(staged_only: bool) -> Result<()> {
     );
 
     // Rust changes: fmt + clippy + test-changed
-    // In staged-only mode, skip Rust compilation checks to avoid tripping on unstaged WIP
+    // In staged-only mode, require clean Rust worktree to avoid fmt/clippy tripping on unstaged WIP
     if cats.rust {
-        if staged_only {
-            println!(
-                "{} Rust changes staged; fast --staged-only skips fmt/clippy/tests to avoid tripping on unstaged WIP.",
-                "[WARN]".yellow()
+        if staged_only && has_unstaged_rust_changes()? {
+            // Fail hard: can't reliably check staged Rust if worktree is dirty
+            anyhow::bail!(
+                "Cannot run pre-commit with staged Rust changes while unstaged Rust changes exist.\n\
+                 Either:\n  \
+                 - Stage all Rust changes: git add -u\n  \
+                 - Stash unstaged changes: git stash -k\n  \
+                 - Run full mode: cargo xtask precommit --mode full\n  \
+                 - Bypass hook (emergency): git commit --no-verify"
             );
-            println!("  💡 Run: cargo xtask precommit --mode full  (receipt-grade)");
-        } else {
-            run_fmt_with_autostage()?;
-            run_clippy()?;
-            run_test_changed()?;
         }
+        // Worktree is clean (or not staged-only), run full Rust checks
+        run_fmt_with_autostage()?;
+        run_clippy()?;
+        run_test_changed()?;
     }
 
     // Claude changes: skills/agents lint (use file-based detection, not git calls)
@@ -525,3 +538,4 @@ fn run_fmt_with_autostage() -> Result<()> {
 
     Ok(())
 }
+// test comment
