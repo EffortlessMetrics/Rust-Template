@@ -9,7 +9,7 @@ stories: [US-TPL-PLT-001]
 requirements: [REQ-PLT-DOCS-CONSISTENCY]
 acs: [AC-PLT-009, AC-PLT-010]
 adrs: [ADR-0005]
-last_updated: 2025-12-27
+last_updated: 2025-12-28
 ---
 
 # Roadmap: Rust-as-Spec Platform Cell (v3.3.13)
@@ -62,6 +62,7 @@ Template versions (v3.3.12, v3.3.13, etc.) are **tagged snapshots** of this repo
 |---------|--------|-------|
 | v3.3.12 | Tagged | Security hardening, governance architecture, CI improvements |
 | v3.3.13 | Tagged | Docs polish + release tooling hardening (see §4.4) |
+| v3.3.14 | Next   | DevEx loop: faster precommit, staged-only semantics, targeted spellcheck (see §4.4.1) |
 
 ### Layer 2: Kernel Baseline (Frozen Tags)
 
@@ -124,7 +125,7 @@ The template is at v3.3.13, building on the frozen v3.3.9-kernel baseline.
 
 **Template Version (v3.3.13):**
 
-This is the current active template version with adoption receipts and documentation polish.
+This is the current released template version with docs polish and release tooling hardening. Adoption receipts are v3.4.0 entry criteria.
 
 **Frozen Kernel Baseline (v3.3.9-kernel tag):**
 
@@ -333,9 +334,9 @@ Only a few items remain - all now have documentation or are external dependencie
 > architecture) is complete. Adoption receipts are tracked in v3.4.0 entry criteria, not as
 > v3.3.13 blockers.
 
-**Status:** Ready for tag
+**Status:** Released (tag: v3.3.13)
 
-#### In This Release Candidate
+#### Shipped in v3.3.13
 
 | Item                         | Description                                   | Status              |
 | ---------------------------- | --------------------------------------------- | ------------------- |
@@ -396,6 +397,41 @@ These receipts validate the template in real use but are **not** v3.3.13 blocker
 
 ---
 
+### 4.4.1 v3.3.14 – DevEx Loop (Patch Release)
+
+> **Scope:** Developer experience improvements merged after v3.3.13 tag.
+> These changes are already on `main` and will ship in the next patch tag.
+
+**Status:** On main, pending tag
+
+#### Merged (Post-v3.3.13)
+
+| Item | Description | Status |
+| ---- | ----------- | ------ |
+| **Faster precommit** | Default mode changed from full to fast; ~10x speedup for typical commits | ✅ Merged (PR #43) |
+| **Staged-only semantics** | `--staged-only` flag limits checks to staged files only | ✅ Merged (PR #43) |
+| **Targeted spellcheck** | Spellcheck runs only on changed `.md` files in fast mode | ✅ Merged (PR #43) |
+| **docs-check alignment** | Consistent behavior between precommit and CI | ✅ Merged (PR #43) |
+
+#### Release Checklist
+
+```text
+[ ] Verify selftest green: cargo xtask selftest
+[ ] Add evidence bundle: cargo xtask release-bundle 3.3.14
+[ ] Commit evidence and merge to main
+[ ] Tag: git tag v3.3.14 -m "v3.3.14"
+[ ] Push: git push --follow-tags
+```
+
+#### Optional Follow-ups (Not Blocking Tag)
+
+| Item | Description | Notes |
+| ---- | ----------- | ----- |
+| **pre-push hook option** | Install hooks could optionally add a pre-push hook for full validation | Keeps commits fast, pushes safe |
+| **Untracked file detection** | Include `git ls-files --others` in non-staged mode | Catches new files that aren't staged |
+
+---
+
 ### 4.5 v3.4.0 – IDP-Ready (Minor Release)
 
 > **Note:** v3.4.0 is the *next minor* kernel closure. The current frozen baseline is `v3.3.9-kernel`.
@@ -414,7 +450,9 @@ v3.4.0 is not a feature list. It's the point where Backstage/Port consumers can 
 #### Entry Criteria (Gate Before Starting v3.4.0)
 
 - v3.3.12 released ✅
-- v3.3.13 released with receipts 🔄 (in progress — see §4.4)
+- v3.3.13 released ✅
+- Fork dry-run receipt 🔜 pending
+- AI first-hour receipt 🔜 pending
 - At least one real fork exists and is actively used
 - Friction log reviewed; v3.4.0 candidates tagged
 
@@ -456,24 +494,25 @@ See [v3.4.0-plan.md](archive/v3.4.0-plan.md) for scope when v3.4.0 work begins.
 
 ## 5. Path Forward Options
 
-> **Current State (v3.3.13):** The template has completed security hardening, architecture refactoring, and documentation polish. The next step is external validation via fork receipts. See §4.4 for v3.3.13 release checklist.
+> **Current State:** Template v3.3.13 is released. v3.3.14 (DevEx improvements) is on main, pending tag. The next step is external validation via fork receipts (v3.4.0 entry criteria).
 
 ### 5.1 Option A: Minimal (Lock and Fork) — *Active*
 
 **Goal:** Freeze the kernel as-is, use it for services, let friction drive improvements.
 
-**Status:** This is the current path. v3.3.9-kernel is frozen; v3.3.13 adds validation receipts.
+**Status:** This is the current path. v3.3.9-kernel is frozen; v3.3.13 is released; v3.3.14 is on main.
 
 **Immediate Next Steps:**
 
 1. ✅ Kernel frozen at v3.3.9-kernel
 2. ✅ Branch protection configured
 3. ✅ Documentation complete (v3.3.12 → v3.3.13)
-4. 🔜 Create fork from v3.3.9-kernel tag
-5. 🔜 Complete fork dry-run and AI first-hour receipts
-6. 🔜 Tag v3.3.13 with evidence bundle
+4. ✅ v3.3.13 tagged with evidence bundle
+5. 🔜 Tag v3.3.14 (DevEx improvements on main)
+6. 🔜 Create fork from v3.3.9-kernel tag
+7. 🔜 Complete fork dry-run and AI first-hour receipts
 
-**After v3.3.13:**
+**After v3.3.14:**
 
 - Fork for real service development
 - Capture friction in `FRICTION_LOG.md`
@@ -788,17 +827,20 @@ The template is "production ready" when:
 
 | Layer        | Version         | Status                          |
 |--------------|-----------------|--------------------------------|
-| **Template** | v3.3.13         | Release candidate in progress  |
+| **Template** | v3.3.13         | Released (tag: v3.3.13)        |
 | **Kernel**   | v3.3.9-kernel   | Frozen baseline                |
+| **Next**     | v3.3.14         | On main, pending tag (see §4.4.1) |
 
 **v3.3.9-kernel** is a stable, selftest-green kernel. All **kernel ACs** (`must_have_ac: true`) pass; non-kernel ACs are tracked as soft gates and may be failing or unknown without blocking selftest.
 
-**v3.3.13** adds documentation polish, version alignment, and security configuration docs. The remaining gates are external validation receipts (fork dry-run + AI first-hour).
+**v3.3.13** shipped documentation polish, version alignment, and security configuration docs. External validation receipts (fork dry-run + AI first-hour) are v3.4.0 entry criteria.
+
+**v3.3.14** (on main) includes faster precommit defaults, staged-only semantics, and targeted spellcheck.
 
 **Next Steps:**
 
-1. Complete fork validation receipts (see §4.4 Release Checklist)
-2. Tag v3.3.13 with evidence bundle
+1. Tag v3.3.14 once CI is stable or with local selftest receipts
+2. Collect fork dry-run + AI first-hour receipts (v3.4.0 gate)
 3. Fork for real service development
 4. Capture friction → batch improvements into v3.4.0
 
