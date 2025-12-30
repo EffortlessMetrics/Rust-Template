@@ -23,6 +23,7 @@ tracing.workspace = true
 uuid.workspace = true
 
 [build-dependencies]
+protobuf-src = "2.1.1"
 tonic-build = "0.14.2"
 tonic-prost-build = "0.14.2"
 
