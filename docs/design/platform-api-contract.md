@@ -48,10 +48,25 @@ The chain ensures:
 | Endpoint | Schema | Purpose |
 |----------|--------|---------|
 | `/platform/status` | `PlatformStatus` | Governance health, version, auth mode |
-| `/platform/docs/index` | `DocsIndex` | Documentation inventory with front-matter |
 | `/platform/graph` | `GovernanceGraph` | Full REQ → AC → test → doc linkage |
-| `/platform/schema` | Schema index | JSON Schema + endpoint list |
-| `/platform/openapi` | OpenAPI 3.0.3 | Machine-readable API specification |
+| `/platform/openapi` | OpenAPI 3.1.0 | Machine-readable API specification |
+| `/platform/devex/flows` | `DevExFlows` | Developer workflows and xtask commands |
+| `/platform/docs/index` | `DocsIndex` | Documentation inventory with front-matter |
+| `/platform/coverage` | `CoverageResponse` | AC coverage with BDD test results |
+| `/platform/tasks` | `TasksResponse` | Work items with optional filtering |
+| `/platform/tasks/suggest-next` | `SuggestedSequence` | Recommended next work for a task |
+| `/platform/tasks/graph` | `TaskGraph` | Task dependency graph (JSON/Mermaid) |
+| `/platform/agent/hints` | `AgentHintsResponse` | Prioritized work suggestions for agents |
+| `/platform/friction` | `FrictionResponse` | Development friction log entries |
+| `/platform/questions` | `QuestionsResponse` | Design questions and ambiguities |
+| `/platform/forks` | `ForksResponse` | Registered template forks/branches |
+| `/platform/issues` | `IssuesResponse` | Unified issues aggregation |
+| `/platform/schema` | `PlatformSchemas` | JSON Schema + endpoint list |
+| `/platform/schema/{name}` | `SchemaInfo` | Specific schema by name |
+| `/platform/ui/contract` | `UiContract` | Governed UI contract specification |
+| `/platform/idp/snapshot` | IDP Snapshot | Governance health for dashboards |
+
+For full endpoint documentation, see `docs/reference/platform-api-endpoints.md`.
 
 ## Verification
 

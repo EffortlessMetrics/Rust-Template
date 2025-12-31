@@ -101,7 +101,7 @@ cargo xtask kernel-status
 ```
 
 **Expected output sections:**
-- `Template version: v3.3.13` – matches expected template version
+- `Template version: v3.3.14` – matches expected template version
 - `Kernel tag: v3.3.9-kernel (HEAD is at tag: yes)` – at kernel tag
 - `Tree clean: yes` – no uncommitted changes
 - `Kernel ACs: Total: 72, PASS: 72` – all passing
@@ -128,7 +128,7 @@ cargo xtask idp-snapshot --pretty
 
 ```json
 {
-  "template_version": "3.3.13",
+  "template_version": "3.3.14",
   "governance_health": {
     "status": "healthy",
     "ac_coverage": {

@@ -487,6 +487,196 @@ pub fn create_friction_entry(
     Ok(())
 }
 
+/// Create a GitHub issue from a friction entry
+pub fn gh_create_issue(
+    friction_id: &str,
+    extra_labels: Option<&str>,
+    dry_run: bool,
+    open_in_browser: bool,
+) -> Result<()> {
+    use crate::commands::github::{GhClient, friction_issue_body, friction_labels};
+
+    // Load the friction entry
+    let friction_dir = Path::new("friction");
+    let file_path = friction_dir.join(format!("{}.yaml", friction_id));
+
+    if !file_path.exists() {
+        anyhow::bail!("Friction entry '{}' not found at {}", friction_id, file_path.display());
+    }
+
+    let entry = FrictionEntry::load(&file_path)?;
+
+    // Check if already linked to a GitHub issue
+    if let Some(ref related) = entry.related_items
+        && !related.issues.is_empty()
+    {
+        eprintln!(
+            "⚠️  Warning: Friction entry '{}' is already linked to GitHub issues: {}",
+            friction_id,
+            related.issues.join(", ")
+        );
+    }
+
+    // Generate labels
+    let mut labels = friction_labels(&entry.category, &entry.severity);
+    if let Some(extra) = extra_labels {
+        labels.extend(extra.split(',').map(|s| s.trim().to_string()));
+    }
+
+    // Generate issue body
+    let flow = entry.context.as_ref().and_then(|c| c.flow.as_deref());
+    let phase = entry.context.as_ref().and_then(|c| c.phase.as_deref());
+    let body = friction_issue_body(
+        &entry.id,
+        &entry.summary,
+        &entry.description,
+        &entry.category,
+        &entry.severity,
+        &entry.date,
+        flow,
+        phase,
+        &entry.refs,
+    );
+
+    let title = format!("[Friction] {}", entry.summary);
+
+    if dry_run {
+        println!("🔍 Dry run - would create GitHub issue:\n");
+        println!("Title: {}", title);
+        println!("Labels: {}", labels.join(", "));
+        println!("\nBody:\n{}", body);
+        return Ok(());
+    }
+
+    // Create the issue
+    println!("Creating GitHub issue from friction entry {}...", friction_id);
+    let issue_ref = GhClient::create_issue(&title, &body, &labels)?;
+
+    println!("✅ Created GitHub issue: {}", issue_ref.url);
+    println!("   Issue number: #{}", issue_ref.number);
+
+    // Update friction entry with issue reference
+    let mut updated_entry = entry.clone();
+    let related = updated_entry.related_items.get_or_insert(RelatedItems {
+        issues: Vec::new(),
+        adrs: Vec::new(),
+        tasks: Vec::new(),
+    });
+    related.issues.push(issue_ref.as_short());
+    updated_entry.save()?;
+
+    println!("   Updated friction entry with issue reference");
+
+    if open_in_browser {
+        GhClient::open_in_browser(issue_ref.number)?;
+    }
+
+    Ok(())
+}
+
+/// Link an existing GitHub issue to a friction entry
+pub fn gh_link_issue(friction_id: &str, issue_number: &str) -> Result<()> {
+    use crate::commands::github::IssueRef;
+
+    // Parse issue number
+    let issue_ref = IssueRef::parse(issue_number)
+        .ok_or_else(|| anyhow::anyhow!("Invalid issue number: {}", issue_number))?;
+
+    // Load the friction entry
+    let friction_dir = Path::new("friction");
+    let file_path = friction_dir.join(format!("{}.yaml", friction_id));
+
+    if !file_path.exists() {
+        anyhow::bail!("Friction entry '{}' not found at {}", friction_id, file_path.display());
+    }
+
+    let mut entry = FrictionEntry::load(&file_path)?;
+
+    // Check if already linked
+    let issue_short = issue_ref.as_short();
+    if let Some(ref related) = entry.related_items
+        && related.issues.contains(&issue_short)
+    {
+        println!("ℹ️  Friction entry '{}' is already linked to {}", friction_id, issue_short);
+        return Ok(());
+    }
+
+    // Add issue reference
+    let related = entry.related_items.get_or_insert(RelatedItems {
+        issues: Vec::new(),
+        adrs: Vec::new(),
+        tasks: Vec::new(),
+    });
+    related.issues.push(issue_short.clone());
+
+    // Save the updated entry
+    entry.save()?;
+
+    println!("✅ Linked friction entry {} to GitHub issue {}", friction_id, issue_short);
+
+    Ok(())
+}
+
+/// Resolve a friction entry (mark as resolved/wont_fix with resolution details)
+#[allow(clippy::too_many_arguments)]
+pub fn resolve_friction_entry(
+    id: &str,
+    resolved_by: &str,
+    fix_description: Option<&str>,
+    pr_links: &[String],
+    verification: Option<&str>,
+    status: &str,
+) -> Result<()> {
+    // Validate status
+    let valid_statuses = ["resolved", "wont_fix"];
+    if !valid_statuses.contains(&status) {
+        anyhow::bail!("Invalid status '{}'. Must be one of: {}", status, valid_statuses.join(", "));
+    }
+
+    // Find and load the friction entry
+    let friction_dir = Path::new("friction");
+    let file_path = friction_dir.join(format!("{}.yaml", id));
+
+    if !file_path.exists() {
+        anyhow::bail!("Friction entry '{}' not found at {}", id, file_path.display());
+    }
+
+    let mut entry = FrictionEntry::load(&file_path)?;
+
+    // Warn if already resolved
+    if entry.status == "resolved" || entry.status == "wont_fix" {
+        eprintln!(
+            "⚠️  Warning: Friction entry '{}' is already {} (re-resolving)",
+            id, entry.status
+        );
+    }
+
+    // Update status and add resolution
+    entry.status = status.to_string();
+    entry.resolution = Some(Resolution {
+        resolved_by: resolved_by.to_string(),
+        resolved_at: chrono::Utc::now().to_rfc3339(),
+        fix_description: fix_description.map(String::from),
+        pr_links: pr_links.to_vec(),
+        verification: verification.map(String::from),
+    });
+
+    // Save the updated entry
+    entry.save()?;
+
+    println!("✅ Resolved friction entry: {}", id);
+    println!("   Status: {}", status);
+    println!("   Resolved by: {}", resolved_by);
+    if let Some(desc) = fix_description {
+        println!("   Fix: {}", desc);
+    }
+    if !pr_links.is_empty() {
+        println!("   PRs: {}", pr_links.join(", "));
+    }
+
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

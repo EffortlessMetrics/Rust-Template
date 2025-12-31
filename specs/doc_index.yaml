@@ -491,7 +491,7 @@ docs:
   # Kernel Snapshot (Release Baseline)
   - id: SNAPSHOT-TPL-KERNEL-001
     file: docs/KERNEL_SNAPSHOT.md
-    title: "Kernel Snapshot v3.3.13"
+    title: "Kernel Snapshot v3.3.14"
     doc_type: status
     stories: [US-TPL-PLT-001]
     requirements: [REQ-PLT-DOCS-CONSISTENCY, REQ-TPL-OPINIONATED-DEFAULTS]

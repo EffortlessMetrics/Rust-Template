@@ -25,6 +25,8 @@ Rust Kernel (source of truth)
 
 ## Primary Endpoints
 
+This section documents the primary `/platform/*` endpoints. For the complete endpoint reference, see `docs/reference/platform-api-endpoints.md`.
+
 ### GET /platform/status
 
 Returns comprehensive governance status.
@@ -128,6 +130,31 @@ Returns documentation inventory with health validation.
 
 **doc_type enum:**
 `adr`, `design_doc`, `impl_plan`, `requirements_doc`, `guide`, `how-to`, `how_to`, `explanation`, `reference`, `ci_workflow`, `status`
+
+### Additional Platform Endpoints
+
+The following endpoints are also available (see `docs/reference/platform-api-endpoints.md` for full details):
+
+| Endpoint | Description |
+|----------|-------------|
+| `/platform/graph` | Full governance graph (stories -> REQs -> ACs -> tests -> docs) |
+| `/platform/openapi` | OpenAPI specification (YAML format) |
+| `/platform/openapi.yaml` | OpenAPI specification (alias with .yaml suffix) |
+| `/platform/schema` | JSON Schema definitions for all platform data files |
+| `/platform/schema/{name}` | Get specific schema by name (spec_ledger, tasks, etc.) |
+| `/platform/devex/flows` | Developer flows and available xtask commands |
+| `/platform/coverage` | AC coverage summary with BDD test results |
+| `/platform/tasks` | Task list with optional filtering by status/requirement |
+| `/platform/tasks/suggest-next` | Recommended next work for a given task |
+| `/platform/tasks/graph` | Task dependency graph (JSON or Mermaid format) |
+| `/platform/agent/hints` | Prioritized work suggestions for AI agents |
+| `/platform/friction` | Development friction log entries |
+| `/platform/questions` | Design questions and ambiguities |
+| `/platform/forks` | Registered template forks/branches |
+| `/platform/issues` | Unified issues aggregation (friction + questions + tasks) |
+| `/platform/ui/contract` | Governed UI contract (screens, regions, data-uiid anchors) |
+| `/platform/idp/snapshot` | IDP snapshot with governance health for agents |
+| `/platform/debug/info` | Basic kernel and template version info |
 
 ## Stability Policy
 

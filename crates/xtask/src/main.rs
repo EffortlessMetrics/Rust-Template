@@ -438,6 +438,54 @@ enum Commands {
         refs: Vec<String>,
     },
 
+    /// Resolve a friction entry (mark as resolved with resolution details)
+    #[command(next_help_heading = "🏛️ Governance Artifacts")]
+    FrictionResolve {
+        /// Friction ID to resolve (e.g., FRICTION-TOOL-001)
+        #[arg(long)]
+        id: String,
+        /// Who resolved it (e.g., "agent", "human", username)
+        #[arg(long)]
+        resolved_by: String,
+        /// Description of how it was fixed
+        #[arg(long)]
+        fix_description: Option<String>,
+        /// PR links (repeatable)
+        #[arg(long = "pr")]
+        pr_links: Vec<String>,
+        /// Verification notes
+        #[arg(long)]
+        verification: Option<String>,
+        /// New status (defaults to "resolved", can be "wont_fix")
+        #[arg(long, default_value = "resolved")]
+        status: String,
+    },
+
+    /// Create GitHub issue from friction entry
+    #[command(next_help_heading = "🏛️ Governance Artifacts")]
+    FrictionGhCreate {
+        /// Friction ID to create issue from (e.g., FRICTION-TOOL-001)
+        friction_id: String,
+        /// Additional labels (comma-separated)
+        #[arg(long)]
+        labels: Option<String>,
+        /// Preview issue without creating (dry run)
+        #[arg(long)]
+        dry_run: bool,
+        /// Open issue in browser after creation
+        #[arg(long)]
+        open: bool,
+    },
+
+    /// Link existing GitHub issue to friction entry
+    #[command(next_help_heading = "🏛️ Governance Artifacts")]
+    FrictionGhLink {
+        /// Friction ID to link
+        friction_id: String,
+        /// GitHub issue number (e.g., 123 or #123)
+        issue_number: String,
+    },
+
     /// List questions from questions/ directory
     #[command(next_help_heading = "🏛️ Governance Artifacts")]
     QuestionsList {
@@ -476,6 +524,48 @@ enum Commands {
         /// REQ-*/AC-* IDs this question is about (repeatable)
         #[arg(long = "refs")]
         refs: Vec<String>,
+    },
+
+    /// Resolve a question (mark as answered/resolved/obsolete)
+    #[command(next_help_heading = "🏛️ Governance Artifacts")]
+    QuestionResolve {
+        /// Question ID to resolve (e.g., Q-TPL-001)
+        #[arg(long)]
+        id: String,
+        /// Who resolved it (agent, human, flow)
+        #[arg(long)]
+        resolved_by: String,
+        /// Which option was chosen (label from options list, optional)
+        #[arg(long)]
+        chosen_option: Option<String>,
+        /// Resolution notes
+        #[arg(long)]
+        notes: Option<String>,
+        /// New status (answered, resolved, obsolete)
+        #[arg(long, default_value = "resolved")]
+        status: String,
+    },
+
+    /// Search across friction, questions, and tasks
+    #[command(next_help_heading = "🏛️ Governance Artifacts")]
+    IssuesSearch {
+        /// Search query (matches ID, summary, description)
+        query: String,
+        /// Limit to specific type: friction, question, task (omit for all)
+        #[arg(long = "type")]
+        type_filter: Option<String>,
+        /// Filter by status
+        #[arg(long)]
+        status: Option<String>,
+        /// Filter by REQ/AC reference (e.g., REQ-TPL-001, AC-TPL-001)
+        #[arg(long)]
+        refs: Option<String>,
+        /// Output in JSON format
+        #[arg(long)]
+        json: bool,
+        /// Maximum results to return
+        #[arg(long, default_value = "50")]
+        limit: usize,
     },
 
     /// List registered template forks
@@ -989,6 +1079,27 @@ fn main() -> Result<()> {
             discovered_by.as_deref(),
             &refs,
         ),
+        Commands::FrictionResolve {
+            id,
+            resolved_by,
+            fix_description,
+            pr_links,
+            verification,
+            status,
+        } => commands::friction::resolve_friction_entry(
+            &id,
+            &resolved_by,
+            fix_description.as_deref(),
+            &pr_links,
+            verification.as_deref(),
+            &status,
+        ),
+        Commands::FrictionGhCreate { friction_id, labels, dry_run, open } => {
+            commands::friction::gh_create_issue(&friction_id, labels.as_deref(), dry_run, open)
+        }
+        Commands::FrictionGhLink { friction_id, issue_number } => {
+            commands::friction::gh_link_issue(&friction_id, &issue_number)
+        }
         Commands::ForkList { status, domain, json } => {
             commands::fork::list_fork_entries(status.as_deref(), domain.as_deref(), json)
         }
@@ -1033,6 +1144,25 @@ fn main() -> Result<()> {
             task_id.as_deref(),
             &refs,
         ),
+        Commands::QuestionResolve { id, resolved_by, chosen_option, notes, status } => {
+            commands::questions::resolve_question(
+                &id,
+                &resolved_by,
+                chosen_option.as_deref(),
+                notes.as_deref(),
+                &status,
+            )
+        }
+        Commands::IssuesSearch { query, type_filter, status, refs, json, limit } => {
+            commands::issues_search::search_issues(
+                &query,
+                type_filter.as_deref(),
+                status.as_deref(),
+                refs.as_deref(),
+                json,
+                limit,
+            )
+        }
         Commands::ServiceDescriptor { format } => commands::service_descriptor::run(&format)
             .map_err(|e| anyhow::anyhow!("service-descriptor failed: {}", e)),
         Commands::ServiceInit { id, name, description, tags, register_fork } => {
@@ -1197,15 +1327,21 @@ pub fn all_command_names() -> Vec<&'static str> {
         "fmt-all",
         "fork-list",
         "fork-register",
+        "friction-gh-create",
+        "friction-gh-link",
         "friction-list",
         "friction-new",
+        "friction-resolve",
         "graph-export",
+        "question-new",
+        "question-resolve",
         "questions-list",
         "questions-new",
         "hakari",
         "idp-check",
         "idp-snapshot",
         "install-hooks",
+        "issues-search",
         "migrate",
         "pin-actions",
         "policy-test",

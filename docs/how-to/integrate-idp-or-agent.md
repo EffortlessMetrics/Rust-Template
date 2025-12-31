@@ -21,17 +21,23 @@ last_updated: 2025-11-27
 
 ---
 
-## TL;DR: Three API Families
+## TL;DR: Platform API Families
 
-| API | Endpoint | Use Case |
-|-----|----------|----------|
-| **Governance Health** | `/platform/status` | Portal widget: "Is this service governed?" |
+| API Family | Endpoints | Use Case |
+|------------|-----------|----------|
+| **Governance Health** | `/platform/status`, `/platform/coverage` | Portal widget: "Is this service governed?" |
 | **Governance Graph** | `/platform/graph` | Dashboard: Show REQ/AC/doc relationships |
-| **Tasks & Hints** | `/platform/tasks`, `/platform/agent/hints` | Task management: "What should I work on?" |
+| **Tasks & Hints** | `/platform/tasks`, `/platform/tasks/suggest-next`, `/platform/tasks/graph`, `/platform/agent/hints` | Task management: "What should I work on?" |
 | **Docs Index** | `/platform/docs/index` | Doc discovery: "What docs exist?" |
 | **Flows & Commands** | `/platform/devex/flows` | Automation: "What workflows can I run?" |
+| **Issues & Friction** | `/platform/friction`, `/platform/questions`, `/platform/issues` | Track DevEx problems and design questions |
+| **Forks & Schemas** | `/platform/forks`, `/platform/schema`, `/platform/schema/{name}` | Template tracking and validation |
+| **OpenAPI & UI** | `/platform/openapi`, `/platform/ui/contract` | Contract definitions for code generation |
+| **IDP Snapshot** | `/platform/idp/snapshot` | Aggregated health for portal dashboards |
 
 All responses are JSON. No database required—same data CI validates.
+
+For complete endpoint documentation, see `docs/reference/platform-api-endpoints.md`.
 
 ---
 
@@ -589,7 +595,7 @@ for hint in sorted(hints["hints"], key=lambda h: h["priority"]):
 
 ### "What endpoints exist?"
 
-→ Call `/platform/openapi` for OpenAPI spec, or see `docs/reference/platform-support.md`.
+→ Call `/platform/openapi` for OpenAPI spec, or see `docs/reference/platform-api-endpoints.md`.
 
 ---
 
