@@ -553,6 +553,80 @@ curl http://localhost:8080/platform/forks/FORK-XXX-001
 
 ---
 
+### GET /platform/issues
+
+**Description:** Returns all governance artifacts (friction, questions, tasks) as a unified list of issues with normalized status, priority, and filtering capabilities.
+
+**Query Parameters:**
+- `kind` (optional): Filter by issue kind ("friction", "question", "task")
+- `status` (optional): Filter by normalized status ("open", "in_progress", "resolved")
+- `priority` (optional): Filter by exact priority (1=critical, 2=high, 3=medium, 4=low)
+- `min_priority` (optional): Filter by minimum priority (1=highest)
+- `from_date` (optional): Filter by date range start (ISO 8601)
+- `to_date` (optional): Filter by date range end (ISO 8601)
+- `q` (optional): Text search in id, summary, category, and labels
+- `page` (optional): Page number (1-indexed, default 1)
+- `per_page` (optional): Items per page (default 50, max 100)
+
+**Response Format:** JSON object with array of normalized issues, pagination, and summary.
+
+**Example:**
+```bash
+# Get all issues
+curl http://localhost:8080/platform/issues
+
+# Get open friction issues
+curl "http://localhost:8080/platform/issues?kind=friction&status=open"
+
+# Get high-priority issues (priority 1 or 2)
+curl "http://localhost:8080/platform/issues?min_priority=2"
+
+# Search issues
+curl "http://localhost:8080/platform/issues?q=devex"
+```
+
+**Response Structure:**
+```json
+{
+  "issues": [
+    {
+      "id": "FRICTION-TPL-001",
+      "kind": "friction",
+      "status": "open",
+      "native_status": "investigating",
+      "summary": "One-line summary",
+      "priority": 2,
+      "created_at": "2025-12-10",
+      "category": "tooling",
+      "refs": ["REQ-TPL-001"],
+      "owner": "team",
+      "labels": ["devex"]
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "per_page": 50,
+    "total_items": 10,
+    "total_pages": 1
+  },
+  "summary": {
+    "total": 10,
+    "by_kind": {
+      "friction": 3,
+      "question": 2,
+      "task": 5
+    },
+    "by_status": {
+      "open": 6,
+      "in_progress": 2,
+      "resolved": 2
+    }
+  }
+}
+```
+
+---
+
 ### GET /platform/idp/snapshot
 
 **Description:** Returns IDP (Internal Developer Platform) snapshot with governance health, AC coverage, and prioritized task hints for agents.
@@ -961,6 +1035,7 @@ secrets:
 | GET | `/platform/questions/{id}` | Specific question | Yes* |
 | GET | `/platform/forks` | All template forks | Yes* |
 | GET | `/platform/forks/{name}` | Specific fork details | Yes* |
+| GET | `/platform/issues` | Unified issues (friction+questions+tasks) | Yes* |
 | GET | `/platform/idp/snapshot` | IDP snapshot for agents | Yes* |
 | GET | `/platform/agent/hints` | Prioritized work hints | Yes* |
 | GET | `/platform/ui/contract` | UI contract specification | Yes* |

@@ -18,7 +18,7 @@ last_updated: 2025-12-27
 > orient, discover work, and validate changes using the platform's structured APIs
 > rather than browsing files.
 
-**Kernel Version:** v3.3.9-kernel | **Template Version:** v3.3.13
+**Kernel Version:** v3.3.9-kernel | **Template Version:** v3.3.14
 
 ---
 

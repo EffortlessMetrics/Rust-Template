@@ -401,6 +401,87 @@ pub fn create_question(
     Ok(())
 }
 
+/// Resolve a question (mark as answered/resolved/obsolete)
+pub fn resolve_question(
+    id: &str,
+    resolved_by: &str,
+    chosen_option: Option<&str>,
+    notes: Option<&str>,
+    status: &str,
+) -> Result<()> {
+    // Validate status
+    let valid_statuses = ["answered", "resolved", "obsolete"];
+    if !valid_statuses.contains(&status) {
+        anyhow::bail!("Invalid status '{}'. Must be one of: {}", status, valid_statuses.join(", "));
+    }
+
+    // Validate resolved_by
+    let valid_resolved_by = ["agent", "human", "flow"];
+    if !valid_resolved_by.contains(&resolved_by) {
+        anyhow::bail!(
+            "Invalid resolved_by '{}'. Must be one of: {}",
+            resolved_by,
+            valid_resolved_by.join(", ")
+        );
+    }
+
+    // Find and load the question
+    let questions_dir = Path::new("questions");
+    let file_path = questions_dir.join(format!("{}.yaml", id));
+
+    if !file_path.exists() {
+        anyhow::bail!("Question '{}' not found at {}", id, file_path.display());
+    }
+
+    let mut question = Question::load(&file_path)?;
+
+    // Warn if already resolved
+    if question.status == "resolved"
+        || question.status == "answered"
+        || question.status == "obsolete"
+    {
+        eprintln!("⚠️  Warning: Question '{}' is already {} (re-resolving)", id, question.status);
+    }
+
+    // Validate chosen_option matches an existing option if provided
+    if let Some(chosen) = chosen_option
+        && !question.options.is_empty()
+    {
+        let valid_options: Vec<&str> = question.options.iter().map(|o| o.label.as_str()).collect();
+        if !valid_options.contains(&chosen) {
+            eprintln!(
+                "⚠️  Warning: chosen_option '{}' doesn't match any defined option ({})",
+                chosen,
+                valid_options.join(", ")
+            );
+        }
+    }
+
+    // Update status and add resolution
+    question.status = status.to_string();
+    question.resolution = Some(Resolution {
+        resolved_by: resolved_by.to_string(),
+        resolved_at: chrono::Utc::now().to_rfc3339(),
+        chosen_option: chosen_option.map(String::from),
+        notes: notes.map(String::from),
+    });
+
+    // Save the updated question
+    question.save()?;
+
+    println!("✅ Resolved question: {}", id);
+    println!("   Status: {}", status);
+    println!("   Resolved by: {}", resolved_by);
+    if let Some(option) = chosen_option {
+        println!("   Chosen option: {}", option);
+    }
+    if let Some(note) = notes {
+        println!("   Notes: {}", note);
+    }
+
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

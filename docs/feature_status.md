@@ -72,7 +72,7 @@ Auto-generated AC status from acceptance (BDD) and unit tests.
 | AC-TPL-004 | US-TPL-001 | REQ-TPL-ERROR-HANDLING | [PASS] pass | 4 |
 | AC-TPL-007 | US-TPL-001 | REQ-TPL-METRICS | [PASS] pass | 3 |
 | AC-TPL-AC-STATUS-CONSISTENCY | US-TPL-PLT-001 | REQ-PLT-DOCS-CONSISTENCY | [PASS] pass | 2 |
-| AC-TPL-AGENT-HINTS | US-TPL-PLT-001 | REQ-TPL-AGENT-INTERFACE | [PASS] pass | 1 |
+| AC-TPL-AGENT-HINTS | US-TPL-PLT-001 | REQ-TPL-AGENT-INTERFACE | [UNKNOWN] unknown | 1 |
 | AC-TPL-AGENT-HINTS-SCHEMA | US-TPL-PLT-001 | REQ-TPL-AGENT-INTERFACE | [PASS] pass | 2 |
 | AC-TPL-AGENT-SKILLS | US-TPL-PLT-001 | REQ-TPL-AGENT-INTERFACE | [PASS] pass | 2 |
 | AC-TPL-AGENTS-DESCRIPTION-QUALITY | US-TPL-PLT-001 | REQ-TPL-AGENTS-GOVERNANCE | [UNKNOWN] unknown | 0 |
@@ -90,7 +90,7 @@ Auto-generated AC status from acceptance (BDD) and unit tests.
 | AC-TPL-BUNDLE-MANIFEST | US-TPL-PLT-001 | REQ-TPL-BUNDLE-CONTRACT | [PASS] pass | 2 |
 | AC-TPL-BUNDLE-MANIFEST-LINKED | US-TPL-PLT-001 | REQ-TPL-BUNDLE-CONTRACT | [PASS] pass | 2 |
 | AC-TPL-BUNDLE-MINIMAL-SCOPE | US-TPL-PLT-001 | REQ-TPL-BUNDLE-CONTRACT | [PASS] pass | 1 |
-| AC-TPL-BUNDLE-REFERENTIAL-INTEGRITY | US-TPL-PLT-001 | REQ-TPL-AGENT-ERGONOMICS | [PASS] pass | 1 |
+| AC-TPL-BUNDLE-REFERENTIAL-INTEGRITY | US-TPL-PLT-001 | REQ-TPL-AGENT-ERGONOMICS | [UNKNOWN] unknown | 1 |
 | AC-TPL-CLI-JSON-CORE | US-TPL-PHILOSOPHY-001 | REQ-TPL-AI-IDP-COMPAT | [PASS] pass | 3 |
 | AC-TPL-CLI-JSON-OUTPUT | US-TPL-PLT-001 | REQ-PLT-DEVEX-CONTRACT | [PASS] pass | 3 |
 | AC-TPL-CONFIG-VALIDATION | US-TPL-PLT-001 | REQ-TPL-CONFIG-INTEGRITY | [PASS] pass | 2 |
@@ -184,7 +184,9 @@ Auto-generated AC status from acceptance (BDD) and unit tests.
 - AC-PLT-013: `cargo xtask release-verify` provides git command sequence on success
 - AC-PLT-016: `cargo xtask ci-local` orchestrates doctor + selftest + audit + docs-check
 - AC-PLT-ENV-SCCACHE-WARN: When sccache/libz.so.1 issues are detected, doctor classifies them as environment warnings (not template failures) and suggests workarounds including RUSTC_WRAPPER="" and IN_NIX_SHELL=1 patterns.
+- AC-TPL-AGENT-HINTS: GET /platform/agent/hints returns prioritized task suggestions for agents, filtering tasks by Todo/InProgress status. Each hint includes: task_id, status, requirement_ids, ac_ids, reason, and recommended_sequence (array of commands/edits).
 - AC-TPL-AGENTS-NAME-FORMAT: Agent names MUST be kebab-case, contain only lowercase letters/digits/hyphens, max 64 characters, and be unique within the project. agents-lint enforces this.
+- AC-TPL-BUNDLE-REFERENTIAL-INTEGRITY: Bundle generation (cargo xtask bundle <TASK>) validates that all AC IDs in the task's acs array exist in spec_ledger.yaml before including them in bundle.yaml. Non-existent ACs are logged as warnings and excluded from the manifest's ac_ids array. The bundle command returns exit code 0 with warnings (not silent success) so CI can optionally gate on strict mode via BUNDLE_STRICT_REFS=1.
 - AC-TPL-FLOW-IDEMPOTENT: Running cargo xtask selftest or cargo xtask suggest-next multiple times without changes produces stable outputs and no duplicate artifacts.
 - AC-TPL-FORKS-STATUS-SUMMARY: /platform/status includes governance.forks.total and a forks.ids array when forks/fork_registry.yaml exists, and `cargo xtask fork-list --json` reflects that state.
 - AC-TPL-GOV-FORKS: Fork metadata is stored under forks/fork_registry.yaml, can be managed via `cargo xtask fork-register`/`fork-list`, and is exposed via /platform/forks and /platform/forks/{name}.

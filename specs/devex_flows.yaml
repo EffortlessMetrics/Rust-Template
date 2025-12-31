@@ -321,6 +321,230 @@ commands:
       contributing_flow: false
       claude_golden_path: true
 
+  issues-search:
+    category: platform
+    summary: "Search across friction, questions, and tasks"
+    required: true
+    args:
+      - name: query
+        required: true
+        description: "Search query string"
+      - name: --type
+        required: false
+        description: "Filter by type (friction, question, task)"
+      - name: --status
+        required: false
+        description: "Filter by status"
+      - name: --refs
+        required: false
+        description: "Filter by REQ/AC references"
+      - name: --json
+        required: false
+        description: "Output in JSON format"
+      - name: --limit
+        required: false
+        description: "Limit number of results"
+    docs:
+      readme_table: true
+      contributing_flow: false
+      claude_golden_path: true
+
+  # Friction Management
+  friction-list:
+    category: governance
+    summary: "List friction log entries (track process/tooling issues)"
+    required: true
+    args:
+      - name: --status
+        required: false
+        description: "Filter by status (open, investigating, in_progress, resolved, wont_fix)"
+      - name: --severity
+        required: false
+        description: "Filter by severity (low, medium, high, critical)"
+      - name: --json
+        required: false
+        description: "Output in JSON format"
+    docs:
+      readme_table: true
+      contributing_flow: false
+      claude_golden_path: true
+
+  friction-new:
+    category: governance
+    summary: "Create a new friction log entry"
+    required: true
+    args:
+      - name: --category
+        required: true
+        description: "Category (tooling, process, documentation, devex, ci_cd, platform, api, testing, governance, other)"
+      - name: --severity
+        required: true
+        description: "Severity level (low, medium, high, critical)"
+      - name: --summary
+        required: true
+        description: "Brief summary of the friction point"
+      - name: --description
+        required: false
+        description: "Detailed description"
+      - name: --flow
+        required: false
+        description: "Flow where friction occurred"
+      - name: --phase
+        required: false
+        description: "Phase within flow"
+      - name: --discovered-by
+        required: false
+        description: "Who discovered this friction"
+      - name: --refs
+        required: false
+        description: "REQ-*/AC-* IDs (repeatable)"
+    docs:
+      readme_table: true
+      contributing_flow: false
+      claude_golden_path: true
+
+  friction-resolve:
+    category: governance
+    summary: "Resolve a friction entry (mark as resolved with resolution details)"
+    required: true
+    args:
+      - name: --id
+        required: true
+        description: "Friction ID to resolve (e.g., FRICTION-TOOL-001)"
+      - name: --resolved-by
+        required: true
+        description: "Who resolved it (agent, human, username)"
+      - name: --fix-description
+        required: false
+        description: "Description of how it was fixed"
+      - name: --pr
+        required: false
+        description: "PR links (repeatable)"
+      - name: --verification
+        required: false
+        description: "Verification notes"
+      - name: --status
+        required: false
+        description: "New status (resolved, wont_fix)"
+    docs:
+      readme_table: false
+      contributing_flow: false
+      claude_golden_path: true
+
+  friction-gh-create:
+    category: governance
+    summary: "Create GitHub issue from friction entry"
+    required: true
+    args:
+      - name: friction_id
+        required: true
+        description: "Friction ID to create issue from (e.g., FRICTION-TOOL-001)"
+      - name: --labels
+        required: false
+        description: "Additional labels (comma-separated)"
+      - name: --dry-run
+        required: false
+        description: "Preview issue without creating"
+      - name: --open
+        required: false
+        description: "Open issue in browser after creation"
+    docs:
+      readme_table: false
+      contributing_flow: false
+      claude_golden_path: true
+
+  friction-gh-link:
+    category: governance
+    summary: "Link existing GitHub issue to friction entry"
+    required: true
+    args:
+      - name: friction_id
+        required: true
+        description: "Friction ID to link"
+      - name: issue_number
+        required: true
+        description: "GitHub issue number (e.g., 123 or #123)"
+    docs:
+      readme_table: false
+      contributing_flow: false
+      claude_golden_path: true
+
+  # Questions Management
+  questions-list:
+    category: governance
+    summary: "List questions from questions/ directory"
+    required: true
+    args:
+      - name: --status
+        required: false
+        description: "Filter by status (open, answered, resolved, obsolete)"
+      - name: --json
+        required: false
+        description: "Output in JSON format"
+    docs:
+      readme_table: true
+      contributing_flow: false
+      claude_golden_path: true
+
+  question-new:
+    category: governance
+    summary: "Create a new question artifact (capture ambiguity during flows)"
+    required: true
+    args:
+      - name: --category
+        required: true
+        description: "Question category/component (e.g., TPL, BUNDLE, SUGGEST)"
+      - name: --summary
+        required: true
+        description: "Brief summary of the question"
+      - name: --flow
+        required: true
+        description: "Flow that generated this question"
+      - name: --phase
+        required: true
+        description: "Phase within the flow"
+      - name: --description
+        required: true
+        description: "Detailed description of the ambiguity"
+      - name: --created-by
+        required: false
+        description: "Who created this question (agent, human, flow)"
+      - name: --task-id
+        required: false
+        description: "Related task ID"
+      - name: --refs
+        required: false
+        description: "REQ-*/AC-* IDs (repeatable)"
+    docs:
+      readme_table: false
+      contributing_flow: false
+      claude_golden_path: true
+
+  question-resolve:
+    category: governance
+    summary: "Resolve a question (mark as answered/resolved/obsolete)"
+    required: true
+    args:
+      - name: --id
+        required: true
+        description: "Question ID to resolve (e.g., Q-TPL-001)"
+      - name: --resolved-by
+        required: true
+        description: "Who resolved it (agent, human, flow)"
+      - name: --chosen-option
+        required: false
+        description: "Which option was chosen (label from options list)"
+      - name: --notes
+        required: false
+        description: "Resolution notes"
+      - name: --status
+        required: false
+        description: "New status (answered, resolved, obsolete)"
+    docs:
+      readme_table: false
+      contributing_flow: false
+      claude_golden_path: true
+
   # Meta
   help-flows:
     category: meta
@@ -400,7 +624,7 @@ flows:
     description: "Explore available commands and flows"
     required: true
     documented_in: ["README.md"]
-    steps: ["help-flows", "ac-status", "ac-lint", "tasks-list", "graph-export"]
+    steps: ["help-flows", "ac-status", "ac-lint", "tasks-list", "graph-export", "issues-search"]
 
   platform_exploration:
     name: "Platform Exploration"
@@ -408,3 +632,17 @@ flows:
     required: false
     documented_in: ["AGENT_GUIDE.md"]
     steps: ["status", "tasks-list", "graph-export", "suggest-next"]
+
+  friction_management:
+    name: "Friction Management"
+    description: "Track, manage, and resolve DevEx friction points"
+    required: false
+    documented_in: ["CLAUDE.md"]
+    steps: ["friction-list", "friction-new", "friction-resolve", "friction-gh-create", "friction-gh-link"]
+
+  question_tracking:
+    name: "Question Tracking"
+    description: "Capture and resolve design ambiguities during development"
+    required: false
+    documented_in: ["CLAUDE.md"]
+    steps: ["questions-list", "question-new", "question-resolve"]
