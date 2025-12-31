@@ -136,16 +136,23 @@ pub fn run() -> Result<()> {
     }
 
     // Check Kernel REQ→Doc coverage (Slice C)
-    // Note: This is currently a soft check (warning) to allow incremental doc coverage.
-    // Once all kernel REQs are documented, promote this to a hard failure.
+    // All kernel REQs (must_have_ac: true) must have at least one doc covering them.
+    // This is now a hard check since kernel documentation coverage is complete.
     print!("Kernel REQ doc coverage... ");
     match validate_kernel_req_doc_coverage() {
         Ok(_) => println!("{}", "✓ Covered".green()),
         Err(e) => {
-            println!("{}", "⚠ Gaps".yellow());
-            eprintln!("  [WARN] {}", e);
-            // Soft check: don't increment issues count
-            // TODO: Promote to hard failure once all kernel REQs are documented
+            println!("{}", "✗ Missing docs".red());
+            eprintln!("  {}", e);
+            eprintln!();
+            eprintln!("{}", "To fix kernel REQ documentation gaps:".bold());
+            eprintln!("  1. Create a doc in docs/... covering the requirement");
+            eprintln!(
+                "  2. Register it in {} with the REQ ID in 'requirements:'",
+                "specs/doc_index.yaml".cyan()
+            );
+            eprintln!("  3. Or demote the REQ by removing must_have_ac: true");
+            issues += 1;
         }
     }
 

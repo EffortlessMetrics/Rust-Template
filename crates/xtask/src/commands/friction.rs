@@ -104,8 +104,9 @@ impl FrictionEntry {
         Ok(entry)
     }
 
-    /// Save friction entry to YAML file
-    #[allow(dead_code)]
+    /// Save friction entry to YAML file.
+    ///
+    /// Used by `create_friction_entry()` to persist new entries.
     pub fn save(&self) -> Result<PathBuf> {
         let friction_dir = Path::new("friction");
         fs::create_dir_all(friction_dir)

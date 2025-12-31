@@ -101,7 +101,11 @@ struct Requirement {
 
 #[derive(Debug, Deserialize)]
 struct AcceptanceCriteria {
-    #[allow(dead_code)]
+    /// AC ID. Deserialized for schema completeness; count derived from Vec length.
+    #[expect(
+        dead_code,
+        reason = "deserialized for schema completeness; count derived from Vec length"
+    )]
     id: String,
 }
 
@@ -112,7 +116,8 @@ struct DocIndex {
 
 #[derive(Debug, Deserialize)]
 struct DocEntry {
-    #[allow(dead_code)]
+    /// Doc ID. Deserialized for schema completeness.
+    #[expect(dead_code, reason = "deserialized for schema completeness")]
     id: String,
 }
 

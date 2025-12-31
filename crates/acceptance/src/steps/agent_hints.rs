@@ -19,9 +19,7 @@ async fn when_run_command(world: &mut World, command: String) {
     let parts: Vec<String> = shell_words::split(&command)
         .unwrap_or_else(|_| command.split_whitespace().map(|s| s.to_string()).collect());
 
-    if parts.is_empty() {
-        panic!("Command string is empty");
-    }
+    assert!(!parts.is_empty(), "Command string is empty");
 
     let subcommand = if parts.len() >= 3 && parts[0] == "cargo" && parts[1] == "xtask" {
         Some(parts[2].as_str())
@@ -123,13 +121,12 @@ async fn then_json_array_has_count(world: &mut World, field: String, expected_co
     } else if let Some(response) = &world.last_response {
         &response.body
     } else {
-        panic!("No JSON output available from either CLI command or HTTP response");
+        panic!("No JSON output available from either CLI command or HTTP response")
     };
 
-    let array = json
-        .get(&field)
-        .and_then(|v| v.as_array())
-        .unwrap_or_else(|| panic!("field '{}' should be an array", field));
+    let array = json.get(&field).and_then(|v| v.as_array());
+    assert!(array.is_some(), "field '{}' should be an array", field);
+    let array = array.unwrap();
 
     assert_eq!(
         array.len(),
@@ -145,10 +142,9 @@ async fn then_json_array_has_count(world: &mut World, field: String, expected_co
 #[then(regex = r#"^the first hint in JSON should have field "([^"]+)"$"#)]
 async fn then_first_hint_in_json_has_field(world: &mut World, field: String) {
     let json = world.cli_json_output.as_ref().expect("No JSON output available from CLI command");
-    let hints = json
-        .get("hints")
-        .and_then(|v| v.as_array())
-        .unwrap_or_else(|| panic!("JSON should have 'hints' array"));
+    let hints = json.get("hints").and_then(|v| v.as_array());
+    assert!(hints.is_some(), "JSON should have 'hints' array");
+    let hints = hints.unwrap();
 
     assert!(!hints.is_empty(), "Expected at least one hint, but hints array is empty");
 
@@ -169,16 +165,17 @@ async fn then_first_hint_field_not_empty(world: &mut World, field: String) {
     } else if let Some(response) = &world.last_response {
         response.body.get("hints").and_then(|v| v.as_array())
     } else {
-        panic!("No JSON output available from either CLI command or HTTP response");
+        panic!("No JSON output available from either CLI command or HTTP response")
     };
 
-    let hints = hints.unwrap_or_else(|| panic!("JSON should have 'hints' array"));
+    assert!(hints.is_some(), "JSON should have 'hints' array");
+    let hints = hints.unwrap();
     assert!(!hints.is_empty(), "Expected at least one hint, but hints array is empty");
 
     let first_hint = &hints[0];
-    let value = first_hint
-        .get(&field)
-        .unwrap_or_else(|| panic!("Expected first hint to have field '{}', but it didn't", field));
+    let value = first_hint.get(&field);
+    assert!(value.is_some(), "Expected first hint to have field '{}', but it didn't", field);
+    let value = value.unwrap();
 
     // Check that the value is not empty (works for strings and arrays)
     match value {

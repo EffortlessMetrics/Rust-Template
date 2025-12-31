@@ -155,11 +155,9 @@ async fn given_tasks_exist(world: &mut World, file: String, step: &cucumber::ghe
 
 #[when(regex = r#"^I send a POST request to "([^"]+)" with body:$"#)]
 async fn when_post_request(world: &mut World, path: String, step: &Step) {
-    let body = step
-        .docstring
-        .as_ref()
-        .cloned()
-        .unwrap_or_else(|| panic!("Docstring body not provided for POST {}", path));
+    let body = step.docstring.as_ref().cloned();
+    assert!(body.is_some(), "Docstring body not provided for POST {}", path);
+    let body = body.unwrap();
     let mut request_builder =
         Request::builder().method("POST").uri(&path).header("content-type", "application/json");
 
@@ -169,12 +167,14 @@ async fn when_post_request(world: &mut World, path: String, step: &Step) {
 
     let request = request_builder.body(Body::from(body)).expect("Failed to build request");
 
-    let response = world
-        .app
-        .clone()
-        .oneshot(request)
-        .await
-        .unwrap_or_else(|err| panic!("App request failed for POST {}: {}", path, err));
+    let response = world.app.clone().oneshot(request).await;
+    assert!(
+        response.is_ok(),
+        "App request failed for POST {}: {}",
+        path,
+        response.as_ref().unwrap_err()
+    );
+    let response = response.unwrap();
 
     let status = response.status().as_u16();
     let headers = response.headers().clone();
@@ -209,7 +209,9 @@ async fn then_task_status(world: &mut World, task_id: String, expected_status_st
         "InProgress" => TaskStatus::InProgress,
         "Review" => TaskStatus::Review,
         "Done" => TaskStatus::Done,
-        _ => panic!("Invalid expected status: {}", expected_status_str),
+        other => {
+            panic!("Invalid expected status: {}", other)
+        }
     };
 
     assert_eq!(status, expected_status, "Expected status {:?}, got {:?}", expected_status, status);
@@ -337,12 +339,14 @@ async fn when_get_request(world: &mut World, path: String) {
 
     let request = request_builder.body(Body::empty()).expect("Failed to build request");
 
-    let response = world
-        .app
-        .clone()
-        .oneshot(request)
-        .await
-        .unwrap_or_else(|err| panic!("App request failed for GET {}: {}", path, err));
+    let response = world.app.clone().oneshot(request).await;
+    assert!(
+        response.is_ok(),
+        "App request failed for GET {}: {}",
+        path,
+        response.as_ref().unwrap_err()
+    );
+    let response = response.unwrap();
 
     let status = response.status().as_u16();
     let headers = response.headers().clone();
@@ -357,11 +361,9 @@ async fn when_get_request(world: &mut World, path: String) {
 
 #[when(regex = r#"^I send a PUT request to "([^"]+)" with body:$"#)]
 async fn when_put_request(world: &mut World, path: String, step: &Step) {
-    let body = step
-        .docstring
-        .as_ref()
-        .cloned()
-        .unwrap_or_else(|| panic!("Docstring body not provided for PUT {}", path));
+    let body = step.docstring.as_ref().cloned();
+    assert!(body.is_some(), "Docstring body not provided for PUT {}", path);
+    let body = body.unwrap();
     let mut request_builder =
         Request::builder().method("PUT").uri(&path).header("content-type", "application/json");
 
@@ -371,12 +373,14 @@ async fn when_put_request(world: &mut World, path: String, step: &Step) {
 
     let request = request_builder.body(Body::from(body)).expect("Failed to build request");
 
-    let response = world
-        .app
-        .clone()
-        .oneshot(request)
-        .await
-        .unwrap_or_else(|err| panic!("App request failed for PUT {}: {}", path, err));
+    let response = world.app.clone().oneshot(request).await;
+    assert!(
+        response.is_ok(),
+        "App request failed for PUT {}: {}",
+        path,
+        response.as_ref().unwrap_err()
+    );
+    let response = response.unwrap();
 
     let status = response.status().as_u16();
     let headers = response.headers().clone();
@@ -438,12 +442,11 @@ async fn then_json_contains_task_with_status(
     let tasks =
         response.body.get("tasks").and_then(|t| t.as_array()).expect("tasks array should exist");
 
-    let task = tasks
-        .iter()
-        .find(|task| {
-            task.get("id").and_then(|id| id.as_str()).map(|id| id == task_id).unwrap_or(false)
-        })
-        .unwrap_or_else(|| panic!("Expected to find task with id '{}' in response", task_id));
+    let task = tasks.iter().find(|task| {
+        task.get("id").and_then(|id| id.as_str()).map(|id| id == task_id).unwrap_or(false)
+    });
+    assert!(task.is_some(), "Expected to find task with id '{}' in response", task_id);
+    let task = task.unwrap();
 
     let actual_status = task.get("status").and_then(|s| s.as_str()).unwrap_or("");
     assert_eq!(
@@ -535,13 +538,12 @@ async fn then_array_contains_task(world: &mut World, field: String, task_id: Str
     } else if let Some(response) = &world.last_response {
         &response.body
     } else {
-        panic!("response should exist");
+        panic!("response should exist")
     };
 
-    let array = json
-        .get(&field)
-        .and_then(|v| v.as_array())
-        .unwrap_or_else(|| panic!("field '{}' should be an array", field));
+    let array = json.get(&field).and_then(|v| v.as_array());
+    assert!(array.is_some(), "field '{}' should be an array", field);
+    let array = array.unwrap();
 
     let found = array.iter().any(|item| extract_hint_task_id(item) == task_id);
 
@@ -560,13 +562,12 @@ async fn then_array_not_contains_task(world: &mut World, field: String, task_id:
     } else if let Some(response) = &world.last_response {
         &response.body
     } else {
-        panic!("response should exist");
+        panic!("response should exist")
     };
 
-    let array = json
-        .get(&field)
-        .and_then(|v| v.as_array())
-        .unwrap_or_else(|| panic!("field '{}' should be an array", field));
+    let array = json.get(&field).and_then(|v| v.as_array());
+    assert!(array.is_some(), "field '{}' should be an array", field);
+    let array = array.unwrap();
 
     let found = array.iter().any(|item| extract_hint_task_id(item) == task_id);
 
@@ -585,7 +586,7 @@ async fn then_first_hint_has_field(world: &mut World, field: String) {
     } else if let Some(response) = &world.last_response {
         &response.body
     } else {
-        panic!("response should exist");
+        panic!("response should exist")
     };
 
     let hints = json
@@ -613,7 +614,7 @@ async fn then_first_hint_field_equals(world: &mut World, field: String, expected
     } else if let Some(response) = &world.last_response {
         &response.body
     } else {
-        panic!("response should exist");
+        panic!("response should exist")
     };
 
     let hints = json
@@ -684,9 +685,14 @@ async fn then_first_hint_field_array_length_gt(world: &mut World, field: String,
     assert!(!hints.is_empty(), "Expected at least one hint, but hints array is empty");
 
     let first_hint = &hints[0];
-    let array = first_hint.get(&field).and_then(|v| v.as_array()).unwrap_or_else(|| {
-        panic!("Expected first hint field '{}' to be an array. Hint: {:?}", field, first_hint)
-    });
+    let array = first_hint.get(&field).and_then(|v| v.as_array());
+    assert!(
+        array.is_some(),
+        "Expected first hint field '{}' to be an array. Hint: {:?}",
+        field,
+        first_hint
+    );
+    let array = array.unwrap();
 
     assert!(
         array.len() > min_count,
@@ -705,9 +711,14 @@ async fn then_first_hint_field_array_length_gt(world: &mut World, field: String,
 #[then(regex = r#"^the field "([^"]+)" should be of type "([^"]+)"$"#)]
 async fn then_field_is_type(world: &mut World, field: String, expected_type: String) {
     let response = world.last_response.as_ref().expect("response should exist");
-    let value = response.body.get(&field).unwrap_or_else(|| {
-        panic!("Expected field '{}' to exist in response. Response: {:?}", field, response.body)
-    });
+    let value = response.body.get(&field);
+    assert!(
+        value.is_some(),
+        "Expected field '{}' to exist in response. Response: {:?}",
+        field,
+        response.body
+    );
+    let value = value.unwrap();
 
     let actual_type = match value {
         serde_json::Value::Null => "null",
@@ -728,12 +739,14 @@ async fn then_field_is_type(world: &mut World, field: String, expected_type: Str
 #[then(regex = r#"^the field "([^"]+)" should equal "([^"]+)"$"#)]
 async fn then_field_equals(world: &mut World, field: String, expected_value: String) {
     let response = world.last_response.as_ref().expect("response should exist");
-    let actual = response.body.get(&field).and_then(|v| v.as_str()).unwrap_or_else(|| {
-        panic!(
-            "Expected field '{}' to exist and be a string in response. Response: {:?}",
-            field, response.body
-        )
-    });
+    let actual = response.body.get(&field).and_then(|v| v.as_str());
+    assert!(
+        actual.is_some(),
+        "Expected field '{}' to exist and be a string in response. Response: {:?}",
+        field,
+        response.body
+    );
+    let actual = actual.unwrap();
 
     assert_eq!(
         actual, expected_value,
@@ -752,15 +765,16 @@ async fn then_nested_field_exists(world: &mut World, field_path: String) {
     let mut current_value = &response.body;
 
     for (index, part) in parts.iter().enumerate() {
-        current_value = current_value.get(part).unwrap_or_else(|| {
-            panic!(
-                "Expected nested field '{}' to exist at path '{}'. Current path: '{}'. Response: {:?}",
-                field_path,
-                field_path,
-                parts[..=index].join("."),
-                response.body
-            )
-        });
+        let next_value = current_value.get(part);
+        assert!(
+            next_value.is_some(),
+            "Expected nested field '{}' to exist at path '{}'. Current path: '{}'. Response: {:?}",
+            field_path,
+            field_path,
+            parts[..=index].join("."),
+            response.body
+        );
+        current_value = next_value.unwrap();
     }
 
     // If we got here, all parts of the path exist
@@ -771,9 +785,14 @@ async fn then_nested_field_exists(world: &mut World, field_path: String) {
 #[then(regex = r#"^the field "([^"]+)" should not be empty$"#)]
 async fn then_array_not_empty(world: &mut World, field: String) {
     let response = world.last_response.as_ref().expect("response should exist");
-    let value = response.body.get(&field).unwrap_or_else(|| {
-        panic!("Expected field '{}' to exist in response. Response: {:?}", field, response.body)
-    });
+    let value = response.body.get(&field);
+    assert!(
+        value.is_some(),
+        "Expected field '{}' to exist in response. Response: {:?}",
+        field,
+        response.body
+    );
+    let value = value.unwrap();
 
     // Handle both arrays and objects
     match value {
@@ -806,9 +825,14 @@ async fn then_first_hint_array_contains(world: &mut World, field: String, value:
     assert!(!hints.is_empty(), "Expected at least one hint, but hints array is empty");
 
     let first_hint = &hints[0];
-    let array = first_hint.get(&field).and_then(|v| v.as_array()).unwrap_or_else(|| {
-        panic!("Expected first hint field '{}' to be an array. Hint: {:?}", field, first_hint)
-    });
+    let array = first_hint.get(&field).and_then(|v| v.as_array());
+    assert!(
+        array.is_some(),
+        "Expected first hint field '{}' to be an array. Hint: {:?}",
+        field,
+        first_hint
+    );
+    let array = array.unwrap();
 
     let contains = array.iter().any(|v| v.as_str() == Some(&value));
     assert!(
@@ -855,8 +879,12 @@ async fn then_hints_sorted_by_status(
                 second_first
             );
         }
-        (None, _) => panic!("No hints with status '{}' found", first_status),
-        (_, None) => panic!("No hints with status '{}' found", second_status),
+        (None, _) => {
+            panic!("No hints with status '{}' found", first_status);
+        }
+        (_, None) => {
+            panic!("No hints with status '{}' found", second_status);
+        }
     }
 }
 
@@ -953,13 +981,12 @@ async fn then_warnings_array_not_empty(world: &mut World, field: String) {
     } else if let Some(response) = &world.last_response {
         &response.body
     } else {
-        panic!("response should exist");
+        panic!("response should exist")
     };
 
-    let array = json
-        .get(&field)
-        .and_then(|v| v.as_array())
-        .unwrap_or_else(|| panic!("field '{}' should be an array. JSON: {:?}", field, json));
+    let array = json.get(&field).and_then(|v| v.as_array());
+    assert!(array.is_some(), "field '{}' should be an array. JSON: {:?}", field, json);
+    let array = array.unwrap();
 
     assert!(
         !array.is_empty(),
@@ -977,7 +1004,7 @@ async fn then_first_warning_has_field(world: &mut World, field: String) {
     } else if let Some(response) = &world.last_response {
         &response.body
     } else {
-        panic!("response should exist");
+        panic!("response should exist")
     };
 
     let warnings =
@@ -1006,13 +1033,12 @@ async fn then_first_warning_in_field_has_field(
     } else if let Some(response) = &world.last_response {
         &response.body
     } else {
-        panic!("response should exist");
+        panic!("response should exist")
     };
 
-    let warnings = json
-        .get(&warning_field)
-        .and_then(|v| v.as_array())
-        .unwrap_or_else(|| panic!("'{}' should be an array. JSON: {:?}", warning_field, json));
+    let warnings = json.get(&warning_field).and_then(|v| v.as_array());
+    assert!(warnings.is_some(), "'{}' should be an array. JSON: {:?}", warning_field, json);
+    let warnings = warnings.unwrap();
 
     assert!(
         !warnings.is_empty(),

@@ -348,7 +348,8 @@ struct CucumberReport(Vec<CucumberFeature>);
 
 #[derive(Debug, Deserialize)]
 struct CucumberFeature {
-    #[allow(dead_code)]
+    /// Feature file URI. Deserialized for schema completeness but not used in coverage logic.
+    #[expect(dead_code, reason = "deserialized for schema completeness; coverage uses elements")]
     uri: String,
     elements: Vec<CucumberElement>,
 }

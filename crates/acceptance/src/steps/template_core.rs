@@ -325,14 +325,16 @@ async fn then_response_body_contains(world: &mut World, needle: String) {
 #[then(regex = r#"^the response body should match the file "([^"]+)"$"#)]
 async fn then_response_body_should_match_file(world: &mut World, file_path: String) {
     let response = world.last_response.as_ref().expect("no last response");
-    let expected = read_file_content(world, &file_path).unwrap_or_else(|e| {
-        panic!(
-            "Failed to read file '{}': {}\nResolved path: {}",
-            file_path,
-            e,
-            resolve_path(world, &file_path).display()
-        )
-    });
+    let path = resolve_path(world, &file_path);
+    let expected = read_file_content(world, &file_path);
+    assert!(
+        expected.is_ok(),
+        "Failed to read file '{}': {}\nResolved path: {}",
+        file_path,
+        expected.as_ref().unwrap_err(),
+        path.display()
+    );
+    let expected = expected.unwrap();
 
     assert_eq!(
         response.raw_body,

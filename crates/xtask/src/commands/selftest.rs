@@ -39,9 +39,9 @@ impl SelftestResults {
 }
 
 /// Run full template self-test suite with default verbosity.
-/// Future: Used as library entry point for programmatic selftest invocation.
+///
+/// This is the library entry point for programmatic selftest invocation.
 /// See AC-KERN-SELFTEST for selftest infrastructure requirements.
-#[allow(dead_code)]
 pub fn run() -> Result<()> {
     run_with_verbosity(crate::Verbosity::Normal)
 }
@@ -747,8 +747,10 @@ fn run_ac_coverage_check(verbosity: crate::Verbosity) -> Result<()> {
     #[derive(Debug, Deserialize)]
     struct Story {
         /// Story ID from spec_ledger.yaml.
-        /// Currently only used for deserialization; ID not needed in selftest validation.
-        #[allow(dead_code)]
+        #[expect(
+            dead_code,
+            reason = "deserialized for schema completeness; validation uses requirements"
+        )]
         id: String,
         requirements: Vec<Requirement>,
     }
@@ -769,9 +771,11 @@ fn run_ac_coverage_check(verbosity: crate::Verbosity) -> Result<()> {
     struct AcceptanceCriteria {
         id: String,
         /// AC description text.
-        /// Currently not used in selftest validation; only ID and must_have_ac flag matter.
         #[serde(default)]
-        #[allow(dead_code)]
+        #[expect(
+            dead_code,
+            reason = "deserialized for schema completeness; validation uses id and must_have_ac"
+        )]
         text: String,
         #[serde(default = "default_must_have_ac")]
         must_have_ac: bool,

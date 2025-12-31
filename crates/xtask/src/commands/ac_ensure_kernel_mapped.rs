@@ -102,7 +102,7 @@ pub fn check_kernel_mappings(ledger_path: &Path, verbose: bool) -> Result<Kernel
 
     #[derive(Debug, Deserialize)]
     struct Story {
-        #[allow(dead_code)]
+        #[expect(dead_code, reason = "deserialized for schema completeness")]
         id: String,
         requirements: Vec<Requirement>,
     }
@@ -128,10 +128,9 @@ pub fn check_kernel_mappings(ledger_path: &Path, verbose: bool) -> Result<Kernel
     struct TestMapping {
         #[serde(rename = "type")]
         test_type: String,
-        // tag field is deserialized but not used - we only care about test_type
-        // for determining if a test mapping exists
+        /// Tag field deserialized for schema completeness; only test_type used in mapping check.
         #[serde(default)]
-        #[allow(dead_code)]
+        #[expect(dead_code, reason = "deserialized for schema completeness; only test_type used")]
         tag: String,
     }
 

@@ -181,8 +181,11 @@ impl gov_http::PlatformState for AppState {
 }
 
 impl AppState {
-    #[allow(dead_code)]
-    fn new(governance_repo: Arc<dyn GovernanceRepository>) -> Result<Self, String> {
+    /// Create a new AppState with default configuration.
+    ///
+    /// Uses the default workspace root resolution. For tests or custom configurations,
+    /// prefer `with_config()` which allows explicit workspace root specification.
+    pub fn new(governance_repo: Arc<dyn GovernanceRepository>) -> Result<Self, String> {
         let workspace_root = resolve_workspace_root();
         Self::with_config(governance_repo, workspace_root, None)
     }
