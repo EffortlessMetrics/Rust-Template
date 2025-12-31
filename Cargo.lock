@@ -1531,6 +1531,7 @@ dependencies = [
  "serde_yaml_ng",
  "spec-runtime",
  "thiserror 2.0.17",
+ "tokio",
  "tracing",
  "uuid",
 ]
@@ -5439,7 +5440,6 @@ dependencies = [
  "once_cell",
  "quick-xml 0.38.4",
  "regex",
- "scopeguard",
  "serde",
  "serde_json",
  "serde_yaml_ng",

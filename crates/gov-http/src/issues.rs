@@ -478,14 +478,20 @@ where
     S: PlatformState,
 {
     let ctx = state.context();
-    let root = ctx.root();
+    let root = ctx.root().to_path_buf(); // Clone for spawn_blocking
     let repo = state.governance_repo();
 
-    // Load all three sources
-    let friction_entries = load_friction_entries(root)?;
-    let questions = load_question_entries(root)?;
+    // Load friction and questions in a blocking task to avoid blocking Tokio workers
+    // on filesystem I/O (YAML parsing).
+    let (friction_entries, questions) = tokio::task::spawn_blocking(move || {
+        let friction = load_friction_entries(&root)?;
+        let questions = load_question_entries(&root)?;
+        Ok::<_, PlatformError>((friction, questions))
+    })
+    .await
+    .map_err(|e| PlatformError::internal(format!("spawn_blocking failed: {}", e)))??;
 
-    // Load tasks with status overlay
+    // Load tasks with status overlay (spec_runtime uses ctx which may not be Send)
     let tasks_spec = spec_runtime::load_tasks_with_context(ctx)
         .map_err(|e| PlatformError::spec_load("tasks.yaml", e))?;
 
