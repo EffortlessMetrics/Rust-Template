@@ -11,6 +11,7 @@ Complete reference for all `xtask` CLI commands.
 - `questions-list --json` - Questions with statistics
 - `fork-list --json` - Fork registry with kernel version breakdown
 - `version --json` - Kernel and template version information
+- `issues-search --json` - Cross-artifact search results with relevance scores
 
 **Quick Index:**
 - [dev-up](#xtask-dev-up) - One-command environment setup
@@ -34,6 +35,12 @@ Complete reference for all `xtask` CLI commands.
 - [contracts-check](#xtask-contracts-check) - Validate governed facts match docs
 - [contracts-fmt](#xtask-contracts-fmt) - Sync governed facts to docs
 - [ui-contract-check](#xtask-ui-contract-check) - Validate UI contract and DOM anchors
+- [issues-search](#xtask-issues-search) - Search across friction, questions, and tasks
+- [friction-gh-create](#xtask-friction-gh-create) - Create GitHub issue from friction entry
+- [friction-gh-link](#xtask-friction-gh-link) - Link existing GitHub issue to friction entry
+- [friction-resolve](#xtask-friction-resolve) - Resolve a friction entry
+- [question-new](#xtask-question-new) - Create a new question artifact
+- [question-resolve](#xtask-question-resolve) - Resolve a question
 
 ---
 
@@ -2508,6 +2515,655 @@ This check runs as part of **step 9 (Governance graph & UI)** in selftest:
 
 ---
 
+## xtask issues-search
+
+Search across friction entries, questions, and tasks with a unified interface.
+
+### Usage
+
+```bash
+cargo run -p xtask -- issues-search <query>
+
+# Filter by type
+cargo run -p xtask -- issues-search "auth" --type friction
+cargo run -p xtask -- issues-search "bundle" --type question
+cargo run -p xtask -- issues-search "release" --type task
+
+# Filter by status
+cargo run -p xtask -- issues-search "bug" --status open
+
+# Filter by REQ/AC references
+cargo run -p xtask -- issues-search "test" --refs REQ-TPL-001
+
+# JSON output for programmatic access
+cargo run -p xtask -- issues-search "error" --json
+
+# Limit results
+cargo run -p xtask -- issues-search "docs" --limit 10
+```
+
+### Parameters
+
+| Flag | Description |
+|------|-------------|
+| `<query>` | Search query (matches ID, summary, description) |
+| `--type <TYPE>` | Filter by type: `friction`, `question`, or `task` (omit for all) |
+| `--status <STATUS>` | Filter by status |
+| `--refs <REF>` | Filter by REQ/AC reference (e.g., `REQ-TPL-001`) |
+| `--json` | Output in JSON format |
+| `--limit <N>` | Maximum results to return (default: 50) |
+
+### What It Does
+
+1. Searches friction entries from `friction/*.yaml`
+2. Searches questions from `questions/*.yaml`
+3. Searches tasks from `specs/tasks.yaml`
+4. Calculates relevance scores based on:
+   - ID match (highest priority, exact match bonus)
+   - Summary/title match
+   - Description/context match
+   - Category/label match
+5. Sorts results by relevance score (highest first)
+6. Returns unified results with type, ID, status, summary, and refs
+
+### Exit Codes
+
+- `0`: Search completed (even if no results)
+- Non-zero: Search failed (file read error, parse error)
+
+### When to Use
+
+- **Finding related issues**: Search across all governance artifacts
+- **Agent workflows**: Quickly locate relevant friction/questions for a task
+- **Triaging work**: Find all open issues related to a specific REQ or AC
+- **Auditing**: Find all issues mentioning a specific component or flow
+
+### Example Output
+
+```
+Found 3 results for 'auth':
+
+TYPE         ID                       STATUS       SUMMARY
+────────────────────────────────────────────────────────────────────────────────
+friction     FRICTION-TOOL-001        open         Auth token refresh fails si...
+question     Q-TPL-002                open         Should auth use JWT or sess...
+task         TASK-AUTH-001            InProgress   Implement OAuth2 flow
+```
+
+### JSON Output
+
+```json
+{
+  "query": "auth",
+  "total_results": 3,
+  "results": [
+    {
+      "issue_type": "friction",
+      "id": "FRICTION-TOOL-001",
+      "summary": "Auth token refresh fails silently",
+      "status": "open",
+      "refs": ["REQ-TPL-AUTH"],
+      "date": "2025-01-15",
+      "relevance_score": 15.0
+    }
+  ]
+}
+```
+
+### Notes
+
+- **Unified interface**: Search all governance artifacts in one command
+- **Relevance scoring**: Results sorted by match quality, not just date
+- **Type-aware**: Understands friction, question, and task schemas
+- **Fast**: Parses YAML files directly, no network calls
+
+---
+
+## xtask friction-gh-create
+
+Create a GitHub issue from a friction entry.
+
+### Usage
+
+```bash
+cargo run -p xtask -- friction-gh-create <FRICTION_ID>
+
+# With additional labels
+cargo run -p xtask -- friction-gh-create FRICTION-TOOL-001 --labels "bug,urgent"
+
+# Preview without creating (dry run)
+cargo run -p xtask -- friction-gh-create FRICTION-TOOL-001 --dry-run
+
+# Open in browser after creation
+cargo run -p xtask -- friction-gh-create FRICTION-TOOL-001 --open
+```
+
+### Parameters
+
+| Flag | Description |
+|------|-------------|
+| `<FRICTION_ID>` | Friction ID to create issue from (e.g., `FRICTION-TOOL-001`) |
+| `--labels <LABELS>` | Additional labels (comma-separated) |
+| `--dry-run` | Preview issue without creating |
+| `--open` | Open issue in browser after creation |
+
+### What It Does
+
+1. Loads friction entry from `friction/<FRICTION_ID>.yaml`
+2. Checks if already linked to a GitHub issue (warns if so)
+3. Generates issue title: `[Friction] <summary>`
+4. Generates issue body with:
+   - Friction ID, category, severity, date
+   - Description
+   - Context (flow, phase if available)
+   - Related REQ/AC references
+5. Applies labels: `friction`, `category:<category>`, `priority:<severity>` (if high/critical)
+6. Creates GitHub issue using `gh` CLI
+7. Updates friction entry with issue reference in `related_items.issues`
+
+### Prerequisites
+
+- GitHub CLI (`gh`) installed and authenticated (`gh auth login`)
+- Repository must have a GitHub remote configured
+
+### Exit Codes
+
+- `0`: Issue created successfully
+- Non-zero: Failed to create issue or friction entry not found
+
+### When to Use
+
+- **Escalating friction**: Turn a friction entry into a trackable GitHub issue
+- **Team visibility**: Make friction visible to team members via GitHub
+- **Integration**: Connect local governance artifacts to GitHub workflow
+
+### Example Output
+
+```
+Creating GitHub issue from friction entry FRICTION-TOOL-001...
+Created GitHub issue: https://github.com/owner/repo/issues/42
+   Issue number: #42
+   Updated friction entry with issue reference
+```
+
+### Dry Run Output
+
+```
+Dry run - would create GitHub issue:
+
+Title: [Friction] Build times increased after Cargo.lock update
+Labels: friction, category:tooling, priority:high
+
+Body:
+## Friction: Build times increased after Cargo.lock update
+
+**ID**: `FRICTION-TOOL-001` | **Category**: tooling | **Severity**: high | **Date**: 2025-01-15
+
+### Description
+
+Clean builds now take 3+ minutes instead of ~90 seconds after updating dependencies.
+...
+```
+
+### Common Issues
+
+**GitHub CLI not installed:**
+```
+GitHub CLI (gh) not found. Install it from: https://cli.github.com/
+Then run: gh auth login
+```
+
+**Not authenticated:**
+```
+GitHub CLI not authenticated.
+Run: gh auth login
+```
+
+**Friction entry already linked:**
+- Warning is shown but issue is still created
+- Consider using `friction-gh-link` if issue already exists
+
+### Notes
+
+- **Atomic update**: Friction entry is updated with issue reference after creation
+- **Label mapping**: Severity is mapped to priority labels (high/critical only)
+- **Bidirectional**: Creates a reference trail between friction and GitHub
+
+---
+
+## xtask friction-gh-link
+
+Link an existing GitHub issue to a friction entry.
+
+### Usage
+
+```bash
+cargo run -p xtask -- friction-gh-link <FRICTION_ID> <ISSUE_NUMBER>
+
+# Examples
+cargo run -p xtask -- friction-gh-link FRICTION-TOOL-001 42
+cargo run -p xtask -- friction-gh-link FRICTION-TOOL-001 "#42"
+```
+
+### Parameters
+
+| Flag | Description |
+|------|-------------|
+| `<FRICTION_ID>` | Friction ID to link (e.g., `FRICTION-TOOL-001`) |
+| `<ISSUE_NUMBER>` | GitHub issue number (e.g., `42` or `#42`) |
+
+### What It Does
+
+1. Parses issue number (handles `#` prefix)
+2. Loads friction entry from `friction/<FRICTION_ID>.yaml`
+3. Checks if already linked to this issue (returns early if so)
+4. Adds issue reference to `related_items.issues` list
+5. Saves updated friction entry
+
+### Exit Codes
+
+- `0`: Link created successfully (or already linked)
+- Non-zero: Friction entry not found or invalid issue number
+
+### When to Use
+
+- **Retroactive linking**: Connect a friction entry to an existing issue
+- **Manual creation**: When issue was created outside of `friction-gh-create`
+- **Cross-referencing**: Link friction to issues created by other workflows
+
+### Example Output
+
+```
+Linked friction entry FRICTION-TOOL-001 to GitHub issue #42
+```
+
+### Already Linked
+
+```
+Friction entry 'FRICTION-TOOL-001' is already linked to #42
+```
+
+### Common Issues
+
+**Invalid issue number:**
+- Must be numeric (with optional `#` prefix)
+- Example: `42`, `#42`
+
+**Friction entry not found:**
+- Check that `friction/<FRICTION_ID>.yaml` exists
+- Verify ID spelling
+
+### Notes
+
+- **Idempotent**: Safe to run multiple times
+- **No validation**: Does not verify issue exists on GitHub
+- **Lightweight**: Only modifies the friction YAML file
+
+---
+
+## xtask friction-resolve
+
+Resolve a friction entry by marking it as resolved or won't fix.
+
+### Usage
+
+```bash
+cargo run -p xtask -- friction-resolve --id <FRICTION_ID> --resolved-by <WHO>
+
+# With fix description
+cargo run -p xtask -- friction-resolve \
+  --id FRICTION-TOOL-001 \
+  --resolved-by "human" \
+  --fix-description "Upgraded sccache to v0.8.0"
+
+# With PR links
+cargo run -p xtask -- friction-resolve \
+  --id FRICTION-TOOL-001 \
+  --resolved-by "agent" \
+  --pr https://github.com/owner/repo/pull/123 \
+  --pr https://github.com/owner/repo/pull/124
+
+# Mark as won't fix
+cargo run -p xtask -- friction-resolve \
+  --id FRICTION-TOOL-001 \
+  --resolved-by "human" \
+  --status wont_fix \
+  --fix-description "Accepted as known limitation"
+
+# With verification notes
+cargo run -p xtask -- friction-resolve \
+  --id FRICTION-TOOL-001 \
+  --resolved-by "human" \
+  --verification "Tested on CI - build times now under 90s"
+```
+
+### Parameters
+
+| Flag | Description |
+|------|-------------|
+| `--id <ID>` | Friction ID to resolve (e.g., `FRICTION-TOOL-001`) |
+| `--resolved-by <WHO>` | Who resolved it (e.g., `agent`, `human`, username) |
+| `--fix-description <DESC>` | Description of how it was fixed (optional) |
+| `--pr <URL>` | PR links (repeatable) |
+| `--verification <NOTES>` | Verification notes (optional) |
+| `--status <STATUS>` | New status: `resolved` (default) or `wont_fix` |
+
+### What It Does
+
+1. Loads friction entry from `friction/<FRICTION_ID>.yaml`
+2. Validates status is `resolved` or `wont_fix`
+3. Updates status field
+4. Adds resolution block with:
+   - `resolved_by`: Who resolved it
+   - `resolved_at`: Current timestamp (RFC 3339)
+   - `fix_description`: Optional fix description
+   - `pr_links`: Optional list of PR URLs
+   - `verification`: Optional verification notes
+5. Saves updated friction entry
+
+### Exit Codes
+
+- `0`: Friction entry resolved successfully
+- Non-zero: Entry not found or invalid status
+
+### When to Use
+
+- **Closing friction**: Mark a friction point as fixed
+- **Documenting resolution**: Capture how and why it was resolved
+- **Audit trail**: Record PRs and verification for future reference
+- **Won't fix**: Document accepted limitations
+
+### Example Output
+
+```
+Resolved friction entry: FRICTION-TOOL-001
+   Status: resolved
+   Resolved by: human
+   Fix: Upgraded sccache to v0.8.0
+   PRs: https://github.com/owner/repo/pull/123
+```
+
+### Resolution Block Structure
+
+After resolution, the friction YAML includes:
+
+```yaml
+status: resolved
+resolution:
+  resolved_by: human
+  resolved_at: "2025-01-15T10:30:00Z"
+  fix_description: "Upgraded sccache to v0.8.0"
+  pr_links:
+    - https://github.com/owner/repo/pull/123
+  verification: "Tested on CI - build times now under 90s"
+```
+
+### Common Issues
+
+**Already resolved:**
+- Warning is shown but status can be updated again
+- Useful for re-resolving with updated information
+
+**Invalid status:**
+- Must be `resolved` or `wont_fix`
+- Other statuses (open, investigating, in_progress) use `friction-new`
+
+### Notes
+
+- **Timestamp**: Uses UTC timestamp in RFC 3339 format
+- **Overwrites**: Previous resolution is replaced, not appended
+- **Surfaced via API**: Resolution appears in `/platform/friction` endpoint
+
+---
+
+## xtask question-new
+
+Create a new question artifact to capture ambiguity encountered during flows.
+
+### Usage
+
+```bash
+cargo run -p xtask -- question-new \
+  --category TPL \
+  --summary "Should auth use JWT or session cookies?" \
+  --flow governed-feature-dev \
+  --phase implementation \
+  --description "Implementing AC-TPL-AUTH-001 requires choosing auth mechanism"
+
+# With related task
+cargo run -p xtask -- question-new \
+  --category TPL \
+  --summary "Which crate for OpenAPI generation?" \
+  --flow governed-feature-dev \
+  --phase planning \
+  --description "Need to choose between utoipa and paperclip" \
+  --task-id TASK-API-001
+
+# With REQ/AC references
+cargo run -p xtask -- question-new \
+  --category BUNDLE \
+  --summary "Should bundle include test files?" \
+  --flow bundle \
+  --phase selection \
+  --description "Unclear if test files help or add noise" \
+  --refs REQ-TPL-BUNDLE \
+  --refs AC-TPL-BUNDLE-001
+
+# Agent-created question
+cargo run -p xtask -- question-new \
+  --category SUGGEST \
+  --summary "Ambiguous dependency between tasks" \
+  --flow suggest-next \
+  --phase dependency_analysis \
+  --description "TASK-A and TASK-B have circular dependency" \
+  --created-by agent
+```
+
+### Parameters
+
+| Flag | Description |
+|------|-------------|
+| `--category <CAT>` | Question category/component (e.g., `TPL`, `BUNDLE`, `SUGGEST`) |
+| `--summary <SUMMARY>` | Brief summary of the question |
+| `--flow <FLOW>` | Flow that generated this question |
+| `--phase <PHASE>` | Phase within the flow |
+| `--description <DESC>` | Detailed description of the ambiguity |
+| `--created-by <WHO>` | Who created this: `agent`, `human`, or `flow` (default: `human`) |
+| `--task-id <ID>` | Related task ID (optional) |
+| `--refs <REF>` | REQ/AC IDs this question is about (repeatable) |
+
+### What It Does
+
+1. Validates category format (uppercase alphanumeric)
+2. Validates `created_by` is one of: `agent`, `human`, `flow`
+3. Generates sequential question ID: `Q-<CATEGORY>-<NNN>`
+4. Creates question artifact with:
+   - ID, summary, context (flow, phase, description)
+   - Optional task_id and refs
+   - Created timestamp (RFC 3339)
+   - Status: `open`
+5. Saves to `questions/<ID>.yaml`
+
+### Exit Codes
+
+- `0`: Question created successfully
+- Non-zero: Invalid category or created_by value
+
+### Output Artifacts
+
+- `questions/Q-<CATEGORY>-<NNN>.yaml` - Question artifact file
+
+### When to Use
+
+- **During feature development**: Capture design ambiguity
+- **During agent workflows**: Record blockers that need human input
+- **During planning**: Document decisions that need to be made
+- **For audit trail**: Track why certain choices were made
+
+### Example Output
+
+```
+Created question: Q-TPL-003
+   File: questions/Q-TPL-003.yaml
+   Flow: governed-feature-dev / implementation
+   Created by: human
+   Status: open
+```
+
+### Question File Structure
+
+```yaml
+id: Q-TPL-003
+summary: "Should auth use JWT or session cookies?"
+context:
+  flow: governed-feature-dev
+  phase: implementation
+  description: "Implementing AC-TPL-AUTH-001 requires choosing auth mechanism"
+  files_involved: []
+task_id: TASK-AUTH-001
+refs:
+  - REQ-TPL-AUTH
+  - AC-TPL-AUTH-001
+created_by: human
+created_at: "2025-01-15T10:30:00Z"
+status: open
+```
+
+### Common Issues
+
+**Invalid category:**
+- Must be alphanumeric (e.g., `TPL`, `BUNDLE`, not `my-component`)
+
+**Invalid created_by:**
+- Must be one of: `agent`, `human`, `flow`
+
+### Notes
+
+- **Sequential IDs**: IDs are auto-generated within each category
+- **Surfaced via API**: Appears in `/platform/questions` endpoint
+- **Listed via CLI**: Use `questions-list` to view
+
+---
+
+## xtask question-resolve
+
+Resolve a question by marking it as answered, resolved, or obsolete.
+
+### Usage
+
+```bash
+cargo run -p xtask -- question-resolve --id <QUESTION_ID> --resolved-by <WHO>
+
+# Mark as answered with chosen option
+cargo run -p xtask -- question-resolve \
+  --id Q-TPL-003 \
+  --resolved-by human \
+  --chosen-option "JWT" \
+  --notes "JWT provides stateless auth, better for microservices"
+
+# Mark as resolved (decision implemented)
+cargo run -p xtask -- question-resolve \
+  --id Q-TPL-003 \
+  --resolved-by agent \
+  --status resolved \
+  --notes "Implemented JWT auth per ADR-0015"
+
+# Mark as obsolete (no longer relevant)
+cargo run -p xtask -- question-resolve \
+  --id Q-TPL-003 \
+  --resolved-by human \
+  --status obsolete \
+  --notes "Feature was descoped"
+```
+
+### Parameters
+
+| Flag | Description |
+|------|-------------|
+| `--id <ID>` | Question ID to resolve (e.g., `Q-TPL-003`) |
+| `--resolved-by <WHO>` | Who resolved it: `agent`, `human`, or `flow` |
+| `--chosen-option <LABEL>` | Which option was chosen (label from options list, optional) |
+| `--notes <NOTES>` | Resolution notes (optional) |
+| `--status <STATUS>` | New status: `answered`, `resolved` (default), or `obsolete` |
+
+### What It Does
+
+1. Loads question from `questions/<ID>.yaml`
+2. Validates status is one of: `answered`, `resolved`, `obsolete`
+3. Validates `resolved_by` is one of: `agent`, `human`, `flow`
+4. If `chosen_option` provided and question has options, validates it matches
+5. Updates status and adds resolution block:
+   - `resolved_by`: Who resolved it
+   - `resolved_at`: Current timestamp (RFC 3339)
+   - `chosen_option`: Optional chosen option label
+   - `notes`: Optional resolution notes
+6. Saves updated question
+
+### Exit Codes
+
+- `0`: Question resolved successfully
+- Non-zero: Question not found or invalid status/resolved_by
+
+### Status Semantics
+
+| Status | Meaning |
+|--------|---------|
+| `answered` | Decision made, waiting for implementation |
+| `resolved` | Decision implemented |
+| `obsolete` | Question no longer relevant |
+
+### When to Use
+
+- **Decision made**: Mark as `answered` when choice is clear
+- **Implementation complete**: Mark as `resolved` when decision is implemented
+- **No longer needed**: Mark as `obsolete` when question is moot
+- **Agent workflow**: Record how ambiguity was resolved
+
+### Example Output
+
+```
+Resolved question: Q-TPL-003
+   Status: resolved
+   Resolved by: human
+   Chosen option: JWT
+   Notes: JWT provides stateless auth, better for microservices
+```
+
+### Resolution Block Structure
+
+After resolution, the question YAML includes:
+
+```yaml
+status: resolved
+resolution:
+  resolved_by: human
+  resolved_at: "2025-01-15T11:00:00Z"
+  chosen_option: JWT
+  notes: "JWT provides stateless auth, better for microservices"
+```
+
+### Common Issues
+
+**Already resolved:**
+- Warning is shown but status can be updated again
+- Useful for correcting or updating resolution
+
+**Invalid chosen_option:**
+- Warning if option doesn't match defined options
+- Still allowed (options may not always be defined)
+
+**Invalid status:**
+- Must be `answered`, `resolved`, or `obsolete`
+- Use `open` status only via direct YAML edit
+
+### Notes
+
+- **Timestamp**: Uses UTC timestamp in RFC 3339 format
+- **Overwrites**: Previous resolution is replaced, not appended
+- **Surfaced via API**: Resolution appears in `/platform/questions` endpoint
+
+---
+
 ## Command Comparison
 
 | Command | Speed | Coverage | Use Case |
@@ -2525,6 +3181,12 @@ This check runs as part of **step 9 (Governance graph & UI)** in selftest:
 | `contracts-check` | Fast | Doc governance | Before PR merge |
 | `contracts-fmt` | Fast | Doc sync | After selftest changes |
 | `ui-contract-check` | Medium | UI contract + DOM | After UI changes |
+| `issues-search` | Fast | Cross-artifact search | Find related issues |
+| `friction-gh-create` | Fast | GitHub integration | Escalate friction to GitHub |
+| `friction-gh-link` | Fast | GitHub integration | Link existing issues |
+| `friction-resolve` | Fast | Lifecycle mgmt | Close friction entries |
+| `question-new` | Fast | Artifact creation | Capture ambiguity |
+| `question-resolve` | Fast | Lifecycle mgmt | Close questions |
 
 ---
 

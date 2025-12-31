@@ -738,7 +738,7 @@ See [v3.4.0-plan.md](archive/v3.4.0-plan.md) for scope when v3.4.0 work begins.
 ## 6. Recommended Path (For Adopters)
 
 > **Scope note:** This section describes what happens **in forks**, not in this repo.
-> The kernel (v3.3.9) is frozen. Template is at v3.3.13. Validation happens when you use it.
+> The kernel (v3.3.9) is frozen. Template is at v3.3.14. Validation happens when you use it.
 
 **Option C (Validate) is recommended** for these reasons:
 

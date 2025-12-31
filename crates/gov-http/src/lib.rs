@@ -24,6 +24,7 @@ pub mod error;
 pub mod forks;
 pub mod friction;
 pub mod handlers;
+pub mod issues;
 pub mod questions;
 pub mod state;
 
@@ -34,6 +35,10 @@ pub use handlers::{
     CoverageDetail, CoverageResponse, CoverageSummary, DocHealthSummary, DocInfoWithHealth,
     DocsIndexResponse, SuggestNextQuery, TaskDocsOut, TaskFilters, TaskGraphQuery,
     TaskGraphResponse, TaskOut, TasksResponse,
+};
+pub use issues::{
+    Issue, IssueFilters, IssueKind, IssueStatus, IssuesResponse, IssuesSummary, KindCounts,
+    Pagination, StatusCounts,
 };
 pub use questions::{
     Question, QuestionContext, QuestionFilters, QuestionOption, QuestionResolution,
@@ -153,6 +158,7 @@ where
         .merge(friction::router::<S>())
         .merge(questions::router::<S>())
         .merge(forks::router::<S>())
+        .merge(issues::router::<S>())
 }
 
 /// Build a minimal platform router with only health/status endpoints.

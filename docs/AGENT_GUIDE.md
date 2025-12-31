@@ -885,6 +885,20 @@ cargo xtask friction-list --severity high
 
 # Create new friction entry
 cargo xtask friction-new --category devex --severity medium --summary "Description of the issue"
+
+# Resolve a friction entry
+cargo xtask friction-resolve --id FRICTION-TOOL-001 --resolved-by agent \
+  --fix-description "Fixed by updating the config" --pr "#123"
+
+# Create GitHub issue from friction entry
+cargo xtask friction-gh-create FRICTION-TOOL-001
+cargo xtask friction-gh-create FRICTION-TOOL-001 --dry-run  # Preview without creating
+cargo xtask friction-gh-create FRICTION-TOOL-001 --open     # Open in browser after creation
+cargo xtask friction-gh-create FRICTION-TOOL-001 --labels "team:platform,sprint:q1"
+
+# Link existing GitHub issue to friction entry
+cargo xtask friction-gh-link FRICTION-TOOL-001 123  # Links to issue #123
+cargo xtask friction-gh-link FRICTION-TOOL-001 "#123"  # Also accepts # prefix
 ```
 
 **API:**
@@ -967,9 +981,34 @@ cargo xtask adr-new "Title of architectural decision"
 - "Task has circular dependency in workflow"
 - "AC description ambiguous - multiple interpretations"
 
-**Command:**
+**Commands:**
 ```bash
+# Show questions summary
 cargo xtask status  # Shows open questions
+
+# List all questions
+cargo xtask questions-list
+cargo xtask questions-list --status open
+cargo xtask questions-list --json
+
+# Create a new question
+cargo xtask question-new --category BUNDLE --summary "Multiple ACs found" \
+  --flow bundle --phase ac_selection \
+  --description "Found 3 ACs for the same requirement, unclear priority"
+
+# Create a question with task/ref linkage
+cargo xtask question-new --category TPL --summary "Unclear behavior" \
+  --flow implement_ac --phase implementation \
+  --description "Spec is ambiguous about error handling" \
+  --task-id TASK-001 --refs REQ-TPL-001 --refs AC-TPL-001
+
+# Resolve a question
+cargo xtask question-resolve --id Q-BUNDLE-001 --resolved-by agent \
+  --chosen-option "Option A" --notes "Chose based on risk assessment"
+
+# Mark question as obsolete
+cargo xtask question-resolve --id Q-BUNDLE-002 --resolved-by human \
+  --status obsolete --notes "Requirement was removed"
 ```
 
 **API:**
@@ -1034,6 +1073,71 @@ curl http://localhost:8080/platform/questions/Q-EXAMPLE-001
   "created_by": "flow",
   "created_at": "2025-11-26T00:00:00Z",
   "status": "open"
+}
+```
+
+### Unified Issue Search
+
+The `issues-search` command provides unified search across friction entries, questions, and tasks. This is useful when you need to find related issues across different artifact types.
+
+**Use unified search for:**
+- Finding all issues related to a specific REQ or AC
+- Searching by keyword across all governance artifacts
+- Discovering related friction entries and questions for a task
+- Quick lookup by ID without knowing the artifact type
+
+**Examples:**
+```bash
+# Search across all artifact types by keyword
+cargo xtask issues-search "bundle"
+
+# Search only friction entries
+cargo xtask issues-search "port discovery" --type friction
+
+# Search only questions
+cargo xtask issues-search "ambiguous" --type question
+
+# Search only tasks
+cargo xtask issues-search "platform" --type task
+
+# Filter by status
+cargo xtask issues-search "config" --status open
+
+# Filter by REQ/AC reference
+cargo xtask issues-search "" --refs REQ-TPL-001
+
+# Combine filters
+cargo xtask issues-search "api" --type friction --status open --refs AC-PLT-001
+
+# JSON output for programmatic use
+cargo xtask issues-search "bundle" --json
+
+# Limit results
+cargo xtask issues-search "test" --limit 10
+```
+
+**Search behavior:**
+- Results are ranked by relevance (ID match > summary > description > category/labels)
+- Exact ID matches receive a bonus score
+- Empty query with `--refs` filter finds all issues linked to that REQ/AC
+- Default limit is 50 results
+
+**Response structure (--json):**
+```json
+{
+  "query": "bundle",
+  "total_results": 3,
+  "results": [
+    {
+      "issue_type": "friction",
+      "id": "FRICTION-BUNDLE-001",
+      "summary": "Bundle command slow on large repos",
+      "status": "open",
+      "refs": ["REQ-TPL-BUNDLE"],
+      "date": "2025-01-01",
+      "relevance_score": 15.0
+    }
+  ]
 }
 ```
 
@@ -1416,21 +1520,38 @@ cargo xtask graph-export --check-invariants
 # Governance Artifacts
 cargo xtask friction-new --category X --severity Y --summary "..."
 cargo xtask friction-list
+cargo xtask friction-resolve --id FRICTION-ID --resolved-by agent --fix-description "..."
+cargo xtask friction-gh-create FRICTION-ID          # Create GitHub issue from friction
+cargo xtask friction-gh-link FRICTION-ID 123        # Link to existing GitHub issue
 cargo xtask question-new --category X --summary "..." --flow F --phase P --description "..."
 cargo xtask questions-list
+cargo xtask question-resolve --id Q-ID --resolved-by agent --chosen-option "A" --notes "..."
+cargo xtask issues-search "query"                   # Unified search across friction/questions/tasks
+cargo xtask issues-search "query" --type friction --status open --refs REQ-ID
 cargo xtask fork-register --name "Name" --domain "domain" --kernel-version "v3.3.9-kernel" ...
 cargo xtask fork-list
 
-# Introspection
+# Introspection (see docs/reference/platform-api-endpoints.md for full reference)
 curl http://localhost:8080/platform/status
 curl http://localhost:8080/platform/graph
+curl http://localhost:8080/platform/openapi                  # OpenAPI spec (YAML)
+curl http://localhost:8080/platform/schema                   # All JSON schemas
+curl http://localhost:8080/platform/schema/tasks             # Specific schema by name
+curl http://localhost:8080/platform/devex/flows              # DevEx commands and flows
+curl http://localhost:8080/platform/docs/index               # Documentation inventory
+curl http://localhost:8080/platform/coverage                 # AC coverage summary
 curl http://localhost:8080/platform/tasks
+curl http://localhost:8080/platform/tasks/suggest-next?task=TASK-ID  # Next steps for task
 curl http://localhost:8080/platform/tasks/graph              # Task dependency graph (JSON)
 curl 'http://localhost:8080/platform/tasks/graph?format=mermaid'  # Mermaid diagram
+curl http://localhost:8080/platform/agent/hints              # Prioritized work for agents
 curl http://localhost:8080/platform/friction                 # Friction log entries
 curl http://localhost:8080/platform/questions                # Question artifacts
 curl "http://localhost:8080/platform/questions?status=open"  # Filter by status
 curl http://localhost:8080/platform/forks                    # Fork registry
+curl http://localhost:8080/platform/issues                   # Unified issues (friction+questions+tasks)
+curl http://localhost:8080/platform/idp/snapshot             # IDP snapshot for dashboards
+curl http://localhost:8080/platform/ui/contract              # UI contract specification
 ```
 
 ### Environment Variables

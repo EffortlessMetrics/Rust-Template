@@ -31,10 +31,35 @@ However, this governance state was only accessible via CLI tools (`cargo xtask g
 
 Expose the governance state via HTTP endpoints under `/platform/*`:
 
+**Core governance endpoints:**
+- `/platform/status` - High-level governance health status
 - `/platform/graph` - Complete governance graph (stories, requirements, ACs, docs, commands, flows)
+- `/platform/openapi` - OpenAPI specification (YAML)
+- `/platform/schema` - JSON Schema definitions for platform data files
+- `/platform/schema/{name}` - Specific schema by name
+
+**DevEx and documentation:**
 - `/platform/devex/flows` - DevEx commands and flows from `specs/devex_flows.yaml`
 - `/platform/docs/index` - Document index from `specs/doc_index.yaml`
-- `/platform/status` - High-level governance health status
+- `/platform/coverage` - AC coverage summary with BDD test results
+
+**Work and task management:**
+- `/platform/tasks` - Task list with optional filtering
+- `/platform/tasks/suggest-next` - Recommended next work for a task
+- `/platform/tasks/graph` - Task dependency graph (JSON or Mermaid)
+
+**Agent support:**
+- `/platform/agent/hints` - Prioritized work suggestions for AI agents
+- `/platform/idp/snapshot` - IDP snapshot with governance health
+
+**Metadata and issues:**
+- `/platform/friction` - Development friction log entries
+- `/platform/questions` - Design questions and ambiguities
+- `/platform/forks` - Registered template forks/branches
+- `/platform/issues` - Unified issues aggregation (friction + questions + tasks)
+- `/platform/ui/contract` - Governed UI contract specification
+
+For full endpoint documentation, see `docs/reference/platform-api-endpoints.md`.
 
 ## Implementation
 

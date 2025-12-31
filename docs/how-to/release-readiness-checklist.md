@@ -2,7 +2,7 @@
 id: HOW-TO-RELEASE-READINESS
 title: "Release Readiness Checklist"
 doc_type: how_to
-version: 3.3.13
+version: 3.3.14
 stories: [US-TPL-PLT-001]
 requirements:
   - REQ-PLT-RELEASE-SAFETY

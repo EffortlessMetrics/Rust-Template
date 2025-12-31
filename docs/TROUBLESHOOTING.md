@@ -2139,4 +2139,4 @@ For detailed gate documentation, see [ADR-0017](adr/0017-tier1-selftest-gate.md)
 
 ---
 
-**Last Updated:** 2025-12-27 (v3.3.13)
+**Last Updated:** 2025-12-31 (v3.3.14)

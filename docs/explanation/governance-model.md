@@ -11,8 +11,8 @@ adrs: [ADR-0003, ADR-0005, ADR-0020, ADR-0021, ADR-0024]
 
 # Governance Model: How Rust-as-Spec Platform Cells Stay Honest
 
-**Template Version:** v3.3.13
-**Last Updated:** 2025-12-27
+**Template Version:** v3.3.14
+**Last Updated:** 2025-12-31
 
 > **TL;DR:** This template uses specs, BDD tests, policies, and graph invariants to create a **self-governing platform cell** where code, docs, and contracts must agree — and the repo can prove it via `cargo xtask selftest`.
 

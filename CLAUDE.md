@@ -96,10 +96,10 @@ When you need to know “what is correct?”, look in this order:
 
    - **Bootstrap:** `dev-up` (one-command setup), `doctor`, `kernel-smoke`, `install-hooks`
    - **Sanity:** `check`, `selftest`, `precommit`, `ci-local`
-   - **Governance:** `skills-lint`, `skills-fmt`, `agents-lint`, `agents-fmt`, `ac-status`, `ac-coverage`
+   - **Governance:** `skills-lint`, `skills-fmt`, `agents-lint`, `agents-fmt`, `ac-status`, `ac-coverage`, `issues-search` (unified search across friction, questions, tasks)
    - **AC-first development:** `ac-new`, `ac-suggest-scenarios`, `ac-tests`, `test-ac`, `bundle`, `test-changed`
    - **Design & docs:** `adr-new`, `adr-check`, `design-new`, `docs-check`, `spellcheck`
-   - **Friction & feedback:** `friction-list` (DevEx issues, process problems)
+   - **Friction & feedback:** `friction-list` (DevEx issues, process problems), `friction-gh-create`, `friction-gh-link`
    - **Release:** `release-prepare`, `release-bundle`, `sbom-local`
    - **Exploration:** `help-flows`, `tasks-list`, `suggest-next` (agent guidance)
 
@@ -147,6 +147,9 @@ curl http://localhost:8080/platform/status
 
 # Full governance graph (stories → REQs → ACs → tests → docs → commands)
 curl http://localhost:8080/platform/graph
+
+# OpenAPI specification (machine-readable)
+curl http://localhost:8080/platform/openapi
 
 # Developer flows and available xtask commands
 curl http://localhost:8080/platform/devex/flows

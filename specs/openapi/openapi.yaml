@@ -20,10 +20,19 @@ info:
     - /platform/questions - Design questions and ambiguities
     - /platform/forks - Template forks/branches
     - /platform/agent/hints - Prioritized work suggestions for AI agents
+    - /platform/issues - Unified issues aggregation (friction + questions + tasks)
+    - /platform/graph - Full governance graph (stories → REQs → ACs → tests → docs)
+    - /platform/devex/flows - Developer flows and available xtask commands
+    - /platform/coverage - AC coverage summary
+    - /platform/tasks - Tasks from specs/tasks.yaml with filtering
+    - /platform/tasks/suggest-next - Recommended next work
+    - /platform/tasks/graph - Task dependencies (JSON or Mermaid)
+    - /platform/schema - Machine-readable schema definitions
+    - /platform/schema/{name} - Get specific schema by name
 
   x-template-version: "3.3.14"
   x-schema-version: "1.0"
-  x-last-updated: "2025-12-30"
+  x-last-updated: "2025-12-31"
   license:
     name: Apache-2.0
     url: https://www.apache.org/licenses/LICENSE-2.0
@@ -392,6 +401,411 @@ paths:
                   error:
                     type: string
                     example: "Failed to generate agent hints"
+
+  /platform/issues:
+    get:
+      summary: Unified issues aggregation
+      description: |
+        Returns all governance artifacts (friction, questions, tasks) as a unified
+        list of issues with normalized status, priority, and filtering capabilities.
+
+        This is the primary endpoint for tracking all open work and DevEx issues
+        across the entire governance system. Issues are normalized to a common
+        representation with consistent status (open/in_progress/resolved) and
+        priority (1-4) regardless of their source type.
+
+        **Ordering**: Results are sorted by priority (1=highest) then by created_at
+        (most recent first), with ID as a final tie-breaker for deterministic output.
+
+        **Pagination**: Default 50 items/page, max 100. Use `page` and `per_page`
+        query parameters to navigate results.
+      operationId: getIssues
+      tags: [platform]
+      security: []
+      parameters:
+        - name: kind
+          in: query
+          description: Filter by issue kind
+          required: false
+          schema:
+            type: string
+            enum: [friction, question, task]
+        - name: status
+          in: query
+          description: Filter by normalized status
+          required: false
+          schema:
+            type: string
+            enum: [open, in_progress, resolved]
+        - name: priority
+          in: query
+          description: Filter by exact priority (1=critical, 2=high, 3=medium, 4=low)
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 4
+        - name: min_priority
+          in: query
+          description: Filter by minimum priority (1=highest, so min_priority=2 returns priorities 1 and 2)
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 4
+        - name: from_date
+          in: query
+          description: Filter by date range start (ISO 8601)
+          required: false
+          schema:
+            type: string
+            format: date
+        - name: to_date
+          in: query
+          description: Filter by date range end (ISO 8601)
+          required: false
+          schema:
+            type: string
+            format: date
+        - name: q
+          in: query
+          description: Text search in id, summary, category, and labels
+          required: false
+          schema:
+            type: string
+        - name: page
+          in: query
+          description: Page number (1-indexed, default 1)
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: per_page
+          in: query
+          description: Items per page (default 50, max 100)
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 50
+      responses:
+        "200":
+          description: Issues retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IssuesResponse'
+        "500":
+          description: Internal server error (e.g., failed to load issues)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Failed to load issues"
+
+  /platform/graph:
+    get:
+      summary: Governance graph
+      description: |
+        Returns the full governance traceability graph showing relationships
+        between stories, requirements, acceptance criteria, tests, documents,
+        and DevEx commands/flows.
+
+        The graph provides:
+        - Nodes: stories, requirements, ACs, tests, documents, commands, flows
+        - Edges: contains, tested_by, documents, executes relationships
+        - Mermaid export capability via the to_mermaid() method
+
+        Use this for understanding the complete governance structure and
+        visualizing traceability from business requirements to tests.
+      operationId: getGraph
+      tags: [platform]
+      security: []
+      responses:
+        "200":
+          description: Governance graph retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Graph'
+        "500":
+          description: Internal server error (e.g., failed to build graph)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Failed to load governance data"
+
+  /platform/devex/flows:
+    get:
+      summary: Developer experience flows
+      description: |
+        Returns the DevEx flows specification containing all available
+        xtask commands and workflow definitions.
+
+        The response includes:
+        - commands: Available xtask commands with categories, summaries, and requirements
+        - flows: Workflow definitions with steps and documentation references
+
+        Use this to discover available automation commands and understand
+        the recommended development workflows.
+      operationId: getDevexFlows
+      tags: [platform]
+      security: []
+      responses:
+        "200":
+          description: DevEx flows retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DevExFlows'
+        "500":
+          description: Internal server error (e.g., failed to load flows)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Failed to load devex flows"
+
+  /platform/coverage:
+    get:
+      summary: AC coverage summary
+      description: |
+        Returns acceptance criteria coverage based on BDD test results.
+        Coverage is computed from Cucumber JSON reports in target/ac_report.json.
+
+        The response includes:
+        - summary: Counts of passing, failing, and unknown ACs
+        - details: Per-AC status with linked story, requirement, and scenarios
+
+        ACs are marked as:
+        - passing: All associated scenarios passed
+        - failing: At least one scenario failed
+        - unknown: No test results found for this AC
+      operationId: getCoverage
+      tags: [platform]
+      security: []
+      responses:
+        "200":
+          description: Coverage data retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoverageResponse'
+
+  /platform/tasks:
+    get:
+      summary: Task list
+      description: |
+        Returns all tasks from specs/tasks.yaml with optional filtering.
+        Task status is overlaid from the governance repository state.
+
+        Tasks represent work items linked to requirements and acceptance
+        criteria, with metadata including owner, labels, and documentation.
+      operationId: getTasks
+      tags: [platform]
+      security: []
+      parameters:
+        - name: status
+          in: query
+          description: Filter by task status (Todo, InProgress, Review, Done)
+          required: false
+          schema:
+            type: string
+            enum: [Todo, InProgress, Review, Done]
+        - name: req
+          in: query
+          description: Filter by requirement ID (e.g., REQ-TPL-001)
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Tasks retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TasksResponse'
+        "500":
+          description: Internal server error (e.g., failed to load tasks)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Failed to load tasks"
+
+  /platform/tasks/suggest-next:
+    get:
+      summary: Suggested next steps
+      description: |
+        Returns a suggested sequence of actions for completing a given task.
+        The suggestion is based on the task's recommended flows and DevEx
+        commands, with status indicators for already-completed steps.
+
+        The response includes:
+        - task: The task ID
+        - goal: Task summary/objective
+        - recommended_flows: List of flow names to follow
+        - recommended_sequence: Ordered list of actions (commands, docs, tests)
+      operationId: getSuggestNext
+      tags: [platform]
+      security: []
+      parameters:
+        - name: task
+          in: query
+          description: Task ID to get suggestions for (e.g., TASK-TPL-001)
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Suggestions retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuggestedSequence'
+        "400":
+          description: Missing required task parameter
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        "404":
+          description: Task not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Failed to generate suggestion"
+
+  /platform/tasks/graph:
+    get:
+      summary: Task dependency graph
+      description: |
+        Returns the task dependency graph showing relationships between tasks.
+        The graph can be returned in JSON format (default) or as a Mermaid
+        diagram for visualization.
+
+        The graph includes:
+        - nodes: Tasks with their metadata (status, requirement, owner, labels)
+        - edges: Dependency relationships (depends_on)
+        - blocking_relationships: Tasks that block other tasks
+      operationId: getTaskGraph
+      tags: [platform]
+      security: []
+      parameters:
+        - name: format
+          in: query
+          description: Output format (json or mermaid)
+          required: false
+          schema:
+            type: string
+            enum: [json, mermaid]
+            default: json
+      responses:
+        "200":
+          description: Task graph retrieved successfully
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/TaskGraph'
+                  - $ref: '#/components/schemas/TaskGraphMermaid'
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Failed to build task graph"
+
+  /platform/schema:
+    get:
+      summary: Platform schemas
+      description: |
+        Returns all platform schema definitions including JSON schemas for
+        spec_ledger, tasks, questions, devex_flows, config, doc_index, and
+        service_metadata.
+
+        Also includes endpoint schema information for API documentation.
+
+        Use this for:
+        - Code generation from schemas
+        - Validation of YAML configuration files
+        - Understanding the platform data model
+      operationId: getSchema
+      tags: [platform]
+      security: []
+      responses:
+        "200":
+          description: Schemas retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformSchemas'
+
+  /platform/schema/{name}:
+    get:
+      summary: Get schema by name
+      description: |
+        Returns a specific schema by name. Available schemas include:
+        - spec_ledger: Story/REQ/AC traceability ledger
+        - tasks: Work item tracking
+        - questions: Design questions and ambiguities
+        - devex_flows: Developer workflows and commands
+        - config: Service configuration
+        - doc_index: Documentation inventory
+        - service_metadata: Service identity
+      operationId: getSchemaByName
+      tags: [platform]
+      security: []
+      parameters:
+        - name: name
+          in: path
+          description: Schema name (e.g., spec_ledger, tasks, questions)
+          required: true
+          schema:
+            type: string
+            enum: [spec_ledger, tasks, questions, devex_flows, config, doc_index, service_metadata]
+      responses:
+        "200":
+          description: Schema retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SchemaInfo'
+        "404":
+          description: Schema not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
 components:
   securitySchemes:
@@ -1195,3 +1609,633 @@ components:
               value:
                 type: string
           description: "Recommended sequence of actions (optional)"
+
+    # ==========================================================================
+    # Unified Issues Schemas
+    # ==========================================================================
+
+    IssuesResponse:
+      type: object
+      description: "Unified issues response with pagination and summary"
+      required: [issues, pagination, summary]
+      properties:
+        issues:
+          type: array
+          items:
+            $ref: '#/components/schemas/Issue'
+          description: "Array of normalized issues"
+        pagination:
+          $ref: '#/components/schemas/IssuesPagination'
+        summary:
+          $ref: '#/components/schemas/IssuesSummary'
+
+    Issue:
+      type: object
+      description: "Unified issue representation normalizing friction, questions, and tasks"
+      required: [id, kind, status, native_status, summary, priority]
+      properties:
+        id:
+          type: string
+          description: "Unique identifier (FRICTION-XXX, Q-XXX, TASK-XXX)"
+          example: "FRICTION-TPL-001"
+        kind:
+          type: string
+          enum: [friction, question, task]
+          description: "Issue type"
+        status:
+          type: string
+          enum: [open, in_progress, resolved]
+          description: "Normalized status across all issue types"
+        native_status:
+          type: string
+          description: "Original status string from source artifact"
+          example: "investigating"
+        summary:
+          type: string
+          description: "One-line summary"
+        priority:
+          type: integer
+          minimum: 1
+          maximum: 4
+          description: "Priority (1=critical/p0, 2=high/p1, 3=medium/p2, 4=low/p3)"
+        created_at:
+          type: string
+          format: date
+          description: "Creation/discovery date (ISO 8601, nullable for tasks)"
+        category:
+          type: string
+          description: "Category or flow context"
+        refs:
+          type: array
+          items:
+            type: string
+          description: "Related REQ/AC IDs"
+        owner:
+          type: string
+          description: "Owner/assignee"
+        labels:
+          type: array
+          items:
+            type: string
+          description: "Labels/tags"
+
+    IssuesPagination:
+      type: object
+      description: "Pagination metadata"
+      required: [page, per_page, total_items, total_pages]
+      properties:
+        page:
+          type: integer
+          minimum: 1
+          description: "Current page number (1-indexed)"
+        per_page:
+          type: integer
+          minimum: 1
+          maximum: 100
+          description: "Items per page"
+        total_items:
+          type: integer
+          minimum: 0
+          description: "Total number of items across all pages"
+        total_pages:
+          type: integer
+          minimum: 0
+          description: "Total number of pages"
+
+    IssuesSummary:
+      type: object
+      description: "Summary counts by kind and status"
+      required: [total, by_kind, by_status]
+      properties:
+        total:
+          type: integer
+          minimum: 0
+          description: "Total number of issues (before pagination)"
+        by_kind:
+          $ref: '#/components/schemas/IssuesKindCounts'
+        by_status:
+          $ref: '#/components/schemas/IssuesStatusCounts'
+
+    IssuesKindCounts:
+      type: object
+      description: "Issue counts by kind"
+      required: [friction, question, task]
+      properties:
+        friction:
+          type: integer
+          minimum: 0
+        question:
+          type: integer
+          minimum: 0
+        task:
+          type: integer
+          minimum: 0
+
+    IssuesStatusCounts:
+      type: object
+      description: "Issue counts by status"
+      required: [open, in_progress, resolved]
+      properties:
+        open:
+          type: integer
+          minimum: 0
+        in_progress:
+          type: integer
+          minimum: 0
+        resolved:
+          type: integer
+          minimum: 0
+
+    # ==========================================================================
+    # Governance Graph Schemas
+    # ==========================================================================
+
+    Graph:
+      type: object
+      description: "Full governance traceability graph"
+      required: [nodes, edges]
+      properties:
+        nodes:
+          type: array
+          items:
+            $ref: '#/components/schemas/GraphNode'
+          description: "Graph nodes (stories, requirements, ACs, tests, docs, commands, flows)"
+        edges:
+          type: array
+          items:
+            $ref: '#/components/schemas/GraphEdge'
+          description: "Graph edges showing relationships"
+
+    GraphNode:
+      type: object
+      description: "A node in the governance graph"
+      required: [id, label, type]
+      properties:
+        id:
+          type: string
+          description: "Unique node identifier"
+          example: "US-TPL-001"
+        label:
+          type: string
+          description: "Human-readable label"
+          example: "User Story Title"
+        type:
+          type: string
+          enum: [story, requirement, ac, test, document, command, flow]
+          description: "Node type"
+        url:
+          type: string
+          description: "Optional URL for the node (e.g., file:// for documents)"
+        meta:
+          $ref: '#/components/schemas/GraphNodeMeta'
+
+    GraphNodeMeta:
+      type: object
+      description: "Additional node metadata"
+      properties:
+        must_have_ac:
+          type: boolean
+          default: false
+          description: "For requirements: whether this REQ must have at least one AC"
+
+    GraphEdge:
+      type: object
+      description: "An edge in the governance graph"
+      required: [source, target, type]
+      properties:
+        source:
+          type: string
+          description: "Source node ID"
+        target:
+          type: string
+          description: "Target node ID"
+        type:
+          type: string
+          enum: [contains, tested_by, documents, executes]
+          description: "Edge type describing the relationship"
+
+    # ==========================================================================
+    # DevEx Flows Schemas
+    # ==========================================================================
+
+    DevExFlows:
+      type: object
+      description: "Developer experience flows specification"
+      required: [schema_version, commands]
+      properties:
+        schema_version:
+          type: string
+          description: "Schema version"
+        template_version:
+          type: string
+          description: "Template version"
+        commands:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/CommandSpec'
+          description: "Available xtask commands"
+        flows:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/FlowSpec'
+          description: "Workflow definitions"
+
+    CommandSpec:
+      type: object
+      description: "Specification for an xtask command"
+      required: [category, summary, required]
+      properties:
+        category:
+          type: string
+          enum: [onboarding, design_ac, testing, governance, release]
+          description: "Command category"
+        summary:
+          type: string
+          description: "Brief command description"
+        required:
+          type: boolean
+          description: "Whether this command is required"
+        docs:
+          $ref: '#/components/schemas/DocsRequirement'
+
+    DocsRequirement:
+      type: object
+      description: "Documentation requirements for a command"
+      properties:
+        readme_table:
+          type: boolean
+          description: "Should appear in README command table"
+        contributing_flow:
+          type: boolean
+          description: "Should appear in CONTRIBUTING flow"
+        claude_golden_path:
+          type: boolean
+          description: "Should appear in CLAUDE.md golden path"
+
+    FlowSpec:
+      type: object
+      description: "Workflow specification"
+      required: [name, description, steps]
+      properties:
+        name:
+          type: string
+          description: "Flow name"
+        description:
+          type: string
+          description: "Flow description"
+        required:
+          type: boolean
+          description: "Whether this flow is required"
+        documented_in:
+          type: array
+          items:
+            type: string
+          description: "Documentation references"
+        steps:
+          type: array
+          items:
+            type: string
+          description: "Ordered list of command names"
+
+    # ==========================================================================
+    # Coverage Schemas
+    # ==========================================================================
+
+    CoverageResponse:
+      type: object
+      description: "AC coverage response"
+      required: [summary, details]
+      properties:
+        summary:
+          $ref: '#/components/schemas/CoverageSummary'
+        details:
+          type: array
+          items:
+            $ref: '#/components/schemas/CoverageDetail'
+          description: "Per-AC coverage details"
+
+    CoverageSummary:
+      type: object
+      description: "Summary of AC coverage"
+      required: [passing, failing, unknown, total]
+      properties:
+        passing:
+          type: integer
+          minimum: 0
+          description: "Number of passing ACs"
+        failing:
+          type: integer
+          minimum: 0
+          description: "Number of failing ACs"
+        unknown:
+          type: integer
+          minimum: 0
+          description: "Number of ACs with no test results"
+        total:
+          type: integer
+          minimum: 0
+          description: "Total number of ACs"
+
+    CoverageDetail:
+      type: object
+      description: "Coverage detail for a single AC"
+      required: [id, title, status, story, requirement, scenarios]
+      properties:
+        id:
+          type: string
+          description: "AC ID"
+          example: "AC-TPL-001"
+        title:
+          type: string
+          description: "AC title/text"
+        status:
+          type: string
+          enum: [passing, failing, unknown]
+          description: "Coverage status"
+        story:
+          type: string
+          description: "Parent story ID"
+        requirement:
+          type: string
+          description: "Parent requirement ID"
+        scenarios:
+          type: array
+          items:
+            type: string
+          description: "BDD scenario names covering this AC"
+
+    # ==========================================================================
+    # Tasks Schemas
+    # ==========================================================================
+
+    TasksResponse:
+      type: object
+      description: "Tasks list response"
+      required: [tasks]
+      properties:
+        tasks:
+          type: array
+          items:
+            $ref: '#/components/schemas/TaskOut'
+          description: "List of tasks"
+
+    TaskOut:
+      type: object
+      description: "Task output DTO"
+      required: [id, title, requirement, acs, status, labels]
+      properties:
+        id:
+          type: string
+          description: "Task ID"
+          example: "TASK-TPL-001"
+        title:
+          type: string
+          description: "Task title"
+        requirement:
+          type: string
+          description: "Related requirement ID"
+        acs:
+          type: array
+          items:
+            type: string
+          description: "Related AC IDs"
+        status:
+          type: string
+          enum: [Todo, InProgress, Review, Done]
+          description: "Task status"
+        owner:
+          type: string
+          description: "Task owner (optional)"
+        labels:
+          type: array
+          items:
+            type: string
+          description: "Task labels"
+        docs:
+          $ref: '#/components/schemas/TaskDocsOut'
+
+    TaskDocsOut:
+      type: object
+      description: "Task documentation references"
+      properties:
+        design:
+          type: array
+          items:
+            type: string
+          description: "Design doc IDs"
+        plan:
+          type: array
+          items:
+            type: string
+          description: "Plan doc IDs"
+
+    # ==========================================================================
+    # Suggested Sequence Schemas
+    # ==========================================================================
+
+    SuggestedSequence:
+      type: object
+      description: "Suggested sequence of actions for a task"
+      required: [task, goal, recommended_flows, recommended_sequence]
+      properties:
+        task:
+          type: string
+          description: "Task ID"
+        goal:
+          type: string
+          description: "Task summary/objective"
+        recommended_flows:
+          type: array
+          items:
+            type: string
+          description: "List of recommended flow names"
+        recommended_sequence:
+          type: array
+          items:
+            $ref: '#/components/schemas/Action'
+          description: "Ordered list of actions"
+
+    Action:
+      type: object
+      description: "An action in the suggested sequence"
+      required: [kind]
+      properties:
+        kind:
+          type: string
+          enum: [command, doc, test, bundle]
+          description: "Action type"
+        command:
+          type: string
+          description: "Command name (for kind=command)"
+        status:
+          type: string
+          enum: [pending, satisfied]
+          description: "Whether the action is already satisfied"
+        doc:
+          type: string
+          description: "Document reference (for kind=doc)"
+        description:
+          type: string
+          description: "Action description"
+        ac_id:
+          type: string
+          description: "Related AC ID (for kind=test)"
+
+    # ==========================================================================
+    # Task Graph Schemas
+    # ==========================================================================
+
+    TaskGraph:
+      type: object
+      description: "Task dependency graph (JSON format)"
+      required: [nodes, edges, blocking_relationships]
+      properties:
+        nodes:
+          type: array
+          items:
+            $ref: '#/components/schemas/TaskNode'
+          description: "Task nodes"
+        edges:
+          type: array
+          items:
+            $ref: '#/components/schemas/TaskEdge'
+          description: "Dependency edges"
+        blocking_relationships:
+          type: array
+          items:
+            $ref: '#/components/schemas/BlockingRelationship'
+          description: "Blocking relationships between tasks"
+
+    TaskGraphMermaid:
+      type: object
+      description: "Task dependency graph (Mermaid format)"
+      required: [mermaid]
+      properties:
+        mermaid:
+          type: string
+          description: "Mermaid diagram source"
+
+    TaskNode:
+      type: object
+      description: "A node in the task graph"
+      required: [id, title, status, requirement, labels]
+      properties:
+        id:
+          type: string
+          description: "Task ID"
+        title:
+          type: string
+          description: "Task title"
+        status:
+          type: string
+          description: "Task status"
+        requirement:
+          type: string
+          description: "Related requirement ID"
+        owner:
+          type: string
+          description: "Task owner (optional)"
+        labels:
+          type: array
+          items:
+            type: string
+          description: "Task labels"
+
+    TaskEdge:
+      type: object
+      description: "A dependency edge in the task graph"
+      required: [from, to, edge_type]
+      properties:
+        from:
+          type: string
+          description: "Source task ID"
+        to:
+          type: string
+          description: "Target task ID"
+        edge_type:
+          type: string
+          enum: [depends_on, same_requirement]
+          description: "Edge type"
+
+    BlockingRelationship:
+      type: object
+      description: "A blocking relationship between tasks"
+      required: [blocker, blocked, reason]
+      properties:
+        blocker:
+          type: string
+          description: "Task that is blocking"
+        blocked:
+          type: string
+          description: "Task that is blocked"
+        reason:
+          type: string
+          description: "Reason for the blocking relationship"
+
+    # ==========================================================================
+    # Platform Schemas Schemas
+    # ==========================================================================
+
+    PlatformSchemas:
+      type: object
+      description: "All platform schema definitions"
+      required: [schemas, endpoints]
+      properties:
+        schemas:
+          type: array
+          items:
+            $ref: '#/components/schemas/SchemaInfo'
+          description: "Available schema definitions"
+        endpoints:
+          type: array
+          items:
+            $ref: '#/components/schemas/EndpointSchema'
+          description: "API endpoint documentation"
+
+    SchemaInfo:
+      type: object
+      description: "Information about a specific schema"
+      required: [name, version, description, source_file, json_schema]
+      properties:
+        name:
+          type: string
+          description: "Schema name"
+          example: "spec_ledger"
+        version:
+          type: string
+          description: "Schema version"
+          example: "1.0"
+        description:
+          type: string
+          description: "Schema description"
+        source_file:
+          type: string
+          description: "Source file path"
+          example: "specs/spec_ledger.yaml"
+        json_schema:
+          type: object
+          additionalProperties: true
+          description: "JSON Schema definition"
+
+    EndpointSchema:
+      type: object
+      description: "API endpoint schema information"
+      required: [path, method, description, response_type]
+      properties:
+        path:
+          type: string
+          description: "Endpoint path"
+          example: "/platform/status"
+        method:
+          type: string
+          description: "HTTP method"
+          example: "GET"
+        description:
+          type: string
+          description: "Endpoint description"
+        request_type:
+          type: string
+          description: "Request type description (optional)"
+        response_type:
+          type: string
+          description: "Response type name"

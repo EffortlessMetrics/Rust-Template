@@ -1,6 +1,6 @@
 <!-- doclint:disable orphan-version -->
 
-# AI Agent First-Hour Receipt — Template v3.3.13 (Kernel v3.3.9-kernel)
+# AI Agent First-Hour Receipt — Template v3.3.14 (Kernel v3.3.9-kernel)
 
 > **Template:** Copy this file and rename to `AI_FIRST_HOUR_YYYY-MM-DD.md` to record
 > your AI agent's first-hour onboarding results. The goal is to prove that an AI agent
