@@ -16,9 +16,20 @@ pub struct RecommendedStep {
     pub value: String,
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+pub struct AgentHintReason {
+    pub summary: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub code: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub details: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub category: Option<String>,
+}
+
 /// Wire format for agent hints (AC-TPL-AGENT-HINTS-SCHEMA).
 ///
-/// Uses the canonical `Hint*` types from `spec_runtime::hints` for schema fields,
+/// Uses a compatibility-friendly reason shape and canonical hint metadata,
 /// plus convenience fields for backward compatibility with AC-TPL-AGENT-HINTS.
 #[derive(Debug, Serialize, Deserialize)]
 pub struct AgentHint {
@@ -27,7 +38,7 @@ pub struct AgentHint {
     pub kind: String,
     pub priority: String,
     pub status: String,
-    pub reason: HintReason,
+    pub reason: AgentHintReason,
     pub target: HintTarget,
     pub tags: Vec<String>,
     pub links: HintLinks,
@@ -45,9 +56,12 @@ pub struct AgentHint {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct AgentHintsResponse {
     pub hints: Vec<AgentHint>,
-    /// Warnings about referential integrity issues (invalid AC/REQ references)
+    /// Warnings about referential integrity issues (human-readable)
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub warnings: Vec<spec_runtime::ReferentialWarning>,
+    pub warnings: Vec<String>,
+    /// Structured referential integrity warnings (invalid AC/REQ references)
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub warnings_structured: Vec<spec_runtime::ReferentialWarning>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -162,7 +176,8 @@ async fn agent_hints(
     let kernel_governance_hints = engine.kernel_governance_hints();
 
     // Collect any referential integrity warnings
-    let warnings: Vec<spec_runtime::ReferentialWarning> = engine.warnings().to_vec();
+    let warnings_structured: Vec<spec_runtime::ReferentialWarning> = engine.warnings().to_vec();
+    let warnings: Vec<String> = warnings_structured.iter().map(|w| w.message.clone()).collect();
 
     // Convert HintEngine hints to AgentHints and build recommended sequences
     let mut hints: Vec<AgentHint> = hint_engine_hints
@@ -220,7 +235,7 @@ async fn agent_hints(
                 kind: kind_str,
                 priority: priority_str,
                 status: status_str,
-                reason: hint.reason.clone(),
+                reason: to_api_reason(&hint.reason),
                 target,
                 tags: hint.tags.clone(),
                 links,
@@ -251,7 +266,7 @@ async fn agent_hints(
             kind: "governance".to_string(),
             priority: "high".to_string(),
             status: "open".to_string(),
-            reason: hint.reason.clone(),
+            reason: to_api_reason(&hint.reason),
             target: hint.target.clone(),
             tags: hint.tags.clone(),
             links: hint.links.clone(),
@@ -324,7 +339,7 @@ async fn agent_hints(
         }
     });
 
-    Ok(Json(AgentHintsResponse { hints, warnings }))
+    Ok(Json(AgentHintsResponse { hints, warnings, warnings_structured }))
 }
 
 /// Helper function to determine priority order from labels
@@ -342,6 +357,27 @@ fn get_priority_order(labels: &[String]) -> u8 {
     }
     // No priority label = lowest priority
     3
+}
+
+fn to_api_reason(reason: &HintReason) -> AgentHintReason {
+    let summary = summarize_reason(reason);
+    AgentHintReason {
+        summary,
+        code: Some(reason.code.clone()),
+        details: Some(reason.details.clone()),
+        category: None,
+    }
+}
+
+fn summarize_reason(reason: &HintReason) -> String {
+    for sentence in reason.details.split('.') {
+        let trimmed = sentence.trim();
+        if !trimmed.is_empty() {
+            return trimmed.to_string();
+        }
+    }
+
+    reason.code.clone()
 }
 
 /// Build recommended command sequence from task's recommended_flows
@@ -401,4 +437,26 @@ fn build_recommended_sequence(
     }
 
     sequence
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn summarize_reason_uses_first_non_empty_sentence() {
+        let code = "FALLBACK";
+        let cases = [
+            ("  Leading sentence.", "Leading sentence"),
+            ("First sentence. Second sentence.", "First sentence"),
+            ("No terminator here", "No terminator here"),
+            (". Second sentence.", "Second sentence"),
+            ("   .   ", code),
+        ];
+
+        for (details, expected) in cases {
+            let reason = HintReason { code: code.to_string(), details: details.to_string() };
+            assert_eq!(summarize_reason(&reason), expected);
+        }
+    }
 }

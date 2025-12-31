@@ -465,7 +465,7 @@ fn run_ac_status_with_autostage() -> Result<()> {
     if !layout.has_coverage() {
         println!("{} Skipping AC status regeneration: coverage.jsonl missing", "[WARN]".yellow());
         println!("  hint: Run 'cargo xtask bdd' to generate coverage first.");
-        println!("  💡 feature_status.md will be validated (not regenerated) in selftest.");
+        println!("  💡 feature_status.md will be regenerated in selftest and must be committed.");
         return Ok(());
     }
 

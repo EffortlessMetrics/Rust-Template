@@ -65,11 +65,12 @@ XTASK_LOW_RESOURCES=1 cargo xtask check
 
 ### `XTASK_SKIP_BDD`
 
-**Purpose:** Skip BDD acceptance tests entirely.
+**Purpose:** Internal circuit breaker to prevent nested BDD runs (harness use only).
 
 **Effect:**
 - Bypasses `conftest` and feature file execution
-- Useful for quick smoke tests or when BDD infrastructure unavailable
+- Selftest cannot validate AC status or regenerate `docs/feature_status.md`
+- Normal users should leave this unset; Tier-1 selftest is expected to run BDD
 
 **Example:**
 ```bash

@@ -113,6 +113,8 @@ These define the "governed service cell" contract:
 |----------|--------|-------------|
 | `/platform/schema` | GET | All platform API schemas |
 | `/platform/schema/{name}` | GET | Specific schema by name |
+| `/platform/openapi` | GET | OpenAPI spec (YAML) |
+| `/platform/openapi.yaml` | GET | OpenAPI spec (YAML) alias |
 | `/platform/docs/index` | GET | Documentation inventory with health validation |
 | `/platform/ui/contract` | GET | UI contract specification |
 

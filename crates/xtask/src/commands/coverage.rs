@@ -1,6 +1,8 @@
 use anyhow::{Context, Result};
 use colored::Colorize;
 use serde::Deserialize;
+use std::fs;
+use std::path::Path;
 use std::process::Command;
 
 /// Coverage baseline target (65%)
@@ -15,6 +17,17 @@ struct TarpaulinReport {
 pub fn run() -> Result<()> {
     run_with_baseline(COVERAGE_BASELINE)?;
     Ok(())
+}
+
+pub fn run_report_only(report_path: &Path) -> Result<f64> {
+    run_report_only_with_baseline(report_path, COVERAGE_BASELINE)
+}
+
+pub fn run_report_only_with_baseline(report_path: &Path, baseline: f64) -> Result<f64> {
+    println!("{}", "Reading coverage report".blue().bold());
+    println!("  Report: {}", report_path.display());
+    let report = read_tarpaulin_report(report_path)?;
+    evaluate_coverage(report.coverage, baseline)
 }
 
 pub fn run_with_baseline(baseline: f64) -> Result<f64> {
@@ -70,11 +83,21 @@ pub fn run_with_baseline(baseline: f64) -> Result<f64> {
 
     // Parse JSON output
     let stdout = String::from_utf8_lossy(&output.stdout);
-    let report: TarpaulinReport =
-        serde_json::from_str(&stdout).context("Failed to parse tarpaulin JSON output")?;
+    let report = parse_tarpaulin_report(&stdout)?;
+    evaluate_coverage(report.coverage, baseline)
+}
 
-    let coverage_pct = report.coverage;
+fn read_tarpaulin_report(report_path: &Path) -> Result<TarpaulinReport> {
+    let contents = fs::read_to_string(report_path)
+        .with_context(|| format!("Failed to read coverage report {}", report_path.display()))?;
+    parse_tarpaulin_report(&contents)
+}
 
+fn parse_tarpaulin_report(contents: &str) -> Result<TarpaulinReport> {
+    serde_json::from_str(contents).context("Failed to parse tarpaulin JSON output")
+}
+
+fn evaluate_coverage(coverage_pct: f64, baseline: f64) -> Result<f64> {
     println!();
     println!("{}", "Coverage Report:".bold());
     println!("  Coverage: {:.2}%", coverage_pct);

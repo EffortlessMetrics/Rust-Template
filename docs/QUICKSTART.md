@@ -126,6 +126,21 @@ curl http://localhost:8080/health
 # Expected: {"status":"ok"}
 ```
 
+**Wire-level smoke (no DB, no secrets):**
+
+```bash
+# Terminal 1
+nix develop
+cargo run -p app-http
+
+# Terminal 2
+curl -sS localhost:8080/platform/status | jq .
+curl -sS localhost:8080/platform/openapi | head
+curl -sS localhost:8080/platform/agent/hints | jq .
+```
+
+Local runs do not require Postgres. The default `config/local.yaml` disables auto-migrate so `cargo run -p app-http` boots without a database. If you want DB-backed paths locally, set `DATABASE_URL` and run `docker compose up -d`.
+
 ### Security Configuration
 
 By default, the service starts in **open mode** (no authentication required). For production:

@@ -57,7 +57,7 @@ async fn test_dashboard_has_contract_regions() {
         .expect("UI contract should load");
 
     let repo = Arc::new(FsGovernanceRepository::new(workspace_root.clone()));
-    let app = app_with_workspace_root(repo, workspace_root.clone());
+    let app = app_with_workspace_root(repo, workspace_root.clone()).expect("valid config");
 
     // Find the dashboard screen in contract
     let dashboard = contract
@@ -93,7 +93,7 @@ async fn test_graph_has_contract_regions() {
         .expect("UI contract should load");
 
     let repo = Arc::new(FsGovernanceRepository::new(workspace_root.clone()));
-    let app = app_with_workspace_root(repo, workspace_root.clone());
+    let app = app_with_workspace_root(repo, workspace_root.clone()).expect("valid config");
 
     // Find the graph screen in contract
     let graph = contract
@@ -129,7 +129,7 @@ async fn test_flows_has_contract_regions() {
         .expect("UI contract should load");
 
     let repo = Arc::new(FsGovernanceRepository::new(workspace_root.clone()));
-    let app = app_with_workspace_root(repo, workspace_root.clone());
+    let app = app_with_workspace_root(repo, workspace_root.clone()).expect("valid config");
 
     // Find the flows screen in contract
     let flows = contract
@@ -165,7 +165,7 @@ async fn test_coverage_has_contract_regions() {
         .expect("UI contract should load");
 
     let repo = Arc::new(FsGovernanceRepository::new(workspace_root.clone()));
-    let app = app_with_workspace_root(repo, workspace_root.clone());
+    let app = app_with_workspace_root(repo, workspace_root.clone()).expect("valid config");
 
     // Find the coverage screen in contract
     let coverage = contract
@@ -204,7 +204,8 @@ async fn test_all_contract_screens_are_reachable() {
         let app = app_with_workspace_root(
             Arc::new(FsGovernanceRepository::new(workspace_root.clone())),
             workspace_root.clone(),
-        );
+        )
+        .expect("valid config");
 
         let response = app
             .oneshot(Request::builder().uri(&screen.route).body(Body::empty()).unwrap())
@@ -234,7 +235,8 @@ async fn test_full_contract_coverage() {
         let app = app_with_workspace_root(
             Arc::new(FsGovernanceRepository::new(workspace_root.clone())),
             workspace_root.clone(),
-        );
+        )
+        .expect("valid config");
 
         let html = fetch_html(app, &screen.route).await;
         let found_uiids = extract_uiids(&html);

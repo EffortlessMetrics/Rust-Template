@@ -1,7 +1,6 @@
 use anyhow::{Context, Result};
 use colored::Colorize;
 use regex::Regex;
-use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::Path;
 
@@ -12,26 +11,6 @@ pub struct ServiceInitArgs {
     pub description: String,
     pub tags: Option<Vec<String>>,
     pub register_fork: bool,
-}
-
-/// Service metadata structure for service_metadata.yaml.
-/// Future: Used when implementing service metadata persistence and validation.
-/// See TASK-DX-SERVICE-METADATA for planned metadata features.
-#[derive(Debug, Serialize, Deserialize)]
-#[allow(dead_code)]
-struct ServiceMetadata {
-    service_id: String,
-    display_name: String,
-    description: String,
-    template_version: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    ownership: Option<serde_yaml::Value>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    lifecycle: Option<serde_yaml::Value>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    links: Option<serde_yaml::Value>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    tags: Option<Vec<String>>,
 }
 
 pub fn run(args: ServiceInitArgs) -> Result<()> {

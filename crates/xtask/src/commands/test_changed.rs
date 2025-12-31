@@ -420,6 +420,16 @@ fn execute_test_command(cmd: &TestCommand) -> Result<bool> {
                 return Ok(true);
             }
 
+            if crate::env::should_skip_bdd() {
+                let reason = if crate::env::is_low_resources() {
+                    "XTASK_LOW_RESOURCES=1"
+                } else {
+                    "XTASK_SKIP_BDD=1"
+                };
+                println!("    {} Skipping acceptance tests ({})", "[skip]".yellow(), reason);
+                return Ok(true);
+            }
+
             let mut cmd = crate::cargo_cmd("test", &["-p", "acceptance", "--test", "acceptance"]);
             cmd.env("CUCUMBER_TAG_EXPRESSION", &tag_expr);
             let output = cmd.output()?;
@@ -445,6 +455,15 @@ fn execute_test_command(cmd: &TestCommand) -> Result<bool> {
             cmd.env_remove("CUCUMBER_TAG_EXPRESSION");
             if plan_only {
                 println!("    {} {} (plan-only)", ok_icon, description);
+                return Ok(true);
+            }
+            if crate::env::should_skip_bdd() {
+                let reason = if crate::env::is_low_resources() {
+                    "XTASK_LOW_RESOURCES=1"
+                } else {
+                    "XTASK_SKIP_BDD=1"
+                };
+                println!("    {} Skipping acceptance tests ({})", "[skip]".yellow(), reason);
                 return Ok(true);
             }
             let output = cmd.output()?;

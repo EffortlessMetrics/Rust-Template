@@ -100,7 +100,11 @@ struct Requirement {
 
 #[derive(Debug, Deserialize)]
 struct AcceptanceCriteria {
-    #[allow(dead_code)]
+    /// AC ID (e.g., "AC-PLT-001"). Deserialized for counting purposes.
+    #[expect(
+        dead_code,
+        reason = "deserialized for schema completeness; count derived from Vec length"
+    )]
     id: String,
 }
 
@@ -111,7 +115,11 @@ struct DocIndex {
 
 #[derive(Debug, Deserialize)]
 struct DocEntry {
-    #[allow(dead_code)]
+    /// Doc ID. Deserialized for schema completeness but not used in validation logic.
+    #[expect(
+        dead_code,
+        reason = "deserialized for schema completeness; validation uses other fields"
+    )]
     id: String,
     #[serde(default)]
     doc_type: String,
@@ -150,7 +158,11 @@ struct ServiceMetadata {
 
 #[derive(Debug, Deserialize)]
 struct FrictionEntry {
-    #[allow(dead_code)]
+    /// Friction ID. Deserialized for schema completeness but not used in count logic.
+    #[expect(
+        dead_code,
+        reason = "deserialized for schema completeness; filtering uses status field"
+    )]
     id: String,
     #[serde(default)]
     status: String,
@@ -158,7 +170,11 @@ struct FrictionEntry {
 
 #[derive(Debug, Deserialize)]
 struct Question {
-    #[allow(dead_code)]
+    /// Question ID. Deserialized for schema completeness but not used in count logic.
+    #[expect(
+        dead_code,
+        reason = "deserialized for schema completeness; filtering uses status field"
+    )]
     id: String,
     #[serde(default)]
     status: String,

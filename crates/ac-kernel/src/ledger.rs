@@ -66,8 +66,9 @@ struct Requirement {
     id: String,
     #[serde(default)]
     title: String,
+    /// Tags for categorizing this requirement. Deserialized for schema completeness.
     #[serde(default)]
-    #[allow(dead_code)]
+    #[expect(dead_code, reason = "deserialized for schema completeness; future filtering support")]
     tags: Vec<String>,
     /// Whether all ACs under this requirement must have BDD coverage.
     /// Defaults to true (kernel). Set to false for non-kernel/exploratory ACs.

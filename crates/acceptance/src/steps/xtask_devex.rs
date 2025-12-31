@@ -1193,13 +1193,19 @@ async fn then_output_contains_valid_yaml_ac(world: &mut World, ac_id: String, de
     // Extract the YAML snippet from the output
     // The ac-new command outputs the YAML indented under "AC Entry (add to spec_ledger.yaml):"
     // We need to extract the lines that form the YAML AC entry
-    let yaml_snippet = extract_yaml_ac_snippet(output)
-        .unwrap_or_else(|| panic!("Failed to extract YAML snippet from output:\n{}", output));
+    let yaml_snippet = extract_yaml_ac_snippet(output);
+    assert!(yaml_snippet.is_some(), "Failed to extract YAML snippet from output:\n{}", output);
+    let yaml_snippet = yaml_snippet.unwrap();
 
     // Parse the YAML snippet
-    let yaml_value: serde_yaml::Value = serde_yaml::from_str(&yaml_snippet).unwrap_or_else(|e| {
-        panic!("Failed to parse YAML snippet: {}\nSnippet:\n{}", e, yaml_snippet)
-    });
+    let yaml_value: Result<serde_yaml::Value, _> = serde_yaml::from_str(&yaml_snippet);
+    assert!(
+        yaml_value.is_ok(),
+        "Failed to parse YAML snippet: {}\nSnippet:\n{}",
+        yaml_value.as_ref().unwrap_err(),
+        yaml_snippet
+    );
+    let yaml_value = yaml_value.unwrap();
 
     // Validate structure
     assert!(yaml_value.is_mapping(), "YAML should be a mapping");
@@ -1550,6 +1556,12 @@ async fn execute_command(world: &mut World, command: &str, env_vars: &[(&str, &s
         c
     };
 
+    let subcommand = if parts.len() >= 3 && parts[0] == "cargo" && parts[1] == "xtask" {
+        Some(parts[2].as_str())
+    } else {
+        None
+    };
+
     // Apply persistent env from context first
     for (key, value) in &world.xtask_context().env {
         cmd.env(key, value);
@@ -1573,8 +1585,8 @@ async fn execute_command(world: &mut World, command: &str, env_vars: &[(&str, &s
     }
 
     cmd.env("XTASK_LOW_RESOURCES", &low_resource);
-    // Skip BDD auto-regeneration in selftest and ac-status to avoid nested BDD runs
-    if command.contains("selftest") || command.contains("ac-status") {
+    // Avoid nested BDD runs during acceptance tests to prevent coverage clobbering.
+    if matches!(subcommand, Some(name) if name != "bdd") {
         cmd.env("XTASK_SKIP_BDD", "1");
     }
     cmd.env_remove("RUSTC_WRAPPER");
@@ -1583,12 +1595,9 @@ async fn execute_command(world: &mut World, command: &str, env_vars: &[(&str, &s
     cmd.env("SPEC_ROOT", world.spec_root());
     // Prevent Nix wrapper from activating (we're already in Nix shell during tests)
     cmd.env("IN_NIX_SHELL", "1");
-
-    let subcommand = if parts.len() >= 3 && parts[0] == "cargo" && parts[1] == "xtask" {
-        Some(parts[2].as_str())
-    } else {
-        None
-    };
+    // Avoid leaking BDD selection env vars into child commands.
+    cmd.env_remove("CUCUMBER_TAG_EXPRESSION");
+    cmd.env_remove("CUCUMBER_FILTER_TAGS");
 
     // Allow tests to simulate failure output without running the full command
     let simulate_fail = world.xtask_context().env.contains_key("XTASK_SIMULATE_SELFTEST_FAIL");
@@ -2951,13 +2960,14 @@ async fn then_json_field_should_have(world: &mut World, field_path: String, sub_
         serde_json::from_str(&json_str).expect("Output should be valid JSON");
 
     // Navigate to the field (support nested paths like "governance_health")
-    let field_value = json.get(&field_path).unwrap_or_else(|| {
-        panic!(
-            "Field '{}' not found in JSON\nActual JSON: {}",
-            field_path,
-            serde_json::to_string_pretty(&json).unwrap()
-        )
-    });
+    let field_value = json.get(&field_path);
+    assert!(
+        field_value.is_some(),
+        "Field '{}' not found in JSON\nActual JSON: {}",
+        field_path,
+        serde_json::to_string_pretty(&json).unwrap()
+    );
+    let field_value = field_value.unwrap();
 
     // Check if the field is an object and has the sub_field
     if let Some(obj) = field_value.as_object() {
@@ -3002,7 +3012,7 @@ async fn then_file_contains_valid_json(world: &mut World) {
                 let path_str = &output[abs_start..abs_start + end];
                 std::path::PathBuf::from(path_str)
             } else {
-                panic!("Found 'written to:' but no /tmp/ path after it");
+                panic!("Found 'written to:' but no /tmp/ path after it")
             }
         } else if let Some(start) = output.find("/tmp/") {
             // Fallback: find first /tmp/ occurrence (old behavior)
@@ -3012,13 +3022,19 @@ async fn then_file_contains_valid_json(world: &mut World) {
             let path_str = &output[start..start + end];
             std::path::PathBuf::from(path_str)
         } else {
-            panic!("Could not determine file path from context or command output");
+            panic!("Could not determine file path from context or command output")
         }
     };
 
     // Read the file
-    let content = std::fs::read_to_string(&file_path)
-        .unwrap_or_else(|e| panic!("Failed to read file {:?}: {}", file_path, e));
+    let content = std::fs::read_to_string(&file_path);
+    assert!(
+        content.is_ok(),
+        "Failed to read file {:?}: {}",
+        file_path,
+        content.as_ref().unwrap_err()
+    );
+    let content = content.unwrap();
 
     // Parse as JSON
     let parse_result: Result<serde_json::Value, _> = serde_json::from_str(&content);

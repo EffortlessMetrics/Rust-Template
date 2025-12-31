@@ -24,40 +24,41 @@ struct Ledger {
 #[derive(Debug, Deserialize)]
 struct LedgerMetadata {
     template_version: String,
-    /// Human-readable description of the spec ledger.
-    /// Future: Displayed in governance dashboard and /platform/status endpoint.
-    /// See AC-PLT-DASHBOARD for planned dashboard features.
+    /// Human-readable description of the spec ledger. Deserialized for schema completeness.
     #[serde(default)]
-    #[allow(dead_code)]
+    #[expect(dead_code, reason = "deserialized for schema completeness; future dashboard feature")]
     description: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]
 struct Story {
-    /// Story ID from spec_ledger.yaml.
-    /// Future: Used for filtering and reporting in spec query features.
-    /// See TASK-DX-SPEC-QUERY for planned query and filtering commands.
-    #[allow(dead_code)]
+    /// Story ID from spec_ledger.yaml. Deserialized for schema completeness.
+    #[expect(
+        dead_code,
+        reason = "deserialized for schema completeness; count derived from Vec length"
+    )]
     id: String,
     requirements: Vec<Requirement>,
 }
 
 #[derive(Debug, Deserialize)]
 struct Requirement {
-    /// Requirement ID from spec_ledger.yaml.
-    /// Currently only used for counting requirements in governance dashboard.
-    /// Future: Used in dependency analysis and traceability features.
-    #[allow(dead_code)]
+    /// Requirement ID from spec_ledger.yaml. Deserialized for schema completeness.
+    #[expect(
+        dead_code,
+        reason = "deserialized for schema completeness; count derived from Vec length"
+    )]
     id: String,
     acceptance_criteria: Vec<AcceptanceCriteria>,
 }
 
 #[derive(Debug, Deserialize)]
 struct AcceptanceCriteria {
-    /// AC ID from spec_ledger.yaml.
-    /// Currently only used for counting ACs in governance dashboard.
-    /// Future: Used in AC-level reporting and traceability features.
-    #[allow(dead_code)]
+    /// AC ID from spec_ledger.yaml. Deserialized for schema completeness.
+    #[expect(
+        dead_code,
+        reason = "deserialized for schema completeness; count derived from Vec length"
+    )]
     id: String,
 }
 
@@ -69,10 +70,11 @@ struct TasksFile {
 
 #[derive(Debug, Deserialize)]
 struct TaskDefinition {
-    /// Task ID from specs/tasks.yaml.
-    /// Currently only used for counting tasks in governance dashboard.
-    /// Future: Used in task dependency graph and work planning features.
-    #[allow(dead_code)]
+    /// Task ID from specs/tasks.yaml. Deserialized for schema completeness.
+    #[expect(
+        dead_code,
+        reason = "deserialized for schema completeness; count derived from Vec length"
+    )]
     id: String,
     status: Option<String>,
 }
@@ -91,9 +93,9 @@ impl AcCoverage {
     }
 
     /// Return count of ACs with at least one test run (pass or fail).
-    /// Future: Used in AC coverage percentage calculations and dashboard analytics.
-    /// See AC-PLT-COVERAGE for coverage metrics requirements.
-    #[allow(dead_code)]
+    ///
+    /// Useful for calculating coverage percentage in dashboard analytics.
+    #[expect(dead_code, reason = "infrastructure for future coverage percentage calculations")]
     fn with_tests(&self) -> usize {
         self.pass + self.fail
     }

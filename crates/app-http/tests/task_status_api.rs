@@ -49,7 +49,7 @@ async fn update_task_status_endpoint_accepts_json_body() {
     write_tasks_files(&spec_root, "TASK-001", TaskStatus::Todo);
 
     let repo = Arc::new(adapters_spec_fs::FsGovernanceRepository::new(spec_root.join("specs")));
-    let app = app_with_workspace_root(repo, spec_root.clone());
+    let app = app_with_workspace_root(repo, spec_root.clone()).expect("valid config");
 
     let body = r#"{ "status": "InProgress" }"#;
     let request = Request::builder()
@@ -85,7 +85,7 @@ async fn update_task_status_endpoint_accepts_form_body() {
     write_tasks_files(&spec_root, "TASK-002", TaskStatus::Todo);
 
     let repo = Arc::new(adapters_spec_fs::FsGovernanceRepository::new(spec_root.join("specs")));
-    let app = app_with_workspace_root(repo, spec_root.clone());
+    let app = app_with_workspace_root(repo, spec_root.clone()).expect("valid config");
 
     let request = Request::builder()
         .method("POST")
@@ -119,7 +119,7 @@ async fn tasks_endpoint_returns_persisted_status() {
     write_tasks_files(&spec_root, "TASK-003", TaskStatus::Review);
 
     let repo = Arc::new(adapters_spec_fs::FsGovernanceRepository::new(spec_root.join("specs")));
-    let app = app_with_workspace_root(repo, spec_root.clone());
+    let app = app_with_workspace_root(repo, spec_root.clone()).expect("valid config");
 
     let request = Request::builder()
         .method("GET")

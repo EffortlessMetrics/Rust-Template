@@ -1646,7 +1646,7 @@ cargo xtask ac-status --json | jq '.acs[] | select(.status == "fail")'
   ```text
   [WARN] Skipping AC status regeneration: coverage.jsonl missing
     hint: Run 'cargo xtask bdd' to generate coverage first.
-    💡 feature_status.md will be validated (not regenerated) in selftest.
+    💡 feature_status.md will be regenerated in selftest and must be committed.
   ```
 
 **Diagnosis:**

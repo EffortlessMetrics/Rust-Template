@@ -67,11 +67,76 @@ pub async fn create_pool() -> Result<PgPool> {
     Ok(pool)
 }
 
+/// PostgreSQL-backed implementation of the [`ExampleTaskRepository`] trait.
+///
+/// This struct provides persistent storage for [`ExampleTask`] entities using
+/// PostgreSQL as the backing database. It uses SQLx for async database operations
+/// and connection pooling.
+///
+/// # Architecture
+///
+/// `PostgresTaskRepository` implements the repository pattern, serving as the
+/// concrete adapter for the `ExampleTaskRepository` port defined in `business-core`.
+/// This separation allows the business logic to remain database-agnostic while
+/// this adapter handles PostgreSQL-specific concerns.
+///
+/// # Connection Management
+///
+/// The repository uses a [`PgPool`] for connection pooling, which is managed
+/// internally. Connections are acquired from the pool for each operation and
+/// returned automatically when the operation completes.
+///
+/// # Example
+///
+/// ```ignore
+/// use adapters_db_sqlx::PostgresTaskRepository;
+///
+/// // Create repository from DATABASE_URL environment variable
+/// let repo = PostgresTaskRepository::new().await?;
+///
+/// // Or use an existing connection pool
+/// let pool = PgPool::connect(&database_url).await?;
+/// let repo = PostgresTaskRepository::new_with_pool(pool);
+/// ```
+///
+/// # Database Schema
+///
+/// This repository expects a `tasks` table with the following columns:
+/// - `id` (UUID, primary key)
+/// - `title` (TEXT)
+/// - `status` (TEXT: "PENDING", "IN_PROGRESS", or "COMPLETED")
+/// - `created_at` (TIMESTAMP WITH TIME ZONE)
+///
+/// Use [`run_migrations`] to ensure the schema is up to date.
 pub struct PostgresTaskRepository {
     pool: PgPool,
 }
 
 impl PostgresTaskRepository {
+    /// Creates a new repository instance using the `DATABASE_URL` environment variable.
+    ///
+    /// This method reads the database connection string from the `DATABASE_URL`
+    /// environment variable and establishes a connection pool to the PostgreSQL
+    /// database.
+    ///
+    /// # Environment Variables
+    ///
+    /// - `DATABASE_URL` - Required. PostgreSQL connection string in the format:
+    ///   `postgres://user:password@host:port/database`
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if:
+    /// - The `DATABASE_URL` environment variable is not set
+    /// - The connection to the database fails
+    ///
+    /// # Example
+    ///
+    /// ```ignore
+    /// // Ensure DATABASE_URL is set before calling
+    /// std::env::set_var("DATABASE_URL", "postgres://localhost/mydb");
+    /// let repo = PostgresTaskRepository::new().await?;
+    /// ```
     pub async fn new() -> Result<Self> {
         let database_url =
             env::var("DATABASE_URL").map_err(|_| anyhow::anyhow!("DATABASE_URL must be set"))?;
@@ -80,7 +145,28 @@ impl PostgresTaskRepository {
         Ok(Self { pool })
     }
 
-    /// Create a new repository with an existing pool (useful for testing)
+    /// Creates a new repository instance with an existing connection pool.
+    ///
+    /// This constructor is useful when you want to share a connection pool
+    /// across multiple repositories or services, or when you need more control
+    /// over pool configuration (e.g., in tests or when using custom pool settings).
+    ///
+    /// # Arguments
+    ///
+    /// * `pool` - An existing [`PgPool`] connection pool
+    ///
+    /// # Example
+    ///
+    /// ```ignore
+    /// use sqlx::postgres::PgPoolOptions;
+    ///
+    /// let pool = PgPoolOptions::new()
+    ///     .max_connections(5)
+    ///     .connect(&database_url)
+    ///     .await?;
+    ///
+    /// let repo = PostgresTaskRepository::new_with_pool(pool);
+    /// ```
     pub fn new_with_pool(pool: PgPool) -> Self {
         Self { pool }
     }

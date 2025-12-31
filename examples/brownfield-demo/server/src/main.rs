@@ -3,10 +3,10 @@
 //! This is a simple existing codebase that we'll enhance with Rust IaC tooling.
 
 use axum::{
+    Router,
     extract::Path,
     response::Json,
     routing::{get, post},
-    Router,
 };
 use serde::{Deserialize, Serialize};
 use std::sync::{Arc, Mutex};
@@ -29,13 +29,11 @@ type SharedState = Arc<Mutex<Vec<Item>>>;
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     // Shared state for items
-    let state: SharedState = Arc::new(Mutex::new(vec![
-        Item {
-            id: 1,
-            name: "Example Item".to_string(),
-            description: Some("An example item in the demo server".to_string()),
-        },
-    ]));
+    let state: SharedState = Arc::new(Mutex::new(vec![Item {
+        id: 1,
+        name: "Example Item".to_string(),
+        description: Some("An example item in the demo server".to_string()),
+    }]));
 
     // Build router
     let app = Router::new()
@@ -66,7 +64,8 @@ async fn health_check() -> &'static str {
 async fn list_items(
     axum::extract::State(state): axum::extract::State<SharedState>,
 ) -> Json<Vec<Item>> {
-    let items = state.lock().unwrap();
+    let items =
+        state.lock().expect("items mutex poisoned - a thread panicked while holding the lock");
     Json(items.clone())
 }
 
@@ -74,14 +73,11 @@ async fn create_item(
     axum::extract::State(state): axum::extract::State<SharedState>,
     Json(req): Json<CreateItemRequest>,
 ) -> Json<Item> {
-    let mut items = state.lock().unwrap();
+    let mut items =
+        state.lock().expect("items mutex poisoned - a thread panicked while holding the lock");
     let new_id = items.iter().map(|i| i.id).max().unwrap_or(0) + 1;
 
-    let new_item = Item {
-        id: new_id,
-        name: req.name,
-        description: req.description,
-    };
+    let new_item = Item { id: new_id, name: req.name, description: req.description };
 
     items.push(new_item.clone());
     Json(new_item)
@@ -91,7 +87,8 @@ async fn get_item(
     axum::extract::State(state): axum::extract::State<SharedState>,
     Path(id): Path<u64>,
 ) -> Result<Json<Item>, axum::http::StatusCode> {
-    let items = state.lock().unwrap();
+    let items =
+        state.lock().expect("items mutex poisoned - a thread panicked while holding the lock");
 
     items
         .iter()
@@ -107,11 +104,7 @@ mod tests {
 
     #[test]
     fn test_item_creation() {
-        let item = Item {
-            id: 1,
-            name: "Test".to_string(),
-            description: None,
-        };
+        let item = Item { id: 1, name: "Test".to_string(), description: None };
         assert_eq!(item.id, 1);
         assert_eq!(item.name, "Test");
     }

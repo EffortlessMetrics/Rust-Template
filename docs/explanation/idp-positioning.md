@@ -33,7 +33,7 @@ This document explains how Internal Developer Portals (IDPs) like Backstage, Por
 
 **Platform cells are self-describing services.** Integrate via runtime APIs or static artifacts—no manual catalog maintenance required.
 
-**Runtime APIs:** `/platform/status` (governance health), `/platform/graph` (traceability), `/platform/tasks` (work items), `/platform/agent/hints` (task suggestions), `/platform/schema` (OpenAPI contract), `/platform/devex/flows` (commands), `/platform/docs/index` (doc inventory)
+**Runtime APIs:** `/platform/status` (governance health), `/platform/graph` (traceability), `/platform/tasks` (work items), `/platform/agent/hints` (task suggestions), `/platform/schema` (schema index), `/platform/openapi` (OpenAPI contract), `/platform/devex/flows` (commands), `/platform/docs/index` (doc inventory)
 
 **Evidence Files:** `service_metadata.yaml` (team/tier/links), `feature_status.md` (AC status), `release_evidence/v*.md` (governance bundles)
 
@@ -105,7 +105,8 @@ Every platform cell provides:
 | `/platform/graph` | Complete governance graph (stories, requirements, ACs, docs, commands) |
 | `/platform/devex/flows` | DevEx commands and workflows |
 | `/platform/docs/index` | Document index with traceability to requirements |
-| `/platform/schema` | Machine-readable platform contract (OpenAPI/JSON Schema) |
+| `/platform/schema` | Schema index (JSON Schema + endpoint list) |
+| `/platform/openapi` | OpenAPI contract for platform endpoints |
 | `/platform/tasks` | Current tasks (CLI/HTTP for task management) |
 | `/platform/agent/hints` | Prioritized task suggestions for agents |
 | `/ui` | Web UI for exploring governance, flows, and graphs |
@@ -155,15 +156,15 @@ def scrape_platform_cell(service_url):
     # Get docs index
     docs = requests.get(f"{service_url}/platform/docs/index").json()
 
-    # Get platform schema
-    schema = requests.get(f"{service_url}/platform/schema").json()
+    # Get OpenAPI spec (YAML)
+    openapi = requests.get(f"{service_url}/platform/openapi").text
 
     return {
-        "service_id": status.get("service_id"),
-        "health": status.get("governance_health"),
+        "service_id": status.get("service", {}).get("service_id"),
+        "health": status.get("governance"),
         "governance_graph": graph,
         "documentation": docs,
-        "schema": schema,
+        "openapi": openapi,
     }
 ```
 
@@ -373,22 +374,44 @@ def scrape_from_repo(repo_path):
 
 ### `/platform/schema`
 
-**Purpose:** Machine-readable platform contract (OpenAPI/JSON Schema)
+**Purpose:** Schema index for platform data files and endpoint inventory
 
 **Response:**
 
 ```json
 {
-  "openapi": "3.0.0",
-  "info": {
-    "title": "Rust-as-Spec Platform API",
-    "version": "3.3.1"
-  },
-  "paths": {
-    "/platform/status": { "get": { "responses": { "200": { ... } } } },
-    "/platform/graph": { "get": { "responses": { "200": { ... } } } }
-  }
+  "schemas": [
+    { "name": "spec_ledger", "version": "1.0", "source_file": "specs/spec_ledger.yaml" }
+  ],
+  "endpoints": [
+    { "path": "/platform/status", "method": "GET", "response_type": "PlatformStatus" }
+  ]
 }
+```
+
+**IDP Use:**
+- Schema discovery for spec files
+- Endpoint inventory for automation
+
+---
+
+### `/platform/openapi`
+
+**Purpose:** OpenAPI contract for platform endpoints
+
+**Response:**
+
+```yaml
+openapi: 3.0.3
+info:
+  title: Rust-as-Spec Platform API
+  version: 3.3.14
+paths:
+  /platform/status:
+    get:
+      responses:
+        "200":
+          description: Platform status
 ```
 
 **IDP Use:**
@@ -954,11 +977,11 @@ end
 
 ---
 
-### 2. Use `/platform/schema` for Contract Validation
+### 2. Use `/platform/openapi` for Contract Validation
 
 **Before deploying an IDP scraper:**
 
-1. Fetch `/platform/schema` from a platform cell
+1. Fetch `/platform/openapi` from a platform cell
 2. Generate client code or validation schemas
 3. Test your scraper against the schema
 4. Subscribe to schema updates (breaking changes should be versioned)
@@ -994,7 +1017,7 @@ end
 
 **See:** `specs/service_metadata.yaml` → `links.status` for auth requirements.
 
-**Default:** Basic auth or API key (check `/platform/schema` for details).
+**Default:** Basic auth or API key (check `/platform/openapi` for details).
 
 ---
 

@@ -89,14 +89,16 @@ async fn then_directory_should_not_exist(world: &mut World, dir_path: String) {
 
 #[then(regex = r#"^the file "([^"]+)" should contain "([^"]+)"$"#)]
 async fn then_file_should_contain(world: &mut World, file_path: String, expected_text: String) {
-    let content = read_file_content(world, &file_path).unwrap_or_else(|e| {
-        panic!(
-            "Failed to read file '{}': {}\nResolved path: {}",
-            file_path,
-            e,
-            resolve_path(world, &file_path).display()
-        )
-    });
+    let path = resolve_path(world, &file_path);
+    let content = read_file_content(world, &file_path);
+    assert!(
+        content.is_ok(),
+        "Failed to read file '{}': {}\nResolved path: {}",
+        file_path,
+        content.as_ref().unwrap_err(),
+        path.display()
+    );
+    let content = content.unwrap();
 
     assert!(
         content.contains(&expected_text),
@@ -113,14 +115,16 @@ async fn then_file_should_not_contain(
     file_path: String,
     unexpected_text: String,
 ) {
-    let content = read_file_content(world, &file_path).unwrap_or_else(|e| {
-        panic!(
-            "Failed to read file '{}': {}\nResolved path: {}",
-            file_path,
-            e,
-            resolve_path(world, &file_path).display()
-        )
-    });
+    let path = resolve_path(world, &file_path);
+    let content = read_file_content(world, &file_path);
+    assert!(
+        content.is_ok(),
+        "Failed to read file '{}': {}\nResolved path: {}",
+        file_path,
+        content.as_ref().unwrap_err(),
+        path.display()
+    );
+    let content = content.unwrap();
 
     assert!(
         !content.contains(&unexpected_text),
@@ -133,17 +137,25 @@ async fn then_file_should_not_contain(
 
 #[then(regex = r#"^the file "([^"]+)" should match pattern "([^"]+)"$"#)]
 async fn then_file_should_match_pattern(world: &mut World, file_path: String, pattern_str: String) {
-    let content = read_file_content(world, &file_path).unwrap_or_else(|e| {
-        panic!(
-            "Failed to read file '{}': {}\nResolved path: {}",
-            file_path,
-            e,
-            resolve_path(world, &file_path).display()
-        )
-    });
+    let path = resolve_path(world, &file_path);
+    let content = read_file_content(world, &file_path);
+    assert!(
+        content.is_ok(),
+        "Failed to read file '{}': {}\nResolved path: {}",
+        file_path,
+        content.as_ref().unwrap_err(),
+        path.display()
+    );
+    let content = content.unwrap();
 
-    let pattern = Regex::new(&pattern_str)
-        .unwrap_or_else(|e| panic!("Invalid regex pattern '{}': {}", pattern_str, e));
+    let pattern = Regex::new(&pattern_str);
+    assert!(
+        pattern.is_ok(),
+        "Invalid regex pattern '{}': {}",
+        pattern_str,
+        pattern.as_ref().unwrap_err()
+    );
+    let pattern = pattern.unwrap();
 
     assert!(
         pattern.is_match(&content),
@@ -156,14 +168,16 @@ async fn then_file_should_match_pattern(world: &mut World, file_path: String, pa
 
 #[then(regex = r#"^the file "([^"]+)" should be empty$"#)]
 async fn then_file_should_be_empty(world: &mut World, file_path: String) {
-    let content = read_file_content(world, &file_path).unwrap_or_else(|e| {
-        panic!(
-            "Failed to read file '{}': {}\nResolved path: {}",
-            file_path,
-            e,
-            resolve_path(world, &file_path).display()
-        )
-    });
+    let path = resolve_path(world, &file_path);
+    let content = read_file_content(world, &file_path);
+    assert!(
+        content.is_ok(),
+        "Failed to read file '{}': {}\nResolved path: {}",
+        file_path,
+        content.as_ref().unwrap_err(),
+        path.display()
+    );
+    let content = content.unwrap();
 
     assert!(
         content.trim().is_empty(),
@@ -175,14 +189,16 @@ async fn then_file_should_be_empty(world: &mut World, file_path: String) {
 
 #[then(regex = r#"^the file "([^"]+)" should not be empty$"#)]
 async fn then_file_should_not_be_empty(world: &mut World, file_path: String) {
-    let content = read_file_content(world, &file_path).unwrap_or_else(|e| {
-        panic!(
-            "Failed to read file '{}': {}\nResolved path: {}",
-            file_path,
-            e,
-            resolve_path(world, &file_path).display()
-        )
-    });
+    let path = resolve_path(world, &file_path);
+    let content = read_file_content(world, &file_path);
+    assert!(
+        content.is_ok(),
+        "Failed to read file '{}': {}\nResolved path: {}",
+        file_path,
+        content.as_ref().unwrap_err(),
+        path.display()
+    );
+    let content = content.unwrap();
 
     assert!(!content.trim().is_empty(), "File '{}' should not be empty", file_path);
 }
@@ -197,8 +213,14 @@ async fn then_file_should_be_executable(world: &mut World, file_path: String) {
     use std::os::unix::fs::PermissionsExt;
 
     let path = resolve_path(world, &file_path);
-    let metadata = fs::metadata(&path)
-        .unwrap_or_else(|e| panic!("Failed to read metadata for '{}': {}", file_path, e));
+    let metadata = fs::metadata(&path);
+    assert!(
+        metadata.is_ok(),
+        "Failed to read metadata for '{}': {}",
+        file_path,
+        metadata.as_ref().unwrap_err()
+    );
+    let metadata = metadata.unwrap();
 
     let perms = metadata.permissions();
     let is_executable = perms.mode() & 0o111 != 0;
@@ -212,8 +234,14 @@ async fn then_file_should_not_be_executable(world: &mut World, file_path: String
     use std::os::unix::fs::PermissionsExt;
 
     let path = resolve_path(world, &file_path);
-    let metadata = fs::metadata(&path)
-        .unwrap_or_else(|e| panic!("Failed to read metadata for '{}': {}", file_path, e));
+    let metadata = fs::metadata(&path);
+    assert!(
+        metadata.is_ok(),
+        "Failed to read metadata for '{}': {}",
+        file_path,
+        metadata.as_ref().unwrap_err()
+    );
+    let metadata = metadata.unwrap();
 
     let perms = metadata.permissions();
     let is_executable = perms.mode() & 0o111 != 0;
@@ -264,13 +292,14 @@ async fn then_json_field_should_equal(
         .as_ref()
         .expect("No JSON output available - did you parse the command output as JSON?");
 
-    let actual_value = json.get(&field_name).and_then(|v| v.as_str()).unwrap_or_else(|| {
-        panic!(
-            "Field '{}' not found or not a string in JSON:\n{}",
-            field_name,
-            serde_json::to_string_pretty(json).unwrap_or_else(|_| format!("{:?}", json))
-        )
-    });
+    let actual_value = json.get(&field_name).and_then(|v| v.as_str());
+    assert!(
+        actual_value.is_some(),
+        "Field '{}' not found or not a string in JSON:\n{}",
+        field_name,
+        serde_json::to_string_pretty(json).unwrap_or_else(|_| format!("{:?}", json))
+    );
+    let actual_value = actual_value.unwrap();
 
     assert_eq!(
         actual_value, expected_value,
@@ -290,13 +319,14 @@ async fn then_json_field_should_contain(
         .as_ref()
         .expect("No JSON output available - did you parse the command output as JSON?");
 
-    let actual_value = json.get(&field_name).and_then(|v| v.as_str()).unwrap_or_else(|| {
-        panic!(
-            "Field '{}' not found or not a string in JSON:\n{}",
-            field_name,
-            serde_json::to_string_pretty(json).unwrap_or_else(|_| format!("{:?}", json))
-        )
-    });
+    let actual_value = json.get(&field_name).and_then(|v| v.as_str());
+    assert!(
+        actual_value.is_some(),
+        "Field '{}' not found or not a string in JSON:\n{}",
+        field_name,
+        serde_json::to_string_pretty(json).unwrap_or_else(|_| format!("{:?}", json))
+    );
+    let actual_value = actual_value.unwrap();
 
     assert!(
         actual_value.contains(&expected_substring),
@@ -348,8 +378,14 @@ async fn then_output_should_match_pattern(world: &mut World, pattern_str: String
     let output =
         world.xtask_context().last_command_output.as_ref().expect("No command output available");
 
-    let pattern = Regex::new(&pattern_str)
-        .unwrap_or_else(|e| panic!("Invalid regex pattern '{}': {}", pattern_str, e));
+    let pattern = Regex::new(&pattern_str);
+    assert!(
+        pattern.is_ok(),
+        "Invalid regex pattern '{}': {}",
+        pattern_str,
+        pattern.as_ref().unwrap_err()
+    );
+    let pattern = pattern.unwrap();
 
     assert!(
         pattern.is_match(output),
@@ -388,13 +424,22 @@ async fn given_file_with_content(world: &mut World, file_path: String, step: &St
 
     // Create parent directories if they don't exist
     if let Some(parent) = path.parent() {
-        fs::create_dir_all(parent).unwrap_or_else(|e| {
-            panic!("Failed to create parent directories for '{}': {}", file_path, e)
-        });
+        let mkdir_result = fs::create_dir_all(parent);
+        assert!(
+            mkdir_result.is_ok(),
+            "Failed to create parent directories for '{}': {}",
+            file_path,
+            mkdir_result.unwrap_err()
+        );
     }
 
-    fs::write(&path, content)
-        .unwrap_or_else(|e| panic!("Failed to write file '{}': {}", file_path, e));
+    let write_result = fs::write(&path, content);
+    assert!(
+        write_result.is_ok(),
+        "Failed to write file '{}': {}",
+        file_path,
+        write_result.unwrap_err()
+    );
 }
 
 #[given(regex = r#"^a file "([^"]+)" exists$"#)]
@@ -403,15 +448,24 @@ async fn given_file_exists(world: &mut World, file_path: String) {
 
     // Create parent directories if they don't exist
     if let Some(parent) = path.parent() {
-        fs::create_dir_all(parent).unwrap_or_else(|e| {
-            panic!("Failed to create parent directories for '{}': {}", file_path, e)
-        });
+        let mkdir_result = fs::create_dir_all(parent);
+        assert!(
+            mkdir_result.is_ok(),
+            "Failed to create parent directories for '{}': {}",
+            file_path,
+            mkdir_result.unwrap_err()
+        );
     }
 
     // Create an empty file if it doesn't exist
     if !path.exists() {
-        fs::write(&path, "")
-            .unwrap_or_else(|e| panic!("Failed to create file '{}': {}", file_path, e));
+        let write_result = fs::write(&path, "");
+        assert!(
+            write_result.is_ok(),
+            "Failed to create file '{}': {}",
+            file_path,
+            write_result.unwrap_err()
+        );
     }
 }
 
@@ -445,8 +499,13 @@ async fn when_regenerated_output_captured(_world: &mut World) {
 #[given(regex = r#"^a directory "([^"]+)" exists$"#)]
 async fn given_directory_exists(world: &mut World, dir_path: String) {
     let path = resolve_path(world, &dir_path);
-    fs::create_dir_all(&path)
-        .unwrap_or_else(|e| panic!("Failed to create directory '{}': {}", dir_path, e));
+    let mkdir_result = fs::create_dir_all(&path);
+    assert!(
+        mkdir_result.is_ok(),
+        "Failed to create directory '{}': {}",
+        dir_path,
+        mkdir_result.unwrap_err()
+    );
 }
 
 // ============================================================================
@@ -457,8 +516,13 @@ async fn given_directory_exists(world: &mut World, dir_path: String) {
 async fn when_delete_file(world: &mut World, file_path: String) {
     let path = resolve_path(world, &file_path);
     if path.exists() {
-        fs::remove_file(&path)
-            .unwrap_or_else(|e| panic!("Failed to delete file '{}': {}", file_path, e));
+        let rm_result = fs::remove_file(&path);
+        assert!(
+            rm_result.is_ok(),
+            "Failed to delete file '{}': {}",
+            file_path,
+            rm_result.unwrap_err()
+        );
     }
 }
 
@@ -466,8 +530,13 @@ async fn when_delete_file(world: &mut World, file_path: String) {
 async fn when_delete_directory(world: &mut World, dir_path: String) {
     let path = resolve_path(world, &dir_path);
     if path.exists() {
-        fs::remove_dir_all(&path)
-            .unwrap_or_else(|e| panic!("Failed to delete directory '{}': {}", dir_path, e));
+        let rm_result = fs::remove_dir_all(&path);
+        assert!(
+            rm_result.is_ok(),
+            "Failed to delete directory '{}': {}",
+            dir_path,
+            rm_result.unwrap_err()
+        );
     }
 }
 
@@ -477,13 +546,22 @@ async fn when_create_file_with_content(world: &mut World, file_path: String, con
 
     // Create parent directories if they don't exist
     if let Some(parent) = path.parent() {
-        fs::create_dir_all(parent).unwrap_or_else(|e| {
-            panic!("Failed to create parent directories for '{}': {}", file_path, e)
-        });
+        let mkdir_result = fs::create_dir_all(parent);
+        assert!(
+            mkdir_result.is_ok(),
+            "Failed to create parent directories for '{}': {}",
+            file_path,
+            mkdir_result.unwrap_err()
+        );
     }
 
-    fs::write(&path, content)
-        .unwrap_or_else(|e| panic!("Failed to write file '{}': {}", file_path, e));
+    let write_result = fs::write(&path, content);
+    assert!(
+        write_result.is_ok(),
+        "Failed to write file '{}': {}",
+        file_path,
+        write_result.unwrap_err()
+    );
 }
 
 #[cfg(test)]

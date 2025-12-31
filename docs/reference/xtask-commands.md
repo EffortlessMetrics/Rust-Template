@@ -1975,7 +1975,7 @@ XTASK_STRICT_AC_COVERAGE=1 cargo run -p xtask -- selftest
 | Variable | Description |
 |----------|-------------|
 | `XTASK_LOW_RESOURCES=1` | Reduce parallelism and skip resource-intensive checks |
-| `XTASK_SKIP_BDD=1` | Skip BDD tests (used internally to avoid recursion) |
+| `XTASK_SKIP_BDD=1` | Skip BDD tests (internal/harness use; leave unset for normal selftest) |
 | `XTASK_STRICT_AC_COVERAGE=1` | Fail selftest if kernel (`must_have_ac=true`) ACs have Unknown status (no BDD coverage) |
 
 ### What It Does
@@ -2640,4 +2640,3 @@ xt bundle implement_ac
 - `TEMPLATE_API.md` - Full API specification with schemas
 - `docs/how-to/` - Task-oriented guides
 - `docs/explanation/architecture.md` - Design rationale
-

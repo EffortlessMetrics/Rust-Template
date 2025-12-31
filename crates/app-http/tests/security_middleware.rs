@@ -127,7 +127,7 @@ async fn test_cors_headers_present_in_response() {
 
     let workspace_root = test_workspace_root();
     let repo = Arc::new(NoopRepo);
-    let app = app_with_workspace_root(repo, workspace_root);
+    let app = app_with_workspace_root(repo, workspace_root).expect("valid config");
 
     let request = Request::builder()
         .method(Method::GET)
@@ -149,7 +149,7 @@ async fn test_cors_preflight_request_handling() {
 
     let workspace_root = test_workspace_root();
     let repo = Arc::new(NoopRepo);
-    let app = app_with_workspace_root(repo, workspace_root);
+    let app = app_with_workspace_root(repo, workspace_root).expect("valid config");
 
     let request = Request::builder()
         .method(Method::OPTIONS)
@@ -175,7 +175,7 @@ async fn test_cors_rejects_unauthorized_origin() {
 
     let workspace_root = test_workspace_root();
     let repo = Arc::new(NoopRepo);
-    let app = app_with_workspace_root(repo, workspace_root);
+    let app = app_with_workspace_root(repo, workspace_root).expect("valid config");
 
     let request = Request::builder()
         .method(Method::OPTIONS)
@@ -198,7 +198,7 @@ async fn test_security_headers_present_in_response() {
 
     let workspace_root = test_workspace_root();
     let repo = Arc::new(NoopRepo);
-    let app = app_with_workspace_root(repo, workspace_root);
+    let app = app_with_workspace_root(repo, workspace_root).expect("valid config");
 
     let request =
         Request::builder().method(Method::GET).uri("/health").body(Body::empty()).unwrap();
@@ -227,7 +227,7 @@ async fn test_csp_header_contains_directives() {
 
     let workspace_root = test_workspace_root();
     let repo = Arc::new(NoopRepo);
-    let app = app_with_workspace_root(repo, workspace_root);
+    let app = app_with_workspace_root(repo, workspace_root).expect("valid config");
 
     let request =
         Request::builder().method(Method::GET).uri("/health").body(Body::empty()).unwrap();
@@ -250,7 +250,7 @@ async fn test_permissions_policy_restricts_features() {
 
     let workspace_root = test_workspace_root();
     let repo = Arc::new(NoopRepo);
-    let app = app_with_workspace_root(repo, workspace_root);
+    let app = app_with_workspace_root(repo, workspace_root).expect("valid config");
 
     let request =
         Request::builder().method(Method::GET).uri("/health").body(Body::empty()).unwrap();
@@ -277,7 +277,7 @@ async fn test_cross_origin_headers_present() {
 
     let workspace_root = test_workspace_root();
     let repo = Arc::new(NoopRepo);
-    let app = app_with_workspace_root(repo, workspace_root);
+    let app = app_with_workspace_root(repo, workspace_root).expect("valid config");
 
     let request =
         Request::builder().method(Method::GET).uri("/health").body(Body::empty()).unwrap();
@@ -302,7 +302,7 @@ async fn test_hsts_header_in_production() {
 
     let workspace_root = test_workspace_root();
     let repo = Arc::new(NoopRepo);
-    let app = app_with_workspace_root(repo, workspace_root);
+    let app = app_with_workspace_root(repo, workspace_root).expect("valid config");
 
     let request =
         Request::builder().method(Method::GET).uri("/health").body(Body::empty()).unwrap();
@@ -331,7 +331,7 @@ async fn test_no_hsts_header_in_development() {
 
     let workspace_root = test_workspace_root();
     let repo = Arc::new(NoopRepo);
-    let app = app_with_workspace_root(repo, workspace_root);
+    let app = app_with_workspace_root(repo, workspace_root).expect("valid config");
 
     let request =
         Request::builder().method(Method::GET).uri("/health").body(Body::empty()).unwrap();
@@ -354,7 +354,7 @@ async fn test_cors_config_custom_origins() {
 
     let workspace_root = test_workspace_root();
     let repo = Arc::new(NoopRepo);
-    let app = app_with_workspace_root(repo, workspace_root);
+    let app = app_with_workspace_root(repo, workspace_root).expect("valid config");
 
     let request = Request::builder()
         .method(Method::GET)
@@ -385,7 +385,7 @@ async fn test_security_headers_can_be_disabled() {
 
     let workspace_root = test_workspace_root();
     let repo = Arc::new(NoopRepo);
-    let app = app_with_workspace_root(repo, workspace_root);
+    let app = app_with_workspace_root(repo, workspace_root).expect("valid config");
 
     let request =
         Request::builder().method(Method::GET).uri("/health").body(Body::empty()).unwrap();
@@ -410,7 +410,7 @@ async fn test_cors_can_be_disabled() {
 
     let workspace_root = test_workspace_root();
     let repo = Arc::new(NoopRepo);
-    let app = app_with_workspace_root(repo, workspace_root);
+    let app = app_with_workspace_root(repo, workspace_root).expect("valid config");
 
     let request = Request::builder()
         .method(Method::GET)
@@ -434,7 +434,7 @@ async fn test_request_id_header_preserved_with_security_middleware() {
 
     let workspace_root = test_workspace_root();
     let repo = Arc::new(NoopRepo);
-    let app = app_with_workspace_root(repo, workspace_root);
+    let app = app_with_workspace_root(repo, workspace_root).expect("valid config");
 
     let request = Request::builder()
         .method(Method::GET)

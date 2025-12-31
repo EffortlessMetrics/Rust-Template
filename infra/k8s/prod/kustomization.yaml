@@ -44,3 +44,17 @@ labels:
     app.kubernetes.io/managed-by: kustomize
     cost-center: engineering
     team: platform
+
+# Secret generator - reads from secret.env (not committed to git)
+# Copy secret.env.example to secret.env and fill in real values
+# CRITICAL: Production secrets MUST be injected via CI/CD or secret management system
+secretGenerator:
+- name: app-secrets
+  envs:
+  - secret.env
+  options:
+    labels:
+      app: app-http
+      environment: production
+      team: platform
+      cost-center: engineering

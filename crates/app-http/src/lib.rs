@@ -92,7 +92,7 @@
 //!
 //! # async fn example() {
 //! let repo = Arc::new(FsGovernanceRepository::new("/workspace/root".into()));
-//! let router = app(repo);
+//! let router = app(repo).expect("invalid platform auth configuration");
 //!
 //! // Serve with axum
 //! let listener = tokio::net::TcpListener::bind("0.0.0.0:8080").await.unwrap();
@@ -111,7 +111,8 @@
 //! # fn example() {
 //! let workspace_root = PathBuf::from("/workspace/root");
 //! let repo = Arc::new(FsGovernanceRepository::new(workspace_root.clone()));
-//! let state = AppState::with_config(repo, workspace_root, None);
+//! let state = AppState::with_config(repo, workspace_root, None)
+//!     .expect("invalid platform auth configuration");
 //! let router = app_with_state(state);
 //! # }
 //! ```
@@ -180,8 +181,11 @@ impl gov_http::PlatformState for AppState {
 }
 
 impl AppState {
-    #[allow(dead_code)]
-    fn new(governance_repo: Arc<dyn GovernanceRepository>) -> Self {
+    /// Create a new AppState with default configuration.
+    ///
+    /// Uses the default workspace root resolution. For tests or custom configurations,
+    /// prefer `with_config()` which allows explicit workspace root specification.
+    pub fn new(governance_repo: Arc<dyn GovernanceRepository>) -> Result<Self, String> {
         let workspace_root = resolve_workspace_root();
         Self::with_config(governance_repo, workspace_root, None)
     }
@@ -190,9 +194,9 @@ impl AppState {
         governance_repo: Arc<dyn GovernanceRepository>,
         workspace_root: PathBuf,
         config: Option<spec_runtime::ValidatedConfig>,
-    ) -> Self {
+    ) -> Result<Self, String> {
         let config = config.or_else(|| load_validated_config(&workspace_root));
-        let platform_auth = security::PlatformAuthConfig::from_sources(config.as_ref());
+        let platform_auth = security::PlatformAuthConfig::try_from_sources(config.as_ref())?;
         platform_auth.warn_if_misconfigured();
 
         // Initialize security configurations
@@ -203,7 +207,7 @@ impl AppState {
         // Create RepoContext for gov-http integration
         let repo_context = RepoContext::new(&workspace_root);
 
-        Self {
+        Ok(Self {
             governance_repo,
             workspace_root,
             config,
@@ -211,26 +215,35 @@ impl AppState {
             cors_config,
             security_headers_config,
             repo_context,
-        }
+        })
     }
 }
 
 /// Create the application router (reusable for both main and tests)
-pub fn app(governance_repo: Arc<dyn GovernanceRepository>) -> Router {
+///
+/// # Errors
+///
+/// Returns an error if platform auth configuration is invalid (e.g., invalid PLATFORM_AUTH_MODE).
+pub fn app(governance_repo: Arc<dyn GovernanceRepository>) -> Result<Router, String> {
     let workspace_root = resolve_workspace_root();
     let config = load_validated_config(&workspace_root);
-    let app_state = AppState::with_config(governance_repo, workspace_root, config);
-    build_router(app_state)
+    let app_state = AppState::with_config(governance_repo, workspace_root, config)?;
+    Ok(build_router(app_state))
 }
 
 /// Create the application router with an explicit workspace root.
 /// Useful for tests to avoid reliance on global environment variables.
+///
+/// # Errors
+///
+/// Returns an error if platform auth configuration is invalid (e.g., invalid PLATFORM_AUTH_MODE).
 pub fn app_with_workspace_root(
     governance_repo: Arc<dyn GovernanceRepository>,
     workspace_root: PathBuf,
-) -> Router {
+) -> Result<Router, String> {
     let config = load_validated_config(&workspace_root);
-    build_router(AppState::with_config(governance_repo, workspace_root, config))
+    let app_state = AppState::with_config(governance_repo, workspace_root, config)?;
+    Ok(build_router(app_state))
 }
 
 /// Create an application router from an already-constructed state (e.g., when main has validated config).
@@ -504,7 +517,7 @@ mod tests {
     async fn test_health_returns_ok() {
         let workspace_root = test_workspace_root();
         let repo = Arc::new(FsGovernanceRepository::new(workspace_root.clone()));
-        let app = app_with_workspace_root(repo, workspace_root);
+        let app = app_with_workspace_root(repo, workspace_root).expect("valid config");
 
         let response = app
             .oneshot(Request::builder().uri("/health").body(Body::empty()).unwrap())
@@ -523,7 +536,7 @@ mod tests {
     async fn test_version_returns_build_info() {
         let workspace_root = test_workspace_root();
         let repo = Arc::new(FsGovernanceRepository::new(workspace_root.clone()));
-        let app = app_with_workspace_root(repo, workspace_root);
+        let app = app_with_workspace_root(repo, workspace_root).expect("valid config");
 
         let response = app
             .oneshot(Request::builder().uri("/version").body(Body::empty()).unwrap())

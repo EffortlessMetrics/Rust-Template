@@ -1,5 +1,5 @@
 use acceptance::{AcCoverageWriter, World};
-use cucumber::{World as _, WriterExt, tag::Ext as _, writer};
+use cucumber::{World as _, WriterExt, writer};
 use gherkin::tagexpr::TagOperation;
 use std::fs::File;
 
@@ -67,12 +67,47 @@ async fn main() {
         .expect("Failed to create AC coverage writer");
 
     let raw_tag_expr = std::env::var("CUCUMBER_TAG_EXPRESSION").ok();
-    let tag_expression: Option<TagOperation> =
-        raw_tag_expr.as_deref().and_then(|expr| expr.parse::<TagOperation>().ok());
-    let simple_tags = raw_tag_expr.as_deref().map(parse_simple_tag_list).unwrap_or_default();
+    let explicit_expr_set = raw_tag_expr.is_some();
+    let in_ci = std::env::var("CI").is_ok();
+    let normalized_expr = raw_tag_expr.as_deref().and_then(normalize_tag_expression);
+    let wip_requested = raw_tag_expr
+        .as_deref()
+        .map(|expr| expr.contains("wip") || expr.contains("WIP"))
+        .unwrap_or(false);
 
-    // Clone for use in the filter closure
-    let raw_tag_expr_for_filter = raw_tag_expr.clone();
+    if std::env::var("CUCUMBER_FILTER_TAGS").is_err() {
+        let mut parts = Vec::new();
+
+        if let Some(expr) = normalized_expr.as_deref() {
+            parts.push(format!("({expr})"));
+        } else if !explicit_expr_set && !in_ci {
+            parts.push("not @ci-only".to_string());
+        }
+
+        if !wip_requested {
+            parts.push("not @wip".to_string());
+        }
+
+        if cfg!(windows) {
+            parts.push("not @unix_only".to_string());
+        }
+
+        if cfg!(unix) {
+            parts.push("not @windows_only".to_string());
+        }
+
+        if !parts.is_empty() {
+            // SAFETY: Adjusting process env vars for test filtering only.
+            unsafe {
+                std::env::set_var("CUCUMBER_FILTER_TAGS", parts.join(" and "));
+            }
+        }
+    }
+
+    // SAFETY: Clear alias env var to avoid leaking into child commands.
+    unsafe {
+        std::env::remove_var("CUCUMBER_TAG_EXPRESSION");
+    }
 
     // Use filter_run_and_exit with coverage and JUnit writers
     // The JUnit file may be empty due to the cucumber-rs exit() issue documented above.
@@ -114,33 +149,8 @@ async fn main() {
                     return false;
                 }
 
-                // Exclude @wip scenarios unless explicitly included via tag expression
-                let is_wip = tags.iter().any(|t| t.eq_ignore_ascii_case("wip"));
-
-                // Always exclude @wip unless the tag expression explicitly mentions "wip"
-                if is_wip {
-                    let wip_explicitly_requested = raw_tag_expr_for_filter
-                        .as_ref()
-                        .map(|expr| expr.contains("wip") || expr.contains("WIP"))
-                        .unwrap_or(false)
-                        || simple_tags.iter().any(|t| t.eq_ignore_ascii_case("wip"));
-
-                    if !wip_explicitly_requested {
-                        return false;
-                    }
-                }
-
-                if let Some(expr) = &tag_expression {
-                    return expr.eval(tags.iter());
-                }
-
-                if !simple_tags.is_empty() {
-                    return tags.iter().any(|t| {
-                        simple_tags.iter().any(|filter| {
-                            t.eq_ignore_ascii_case(filter)
-                                || t.eq_ignore_ascii_case(filter.trim_start_matches('@'))
-                        })
-                    });
+                if !wip_requested && tags.iter().any(|t| t.eq_ignore_ascii_case("wip")) {
+                    return false;
                 }
 
                 true
@@ -157,6 +167,24 @@ fn parse_simple_tag_list(expr: &str) -> Vec<String> {
         .filter(|tag| !tag.is_empty())
         .map(|tag| tag.to_string())
         .collect()
+}
+
+fn normalize_tag_expression(expr: &str) -> Option<String> {
+    let trimmed = expr.trim();
+    if trimmed.is_empty() {
+        return None;
+    }
+
+    if trimmed.parse::<TagOperation>().is_ok() {
+        return Some(trimmed.to_string());
+    }
+
+    let tags = parse_simple_tag_list(trimmed);
+    if tags.is_empty() {
+        None
+    } else {
+        Some(tags.into_iter().map(|tag| format!("@{tag}")).collect::<Vec<_>>().join(" or "))
+    }
 }
 
 #[cfg(test)]

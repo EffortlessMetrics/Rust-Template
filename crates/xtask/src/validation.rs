@@ -1,43 +1,53 @@
-/// Validation module for ensuring xtask implementation matches specifications
-///
-/// This module provides build-time and test-time validation that:
-/// 1. All required xtask commands from specs/xtask_commands.yaml are implemented
-/// 2. AC reports conform to specs/ac_report.schema.json
+//! Validation module for ensuring xtask implementation matches specifications
+//!
+//! This module provides build-time and test-time validation that:
+//! 1. All required xtask commands from specs/xtask_commands.yaml are implemented
+//! 2. AC reports conform to specs/ac_report.schema.json
+
+#[cfg(test)]
 use anyhow::{Context, Result};
+#[cfg(test)]
 use serde::Deserialize;
+#[cfg(test)]
 use std::collections::HashSet;
+#[cfg(test)]
 use std::fs;
+#[cfg(test)]
 use std::path::{Path, PathBuf};
 
 #[cfg(test)]
 use serde_json::Value;
 
+/// Xtask commands specification loaded from specs/xtask_commands.yaml.
+/// Used by validation infrastructure in tests.
+#[cfg(test)]
 #[derive(Debug, Deserialize)]
-#[allow(dead_code)]
 struct XtaskCommandsSpec {
-    #[allow(dead_code)]
+    #[expect(dead_code, reason = "deserialized for schema completeness")]
     version: String,
-    #[allow(dead_code)]
+    #[expect(dead_code, reason = "deserialized for schema completeness")]
     description: String,
     commands: Vec<CommandSpec>,
 }
 
+/// Individual command specification from the xtask commands YAML.
+#[cfg(test)]
 #[derive(Debug, Deserialize)]
-#[allow(dead_code)]
 struct CommandSpec {
     name: String,
-    #[allow(dead_code)]
+    #[expect(dead_code, reason = "deserialized for schema completeness; future validation")]
     description: String,
     required: bool,
-    #[allow(dead_code)]
+    #[expect(dead_code, reason = "deserialized for schema completeness; future validation")]
     usage: String,
-    #[allow(dead_code)]
     #[serde(default)]
+    #[expect(dead_code, reason = "deserialized for schema completeness; future validation")]
     has_args: bool,
 }
 
-/// Get the project root directory (two levels up from the xtask crate)
-#[allow(dead_code)]
+/// Get the project root directory (two levels up from the xtask crate).
+/// Used by validation functions and tests.
+#[cfg(test)]
 fn project_root() -> PathBuf {
     let manifest_dir = env!("CARGO_MANIFEST_DIR");
     Path::new(manifest_dir)
@@ -47,12 +57,14 @@ fn project_root() -> PathBuf {
         .to_path_buf()
 }
 
-/// Validate that all required commands in the spec are implemented in the Commands enum
+/// Validate that all required commands in the spec are implemented in the Commands enum.
 ///
 /// This function reads specs/xtask_commands.yaml and verifies that each required
 /// command name appears in the Commands enum definition.
-#[allow(dead_code)]
-pub fn validate_xtask_commands_against_spec() -> Result<()> {
+///
+/// Used by tests to ensure the xtask implementation matches the spec.
+#[cfg(test)]
+fn validate_xtask_commands_against_spec() -> Result<()> {
     // Read the spec
     let root = project_root();
     let spec_path = root.join("specs/xtask_commands.yaml");
@@ -114,9 +126,10 @@ pub fn validate_xtask_commands_against_spec() -> Result<()> {
     Ok(())
 }
 
-/// Normalize command names to handle kebab-case to PascalCase conversion
+/// Normalize command names to handle kebab-case to PascalCase conversion.
+///
 /// Examples: "ac-status" -> "AcStatus", "check" -> "Check"
-#[allow(dead_code)]
+#[cfg(test)]
 fn normalize_command_name(name: &str) -> String {
     name.split('-')
         .map(|part| {
@@ -131,8 +144,8 @@ fn normalize_command_name(name: &str) -> String {
         .collect()
 }
 
-/// Extract command variant names from the Commands enum definition
-#[allow(dead_code)]
+/// Extract command variant names from the Commands enum definition.
+#[cfg(test)]
 fn extract_commands_from_enum(content: &str) -> Result<HashSet<String>> {
     let mut commands = HashSet::new();
     let mut in_enum = false;

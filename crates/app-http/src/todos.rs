@@ -52,8 +52,9 @@ impl TodosState {
         Self { todos: Arc::new(RwLock::new(todos)) }
     }
 
-    /// Create a new TodosState with empty todos (for AC-MYSERV-002 testing)
-    #[allow(dead_code)]
+    /// Create a new TodosState with empty todos.
+    ///
+    /// Used for testing AC-MYSERV-002 (empty array scenario) and in unit tests.
     pub fn empty() -> Self {
         Self { todos: Arc::new(RwLock::new(vec![])) }
     }

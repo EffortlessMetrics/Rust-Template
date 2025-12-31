@@ -11,6 +11,7 @@ pub fn run() -> Result<()> {
     println!();
 
     let mut failed = 0;
+    let skip_bdd = crate::env::should_skip_bdd();
 
     // Step 1: Check environment
     println!("{}", "[1/5] Checking environment...".blue());
@@ -45,21 +46,30 @@ pub fn run() -> Result<()> {
 
     // Step 3: Run BDD tests
     println!("{}", "[3/5] Running BDD acceptance tests...".blue());
-    match run_bdd() {
-        Ok(_) => {
-            println!("  {} BDD scenarios passed", "✓".green());
-            if Path::new("target/junit/acceptance.xml").exists() {
-                println!("  {} JUnit output created", "✓".green());
-            } else {
-                println!(
-                    "  {} JUnit output not found (expected at target/junit/acceptance.xml)",
-                    "⚠".yellow()
-                );
+    if skip_bdd {
+        let reason = if crate::env::is_low_resources() {
+            "XTASK_LOW_RESOURCES=1"
+        } else {
+            "XTASK_SKIP_BDD=1"
+        };
+        println!("  {} Skipping BDD tests ({})", "⚠".yellow(), reason);
+    } else {
+        match run_bdd() {
+            Ok(_) => {
+                println!("  {} BDD scenarios passed", "✓".green());
+                if Path::new("target/junit/acceptance.xml").exists() {
+                    println!("  {} JUnit output created", "✓".green());
+                } else {
+                    println!(
+                        "  {} JUnit output not found (expected at target/junit/acceptance.xml)",
+                        "⚠".yellow()
+                    );
+                }
             }
-        }
-        Err(e) => {
-            eprintln!("  {} BDD tests failed: {}", "✗".red(), e);
-            failed += 1;
+            Err(e) => {
+                eprintln!("  {} BDD tests failed: {}", "✗".red(), e);
+                failed += 1;
+            }
         }
     }
     println!();

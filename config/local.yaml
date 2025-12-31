@@ -4,7 +4,7 @@ settings:
   telemetry.otlp_endpoint: "http://localhost:4317"
   platform.auth_mode: "open"
   platform.redact_secrets: true
-  database.auto_migrate: true
+  database.auto_migrate: false
 secrets:
   # Database connection string - replace with actual credentials in production
   db.url: "postgres://CHANGE_ME:CHANGE_ME@localhost:5432/app"

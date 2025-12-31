@@ -37,7 +37,7 @@ If you're building a new service from this template (like the Knowledge Hub), yo
 
 1. **Run `cargo xtask selftest` in CI** as a merge gate on your main branch
 2. **Keep these files aligned**: `spec_ledger.yaml` (your stories/REQs/ACs) + `specs/features/*.feature` (BDD tests) + test code
-3. **Expose these HTTP endpoints**: `/platform/status`, `/platform/graph`, `/platform/tasks`, `/platform/agent/hints`, `/platform/docs/index`, `/platform/schema`
+3. **Expose these HTTP endpoints**: `/platform/status`, `/platform/graph`, `/platform/tasks`, `/platform/agent/hints`, `/platform/docs/index`, `/platform/schema`, `/platform/openapi`
 4. **Maintain these files**: `service_metadata.yaml`, `specs/tasks.yaml`, release evidence bundles
 5. **Tag kernel ACs with** `must_have_ac: true` only if they're truly required for your service
 
@@ -451,7 +451,8 @@ fn test_name() {
 
 #### AC-TPL-PLATFORM-SCHEMA: Machine-Readable Schema
 **Contract:**
-- `GET /platform/schema` returns JSON schema/OpenAPI document
+- `GET /platform/schema` returns the schema index (JSON Schema + endpoint list)
+- `GET /platform/openapi` returns the OpenAPI document
 - Includes schemas for `/platform/status`, `/platform/graph`, `/platform/tasks`, `/platform/agent/hints`
 
 **Why:**

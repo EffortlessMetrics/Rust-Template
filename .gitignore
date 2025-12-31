@@ -4,6 +4,7 @@ target/
 .DS_Store
 .idea/
 .env
+secret.env
 sbom.json
 *.sig
 .tools/

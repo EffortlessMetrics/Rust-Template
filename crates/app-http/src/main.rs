@@ -46,11 +46,17 @@ async fn main() -> anyhow::Result<()> {
         std::sync::Arc::new(adapters_spec_fs::FsGovernanceRepository::new(specs_dir));
 
     // Build our application router from lib, reusing validated config
-    let app_state = AppState::with_config(
+    let app_state = match AppState::with_config(
         governance_repo,
         workspace_root.clone(),
         Some(validated_config.clone()),
-    );
+    ) {
+        Ok(state) => state,
+        Err(err) => {
+            eprintln!("Platform auth configuration error: {}", err);
+            std::process::exit(1);
+        }
+    };
     let app = app_with_state(app_state);
 
     // Start server on the documented platform port

@@ -39,7 +39,8 @@ spec_ledger.yaml → spec-runtime → /platform/* → openapi.yaml → TypeScrip
 The chain ensures:
 
 - **Rust structs** in `crates/platform/src/` serialize to JSON matching the OpenAPI schema
-- **OpenAPI document** at `/platform/schema` is generated from the same runtime graph
+- **OpenAPI document** at `/platform/openapi` is generated from the same runtime graph
+- **Schema index** at `/platform/schema` exposes JSON Schemas for platform data files
 - **TypeScript consumers** (like the Backstage plugin) import types generated from OpenAPI
 
 ## Covered Endpoints
@@ -49,7 +50,8 @@ The chain ensures:
 | `/platform/status` | `PlatformStatus` | Governance health, version, auth mode |
 | `/platform/docs/index` | `DocsIndex` | Documentation inventory with front-matter |
 | `/platform/graph` | `GovernanceGraph` | Full REQ → AC → test → doc linkage |
-| `/platform/schema` | OpenAPI 3.0.3 | Machine-readable API specification |
+| `/platform/schema` | Schema index | JSON Schema + endpoint list |
+| `/platform/openapi` | OpenAPI 3.0.3 | Machine-readable API specification |
 
 ## Verification
 

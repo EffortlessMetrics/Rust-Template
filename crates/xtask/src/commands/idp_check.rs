@@ -152,8 +152,12 @@ fn run_plugin_checks(plugin_dir: &std::path::Path) -> Result<()> {
     }
 
     // Run pnpm check (type checking)
-    let check_output =
-        Command::new("pnpm").arg("run").arg("check").current_dir(plugin_dir).output()?;
+    let check_output = Command::new("pnpm")
+        .arg("run")
+        .arg("check")
+        .env("CI", "1")
+        .current_dir(plugin_dir)
+        .output()?;
 
     if !check_output.status.success() {
         anyhow::bail!("TypeScript type check failed");
@@ -169,6 +173,7 @@ fn run_plugin_checks(plugin_dir: &std::path::Path) -> Result<()> {
             "--passWithNoTests",
             "--testPathPattern=PlatformClient.test.ts",
         ])
+        .env("CI", "1")
         .current_dir(plugin_dir)
         .output()?;
 
