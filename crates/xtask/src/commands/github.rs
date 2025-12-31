@@ -13,7 +13,8 @@
 //! - `question_issue_body()` / `question_labels()` - For `question-gh-create`
 
 use anyhow::{Context, Result};
-use std::process::Command;
+use std::io::Write;
+use std::process::{Command, Stdio};
 
 /// Reference to a GitHub issue
 #[derive(Debug, Clone)]
@@ -107,23 +108,13 @@ impl GhClient {
 
     /// Create a GitHub issue
     ///
-    /// Uses --body-file for safer handling of multi-line bodies and special characters.
+    /// Uses `--body-file -` to pipe body via stdin, avoiding temp files and
+    /// shell quoting issues with special characters.
     pub fn create_issue(title: &str, body: &str, labels: &[String]) -> Result<IssueRef> {
         Self::check_auth()?;
 
-        // Write body to a temp file to avoid shell quoting issues
-        let temp_dir = std::env::temp_dir();
-        let body_file = temp_dir.join(format!("gh-issue-body-{}.md", std::process::id()));
-        std::fs::write(&body_file, body).context("Failed to write issue body to temp file")?;
-
-        // Ensure cleanup on all exit paths
-        let _cleanup = scopeguard::guard(body_file.clone(), |path| {
-            let _ = std::fs::remove_file(path);
-        });
-
         let mut cmd = Command::new("gh");
-        cmd.args(["issue", "create", "--title", title, "--body-file"]);
-        cmd.arg(&body_file);
+        cmd.args(["issue", "create", "--title", title, "--body-file", "-"]);
 
         // Add non-empty labels (trim and dedupe)
         let mut seen_labels = std::collections::HashSet::new();
@@ -134,7 +125,22 @@ impl GhClient {
             }
         }
 
-        let output = cmd.output().context("Failed to run 'gh issue create'")?;
+        // Pipe body via stdin
+        cmd.stdin(Stdio::piped());
+        cmd.stdout(Stdio::piped());
+        cmd.stderr(Stdio::piped());
+
+        let mut child = cmd.spawn().context("Failed to spawn 'gh issue create'")?;
+
+        // Write body to stdin
+        child
+            .stdin
+            .as_mut()
+            .context("Failed to open stdin for 'gh issue create'")?
+            .write_all(body.as_bytes())
+            .context("Failed to write issue body to gh stdin")?;
+
+        let output = child.wait_with_output().context("Failed to run 'gh issue create'")?;
 
         if !output.status.success() {
             let stderr = String::from_utf8_lossy(&output.stderr);

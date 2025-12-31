@@ -19,3 +19,4 @@ uuid = { workspace = true }
 gov-model = { path = "../gov-model" }
 gov-contracts = { path = "../gov-contracts" }
 spec-runtime = { path = "../spec-runtime" }
+tokio = { workspace = true }

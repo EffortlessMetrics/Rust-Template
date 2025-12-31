@@ -1,10 +1,26 @@
 //! Cross-system issue search across friction, questions, and tasks.
 
-use anyhow::Result;
+use anyhow::{Context, Result};
 use serde::Serialize;
 
 use crate::commands::friction::{FrictionEntry, load_all_friction_entries};
 use crate::commands::questions::{Question, load_all_questions};
+
+/// Truncate a string to a maximum number of characters (Unicode-safe).
+///
+/// Unlike byte slicing, this won't panic on multi-byte UTF-8 characters.
+/// If truncation occurs, appends "..." (so max visible chars is `max_chars - 3`).
+fn truncate_chars(s: &str, max_chars: usize) -> String {
+    let char_count = s.chars().count();
+    if char_count <= max_chars {
+        return s.to_string();
+    }
+    // Leave room for "..."
+    let keep = max_chars.saturating_sub(3);
+    let mut result: String = s.chars().take(keep).collect();
+    result.push_str("...");
+    result
+}
 
 /// Unified search result
 #[derive(Debug, Clone, Serialize)]
@@ -49,7 +65,8 @@ pub fn search_issues(
 
     // Search friction entries
     if type_filter.is_none() || type_filter == Some("friction") {
-        let friction_entries = load_all_friction_entries().unwrap_or_default();
+        let friction_entries = load_all_friction_entries()
+            .context("Failed to load friction entries from ./friction")?;
         for entry in friction_entries {
             if let Some(result) = search_friction(&entry, &query_lower, status_filter, refs_filter)
             {
@@ -60,7 +77,8 @@ pub fn search_issues(
 
     // Search questions
     if type_filter.is_none() || type_filter == Some("question") {
-        let questions = load_all_questions().unwrap_or_default();
+        let questions =
+            load_all_questions().context("Failed to load questions from ./questions")?;
         for question in questions {
             if let Some(result) =
                 search_question(&question, &query_lower, status_filter, refs_filter)
@@ -71,9 +89,8 @@ pub fn search_issues(
     }
 
     // Search tasks
-    if (type_filter.is_none() || type_filter == Some("task"))
-        && let Ok(tasks) = load_tasks()
-    {
+    if type_filter.is_none() || type_filter == Some("task") {
+        let tasks = load_tasks().context("Failed to load tasks from specs/tasks.yaml")?;
         for task in tasks {
             if let Some(result) = search_task(&task, &query_lower, status_filter, refs_filter) {
                 results.push(result);
@@ -104,11 +121,7 @@ pub fn search_issues(
         println!("{}", "─".repeat(80));
 
         for result in &results {
-            let summary_truncated = if result.summary.len() > 40 {
-                format!("{}...", &result.summary[..37])
-            } else {
-                result.summary.clone()
-            };
+            let summary_truncated = truncate_chars(&result.summary, 40);
             println!(
                 "{:<12} {:<24} {:<12} {}",
                 result.issue_type, result.id, result.status, summary_truncated
@@ -379,6 +392,36 @@ fn search_task(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_truncate_chars_ascii() {
+        // Short string - no truncation
+        assert_eq!(truncate_chars("hello", 10), "hello");
+        // Exact length - no truncation
+        assert_eq!(truncate_chars("hello", 5), "hello");
+        // Truncation needed
+        assert_eq!(truncate_chars("hello world", 8), "hello...");
+        // Edge case: very short max
+        assert_eq!(truncate_chars("hello", 3), "...");
+    }
+
+    #[test]
+    fn test_truncate_chars_unicode() {
+        // Multi-byte UTF-8 characters (Japanese)
+        let japanese = "こんにちは世界"; // 7 characters, but more bytes
+        assert_eq!(truncate_chars(japanese, 10), japanese); // No truncation
+        assert_eq!(truncate_chars(japanese, 6), "こんに...");
+
+        // Emojis (4-byte UTF-8) - 5 emojis
+        let emojis = "🎉🎊🎁🎄🎅";
+        assert_eq!(truncate_chars(emojis, 5), emojis); // Exact length, no truncation
+        assert_eq!(truncate_chars(emojis, 4), "🎉..."); // Needs truncation
+
+        // Mixed ASCII and Unicode
+        let mixed = "Hello 世界!"; // 9 characters
+        assert_eq!(truncate_chars(mixed, 10), mixed);
+        assert_eq!(truncate_chars(mixed, 8), "Hello...");
+    }
 
     #[test]
     fn test_search_result_serialization() {
