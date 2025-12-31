@@ -27,10 +27,13 @@ pub(crate) fn run_xtask_command(world: &World, command: &str) -> (String, String
         PathBuf::from(env!("CARGO_MANIFEST_DIR")).parent().unwrap().parent().unwrap().to_path_buf();
     let manifest = actual_root.join("Cargo.toml");
 
+    let parts: Vec<&str> = command.split_whitespace().collect();
+    let subcommand = parts.get(2).copied();
+
     let mut cmd = Command::new("cargo");
     cmd.arg("run").arg("--manifest-path").arg(manifest).arg("-p").arg("xtask").arg("--");
 
-    for part in command.split_whitespace().skip(3) {
+    for part in parts.iter().skip(3) {
         cmd.arg(part);
     }
 
@@ -45,6 +48,16 @@ pub(crate) fn run_xtask_command(world: &World, command: &str) -> (String, String
     if !world.xtask_context().env.contains_key("XTASK_LOW_RESOURCES") {
         cmd.env("XTASK_LOW_RESOURCES", "1");
     }
+
+    // Avoid nested BDD runs during acceptance tests to prevent coverage clobbering.
+    if subcommand != Some("bdd") {
+        cmd.env("XTASK_SKIP_BDD", "1");
+    }
+    // Prevent xtask from re-wrapping in Nix inside the test harness.
+    cmd.env("IN_NIX_SHELL", "1");
+    // Avoid leaking BDD selection env vars into child commands.
+    cmd.env_remove("CUCUMBER_TAG_EXPRESSION");
+    cmd.env_remove("CUCUMBER_FILTER_TAGS");
 
     let output = cmd.output().expect("Failed to execute command");
     let stdout = String::from_utf8_lossy(&output.stdout).to_string();

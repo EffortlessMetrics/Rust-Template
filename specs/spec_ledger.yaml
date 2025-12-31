@@ -701,9 +701,10 @@ stories:
         acceptance_criteria:
           - id: AC-TPL-PLATFORM-SCHEMA
             text: >
-              GET /platform/schema (or /platform/openapi) returns a JSON
-              schema/OpenAPI document that includes /platform/status,
-              /platform/graph, /platform/tasks, and /platform/agent/hints.
+              GET /platform/schema returns the PlatformSchemas index (schema list
+              plus endpoint metadata) that includes /platform/status, /platform/graph,
+              /platform/tasks, and /platform/agent/hints. GET /platform/openapi
+              returns the OpenAPI contract for the platform endpoints.
             tags: [kernel]
             must_have_ac: true
             tests:
@@ -1693,9 +1694,10 @@ stories:
             text: >
               Agent hints (/platform/agent/hints and cargo xtask suggest-next) validate
               that referenced AC IDs and REQ IDs exist in spec_ledger.yaml. When a task
-              references a non-existent AC or REQ, the response includes a warnings array
-              identifying the invalid reference. Hints with invalid references are excluded
-              or marked with a referential_integrity_warning flag.
+              references a non-existent AC or REQ, the response includes a warnings string
+              array plus a warnings_structured array with invalid_id/ref_type/source/message
+              entries. Hints with invalid references are excluded or marked with a
+              referential_integrity_warning flag.
             tags: [kernel, agent-interface, governance]
             must_have_ac: true
             tests:

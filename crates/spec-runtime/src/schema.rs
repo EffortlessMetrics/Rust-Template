@@ -61,15 +61,35 @@ fn get_spec_ledger_schema() -> SchemaInfo {
         json_schema: json!({
             "$schema": "http://json-schema.org/draft-07/schema#",
             "type": "object",
-            "required": ["schema_version", "template_version", "stories"],
+            "required": ["metadata", "stories"],
             "properties": {
-                "schema_version": {
-                    "type": "string",
-                    "description": "Schema version for the ledger format"
-                },
-                "template_version": {
-                    "type": "string",
-                    "description": "Template version this ledger conforms to"
+                "metadata": {
+                    "type": "object",
+                    "required": ["schema_version", "template_version", "last_updated", "description"],
+                    "properties": {
+                        "schema_version": {
+                            "type": "string",
+                            "description": "Schema version for the ledger format"
+                        },
+                        "template_version": {
+                            "type": "string",
+                            "description": "Template version this ledger conforms to"
+                        },
+                        "last_updated": {
+                            "type": "string",
+                            "format": "date",
+                            "description": "Date of last update (YYYY-MM-DD)"
+                        },
+                        "description": {
+                            "type": "string",
+                            "description": "Human-readable ledger description"
+                        },
+                        "adrs": {
+                            "type": "array",
+                            "items": { "type": "string" },
+                            "description": "Template-wide ADR references"
+                        }
+                    }
                 },
                 "stories": {
                     "type": "array",
@@ -79,7 +99,7 @@ fn get_spec_ledger_schema() -> SchemaInfo {
                         "properties": {
                             "id": {
                                 "type": "string",
-                                "pattern": "^US-[A-Z0-9]+-\\d+$",
+                                "pattern": "^US-[A-Z0-9-]+-\\d+$",
                                 "description": "Unique story identifier"
                             },
                             "title": {
@@ -90,20 +110,57 @@ fn get_spec_ledger_schema() -> SchemaInfo {
                                 "type": "string",
                                 "description": "Detailed story description"
                             },
+                            "adr": {
+                                "oneOf": [
+                                    { "type": "string" },
+                                    { "type": "array", "items": { "type": "string" } }
+                                ],
+                                "description": "Associated ADRs"
+                            },
                             "requirements": {
                                 "type": "array",
                                 "items": {
                                     "type": "object",
-                                    "required": ["id", "text", "acceptance_criteria"],
+                                    "required": ["id", "title", "acceptance_criteria"],
                                     "properties": {
                                         "id": {
                                             "type": "string",
-                                            "pattern": "^REQ-[A-Z0-9]+-[A-Z0-9-]+$",
+                                            "pattern": "^REQ-[A-Z0-9-]+$",
                                             "description": "Unique requirement identifier"
                                         },
-                                        "text": {
+                                        "title": {
                                             "type": "string",
-                                            "description": "Requirement text"
+                                            "description": "Requirement title"
+                                        },
+                                        "description": {
+                                            "type": "string",
+                                            "description": "Requirement description"
+                                        },
+                                        "tags": {
+                                            "type": "array",
+                                            "items": { "type": "string" },
+                                            "description": "Requirement tags"
+                                        },
+                                        "must_have_ac": {
+                                            "type": "boolean",
+                                            "description": "Whether this requirement must have at least one AC"
+                                        },
+                                        "adr": {
+                                            "oneOf": [
+                                                { "type": "string" },
+                                                { "type": "array", "items": { "type": "string" } }
+                                            ],
+                                            "description": "Associated ADRs"
+                                        },
+                                        "docs": {
+                                            "type": "array",
+                                            "items": { "type": "string" },
+                                            "description": "Supporting documentation references"
+                                        },
+                                        "ci_workflows": {
+                                            "type": "array",
+                                            "items": { "type": "string" },
+                                            "description": "Related CI workflows"
                                         },
                                         "acceptance_criteria": {
                                             "type": "array",
@@ -113,12 +170,67 @@ fn get_spec_ledger_schema() -> SchemaInfo {
                                                 "properties": {
                                                     "id": {
                                                         "type": "string",
-                                                        "pattern": "^AC-[A-Z0-9]+-[A-Z0-9-]+$",
+                                                        "pattern": "^AC-[A-Z0-9-]+$",
                                                         "description": "Unique AC identifier"
                                                     },
                                                     "text": {
                                                         "type": "string",
                                                         "description": "Acceptance criterion text"
+                                                    },
+                                                    "tags": {
+                                                        "type": "array",
+                                                        "items": { "type": "string" },
+                                                        "description": "AC tags"
+                                                    },
+                                                    "must_have_ac": {
+                                                        "type": "boolean",
+                                                        "description": "Whether this AC is required"
+                                                    },
+                                                    "note": {
+                                                        "type": "string",
+                                                        "description": "Optional AC notes"
+                                                    },
+                                                    "docs": {
+                                                        "type": "array",
+                                                        "items": { "type": "string" },
+                                                        "description": "Supporting documentation references"
+                                                    },
+                                                    "adr": {
+                                                        "oneOf": [
+                                                            { "type": "string" },
+                                                            { "type": "array", "items": { "type": "string" } }
+                                                        ],
+                                                        "description": "Associated ADRs"
+                                                    },
+                                                    "tests": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "type": "object",
+                                                            "required": ["type", "tag"],
+                                                            "properties": {
+                                                                "type": {
+                                                                    "type": "string",
+                                                                    "description": "Test type (bdd, unit, integration, ci, manual, docs)"
+                                                                },
+                                                                "tag": {
+                                                                    "type": "string",
+                                                                    "description": "Test tag or scenario identifier"
+                                                                },
+                                                                "file": {
+                                                                    "type": "string",
+                                                                    "description": "File path where the test is defined"
+                                                                },
+                                                                "module": {
+                                                                    "type": "string",
+                                                                    "description": "Module path for the test"
+                                                                },
+                                                                "workflow": {
+                                                                    "type": "string",
+                                                                    "description": "CI workflow name"
+                                                                }
+                                                            }
+                                                        },
+                                                        "description": "Test mappings for this AC"
                                                     }
                                                 }
                                             }
@@ -612,6 +724,20 @@ fn get_platform_endpoints() -> Vec<EndpointSchema> {
             description: "Get platform schema definitions and API documentation".to_string(),
             request_type: None,
             response_type: "PlatformSchemas".to_string(),
+        },
+        EndpointSchema {
+            path: "/platform/openapi".to_string(),
+            method: "GET".to_string(),
+            description: "Get OpenAPI specification (YAML)".to_string(),
+            request_type: None,
+            response_type: "text/yaml".to_string(),
+        },
+        EndpointSchema {
+            path: "/platform/openapi.yaml".to_string(),
+            method: "GET".to_string(),
+            description: "Get OpenAPI specification (YAML)".to_string(),
+            request_type: None,
+            response_type: "text/yaml".to_string(),
         },
         EndpointSchema {
             path: "/platform/devex/flows".to_string(),

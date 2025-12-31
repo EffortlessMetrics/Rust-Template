@@ -310,11 +310,13 @@ Feature: Agent Hints API
     Then the response status code should be 200
     And the JSON response should have field "hints"
     And the JSON response should have field "warnings"
+    And the JSON response should have field "warnings_structured"
     And the "warnings" array should not be empty
-    And the first warning should have field "invalid_id"
-    And the first warning should have field "ref_type"
-    And the first warning should have field "source"
-    And the first warning should have field "message"
+    And the "warnings_structured" array should not be empty
+    And the first warning in "warnings_structured" should have field "invalid_id"
+    And the first warning in "warnings_structured" should have field "ref_type"
+    And the first warning in "warnings_structured" should have field "source"
+    And the first warning in "warnings_structured" should have field "message"
 
   @AC-TPL-HINTS-REFERENTIAL-INTEGRITY
   Scenario: CLI suggest-next shows warnings for invalid AC references
@@ -334,4 +336,3 @@ Feature: Agent Hints API
     When I send a GET request to "/platform/agent/hints"
     Then the response status code should be 200
     And the JSON response should have field "hints"
-

@@ -994,6 +994,43 @@ async fn then_first_warning_has_field(world: &mut World, field: String) {
     );
 }
 
+#[then(regex = r#"^the first warning in "([^"]+)" should have field "([^"]+)"$"#)]
+async fn then_first_warning_in_field_has_field(
+    world: &mut World,
+    warning_field: String,
+    field: String,
+) {
+    // Support both HTTP API responses and CLI JSON output
+    let json = if let Some(cli_json) = &world.cli_json_output {
+        cli_json
+    } else if let Some(response) = &world.last_response {
+        &response.body
+    } else {
+        panic!("response should exist");
+    };
+
+    let warnings = json
+        .get(&warning_field)
+        .and_then(|v| v.as_array())
+        .unwrap_or_else(|| panic!("'{}' should be an array. JSON: {:?}", warning_field, json));
+
+    assert!(
+        !warnings.is_empty(),
+        "Expected at least one warning in '{}', but array was empty. JSON: {:?}",
+        warning_field,
+        json
+    );
+
+    let first_warning = &warnings[0];
+    assert!(
+        first_warning.get(&field).is_some(),
+        "Expected first warning in '{}' to have field '{}', but it didn't. Warning: {:?}",
+        warning_field,
+        field,
+        first_warning
+    );
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

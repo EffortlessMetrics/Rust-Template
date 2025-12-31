@@ -23,6 +23,12 @@ async fn when_run_command(world: &mut World, command: String) {
         panic!("Command string is empty");
     }
 
+    let subcommand = if parts.len() >= 3 && parts[0] == "cargo" && parts[1] == "xtask" {
+        Some(parts[2].as_str())
+    } else {
+        None
+    };
+
     let root_path = world._temp_dir.path();
     let workspace_root = actual_workspace_root();
 
@@ -54,6 +60,14 @@ async fn when_run_command(world: &mut World, command: String) {
 
     // Bypass xtask's automatic Nix wrapper since the temp directory has no flake.nix
     cmd.env("IN_NIX_SHELL", "1");
+
+    // Avoid nested BDD runs during acceptance tests to prevent coverage clobbering.
+    if subcommand != Some("bdd") {
+        cmd.env("XTASK_SKIP_BDD", "1");
+    }
+    // Avoid leaking BDD selection env vars into child commands.
+    cmd.env_remove("CUCUMBER_TAG_EXPRESSION");
+    cmd.env_remove("CUCUMBER_FILTER_TAGS");
 
     // Execute the command
     let output = cmd.output().expect("Failed to execute command");

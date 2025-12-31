@@ -90,7 +90,7 @@ cargo xtask selftest     # Full governance validation
 - AC-PLT-015: Platform introspection endpoints (/platform/status, /graph, /docs/index)
 - AC-PLT-019: Task management via HTTP (GET /tasks, PATCH /tasks/{id}/status)
 - AC-TPL-PLATFORM-GOVERNANCE-APIS: Governance APIs (/friction, /questions, /forks)
-- AC-TPL-PLATFORM-SCHEMA: Machine-readable OpenAPI contract at /platform/schema
+- AC-TPL-PLATFORM-SCHEMA: Machine-readable OpenAPI contract at /platform/openapi
 
 **IDP Integration:**
 
@@ -111,7 +111,8 @@ The following surfaces constitute the **IDP contract** - what an IDP can rely on
 | `/platform/docs/index` | AC-PLT-015 | Documentation inventory with health |
 | `/platform/graph` | AC-PLT-015 | REQ/AC/test/doc relationships |
 | `/platform/tasks` | AC-PLT-019 | Task management with filters |
-| `/platform/schema` | AC-TPL-PLATFORM-SCHEMA | OpenAPI spec |
+| `/platform/schema` | AC-TPL-PLATFORM-SCHEMA | Schema index (JSON Schema + endpoint list) |
+| `/platform/openapi` | AC-TPL-PLATFORM-SCHEMA | OpenAPI spec |
 | `cargo xtask idp-snapshot` | AC-TPL-IDP-SNAPSHOT | Machine-readable tile data |
 
 **Invariants an IDP can trust:**
@@ -176,7 +177,8 @@ one with `must_have_ac: false` is a template default.
   - `/platform/graph` - Full governance graph (REQ/AC/test/doc relationships)
   - `/platform/devex/flows` - Canonical DevEx flows and commands
   - `/platform/docs/index` - Documentation inventory (with doc health info)
-  - `/platform/schema` - OpenAPI contract
+  - `/platform/schema` - Schema index (JSON Schema + endpoint list)
+  - `/platform/openapi` - OpenAPI contract
   - `/platform/status` - Governance health metrics (includes policy status)
 - JSON contracts & schemas:
   - CLI commands support `--json` output for AI/IDP integration

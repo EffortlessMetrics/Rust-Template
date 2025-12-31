@@ -45,9 +45,11 @@ cargo run -p app-http
 
 The service will:
 1. Load and validate `config/local.yaml` against `specs/config_schema.yaml`
-2. Run database migrations if `database.auto_migrate: true`
+2. Run database migrations if `database.auto_migrate: true` (disabled in local config by default)
 3. Start the HTTP server on the configured port (default: 8080)
 4. Expose health, version, and platform introspection endpoints
+
+Local runs do not require Postgres. The default `config/local.yaml` disables auto-migrate so `cargo run -p app-http` boots without a database. If you want DB-backed paths locally, set `DATABASE_URL` and run `docker compose up -d`.
 
 ### Configuration
 
@@ -59,7 +61,7 @@ env: "dev"
 http_port: 8080
 
 settings:
-  database.auto_migrate: true
+  database.auto_migrate: false
 
 platform:
   auth_mode: "basic"  # or "jwt" or "none"

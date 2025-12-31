@@ -158,7 +158,7 @@ The v3.3.9-kernel tag marks the stable, frozen baseline that includes:
 **Runtime & APIs:**
 
 - Service health, version, metrics endpoints
-- Platform introspection: `/platform/graph`, `/platform/devex/flows`, `/platform/docs/index`, `/platform/schema`
+- Platform introspection: `/platform/graph`, `/platform/devex/flows`, `/platform/docs/index`, `/platform/schema`, `/platform/openapi`
 - Agent hints API: `/platform/agent/hints` with task prioritization
 - Platform UI dashboard with graph visualization and flows view
 - Configuration validation and IAC alignment (Docker Compose, Kubernetes, Terraform)

@@ -1550,6 +1550,12 @@ async fn execute_command(world: &mut World, command: &str, env_vars: &[(&str, &s
         c
     };
 
+    let subcommand = if parts.len() >= 3 && parts[0] == "cargo" && parts[1] == "xtask" {
+        Some(parts[2].as_str())
+    } else {
+        None
+    };
+
     // Apply persistent env from context first
     for (key, value) in &world.xtask_context().env {
         cmd.env(key, value);
@@ -1573,8 +1579,8 @@ async fn execute_command(world: &mut World, command: &str, env_vars: &[(&str, &s
     }
 
     cmd.env("XTASK_LOW_RESOURCES", &low_resource);
-    // Skip BDD auto-regeneration in selftest and ac-status to avoid nested BDD runs
-    if command.contains("selftest") || command.contains("ac-status") {
+    // Avoid nested BDD runs during acceptance tests to prevent coverage clobbering.
+    if matches!(subcommand, Some(name) if name != "bdd") {
         cmd.env("XTASK_SKIP_BDD", "1");
     }
     cmd.env_remove("RUSTC_WRAPPER");
@@ -1583,12 +1589,9 @@ async fn execute_command(world: &mut World, command: &str, env_vars: &[(&str, &s
     cmd.env("SPEC_ROOT", world.spec_root());
     // Prevent Nix wrapper from activating (we're already in Nix shell during tests)
     cmd.env("IN_NIX_SHELL", "1");
-
-    let subcommand = if parts.len() >= 3 && parts[0] == "cargo" && parts[1] == "xtask" {
-        Some(parts[2].as_str())
-    } else {
-        None
-    };
+    // Avoid leaking BDD selection env vars into child commands.
+    cmd.env_remove("CUCUMBER_TAG_EXPRESSION");
+    cmd.env_remove("CUCUMBER_FILTER_TAGS");
 
     // Allow tests to simulate failure output without running the full command
     let simulate_fail = world.xtask_context().env.contains_key("XTASK_SIMULATE_SELFTEST_FAIL");

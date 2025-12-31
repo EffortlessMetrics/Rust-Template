@@ -3,11 +3,30 @@ use axum::body::Body;
 use cucumber::{given, then, when};
 use http::Request;
 use http_body_util::BodyExt;
+use std::fs;
 use tower::util::ServiceExt;
 
 // ============================================================================
 // Template Core Step Definitions - Keep these in your service
 // ============================================================================
+
+fn workspace_root(world: &World) -> std::path::PathBuf {
+    world.xtask_context().test_repo_path.clone().unwrap_or_else(|| world.spec_root().to_path_buf())
+}
+
+fn resolve_path(world: &World, path_str: &str) -> std::path::PathBuf {
+    let root = workspace_root(world);
+    if path_str.starts_with('/') || path_str.starts_with("./") || path_str.starts_with("../") {
+        root.join(path_str.trim_start_matches('/'))
+    } else {
+        root.join(path_str)
+    }
+}
+
+fn read_file_content(world: &World, path_str: &str) -> Result<String, std::io::Error> {
+    let path = resolve_path(world, path_str);
+    fs::read_to_string(path)
+}
 
 #[when(regex = r"^I GET (/health|/version|/metrics)$")]
 async fn when_get_endpoint(world: &mut World, path: String) {
@@ -300,5 +319,27 @@ async fn then_response_body_contains(world: &mut World, needle: String) {
         "Expected response body to contain {:?}, but it did not. Body: {}",
         needle,
         response.raw_body
+    );
+}
+
+#[then(regex = r#"^the response body should match the file "([^"]+)"$"#)]
+async fn then_response_body_should_match_file(world: &mut World, file_path: String) {
+    let response = world.last_response.as_ref().expect("no last response");
+    let expected = read_file_content(world, &file_path).unwrap_or_else(|e| {
+        panic!(
+            "Failed to read file '{}': {}\nResolved path: {}",
+            file_path,
+            e,
+            resolve_path(world, &file_path).display()
+        )
+    });
+
+    assert_eq!(
+        response.raw_body,
+        expected,
+        "Response body did not match file '{}' (expected {} bytes, got {} bytes)",
+        file_path,
+        expected.len(),
+        response.raw_body.len()
     );
 }

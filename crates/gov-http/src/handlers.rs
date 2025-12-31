@@ -5,11 +5,13 @@ use crate::state::PlatformState;
 use axum::{
     Json,
     extract::{Query, State},
+    http::header,
     response::IntoResponse,
 };
 use gov_model::TaskStatus;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::fs;
 
 /// Health check response.
 #[derive(Serialize)]
@@ -47,6 +49,21 @@ pub async fn get_status() -> impl IntoResponse {
 /// Returns the complete list of platform API schemas.
 pub async fn get_schema() -> Json<spec_runtime::PlatformSchemas> {
     Json(spec_runtime::get_all_schemas())
+}
+
+/// Get the OpenAPI spec (YAML).
+///
+/// Returns the OpenAPI document from specs/openapi/openapi.yaml.
+pub async fn get_openapi<S>(State(state): State<S>) -> Result<impl IntoResponse, PlatformError>
+where
+    S: PlatformState,
+{
+    let ctx = state.context();
+    let openapi_path = ctx.specs_dir().join("openapi/openapi.yaml");
+    let content = fs::read_to_string(&openapi_path)
+        .map_err(|e| PlatformError::spec_load("OpenAPI spec", e))?;
+
+    Ok(([(header::CONTENT_TYPE, "application/yaml")], content))
 }
 
 /// Get a specific schema by name.

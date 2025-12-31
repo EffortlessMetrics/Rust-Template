@@ -50,7 +50,8 @@ The following ACs constitute the **IDP contract** - the stable surfaces an IDP c
 | `AC-PLT-015` | `/platform/docs/index` | Documentation inventory with health status |
 | `AC-PLT-019` | `/platform/tasks` | Task management with status filtering |
 | `AC-PLT-024` | `/platform/agent/hints` | Prioritized work suggestions for agents |
-| `AC-TPL-PLATFORM-SCHEMA` | `/platform/schema` | OpenAPI spec for all platform endpoints |
+| `AC-TPL-PLATFORM-SCHEMA` | `/platform/schema` | Schema index for all platform endpoints |
+| `AC-TPL-PLATFORM-SCHEMA` | `/platform/openapi` | OpenAPI spec for all platform endpoints |
 
 ### IDP-Specific ACs
 
@@ -133,7 +134,8 @@ cargo xtask idp-snapshot --pretty
 | `GET /platform/docs/index` | Doc portal sync | Documentation inventory |
 | `GET /platform/tasks` | Kanban board | Task list with filters |
 | `GET /platform/agent/hints` | Agent orchestration | Prioritized work suggestions |
-| `GET /platform/schema` | Codegen, validation | OpenAPI specification |
+| `GET /platform/schema` | Schema discovery | JSON Schema index + endpoint list |
+| `GET /platform/openapi` | Codegen, validation | OpenAPI specification |
 
 ### 3. CLI Commands (JSON Mode)
 

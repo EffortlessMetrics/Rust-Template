@@ -1,12 +1,8 @@
 name: Coverage
 on:
-  pull_request:
-    paths:
-      - 'crates/**'
-      - 'tests/**'
-      - 'specs/**'
-      - 'features/**'
-      - '.github/workflows/ci-coverage.yml'
+  push:
+    tags: ["v*"]
+  workflow_dispatch: {}
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -28,11 +24,14 @@ jobs:
       - name: Pre-build xtask for acceptance tests
         run: nix develop -c cargo build -p xtask
 
-      - name: Run coverage (report only - selftest owns the policy)
+      - name: Run coverage (report only - release receipt)
         env: { RUSTC_WRAPPER: "", CARGO_INCREMENTAL: "0" }
         run: |
           nix develop -c cargo llvm-cov --workspace --all-features --lcov --output-path lcov.info
           nix develop -c cargo llvm-cov --workspace --all-features --json --output-path cov.json
+      - name: Run selftest with coverage report
+        run: |
+          nix develop -c bash -lc 'XTASK_COVERAGE_REPORT=cov.json cargo xtask selftest'
 
       - name: Show sccache stats
         if: always()

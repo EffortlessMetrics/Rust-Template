@@ -193,7 +193,7 @@ enum Commands {
         #[arg(long)]
         ac: Option<String>,
         /// Check mode: verify existing file matches computed state without writing.
-        /// Used by selftest and CI. Fails if docs/feature_status.md would differ.
+        /// Used by CI or manual verification. Fails if docs/feature_status.md would differ.
         /// Has no effect when combined with --summary or --json.
         #[arg(long)]
         check: bool,

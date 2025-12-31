@@ -20,6 +20,13 @@ Feature: Platform schema and metadata surfaces
     And the response body should contain "doc_index"
 
   @AC-TPL-PLATFORM-SCHEMA
+  Scenario: Platform exposes OpenAPI contract at /platform/openapi
+    When I send a GET request to "/platform/openapi"
+    Then the response status code should be 200
+    And the response includes "content-type" header with value "application/yaml"
+    And the response body should match the file "specs/openapi/openapi.yaml"
+
+  @AC-TPL-PLATFORM-SCHEMA
   Scenario: Platform exposes individual schemas by name
     When I send a GET request to "/platform/schema/tasks"
     Then the response status code should be 200

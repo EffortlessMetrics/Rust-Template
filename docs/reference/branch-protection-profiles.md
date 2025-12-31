@@ -24,7 +24,7 @@ This document defines three standard profiles for GitHub branch protection. Choo
 | Flags | 🟡 Advisory | ✅ Required | ✅ Required |
 | Privacy | 🟡 Advisory | ✅ Required | ✅ Required |
 | **Quality** |
-| Coverage | 🟡 Advisory | 🟡 Advisory | ✅ Required |
+| Coverage (tag-only) | 🟡 Advisory | 🟡 Advisory | 🟡 Advisory |
 | Security | 🟡 Advisory | ✅ Required | ✅ Required |
 | **Documentation** |
 | Docs Build | 🟡 Advisory | 🟡 Advisory | ✅ Required |
@@ -34,6 +34,8 @@ Legend:
 - ✅ Required: Must pass before merge
 - 🟡 Advisory: Runs but doesn't block
 - ❌ Disabled: Doesn't run
+
+Note: Coverage runs on release tags (and manual runs). Keep it out of PR-required checks.
 
 ---
 
@@ -56,7 +58,7 @@ Select these in GitHub → Settings → Branches → Branch Protection:
 These run but don't block merges:
 - All contract checks (OpenAPI, Proto, DB, Events)
 - All governance checks (ACs, Gherkin, Features, Flags, Privacy)
-- Coverage
+- Coverage (tag-only release receipt)
 - Security
 
 ### When to Use
@@ -98,7 +100,7 @@ Move to **Standard** when:
 
 ### Advisory Checks
 
-- `Coverage`
+- `Coverage` (tag-only release receipt)
 - `Docs`
 - `Scope Guard`
 
@@ -139,9 +141,12 @@ All checks are required:
 - `Flags`
 - `Privacy`
 - `Security`
-- `Coverage`
 - `Docs`
 - `Scope Guard`
+
+### Advisory Checks
+
+- `Coverage` (tag-only release receipt)
 
 ### When to Use
 

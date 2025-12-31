@@ -37,7 +37,7 @@ The platform endpoints, config surface, and devex flows already exist, but witho
 ## Decisions
 
 1) **Machine-readable schema**
-- `/platform/schema` (alias `/platform/openapi`) is emitted from the same spec-runtime graph used by xtask. It must list `/platform/status`, `/platform/graph`, `/platform/tasks`, and `/platform/agent/hints` with shapes matching the runtime handlers.
+- `/platform/schema` returns the schema index (JSON Schema + endpoint list) emitted from the same spec-runtime graph used by xtask. `/platform/openapi` serves the OpenAPI document for codegen and validation.
 - The schema includes template version and build SHA for change tracking and is bundled in the Docker image so dashboards/agents can fetch it without local specs.
 
 2) **Metadata coherence**
