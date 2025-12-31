@@ -3,7 +3,7 @@ info:
   title: Service API
   version: 1.0.0
   description: |
-    Template-based service API (Template v3.3.8).
+    Template-based service API (Template v3.3.14).
 
     **Template Core Endpoints** (Keep these):
     - /health - Health check (AC-TPL-001)
@@ -14,15 +14,16 @@ info:
     **Platform Introspection Endpoints** (Governance visibility):
     - /platform/status - Governance health, ledger counts, policy status
     - /platform/docs/index - Documentation inventory with validation
+    - /platform/openapi - OpenAPI spec (YAML)
     - /platform/ui/contract - Governed UI contract (screens, regions, data-uiid anchors)
     - /platform/friction - Development friction log (DevEx issues)
     - /platform/questions - Design questions and ambiguities
     - /platform/forks - Template forks/branches
     - /platform/agent/hints - Prioritized work suggestions for AI agents
 
-  x-template-version: "3.3.8"
+  x-template-version: "3.3.14"
   x-schema-version: "1.0"
-  x-last-updated: "2025-11-17"
+  x-last-updated: "2025-12-30"
   license:
     name: Apache-2.0
     url: https://www.apache.org/licenses/LICENSE-2.0
@@ -116,6 +117,59 @@ paths:
                   error:
                     type: string
                     example: "Failed to load governance data"
+
+  /platform/openapi:
+    get:
+      summary: OpenAPI specification (YAML)
+      description: |
+        Returns the OpenAPI document for platform endpoints as raw YAML.
+        This is suitable for code generation and contract validation.
+      operationId: getPlatformOpenApi
+      tags: [platform]
+      security: []
+      responses:
+        "200":
+          description: OpenAPI spec retrieved successfully
+          content:
+            application/yaml:
+              schema:
+                type: string
+        "500":
+          description: Internal server error (e.g., failed to load OpenAPI spec)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Failed to load OpenAPI spec"
+
+  /platform/openapi.yaml:
+    get:
+      summary: OpenAPI specification (YAML)
+      description: |
+        Alias of /platform/openapi for tooling that expects a .yaml suffix.
+      operationId: getPlatformOpenApiYaml
+      tags: [platform]
+      security: []
+      responses:
+        "200":
+          description: OpenAPI spec retrieved successfully
+          content:
+            application/yaml:
+              schema:
+                type: string
+        "500":
+          description: Internal server error (e.g., failed to load OpenAPI spec)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Failed to load OpenAPI spec"
 
   /platform/docs/index:
     get:
@@ -821,7 +875,7 @@ components:
         template_version:
           type: string
           description: "Template version"
-          example: "v3.3.8"
+          example: "v3.3.14"
         screens:
           type: array
           items:
@@ -1045,6 +1099,29 @@ components:
           items:
             type: string
           description: "Referential integrity warnings (optional)"
+        warnings_structured:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReferentialWarning'
+          description: "Structured referential integrity warnings (optional)"
+
+    ReferentialWarning:
+      type: object
+      description: "Referential integrity warning for invalid AC/REQ references"
+      required: [invalid_id, ref_type, source, message]
+      properties:
+        invalid_id:
+          type: string
+          description: "Invalid AC or REQ ID"
+        ref_type:
+          type: string
+          description: "Reference type ('ac' or 'requirement')"
+        source:
+          type: string
+          description: "Task ID containing the invalid reference"
+        message:
+          type: string
+          description: "Human-readable warning message"
 
     AgentHint:
       type: object
@@ -1074,6 +1151,9 @@ components:
             summary:
               type: string
               description: "Brief reason for the hint"
+            code:
+              type: string
+              description: "Machine-readable reason code (optional)"
             details:
               type: string
               description: "Detailed explanation (optional)"

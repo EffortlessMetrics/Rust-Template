@@ -34,11 +34,20 @@ enum TokenKind<'a> {
 impl PlatformAuthConfig {
     /// Create auth config from environment and validated config sources.
     ///
+    /// # Deprecated
+    ///
+    /// This method panics on invalid configuration. Use [`try_from_sources`] instead
+    /// for proper error handling.
+    ///
     /// # Panics
     ///
     /// Panics if PLATFORM_AUTH_MODE is set to an invalid value.
     /// Valid values: "basic", "jwt", "none", "open" (case-insensitive).
     /// This is fail-closed behavior to prevent silent fallback to unauthenticated mode.
+    #[deprecated(
+        since = "3.3.15",
+        note = "Use `try_from_sources()` instead for proper error handling"
+    )]
     pub fn from_sources(config: Option<&ValidatedConfig>) -> Self {
         match Self::try_from_sources(config) {
             Ok(cfg) => cfg,
@@ -555,5 +564,43 @@ mod tests {
 
         let cfg = PlatformAuthConfig::try_from_sources(None).expect("default mode should be valid");
         assert_eq!(cfg.mode, PlatformAuthMode::Open);
+    }
+
+    /// Verify that invalid auth mode configuration returns an error instead of panicking.
+    /// This test validates the fix for issue #56.
+    #[test]
+    fn invalid_auth_mode_returns_error_not_panic() {
+        // Test that parse_strict with invalid mode returns Err, doesn't panic
+        let result = PlatformAuthMode::parse_strict("invalid-mode");
+        assert!(result.is_err(), "Invalid auth mode should return Err, not panic");
+
+        let err = result.unwrap_err();
+        assert!(
+            err.contains("Invalid auth mode 'invalid-mode'"),
+            "Error message should mention the invalid mode: {}",
+            err
+        );
+        assert!(
+            err.contains("basic, jwt, none, open"),
+            "Error message should list valid options: {}",
+            err
+        );
+
+        // Test other invalid values
+        assert!(PlatformAuthMode::parse_strict("").is_err(), "Empty string should return Err");
+        assert!(
+            PlatformAuthMode::parse_strict("bearer").is_err(),
+            "'bearer' is not a valid mode, should return Err"
+        );
+        assert!(
+            PlatformAuthMode::parse_strict("token").is_err(),
+            "'token' is not a valid mode, should return Err"
+        );
+
+        // Verify valid modes still work
+        assert!(PlatformAuthMode::parse_strict("basic").is_ok(), "'basic' should be valid");
+        assert!(PlatformAuthMode::parse_strict("jwt").is_ok(), "'jwt' should be valid");
+        assert!(PlatformAuthMode::parse_strict("open").is_ok(), "'open' should be valid");
+        assert!(PlatformAuthMode::parse_strict("none").is_ok(), "'none' should be valid");
     }
 }

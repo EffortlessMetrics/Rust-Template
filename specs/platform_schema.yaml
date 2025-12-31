@@ -3,8 +3,8 @@
 # Used for IDP integrations (Backstage, Port.io, etc.)
 
 schema_version: "1.0.0" # doclint:disable orphan-version
-template_version: "3.3.8" # doclint:disable orphan-version
-last_updated: "2025-12-01"
+template_version: "3.3.14" # doclint:disable orphan-version
+last_updated: "2025-12-30"
 
 paths:
   /platform/idp/snapshot:
@@ -32,7 +32,7 @@ paths:
           type: string
           pattern: "^\\d+\\.\\d+\\.\\d+$"
           description: SemVer template version from spec_ledger.yaml
-          example: "3.3.8"
+          example: "3.3.14"
 
         service_id:
           type: string
@@ -176,24 +176,54 @@ paths:
     response:
       type: object
       required:
-        - template_version
+        - service
         - governance
         - errors
       properties:
-        template_version:
-          type: string
-        service_id:
-          type: string
-          nullable: true
+        service:
+          type: object
+          required:
+            - service_id
+            - template_version
+            - links
+            - tags
+          properties:
+            service_id:
+              type: string
+            template_version:
+              type: string
+            display_name:
+              type: string
+              nullable: true
+            description:
+              type: string
+              nullable: true
+            links:
+              type: object
+              additionalProperties:
+                type: string
+            tags:
+              type: array
+              items:
+                type: string
         governance:
           type: object
+          required:
+            - ledger
+            - devex
+            - docs
+            - tasks
+            - questions
+            - friction
+            - forks
+            - policies
           properties:
             policies:
               type: object
               properties:
                 status:
                   type: string
-                  enum: [passing, failing]
+                  enum: [pass, fail, unknown]
             ledger:
               type: object
               properties:
@@ -203,6 +233,132 @@ paths:
                   type: integer
                 acs:
                   type: integer
+            devex:
+              type: object
+              properties:
+                commands:
+                  type: integer
+                flows:
+                  type: integer
+            docs:
+              type: object
+              properties:
+                total:
+                  type: integer
+                design:
+                  type: integer
+                doc_type_issues:
+                  type: integer
+            tasks:
+              type: object
+              properties:
+                total:
+                  type: integer
+                by_status:
+                  type: object
+                  properties:
+                    todo:
+                      type: integer
+                    in_progress:
+                      type: integer
+                    review:
+                      type: integer
+                    done:
+                      type: integer
+            questions:
+              type: object
+              properties:
+                open:
+                  type: integer
+                answered:
+                  type: integer
+                resolved:
+                  type: integer
+                total:
+                  type: integer
+                top_open:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      summary:
+                        type: string
+                      flow:
+                        type: string
+            friction:
+              type: object
+              properties:
+                total:
+                  type: integer
+                open:
+                  type: integer
+                by_severity:
+                  type: object
+                  properties:
+                    low:
+                      type: integer
+                    medium:
+                      type: integer
+                    high:
+                      type: integer
+                    critical:
+                      type: integer
+                recent:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      date:
+                        type: string
+                      severity:
+                        type: string
+                      summary:
+                        type: string
+                      category:
+                        type: string
+            forks:
+              type: object
+              properties:
+                total:
+                  type: integer
+                ids:
+                  type: array
+                  items:
+                    type: string
+            ac_coverage:
+              type: object
+              properties:
+                total:
+                  type: integer
+                passing:
+                  type: integer
+                failing:
+                  type: integer
+                unknown:
+                  type: integer
+        config:
+          type: object
+          properties:
+            env:
+              type: string
+            http_port:
+              type: integer
+            settings:
+              type: object
+            secrets_redacted:
+              type: object
+            auth:
+              type: object
+              properties:
+                mode:
+                  type: string
+                  enum: [open, token, oidc]
+                token_present:
+                  type: boolean
         errors:
           description: Error tracking summary (AC-TPL-ERROR-MAPPING)
           type: object
@@ -251,6 +407,20 @@ paths:
                 server_errors:
                   type: integer
                   description: Number of 5xx server errors
+
+  /platform/openapi:
+    description: |
+      OpenAPI specification (YAML) for platform endpoints.
+    method: GET
+    response:
+      type: string
+
+  /platform/openapi.yaml:
+    description: |
+      Alias of /platform/openapi for tooling that expects a .yaml suffix.
+    method: GET
+    response:
+      type: string
 
   /platform/docs/index:
     description: |
@@ -306,6 +476,11 @@ paths:
           items:
             type: object
             properties:
+              id:
+                type: string
+              kind:
+                type: string
+                enum: [task, governance, policy, flow]
               task_id:
                 type: string
               title:
@@ -315,6 +490,22 @@ paths:
                 enum: [low, medium, high]
               status:
                 type: string
+                enum: [open, in_progress, done]
+              reason:
+                type: object
+                properties:
+                  summary:
+                    type: string
+                  code:
+                    type: string
+                  details:
+                    type: string
+              owner:
+                type: string
+              labels:
+                type: array
+                items:
+                  type: string
               requirement_ids:
                 type: array
                 items:
@@ -323,6 +514,33 @@ paths:
                 type: array
                 items:
                   type: string
+              recommended_sequence:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    kind:
+                      type: string
+                      enum: [command, doc, flow]
+                    value:
+                      type: string
+        warnings:
+          type: array
+          items:
+            type: string
+        warnings_structured:
+          type: array
+          items:
+            type: object
+            properties:
+              invalid_id:
+                type: string
+              ref_type:
+                type: string
+              source:
+                type: string
+              message:
+                type: string
 
 # Stability contract (from ADR-0016)
 stability:

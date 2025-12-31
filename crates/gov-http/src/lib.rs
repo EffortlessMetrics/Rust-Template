@@ -53,6 +53,8 @@ use axum::{Router, routing::get};
 /// These are the externally consumed surfaces that define the "governed service cell":
 /// - `/schema` - All platform schemas
 /// - `/schema/{name}` - Specific schema by name
+/// - `/openapi` - OpenAPI spec (YAML)
+/// - `/openapi.yaml` - OpenAPI spec alias (YAML)
 /// - `/docs/index` - Documentation inventory with health validation
 /// - `/ui/contract` - UI contract specification
 ///
@@ -97,6 +99,8 @@ where
         // Contract anchor endpoints
         .route("/schema", get(handlers::get_schema))
         .route("/schema/{name}", get(handlers::get_schema_by_name))
+        .route("/openapi", get(handlers::get_openapi::<S>))
+        .route("/openapi.yaml", get(handlers::get_openapi::<S>))
         .route("/docs/index", get(handlers::get_docs_index::<S>))
         .route("/ui/contract", get(handlers::get_ui_contract::<S>))
         // Governance introspection endpoints
@@ -133,6 +137,8 @@ where
         // Contract anchor endpoints
         .route("/schema", get(handlers::get_schema))
         .route("/schema/{name}", get(handlers::get_schema_by_name))
+        .route("/openapi", get(handlers::get_openapi::<S>))
+        .route("/openapi.yaml", get(handlers::get_openapi::<S>))
         .route("/docs/index", get(handlers::get_docs_index::<S>))
         .route("/ui/contract", get(handlers::get_ui_contract::<S>))
         // Governance introspection endpoints

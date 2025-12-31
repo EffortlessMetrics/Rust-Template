@@ -3,11 +3,9 @@ use cucumber::{gherkin::Step, given, then, when};
 
 #[given(regex = r#"^the config file "([^"]+)" contains:$"#)]
 async fn given_config_file(world: &mut World, rel_path: String, step: &Step) {
-    let content = step
-        .docstring
-        .as_ref()
-        .cloned()
-        .unwrap_or_else(|| panic!("Config content must be provided for {}", rel_path));
+    let content = step.docstring.as_ref().cloned();
+    assert!(content.is_some(), "Config content must be provided for {}", rel_path);
+    let content = content.unwrap();
 
     let root = world.spec_root();
     let target = root.join(rel_path);
@@ -39,9 +37,8 @@ async fn when_validate_config(world: &mut World) {
 
 #[then("the configuration validation should fail")]
 async fn then_validation_should_fail(world: &mut World) {
-    let Some(ok) = world.config_validation_ok else {
-        panic!("Configuration validation was not executed");
-    };
+    assert!(world.config_validation_ok.is_some(), "Configuration validation was not executed");
+    let ok = world.config_validation_ok.unwrap();
 
     assert!(
         !ok,
@@ -52,10 +49,9 @@ async fn then_validation_should_fail(world: &mut World) {
 
 #[then(regex = r#"^the validation error should contain "([^"]+)"$"#)]
 async fn then_validation_error_contains(world: &mut World, needle: String) {
-    let error = world
-        .config_validation_error
-        .as_ref()
-        .unwrap_or_else(|| panic!("Expected validation error message to be captured"));
+    let error = world.config_validation_error.as_ref();
+    assert!(error.is_some(), "Expected validation error message to be captured");
+    let error = error.unwrap();
 
     assert!(
         error.contains(&needle),

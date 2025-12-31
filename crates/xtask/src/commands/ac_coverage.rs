@@ -291,7 +291,8 @@ fn print_coverage_report(
 
 #[derive(Debug, Clone)]
 pub struct AcCoverageArgs {
-    #[allow(dead_code)]
+    /// Path to spec_ledger.yaml. Used for AC metadata lookup.
+    #[expect(dead_code, reason = "stored for potential future use; currently parsed via layout")]
     pub ledger: PathBuf,
     pub features_dir: PathBuf,
     /// Primary source: AC coverage JSONL (resilient to cucumber exit())

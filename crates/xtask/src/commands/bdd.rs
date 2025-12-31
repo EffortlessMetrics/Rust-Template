@@ -56,7 +56,8 @@ fn check_junit_for_success() -> bool {
 pub fn output_indicates_success(stdout: &str) -> bool {
     // Look for cucumber test result indicators
     let has_passes = stdout.contains("✔");
-    let has_failures = stdout.contains("✗") || stdout.contains("FAILED");
+    let has_failures =
+        stdout.contains("✗") || stdout.contains("FAILED") || stdout.contains("error: test failed");
     let has_scenarios = stdout.contains("Scenario:");
 
     // If we see passing tests with no failures, consider it a success
@@ -78,9 +79,10 @@ pub fn is_bdd_success(output: &Output) -> bool {
 
     let has_bdd_pass = stdout.contains("[BDD-PASS]") || stderr.contains("[BDD-PASS]");
     let junit_ok = check_junit_for_success();
+    let coverage_ok = check_coverage_for_success();
     let output_ok = output_indicates_success(&stdout);
 
-    output.status.success() || has_bdd_pass || junit_ok || output_ok
+    output.status.success() || has_bdd_pass || junit_ok || coverage_ok || output_ok
 }
 
 /// Options for running BDD acceptance tests
@@ -122,7 +124,13 @@ pub fn run_for_junit(junit_path: &std::path::Path) -> Result<()> {
 /// trusting the raw `cargo test` exit code, which can intermittently return
 /// 101 due to async cleanup issues even when all tests pass.
 pub fn run_with_options(options: BddOptions) -> Result<()> {
-    let mut cmd = crate::cargo_cmd("test", &["-p", "acceptance", "--test", "acceptance"]);
+    clear_coverage_files();
+
+    // --fail-fast avoids a flaky early-exit path in cucumber that can skip summaries/coverage.
+    let mut cmd = crate::cargo_cmd(
+        "test",
+        &["-p", "acceptance", "--test", "acceptance", "--", "--fail-fast"],
+    );
 
     let in_ci = crate::env::is_ci();
 
@@ -193,6 +201,36 @@ fn finalize_coverage_file() {
             );
         }
     }
+}
+
+fn clear_coverage_files() {
+    let coverage_path = Path::new("target/ac/coverage.jsonl");
+    let temp_path = Path::new("target/ac/coverage.jsonl.tmp");
+
+    let _ = std::fs::remove_file(coverage_path);
+    let _ = std::fs::remove_file(temp_path);
+}
+
+fn check_coverage_for_success() -> bool {
+    let coverage_path = Path::new("target/ac/coverage.jsonl");
+    let content = match std::fs::read_to_string(coverage_path) {
+        Ok(content) => content,
+        Err(_) => return false,
+    };
+
+    let mut has_records = false;
+    for line in content.lines() {
+        let trimmed = line.trim();
+        if trimmed.is_empty() {
+            continue;
+        }
+        has_records = true;
+        if trimmed.contains("\"status\":\"failed\"") {
+            return false;
+        }
+    }
+
+    has_records
 }
 
 #[cfg(test)]

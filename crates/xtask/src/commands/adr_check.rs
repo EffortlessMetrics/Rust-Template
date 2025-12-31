@@ -56,11 +56,12 @@ struct Story {
 #[derive(Debug, Deserialize)]
 struct Requirement {
     id: String,
-    /// Tags for categorizing requirements (e.g., @tier1, @security).
-    /// Future: Used for filtering ADR checks by tag.
-    /// See TASK-DX-ADR-FILTERING for planned tag-based ADR validation.
+    /// Tags for categorizing requirements (e.g., @tier1, @security). Deserialized for schema completeness.
     #[serde(default)]
-    #[allow(dead_code)]
+    #[expect(
+        dead_code,
+        reason = "deserialized for schema completeness; future tag-based filtering"
+    )]
     tags: Vec<String>,
     #[serde(default, deserialize_with = "deserialize_string_or_vec")]
     adr: Option<Vec<String>>,

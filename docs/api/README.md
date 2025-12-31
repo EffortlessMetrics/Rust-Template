@@ -21,7 +21,8 @@ API documentation is generated from specifications, not maintained as separate p
 | Source              | Location                              | Description                          |
 | ------------------- | ------------------------------------- | ------------------------------------ |
 | **OpenAPI Spec**    | `specs/openapi/openapi.yaml`          | Machine-readable API contract        |
-| **Runtime Schema**  | `/platform/schema`                    | Live OpenAPI spec from service       |
+| **Runtime Schema**  | `/platform/schema`                    | JSON Schema index and endpoint list  |
+| **Runtime OpenAPI** | `/platform/openapi`                   | OpenAPI spec from the running service |
 | **Platform Ref**    | `docs/reference/platform_api_contract.md` | Human-readable reference         |
 
 ## Quick Access
@@ -30,7 +31,8 @@ Start the service and query endpoints:
 
 ```bash
 cargo run -p app-http &
-curl http://localhost:8080/platform/schema   # OpenAPI spec
+curl http://localhost:8080/platform/openapi  # OpenAPI spec
+curl http://localhost:8080/platform/schema   # Schema index
 curl http://localhost:8080/platform/status   # Governance health
 ```
 
@@ -41,7 +43,8 @@ curl http://localhost:8080/platform/status   # Governance health
 | `/platform/status`    | Governance health and AC coverage     |
 | `/platform/graph`     | REQ/AC/test/doc relationships         |
 | `/platform/docs/index`| Documentation inventory               |
-| `/platform/schema`    | OpenAPI specification                 |
+| `/platform/schema`    | Schema index (JSON Schema + endpoints) |
+| `/platform/openapi`   | OpenAPI specification                 |
 | `/platform/tasks`     | Task list with filters                |
 | `/platform/agent/hints` | Prioritized task suggestions        |
 | `/platform/friction`  | Friction log entries                  |

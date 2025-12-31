@@ -135,13 +135,39 @@ curl http://localhost:8080/platform/graph
 
 ### GET /platform/schema
 
-**Description:** Returns machine-readable OpenAPI/JSON schema for all platform data structures.
+**Description:** Returns the schema index (JSON Schema + endpoint list) for platform data structures.
 
 **Response Format:** JSON object with schema definitions.
 
 **Example:**
 ```bash
 curl http://localhost:8080/platform/schema
+```
+
+---
+
+### GET /platform/openapi
+
+**Description:** Returns the OpenAPI specification (YAML) for platform endpoints.
+
+**Response Format:** Raw OpenAPI YAML.
+
+**Example:**
+```bash
+curl http://localhost:8080/platform/openapi
+```
+
+---
+
+### GET /platform/openapi.yaml
+
+**Description:** Alias of `/platform/openapi` for tooling that expects a `.yaml` suffix.
+
+**Response Format:** Raw OpenAPI YAML.
+
+**Example:**
+```bash
+curl http://localhost:8080/platform/openapi.yaml
 ```
 
 ---
@@ -919,6 +945,8 @@ secrets:
 | GET | `/platform/graph` | Full governance graph | Yes* |
 | GET | `/platform/schema` | All platform schemas | Yes* |
 | GET | `/platform/schema/{name}` | Specific schema by name | Yes* |
+| GET | `/platform/openapi` | OpenAPI spec (YAML) | Yes* |
+| GET | `/platform/openapi.yaml` | OpenAPI spec (YAML) alias | Yes* |
 | GET | `/platform/devex/flows` | DevEx flows & commands | Yes* |
 | GET | `/platform/docs/index` | Documentation inventory | Yes* |
 | GET | `/platform/coverage` | AC coverage summary | Yes* |

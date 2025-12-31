@@ -7,7 +7,7 @@ settings:
   telemetry.otlp_endpoint: "http://localhost:4317"
   platform.auth_mode: "open"
   platform.redact_secrets: true
-  database.auto_migrate: true
+  database.auto_migrate: false
   
   # CORS configuration (optional - defaults to secure values)
   cors.enabled: true

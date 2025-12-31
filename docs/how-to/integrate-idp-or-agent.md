@@ -40,7 +40,7 @@ All responses are JSON. No database required—same data CI validates.
 **What you integrate against:**
 
 1. **`/platform/*` HTTP endpoints** – All platform APIs live under this path. The endpoints listed above are the kernel contract; their response schemas are stable.
-2. **OpenAPI spec** – Machine-readable contract at `/platform/schema` and in `specs/openapi/openapi.yaml`. Use this for codegen.
+2. **OpenAPI spec** – Machine-readable contract at `/platform/openapi` and in `specs/openapi/openapi.yaml`. Use this for codegen.
 3. **CLI JSON mode** – All xtask commands support `--json` for scripting (`cargo xtask status --json`, etc.).
 
 **Reference implementation:**
@@ -589,7 +589,7 @@ for hint in sorted(hints["hints"], key=lambda h: h["priority"]):
 
 ### "What endpoints exist?"
 
-→ Call `/platform/schema` for OpenAPI spec, or see `docs/reference/platform-support.md`.
+→ Call `/platform/openapi` for OpenAPI spec, or see `docs/reference/platform-support.md`.
 
 ---
 

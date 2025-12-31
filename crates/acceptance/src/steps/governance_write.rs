@@ -14,8 +14,9 @@ async fn task_exists(_world: &mut World, task_id: String) {
 #[when(expr = "the system updates its status to {string}")]
 async fn update_task_status(world: &mut World, status_str: String) {
     let task_id = TaskId("TASK-TPL-GOV-WRITE-001".to_string());
-    let status: TaskStatus =
-        status_str.parse().unwrap_or_else(|e| panic!("Unknown status '{}': {}", status_str, e));
+    let status: Result<TaskStatus, _> = status_str.parse();
+    assert!(status.is_ok(), "Unknown status '{}': {}", status_str, status.as_ref().unwrap_err());
+    let status = status.unwrap();
 
     // We need to access the repository from the app state or directly from the world if exposed.
     // Since World holds the app router, we can't easily grab the repo from it without exposing it.

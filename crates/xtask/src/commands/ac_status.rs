@@ -1,20 +1,16 @@
 use ac_kernel::{Ac, AcJson, AcSource, AcStatus, build_status_json};
 use anyhow::{Context, Result};
 use colored::Colorize;
-use quick_xml::Reader;
-use quick_xml::events::Event;
 use regex::Regex;
 use spec_runtime::ledger::TestMapping;
 use std::collections::{HashMap, HashSet};
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
-use walkdir::WalkDir;
 
 use super::ac_parsing::{
-    AC_PATTERN_WITH_AT, SCENARIO_PATTERN, Scenario, TAG_PATTERN, TESTCASE_SCENARIO_PATTERN,
-    TESTCASE_SUFFIX_PATTERN, parse_ac_coverage, parse_cucumber_json_with_scenarios,
-    parse_features_with_metadata, parse_junit_with_scenarios,
+    Scenario, parse_ac_coverage, parse_cucumber_json_with_scenarios, parse_features_with_metadata,
+    parse_junit_with_scenarios,
 };
 use crate::kernel::layout_for_repo;
 
@@ -609,7 +605,24 @@ fn update_ac_statuses(
     }
 }
 
-#[allow(dead_code)]
+// Imports for test-only functions
+#[cfg(test)]
+use super::ac_parsing::{
+    AC_PATTERN_WITH_AT, SCENARIO_PATTERN, TAG_PATTERN, TESTCASE_SCENARIO_PATTERN,
+    TESTCASE_SUFFIX_PATTERN,
+};
+#[cfg(test)]
+use quick_xml::Reader;
+#[cfg(test)]
+use quick_xml::events::Event;
+#[cfg(test)]
+use walkdir::WalkDir;
+
+/// Parse feature files and extract scenarios with their AC tags.
+///
+/// Returns full Scenario structs (including file path). Used by tests.
+/// For production code, use `ac_parsing::parse_features` which returns simpler mapping.
+#[cfg(test)]
 fn parse_features(features_dir: &Path) -> Result<HashMap<String, Scenario>> {
     let mut scenarios = HashMap::new();
 
@@ -684,10 +697,10 @@ fn parse_features(features_dir: &Path) -> Result<HashMap<String, Scenario>> {
 }
 
 /// Normalize JUnit testcase names for scenario matching.
-/// Future: Used if we switch back to JUnit-based AC status (currently using Cucumber JSON).
-/// Kept as infrastructure for fallback parsing path.
-/// Remove #[allow] once parsing strategy is finalized.
-#[allow(dead_code)]
+///
+/// Used by the JUnit fallback parsing path. The primary parser uses Cucumber JSON.
+#[cfg(test)]
+#[allow(dead_code)] // Fallback implementation kept for reference; primary path uses ac_parsing
 fn normalize_testcase_name(name: &str) -> String {
     // Extract scenario name from JUnit testcase name
     // Format: "Scenario: <name>: <file>:<line>:<col>"
@@ -702,10 +715,11 @@ fn normalize_testcase_name(name: &str) -> String {
 }
 
 /// Parse JUnit XML and extract AC test results using scenario metadata.
-/// Future: Fallback parser for systems without Cucumber JSON support.
-/// Currently superseded by parse_junit_with_scenarios() from ac_parsing module.
-/// Remove #[allow] once deprecated in favor of unified parsing path.
-#[allow(dead_code)]
+///
+/// Fallback parser for systems without Cucumber JSON support.
+/// The primary path uses `ac_parsing::parse_junit_with_scenarios()`.
+#[cfg(test)]
+#[allow(dead_code)] // Fallback implementation kept for reference; primary path uses ac_parsing
 fn parse_junit(
     junit_path: &Path,
     scenarios: &HashMap<String, Scenario>,
@@ -979,15 +993,6 @@ fn generate_status_md_content(
     output.push_str("    \n");
     output.push_str("  To update this file, modify specs or BDD scenarios, then run:\n");
     output.push_str("    cargo xtask ac-status\n");
-    output.push('\n');
-    output.push_str(
-        "  Note: The \"executed\" count (and sometimes PASS/UNKNOWN classification) in\n",
-    );
-    output.push_str("  the Tests column is volatile (depends on which tests ran locally). Only\n");
-    output.push_str("  \"total\" (spec-derived) is stable.\n");
-    output.push_str(
-        "  See issue #35 for discussion of removing volatile fields from committed output.\n",
-    );
     output.push_str("-->\n\n");
     output.push_str("# Feature Status\n\n");
     output.push_str("Auto-generated AC status from acceptance (BDD) and unit tests.\n\n");
@@ -1007,8 +1012,8 @@ fn generate_status_md_content(
     output.push_str(
         "> [`crates/ac-kernel/README.md`](../crates/ac-kernel/README.md#ac-governance-semantics).\n\n",
     );
-    output.push_str("| AC ID | Story | Requirement | Status | Tests (executed/total) |\n");
-    output.push_str("|-------|-------|-------------|--------|------------------------|\n");
+    output.push_str("| AC ID | Story | Requirement | Status | Tests |\n");
+    output.push_str("|-------|-------|-------------|--------|-------|\n");
 
     // Sort ACs for deterministic output
     let mut sorted_acs: Vec<_> = acs.values().collect();
@@ -1016,20 +1021,21 @@ fn generate_status_md_content(
 
     for ac in sorted_acs {
         output.push_str(&format!(
-            "| {} | {} | {} | {} {} | {} / {} |\n",
+            "| {} | {} | {} | {} {} | {} |\n",
             ac.id,
             ac.story_id,
             ac.req_id,
             ac.status.icon(),
             ac.status.name(),
-            ac.tests_executed,
             ac.tests_total
         ));
     }
 
     // Unmapped ACs: Split into service-level and meta ACs
+    // An AC is "unmapped" if it has no tests defined (tests_total == 0)
+    // or has Unknown status (no test evidence was captured)
     let unmapped: Vec<_> =
-        acs.values().filter(|ac| ac.tests_total == 0 || ac.tests_executed == 0).collect();
+        acs.values().filter(|ac| ac.tests_total == 0 || ac.status == AcStatus::Unknown).collect();
 
     let service_unmapped: Vec<_> = unmapped.iter().filter(|ac| !is_meta_ac(ac)).copied().collect();
     let meta_unmapped: Vec<_> = unmapped.iter().filter(|ac| is_meta_ac(ac)).copied().collect();

@@ -108,9 +108,9 @@ impl VersionInfo {
     }
 
     /// Create VersionInfo with a specific date.
-    /// Future: Used when implementing retroactive version updates for historical releases.
-    /// Currently only used in tests. See TASK-DX-VERSION-HISTORY for version history features.
-    #[allow(dead_code)]
+    ///
+    /// Useful for testing and retroactive version updates.
+    #[allow(dead_code)] // Infrastructure for retroactive version updates
     pub fn with_date(version_str: &str, date: &str) -> Result<Self> {
         let version = Version::parse(version_str)?;
         Ok(Self {
@@ -138,10 +138,11 @@ pub struct FilePattern {
     /// Human-readable marker to locate the line
     pub marker: String,
     /// Pattern type: yaml_value, heading_version, inline_version, etc.
-    /// Future: Used when implementing pattern-based version replacement strategies.
-    /// See AC-KERN-VERSION-UPDATE for version update automation requirements.
     #[serde(rename = "type")]
-    #[allow(dead_code)]
+    #[expect(
+        dead_code,
+        reason = "deserialized for schema completeness; future pattern strategies"
+    )]
     pub pattern_type: String,
     /// Format style: quoted, prefixed, prefixed_paren, etc.
     pub format: String,
@@ -151,10 +152,9 @@ pub struct FilePattern {
     /// Example of the expected format
     #[serde(default)]
     pub example: Option<String>,
-    /// Additional notes about the pattern.
-    /// Future: Displayed in version manifest validation errors for better UX.
+    /// Additional notes about the pattern. Deserialized for schema completeness.
     #[serde(default)]
-    #[allow(dead_code)]
+    #[expect(dead_code, reason = "deserialized for schema completeness; future UX improvements")]
     pub notes: Option<String>,
 }
 
@@ -164,26 +164,22 @@ pub struct FilePattern {
 pub struct VersionTarget {
     /// Path to the file
     pub path: String,
-    /// Description of the file's purpose.
-    /// Future: Displayed in version update UI and validation reports.
+    /// Description of the file's purpose. Deserialized for schema completeness.
     #[serde(default)]
-    #[allow(dead_code)]
+    #[expect(dead_code, reason = "deserialized for schema completeness; future UI improvements")]
     pub description: Option<String>,
     /// Patterns to match and update
     pub patterns: Vec<FilePattern>,
     /// Whether this file is required to exist
     #[serde(default = "default_true")]
     pub required: bool,
-    /// Update priority (1=highest).
-    /// Future: Used when implementing ordered version updates across files.
-    /// See TASK-DX-VERSION-ORDERING for version update sequencing.
+    /// Update priority (1=highest). Deserialized for schema completeness.
     #[serde(default = "default_priority")]
-    #[allow(dead_code)]
+    #[expect(dead_code, reason = "deserialized for schema completeness; future ordered updates")]
     pub priority: u32,
-    /// Additional notes about this file.
-    /// Future: Displayed in version update reports and validation errors.
+    /// Additional notes about this file. Deserialized for schema completeness.
     #[serde(default)]
-    #[allow(dead_code)]
+    #[expect(dead_code, reason = "deserialized for schema completeness; future UX improvements")]
     pub notes: Option<String>,
 }
 
@@ -196,18 +192,21 @@ fn default_priority() -> u32 {
 }
 
 /// Version format specification.
-/// Future: Used when implementing custom version formats and validation.
-/// See TASK-DX-VERSION-FORMATS for planned version format features.
+/// Deserialized for schema completeness and future custom format support.
 #[derive(Debug, Clone, Deserialize)]
 pub struct VersionFormat {
     /// Regex pattern for valid version strings.
-    /// Future: Used in version validation and custom format support.
-    #[allow(dead_code)]
+    #[expect(
+        dead_code,
+        reason = "deserialized for schema completeness; future custom format support"
+    )]
     pub pattern: String,
     /// Example version strings matching this format.
-    /// Future: Displayed in version validation error messages.
     #[serde(default)]
-    #[allow(dead_code)]
+    #[expect(
+        dead_code,
+        reason = "deserialized for schema completeness; future validation messages"
+    )]
     pub examples: Vec<String>,
 }
 
@@ -216,19 +215,21 @@ pub struct VersionFormat {
 #[derive(Debug, Clone, Deserialize)]
 pub struct VersionManifest {
     /// Schema version for version manifest format.
-    /// Future: Used for version manifest migration and compatibility checks.
-    #[allow(dead_code)]
+    #[allow(dead_code)] // Deserialized for schema completeness
     pub schema_version: String,
-    /// Human-readable description of the version manifest.
-    /// Future: Displayed in version manifest validation reports.
+    /// Human-readable description of the version manifest. Deserialized for schema completeness.
     #[serde(default)]
-    #[allow(dead_code)]
+    #[expect(
+        dead_code,
+        reason = "deserialized for schema completeness; future validation reports"
+    )]
     pub description: Option<String>,
-    /// Custom version format specification.
-    /// Future: Enables custom version formats beyond semantic versioning.
-    /// See TASK-DX-VERSION-FORMATS for custom format support.
+    /// Custom version format specification. Deserialized for schema completeness.
     #[serde(default)]
-    #[allow(dead_code)]
+    #[expect(
+        dead_code,
+        reason = "deserialized for schema completeness; future custom format support"
+    )]
     pub version_format: Option<VersionFormat>,
     pub files: Vec<VersionTarget>,
 }

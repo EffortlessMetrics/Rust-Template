@@ -8,16 +8,16 @@ pub struct Ledger {
     pub stories: Vec<Story>,
 }
 
+/// Story from the spec ledger. Used in policy validation.
 #[derive(Debug, Deserialize, Serialize, Clone)]
-#[allow(dead_code)]
 pub struct Story {
     pub id: String,
     pub title: String,
     pub requirements: Vec<Requirement>,
 }
 
+/// Requirement from the spec ledger. Used in policy validation.
 #[derive(Debug, Deserialize, Serialize, Clone)]
-#[allow(dead_code)]
 pub struct Requirement {
     pub id: String,
     pub title: String,
@@ -28,8 +28,8 @@ pub struct Requirement {
     pub acceptance_criteria: Vec<AcceptanceCriterion>,
 }
 
+/// Acceptance criterion from the spec ledger. Used in policy validation.
 #[derive(Debug, Deserialize, Serialize, Clone)]
-#[allow(dead_code)]
 pub struct AcceptanceCriterion {
     pub id: String,
     pub text: String,

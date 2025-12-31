@@ -41,6 +41,16 @@ pub fn run(ac_id: &str) -> Result<()> {
         println!("  - {} ({})", scenario.name, scenario.file);
     }
 
+    if crate::env::should_skip_bdd() {
+        let reason = if crate::env::is_low_resources() {
+            "XTASK_LOW_RESOURCES=1"
+        } else {
+            "XTASK_SKIP_BDD=1"
+        };
+        println!("\n[WARN] Skipping acceptance tests ({reason}).");
+        return Ok(());
+    }
+
     // Run BDD tests filtered by AC tag
     println!("\n[INFO] Running acceptance tests for @{}...", ac_id);
 

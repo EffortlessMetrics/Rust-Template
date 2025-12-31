@@ -39,9 +39,9 @@ impl SelftestResults {
 }
 
 /// Run full template self-test suite with default verbosity.
-/// Future: Used as library entry point for programmatic selftest invocation.
+///
+/// This is the library entry point for programmatic selftest invocation.
 /// See AC-KERN-SELFTEST for selftest infrastructure requirements.
-#[allow(dead_code)]
 pub fn run() -> Result<()> {
     run_with_verbosity(crate::Verbosity::Normal)
 }
@@ -164,6 +164,10 @@ pub fn run_with_verbosity(verbosity: crate::Verbosity) -> Result<()> {
             "  {} Skipping BDD tests because XTASK_SKIP_BDD=1 (avoid recursion in harness)",
             "⚠".yellow()
         );
+        println!(
+            "  {} WARNING: XTASK_SKIP_BDD=1 is for harnesses; unset it for full selftest coverage.",
+            "⚠".yellow()
+        );
         true
     } else {
         let step_start = Instant::now();
@@ -215,8 +219,7 @@ pub fn run_with_verbosity(verbosity: crate::Verbosity) -> Result<()> {
         }
         Err(e) => {
             eprintln!("  {} AC status failed: {}", "✗".red(), e);
-            // Don't fail the suite if AC status has issues - it's informational
-            println!("  {} Continuing (AC status is informational)", "⚠".yellow());
+            mapping_ok = false;
         }
     }
 
@@ -233,9 +236,13 @@ pub fn run_with_verbosity(verbosity: crate::Verbosity) -> Result<()> {
 
     let elapsed = step_start.elapsed();
     if verbosity.is_verbose() {
-        println!("  {} Step 3 completed ({:.2}s)", "✓".green(), elapsed.as_secs_f64());
+        println!("  {} Step 5 completed ({:.2}s)", "✓".green(), elapsed.as_secs_f64());
     }
-    results.push("AC/ADR mapping", mapping_ok, Some("Run `cargo run -p xtask -- adr-check`"));
+    results.push(
+        "AC/ADR mapping",
+        mapping_ok,
+        Some("Run `cargo xtask ac-status` and `cargo xtask adr-check`"),
+    );
     println!();
 
     // Step 6: LLM context bundler
@@ -472,8 +479,8 @@ pub fn run_with_verbosity(verbosity: crate::Verbosity) -> Result<()> {
     let test_coverage_ok = if low_resource_mode {
         println!("  {} Test coverage skipped (low-resource mode)", "⚠".yellow());
         true
-    } else {
-        match crate::commands::coverage::run() {
+    } else if let Some(report_path) = coverage_report_path() {
+        match crate::commands::coverage::run_report_only(&report_path) {
             Ok(_) => {
                 let elapsed = step_start.elapsed();
                 if verbosity.is_verbose() {
@@ -489,17 +496,24 @@ pub fn run_with_verbosity(verbosity: crate::Verbosity) -> Result<()> {
             }
             Err(e) => {
                 // Soft gate: warn but don't fail selftest
-                println!("  {} Test coverage below baseline (advisory)", "⚠".yellow());
+                println!("  {} Test coverage check failed (advisory)", "⚠".yellow());
                 if verbosity.is_verbose() {
                     eprintln!("{}", e);
                 }
                 println!(
-                    "  💡 Hint: Run {} for detailed coverage report",
+                    "  💡 Hint: Set XTASK_COVERAGE_REPORT=<path> or run {}",
                     "cargo xtask coverage".cyan()
                 );
                 true // Don't fail selftest on coverage
             }
         }
+    } else {
+        println!("  {} Test coverage skipped (no report provided)", "⚠".yellow());
+        println!(
+            "  💡 Hint: Set XTASK_COVERAGE_REPORT=<path> or run {}",
+            "cargo xtask coverage".cyan()
+        );
+        true
     };
     results.push("Test coverage", test_coverage_ok, Some("Run `cargo xtask coverage` for details"));
     println!();
@@ -533,14 +547,12 @@ pub fn run_with_verbosity(verbosity: crate::Verbosity) -> Result<()> {
 }
 
 fn run_ac_status(verbosity: crate::Verbosity) -> Result<()> {
-    // Use check mode to verify AC status file is up-to-date without regenerating.
-    // This prevents selftest from modifying the repo - the pre-commit hook handles
-    // regeneration and staging of docs/feature_status.md.
+    // Generate docs/feature_status.md from fresh coverage, then ensure it's committed.
     //
-    // We also require coverage to exist (require_coverage: true) because:
+    // We require coverage to exist (require_coverage: true) because:
     // - Step 4 (BDD) should have generated fresh coverage
     // - Without coverage, the computed status would have many [UNKNOWN] entries
-    // - This prevents spurious check failures from stale/missing coverage data
+    // - This prevents churn from stale/missing coverage data
     let layout = crate::kernel::layout_for_repo();
 
     // If BDD was skipped (XTASK_SKIP_BDD=1), we can't validate AC status meaningfully
@@ -567,12 +579,38 @@ fn run_ac_status(verbosity: crate::Verbosity) -> Result<()> {
         );
     }
 
-    crate::commands::ac_status::run(crate::commands::ac_status::AcStatusArgs {
+    let prev_no_regen = env::var("XTASK_NO_REGEN").ok();
+    // SAFETY: This flag prevents ac-status from re-running BDD during selftest.
+    unsafe {
+        env::set_var("XTASK_NO_REGEN", "1");
+    }
+
+    let before_status = std::fs::read_to_string("docs/feature_status.md").unwrap_or_default();
+
+    let result = crate::commands::ac_status::run(crate::commands::ac_status::AcStatusArgs {
         verbosity,
-        check: true,            // Check mode: verify without writing
+        check: false,           // Write mode: generate docs/feature_status.md
         require_coverage: true, // Fail if coverage is missing (guard against churn)
         ..Default::default()
-    })
+    });
+
+    // SAFETY: Restore previous XTASK_NO_REGEN value after the ac-status run.
+    unsafe {
+        if let Some(prev) = prev_no_regen {
+            env::set_var("XTASK_NO_REGEN", prev);
+        } else {
+            env::remove_var("XTASK_NO_REGEN");
+        }
+    }
+
+    result?;
+
+    let after_status = std::fs::read_to_string("docs/feature_status.md").unwrap_or_default();
+    if before_status != after_status {
+        anyhow::bail!("docs/feature_status.md changed; run `cargo xtask ac-status` and commit");
+    }
+
+    Ok(())
 }
 
 fn run_adr_check(verbosity: crate::Verbosity) -> Result<()> {
@@ -580,6 +618,11 @@ fn run_adr_check(verbosity: crate::Verbosity) -> Result<()> {
         verbosity,
         ..Default::default()
     })
+}
+
+fn coverage_report_path() -> Option<PathBuf> {
+    let path = env::var("XTASK_COVERAGE_REPORT").ok()?.trim().to_string();
+    if path.is_empty() { None } else { Some(PathBuf::from(path)) }
 }
 
 /// Run the spec ledger linter to validate structure and invariants.
@@ -704,8 +747,10 @@ fn run_ac_coverage_check(verbosity: crate::Verbosity) -> Result<()> {
     #[derive(Debug, Deserialize)]
     struct Story {
         /// Story ID from spec_ledger.yaml.
-        /// Currently only used for deserialization; ID not needed in selftest validation.
-        #[allow(dead_code)]
+        #[expect(
+            dead_code,
+            reason = "deserialized for schema completeness; validation uses requirements"
+        )]
         id: String,
         requirements: Vec<Requirement>,
     }
@@ -726,9 +771,11 @@ fn run_ac_coverage_check(verbosity: crate::Verbosity) -> Result<()> {
     struct AcceptanceCriteria {
         id: String,
         /// AC description text.
-        /// Currently not used in selftest validation; only ID and must_have_ac flag matter.
         #[serde(default)]
-        #[allow(dead_code)]
+        #[expect(
+            dead_code,
+            reason = "deserialized for schema completeness; validation uses id and must_have_ac"
+        )]
         text: String,
         #[serde(default = "default_must_have_ac")]
         must_have_ac: bool,

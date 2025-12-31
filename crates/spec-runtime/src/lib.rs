@@ -1,3 +1,4 @@
+#![recursion_limit = "256"]
 //! Spec runtime library for the Rust-as-Spec platform.
 //!
 //! This library provides runtime support for loading, validating, and operating on

@@ -229,10 +229,11 @@ struct CucumberReport(Vec<CucumberFeature>);
 
 #[derive(Debug, Deserialize)]
 struct CucumberFeature {
-    /// Feature name from BDD .feature file.
-    /// Future: Used in enhanced coverage reports to group scenarios by feature.
-    /// See TASK-DX-BDD-REPORTING for planned BDD report improvements.
-    #[allow(dead_code)]
+    /// Feature name from BDD .feature file. Deserialized for schema completeness.
+    #[expect(
+        dead_code,
+        reason = "deserialized for schema completeness; future enhanced reporting"
+    )]
     name: String,
     uri: String,
     elements: Vec<CucumberElement>,
@@ -244,10 +245,8 @@ struct CucumberElement {
     #[serde(rename = "type")]
     element_type: String,
     tags: Vec<CucumberTag>,
-    /// Line number in .feature file where scenario starts.
-    /// Future: Used for generating clickable links in IDE integration.
-    /// See TASK-DX-IDE-INTEGRATION for planned editor jump-to-definition features.
-    #[allow(dead_code)]
+    /// Line number in .feature file. Deserialized for schema completeness.
+    #[expect(dead_code, reason = "deserialized for schema completeness; future IDE integration")]
     line: Option<u32>,
     steps: Vec<CucumberStep>,
 }
@@ -255,26 +254,22 @@ struct CucumberElement {
 #[derive(Debug, Deserialize)]
 struct CucumberTag {
     name: String,
-    /// Line number where tag appears in .feature file.
-    /// Future: Used for IDE integration and precise source mapping.
+    /// Line number where tag appears. Deserialized for schema completeness.
     #[serde(default)]
-    #[allow(dead_code)]
+    #[expect(dead_code, reason = "deserialized for schema completeness; future IDE integration")]
     line: Option<u32>,
 }
 
 #[derive(Debug, Deserialize)]
 struct CucumberStep {
-    /// Step keyword (Given/When/Then/And/But).
-    /// Future: Used in detailed BDD failure reports showing which step failed.
-    #[allow(dead_code)]
+    /// Step keyword (Given/When/Then/And/But). Deserialized for schema completeness.
+    #[expect(dead_code, reason = "deserialized for schema completeness; future failure reports")]
     keyword: String,
-    /// Step description text.
-    /// Future: Used in BDD failure output to show exact failing step.
-    #[allow(dead_code)]
+    /// Step description text. Deserialized for schema completeness.
+    #[expect(dead_code, reason = "deserialized for schema completeness; future failure reports")]
     name: String,
-    /// Line number of step in .feature file.
-    /// Future: Used for IDE integration to jump to failing step.
-    #[allow(dead_code)]
+    /// Line number of step in .feature file. Deserialized for schema completeness.
+    #[expect(dead_code, reason = "deserialized for schema completeness; future IDE integration")]
     line: Option<u32>,
     result: CucumberStepResult,
 }
@@ -282,16 +277,13 @@ struct CucumberStep {
 #[derive(Debug, Deserialize)]
 struct CucumberStepResult {
     status: String,
-    /// Step execution duration in nanoseconds.
-    /// Future: Used in performance regression detection for slow BDD scenarios.
-    /// See TASK-DX-PERF-TRACKING for planned test performance monitoring.
+    /// Step execution duration in nanoseconds. Deserialized for schema completeness.
     #[serde(default)]
-    #[allow(dead_code)]
+    #[expect(dead_code, reason = "deserialized for schema completeness; future perf tracking")]
     duration: Option<u64>, // nanoseconds
-    /// Error message if step failed.
-    /// Future: Used in detailed failure reports with root cause analysis.
+    /// Error message if step failed. Deserialized for schema completeness.
     #[serde(default)]
-    #[allow(dead_code)]
+    #[expect(dead_code, reason = "deserialized for schema completeness; future failure analysis")]
     error_message: Option<String>,
 }
 

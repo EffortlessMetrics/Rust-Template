@@ -29,22 +29,22 @@ use crate::contracts::ContractsSnapshot;
 /// Contracts manifest loaded from specs/contracts_manifest.yaml
 #[derive(Debug, Deserialize)]
 struct ContractsManifest {
-    #[allow(dead_code)]
+    #[expect(dead_code, reason = "deserialized for schema completeness")]
     schema_version: String,
-    #[allow(dead_code)]
+    #[expect(dead_code, reason = "deserialized for schema completeness")]
     description: Option<String>,
     contracts: HashMap<String, ContractDef>,
     #[serde(default)]
-    #[allow(dead_code)]
+    #[expect(dead_code, reason = "deserialized for schema completeness; future validation")]
     validation: ValidationSettings,
 }
 
 /// Definition of a single governed contract (e.g., selftest_step_count)
 #[derive(Debug, Deserialize)]
 struct ContractDef {
-    #[allow(dead_code)]
+    #[expect(dead_code, reason = "deserialized for schema completeness")]
     source: String,
-    #[allow(dead_code)]
+    #[expect(dead_code, reason = "deserialized for schema completeness")]
     description: Option<String>,
     patterns: Vec<PatternDef>,
 }
@@ -67,10 +67,10 @@ fn default_true() -> bool {
 #[derive(Debug, Default, Deserialize)]
 struct ValidationSettings {
     #[serde(default)]
-    #[allow(dead_code)]
+    #[expect(dead_code, reason = "deserialized for schema completeness; future strict mode")]
     strict_patterns: bool,
     #[serde(default)]
-    #[allow(dead_code)]
+    #[expect(dead_code, reason = "deserialized for schema completeness; future orphan detection")]
     detect_orphans: bool,
 }
 
