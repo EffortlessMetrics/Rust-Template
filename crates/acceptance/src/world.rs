@@ -195,7 +195,8 @@ impl Default for World {
             std::sync::Arc::new(adapters_spec_fs::FsGovernanceRepository::new(specs_dir));
 
         Self {
-            app: app_http::app_with_workspace_root(governance_repo, temp_dir.path().to_path_buf()), // Real HTTP router from app-http crate
+            app: app_http::app_with_workspace_root(governance_repo, temp_dir.path().to_path_buf())
+                .expect("valid auth config in acceptance tests"), // Real HTTP router from app-http crate
             last_response: None,
             request_headers: HeaderMap::new(),
             _temp_dir: temp_dir,
@@ -280,7 +281,8 @@ impl World {
         let governance_repo =
             std::sync::Arc::new(adapters_spec_fs::FsGovernanceRepository::new(specs_dir));
         self.app =
-            app_http::app_with_workspace_root(governance_repo, self._temp_dir.path().to_path_buf());
+            app_http::app_with_workspace_root(governance_repo, self._temp_dir.path().to_path_buf())
+                .expect("valid auth config in reload_app");
     }
 
     /// Set platform auth configuration for this scenario.

@@ -370,10 +370,8 @@ fn to_api_reason(reason: &HintReason) -> AgentHintReason {
 }
 
 fn summarize_reason(reason: &HintReason) -> String {
-    if !reason.details.is_empty()
-        && let Some(first_sentence) = reason.details.split('.').next()
-    {
-        let trimmed = first_sentence.trim();
+    for sentence in reason.details.split('.') {
+        let trimmed = sentence.trim();
         if !trimmed.is_empty() {
             return trimmed.to_string();
         }
@@ -439,4 +437,26 @@ fn build_recommended_sequence(
     }
 
     sequence
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn summarize_reason_uses_first_non_empty_sentence() {
+        let code = "FALLBACK";
+        let cases = [
+            ("  Leading sentence.", "Leading sentence"),
+            ("First sentence. Second sentence.", "First sentence"),
+            ("No terminator here", "No terminator here"),
+            (". Second sentence.", "Second sentence"),
+            ("   .   ", code),
+        ];
+
+        for (details, expected) in cases {
+            let reason = HintReason { code: code.to_string(), details: details.to_string() };
+            assert_eq!(summarize_reason(&reason), expected);
+        }
+    }
 }

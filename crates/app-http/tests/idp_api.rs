@@ -22,7 +22,7 @@ fn test_workspace_root() -> std::path::PathBuf {
 async fn test_idp_snapshot_returns_200() {
     let workspace_root = test_workspace_root();
     let repo = Arc::new(FsGovernanceRepository::new(workspace_root.clone()));
-    let app = app_with_workspace_root(repo, workspace_root);
+    let app = app_with_workspace_root(repo, workspace_root).expect("valid config");
 
     let response = app
         .oneshot(Request::builder().uri("/platform/idp/snapshot").body(Body::empty()).unwrap())
@@ -36,7 +36,7 @@ async fn test_idp_snapshot_returns_200() {
 async fn test_idp_snapshot_has_required_fields() {
     let workspace_root = test_workspace_root();
     let repo = Arc::new(FsGovernanceRepository::new(workspace_root.clone()));
-    let app = app_with_workspace_root(repo, workspace_root);
+    let app = app_with_workspace_root(repo, workspace_root).expect("valid config");
 
     let response = app
         .oneshot(Request::builder().uri("/platform/idp/snapshot").body(Body::empty()).unwrap())
@@ -60,7 +60,7 @@ async fn test_idp_snapshot_has_required_fields() {
 async fn test_idp_snapshot_governance_health_structure() {
     let workspace_root = test_workspace_root();
     let repo = Arc::new(FsGovernanceRepository::new(workspace_root.clone()));
-    let app = app_with_workspace_root(repo, workspace_root);
+    let app = app_with_workspace_root(repo, workspace_root).expect("valid config");
 
     let response = app
         .oneshot(Request::builder().uri("/platform/idp/snapshot").body(Body::empty()).unwrap())
@@ -102,7 +102,7 @@ async fn test_idp_snapshot_governance_health_structure() {
 async fn test_idp_snapshot_documentation_structure() {
     let workspace_root = test_workspace_root();
     let repo = Arc::new(FsGovernanceRepository::new(workspace_root.clone()));
-    let app = app_with_workspace_root(repo, workspace_root);
+    let app = app_with_workspace_root(repo, workspace_root).expect("valid config");
 
     let response = app
         .oneshot(Request::builder().uri("/platform/idp/snapshot").body(Body::empty()).unwrap())
@@ -124,7 +124,7 @@ async fn test_idp_snapshot_documentation_structure() {
 async fn test_idp_snapshot_task_hints_structure() {
     let workspace_root = test_workspace_root();
     let repo = Arc::new(FsGovernanceRepository::new(workspace_root.clone()));
-    let app = app_with_workspace_root(repo, workspace_root);
+    let app = app_with_workspace_root(repo, workspace_root).expect("valid config");
 
     let response = app
         .oneshot(Request::builder().uri("/platform/idp/snapshot").body(Body::empty()).unwrap())
@@ -163,7 +163,7 @@ async fn test_idp_snapshot_task_hints_structure() {
 async fn test_idp_snapshot_timestamp_format() {
     let workspace_root = test_workspace_root();
     let repo = Arc::new(FsGovernanceRepository::new(workspace_root.clone()));
-    let app = app_with_workspace_root(repo, workspace_root);
+    let app = app_with_workspace_root(repo, workspace_root).expect("valid config");
 
     let response = app
         .oneshot(Request::builder().uri("/platform/idp/snapshot").body(Body::empty()).unwrap())
@@ -187,7 +187,7 @@ async fn test_idp_snapshot_timestamp_format() {
 async fn test_idp_snapshot_template_version() {
     let workspace_root = test_workspace_root();
     let repo = Arc::new(FsGovernanceRepository::new(workspace_root.clone()));
-    let app = app_with_workspace_root(repo, workspace_root);
+    let app = app_with_workspace_root(repo, workspace_root).expect("valid config");
 
     let response = app
         .oneshot(Request::builder().uri("/platform/idp/snapshot").body(Body::empty()).unwrap())

@@ -22,7 +22,7 @@ fn test_workspace_root() -> std::path::PathBuf {
 async fn test_get_all_forks() {
     let workspace_root = test_workspace_root();
     let repo = Arc::new(FsGovernanceRepository::new(workspace_root.clone()));
-    let app = app_with_workspace_root(repo, workspace_root.clone());
+    let app = app_with_workspace_root(repo, workspace_root.clone()).expect("valid config");
 
     let response = app
         .oneshot(Request::builder().uri("/platform/forks").body(Body::empty()).unwrap())
@@ -57,7 +57,7 @@ async fn test_get_all_forks() {
 async fn test_get_fork_by_id_not_found() {
     let workspace_root = test_workspace_root();
     let repo = Arc::new(FsGovernanceRepository::new(workspace_root.clone()));
-    let app = app_with_workspace_root(repo, workspace_root.clone());
+    let app = app_with_workspace_root(repo, workspace_root.clone()).expect("valid config");
 
     let response = app
         .oneshot(
@@ -87,7 +87,7 @@ async fn test_get_fork_by_id_not_found() {
 async fn test_forks_response_is_valid_json() {
     let workspace_root = test_workspace_root();
     let repo = Arc::new(FsGovernanceRepository::new(workspace_root.clone()));
-    let app = app_with_workspace_root(repo, workspace_root.clone());
+    let app = app_with_workspace_root(repo, workspace_root.clone()).expect("valid config");
 
     let response = app
         .oneshot(Request::builder().uri("/platform/forks").body(Body::empty()).unwrap())
@@ -106,7 +106,7 @@ async fn test_forks_response_is_valid_json() {
 async fn test_forks_sorted_by_id() {
     let workspace_root = test_workspace_root();
     let repo = Arc::new(FsGovernanceRepository::new(workspace_root.clone()));
-    let app = app_with_workspace_root(repo, workspace_root.clone());
+    let app = app_with_workspace_root(repo, workspace_root.clone()).expect("valid config");
 
     let response = app
         .oneshot(Request::builder().uri("/platform/forks").body(Body::empty()).unwrap())

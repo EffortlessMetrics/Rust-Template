@@ -22,7 +22,7 @@ fn test_workspace_root() -> std::path::PathBuf {
 async fn test_get_ui_contract() {
     let workspace_root = test_workspace_root();
     let repo = Arc::new(FsGovernanceRepository::new(workspace_root.clone()));
-    let app = app_with_workspace_root(repo, workspace_root.clone());
+    let app = app_with_workspace_root(repo, workspace_root.clone()).expect("valid config");
 
     let response = app
         .oneshot(Request::builder().uri("/platform/ui/contract").body(Body::empty()).unwrap())
@@ -71,7 +71,7 @@ async fn test_get_ui_contract() {
 async fn test_ui_contract_region_ids_are_unique() {
     let workspace_root = test_workspace_root();
     let repo = Arc::new(FsGovernanceRepository::new(workspace_root.clone()));
-    let app = app_with_workspace_root(repo, workspace_root.clone());
+    let app = app_with_workspace_root(repo, workspace_root.clone()).expect("valid config");
 
     let response = app
         .oneshot(Request::builder().uri("/platform/ui/contract").body(Body::empty()).unwrap())
@@ -117,7 +117,7 @@ async fn test_ui_contract_region_ids_are_unique() {
 async fn test_ui_contract_all_screens_defined() {
     let workspace_root = test_workspace_root();
     let repo = Arc::new(FsGovernanceRepository::new(workspace_root.clone()));
-    let app = app_with_workspace_root(repo, workspace_root.clone());
+    let app = app_with_workspace_root(repo, workspace_root.clone()).expect("valid config");
 
     let response = app
         .oneshot(Request::builder().uri("/platform/ui/contract").body(Body::empty()).unwrap())

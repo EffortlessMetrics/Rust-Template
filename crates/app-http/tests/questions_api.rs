@@ -22,7 +22,7 @@ fn test_workspace_root() -> std::path::PathBuf {
 async fn test_get_all_questions() {
     let workspace_root = test_workspace_root();
     let repo = Arc::new(FsGovernanceRepository::new(workspace_root.clone()));
-    let app = app_with_workspace_root(repo, workspace_root.clone());
+    let app = app_with_workspace_root(repo, workspace_root.clone()).expect("valid config");
 
     let response = app
         .oneshot(Request::builder().uri("/platform/questions").body(Body::empty()).unwrap())
@@ -61,7 +61,7 @@ async fn test_get_all_questions() {
 async fn test_get_questions_filtered_by_status() {
     let workspace_root = test_workspace_root();
     let repo = Arc::new(FsGovernanceRepository::new(workspace_root.clone()));
-    let app = app_with_workspace_root(repo, workspace_root.clone());
+    let app = app_with_workspace_root(repo, workspace_root.clone()).expect("valid config");
 
     let response = app
         .oneshot(
@@ -87,7 +87,7 @@ async fn test_get_questions_filtered_by_status() {
 async fn test_get_question_by_id_success() {
     let workspace_root = test_workspace_root();
     let repo = Arc::new(FsGovernanceRepository::new(workspace_root.clone()));
-    let app = app_with_workspace_root(repo, workspace_root.clone());
+    let app = app_with_workspace_root(repo, workspace_root.clone()).expect("valid config");
 
     let response = app
         .oneshot(
@@ -117,7 +117,7 @@ async fn test_get_question_by_id_success() {
 async fn test_get_question_by_id_not_found() {
     let workspace_root = test_workspace_root();
     let repo = Arc::new(FsGovernanceRepository::new(workspace_root.clone()));
-    let app = app_with_workspace_root(repo, workspace_root.clone());
+    let app = app_with_workspace_root(repo, workspace_root.clone()).expect("valid config");
 
     let response = app
         .oneshot(
@@ -147,7 +147,7 @@ async fn test_get_question_by_id_not_found() {
 async fn test_questions_sorted_by_created_at() {
     let workspace_root = test_workspace_root();
     let repo = Arc::new(FsGovernanceRepository::new(workspace_root.clone()));
-    let app = app_with_workspace_root(repo, workspace_root.clone());
+    let app = app_with_workspace_root(repo, workspace_root.clone()).expect("valid config");
 
     let response = app
         .oneshot(Request::builder().uri("/platform/questions").body(Body::empty()).unwrap())

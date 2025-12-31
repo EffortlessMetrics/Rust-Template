@@ -19,3 +19,14 @@ labels:
   pairs:
     app.kubernetes.io/environment: dev
     app.kubernetes.io/managed-by: kustomize
+
+# Secret generator - reads from secret.env (not committed to git)
+# Copy secret.env.example to secret.env and fill in real values
+secretGenerator:
+- name: app-secrets
+  envs:
+  - secret.env
+  options:
+    labels:
+      app: app-http
+      environment: dev
