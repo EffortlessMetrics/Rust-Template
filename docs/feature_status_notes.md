@@ -1,7 +1,7 @@
 <!-- doclint:disable orphan-version -->
 # Feature Status Notes
 
-**Last Updated:** 2025-12-31
+**Last Updated:** 2026-01-06
 **Template Version:** v3.3.14
 **Purpose:** Document AC coverage state, @ci-only testing pattern, and meta/CI-only contracts.
 
@@ -9,13 +9,15 @@
 
 ## Executive Summary
 
-As of v3.3.14 (December 2025 update):
+As of v3.3.14 (January 2026 update):
 - **Total ACs:** 134
 - **Kernel ACs (must_have_ac: true):** 73 (all passing)
-- **Template ACs (must_have_ac: false):** 42
-- **Meta/CI-only ACs:** 19 (CI tests, harness, or example tags)
+- **Optional ACs (must_have_ac: false):** 61 total (43 passing, 18 unknown)
 
-**Status:** The template is at "LLM-native Rust cell 1.0" state. All kernel ACs pass. The 17 remaining UNKNOWN ACs are intentionally soft contracts (`must_have_ac: false`) covering governance documentation, guidance policies, and meta/CI-only contracts that aren't exercised in local selftest.
+**Status:** The template is at "LLM-native Rust cell 1.0" state. All kernel ACs pass. The 18 remaining UNKNOWN ACs are intentionally soft contracts (`must_have_ac: false`) covering governance documentation, guidance policies, and meta/CI-only contracts that aren't exercised in local selftest.
+
+**Recent Additions:**
+- **AC-GOV-025** (`/platform/issues` endpoint): New kernel AC providing unified issue management across friction entries, questions, and tasks with pagination, filtering, and stable schema contracts.
 
 ---
 
@@ -47,9 +49,9 @@ All 73 kernel ACs (`must_have_ac: true`) are passing:
 
 All template behaviour ACs are passing where implemented.
 
-### Template/Meta ACs: 17 UNKNOWN (Intentionally Soft)
+### Optional ACs: 18 UNKNOWN (Intentionally Soft)
 
-17 ACs remain UNKNOWN in `feature_status.md`. This is **intentional** – they're governed via documentation, lint warnings, CI workflows, or manual review rather than hard test gates.
+18 ACs remain UNKNOWN in `feature_status.md`. This is **intentional** – they're governed via documentation, lint warnings, CI workflows, or manual review rather than hard test gates.
 
 #### Skills Governance (7 ACs)
 
@@ -63,7 +65,7 @@ All template behaviour ACs are passing where implemented.
 | AC-TPL-SKILLS-FLOW-MAPPING | Guidance | skills-lint warns on anti-patterns. Not a hard gate. |
 | AC-TPL-SKILLS-LIFECYCLE-DOCS | Doc exists | Lifecycle documented in SKILLS_GOVERNANCE.md. |
 
-#### Agents Governance (6 ACs)
+#### Agents Governance (5 ACs)
 
 | AC ID | Type | Why UNKNOWN |
 |-------|------|-------------|
@@ -73,15 +75,16 @@ All template behaviour ACs are passing where implemented.
 | AC-TPL-AGENTS-SKILLS-REFERENCES | Validation | agents-lint errors on missing skills. Enforced but not BDD-tested. |
 | AC-TPL-AGENTS-LIFECYCLE-DOCS | Doc exists | Lifecycle documented in AGENTS_GOVERNANCE.md. |
 
-#### Platform/Template Infrastructure (5 ACs)
+#### Platform/Template Infrastructure (6 ACs)
 
 | AC ID | Type | Why UNKNOWN |
 |-------|------|-------------|
 | AC-PLT-AC-DEMOTION-GOVERNED | Policy | AC demotion is a governance policy, not a test gate. See §6. |
-| AC-TPL-BDD-EXIT-CODES | Harness | Tests the test harness itself. CI validates `[BDD-PASS]` output. |
-| AC-TPL-BUNDLE-MINIMAL-SCOPE | Guidance | Bundle scope is reviewed manually, not automatically gated. |
 | AC-TPL-EXAMPLE-FORK-BUILDS | Example | CI job validates example fork. Not tested locally. |
-| AC-TPL-XTASK-SPEC-ROOT | Testing infra | SPEC_ROOT behavior is implicitly tested. Unit test exists but not mapped. |
+| AC-TPL-GRAPH-INVARIANTS | Meta | Graph invariants are enforced by sub-ACs; this is a composite. |
+| AC-TPL-PLATFORM-DOCS-CONTRACT | Contract | Schema contract validated by OpenAPI, not direct BDD. |
+| AC-TPL-PLATFORM-STATUS-CONTRACT | Contract | Schema contract validated by OpenAPI, not direct BDD. |
+| AC-TPL-TS-CONFIG-VALIDATION | CI-only | TypeScript config validation runs in CI scripts. |
 
 These are correctly showing as UNKNOWN because:
 - They're documentation, guidance, or governance policies (not testable as BDD)
@@ -348,6 +351,11 @@ For the step-by-step workflow, see `docs/how-to/change-acceptance-criterion.md`.
 
 ## Changelog
 
+- **2026-01-06:** /platform/issues endpoint and BDD contract tests
+  - Added AC-GOV-025 (kernel AC) for unified `/platform/issues` endpoint
+  - 20 BDD scenarios covering schema stability, ordering, filtering, pagination, and error cases
+  - Integration test coverage for pagination edge cases
+  - Total ACs: 134 (73 kernel, 61 optional with 43 passing)
 - **2025-12-01:** Slice B – Harness & SPEC_ROOT ACs
   - Mapped unit tests for AC-TPL-BDD-EXIT-CODES (`is_bdd_success` tests in bdd.rs)
   - Mapped unit test for AC-TPL-XTASK-SPEC-ROOT (`spec_root_resolved` in tasks.rs)
