@@ -939,6 +939,28 @@ stories:
                   module: "xtask::commands::questions::tests::artifacts_have_refs",
                   file: "crates/xtask/src/commands/questions.rs" }
 
+      - id: REQ-PLT-ISSUES-ENDPOINT
+        title: "Unified issues endpoint consolidates governance artifacts"
+        tags: [platform, governance, api]
+        must_have_ac: true
+        description: >
+          The /platform/issues endpoint provides a unified view of all governance
+          artifacts (friction entries, questions, tasks) with stable schema,
+          deterministic ordering, filtering, and pagination.
+        acceptance_criteria:
+          - id: AC-GOV-025
+            text: >
+              GET /platform/issues returns a paginated list of issues from all sources
+              (friction, questions) with stable schema, deterministic ordering (priority,
+              date, id), filtering (kind, status, text search), cursor-based pagination,
+              and summary counts. Error cases (mixed pagination params, invalid cursor,
+              oversized cursor, unknown cursor version) return 400 with descriptive messages.
+            tags: [kernel, governance, api]
+            must_have_ac: true
+            tests:
+              - { type: bdd, tag: "@AC-GOV-025", file: "specs/features/platform_issues.feature" }
+              - { type: integration, tag: "test_issues_endpoint_pagination", file: "crates/app-http/tests/issues_api.rs" }
+
       - id: REQ-TPL-FORK-VISIBILITY
         title: "Forks are visible in governance"
         tags: [governance, idp]

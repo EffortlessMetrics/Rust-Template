@@ -35,6 +35,7 @@ Auto-generated AC status from acceptance (BDD) and unit tests.
 
 | AC ID | Story | Requirement | Status | Tests |
 |-------|-------|-------------|--------|-------|
+| AC-GOV-025 | US-TPL-PLT-001 | REQ-PLT-ISSUES-ENDPOINT | [PASS] pass | 2 |
 | AC-MYSERV-001 | US-MYSERV-001 | REQ-MYSERV-LIST-TODOS | [PASS] pass | 1 |
 | AC-MYSERV-002 | US-MYSERV-001 | REQ-MYSERV-LIST-TODOS | [PASS] pass | 1 |
 | AC-MYSERV-003 | US-MYSERV-001 | REQ-MYSERV-ERROR-HANDLING | [PASS] pass | 1 |
@@ -198,26 +199,3 @@ validated in CI, not by local selftest:
 - AC-TPL-SKILLS-GOVERNANCE-003 – docs/SKILLS_TEMPLATE.md exists and provides a copy-paste template for creating new Skills with checklist for name format, description quality (what + when), allowed-tools safety, and references.
 - AC-TPL-SKILLS-LIFECYCLE-DOCS – docs/SKILLS_GOVERNANCE.md documents the full lifecycle: how to create a Skill (REQ + AC → Task → implement), maintain (keep devex_flows.yaml in sync), and retire (mark REQ deprecated, archive SKILL.md).
 - AC-TPL-TS-CONFIG-VALIDATION – All tsconfig.json files avoid deprecated moduleResolution values (node, node10) and ignoreDeprecations flags; violations are caught by scripts/validate-ts-config.sh and the ts-config-lints CI job.
-
-## Unmapped Scenarios
-
-Scenarios referencing non-existent ACs:
-
-- Scenario 'Cursor exceeding 4KB is rejected' references AC-GOV-025 (in /home/steven/code/Rust/Rust-Template/specs/features/platform_issues.feature)
-- Scenario 'Cursor pagination exhausts all items' references AC-GOV-025 (in /home/steven/code/Rust/Rust-Template/specs/features/platform_issues.feature)
-- Scenario 'Cursor pagination returns stable pages' references AC-GOV-025 (in /home/steven/code/Rust/Rust-Template/specs/features/platform_issues.feature)
-- Scenario 'Filter by kind returns only that kind' references AC-GOV-025 (in /home/steven/code/Rust/Rust-Template/specs/features/platform_issues.feature)
-- Scenario 'Filter by status returns only that status' references AC-GOV-025 (in /home/steven/code/Rust/Rust-Template/specs/features/platform_issues.feature)
-- Scenario 'Invalid cursor encoding is rejected' references AC-GOV-025 (in /home/steven/code/Rust/Rust-Template/specs/features/platform_issues.feature)
-- Scenario 'Mixed pagination params are rejected' references AC-GOV-025 (in /home/steven/code/Rust/Rust-Template/specs/features/platform_issues.feature)
-- Scenario 'Offset pagination includes next_cursor for migration' references AC-GOV-025 (in /home/steven/code/Rust/Rust-Template/specs/features/platform_issues.feature)
-- Scenario 'Offset pagination works with page and per_page' references AC-GOV-025 (in /home/steven/code/Rust/Rust-Template/specs/features/platform_issues.feature)
-- Scenario 'Ordering is deterministic - ID as tiebreaker' references AC-GOV-025 (in /home/steven/code/Rust/Rust-Template/specs/features/platform_issues.feature)
-- Scenario 'Ordering is deterministic - date second, newest first' references AC-GOV-025 (in /home/steven/code/Rust/Rust-Template/specs/features/platform_issues.feature)
-- Scenario 'Ordering is deterministic - priority first' references AC-GOV-025 (in /home/steven/code/Rust/Rust-Template/specs/features/platform_issues.feature)
-- Scenario 'Response schema is stable' references AC-GOV-025 (in /home/steven/code/Rust/Rust-Template/specs/features/platform_issues.feature)
-- Scenario 'Status is normalized across all issue types' references AC-GOV-025 (in /home/steven/code/Rust/Rust-Template/specs/features/platform_issues.feature)
-- Scenario 'Summary counts by status are accurate' references AC-GOV-025 (in /home/steven/code/Rust/Rust-Template/specs/features/platform_issues.feature)
-- Scenario 'Summary reflects filtered items before pagination' references AC-GOV-025 (in /home/steven/code/Rust/Rust-Template/specs/features/platform_issues.feature)
-- Scenario 'Text search matches id, summary, and category' references AC-GOV-025 (in /home/steven/code/Rust/Rust-Template/specs/features/platform_issues.feature)
-- Scenario 'Unknown cursor version is rejected' references AC-GOV-025 (in /home/steven/code/Rust/Rust-Template/specs/features/platform_issues.feature)

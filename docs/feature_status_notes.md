@@ -10,8 +10,8 @@
 ## Executive Summary
 
 As of v3.3.14 (December 2025 update):
-- **Total ACs:** 133
-- **Kernel ACs (must_have_ac: true):** 72 (all passing)
+- **Total ACs:** 134
+- **Kernel ACs (must_have_ac: true):** 73 (all passing)
 - **Template ACs (must_have_ac: false):** 42
 - **Meta/CI-only ACs:** 19 (CI tests, harness, or example tags)
 
@@ -37,7 +37,7 @@ These counts are computed from `specs/spec_ledger.yaml` by `ContractsSnapshot` i
 
 ### Kernel ACs: All Passing
 
-All 72 kernel ACs (`must_have_ac: true`) are passing:
+All 73 kernel ACs (`must_have_ac: true`) are passing:
 - DevEx commands (doctor, check, selftest, ci-local)
 - Platform APIs (/status, /graph, /docs, governance endpoints)
 - UI, graph invariants, config validation, auth

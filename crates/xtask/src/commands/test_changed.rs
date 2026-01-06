@@ -8,9 +8,28 @@
 
 use anyhow::{Context, Result};
 use colored::Colorize;
-use std::{collections::HashSet, env, fs, path::PathBuf, process::Command};
+use std::{collections::HashSet, env, fs, path::Path, path::PathBuf, process::Command};
 
 use super::ac_parsing::{AC_PATTERN_WITH_AT, parse_features_with_metadata};
+
+/// Get the repository root from CARGO_MANIFEST_DIR.
+///
+/// This is immune to CWD changes from other tests or code paths.
+fn repo_root() -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .expect("xtask crate should be in crates/")
+        .parent()
+        .expect("crates/ should be in repo root")
+        .to_path_buf()
+}
+
+/// Create a git command with explicit working directory.
+fn git_cmd(repo_root: &Path) -> Command {
+    let mut cmd = Command::new("git");
+    cmd.current_dir(repo_root);
+    cmd
+}
 
 /// Arguments for test-changed command
 #[derive(Debug, Clone)]
@@ -116,11 +135,19 @@ impl TestPlan {
 
 /// Get list of changed files from git
 pub fn get_changed_files(base: &str) -> Result<(String, Vec<String>)> {
-    let base_ref = resolve_base_ref(base);
+    get_changed_files_in_repo(base, &repo_root())
+}
+
+/// Get list of changed files from git in a specific repository.
+///
+/// This variant takes an explicit repo path, making it safe for use in
+/// parallel tests and when CWD may not be the repo root.
+pub fn get_changed_files_in_repo(base: &str, repo_path: &Path) -> Result<(String, Vec<String>)> {
+    let base_ref = resolve_base_ref_in_repo(base, repo_path);
     let mut files = HashSet::new();
 
     // 1) Changes between base and HEAD (committed diff)
-    let history_diff = Command::new("git")
+    let history_diff = git_cmd(repo_path)
         .args(["diff", "--name-only", &format!("{}...HEAD", base_ref)])
         .output()?;
     if !history_diff.status.success() {
@@ -129,21 +156,21 @@ pub fn get_changed_files(base: &str) -> Result<(String, Vec<String>)> {
     }
 
     // 2) Staged changes vs HEAD
-    let staged_diff = Command::new("git").args(["diff", "--name-only", "--cached"]).output()?;
+    let staged_diff = git_cmd(repo_path).args(["diff", "--name-only", "--cached"]).output()?;
     if !staged_diff.status.success() {
         let stderr = String::from_utf8_lossy(&staged_diff.stderr);
         anyhow::bail!("git diff (staged) failed: {}", stderr.trim());
     }
 
     // 3) Unstaged working tree changes vs HEAD
-    let worktree_diff = Command::new("git").args(["diff", "--name-only"]).output()?;
+    let worktree_diff = git_cmd(repo_path).args(["diff", "--name-only"]).output()?;
     if !worktree_diff.status.success() {
         let stderr = String::from_utf8_lossy(&worktree_diff.stderr);
         anyhow::bail!("git diff (worktree) failed: {}", stderr.trim());
     }
 
     // 4) Newly created, untracked files
-    let untracked = Command::new("git")
+    let untracked = git_cmd(repo_path)
         .args(["ls-files", "--others", "--exclude-standard"])
         .output()
         .context("Failed to list untracked files")?;
@@ -166,7 +193,7 @@ pub fn get_changed_files(base: &str) -> Result<(String, Vec<String>)> {
     Ok((base_ref, files))
 }
 
-fn resolve_base_ref(base: &str) -> String {
+fn resolve_base_ref_in_repo(base: &str, repo_path: &Path) -> String {
     let mut candidates = Vec::new();
     if !base.is_empty() {
         candidates.push(base.to_string());
@@ -179,7 +206,7 @@ fn resolve_base_ref(base: &str) -> String {
     }
 
     for candidate in candidates {
-        if let Ok(output) = Command::new("git").args(["rev-parse", "--verify", &candidate]).output()
+        if let Ok(output) = git_cmd(repo_path).args(["rev-parse", "--verify", &candidate]).output()
             && output.status.success()
         {
             return candidate;
@@ -648,24 +675,8 @@ pub fn run(args: TestChangedArgs) -> Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::{env, fs, path::Path};
+    use std::fs;
     use tempfile::TempDir;
-
-    struct CwdGuard(std::path::PathBuf);
-
-    impl CwdGuard {
-        fn new(path: &Path) -> Self {
-            let prev = env::current_dir().expect("current_dir");
-            env::set_current_dir(path).expect("set_current_dir");
-            Self(prev)
-        }
-    }
-
-    impl Drop for CwdGuard {
-        fn drop(&mut self) {
-            let _ = env::set_current_dir(&self.0);
-        }
-    }
 
     fn git(repo: &Path, args: &[&str]) {
         let status =
@@ -692,8 +703,9 @@ mod tests {
         // Add untracked file
         fs::write(repo.path().join("untracked.txt"), "untracked").expect("write untracked");
 
-        let _guard = CwdGuard::new(repo.path());
-        let (_base, files) = get_changed_files("HEAD").expect("get_changed_files");
+        // Use get_changed_files_in_repo with explicit path - no CWD manipulation needed
+        let (_base, files) =
+            get_changed_files_in_repo("HEAD", repo.path()).expect("get_changed_files_in_repo");
 
         assert!(files.contains(&"tracked.txt".to_string()));
         assert!(files.contains(&"staged.txt".to_string()));
