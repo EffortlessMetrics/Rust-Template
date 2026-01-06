@@ -1,0 +1,45 @@
+# Friction Entry: Env var test isolation issue
+# Created: 2026-01-06
+# Status: open
+
+id: FRICTION-TEST-001
+date: "2026-01-06"
+category: testing
+severity: medium
+summary: "Env var test isolation issue in selftest budget parsing"
+
+description: |
+  The test `kernel_unknown_budget_env_var_parsing` in selftest.rs fails
+  intermittently when run with parallel test threads. It passes reliably
+  with `--test-threads=1`.
+
+  Root cause: The test modifies shared environment variables (XTASK_STRICT_AC_COVERAGE,
+  KERNEL_UNKNOWN_BUDGET) but other tests in the same test run may also set these,
+  causing race conditions.
+
+expected_behavior: |
+  Tests should be isolated from each other and able to run in parallel without
+  interference from environment variable mutations.
+
+impact: |
+  - CI may flake on this test
+  - Developers may see spurious test failures
+
+workaround: |
+  Run the test with `cargo test -p xtask kernel_unknown_budget -- --test-threads=1`
+
+context:
+  discovered_by: agent
+  phase: "development"
+  commands_involved:
+    - "cargo test -p xtask"
+    - "cargo xtask selftest"
+  files_involved:
+    - "crates/xtask/src/commands/selftest.rs"
+
+status: open
+
+related_items:
+  adrs: []
+  issues: []
+  tasks: []

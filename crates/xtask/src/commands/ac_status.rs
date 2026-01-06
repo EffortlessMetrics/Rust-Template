@@ -14,6 +14,30 @@ use super::ac_parsing::{
 };
 use crate::kernel::layout_for_repo;
 
+/// Get the repository root from CARGO_MANIFEST_DIR.
+fn repo_root() -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .expect("xtask crate should be in crates/")
+        .parent()
+        .expect("crates/ should be in repo root")
+        .to_path_buf()
+}
+
+/// Convert an absolute path to a repo-relative path for stable output.
+fn to_relative_path(path: &str) -> String {
+    let root = repo_root();
+    let root_str = root.to_string_lossy();
+    if path.starts_with(root_str.as_ref()) {
+        path.strip_prefix(root_str.as_ref())
+            .unwrap_or(path)
+            .trim_start_matches(std::path::MAIN_SEPARATOR)
+            .to_string()
+    } else {
+        path.to_string()
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct AcStatusArgs {
     pub ledger: PathBuf,
@@ -1081,7 +1105,9 @@ fn generate_status_md_content(
         for scenario in unmapped_scenarios {
             output.push_str(&format!(
                 "- Scenario '{}' references {} (in {})\n",
-                scenario.name, scenario.ac_id, scenario.file
+                scenario.name,
+                scenario.ac_id,
+                to_relative_path(&scenario.file)
             ));
         }
     }
