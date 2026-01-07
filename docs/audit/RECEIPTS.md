@@ -5,7 +5,7 @@ doc_type: guide
 status: published
 audience: contributors, reviewers, tooling-authors
 tags: [receipts, evidence, verification, schema]
-stories: []
+stories: [US-TPL-PLT-001]
 requirements: []
 acs: []
 adrs: []
@@ -92,10 +92,10 @@ The core receipt: what ran and whether it passed.
     }
   ],
   "overall_status": "pass",
-  "repo_version": "v3.3.14",
+  "repo_version": "vX.Y.Z",
   "environment": {
     "os": "linux",
-    "rust_version": "1.83.0",
+    "rust_version": "1.xx.0",
     "nix_shell": true
   }
 }

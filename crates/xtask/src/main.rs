@@ -721,6 +721,29 @@ enum Commands {
         /// Output file (default: stdout)
         #[arg(long, short)]
         output: Option<std::path::PathBuf>,
+        /// Description of what changed (optional)
+        #[arg(long, short)]
+        description: Option<String>,
+    },
+
+    /// Update PR body with cover sheet (bounded replacement)
+    #[command(next_help_heading = "🚢 Releases")]
+    PrUpdate {
+        /// PR number
+        #[arg(long)]
+        pr: u32,
+        /// Directory containing receipts (default: .runs/pr/{pr}/latest/)
+        #[arg(long)]
+        run_dir: Option<std::path::PathBuf>,
+        /// Description of what changed (optional)
+        #[arg(long, short)]
+        description: Option<String>,
+        /// Save a copy to docs/audit/EXHIBITS/PR-{n}.md
+        #[arg(long)]
+        save_exhibit: bool,
+        /// Dry run: show what would be updated without making changes
+        #[arg(long)]
+        dry_run: bool,
     },
 
     // ============================================================================
@@ -1084,8 +1107,22 @@ fn main() -> Result<()> {
         Commands::ReleaseBundle { version } => commands::release_bundle::run(&version),
         Commands::ReleaseVerify => commands::release_verify::run(),
         Commands::SbomLocal => commands::sbom_local::run(),
-        Commands::PrCover { pr, run_dir, output } => {
-            commands::pr_cover::run(commands::pr_cover::PrCoverArgs { pr, run_dir, output })
+        Commands::PrCover { pr, run_dir, output, description } => {
+            commands::pr_cover::run(commands::pr_cover::PrCoverArgs {
+                pr,
+                run_dir,
+                output,
+                description,
+            })
+        }
+        Commands::PrUpdate { pr, run_dir, description, save_exhibit, dry_run } => {
+            commands::pr_update::run(commands::pr_update::PrUpdateArgs {
+                pr,
+                run_dir,
+                description,
+                save_exhibit,
+                dry_run,
+            })
         }
         Commands::ReceiptsGate { pr, output_dir } => {
             commands::receipts::run_gate(commands::receipts::ReceiptsGateArgs { pr, output_dir })
@@ -1384,6 +1421,7 @@ pub fn all_command_names() -> Vec<&'static str> {
         "pin-actions",
         "policy-test",
         "pr-cover",
+        "pr-update",
         "receipts-gate",
         "release-prepare",
         "release-bundle",

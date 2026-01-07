@@ -5,7 +5,7 @@ doc_type: guide
 status: published
 audience: contributors, reviewers, maintainers
 tags: [failure-modes, taxonomy, prevention, gates]
-stories: []
+stories: [US-TPL-PLT-001]
 requirements: []
 acs: []
 adrs: []
@@ -101,8 +101,7 @@ This turns "we got something wrong" into "we hardened the factory."
 - Tests depend on execution order
 
 **Detection:**
-<!-- doclint:disable orphan-version (historical reference) -->
-- [x] BDD test isolation (fixed in v3.3.12)
+- [x] BDD test isolation (fixed in 3.3.x line)
 - [x] `SPEC_ROOT` contract (`AC-TPL-XTASK-SPEC-ROOT`)
 
 **Prevention:**

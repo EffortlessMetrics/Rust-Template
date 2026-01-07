@@ -5443,6 +5443,7 @@ dependencies = [
  "clap",
  "colored",
  "glob",
+ "gov-receipts",
  "gov-xtask-core",
  "ignore",
  "jsonschema",

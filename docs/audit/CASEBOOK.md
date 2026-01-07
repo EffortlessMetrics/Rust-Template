@@ -5,7 +5,7 @@ doc_type: guide
 status: published
 audience: auditors, reviewers, new-contributors
 tags: [casebook, exhibits, examples, archaeology]
-stories: []
+stories: [US-TPL-PLT-001]
 requirements: []
 acs: []
 adrs: []

@@ -5,7 +5,7 @@ doc_type: guide
 status: published
 audience: auditors, maintainers, platform-engineers
 tags: [provenance, trust, ai-native, verification]
-stories: []
+stories: [US-TPL-PLT-001]
 requirements: []
 acs: []
 adrs: []

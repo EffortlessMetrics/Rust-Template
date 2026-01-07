@@ -5,7 +5,7 @@ doc_type: guide
 status: published
 audience: contributors, reviewers
 tags: [pr, review, receipts, claims]
-stories: []
+stories: [US-TPL-PLT-001]
 requirements: []
 acs: []
 adrs: []

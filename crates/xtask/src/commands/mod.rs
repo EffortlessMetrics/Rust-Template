@@ -46,6 +46,7 @@ pub mod migrate;
 pub mod pin_actions;
 pub mod policy_test;
 pub mod pr_cover;
+pub mod pr_update;
 pub mod precommit;
 pub mod questions;
 pub mod quickstart;

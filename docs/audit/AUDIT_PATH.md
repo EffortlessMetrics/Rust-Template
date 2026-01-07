@@ -5,7 +5,7 @@ doc_type: guide
 status: published
 audience: auditors, reviewers, platform-engineers
 tags: [audit, trust, verification, receipts]
-stories: []
+stories: [US-TPL-PLT-001]
 requirements: []
 acs: []
 adrs: []

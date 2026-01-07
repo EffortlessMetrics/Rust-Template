@@ -949,6 +949,16 @@ docs:
     acs: [AC-TPL-CLI-JSON-CORE]
     adrs: [ADR-0016]
 
+  # Unified Issues Endpoint Design
+  - id: DESIGN-PLT-ISSUES-ENDPOINT-001
+    file: docs/design/platform-issues-endpoint.md
+    title: "Unified Issues Endpoint"
+    doc_type: design_doc
+    stories: [US-TPL-PLT-001]
+    requirements: [REQ-PLT-ISSUES-ENDPOINT]
+    acs: [AC-GOV-025]
+    adrs: []
+
   # IDP Tile Specifications
   - id: DESIGN-TPL-IDP-TILES-001
     file: docs/design/DESIGN-IDP-TILES.md
