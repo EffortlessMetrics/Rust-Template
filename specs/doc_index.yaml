@@ -1298,3 +1298,12 @@ docs:
     acs: [AC-PLT-009, AC-PLT-010]
     adrs: []
 
+  - id: GUIDE-OPERATING-STANDARD-001
+    file: docs/audit/OPERATING_STANDARD.md
+    title: "Operating Standard for Trusted Change"
+    doc_type: guide
+    stories: [US-TPL-PLT-001]
+    requirements: [REQ-PLT-DOCS-CONSISTENCY]
+    acs: [AC-PLT-009, AC-PLT-010]
+    adrs: []
+

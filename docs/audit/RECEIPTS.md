@@ -222,12 +222,17 @@ cargo xtask receipts-economics --pr 209 \
 
 Output: `.runs/current/receipts/economics.json`
 
-### `receipts-validate` - Validate receipt against schema
+### `receipts-validate` - Validate receipts against schemas
 
 ```bash
-# Validate a gate receipt (future command)
-cargo xtask receipts-validate .runs/current/receipts/gate.json
+# Validate all receipts in run directory against schemas
+cargo xtask receipts-validate --dir .runs/current
+
+# With explicit schema directory
+cargo xtask receipts-validate --dir .runs/pr/209/run-01 --schema-dir specs/schemas
 ```
+
+Validates each `receipts/*.json` file against its matching schema (e.g., `gate.json` → `gate.schema.json`).
 
 ---
 
