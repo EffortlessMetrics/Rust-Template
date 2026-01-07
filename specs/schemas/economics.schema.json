@@ -1,0 +1,137 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://rust-as-spec.example/schemas/economics.schema.json",
+  "title": "EconomicsReceipt",
+  "description": "Economics receipt for tracking DevLT and compute spend in PRs",
+  "type": "object",
+  "required": ["schema_version", "pr", "run_id", "devlt_minutes", "compute", "iterations", "value_delivered"],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "description": "Schema version for forward compatibility",
+      "default": "1.0"
+    },
+    "pr": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "PR number this receipt is associated with"
+    },
+    "run_id": {
+      "type": "string",
+      "description": "Run ID for correlation with gate receipts"
+    },
+    "devlt_minutes": {
+      "$ref": "#/$defs/DevLtMinutes"
+    },
+    "compute": {
+      "$ref": "#/$defs/ComputeSpend"
+    },
+    "iterations": {
+      "$ref": "#/$defs/Iterations"
+    },
+    "value_delivered": {
+      "$ref": "#/$defs/ValueDelivered"
+    }
+  },
+  "$defs": {
+    "Confidence": {
+      "type": "string",
+      "enum": ["measured", "estimated", "unknown"],
+      "description": "Confidence level for measurements"
+    },
+    "DevLtMinutes": {
+      "type": "object",
+      "description": "Developer time tracking",
+      "required": ["author_confidence", "review_confidence"],
+      "properties": {
+        "author": {
+          "type": ["integer", "null"],
+          "minimum": 0,
+          "description": "Author time in minutes"
+        },
+        "author_confidence": {
+          "$ref": "#/$defs/Confidence"
+        },
+        "review": {
+          "type": ["integer", "null"],
+          "minimum": 0,
+          "description": "Review time in minutes"
+        },
+        "review_confidence": {
+          "$ref": "#/$defs/Confidence"
+        },
+        "interventions": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 0,
+          "description": "Number of human interventions required"
+        },
+        "notes": {
+          "type": ["string", "null"],
+          "description": "Additional notes about time tracking"
+        }
+      }
+    },
+    "ComputeSpend": {
+      "type": "object",
+      "description": "Compute spend tracking",
+      "required": ["confidence"],
+      "properties": {
+        "tokens_usd": {
+          "type": ["number", "null"],
+          "minimum": 0,
+          "description": "Estimated cost in USD for token usage"
+        },
+        "confidence": {
+          "$ref": "#/$defs/Confidence"
+        },
+        "runs": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 0,
+          "description": "Number of CI/gate runs"
+        },
+        "notes": {
+          "type": ["string", "null"],
+          "description": "Additional notes about compute spend"
+        }
+      }
+    },
+    "Iterations": {
+      "type": "object",
+      "description": "Iteration tracking for fix loops",
+      "properties": {
+        "failed_gates": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 0,
+          "description": "Number of failed gate runs before success"
+        },
+        "fix_loops": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 0,
+          "description": "Number of fix-and-retry loops"
+        },
+        "notes": {
+          "type": ["string", "null"],
+          "description": "Additional notes about iterations"
+        }
+      }
+    },
+    "ValueDelivered": {
+      "type": "object",
+      "description": "Value delivered by the PR",
+      "properties": {
+        "uncertainty_reduced": {
+          "type": ["string", "null"],
+          "description": "Description of uncertainty reduced by this PR"
+        },
+        "rework_prevented": {
+          "type": ["string", "null"],
+          "description": "Description of rework prevented by this PR"
+        }
+      }
+    }
+  }
+}

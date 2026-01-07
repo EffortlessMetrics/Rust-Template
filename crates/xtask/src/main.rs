@@ -764,6 +764,65 @@ enum Commands {
         output_dir: std::path::PathBuf,
     },
 
+    /// Generate economics.json receipt for DevLT and compute tracking
+    ///
+    /// Records developer time, compute spend, iteration counts, and value delivered.
+    /// Supports confidence levels (measured/estimated/unknown) for honest reporting.
+    #[command(next_help_heading = "📋 Publishing & Forensics")]
+    ReceiptsEconomics {
+        /// PR number (required)
+        #[arg(long)]
+        pr: u32,
+        /// Output directory for receipts (default: .runs/current)
+        #[arg(long, default_value = ".runs/current")]
+        output_dir: std::path::PathBuf,
+        /// Author time in minutes
+        #[arg(long)]
+        author_minutes: Option<u32>,
+        /// Author time confidence: measured, estimated, unknown (default: unknown)
+        #[arg(long, default_value = "unknown")]
+        author_confidence: String,
+        /// Review time in minutes
+        #[arg(long)]
+        review_minutes: Option<u32>,
+        /// Review time confidence: measured, estimated, unknown (default: unknown)
+        #[arg(long, default_value = "unknown")]
+        review_confidence: String,
+        /// Number of human interventions required
+        #[arg(long, default_value = "0")]
+        interventions: u32,
+        /// Compute cost in USD
+        #[arg(long)]
+        compute_usd: Option<f64>,
+        /// Compute confidence: measured, estimated, unknown (default: unknown)
+        #[arg(long, default_value = "unknown")]
+        compute_confidence: String,
+        /// Number of CI/gate runs
+        #[arg(long, default_value = "0")]
+        runs: u32,
+        /// Number of failed gate runs before success
+        #[arg(long, default_value = "0")]
+        failed_gates: u32,
+        /// Number of fix-and-retry loops
+        #[arg(long, default_value = "0")]
+        fix_loops: u32,
+        /// Description of uncertainty reduced
+        #[arg(long)]
+        uncertainty_reduced: Option<String>,
+        /// Description of rework prevented
+        #[arg(long)]
+        rework_prevented: Option<String>,
+        /// DevLT notes
+        #[arg(long)]
+        devlt_notes: Option<String>,
+        /// Compute notes
+        #[arg(long)]
+        compute_notes: Option<String>,
+        /// Iteration notes
+        #[arg(long)]
+        iteration_notes: Option<String>,
+    },
+
     // ============================================================================
     // SERVICE SETUP (Initialization & configuration)
     // ============================================================================
@@ -1127,6 +1186,43 @@ fn main() -> Result<()> {
         Commands::ReceiptsGate { pr, output_dir } => {
             commands::receipts::run_gate(commands::receipts::ReceiptsGateArgs { pr, output_dir })
         }
+        Commands::ReceiptsEconomics {
+            pr,
+            output_dir,
+            author_minutes,
+            author_confidence,
+            review_minutes,
+            review_confidence,
+            interventions,
+            compute_usd,
+            compute_confidence,
+            runs,
+            failed_gates,
+            fix_loops,
+            uncertainty_reduced,
+            rework_prevented,
+            devlt_notes,
+            compute_notes,
+            iteration_notes,
+        } => commands::receipts::run_economics(commands::receipts::ReceiptsEconomicsArgs {
+            pr,
+            output_dir,
+            author_minutes,
+            author_confidence,
+            review_minutes,
+            review_confidence,
+            interventions,
+            compute_usd,
+            compute_confidence,
+            runs,
+            failed_gates,
+            fix_loops,
+            uncertainty_reduced,
+            rework_prevented,
+            devlt_notes,
+            compute_notes,
+            iteration_notes,
+        }),
         Commands::SuggestNext(args) => commands::suggest_next::run(args),
         Commands::Selftest => commands::selftest::run_with_verbosity(verbosity),
         Commands::KernelSmoke => commands::kernel_smoke::run(),
@@ -1423,6 +1519,7 @@ pub fn all_command_names() -> Vec<&'static str> {
         "pr-cover",
         "pr-update",
         "receipts-gate",
+        "receipts-economics",
         "release-prepare",
         "release-bundle",
         "release-verify",

@@ -1249,8 +1249,8 @@ docs:
     title: "Audit Path (15 Minutes)"
     doc_type: guide
     stories: [US-TPL-PLT-001]
-    requirements: []
-    acs: []
+    requirements: [REQ-PLT-DOCS-CONSISTENCY]
+    acs: [AC-PLT-009, AC-PLT-010]
     adrs: []
 
   - id: GUIDE-PROVENANCE-001
@@ -1258,8 +1258,8 @@ docs:
     title: "Provenance and Trust Model"
     doc_type: guide
     stories: [US-TPL-PLT-001]
-    requirements: []
-    acs: []
+    requirements: [REQ-PLT-DOCS-CONSISTENCY]
+    acs: [AC-PLT-009, AC-PLT-010]
     adrs: []
 
   - id: GUIDE-PR-COVER-SHEET-001
@@ -1267,8 +1267,8 @@ docs:
     title: "PR Cover Sheet Format"
     doc_type: guide
     stories: [US-TPL-PLT-001]
-    requirements: []
-    acs: []
+    requirements: [REQ-PLT-DOCS-CONSISTENCY]
+    acs: [AC-PLT-009, AC-PLT-010]
     adrs: []
 
   - id: GUIDE-RECEIPTS-001
@@ -1276,8 +1276,8 @@ docs:
     title: "Receipts Schema and Usage"
     doc_type: guide
     stories: [US-TPL-PLT-001]
-    requirements: []
-    acs: []
+    requirements: [REQ-PLT-DOCS-CONSISTENCY]
+    acs: [AC-PLT-009, AC-PLT-010]
     adrs: []
 
   - id: GUIDE-FAILURE-MODES-001
@@ -1285,8 +1285,8 @@ docs:
     title: "Failure Modes Taxonomy"
     doc_type: guide
     stories: [US-TPL-PLT-001]
-    requirements: []
-    acs: []
+    requirements: [REQ-PLT-DOCS-CONSISTENCY]
+    acs: [AC-PLT-009, AC-PLT-010]
     adrs: []
 
   - id: GUIDE-CASEBOOK-001
@@ -1294,7 +1294,7 @@ docs:
     title: "Casebook (Curated Exhibits)"
     doc_type: guide
     stories: [US-TPL-PLT-001]
-    requirements: []
-    acs: []
+    requirements: [REQ-PLT-DOCS-CONSISTENCY]
+    acs: [AC-PLT-009, AC-PLT-010]
     adrs: []
 

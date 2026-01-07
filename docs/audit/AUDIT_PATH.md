@@ -6,8 +6,8 @@ status: published
 audience: auditors, reviewers, platform-engineers
 tags: [audit, trust, verification, receipts]
 stories: [US-TPL-PLT-001]
-requirements: []
-acs: []
+requirements: [REQ-PLT-DOCS-CONSISTENCY]
+acs: [AC-PLT-009, AC-PLT-010]
 adrs: []
 last_updated: 2026-01-07
 ---

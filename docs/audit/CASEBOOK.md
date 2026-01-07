@@ -6,8 +6,8 @@ status: published
 audience: auditors, reviewers, new-contributors
 tags: [casebook, exhibits, examples, archaeology]
 stories: [US-TPL-PLT-001]
-requirements: []
-acs: []
+requirements: [REQ-PLT-DOCS-CONSISTENCY]
+acs: [AC-PLT-009, AC-PLT-010]
 adrs: []
 last_updated: 2026-01-07
 ---
