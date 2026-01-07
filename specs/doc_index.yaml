@@ -1233,3 +1233,58 @@ docs:
       - ADR-0006
       - ADR-0017
 
+  # Audit Pack - PR Archaeology and Factory Forensics
+  - id: GUIDE-AUDIT-PATH-001
+    file: docs/audit/AUDIT_PATH.md
+    title: "Audit Path (15 Minutes)"
+    doc_type: guide
+    stories: [US-TPL-PLT-001]
+    requirements: []
+    acs: []
+    adrs: []
+
+  - id: GUIDE-PROVENANCE-001
+    file: docs/audit/PROVENANCE.md
+    title: "Provenance and Trust Model"
+    doc_type: guide
+    stories: [US-TPL-PLT-001]
+    requirements: []
+    acs: []
+    adrs: []
+
+  - id: GUIDE-PR-COVER-SHEET-001
+    file: docs/audit/PR_COVER_SHEET.md
+    title: "PR Cover Sheet Format"
+    doc_type: guide
+    stories: [US-TPL-PLT-001]
+    requirements: []
+    acs: []
+    adrs: []
+
+  - id: GUIDE-RECEIPTS-001
+    file: docs/audit/RECEIPTS.md
+    title: "Receipts Schema and Usage"
+    doc_type: guide
+    stories: [US-TPL-PLT-001]
+    requirements: []
+    acs: []
+    adrs: []
+
+  - id: GUIDE-FAILURE-MODES-001
+    file: docs/audit/FAILURE_MODES.md
+    title: "Failure Modes Taxonomy"
+    doc_type: guide
+    stories: [US-TPL-PLT-001]
+    requirements: []
+    acs: []
+    adrs: []
+
+  - id: GUIDE-CASEBOOK-001
+    file: docs/audit/CASEBOOK.md
+    title: "Casebook (Curated Exhibits)"
+    doc_type: guide
+    stories: [US-TPL-PLT-001]
+    requirements: []
+    acs: []
+    adrs: []
+

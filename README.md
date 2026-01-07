@@ -21,6 +21,8 @@ See **[IDP Cell Contract](docs/IDP_CELL_CONTRACT.md)** for the full integration 
 
 **5-minute trust check:** **[How to Trust a Cell](docs/how-to/trust-a-cell.md)**
 
+**15-minute audit path:** **[docs/audit/AUDIT_PATH.md](docs/audit/AUDIT_PATH.md)** — How to verify changes via receipts, not line-by-line review
+
 ---
 
 ## What This Is
@@ -719,7 +721,18 @@ Read these to understand how the template works:
 - [ADR-0021: Claude Code Agents Governance](docs/adr/0021-claude-code-agents-governance.md)
 - [ADR-0022: Platform Metadata and Test Isolation](docs/adr/0022-platform-metadata-and-test-isolation.md)
 
-### 12.5 Process & Planning
+### 12.5 Audit & Trust
+
+How to verify changes and understand the factory:
+
+- **[Audit Path](docs/audit/AUDIT_PATH.md)** — 15-minute verification guide
+- **[Provenance](docs/audit/PROVENANCE.md)** — What's automated vs human, trust model
+- **[PR Cover Sheet](docs/audit/PR_COVER_SHEET.md)** — Canonical format for PR descriptions
+- **[Receipts](docs/audit/RECEIPTS.md)** — Evidence schema and usage
+- **[Failure Modes](docs/audit/FAILURE_MODES.md)** — Taxonomy of what can go wrong
+- **[Casebook](docs/audit/CASEBOOK.md)** — Curated examples of governed change
+
+### 12.6 Process & Planning
 
 Roadmaps, ADRs, and planning documents:
 
@@ -729,7 +742,7 @@ Roadmaps, ADRs, and planning documents:
 - [ADR Index](docs/adr/README.md) – Architecture decision records
 - [Release Playbook](docs/RELEASE_PLAYBOOK.md) – How to cut releases
 
-### 12.6 Reference Material
+### 12.7 Reference Material
 
 Technical references and command documentation:
 

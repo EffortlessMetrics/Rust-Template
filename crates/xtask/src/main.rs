@@ -709,6 +709,38 @@ enum Commands {
     #[command(next_help_heading = "🚢 Releases")]
     SbomLocal,
 
+    /// Generate PR cover sheet from receipts
+    #[command(next_help_heading = "🚢 Releases")]
+    PrCover {
+        /// PR number
+        #[arg(long)]
+        pr: u32,
+        /// Directory containing receipts (default: .runs/pr/{pr}/latest/)
+        #[arg(long)]
+        run_dir: Option<std::path::PathBuf>,
+        /// Output file (default: stdout)
+        #[arg(long, short)]
+        output: Option<std::path::PathBuf>,
+    },
+
+    // ============================================================================
+    // PUBLISHING & FORENSICS (Receipts, evidence, audit trails)
+    // ============================================================================
+    /// Run gates and emit gate.json receipt
+    ///
+    /// Executes validation gates (fmt, clippy, tests) and generates a structured
+    /// JSON receipt in `.runs/current/receipts/gate.json` for CI pipelines,
+    /// IDP integrations, and audit trails.
+    #[command(next_help_heading = "📋 Publishing & Forensics")]
+    ReceiptsGate {
+        /// PR number (optional, included in receipt metadata)
+        #[arg(long)]
+        pr: Option<u32>,
+        /// Output directory for receipts (default: .runs/current)
+        #[arg(long, default_value = ".runs/current")]
+        output_dir: std::path::PathBuf,
+    },
+
     // ============================================================================
     // SERVICE SETUP (Initialization & configuration)
     // ============================================================================
@@ -1052,6 +1084,12 @@ fn main() -> Result<()> {
         Commands::ReleaseBundle { version } => commands::release_bundle::run(&version),
         Commands::ReleaseVerify => commands::release_verify::run(),
         Commands::SbomLocal => commands::sbom_local::run(),
+        Commands::PrCover { pr, run_dir, output } => {
+            commands::pr_cover::run(commands::pr_cover::PrCoverArgs { pr, run_dir, output })
+        }
+        Commands::ReceiptsGate { pr, output_dir } => {
+            commands::receipts::run_gate(commands::receipts::ReceiptsGateArgs { pr, output_dir })
+        }
         Commands::SuggestNext(args) => commands::suggest_next::run(args),
         Commands::Selftest => commands::selftest::run_with_verbosity(verbosity),
         Commands::KernelSmoke => commands::kernel_smoke::run(),
@@ -1345,6 +1383,8 @@ pub fn all_command_names() -> Vec<&'static str> {
         "migrate",
         "pin-actions",
         "policy-test",
+        "pr-cover",
+        "receipts-gate",
         "release-prepare",
         "release-bundle",
         "release-verify",
