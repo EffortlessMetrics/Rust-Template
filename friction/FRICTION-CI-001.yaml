@@ -41,10 +41,20 @@ context:
   files_involved:
     - ".github/workflows/*.yml"
 
-status: open
+status: resolved
 
-resolution: null
-resolved_date: null
+resolution:
+  resolved_by: maintainer
+  resolved_at: "2026-01-06"
+  fix_description: |
+    CI workflows have been re-enabled post v3.3.14 release. The tier1-selftest.yml
+    workflow now runs on push/PR to main branch and serves as the authoritative
+    kernel gate with XTASK_STRICT_AC_COVERAGE=1 enforcement.
+  pr_links:
+    - "https://github.com/EffortlessMetrics/Rust-Template/pull/46"
+  verification: |
+    Verified tier1-selftest.yml has on.push and on.pull_request triggers for main branch.
+    CI is no longer disabled.
 
 related_items:
   adrs: []
