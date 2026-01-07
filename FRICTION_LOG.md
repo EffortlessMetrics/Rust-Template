@@ -71,13 +71,19 @@ Create a YAML file in `friction/` following the schema in `specs/friction_schema
 
 ### Open
 
-- **FRICTION-CI-001** (2025-12-27) - GitHub Actions intentionally disabled during v3.3.13 release prep
-  - **Category:** ci
+- **FRICTION-TEST-001** (2026-01-06) - Env var test isolation issue in selftest budget parsing
+  - **Category:** testing
   - **Severity:** medium
-  - **Workaround:** Use local selftest receipts as temporary branch protection
-  - **Details:** [friction/FRICTION-CI-001.yaml](friction/FRICTION-CI-001.yaml)
+  - **Workaround:** Run with `--test-threads=1`
+  - **Details:** [friction/FRICTION-TEST-001.yaml](friction/FRICTION-TEST-001.yaml)
 
 ### Resolved
+
+- **FRICTION-CI-001** (2025-12-27, resolved 2026-01-06) - GitHub Actions intentionally disabled during v3.3.13 release prep
+  - **Category:** ci
+  - **Severity:** medium
+  - **Resolution:** CI workflows re-enabled post v3.3.14 release. tier1-selftest.yml runs on push/PR.
+  - **Details:** [friction/FRICTION-CI-001.yaml](friction/FRICTION-CI-001.yaml)
 
 - **FRICTION-ENV-001** (2025-12-01, resolved 2025-12-26) - Nix devshell sccache/libz.so.1 breaks xtask wrapper
   - **Category:** tooling

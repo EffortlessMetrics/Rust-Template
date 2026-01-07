@@ -9,7 +9,7 @@ stories: [US-TPL-PLT-001]
 requirements: [REQ-PLT-DOCS-CONSISTENCY]
 acs: [AC-PLT-009, AC-PLT-010]
 adrs: [ADR-0005]
-last_updated: 2025-12-29
+last_updated: 2026-01-06
 ---
 
 # Roadmap: Rust-as-Spec Platform Cell (v3.3.14)
@@ -160,6 +160,7 @@ The v3.3.9-kernel tag marks the stable, frozen baseline that includes:
 - Service health, version, metrics endpoints
 - Platform introspection: `/platform/graph`, `/platform/devex/flows`, `/platform/docs/index`, `/platform/schema`, `/platform/openapi`
 - Agent hints API: `/platform/agent/hints` with task prioritization
+- Unified issues API: `/platform/issues` aggregating friction, questions, and tasks with pagination
 - Platform UI dashboard with graph visualization and flows view
 - Configuration validation and IAC alignment (Docker Compose, Kubernetes, Terraform)
 - Task lifecycle and governance write operations
@@ -239,6 +240,8 @@ The following gaps have been addressed:
 | **JSON CLI outputs**         | ✅ Complete | `--json` flag on `ac-status`, `friction-list`, `questions-list`, `fork-list` |
 | **Questions HTTP API**       | ✅ Complete | `GET /platform/questions`, `/platform/questions/{id}`                        |
 | **Forks HTTP API**           | ✅ Complete | `GET /platform/forks`, `/platform/forks/{name}`                              |
+| **Unified issues endpoint**  | ✅ Complete | `GET /platform/issues` with filtering, pagination, cross-artifact search (PR #74) |
+| **Issues CLI search**        | ✅ Complete | `cargo xtask issues-search` unified search across friction, questions, tasks |
 
 ### 3.3 Editor Integration ✅
 
@@ -401,10 +404,10 @@ These receipts validate the template in real use but are **not** v3.3.13 blocker
 
 ### 4.4.1 v3.3.14 – DevEx Loop (Patch Release)
 
-> **Scope:** Developer experience improvements merged after v3.3.13 tag.
-> These changes are already on `main` and will ship in the next patch tag.
+> **Scope:** Developer experience improvements and platform enhancements merged after v3.3.13.
+> Includes DevEx loop improvements (PRs #43-45), OpenAPI endpoint (PR #61), unified issues management (PRs #74-76).
 
-**Status:** On main, pending tag
+**Status:** Released (tag: v3.3.14)
 
 #### Merged (Post-v3.3.13)
 
@@ -414,9 +417,14 @@ These receipts validate the template in real use but are **not** v3.3.13 blocker
 | **Staged-only semantics** | `--staged-only` flag limits checks to staged files only | ✅ Merged (PR #43) |
 | **Targeted spellcheck** | Spellcheck runs only on changed `.md` files in fast mode | ✅ Merged (PR #43) |
 | **docs-check alignment** | Consistent behavior between precommit and CI | ✅ Merged (PR #43) |
-| **Blocking hook** | Pre-commit hook now blocks on failure (escape hatch: `--no-verify`) | 🔄 PR #45 |
-| **Staged-only Rust policy** | Requires clean Rust worktree when staging Rust changes | 🔄 PR #45 |
-| **Worktree cleanup** | Acceptance tests clean up git worktrees properly (fixes ENOENT spam) | 🔄 PR #45 |
+| **Blocking hook** | Pre-commit hook now blocks on failure (escape hatch: `--no-verify`) | ✅ Merged (PR #45) |
+| **Staged-only Rust policy** | Requires clean Rust worktree when staging Rust changes | ✅ Merged (PR #45) |
+| **Worktree cleanup** | Acceptance tests clean up git worktrees properly (fixes ENOENT spam) | ✅ Merged (PR #45) |
+| **OpenAPI endpoint** | `/platform/openapi` returns OpenAPI 3.0 spec for platform APIs | ✅ Merged (PR #61) |
+| **Unified issues endpoint** | `/platform/issues` aggregates friction, questions, tasks with pagination | ✅ Merged (PR #74) |
+| **Issues CLI search** | `cargo xtask issues-search` for cross-artifact unified search | ✅ Merged (PR #74) |
+| **xtask/gov-http hardening** | Stabilized git calls, improved error handling after issues merge | ✅ Merged (PR #75) |
+| **Pagination BDD scenarios** | BDD coverage for pagination error contract (400 responses) | ✅ Merged (PR #76) |
 
 #### Hook Behavior (Design Decision)
 
@@ -438,11 +446,11 @@ To customize hook strictness:
 #### Release Checklist
 
 ```text
-[ ] Verify selftest green: cargo xtask selftest
-[ ] Add evidence bundle: cargo xtask release-bundle 3.3.14
-[ ] Commit evidence and merge to main
-[ ] Tag: git tag v3.3.14 -m "v3.3.14"
-[ ] Push: git push --follow-tags
+[x] Verify selftest green: cargo xtask selftest
+[x] Add evidence bundle: cargo xtask release-bundle 3.3.14
+[x] Commit evidence and merge to main
+[x] Tag: git tag v3.3.14 -m "v3.3.14"
+[x] Push: git push --follow-tags
 ```
 
 #### Optional Follow-ups (Not Blocking Tag)
@@ -477,7 +485,7 @@ The gap v3.4.0 closes: **"tests are green" vs "ship survives real load"**.
 
 - v3.3.12 released ✅
 - v3.3.13 released ✅
-- v3.3.14 released (pending tag) 🔜
+- v3.3.14 released ✅
 - Fork dry-run receipt 🔜 pending
 - AI first-hour receipt 🔜 pending
 - At least one real fork exists and is actively used
@@ -572,9 +580,9 @@ See [v3.4.0-plan.md](archive/v3.4.0-plan.md) for scope when v3.4.0 work begins.
 
 1. ✅ Kernel frozen at v3.3.9-kernel
 2. ✅ Branch protection configured
-3. ✅ Documentation complete (v3.3.12 → v3.3.13)
+3. ✅ Documentation complete (v3.3.12 -> v3.3.13)
 4. ✅ v3.3.13 tagged with evidence bundle
-5. 🔜 Tag v3.3.14 (DevEx improvements)
+5. ✅ v3.3.14 tagged (DevEx improvements + unified issues endpoint)
 6. 🔜 Create fork from v3.3.9-kernel tag
 7. 🔜 Complete fork dry-run and AI first-hour receipts (v3.4.0 gate)
 8. 🔜 v3.4.0: External validation (reference consumer, contract tests, API examples)
@@ -842,11 +850,13 @@ cargo xtask fork-list          # List registered forks (--json available)
 ```bash
 cargo xtask bundle implement_ac    # Get context bundle
 cargo xtask suggest-next           # Get task suggestions
+cargo xtask issues-search "query"  # Search across all artifact types
 # Platform APIs for agents
 curl localhost:8080/platform/agent/hints   # Prioritized task hints
 curl localhost:8080/platform/questions     # Question artifacts
 curl localhost:8080/platform/forks         # Fork registry
 curl localhost:8080/platform/friction      # Friction log
+curl localhost:8080/platform/issues        # Unified issues (friction + questions + tasks)
 ```
 
 ### 7.6 Release Commands
@@ -903,7 +913,7 @@ The template is "production ready" when:
 
 **v3.3.13** shipped documentation polish, version alignment, and security configuration docs.
 
-**v3.3.14** shipped faster precommit defaults, staged-only semantics, and targeted spellcheck.
+**v3.3.14** shipped faster precommit defaults, staged-only semantics, targeted spellcheck, unified `/platform/issues` endpoint (PR #74), `issues-search` CLI command, and BDD pagination error contract coverage (PR #76).
 
 **v3.4.0** is the "external proof" release: reference IDP consumer, contract tests, and real fork receipts.
 
@@ -911,10 +921,10 @@ The template is "production ready" when:
 
 **Immediate Next Steps:**
 
-1. ✅ Tag v3.3.14 (DevEx improvements)
+1. ✅ v3.3.14 tagged (DevEx improvements + unified issues endpoint)
 2. Collect fork dry-run + AI first-hour receipts (v3.4.0 gate)
 3. Fork for real service development
-4. Capture friction → batch improvements into v3.4.0
+4. Capture friction -> batch improvements into v3.4.0
 
 **What's Still Missing (Honest Assessment):**
 
