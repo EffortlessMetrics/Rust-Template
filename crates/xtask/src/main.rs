@@ -823,6 +823,21 @@ enum Commands {
         iteration_notes: Option<String>,
     },
 
+    /// Validate receipt JSON files against their schemas
+    ///
+    /// Finds all `receipts/*.json` files in the run directory, matches each
+    /// to its schema (gate.json -> gate.schema.json), and validates.
+    /// Exits with non-zero code if any validation fails.
+    #[command(next_help_heading = "📋 Publishing & Forensics")]
+    ReceiptsValidate {
+        /// Run directory containing receipts/ subdirectory
+        #[arg(long, default_value = ".runs/current")]
+        dir: std::path::PathBuf,
+        /// Schema directory (default: specs/schemas/)
+        #[arg(long, default_value = "specs/schemas")]
+        schema_dir: std::path::PathBuf,
+    },
+
     // ============================================================================
     // SERVICE SETUP (Initialization & configuration)
     // ============================================================================
@@ -1223,6 +1238,12 @@ fn main() -> Result<()> {
             compute_notes,
             iteration_notes,
         }),
+        Commands::ReceiptsValidate { dir, schema_dir } => {
+            commands::receipts::run_validate(commands::receipts::ReceiptsValidateArgs {
+                run_dir: dir,
+                schema_dir,
+            })
+        }
         Commands::SuggestNext(args) => commands::suggest_next::run(args),
         Commands::Selftest => commands::selftest::run_with_verbosity(verbosity),
         Commands::KernelSmoke => commands::kernel_smoke::run(),
@@ -1520,6 +1541,7 @@ pub fn all_command_names() -> Vec<&'static str> {
         "pr-update",
         "receipts-gate",
         "receipts-economics",
+        "receipts-validate",
         "release-prepare",
         "release-bundle",
         "release-verify",

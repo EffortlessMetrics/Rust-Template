@@ -22,6 +22,11 @@ Each exhibit demonstrates:
 - **Earnest wrongness** — what was fixed and hardened
 - **Factory delta** — how the repo got better
 
+> **Note:** This casebook is transitioning to generated output. Once `cargo xtask casebook-gen`
+> is implemented, entries will be auto-generated from dossier receipts (`receipts/dossier.json`).
+> Manual curation will remain for exhibit selection and scoring commentary.
+> See [`RECEIPTS.md`](RECEIPTS.md) for dossier schema details.
+
 ---
 
 ## How to Read an Exhibit
@@ -165,8 +170,19 @@ Template for exhibit file:
 
 This casebook is updated:
 
-- After significant PRs merge (≥3 exhibit score)
+- After significant PRs merge (>=3 exhibit score)
 - During release preparation (audit recent merges)
 - When failure modes are corrected (document the fix)
 
-Future automation: `cargo xtask casebook-gen` will build this from dossiers.
+### Future Automation
+
+`cargo xtask casebook-gen` will build this from dossiers:
+
+1. Read all `receipts/dossier.json` files from merged PRs
+2. Score each PR using the selection criteria
+3. Generate exhibit entries for PRs meeting the threshold
+4. Update this file with new entries, preserving manual commentary
+
+Dossier schema: `specs/schemas/dossier.schema.json`
+
+Until `casebook-gen` exists, maintain this file manually following the process above.

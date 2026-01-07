@@ -1,0 +1,236 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://rust-as-spec.example/schemas/dossier.schema.json",
+  "title": "Dossier",
+  "description": "Structured PR analysis for casebook generation and audit purposes",
+  "type": "object",
+  "required": ["schema_version", "pr", "title", "merged_at", "scope", "intent", "exhibit_score", "factory_delta"],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "description": "Schema version for forward compatibility",
+      "default": "1.0"
+    },
+    "pr": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "PR number"
+    },
+    "title": {
+      "type": "string",
+      "description": "PR title"
+    },
+    "merged_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the PR was merged (ISO 8601 datetime)"
+    },
+    "scope": {
+      "$ref": "#/$defs/Scope"
+    },
+    "intent": {
+      "$ref": "#/$defs/Intent"
+    },
+    "findings": {
+      "type": "array",
+      "default": [],
+      "description": "Findings from analysis",
+      "items": {
+        "$ref": "#/$defs/Finding"
+      }
+    },
+    "errata": {
+      "type": "array",
+      "default": [],
+      "description": "Errata or corrections for previous claims",
+      "items": {
+        "$ref": "#/$defs/Erratum"
+      }
+    },
+    "exhibit_score": {
+      "$ref": "#/$defs/ExhibitScore"
+    },
+    "factory_delta": {
+      "$ref": "#/$defs/FactoryDelta"
+    }
+  },
+  "$defs": {
+    "Scope": {
+      "type": "object",
+      "description": "Scope of changes in the PR",
+      "properties": {
+        "top_dirs": {
+          "type": "array",
+          "default": [],
+          "description": "Top-level directories affected",
+          "items": {
+            "type": "string"
+          }
+        },
+        "files_changed": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 0,
+          "description": "Number of files changed"
+        },
+        "lines_added": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 0,
+          "description": "Lines added"
+        },
+        "lines_removed": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 0,
+          "description": "Lines removed"
+        }
+      }
+    },
+    "Intent": {
+      "type": "object",
+      "description": "Intent and linkage for the PR",
+      "properties": {
+        "issue_links": {
+          "type": "array",
+          "default": [],
+          "description": "Related issue numbers (e.g., ['#76'])",
+          "items": {
+            "type": "string"
+          }
+        },
+        "spec_links": {
+          "type": "array",
+          "default": [],
+          "description": "Related specification IDs (e.g., ['REQ-PLT-ISSUES-001'])",
+          "items": {
+            "type": "string"
+          }
+        },
+        "ac_links": {
+          "type": "array",
+          "default": [],
+          "description": "Related acceptance criteria IDs",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "Finding": {
+      "type": "object",
+      "description": "A finding from PR analysis",
+      "required": ["category", "description"],
+      "properties": {
+        "category": {
+          "type": "string",
+          "description": "Finding severity or category (e.g., 'warning', 'info', 'error')"
+        },
+        "description": {
+          "type": "string",
+          "description": "Description of the finding"
+        },
+        "locations": {
+          "type": "array",
+          "default": [],
+          "description": "Files or locations affected (e.g., ['src/lib.rs:42'])",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "Erratum": {
+      "type": "object",
+      "description": "An erratum or correction for a previous claim",
+      "required": ["original", "correction"],
+      "properties": {
+        "original": {
+          "type": "string",
+          "description": "What was originally stated or claimed"
+        },
+        "correction": {
+          "type": "string",
+          "description": "The correction"
+        },
+        "corrected_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "When the correction was made (ISO 8601 datetime)"
+        }
+      }
+    },
+    "ExhibitScore": {
+      "type": "object",
+      "description": "Quality scores for the exhibit (0-5 scale where 5 is best)",
+      "required": ["scope_clarity", "proof_completeness", "errata_quality", "factory_delta", "total", "max"],
+      "properties": {
+        "scope_clarity": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 5,
+          "description": "Clarity of scope definition (0-5)"
+        },
+        "proof_completeness": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 5,
+          "description": "Completeness of proof/evidence (0-5)"
+        },
+        "errata_quality": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 5,
+          "description": "Quality of errata handling (0-5)"
+        },
+        "factory_delta": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 5,
+          "description": "Quality of factory delta documentation (0-5)"
+        },
+        "total": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Total score"
+        },
+        "max": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 25,
+          "description": "Maximum possible score"
+        }
+      }
+    },
+    "FactoryDelta": {
+      "type": "object",
+      "description": "Changes to the governance factory",
+      "properties": {
+        "gates_added": {
+          "type": "array",
+          "default": [],
+          "description": "Gates added or enhanced",
+          "items": {
+            "type": "string"
+          }
+        },
+        "contracts_tightened": {
+          "type": "array",
+          "default": [],
+          "description": "Contracts tightened or added",
+          "items": {
+            "type": "string"
+          }
+        },
+        "docs_updated": {
+          "type": "array",
+          "default": [],
+          "description": "Documentation updated",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

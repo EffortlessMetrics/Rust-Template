@@ -96,9 +96,9 @@ See the Errata section in PR cover sheets.
 
 | Receipt Type | Location | Purpose |
 |--------------|----------|---------|
-| Gate outputs | `.runs/pr/<n>/<run-id>/receipts/` | Disposable run evidence |
-| Economics | `.runs/pr/<n>/<run-id>/economics.json` | DevLT + compute tracking |
-| Dossiers | `.runs/pr/<n>/<run-id>/dossier.json` | Structured PR analysis |
+| Gate outputs | `.runs/pr/<n>/<run-id>/receipts/gate.json` | Gate pass/fail evidence |
+| Economics | `.runs/pr/<n>/<run-id>/receipts/economics.json` | DevLT + compute tracking |
+| Dossiers | `.runs/pr/<n>/<run-id>/receipts/dossier.json` | Structured PR analysis |
 | Exhibits | `docs/audit/EXHIBITS/PR-<n>.md` | Version-controlled cover sheets |
 
 `.runs/` is ephemeral (gitignored). `docs/audit/` is durable (committed).
@@ -132,6 +132,55 @@ cargo xtask selftest
 - PR cover sheets link to receipts, not prose claims
 
 If you see "checks passed" language without receipt links, that's a red flag.
+
+---
+
+## 9. Generate/Update PR Cover Sheet
+
+Mini-walkthrough for generating and publishing PR cover sheets:
+
+```bash
+# 1. Run gates and generate gate receipt
+cargo xtask receipts-gate --pr 123
+
+# 2. Record economics (time, compute, iterations)
+cargo xtask receipts-economics --pr 123 \
+  --author-minutes 30 --author-confidence estimated \
+  --compute-usd 5.00 --compute-confidence estimated
+
+# 3. Generate cover sheet from receipts (preview)
+cargo xtask pr-cover --pr 123
+
+# 4. Update PR body and save exhibit to docs/audit/EXHIBITS/
+cargo xtask pr-update --pr 123 --save-exhibit
+
+# Or dry-run first to see what would change
+cargo xtask pr-update --pr 123 --dry-run
+```
+
+### Pipeline Diagram
+
+```mermaid
+flowchart LR
+    PR[PR Work] --> RG[receipts-gate]
+    RG --> gate[receipts/gate.json]
+    PR --> RE[receipts-economics]
+    RE --> econ[receipts/economics.json]
+    gate --> PC[pr-cover]
+    econ --> PC
+    PC --> cover[Cover Sheet MD]
+    cover --> PU[pr-update]
+    PU --> exhibit[exhibits/PR-N.md]
+    exhibit --> CB[CASEBOOK.md]
+    CB --> backlog[Backlog/Issues]
+```
+
+Key points:
+- `receipts-gate` runs validation gates and emits `receipts/gate.json`
+- `receipts-economics` records DevLT + compute in `receipts/economics.json`
+- `pr-cover` generates a cover sheet from receipts (stdout or file)
+- `pr-update --save-exhibit` updates the PR body AND saves to `docs/audit/EXHIBITS/`
+- Exhibits feed into the casebook and inform future work
 
 ---
 

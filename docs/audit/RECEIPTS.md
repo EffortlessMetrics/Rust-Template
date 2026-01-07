@@ -34,11 +34,11 @@ Receipts live in `.runs/` (ephemeral, gitignored) during development. Version-co
     <run-id>/
       receipts/
         gate.json        # What gates ran, pass/fail
+        economics.json   # DevLT + compute spend
         tests.json       # Test execution details
         security.json    # Security scan results
         perf.json        # Performance measurements (if any)
-      economics.json     # DevLT + compute spend
-      dossier.json       # Structured PR analysis
+        dossier.json     # Structured PR analysis (future)
 ```
 
 ---
@@ -177,28 +177,90 @@ Structured analysis for casebook generation.
 
 ---
 
-## Generating Receipts
+## Schema Files
 
-### Current (Manual)
+Receipt structures are defined by JSON schemas in `specs/schemas/`:
+
+| Schema | Path | Purpose |
+|--------|------|---------|
+| Gate receipt | `specs/schemas/gate.schema.json` | Gate execution results (fmt, clippy, tests, selftest) |
+| Economics receipt | `specs/schemas/economics.schema.json` | DevLT + compute tracking |
+| Dossier receipt | `specs/schemas/dossier.schema.json` | Structured PR analysis for casebook generation |
+
+Canonical receipt output paths (relative to run directory):
+
+- `receipts/gate.json` - Gate pass/fail evidence
+- `receipts/economics.json` - Time and cost tracking
+- `receipts/dossier.json` - PR analysis (future)
+
+---
+
+## CLI Commands
+
+### `receipts-gate` - Run gates and emit receipt
+
+```bash
+# Run gates and generate gate.json
+cargo xtask receipts-gate --pr 209 --output-dir .runs/pr/209/run-01
+
+# Without PR number (for local validation)
+cargo xtask receipts-gate --output-dir .runs/current
+```
+
+Output: `.runs/current/receipts/gate.json`
+
+### `receipts-economics` - Generate economics receipt
+
+```bash
+# Generate economics receipt with estimates
+cargo xtask receipts-economics --pr 209 \
+  --author-minutes 25 --author-confidence estimated \
+  --compute-usd 4.20 --compute-confidence estimated \
+  --runs 3 --failed-gates 2 --fix-loops 2 \
+  --uncertainty-reduced "Confirmed BDD scenarios cover error paths"
+```
+
+Output: `.runs/current/receipts/economics.json`
+
+### `receipts-validate` - Validate receipt against schema
+
+```bash
+# Validate a gate receipt (future command)
+cargo xtask receipts-validate .runs/current/receipts/gate.json
+```
+
+---
+
+## Example Workflow
+
+```bash
+# 1. Run gates and capture evidence
+cargo xtask receipts-gate --pr 209
+
+# 2. Record economics (after PR work is done)
+cargo xtask receipts-economics --pr 209 \
+  --author-minutes 30 --author-confidence estimated \
+  --compute-usd 5.00 --compute-confidence estimated
+
+# 3. Generate PR cover sheet from receipts
+cargo xtask pr-cover --pr 209
+
+# 4. Update PR body and save exhibit
+cargo xtask pr-update --pr 209 --save-exhibit
+```
+
+---
+
+## Generating Receipts (Legacy/Manual)
+
+For contexts where CLI commands aren't available:
 
 ```bash
 # Run gates and capture output
 cargo xtask selftest 2>&1 | tee .runs/pr/209/2026-01-07/selftest.log
 
 # Create receipts manually from output
-# (Future tooling will automate this)
-```
-
-### Future (Automated)
-
-```bash
-# Generate all receipts
-cargo xtask receipts gate --pr 209
-
-# Generate economics (with estimates)
-cargo xtask receipts economics --pr 209 \
-  --devlt-author-min 25 \
-  --compute-runs 3
+# (Use CLI commands above when available)
 ```
 
 ---

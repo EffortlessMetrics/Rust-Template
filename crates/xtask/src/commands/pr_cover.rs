@@ -92,9 +92,9 @@ pub fn run(args: PrCoverArgs) -> Result<()> {
     let run_dir =
         args.run_dir.unwrap_or_else(|| PathBuf::from(format!(".runs/pr/{}/latest", args.pr)));
 
-    // Check if receipts exist
+    // Check if receipts exist (all receipts are under receipts/ subdirectory)
     let gate_path = run_dir.join("receipts/gate.json");
-    let economics_path = run_dir.join("economics.json");
+    let economics_path = run_dir.join("receipts/economics.json");
 
     // Try to load gate receipt using gov-receipts types
     let gate_receipt: Option<GateReceipt> = if gate_path.exists() {

@@ -24,7 +24,7 @@ which = "8.0.0"
 chrono.workspace = true
 business-core = { path = "../business-core" }
 gov-receipts = { path = "../gov-receipts" }
+jsonschema = "0.37.4"
 
 [dev-dependencies]
 tempfile.workspace = true
-jsonschema = "0.37.4"
