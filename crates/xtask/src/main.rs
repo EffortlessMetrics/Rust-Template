@@ -838,6 +838,73 @@ enum Commands {
         schema_dir: std::path::PathBuf,
     },
 
+    /// Generate quality.json receipt with code quality metrics
+    ///
+    /// Computes hard metrics from git diff (files changed, modules touched,
+    /// unsafe delta, test/impl LOC) and optionally accepts LLM assessments
+    /// for boundary integrity and test depth ratings.
+    #[command(next_help_heading = "📋 Publishing & Forensics")]
+    ReceiptsQuality {
+        /// PR number (optional, included in receipt metadata)
+        #[arg(long)]
+        pr: Option<u32>,
+        /// Output directory for receipts (default: .runs/current)
+        #[arg(long, default_value = ".runs/current")]
+        output_dir: std::path::PathBuf,
+        /// Base branch for comparison (default: origin/main)
+        #[arg(long, default_value = "origin/main")]
+        base_branch: String,
+        /// LLM-provided boundary rating (improved/neutral/degraded)
+        #[arg(long)]
+        boundary_rating: Option<String>,
+        /// LLM-provided test depth rating (hardened/mixed/shallow)
+        #[arg(long)]
+        test_depth_rating: Option<String>,
+        /// LLM-provided notes (repeatable)
+        #[arg(long)]
+        notes: Vec<String>,
+    },
+
+    /// Generate telemetry.json receipt with probe execution results
+    ///
+    /// Captures change surface from git diff, contract change detection,
+    /// and probe execution status based on the selected profile.
+    #[command(next_help_heading = "📋 Publishing & Forensics")]
+    ReceiptsTelemetry {
+        /// PR number (optional, included in receipt metadata)
+        #[arg(long)]
+        pr: Option<u32>,
+        /// Output directory for receipts (default: .runs/current)
+        #[arg(long, default_value = ".runs/current")]
+        output_dir: std::path::PathBuf,
+        /// Probe profile: fast (quick CI), full (comprehensive), exhibit (forensic)
+        #[arg(long, default_value = "fast")]
+        profile: String,
+        /// Base branch for comparison (default: origin/main)
+        #[arg(long, default_value = "origin/main")]
+        base_branch: String,
+    },
+
+    /// Generate timeline.json receipt from commit history
+    ///
+    /// Analyzes commit history to identify sessions, friction zones,
+    /// oscillation patterns, and classifies overall development topology.
+    #[command(next_help_heading = "📋 Publishing & Forensics")]
+    ReceiptsTimeline {
+        /// PR number (optional, included in receipt metadata)
+        #[arg(long)]
+        pr: Option<u32>,
+        /// Output directory for receipts (default: .runs/current)
+        #[arg(long, default_value = ".runs/current")]
+        output_dir: std::path::PathBuf,
+        /// Base branch for comparison (default: origin/main)
+        #[arg(long, default_value = "origin/main")]
+        base_branch: String,
+        /// Session gap threshold in minutes (default: 30)
+        #[arg(long, default_value = "30")]
+        session_gap_minutes: u32,
+    },
+
     // ============================================================================
     // SERVICE SETUP (Initialization & configuration)
     // ============================================================================
@@ -1244,6 +1311,37 @@ fn main() -> Result<()> {
                 schema_dir,
             })
         }
+        Commands::ReceiptsQuality {
+            pr,
+            output_dir,
+            base_branch,
+            boundary_rating,
+            test_depth_rating,
+            notes,
+        } => commands::receipts::run_quality(commands::receipts::ReceiptsQualityArgs {
+            pr,
+            output_dir,
+            base_branch,
+            boundary_rating,
+            test_depth_rating,
+            notes,
+        }),
+        Commands::ReceiptsTelemetry { pr, output_dir, profile, base_branch } => {
+            commands::receipts::run_telemetry(commands::receipts::ReceiptsTelemetryArgs {
+                pr,
+                output_dir,
+                profile,
+                base_branch,
+            })
+        }
+        Commands::ReceiptsTimeline { pr, output_dir, base_branch, session_gap_minutes } => {
+            commands::receipts::run_timeline(commands::receipts::ReceiptsTimelineArgs {
+                pr,
+                output_dir,
+                base_branch,
+                session_gap_minutes,
+            })
+        }
         Commands::SuggestNext(args) => commands::suggest_next::run(args),
         Commands::Selftest => commands::selftest::run_with_verbosity(verbosity),
         Commands::KernelSmoke => commands::kernel_smoke::run(),
@@ -1542,6 +1640,9 @@ pub fn all_command_names() -> Vec<&'static str> {
         "receipts-gate",
         "receipts-economics",
         "receipts-validate",
+        "receipts-quality",
+        "receipts-telemetry",
+        "receipts-timeline",
         "release-prepare",
         "release-bundle",
         "release-verify",

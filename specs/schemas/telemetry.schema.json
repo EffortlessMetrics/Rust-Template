@@ -1,0 +1,296 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://rust-as-spec.example/schemas/telemetry.schema.json",
+  "title": "TelemetryReceipt",
+  "description": "Normalized hard probe outputs - tool measurements, not LLM opinions",
+  "type": "object",
+  "required": ["schema_version", "run_id", "change_surface", "probes"],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "description": "Schema version for forward compatibility",
+      "default": "1.0"
+    },
+    "pr": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "PR number this receipt is associated with"
+    },
+    "run_id": {
+      "type": "string",
+      "description": "Unique identifier for this run (e.g., '2026-01-07T14-32-00Z-pr209')"
+    },
+    "profile": {
+      "$ref": "#/$defs/ProbeProfile",
+      "description": "Probe profile used for this run"
+    },
+    "change_surface": {
+      "$ref": "#/$defs/ChangeSurface"
+    },
+    "contracts": {
+      "$ref": "#/$defs/Contracts"
+    },
+    "safety": {
+      "$ref": "#/$defs/Safety"
+    },
+    "structure": {
+      "$ref": "#/$defs/Structure"
+    },
+    "verification": {
+      "$ref": "#/$defs/Verification"
+    },
+    "probes": {
+      "type": "array",
+      "description": "List of probes that were run",
+      "items": {
+        "$ref": "#/$defs/ProbeResult"
+      }
+    },
+    "not_run": {
+      "type": "array",
+      "description": "Explicit list of probes that were skipped with reasons",
+      "items": {
+        "$ref": "#/$defs/SkippedProbe"
+      },
+      "default": []
+    }
+  },
+  "$defs": {
+    "ProbeProfile": {
+      "type": "string",
+      "enum": ["fast", "full", "exhibit"],
+      "description": "Probe profile: fast (quick CI checks), full (comprehensive analysis), exhibit (forensic/deep dive)"
+    },
+    "ProbeStatus": {
+      "type": "string",
+      "enum": ["run", "not_run", "error"],
+      "description": "Status of a probe execution"
+    },
+    "ChangeSurface": {
+      "type": "object",
+      "description": "Quantified change surface from git diff analysis",
+      "required": ["files_changed", "insertions", "deletions"],
+      "properties": {
+        "files_changed": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of files changed in this PR"
+        },
+        "insertions": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of lines inserted"
+        },
+        "deletions": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of lines deleted"
+        },
+        "hotspots": {
+          "type": "array",
+          "description": "Files with concentrated changes or high churn",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "modules_touched": {
+          "type": "array",
+          "description": "Logical modules affected by the change",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "crates_touched": {
+          "type": "array",
+          "description": "Cargo crates affected by the change",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        }
+      }
+    },
+    "Contracts": {
+      "type": "object",
+      "description": "Contract surface change detection",
+      "properties": {
+        "schema_changed": {
+          "type": "boolean",
+          "description": "Whether any schema files were modified",
+          "default": false
+        },
+        "public_api_changed": {
+          "type": "boolean",
+          "description": "Whether public API surface changed",
+          "default": false
+        },
+        "cli_changed": {
+          "type": "boolean",
+          "description": "Whether CLI interface changed",
+          "default": false
+        },
+        "breaking": {
+          "type": "boolean",
+          "description": "Whether any contract changes are breaking",
+          "default": false
+        },
+        "diff_pointers": {
+          "type": "array",
+          "description": "Pointers to specific diffs showing contract changes",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        }
+      }
+    },
+    "Safety": {
+      "type": "object",
+      "description": "Unsafe code and safety-related metrics from cargo-geiger and similar tools",
+      "properties": {
+        "unsafe_added": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of unsafe blocks/functions added",
+          "default": 0
+        },
+        "unsafe_removed": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of unsafe blocks/functions removed",
+          "default": 0
+        },
+        "geiger_summary": {
+          "$ref": "#/$defs/GeigerSummary",
+          "description": "Summary from cargo-geiger analysis"
+        },
+        "pointers": {
+          "type": "array",
+          "description": "Pointers to specific unsafe code locations",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        }
+      }
+    },
+    "GeigerSummary": {
+      "type": "object",
+      "description": "Summary of cargo-geiger unsafe code analysis",
+      "properties": {
+        "used_unsafe": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Count of used unsafe code regions"
+        },
+        "unused_unsafe": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Count of unused unsafe code regions"
+        },
+        "forbid_unsafe": {
+          "type": "boolean",
+          "description": "Whether #![forbid(unsafe_code)] is set"
+        }
+      }
+    },
+    "Structure": {
+      "type": "object",
+      "description": "Structural analysis from dependency graphs and cycle detection",
+      "properties": {
+        "cycles_detected": {
+          "type": "boolean",
+          "description": "Whether any dependency cycles were detected",
+          "default": false
+        },
+        "dependency_edges_delta": {
+          "type": "integer",
+          "description": "Net change in dependency edges (positive = more coupling)",
+          "default": 0
+        },
+        "pointers": {
+          "type": "array",
+          "description": "Pointers to structural analysis artifacts or problem areas",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        }
+      }
+    },
+    "Verification": {
+      "type": "object",
+      "description": "Test and verification artifact metrics",
+      "properties": {
+        "tests_added": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of test functions added",
+          "default": 0
+        },
+        "tests_modified": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of test functions modified",
+          "default": 0
+        },
+        "coverage_report_path": {
+          "type": "string",
+          "description": "Path to coverage report artifact"
+        },
+        "mutation_outcomes_path": {
+          "type": "string",
+          "description": "Path to mutation testing outcomes artifact"
+        }
+      }
+    },
+    "ProbeResult": {
+      "type": "object",
+      "description": "Result of a single probe execution",
+      "required": ["name", "status"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Probe name (e.g., 'cargo-geiger', 'cargo-deny', 'coverage')"
+        },
+        "version": {
+          "type": "string",
+          "description": "Version of the probe tool"
+        },
+        "status": {
+          "$ref": "#/$defs/ProbeStatus"
+        },
+        "reason": {
+          "type": "string",
+          "description": "Explanation when status is not_run or error"
+        },
+        "duration_ms": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Probe execution time in milliseconds"
+        },
+        "artifact_path": {
+          "type": "string",
+          "description": "Path to detailed probe output artifact"
+        }
+      }
+    },
+    "SkippedProbe": {
+      "type": "object",
+      "description": "Record of a probe that was skipped",
+      "required": ["probe", "reason"],
+      "properties": {
+        "probe": {
+          "type": "string",
+          "description": "Name of the skipped probe"
+        },
+        "reason": {
+          "type": "string",
+          "description": "Why the probe was skipped (e.g., 'no unsafe code', 'fast profile')"
+        }
+      }
+    }
+  }
+}

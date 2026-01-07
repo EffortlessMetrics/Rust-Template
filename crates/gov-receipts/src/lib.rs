@@ -8,6 +8,9 @@
 //!
 //! - [`GateReceipt`] - Core receipt for gate execution results (fmt, clippy, tests, selftest)
 //! - [`EconomicsReceipt`] - DevLT and compute spend tracking with confidence levels
+//! - [`QualityReceipt`] - Code quality metrics, contract changes, boundary integrity
+//! - [`TelemetryReceipt`] - Probe execution results and change surface analysis
+//! - [`TimelineReceipt`] - PR evolution, friction zones, and convergence patterns
 //! - [`Dossier`] - Structured PR analysis for casebook generation
 //!
 //! # Usage
@@ -55,6 +58,9 @@
 pub mod dossier;
 pub mod economics;
 pub mod gate;
+pub mod quality;
+pub mod telemetry;
+pub mod timeline;
 
 // Re-export main types for convenience
 pub use dossier::{
@@ -67,4 +73,18 @@ pub use economics::{
 pub use gate::{
     Environment, GateDetails, GateReceipt, GateReceiptBuilder, GateResult, GateStatus,
     SelftestDetails, TestDetails,
+};
+pub use quality::{
+    Boundaries, BoundaryRating, Contract, ContractChange, LlmBoundaryAssessment, LlmConfidence,
+    LlmTestDepthAssessment, Quality, QualityReceipt, QualityReceiptBuilder, Risks, TestDepthRating,
+    UnsafeDelta, Verification,
+};
+pub use telemetry::{
+    ChangeSurface, Contracts, GeigerSummary, ProbeProfile, ProbeResult, ProbeStatus, Safety,
+    SkippedProbe, Structure, TelemetryReceipt, TelemetryReceiptBuilder, TelemetryVerification,
+};
+pub use timeline::{
+    Convergence, Event, EventType, FrictionZone, Oscillation, OscillationAction, OscillationType,
+    Session, SessionClassification, TimelineConfidence, TimelineReceipt, TimelineReceiptBuilder,
+    Topology, WallClock,
 };

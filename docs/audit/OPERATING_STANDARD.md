@@ -157,6 +157,11 @@ Receipts are JSON, validated by JSON Schema, and treated as the proof anchor:
 | `receipts/gate.json` | `specs/schemas/gate.schema.json` | What ran, pass/fail, durations, environment |
 | `receipts/economics.json` | `specs/schemas/economics.schema.json` | DevLT + compute + iterations + confidence |
 | `receipts/dossier.json` | `specs/schemas/dossier.schema.json` | Scope map, findings, exhibit score |
+| `receipts/quality.json` | `specs/schemas/quality.schema.json` | Contract changes, boundary integrity, verification depth, risks |
+| `receipts/telemetry.json` | `specs/schemas/telemetry.schema.json` | Normalized hard probe outputs (tool measurements) |
+| `receipts/timeline.json` | `specs/schemas/timeline.schema.json` | Temporal topology, friction zones, convergence |
+
+Receipt validation automatically maps `<name>.json` to `<name>.schema.json`. Any new receipt type just needs a corresponding schema file.
 
 ### Ephemeral vs Permanent
 
@@ -175,21 +180,30 @@ The minimum viable "truth surface loop":
 # 1. Run the gate → write receipts/gate.json
 cargo xtask receipts-gate --pr <n>
 
-# 2. Record DevLT/compute honestly → write receipts/economics.json
+# 2. Record DevLT/compute → write receipts/economics.json
 cargo xtask receipts-economics --pr <n> \
   --author-minutes 30 --author-confidence estimated \
   --compute-usd 5.00 --compute-confidence estimated
 
-# 3. Validate receipts against schemas
+# 3. Generate quality metrics → write receipts/quality.json
+cargo xtask receipts-quality --pr <n>
+
+# 4. Generate telemetry (hard probes) → write receipts/telemetry.json
+cargo xtask receipts-telemetry --pr <n> --profile full
+
+# 5. Generate timeline (temporal topology) → write receipts/timeline.json
+cargo xtask receipts-timeline --pr <n>
+
+# 6. Validate all receipts against schemas
 cargo xtask receipts-validate --dir .runs/current
 
-# 4. Generate cover sheet from receipts
+# 7. Generate cover sheet from receipts
 cargo xtask pr-cover --pr <n>
 
-# 5. Update PR body with bounded replacement
+# 8. Update PR body with bounded replacement
 cargo xtask pr-update --pr <n>
 
-# 6. Save the cover sheet into exhibits
+# 9. Save the cover sheet into exhibits
 cargo xtask pr-update --pr <n> --save-exhibit
 ```
 
@@ -300,6 +314,8 @@ That's the whole point.
 ## 12. LLM Analysis Contract (Historian)
 
 When LLM agents (Historian, casebook generators, PR analyzers) produce analysis, they must follow this contract: **speak broadly, conclude precisely**.
+
+> **Narrative comes first.** Tags/anchors are for load-bearing claims, not for every sentence. The model writes naturally; tagging is for the claims that affect conclusions and recommendations.
 
 ### The Rule: "LLMs May Infer; Artifacts Must Disclose"
 
@@ -418,6 +434,18 @@ Re-analysis is expected. Every analysis should carry:
 - `analysis_run_id`: unique identifier for this run
 
 Prior analyses are appended, not overwritten, so "we re-analyzed and tightened the bounds" is visible and auditable.
+
+### Probe Profiles
+
+Probes are organized into three profiles to balance thoroughness vs speed:
+
+| Profile | Use Case | Probes Included |
+|---------|----------|-----------------|
+| `fast` | Always-on, cheap | churn/hotspots, contract flags, existing gate/economics |
+| `full` | Serious PRs | + geiger, rust-code-analysis, cargo-modules, public-api diff |
+| `exhibit` | Casebook/release | + mutation testing, coverage, semver-checks, deny/advisories |
+
+Telemetry receipts always record which probes ran and which were marked `not_run` with reasons.
 
 ---
 
