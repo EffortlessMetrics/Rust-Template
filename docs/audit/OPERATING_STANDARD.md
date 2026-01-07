@@ -4,7 +4,7 @@ title: Operating Standard for Trusted Change
 doc_type: guide
 status: published
 audience: contributors, reviewers, agents
-tags: [audit, trust, governance, receipts, devlt]
+tags: [audit, trust, governance, receipts, devlt, quality, maintainability, historian]
 stories: [US-TPL-PLT-001]
 requirements: [REQ-PLT-DOCS-CONSISTENCY]
 acs: [AC-PLT-009, AC-PLT-010]
@@ -297,7 +297,131 @@ That's the whole point.
 
 ---
 
-## 12. Next Steps That Compound
+## 12. LLM Analysis Contract (Historian)
+
+When LLM agents (Historian, casebook generators, PR analyzers) produce analysis, they must follow this contract: **speak broadly, conclude precisely**.
+
+### The Rule: "LLMs May Infer; Artifacts Must Disclose"
+
+Every claim in a dossier, cover sheet, or analysis artifact should be explicitly labeled:
+
+| Tag | Meaning |
+|-----|---------|
+| **[OBS]** | Observed — directly measured from inputs (diff stats, test runs, receipts) |
+| **[DER]** | Derived — computed from observed (ratios, deltas, histograms) |
+| **[INF]** | Inferred — LLM judgment (design alignment, boundary integrity, likely issues) |
+| **[REC]** | Recommended — suggested follow-ups, refactors, tests |
+
+The model writes naturally, but tags **load-bearing statements** and anchors them.
+
+### Evidence Anchoring
+
+Every inferred or derived claim should include:
+
+- **`evidence_pointers`**: paths, functions, receipts, commit IDs, hunk references
+- **`assumptions`**: what the model assumed to reach the conclusion
+- **`confidence`**: high / medium / low with brief justification
+
+Example:
+> The refactor reduces coupling by moving persistence concerns behind `FooRepo`. **[INF]**
+> *(Pointers: `src/service/foo.rs:42`, `src/repo/foo_repo.rs`; confidence: medium)*
+
+### Bounded Estimates, Never "Unknown"
+
+For core metrics (DevLT, compute band, quality delta):
+
+- Always output a **range** (`lb_minutes`, `ub_minutes`)
+- Widen the range when evidence is weak
+- Explicitly state what coverage was missing (e.g., "no session trace")
+
+The failure mode becomes "low confidence, wide bounds" — not "unknown."
+
+### Quality-First Metric Stack
+
+Quality is the primary measure. Economics are tuning signals.
+
+**Hard metrics (tooling; repeatable):**
+
+| Category | Metrics |
+|----------|---------|
+| Change surface | churn, files changed, hotspots, modules touched |
+| Contract surface | schema diffs, public API deltas, CLI surface changes |
+| Safety markers | `unsafe` delta, concurrency primitives, dependency delta |
+| Verification | test delta, coverage (only if actually measured) |
+
+**Semantic metrics (LLM; structured):**
+
+| Category | What to assess |
+|----------|---------------|
+| Design alignment | Does implementation respect ADR/plan constraints? Where does it drift? |
+| Boundary integrity | Are adapters at edges? Is domain leaking to IO? Are modules cohesive? |
+| Test depth | Do tests assert behavior or just presence? Are error paths exercised? |
+| Doc drift | Are docs updated atomically? Any claims now false? |
+
+### Quality Receipt Shape
+
+```json
+{
+  "quality": {
+    "contract": {
+      "public_api": { "changed": false, "breaking": false, "evidence": ["..."] },
+      "schema": { "changed": true, "breaking": false, "evidence": ["..."] }
+    },
+    "boundaries": {
+      "modules_touched": 4,
+      "hotspots": ["src/a.rs", "src/b/mod.rs"],
+      "llm_assessment": {
+        "rating": "improved|neutral|degraded",
+        "notes": ["..."],
+        "confidence": "medium",
+        "evidence": ["..."]
+      }
+    },
+    "verification": {
+      "tests_added_loc": 320,
+      "impl_added_loc": 110,
+      "test_density_delta": 2.9,
+      "llm_test_depth": {
+        "rating": "hardened|mixed|shallow",
+        "notes": ["..."],
+        "confidence": "medium"
+      }
+    },
+    "risks": {
+      "unsafe_delta": { "added": 0, "removed": 0 },
+      "deps_added": ["..."]
+    }
+  }
+}
+```
+
+### Historian Output Structure
+
+1. **Narrative report** (freeform, high-signal)
+   - Executive summary, maintainability, design alignment, verification depth, risks, recommendations
+   - Full paragraphs welcome — don't be terse
+
+2. **Evidence & assumptions ledger** (short, explicit)
+   - Key pointers: 5–15 anchors (file paths, functions, receipts, commits)
+   - Assumptions: only those that materially affect conclusions
+   - Confidence notes
+
+3. **Structured appendix** (machine-friendly JSON)
+   - Index for downstream automation and dashboarding
+
+### Versioning
+
+Re-analysis is expected. Every analysis should carry:
+
+- `method_id`: e.g., `devlt_est_v2:decision_weighted`
+- `method_version`: version of the estimation algorithm
+- `analysis_run_id`: unique identifier for this run
+
+Prior analyses are appended, not overwritten, so "we re-analyzed and tightened the bounds" is visible and auditable.
+
+---
+
+## 13. Next Steps That Compound
 
 1. **Dossier generation** (`pr-dossier`)
    - Structured facts + findings + references + exhibit score

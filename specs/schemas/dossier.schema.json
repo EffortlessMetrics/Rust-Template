@@ -52,6 +52,9 @@
     },
     "factory_delta": {
       "$ref": "#/$defs/FactoryDelta"
+    },
+    "quality": {
+      "$ref": "#/$defs/Quality"
     }
   },
   "$defs": {
@@ -229,6 +232,194 @@
           "items": {
             "type": "string"
           }
+        }
+      }
+    },
+    "Quality": {
+      "type": "object",
+      "description": "Quality receipt capturing contract, boundary, verification, and risk metrics",
+      "properties": {
+        "contract": {
+          "$ref": "#/$defs/ContractQuality"
+        },
+        "boundaries": {
+          "$ref": "#/$defs/BoundariesQuality"
+        },
+        "verification": {
+          "$ref": "#/$defs/VerificationQuality"
+        },
+        "risks": {
+          "$ref": "#/$defs/RisksQuality"
+        }
+      }
+    },
+    "ContractQuality": {
+      "type": "object",
+      "description": "Contract surface changes (public API, schemas)",
+      "properties": {
+        "public_api": {
+          "$ref": "#/$defs/ContractChange"
+        },
+        "schema": {
+          "$ref": "#/$defs/ContractChange"
+        }
+      }
+    },
+    "ContractChange": {
+      "type": "object",
+      "description": "A contract change indicator",
+      "properties": {
+        "changed": {
+          "type": "boolean",
+          "description": "Whether the contract changed"
+        },
+        "breaking": {
+          "type": "boolean",
+          "description": "Whether the change is breaking"
+        },
+        "evidence": {
+          "type": "array",
+          "default": [],
+          "description": "Evidence pointers (file paths, diffs, etc.)",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "BoundariesQuality": {
+      "type": "object",
+      "description": "Module boundary and architecture metrics",
+      "properties": {
+        "modules_touched": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of modules touched by the change"
+        },
+        "hotspots": {
+          "type": "array",
+          "default": [],
+          "description": "Files or modules that are hotspots for change",
+          "items": {
+            "type": "string"
+          }
+        },
+        "llm_assessment": {
+          "$ref": "#/$defs/LlmAssessment"
+        }
+      }
+    },
+    "VerificationQuality": {
+      "type": "object",
+      "description": "Verification and test coverage metrics",
+      "properties": {
+        "tests_added_loc": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Lines of test code added"
+        },
+        "impl_added_loc": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Lines of implementation code added"
+        },
+        "test_density_delta": {
+          "type": "number",
+          "description": "Change in test density (tests_added_loc / impl_added_loc)"
+        },
+        "llm_test_depth": {
+          "$ref": "#/$defs/LlmTestDepth"
+        }
+      }
+    },
+    "RisksQuality": {
+      "type": "object",
+      "description": "Risk indicators for the change",
+      "properties": {
+        "unsafe_delta": {
+          "$ref": "#/$defs/UnsafeDelta"
+        },
+        "deps_added": {
+          "type": "array",
+          "default": [],
+          "description": "Dependencies added by the change",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "LlmAssessment": {
+      "type": "object",
+      "description": "LLM-generated assessment of boundary quality",
+      "properties": {
+        "rating": {
+          "type": "string",
+          "enum": ["improved", "neutral", "degraded"],
+          "description": "Overall rating of boundary quality change"
+        },
+        "notes": {
+          "type": "array",
+          "default": [],
+          "description": "Notes explaining the assessment",
+          "items": {
+            "type": "string"
+          }
+        },
+        "confidence": {
+          "type": "string",
+          "enum": ["high", "medium", "low"],
+          "description": "Confidence level of the assessment"
+        },
+        "evidence": {
+          "type": "array",
+          "default": [],
+          "description": "Evidence pointers supporting the assessment",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "LlmTestDepth": {
+      "type": "object",
+      "description": "LLM-generated assessment of test depth",
+      "properties": {
+        "rating": {
+          "type": "string",
+          "enum": ["hardened", "mixed", "shallow"],
+          "description": "Overall rating of test depth"
+        },
+        "notes": {
+          "type": "array",
+          "default": [],
+          "description": "Notes explaining the assessment",
+          "items": {
+            "type": "string"
+          }
+        },
+        "confidence": {
+          "type": "string",
+          "enum": ["high", "medium", "low"],
+          "description": "Confidence level of the assessment"
+        }
+      }
+    },
+    "UnsafeDelta": {
+      "type": "object",
+      "description": "Changes to unsafe code blocks",
+      "properties": {
+        "added": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 0,
+          "description": "Number of unsafe blocks added"
+        },
+        "removed": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 0,
+          "description": "Number of unsafe blocks removed"
         }
       }
     }
