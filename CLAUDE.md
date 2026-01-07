@@ -1,4 +1,4 @@
-# CLAUDE.md – Test Service (v3.3.14)
+# CLAUDE.md – rust-as-spec IDP Platform Cell (v3.3.14)
 
 **Template Version:** v3.3.14
 
