@@ -3,6 +3,7 @@
 //! The telemetry receipt captures normalized hard probe outputs - tool
 //! measurements, change surface, and verification coverage.
 
+use crate::meta::ReceiptMeta;
 use serde::{Deserialize, Serialize};
 
 /// Telemetry receipt for tracking probe execution.
@@ -52,6 +53,10 @@ pub struct TelemetryReceipt {
     #[serde(default)]
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub not_run: Vec<SkippedProbe>,
+
+    /// Meta provenance for re-analysis and method versioning.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub meta: Option<ReceiptMeta>,
 }
 
 /// Probe profile determining which probes run.
@@ -275,6 +280,7 @@ pub struct TelemetryReceiptBuilder {
     verification: Option<TelemetryVerification>,
     probes: Vec<ProbeResult>,
     not_run: Vec<SkippedProbe>,
+    meta: Option<ReceiptMeta>,
 }
 
 impl TelemetryReceiptBuilder {
@@ -350,6 +356,12 @@ impl TelemetryReceiptBuilder {
         self
     }
 
+    /// Set the meta provenance.
+    pub fn meta(mut self, meta: ReceiptMeta) -> Self {
+        self.meta = Some(meta);
+        self
+    }
+
     /// Build the telemetry receipt.
     ///
     /// # Panics
@@ -368,6 +380,7 @@ impl TelemetryReceiptBuilder {
             verification: self.verification,
             probes: self.probes,
             not_run: self.not_run,
+            meta: self.meta,
         }
     }
 }
@@ -403,6 +416,7 @@ mod tests {
                 artifact_path: None,
             }],
             not_run: vec![],
+            meta: None,
         };
 
         let json = serde_json::to_string_pretty(&receipt).unwrap();

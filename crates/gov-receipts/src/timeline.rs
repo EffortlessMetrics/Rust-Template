@@ -3,6 +3,7 @@
 //! The timeline receipt captures temporal topology - how a PR evolved,
 //! friction zones, and convergence patterns.
 
+use crate::meta::ReceiptMeta;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
@@ -60,6 +61,10 @@ pub struct TimelineReceipt {
     #[serde(default)]
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub events: Vec<Event>,
+
+    /// Meta provenance for re-analysis and method versioning.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub meta: Option<ReceiptMeta>,
 }
 
 /// Overall evolution pattern.
@@ -278,6 +283,7 @@ pub struct TimelineReceiptBuilder {
     topology_confidence: Option<TimelineConfidence>,
     topology_reasons: Vec<String>,
     events: Vec<Event>,
+    meta: Option<ReceiptMeta>,
 }
 
 impl TimelineReceiptBuilder {
@@ -359,6 +365,12 @@ impl TimelineReceiptBuilder {
         self
     }
 
+    /// Set the meta provenance.
+    pub fn meta(mut self, meta: ReceiptMeta) -> Self {
+        self.meta = Some(meta);
+        self
+    }
+
     /// Build the timeline receipt.
     ///
     /// # Panics
@@ -378,6 +390,7 @@ impl TimelineReceiptBuilder {
             topology_confidence: self.topology_confidence,
             topology_reasons: self.topology_reasons,
             events: self.events,
+            meta: self.meta,
         }
     }
 }
@@ -420,6 +433,7 @@ mod tests {
             topology_confidence: Some(TimelineConfidence::High),
             topology_reasons: vec!["Clean progression".to_string()],
             events: vec![],
+            meta: None,
         };
 
         let json = serde_json::to_string_pretty(&receipt).unwrap();

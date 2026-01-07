@@ -22,6 +22,10 @@
     },
     "quality": {
       "$ref": "#/$defs/Quality"
+    },
+    "meta": {
+      "$ref": "#/$defs/ReceiptMeta",
+      "description": "Meta provenance for re-analysis and method versioning"
     }
   },
   "$defs": {
@@ -261,6 +265,59 @@
       "type": "string",
       "enum": ["high", "medium", "low"],
       "description": "Confidence level for LLM assessments: high (strong evidence), medium (reasonable inference), low (limited evidence)"
+    },
+    "ReceiptMeta": {
+      "type": "object",
+      "description": "Meta provenance header for re-analysis and method versioning",
+      "required": ["method_id", "method_version", "analysis_run_id", "confidence"],
+      "properties": {
+        "method_id": {
+          "type": "string",
+          "description": "Identifier for the analysis method used (e.g., 'telemetry-v1', 'timeline-v1')"
+        },
+        "method_version": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Version of the analysis method. Bump when logic changes materially."
+        },
+        "analysis_run_id": {
+          "type": "string",
+          "description": "Unique identifier for this analysis run (typically matches run_id)"
+        },
+        "inputs_used": {
+          "type": "array",
+          "description": "List of inputs relied on for this analysis (e.g., 'git_diff', 'gate.json', 'pr_comments')",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "assumptions": {
+          "type": "array",
+          "description": "Assumptions that materially affect conclusions",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "confidence": {
+          "$ref": "#/$defs/MetaConfidence",
+          "description": "Confidence level of the analysis results"
+        },
+        "evidence_pointers": {
+          "type": "array",
+          "description": "Evidence pointers (5-15 anchors): file paths, function names, receipt refs, commit SHAs",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        }
+      }
+    },
+    "MetaConfidence": {
+      "type": "string",
+      "enum": ["high", "medium", "low"],
+      "description": "Confidence level: high (exhibit profile, full tooling), medium (full profile), low (fast profile, incomplete data)"
     }
   }
 }

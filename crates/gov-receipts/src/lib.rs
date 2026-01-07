@@ -58,6 +58,7 @@
 pub mod dossier;
 pub mod economics;
 pub mod gate;
+pub mod meta;
 pub mod quality;
 pub mod telemetry;
 pub mod timeline;
@@ -74,6 +75,7 @@ pub use gate::{
     Environment, GateDetails, GateReceipt, GateReceiptBuilder, GateResult, GateStatus,
     SelftestDetails, TestDetails,
 };
+pub use meta::{MetaConfidence, ReceiptMeta, ReceiptMetaBuilder};
 pub use quality::{
     Boundaries, BoundaryRating, Contract, ContractChange, LlmBoundaryAssessment, LlmConfidence,
     LlmTestDepthAssessment, Quality, QualityReceipt, QualityReceiptBuilder, Risks, TestDepthRating,

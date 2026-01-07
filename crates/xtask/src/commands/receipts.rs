@@ -15,12 +15,13 @@ use anyhow::{Context, Result};
 use chrono::Utc;
 use colored::Colorize;
 use gov_receipts::{
-    Boundaries, ChangeSurface, ComputeSpend, Confidence, Contracts, DevLtMinutes, EconomicsReceipt,
-    Environment, FrictionZone, GateReceipt, GateResult, GateStatus, Iterations,
-    LlmBoundaryAssessment, LlmTestDepthAssessment, ProbeProfile, ProbeResult, ProbeStatus, Quality,
-    QualityReceipt, Risks, Session, SessionClassification, SkippedProbe, TelemetryReceipt,
-    TimelineConfidence, TimelineReceipt, Topology, UnsafeDelta, ValueDelivered, Verification,
-    WallClock,
+    Boundaries, ChangeSurface, ComputeSpend, Confidence, Contracts, Convergence, DevLtMinutes,
+    EconomicsReceipt, Environment, FrictionZone, GateReceipt, GateResult, GateStatus,
+    GeigerSummary, Iterations, LlmBoundaryAssessment, LlmTestDepthAssessment, MetaConfidence,
+    Oscillation, OscillationAction, OscillationType, ProbeProfile, ProbeResult, ProbeStatus,
+    Quality, QualityReceipt, ReceiptMeta, Risks, Safety, Session, SessionClassification,
+    SkippedProbe, Structure, TelemetryReceipt, TelemetryVerification, TimelineConfidence,
+    TimelineReceipt, Topology, UnsafeDelta, ValueDelivered, Verification, WallClock,
 };
 use jsonschema::Validator;
 use std::collections::HashMap;
@@ -198,6 +199,25 @@ fn get_repo_version() -> Option<String> {
     let content = fs::read_to_string("specs/spec_ledger.yaml").ok()?;
     let ledger: SpecLedger = serde_yaml::from_str(&content).ok()?;
     Some(ledger.metadata.template_version)
+}
+
+/// Convert probe profile to meta confidence level
+fn profile_to_meta_confidence(profile: ProbeProfile) -> MetaConfidence {
+    match profile {
+        ProbeProfile::Fast => MetaConfidence::Low,
+        ProbeProfile::Full => MetaConfidence::Medium,
+        ProbeProfile::Exhibit => MetaConfidence::High,
+    }
+}
+
+/// Get current git commit SHA (short form)
+fn get_current_commit_short() -> Option<String> {
+    Command::new("git")
+        .args(["rev-parse", "--short", "HEAD"])
+        .output()
+        .ok()
+        .map(|o| String::from_utf8_lossy(&o.stdout).trim().to_string())
+        .filter(|s| !s.is_empty())
 }
 
 /// Arguments for the receipts economics command
@@ -647,6 +667,25 @@ pub fn run_quality(args: ReceiptsQualityArgs) -> Result<()> {
         builder = builder.pr(pr_num as u64);
     }
 
+    // Build meta provenance - quality uses medium confidence by default
+    let mut meta_builder = ReceiptMeta::builder()
+        .method_id("quality-v1")
+        .method_version(1)
+        .analysis_run_id(&run_id)
+        .input("git_diff")
+        .input("git_numstat")
+        .assumption(format!("base branch: {}", args.base_branch))
+        .confidence(MetaConfidence::Medium);
+
+    if let Some(commit) = get_current_commit_short() {
+        meta_builder = meta_builder.evidence(commit);
+    }
+
+    // Add evidence pointers for hotspots
+    for hotspot in boundaries.hotspots.iter().take(5) {
+        meta_builder = meta_builder.evidence(hotspot.clone());
+    }
+
     let receipt = builder
         .quality(Quality {
             contract: gov_receipts::Contract::default(),
@@ -659,6 +698,7 @@ pub fn run_quality(args: ReceiptsQualityArgs) -> Result<()> {
                 llm_risk_notes: vec![],
             },
         })
+        .meta(meta_builder.build())
         .build();
 
     // Write receipt
@@ -770,39 +810,9 @@ pub fn run_telemetry(args: ReceiptsTelemetryArgs) -> Result<()> {
     // Build probe results based on profile
     let mut probes = Vec::new();
     let mut not_run = Vec::new();
-
-    // For v0, we mark most probes as "not_run" since tooling isn't integrated yet
-    match profile {
-        ProbeProfile::Fast => {
-            not_run.push(SkippedProbe {
-                probe: "cargo-geiger".to_string(),
-                reason: "fast profile".to_string(),
-            });
-            not_run.push(SkippedProbe {
-                probe: "cargo-deny".to_string(),
-                reason: "fast profile".to_string(),
-            });
-            not_run.push(SkippedProbe {
-                probe: "coverage".to_string(),
-                reason: "fast profile".to_string(),
-            });
-        }
-        ProbeProfile::Full | ProbeProfile::Exhibit => {
-            // Mark as not_run since tooling isn't yet integrated
-            not_run.push(SkippedProbe {
-                probe: "cargo-geiger".to_string(),
-                reason: "tooling not yet integrated".to_string(),
-            });
-            not_run.push(SkippedProbe {
-                probe: "cargo-deny".to_string(),
-                reason: "tooling not yet integrated".to_string(),
-            });
-            not_run.push(SkippedProbe {
-                probe: "coverage".to_string(),
-                reason: "tooling not yet integrated".to_string(),
-            });
-        }
-    }
+    let mut safety: Option<Safety> = None;
+    let mut structure: Option<Structure> = None;
+    let mut verification: Option<TelemetryVerification> = None;
 
     // Add a basic probe result for git-diff (always runs)
     probes.push(ProbeResult {
@@ -814,12 +824,110 @@ pub fn run_telemetry(args: ReceiptsTelemetryArgs) -> Result<()> {
         artifact_path: None,
     });
 
+    match profile {
+        ProbeProfile::Fast => {
+            // Fast profile skips heavy analysis tools
+            not_run.push(SkippedProbe {
+                probe: "cargo-geiger".to_string(),
+                reason: "fast profile".to_string(),
+            });
+            not_run.push(SkippedProbe {
+                probe: "cargo-modules".to_string(),
+                reason: "fast profile".to_string(),
+            });
+            not_run.push(SkippedProbe {
+                probe: "cargo-deny".to_string(),
+                reason: "fast profile".to_string(),
+            });
+            not_run.push(SkippedProbe {
+                probe: "coverage".to_string(),
+                reason: "fast profile".to_string(),
+            });
+            not_run.push(SkippedProbe {
+                probe: "rust-code-analysis".to_string(),
+                reason: "fast profile".to_string(),
+            });
+        }
+        ProbeProfile::Full | ProbeProfile::Exhibit => {
+            // Run cargo-geiger for safety analysis
+            let (geiger_probe, geiger_safety) = run_geiger_probe();
+            probes.push(geiger_probe);
+            if let Some(s) = geiger_safety {
+                // Merge with unsafe delta from git diff
+                let unsafe_delta = count_unsafe_delta(&args.base_branch);
+                safety = Some(Safety {
+                    unsafe_added: unsafe_delta.added,
+                    unsafe_removed: unsafe_delta.removed,
+                    geiger_summary: s.geiger_summary,
+                    pointers: s.pointers,
+                });
+            } else {
+                // Just use git diff unsafe counts
+                let unsafe_delta = count_unsafe_delta(&args.base_branch);
+                if unsafe_delta.added > 0 || unsafe_delta.removed > 0 {
+                    safety = Some(Safety {
+                        unsafe_added: unsafe_delta.added,
+                        unsafe_removed: unsafe_delta.removed,
+                        geiger_summary: None,
+                        pointers: vec![],
+                    });
+                }
+            }
+
+            // Run cargo-modules for structural analysis
+            let (modules_probe, modules_structure) = run_modules_probe();
+            probes.push(modules_probe);
+            if let Some(s) = modules_structure {
+                structure = Some(s);
+            }
+
+            // cargo-deny is still not integrated
+            not_run.push(SkippedProbe {
+                probe: "cargo-deny".to_string(),
+                reason: "tooling not yet integrated".to_string(),
+            });
+
+            // coverage requires special setup
+            not_run.push(SkippedProbe {
+                probe: "coverage".to_string(),
+                reason: "requires llvm-cov setup".to_string(),
+            });
+
+            // rust-code-analysis only for exhibit profile
+            if profile == ProbeProfile::Exhibit {
+                let (rca_probe, rca_verification) =
+                    run_rust_code_analysis_probe(&args.base_branch, &receipts_dir);
+                probes.push(rca_probe);
+                if let Some(v) = rca_verification {
+                    verification = Some(v);
+                }
+            } else {
+                not_run.push(SkippedProbe {
+                    probe: "rust-code-analysis".to_string(),
+                    reason: "full profile (exhibit required)".to_string(),
+                });
+            }
+        }
+    }
+
     let mut builder = TelemetryReceipt::builder()
         .run_id(&run_id)
         .profile(profile)
-        .change_surface(change_surface)
+        .change_surface(change_surface.clone())
         .contracts(contracts)
         .probes(probes);
+
+    if let Some(s) = safety {
+        builder = builder.safety(s);
+    }
+
+    if let Some(s) = structure {
+        builder = builder.structure(s);
+    }
+
+    if let Some(v) = verification {
+        builder = builder.verification(v);
+    }
 
     for skip in not_run {
         builder = builder.skipped(skip);
@@ -828,6 +936,26 @@ pub fn run_telemetry(args: ReceiptsTelemetryArgs) -> Result<()> {
     if let Some(pr_num) = args.pr {
         builder = builder.pr(pr_num as u64);
     }
+
+    // Build meta provenance
+    let mut meta_builder = ReceiptMeta::builder()
+        .method_id("telemetry-v1")
+        .method_version(1)
+        .analysis_run_id(&run_id)
+        .input("git_diff")
+        .input("git_log")
+        .confidence(profile_to_meta_confidence(profile));
+
+    if let Some(commit) = get_current_commit_short() {
+        meta_builder = meta_builder.evidence(commit);
+    }
+
+    // Add evidence pointers for key files analyzed
+    for crate_name in &change_surface.crates_touched {
+        meta_builder = meta_builder.evidence(format!("crates/{}", crate_name));
+    }
+
+    builder = builder.meta(meta_builder.build());
 
     let receipt = builder.build();
 
@@ -846,6 +974,370 @@ pub fn run_telemetry(args: ReceiptsTelemetryArgs) -> Result<()> {
     println!("  Probes ran: {}, skipped: {}", receipt.probes.len(), receipt.not_run.len());
 
     Ok(())
+}
+
+// ============================================================================
+// PROBE IMPLEMENTATIONS
+// ============================================================================
+
+/// Check if a tool is available in PATH
+fn is_tool_available(tool: &str) -> bool {
+    Command::new("which").arg(tool).output().map(|o| o.status.success()).unwrap_or(false)
+}
+
+/// Get version of a tool
+fn get_tool_version(tool: &str) -> Option<String> {
+    Command::new(tool).arg("--version").output().ok().and_then(|o| {
+        let stdout = String::from_utf8_lossy(&o.stdout);
+        // Extract first line and try to find version number
+        stdout.lines().next().map(|s| s.to_string())
+    })
+}
+
+/// Run cargo-geiger probe for unsafe code analysis
+///
+/// Returns (ProbeResult, Option<Safety>)
+fn run_geiger_probe() -> (ProbeResult, Option<Safety>) {
+    let start = Instant::now();
+
+    // Check if cargo-geiger is installed
+    if !is_tool_available("cargo-geiger") {
+        return (
+            ProbeResult {
+                name: "cargo-geiger".to_string(),
+                version: None,
+                status: ProbeStatus::NotRun,
+                reason: Some("tool not installed".to_string()),
+                duration_ms: Some(start.elapsed().as_millis() as u64),
+                artifact_path: None,
+            },
+            None,
+        );
+    }
+
+    let version = get_tool_version("cargo-geiger");
+    println!("  Running cargo-geiger...");
+
+    // Run cargo geiger with JSON output
+    let output = Command::new("cargo").args(["geiger", "--output-format", "Json"]).output();
+
+    match output {
+        Ok(o) if o.status.success() => {
+            let stdout = String::from_utf8_lossy(&o.stdout);
+            let safety = parse_geiger_output(&stdout);
+
+            (
+                ProbeResult {
+                    name: "cargo-geiger".to_string(),
+                    version,
+                    status: ProbeStatus::Run,
+                    reason: None,
+                    duration_ms: Some(start.elapsed().as_millis() as u64),
+                    artifact_path: None,
+                },
+                safety,
+            )
+        }
+        Ok(o) => {
+            let stderr = String::from_utf8_lossy(&o.stderr);
+            (
+                ProbeResult {
+                    name: "cargo-geiger".to_string(),
+                    version,
+                    status: ProbeStatus::Error,
+                    reason: Some(format!("exit code: {}", o.status.code().unwrap_or(-1))),
+                    duration_ms: Some(start.elapsed().as_millis() as u64),
+                    artifact_path: None,
+                },
+                // Try to parse output even on error (partial output)
+                parse_geiger_output(&stderr),
+            )
+        }
+        Err(e) => (
+            ProbeResult {
+                name: "cargo-geiger".to_string(),
+                version,
+                status: ProbeStatus::Error,
+                reason: Some(format!("failed to run: {}", e)),
+                duration_ms: Some(start.elapsed().as_millis() as u64),
+                artifact_path: None,
+            },
+            None,
+        ),
+    }
+}
+
+/// Parse cargo-geiger JSON output into Safety struct
+fn parse_geiger_output(output: &str) -> Option<Safety> {
+    // cargo-geiger JSON format has a "packages" array with unsafe counts
+    // We'll extract the totals for our workspace
+    #[derive(serde::Deserialize)]
+    struct GeigerReport {
+        #[serde(default)]
+        packages: Vec<GeigerPackage>,
+    }
+
+    #[derive(serde::Deserialize)]
+    struct GeigerPackage {
+        #[serde(default)]
+        unsafety: GeigerUnsafety,
+    }
+
+    #[derive(serde::Deserialize, Default)]
+    struct GeigerUnsafety {
+        #[serde(default)]
+        used: GeigerCounts,
+        #[serde(default)]
+        unused: GeigerCounts,
+        #[serde(default)]
+        forbids_unsafe: bool,
+    }
+
+    #[derive(serde::Deserialize, Default)]
+    struct GeigerCounts {
+        #[serde(default)]
+        functions: GeigerCount,
+        #[serde(default)]
+        exprs: GeigerCount,
+        #[serde(default)]
+        item_impls: GeigerCount,
+        #[serde(default)]
+        item_traits: GeigerCount,
+        #[serde(default)]
+        methods: GeigerCount,
+    }
+
+    #[derive(serde::Deserialize, Default)]
+    struct GeigerCount {
+        #[allow(dead_code)]
+        #[serde(default)]
+        safe: u32,
+        #[serde(default)]
+        unsafe_: u32,
+    }
+
+    // Try to parse the JSON - it might be mixed with other output
+    for line in output.lines() {
+        if let Ok(report) = serde_json::from_str::<GeigerReport>(line) {
+            let mut used_total = 0u32;
+            let mut unused_total = 0u32;
+            let mut any_forbid = false;
+
+            for pkg in &report.packages {
+                used_total += pkg.unsafety.used.functions.unsafe_
+                    + pkg.unsafety.used.exprs.unsafe_
+                    + pkg.unsafety.used.item_impls.unsafe_
+                    + pkg.unsafety.used.item_traits.unsafe_
+                    + pkg.unsafety.used.methods.unsafe_;
+
+                unused_total += pkg.unsafety.unused.functions.unsafe_
+                    + pkg.unsafety.unused.exprs.unsafe_
+                    + pkg.unsafety.unused.item_impls.unsafe_
+                    + pkg.unsafety.unused.item_traits.unsafe_
+                    + pkg.unsafety.unused.methods.unsafe_;
+
+                if pkg.unsafety.forbids_unsafe {
+                    any_forbid = true;
+                }
+            }
+
+            return Some(Safety {
+                unsafe_added: 0,
+                unsafe_removed: 0,
+                geiger_summary: Some(GeigerSummary {
+                    used_unsafe: used_total,
+                    unused_unsafe: unused_total,
+                    forbid_unsafe: any_forbid,
+                }),
+                pointers: vec![],
+            });
+        }
+    }
+
+    None
+}
+
+/// Run cargo-modules probe for dependency cycle detection
+///
+/// Returns (ProbeResult, Option<Structure>)
+fn run_modules_probe() -> (ProbeResult, Option<Structure>) {
+    let start = Instant::now();
+
+    // Check if cargo-modules is installed
+    if !is_tool_available("cargo-modules") {
+        return (
+            ProbeResult {
+                name: "cargo-modules".to_string(),
+                version: None,
+                status: ProbeStatus::NotRun,
+                reason: Some("tool not installed".to_string()),
+                duration_ms: Some(start.elapsed().as_millis() as u64),
+                artifact_path: None,
+            },
+            None,
+        );
+    }
+
+    let version = get_tool_version("cargo-modules");
+    println!("  Running cargo-modules dependencies --acyclic...");
+
+    // Run cargo modules dependencies --acyclic
+    // This command fails (non-zero exit) if cycles are detected
+    let output = Command::new("cargo").args(["modules", "dependencies", "--acyclic"]).output();
+
+    match output {
+        Ok(o) => {
+            let cycles_detected = !o.status.success();
+            let stdout = String::from_utf8_lossy(&o.stdout);
+
+            // Try to count dependency edges from output
+            let edges_count = count_dependency_edges(&stdout);
+
+            (
+                ProbeResult {
+                    name: "cargo-modules".to_string(),
+                    version,
+                    status: ProbeStatus::Run,
+                    reason: if cycles_detected {
+                        Some("cycles detected".to_string())
+                    } else {
+                        None
+                    },
+                    duration_ms: Some(start.elapsed().as_millis() as u64),
+                    artifact_path: None,
+                },
+                Some(Structure {
+                    cycles_detected,
+                    dependency_edges_delta: edges_count.unwrap_or(0),
+                    pointers: vec![],
+                }),
+            )
+        }
+        Err(e) => (
+            ProbeResult {
+                name: "cargo-modules".to_string(),
+                version,
+                status: ProbeStatus::Error,
+                reason: Some(format!("failed to run: {}", e)),
+                duration_ms: Some(start.elapsed().as_millis() as u64),
+                artifact_path: None,
+            },
+            None,
+        ),
+    }
+}
+
+/// Count dependency edges from cargo-modules output
+fn count_dependency_edges(output: &str) -> Option<i32> {
+    // cargo-modules outputs dependency lines like "mod_a -> mod_b"
+    let edge_count = output.lines().filter(|line| line.contains("->")).count();
+    if edge_count > 0 { Some(edge_count as i32) } else { None }
+}
+
+/// Run rust-code-analysis probe for complexity metrics
+///
+/// Returns (ProbeResult, Option<TelemetryVerification>)
+fn run_rust_code_analysis_probe(
+    base_branch: &str,
+    receipts_dir: &std::path::Path,
+) -> (ProbeResult, Option<TelemetryVerification>) {
+    let start = Instant::now();
+
+    // Check if rust-code-analysis-cli is installed
+    if !is_tool_available("rust-code-analysis-cli") {
+        return (
+            ProbeResult {
+                name: "rust-code-analysis".to_string(),
+                version: None,
+                status: ProbeStatus::NotRun,
+                reason: Some("tool not installed".to_string()),
+                duration_ms: Some(start.elapsed().as_millis() as u64),
+                artifact_path: None,
+            },
+            None,
+        );
+    }
+
+    let version = get_tool_version("rust-code-analysis-cli");
+    println!("  Running rust-code-analysis on changed files...");
+
+    // Get list of changed Rust files
+    let changed_files = get_changed_rust_files(base_branch);
+    if changed_files.is_empty() {
+        return (
+            ProbeResult {
+                name: "rust-code-analysis".to_string(),
+                version,
+                status: ProbeStatus::Run,
+                reason: Some("no Rust files changed".to_string()),
+                duration_ms: Some(start.elapsed().as_millis() as u64),
+                artifact_path: None,
+            },
+            None,
+        );
+    }
+
+    // Run rust-code-analysis-cli on each file and collect metrics
+    let artifact_path = receipts_dir.join("rca-metrics.json");
+    let mut all_metrics = Vec::new();
+
+    for file in &changed_files {
+        let output = Command::new("rust-code-analysis-cli")
+            .args(["--metrics", "-O", "json", "-p", file])
+            .output();
+
+        if let Ok(o) = output
+            && o.status.success()
+        {
+            let stdout = String::from_utf8_lossy(&o.stdout);
+            if let Ok(metrics) = serde_json::from_str::<serde_json::Value>(&stdout) {
+                all_metrics.push(serde_json::json!({
+                    "file": file,
+                    "metrics": metrics
+                }));
+            }
+        }
+    }
+
+    // Write aggregated metrics to artifact file
+    if !all_metrics.is_empty() {
+        let _ = std::fs::write(&artifact_path, serde_json::to_string_pretty(&all_metrics).unwrap());
+    }
+
+    (
+        ProbeResult {
+            name: "rust-code-analysis".to_string(),
+            version,
+            status: ProbeStatus::Run,
+            reason: None,
+            duration_ms: Some(start.elapsed().as_millis() as u64),
+            artifact_path: if !all_metrics.is_empty() {
+                Some(artifact_path.to_string_lossy().to_string())
+            } else {
+                None
+            },
+        },
+        Some(TelemetryVerification {
+            tests_added: 0,
+            tests_modified: 0,
+            coverage_report_path: None,
+            mutation_outcomes_path: None,
+        }),
+    )
+}
+
+/// Get list of changed Rust files
+fn get_changed_rust_files(base_branch: &str) -> Vec<String> {
+    let output = Command::new("git").args(["diff", "--name-only", base_branch]).output();
+
+    match output {
+        Ok(o) => String::from_utf8_lossy(&o.stdout)
+            .lines()
+            .filter(|line| line.ends_with(".rs"))
+            .map(|s| s.to_string())
+            .collect(),
+        Err(_) => vec![],
+    }
 }
 
 // ============================================================================
@@ -871,6 +1363,33 @@ impl Default for ReceiptsTimelineArgs {
             pr: None,
             output_dir: PathBuf::from(".runs/current"),
             base_branch: "origin/main".to_string(),
+            session_gap_minutes: 30,
+        }
+    }
+}
+
+/// Arguments for the receipts-forensic command
+#[derive(Debug, Clone)]
+pub struct ReceiptsForensicArgs {
+    /// Pull request number (required for forensic analysis)
+    pub pr: u32,
+    /// Output directory for receipts
+    pub output_dir: PathBuf,
+    /// Base branch for comparison (default: origin/main)
+    pub base_branch: String,
+    /// Probe profile (fast/full/exhibit)
+    pub profile: String,
+    /// Session gap threshold in minutes (default: 30)
+    pub session_gap_minutes: u32,
+}
+
+impl Default for ReceiptsForensicArgs {
+    fn default() -> Self {
+        Self {
+            pr: 0,
+            output_dir: PathBuf::from(".runs/current"),
+            base_branch: "origin/main".to_string(),
+            profile: "fast".to_string(),
             session_gap_minutes: 30,
         }
     }
@@ -920,6 +1439,12 @@ pub fn run_timeline(args: ReceiptsTimelineArgs) -> Result<()> {
     // Find friction zones (files touched multiple times)
     let friction_zones = find_friction_zones(&args.base_branch);
 
+    // Detect oscillations (add/remove/add patterns indicating uncertainty)
+    let oscillations = detect_oscillations(&args.base_branch);
+
+    // Detect convergence (how the PR stabilized toward completion)
+    let convergence = detect_convergence(&args.base_branch, &commits);
+
     // Classify topology
     let (topology, confidence, reasons) = classify_topology(&commits, &friction_zones, &sessions);
 
@@ -934,6 +1459,10 @@ pub fn run_timeline(args: ReceiptsTimelineArgs) -> Result<()> {
         builder = builder.friction_zone(zone);
     }
 
+    for osc in oscillations.iter().cloned() {
+        builder = builder.oscillation(osc);
+    }
+
     for reason in reasons {
         builder = builder.topology_reason(reason);
     }
@@ -941,6 +1470,32 @@ pub fn run_timeline(args: ReceiptsTimelineArgs) -> Result<()> {
     if let Some(pr_num) = args.pr {
         builder = builder.pr(pr_num as u64);
     }
+
+    if let Some(conv) = convergence {
+        builder = builder.convergence(conv);
+    }
+
+    // Build meta provenance - timeline uses medium confidence by default
+    // as it relies on git history analysis
+    let mut meta_builder = ReceiptMeta::builder()
+        .method_id("timeline-v1")
+        .method_version(1)
+        .analysis_run_id(&run_id)
+        .input("git_log")
+        .input("commit_history")
+        .assumption(format!("session gap threshold: {} minutes", args.session_gap_minutes))
+        .confidence(MetaConfidence::Medium);
+
+    if let Some(commit) = get_current_commit_short() {
+        meta_builder = meta_builder.evidence(commit);
+    }
+
+    // Add evidence pointers for commits analyzed
+    for commit in commits.iter().take(5) {
+        meta_builder = meta_builder.evidence(&commit.sha[..7.min(commit.sha.len())]);
+    }
+
+    builder = builder.meta(meta_builder.build());
 
     let receipt = builder.build();
 
@@ -954,7 +1509,164 @@ pub fn run_timeline(args: ReceiptsTimelineArgs) -> Result<()> {
     println!("  Commits: {}", commits.len());
     println!("  Sessions: {}", receipt.sessions.len());
     println!("  Friction zones: {}", receipt.friction_zones.len());
+    println!("  Oscillations: {}", receipt.oscillations.len());
     println!("  Topology: {:?} ({:?} confidence)", receipt.topology, receipt.topology_confidence);
+    if let Some(ref conv) = receipt.convergence {
+        println!(
+            "  Convergence: stable={}, categories={:?}",
+            conv.last_n_commits_stable, conv.stable_categories
+        );
+    }
+
+    Ok(())
+}
+
+// ============================================================================
+// FORENSIC RECEIPT (orchestrates all emitters)
+// ============================================================================
+
+/// Run all receipt emitters in sequence for comprehensive PR forensics
+///
+/// This is the main entry point for generating a complete forensic receipt set.
+/// It runs:
+/// 1. telemetry - provides facts about the change surface
+/// 2. timeline - analyzes git history for development patterns
+/// 3. quality - computes code quality metrics
+/// 4. validate - validates all receipts against schemas
+pub fn run_forensic(args: ReceiptsForensicArgs) -> Result<()> {
+    println!("{}", "Running forensic receipt generation...".blue().bold());
+    println!();
+    println!("  PR: #{}", args.pr);
+    println!("  Profile: {}", args.profile);
+    println!("  Base branch: {}", args.base_branch);
+    println!("  Output: {}", args.output_dir.display());
+    println!();
+
+    // Create output directory structure
+    std::fs::create_dir_all(&args.output_dir).with_context(|| {
+        format!("Failed to create output directory: {}", args.output_dir.display())
+    })?;
+
+    let receipts_dir = args.output_dir.join("receipts");
+    std::fs::create_dir_all(&receipts_dir).with_context(|| {
+        format!("Failed to create receipts directory: {}", receipts_dir.display())
+    })?;
+
+    // Track results for summary
+    let mut results: Vec<(&str, bool, String)> = Vec::new();
+    let start_time = Instant::now();
+
+    // 1. Telemetry receipt (first, provides facts)
+    println!("{}", "Step 1/4: Generating telemetry receipt...".cyan());
+    let telemetry_result = run_telemetry(ReceiptsTelemetryArgs {
+        pr: Some(args.pr),
+        output_dir: args.output_dir.clone(),
+        profile: args.profile.clone(),
+        base_branch: args.base_branch.clone(),
+    });
+    match &telemetry_result {
+        Ok(()) => results.push(("telemetry", true, "generated".to_string())),
+        Err(e) => results.push(("telemetry", false, e.to_string())),
+    }
+    println!();
+
+    // 2. Timeline receipt (uses git history)
+    println!("{}", "Step 2/4: Generating timeline receipt...".cyan());
+    let timeline_result = run_timeline(ReceiptsTimelineArgs {
+        pr: Some(args.pr),
+        output_dir: args.output_dir.clone(),
+        base_branch: args.base_branch.clone(),
+        session_gap_minutes: args.session_gap_minutes,
+    });
+    match &timeline_result {
+        Ok(()) => results.push(("timeline", true, "generated".to_string())),
+        Err(e) => results.push(("timeline", false, e.to_string())),
+    }
+    println!();
+
+    // 3. Quality receipt (can use telemetry data)
+    println!("{}", "Step 3/4: Generating quality receipt...".cyan());
+    let quality_result = run_quality(ReceiptsQualityArgs {
+        pr: Some(args.pr),
+        output_dir: args.output_dir.clone(),
+        base_branch: args.base_branch.clone(),
+        boundary_rating: None,
+        test_depth_rating: None,
+        notes: vec![],
+    });
+    match &quality_result {
+        Ok(()) => results.push(("quality", true, "generated".to_string())),
+        Err(e) => results.push(("quality", false, e.to_string())),
+    }
+    println!();
+
+    // 4. Validate all receipts
+    println!("{}", "Step 4/4: Validating receipts against schemas...".cyan());
+    let validate_result = run_validate(ReceiptsValidateArgs {
+        run_dir: args.output_dir.clone(),
+        schema_dir: PathBuf::from("specs/schemas"),
+    });
+    match &validate_result {
+        Ok(()) => results.push(("validate", true, "all valid".to_string())),
+        Err(e) => results.push(("validate", false, e.to_string())),
+    }
+
+    let elapsed = start_time.elapsed();
+
+    // Print summary
+    println!();
+    println!("{}", "=".repeat(60));
+    println!("{}", "Forensic Receipt Summary".blue().bold());
+    println!("{}", "=".repeat(60));
+    println!();
+
+    let mut pass_count = 0;
+    let mut fail_count = 0;
+
+    for (name, passed, detail) in &results {
+        if *passed {
+            pass_count += 1;
+            println!("  {} {}: {}", "PASS".green(), name, detail.dimmed());
+        } else {
+            fail_count += 1;
+            println!("  {} {}: {}", "FAIL".red(), name, detail);
+        }
+    }
+
+    println!();
+    println!("  Total time: {:.2}s", elapsed.as_secs_f64());
+    println!("  Output directory: {}", args.output_dir.display());
+    println!();
+
+    // List generated receipts
+    if receipts_dir.exists() {
+        let mut receipts: Vec<_> = std::fs::read_dir(&receipts_dir)?
+            .filter_map(|e| e.ok())
+            .filter(|e| e.path().extension().and_then(|s| s.to_str()) == Some("json"))
+            .map(|e| e.file_name().to_string_lossy().to_string())
+            .collect();
+        receipts.sort();
+
+        if !receipts.is_empty() {
+            println!("  Generated receipts:");
+            for receipt in &receipts {
+                println!("    - {}", receipt);
+            }
+            println!();
+        }
+    }
+
+    if fail_count > 0 {
+        println!(
+            "{} {} passed, {} failed",
+            "Summary:".bold(),
+            pass_count.to_string().green(),
+            fail_count.to_string().red()
+        );
+        anyhow::bail!("{} step(s) failed during forensic receipt generation", fail_count);
+    }
+
+    println!("{} All {} steps completed successfully", "OK".green().bold(), pass_count);
 
     Ok(())
 }
@@ -1186,11 +1898,83 @@ fn detect_contract_changes(base_branch: &str) -> Contracts {
 
 /// Commit information
 struct CommitInfo {
-    #[allow(dead_code)]
     sha: String,
     timestamp: chrono::DateTime<Utc>,
     #[allow(dead_code)]
     author: String,
+}
+
+/// File category for convergence detection
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+enum FileCategory {
+    /// Test files: **/tests/**, *_test.rs
+    Tests,
+    /// Documentation: docs/**, *.md
+    Docs,
+    /// Receipt files: .runs/**
+    Receipts,
+    /// Config files: *.toml, *.yaml, *.json in root or specs/
+    Config,
+    /// Implementation files
+    Impl,
+}
+
+impl FileCategory {
+    /// Categorize a file path
+    fn from_path(path: &str) -> Self {
+        // Tests
+        if path.contains("/tests/")
+            || path.ends_with("_test.rs")
+            || path.contains("tests.rs")
+            || (path.contains("/mod.rs") && path.contains("tests"))
+        {
+            return FileCategory::Tests;
+        }
+
+        // Docs
+        if path.starts_with("docs/") || path.ends_with(".md") {
+            return FileCategory::Docs;
+        }
+
+        // Receipts
+        if path.starts_with(".runs/") {
+            return FileCategory::Receipts;
+        }
+
+        // Config
+        if (path.ends_with(".toml") || path.ends_with(".yaml") || path.ends_with(".json"))
+            && (path.starts_with("specs/")
+                || !path.contains('/')
+                || path.starts_with(".claude/")
+                || path.starts_with(".llm/"))
+        {
+            return FileCategory::Config;
+        }
+
+        FileCategory::Impl
+    }
+
+    /// Check if this category is "stable" (non-implementation)
+    fn is_stable(&self) -> bool {
+        matches!(
+            self,
+            FileCategory::Tests
+                | FileCategory::Docs
+                | FileCategory::Receipts
+                | FileCategory::Config
+        )
+    }
+
+    /// Convert to string representation for receipt output
+    fn as_str(&self) -> &'static str {
+        match self {
+            FileCategory::Tests => "tests",
+            FileCategory::Docs => "docs",
+            FileCategory::Receipts => "receipts",
+            FileCategory::Config => "config",
+            FileCategory::Impl => "impl",
+        }
+    }
 }
 
 /// Get commit history between HEAD and base branch
@@ -1222,6 +2006,128 @@ fn get_commit_history(base_branch: &str) -> Vec<CommitInfo> {
                 .collect()
         }
         Err(_) => vec![],
+    }
+}
+
+/// Get files changed in a specific commit
+fn get_files_changed_in_commit(sha: &str) -> Vec<String> {
+    let output = Command::new("git")
+        .args(["diff-tree", "--no-commit-id", "--name-only", "-r", sha])
+        .output();
+
+    match output {
+        Ok(out) => {
+            let stdout = String::from_utf8_lossy(&out.stdout);
+            stdout.lines().map(|s| s.to_string()).collect()
+        }
+        Err(_) => vec![],
+    }
+}
+
+/// Commit change summary for convergence analysis
+struct CommitChangeSummary {
+    sha: String,
+    file_count: usize,
+    categories: std::collections::HashSet<FileCategory>,
+    is_stable: bool,
+}
+
+/// Detect convergence in the commit history
+///
+/// Convergence detection looks for:
+/// 1. An inflection point where churn collapsed (last commit touching many impl files)
+/// 2. Whether final N commits only touch stable categories (tests, docs, receipts, config)
+/// 3. What stable categories the final commits touched
+fn detect_convergence(_base_branch: &str, commits: &[CommitInfo]) -> Option<Convergence> {
+    if commits.is_empty() {
+        return None;
+    }
+
+    // Number of final commits to check for stability
+    const STABLE_WINDOW: usize = 3;
+
+    // Analyze each commit's file changes
+    // Commits are ordered newest-first from get_commit_history
+    let mut summaries: Vec<CommitChangeSummary> = Vec::with_capacity(commits.len());
+
+    for commit in commits {
+        let files = get_files_changed_in_commit(&commit.sha);
+        let categories: std::collections::HashSet<FileCategory> =
+            files.iter().map(|f| FileCategory::from_path(f)).collect();
+
+        let is_stable = !categories.is_empty() && categories.iter().all(|c| c.is_stable());
+
+        summaries.push(CommitChangeSummary {
+            sha: commit.sha.clone(),
+            file_count: files.len(),
+            categories,
+            is_stable,
+        });
+    }
+
+    if summaries.is_empty() {
+        return None;
+    }
+
+    // Check if last N commits are stable
+    let window_size = std::cmp::min(STABLE_WINDOW, summaries.len());
+    let final_commits = &summaries[..window_size];
+    let last_n_commits_stable = final_commits.iter().all(|s| s.is_stable);
+
+    // Collect stable categories from final commits
+    let mut stable_categories_set: std::collections::HashSet<&str> =
+        std::collections::HashSet::new();
+    if last_n_commits_stable {
+        for summary in final_commits {
+            for cat in &summary.categories {
+                if cat.is_stable() {
+                    stable_categories_set.insert(cat.as_str());
+                }
+            }
+        }
+    }
+
+    let stable_categories: Vec<String> =
+        stable_categories_set.into_iter().map(String::from).collect();
+
+    // Find inflection point: last commit that touched impl files before stabilization
+    // Walk from newest to oldest, find where impl work stopped
+    let mut inflection_commit: Option<String> = None;
+
+    // If all commits are stable, no inflection point
+    if !summaries.iter().all(|s| s.is_stable) {
+        // Find the newest commit that touched impl
+        // Then the inflection is the commit right before the stable tail started
+
+        // First, find where the stable tail begins (from newest)
+        let stable_tail_start =
+            summaries.iter().position(|s| !s.is_stable).unwrap_or(summaries.len());
+
+        // If there's a stable tail and impl commits before it, the inflection is the first impl
+        // commit
+        if stable_tail_start > 0 && stable_tail_start < summaries.len() {
+            // The inflection is the commit at stable_tail_start (first non-stable from newest)
+            inflection_commit = Some(summaries[stable_tail_start].sha.clone());
+        } else if stable_tail_start == 0 {
+            // No stable tail at all - look for where file count dropped
+            // Find the commit with the most files as a potential inflection
+            if let Some((idx, _)) = summaries
+                .iter()
+                .enumerate()
+                .filter(|(_, s)| s.file_count > 0)
+                .max_by_key(|(_, s)| s.file_count)
+            {
+                // The inflection is where exploration peaked
+                inflection_commit = Some(summaries[idx].sha.clone());
+            }
+        }
+    }
+
+    // Only return convergence if there's meaningful data
+    if inflection_commit.is_some() || last_n_commits_stable || !stable_categories.is_empty() {
+        Some(Convergence { inflection_commit, last_n_commits_stable, stable_categories })
+    } else {
+        None
     }
 }
 
@@ -1369,6 +2275,315 @@ fn classify_topology(
     (Topology::Linear, TimelineConfidence::Low, reasons)
 }
 
+// ============================================================================
+// OSCILLATION DETECTION
+// ============================================================================
+
+/// Represents an action on a subject (file or dependency) in a commit
+#[derive(Debug, Clone, PartialEq, Eq)]
+enum SubjectAction {
+    Add,
+    Remove,
+}
+
+/// Track per-commit changes for a subject
+#[derive(Debug, Clone)]
+struct SubjectHistory {
+    actions: Vec<(String, SubjectAction)>, // (commit_sha, action)
+}
+
+impl SubjectHistory {
+    fn new() -> Self {
+        Self { actions: Vec::new() }
+    }
+
+    fn push(&mut self, commit: String, action: SubjectAction) {
+        self.actions.push((commit, action));
+    }
+
+    /// Check if this history shows an oscillation pattern (Add -> Remove or Remove -> Add -> Remove, etc.)
+    /// Returns the sequence of actions if it's an oscillation (2+ alternating actions)
+    fn to_oscillation_sequence(&self) -> Option<Vec<OscillationAction>> {
+        if self.actions.len() < 2 {
+            return None;
+        }
+
+        // Convert to oscillation actions and check for alternation
+        let mut sequence = Vec::new();
+        let mut prev_action: Option<&SubjectAction> = None;
+        let mut has_alternation = false;
+
+        for (_, action) in &self.actions {
+            let osc_action = match action {
+                SubjectAction::Add => OscillationAction::Add,
+                SubjectAction::Remove => OscillationAction::Remove,
+            };
+
+            // Check if this alternates from previous
+            if let Some(prev) = prev_action
+                && prev != action
+            {
+                has_alternation = true;
+            }
+
+            sequence.push(osc_action);
+            prev_action = Some(action);
+        }
+
+        if has_alternation { Some(sequence) } else { None }
+    }
+}
+
+/// Detect oscillations in the commit history between base_branch and HEAD
+///
+/// This function detects:
+/// - Dependency oscillations: deps added then removed (or vice versa)
+/// - File oscillations: files created then deleted (or vice versa)
+pub fn detect_oscillations(base_branch: &str) -> Vec<Oscillation> {
+    let mut oscillations = Vec::new();
+
+    // Get commit list from oldest to newest
+    let commits = get_commit_shas_oldest_first(base_branch);
+    if commits.len() < 2 {
+        return oscillations;
+    }
+
+    // Detect dependency oscillations
+    let dep_oscillations = detect_dependency_oscillations(base_branch, &commits);
+    oscillations.extend(dep_oscillations);
+
+    // Detect file oscillations
+    let file_oscillations = detect_file_oscillations(base_branch, &commits);
+    oscillations.extend(file_oscillations);
+
+    oscillations
+}
+
+/// Get commit SHAs from oldest to newest
+fn get_commit_shas_oldest_first(base_branch: &str) -> Vec<String> {
+    let output = Command::new("git")
+        .args(["log", "--format=%H", "--reverse", &format!("{}..HEAD", base_branch)])
+        .output();
+
+    match output {
+        Ok(out) => {
+            let stdout = String::from_utf8_lossy(&out.stdout);
+            stdout.lines().map(|s| s.to_string()).collect()
+        }
+        Err(_) => vec![],
+    }
+}
+
+/// Detect dependency oscillations by parsing Cargo.toml changes across commits
+fn detect_dependency_oscillations(base_branch: &str, commits: &[String]) -> Vec<Oscillation> {
+    let mut dep_history: HashMap<String, SubjectHistory> = HashMap::new();
+
+    // For each commit, get the diff of Cargo.toml files and track dependency changes
+    for (i, commit) in commits.iter().enumerate() {
+        let parent = if i == 0 { base_branch.to_string() } else { commits[i - 1].clone() };
+
+        // Get diff for Cargo.toml files in this commit
+        let output = Command::new("git")
+            .args(["diff", "-U0", &parent, commit, "--", "**/Cargo.toml", "Cargo.toml"])
+            .output();
+
+        if let Ok(out) = output {
+            let diff = String::from_utf8_lossy(&out.stdout);
+            parse_cargo_toml_diff(&diff, commit, &mut dep_history);
+        }
+    }
+
+    // Convert histories to oscillations
+    dep_history
+        .into_iter()
+        .filter_map(|(dep_name, history)| {
+            history.to_oscillation_sequence().map(|sequence| Oscillation {
+                oscillation_type: OscillationType::Dependency,
+                subject: dep_name,
+                sequence,
+            })
+        })
+        .collect()
+}
+
+/// Parse a Cargo.toml diff to extract dependency additions/removals
+fn parse_cargo_toml_diff(diff: &str, commit: &str, history: &mut HashMap<String, SubjectHistory>) {
+    // We're looking for lines like:
+    // +serde = "1.0"
+    // -serde = "1.0"
+    // +serde = { version = "1.0", features = ["derive"] }
+    // -serde = { version = "1.0", features = ["derive"] }
+
+    let mut in_dependencies_section = false;
+
+    for line in diff.lines() {
+        // Track if we're entering a dependencies section
+        if line.contains("[dependencies]")
+            || line.contains("[dev-dependencies]")
+            || line.contains("[build-dependencies]")
+            || line.contains(".dependencies]")
+        {
+            in_dependencies_section = true;
+            continue;
+        }
+
+        // Exit dependency section on new section
+        if line.starts_with('+') || line.starts_with('-') {
+            let content = &line[1..];
+            if content.starts_with('[') && !content.contains("dependencies") {
+                in_dependencies_section = false;
+                continue;
+            }
+        }
+
+        // Skip non-diff lines and header lines
+        if !line.starts_with('+') && !line.starts_with('-') {
+            continue;
+        }
+        if line.starts_with("+++") || line.starts_with("---") {
+            continue;
+        }
+
+        // Parse dependency line
+        let is_add = line.starts_with('+');
+        let content = &line[1..].trim();
+
+        // Skip empty lines and section headers
+        if content.is_empty() || content.starts_with('[') {
+            continue;
+        }
+
+        // Extract dependency name - it's the part before '=' or '.'
+        // e.g., "serde = ..." or "serde.workspace = true"
+        if let Some(dep_name) = extract_dependency_name(content) {
+            // Only track if we think we're in a dependencies section
+            // or the line looks like a dependency declaration
+            if in_dependencies_section || looks_like_dependency_line(content) {
+                let entry = history.entry(dep_name).or_insert_with(SubjectHistory::new);
+                let action = if is_add { SubjectAction::Add } else { SubjectAction::Remove };
+                entry.push(commit.to_string(), action);
+            }
+        }
+    }
+}
+
+/// Extract dependency name from a Cargo.toml dependency line
+fn extract_dependency_name(line: &str) -> Option<String> {
+    // Handle "dep = ..." or "dep.feature = ..."
+    let line = line.trim();
+
+    // Skip if this doesn't look like a dep line
+    if !line.contains('=') {
+        return None;
+    }
+
+    // Get the part before '='
+    let before_eq = line.split('=').next()?.trim();
+
+    // Handle "dep.workspace" -> "dep"
+    let name = before_eq.split('.').next()?.trim();
+
+    // Validate it looks like a crate name (alphanumeric, _, -)
+    if name.is_empty() {
+        return None;
+    }
+    if !name.chars().all(|c| c.is_alphanumeric() || c == '_' || c == '-') {
+        return None;
+    }
+
+    // Skip common non-dependency keys
+    let skip_keys = [
+        "version",
+        "edition",
+        "name",
+        "authors",
+        "description",
+        "license",
+        "repository",
+        "readme",
+        "keywords",
+        "categories",
+        "workspace",
+        "package",
+        "path",
+        "features",
+        "default-features",
+        "optional",
+        "default",
+        "members",
+        "exclude",
+        "include",
+        "resolver",
+        "rust-version",
+    ];
+    if skip_keys.contains(&name) {
+        return None;
+    }
+
+    Some(name.to_string())
+}
+
+/// Check if a line looks like a dependency declaration
+fn looks_like_dependency_line(line: &str) -> bool {
+    let line = line.trim();
+    // Dependency lines typically have format: name = "version" or name = { ... }
+    if let Some(after_eq) = line.split('=').nth(1) {
+        let after_eq = after_eq.trim();
+        // Version string or table
+        after_eq.starts_with('"') || after_eq.starts_with('{') || after_eq == "true"
+    } else {
+        false
+    }
+}
+
+/// Detect file oscillations by tracking file additions/deletions across commits
+fn detect_file_oscillations(base_branch: &str, commits: &[String]) -> Vec<Oscillation> {
+    let mut file_history: HashMap<String, SubjectHistory> = HashMap::new();
+
+    for (i, commit) in commits.iter().enumerate() {
+        let parent = if i == 0 { base_branch.to_string() } else { commits[i - 1].clone() };
+
+        // Get list of added and deleted files in this commit
+        let output = Command::new("git")
+            .args(["diff", "--name-status", "--diff-filter=AD", &parent, commit])
+            .output();
+
+        if let Ok(out) = output {
+            let diff = String::from_utf8_lossy(&out.stdout);
+            for line in diff.lines() {
+                let parts: Vec<&str> = line.split('\t').collect();
+                if parts.len() >= 2 {
+                    let status = parts[0];
+                    let file_path = parts[1];
+
+                    let action = match status {
+                        "A" => SubjectAction::Add,
+                        "D" => SubjectAction::Remove,
+                        _ => continue,
+                    };
+
+                    let entry = file_history
+                        .entry(file_path.to_string())
+                        .or_insert_with(SubjectHistory::new);
+                    entry.push(commit.to_string(), action);
+                }
+            }
+        }
+    }
+
+    // Convert histories to oscillations
+    file_history
+        .into_iter()
+        .filter_map(|(file_path, history)| {
+            history.to_oscillation_sequence().map(|sequence| Oscillation {
+                oscillation_type: OscillationType::File,
+                subject: file_path,
+                sequence,
+            })
+        })
+        .collect()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1431,5 +2646,191 @@ mod tests {
         assert_eq!(serde_json::to_string(&GateStatus::Pass).unwrap(), r#""pass""#);
         assert_eq!(serde_json::to_string(&GateStatus::Fail).unwrap(), r#""fail""#);
         assert_eq!(serde_json::to_string(&GateStatus::Skipped).unwrap(), r#""skipped""#);
+    }
+
+    // ========================================================================
+    // OSCILLATION DETECTION TESTS
+    // ========================================================================
+
+    #[test]
+    fn subject_history_no_oscillation_single_action() {
+        let mut history = SubjectHistory::new();
+        history.push("commit1".to_string(), SubjectAction::Add);
+
+        assert!(history.to_oscillation_sequence().is_none());
+    }
+
+    #[test]
+    fn subject_history_no_oscillation_same_actions() {
+        let mut history = SubjectHistory::new();
+        history.push("commit1".to_string(), SubjectAction::Add);
+        history.push("commit2".to_string(), SubjectAction::Add);
+
+        assert!(history.to_oscillation_sequence().is_none());
+    }
+
+    #[test]
+    fn subject_history_detects_add_remove_oscillation() {
+        let mut history = SubjectHistory::new();
+        history.push("commit1".to_string(), SubjectAction::Add);
+        history.push("commit2".to_string(), SubjectAction::Remove);
+
+        let sequence = history.to_oscillation_sequence().expect("should detect oscillation");
+        assert_eq!(sequence.len(), 2);
+        assert_eq!(sequence[0], OscillationAction::Add);
+        assert_eq!(sequence[1], OscillationAction::Remove);
+    }
+
+    #[test]
+    fn subject_history_detects_add_remove_add_oscillation() {
+        let mut history = SubjectHistory::new();
+        history.push("commit1".to_string(), SubjectAction::Add);
+        history.push("commit2".to_string(), SubjectAction::Remove);
+        history.push("commit3".to_string(), SubjectAction::Add);
+
+        let sequence = history.to_oscillation_sequence().expect("should detect oscillation");
+        assert_eq!(sequence.len(), 3);
+        assert_eq!(sequence[0], OscillationAction::Add);
+        assert_eq!(sequence[1], OscillationAction::Remove);
+        assert_eq!(sequence[2], OscillationAction::Add);
+    }
+
+    #[test]
+    fn extract_dependency_name_simple() {
+        assert_eq!(extract_dependency_name("serde = \"1.0\""), Some("serde".to_string()));
+        assert_eq!(
+            extract_dependency_name("tokio = { version = \"1.0\" }"),
+            Some("tokio".to_string())
+        );
+    }
+
+    #[test]
+    fn extract_dependency_name_workspace() {
+        assert_eq!(extract_dependency_name("serde.workspace = true"), Some("serde".to_string()));
+    }
+
+    #[test]
+    fn extract_dependency_name_skips_metadata() {
+        assert_eq!(extract_dependency_name("version = \"0.1.0\""), None);
+        assert_eq!(extract_dependency_name("edition = \"2021\""), None);
+        assert_eq!(extract_dependency_name("name = \"my-crate\""), None);
+    }
+
+    #[test]
+    fn extract_dependency_name_invalid() {
+        assert_eq!(extract_dependency_name(""), None);
+        assert_eq!(extract_dependency_name("no-equals-sign"), None);
+        assert_eq!(extract_dependency_name("[dependencies]"), None);
+    }
+
+    #[test]
+    fn looks_like_dependency_line_valid() {
+        assert!(looks_like_dependency_line("serde = \"1.0\""));
+        assert!(looks_like_dependency_line("tokio = { version = \"1.0\" }"));
+        assert!(looks_like_dependency_line("serde.workspace = true"));
+    }
+
+    #[test]
+    fn looks_like_dependency_line_invalid() {
+        assert!(!looks_like_dependency_line("[dependencies]"));
+        assert!(!looks_like_dependency_line(""));
+        assert!(!looks_like_dependency_line("no-equals"));
+    }
+
+    #[test]
+    fn parse_cargo_toml_diff_extracts_deps() {
+        let diff = r#"
+diff --git a/Cargo.toml b/Cargo.toml
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -10,0 +11,2 @@
++[dependencies]
++serde = "1.0"
+"#;
+        let mut history = HashMap::new();
+        parse_cargo_toml_diff(diff, "abc123", &mut history);
+
+        assert!(history.contains_key("serde"));
+        assert_eq!(history["serde"].actions.len(), 1);
+        assert_eq!(history["serde"].actions[0].1, SubjectAction::Add);
+    }
+
+    #[test]
+    fn parse_cargo_toml_diff_tracks_removal() {
+        let diff = r#"
+diff --git a/Cargo.toml b/Cargo.toml
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -10,2 +10,0 @@
+-[dependencies]
+-serde = "1.0"
+"#;
+        let mut history = HashMap::new();
+        parse_cargo_toml_diff(diff, "abc123", &mut history);
+
+        assert!(history.contains_key("serde"));
+        assert_eq!(history["serde"].actions.len(), 1);
+        assert_eq!(history["serde"].actions[0].1, SubjectAction::Remove);
+    }
+
+    // ========================================================================
+    // FILE CATEGORY TESTS
+    // ========================================================================
+
+    #[test]
+    fn file_category_tests_detection() {
+        assert_eq!(FileCategory::from_path("crates/foo/tests/integration.rs"), FileCategory::Tests);
+        assert_eq!(FileCategory::from_path("src/lib_test.rs"), FileCategory::Tests);
+        assert_eq!(FileCategory::from_path("crates/x/src/tests.rs"), FileCategory::Tests);
+    }
+
+    #[test]
+    fn file_category_docs_detection() {
+        assert_eq!(FileCategory::from_path("docs/README.md"), FileCategory::Docs);
+        assert_eq!(FileCategory::from_path("CHANGELOG.md"), FileCategory::Docs);
+        assert_eq!(FileCategory::from_path("docs/api/overview.md"), FileCategory::Docs);
+    }
+
+    #[test]
+    fn file_category_receipts_detection() {
+        assert_eq!(
+            FileCategory::from_path(".runs/current/receipts/gate.json"),
+            FileCategory::Receipts
+        );
+        assert_eq!(
+            FileCategory::from_path(".runs/pr123/receipts/timeline.json"),
+            FileCategory::Receipts
+        );
+    }
+
+    #[test]
+    fn file_category_config_detection() {
+        assert_eq!(FileCategory::from_path("Cargo.toml"), FileCategory::Config);
+        assert_eq!(FileCategory::from_path("specs/config.yaml"), FileCategory::Config);
+        assert_eq!(FileCategory::from_path(".claude/settings.json"), FileCategory::Config);
+    }
+
+    #[test]
+    fn file_category_impl_detection() {
+        assert_eq!(FileCategory::from_path("crates/foo/src/lib.rs"), FileCategory::Impl);
+        assert_eq!(FileCategory::from_path("src/main.rs"), FileCategory::Impl);
+    }
+
+    #[test]
+    fn file_category_is_stable() {
+        assert!(FileCategory::Tests.is_stable());
+        assert!(FileCategory::Docs.is_stable());
+        assert!(FileCategory::Receipts.is_stable());
+        assert!(FileCategory::Config.is_stable());
+        assert!(!FileCategory::Impl.is_stable());
+    }
+
+    #[test]
+    fn file_category_as_str() {
+        assert_eq!(FileCategory::Tests.as_str(), "tests");
+        assert_eq!(FileCategory::Docs.as_str(), "docs");
+        assert_eq!(FileCategory::Receipts.as_str(), "receipts");
+        assert_eq!(FileCategory::Config.as_str(), "config");
+        assert_eq!(FileCategory::Impl.as_str(), "impl");
     }
 }

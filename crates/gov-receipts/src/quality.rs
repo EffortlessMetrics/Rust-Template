@@ -3,6 +3,7 @@
 //! The quality receipt captures contract changes, boundary integrity,
 //! verification depth, and risk indicators for a PR or change.
 
+use crate::meta::ReceiptMeta;
 use serde::{Deserialize, Serialize};
 
 /// Quality receipt for tracking code quality metrics.
@@ -24,6 +25,10 @@ pub struct QualityReceipt {
 
     /// Quality metrics.
     pub quality: Quality,
+
+    /// Meta provenance for re-analysis and method versioning.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub meta: Option<ReceiptMeta>,
 }
 
 /// Quality metrics for a PR or change.
@@ -239,6 +244,7 @@ pub struct QualityReceiptBuilder {
     pr: Option<u64>,
     run_id: Option<String>,
     quality: Quality,
+    meta: Option<ReceiptMeta>,
 }
 
 impl QualityReceiptBuilder {
@@ -266,6 +272,12 @@ impl QualityReceiptBuilder {
         self
     }
 
+    /// Set the meta provenance.
+    pub fn meta(mut self, meta: ReceiptMeta) -> Self {
+        self.meta = Some(meta);
+        self
+    }
+
     /// Build the quality receipt.
     pub fn build(self) -> QualityReceipt {
         QualityReceipt {
@@ -273,6 +285,7 @@ impl QualityReceiptBuilder {
             pr: self.pr,
             run_id: self.run_id,
             quality: self.quality,
+            meta: self.meta,
         }
     }
 }
@@ -312,6 +325,7 @@ mod tests {
                     ..Default::default()
                 },
             },
+            meta: None,
         };
 
         let json = serde_json::to_string_pretty(&receipt).unwrap();

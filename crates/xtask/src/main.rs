@@ -905,6 +905,29 @@ enum Commands {
         session_gap_minutes: u32,
     },
 
+    /// Run all receipt emitters for comprehensive PR forensics
+    ///
+    /// Generates a complete forensic receipt set by running:
+    /// 1. telemetry - change surface facts and probe results
+    /// 2. timeline - development pattern analysis from git history
+    /// 3. quality - code quality metrics from diff analysis
+    /// 4. validate - schema validation of all generated receipts
+    #[command(next_help_heading = "📋 Publishing & Forensics")]
+    ReceiptsForensic {
+        /// PR number (required)
+        #[arg(long)]
+        pr: u32,
+        /// Probe profile: fast (quick CI), full (comprehensive), exhibit (forensic)
+        #[arg(long, default_value = "fast")]
+        profile: String,
+        /// Base branch for comparison (default: origin/main)
+        #[arg(long, default_value = "origin/main")]
+        base_branch: String,
+        /// Output directory for receipts (default: .runs/current)
+        #[arg(long, default_value = ".runs/current")]
+        output_dir: std::path::PathBuf,
+    },
+
     // ============================================================================
     // SERVICE SETUP (Initialization & configuration)
     // ============================================================================
@@ -1342,6 +1365,15 @@ fn main() -> Result<()> {
                 session_gap_minutes,
             })
         }
+        Commands::ReceiptsForensic { pr, profile, base_branch, output_dir } => {
+            commands::receipts::run_forensic(commands::receipts::ReceiptsForensicArgs {
+                pr,
+                output_dir,
+                base_branch,
+                profile,
+                session_gap_minutes: 30,
+            })
+        }
         Commands::SuggestNext(args) => commands::suggest_next::run(args),
         Commands::Selftest => commands::selftest::run_with_verbosity(verbosity),
         Commands::KernelSmoke => commands::kernel_smoke::run(),
@@ -1643,6 +1675,7 @@ pub fn all_command_names() -> Vec<&'static str> {
         "receipts-quality",
         "receipts-telemetry",
         "receipts-timeline",
+        "receipts-forensic",
         "release-prepare",
         "release-bundle",
         "release-verify",

@@ -16,10 +16,13 @@
 
 use anyhow::{Context, Result};
 use colored::Colorize;
-use gov_receipts::{EconomicsReceipt, GateReceipt, GateStatus};
+use gov_receipts::{
+    BoundaryRating, EconomicsReceipt, GateReceipt, GateStatus, ProbeStatus, QualityReceipt,
+    TelemetryReceipt, TimelineConfidence, TimelineReceipt, Topology,
+};
 use serde::{Deserialize, Serialize};
 use std::fs;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 /// Idempotent marker: start of cover sheet block
 const COVER_SHEET_START: &str = "<!-- pr-cover-sheet:start -->";
@@ -72,6 +75,9 @@ struct SwarmMeta {
 struct ReceiptPaths {
     gate: Option<String>,
     economics: Option<String>,
+    quality: Option<String>,
+    telemetry: Option<String>,
+    timeline: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -95,6 +101,9 @@ pub fn run(args: PrCoverArgs) -> Result<()> {
     // Check if receipts exist (all receipts are under receipts/ subdirectory)
     let gate_path = run_dir.join("receipts/gate.json");
     let economics_path = run_dir.join("receipts/economics.json");
+    let quality_path = run_dir.join("receipts/quality.json");
+    let telemetry_path = run_dir.join("receipts/telemetry.json");
+    let timeline_path = run_dir.join("receipts/timeline.json");
 
     // Try to load gate receipt using gov-receipts types
     let gate_receipt: Option<GateReceipt> = if gate_path.exists() {
@@ -109,6 +118,36 @@ pub fn run(args: PrCoverArgs) -> Result<()> {
     // Try to load economics receipt using gov-receipts types
     let economics: Option<EconomicsReceipt> = if economics_path.exists() {
         match fs::read_to_string(&economics_path) {
+            Ok(content) => serde_json::from_str(&content).ok(),
+            Err(_) => None,
+        }
+    } else {
+        None
+    };
+
+    // Try to load quality receipt
+    let quality: Option<QualityReceipt> = if quality_path.exists() {
+        match fs::read_to_string(&quality_path) {
+            Ok(content) => serde_json::from_str(&content).ok(),
+            Err(_) => None,
+        }
+    } else {
+        None
+    };
+
+    // Try to load telemetry receipt
+    let telemetry: Option<TelemetryReceipt> = if telemetry_path.exists() {
+        match fs::read_to_string(&telemetry_path) {
+            Ok(content) => serde_json::from_str(&content).ok(),
+            Err(_) => None,
+        }
+    } else {
+        None
+    };
+
+    // Try to load timeline receipt
+    let timeline: Option<TimelineReceipt> = if timeline_path.exists() {
+        match fs::read_to_string(&timeline_path) {
             Ok(content) => serde_json::from_str(&content).ok(),
             Err(_) => None,
         }
@@ -175,6 +214,15 @@ pub fn run(args: PrCoverArgs) -> Result<()> {
 
     content.push('\n');
 
+    // Quality summary section
+    content.push_str(&format_quality_section(&quality, &quality_path));
+
+    // Telemetry summary section
+    content.push_str(&format_telemetry_section(&telemetry, &telemetry_path));
+
+    // Timeline/friction section
+    content.push_str(&format_timeline_section(&timeline, &timeline_path));
+
     // Errata section (proper format)
     content.push_str("### Errata (what we got wrong)\n");
     content.push_str("- Nothing identified in this PR's scope.\n");
@@ -229,6 +277,21 @@ pub fn run(args: PrCoverArgs) -> Result<()> {
             gate: if gate_path.exists() { Some(gate_path.display().to_string()) } else { None },
             economics: if economics_path.exists() {
                 Some(economics_path.display().to_string())
+            } else {
+                None
+            },
+            quality: if quality_path.exists() {
+                Some(quality_path.display().to_string())
+            } else {
+                None
+            },
+            telemetry: if telemetry_path.exists() {
+                Some(telemetry_path.display().to_string())
+            } else {
+                None
+            },
+            timeline: if timeline_path.exists() {
+                Some(timeline_path.display().to_string())
             } else {
                 None
             },
@@ -302,6 +365,254 @@ pub fn replace_cover_sheet(markdown: &str, new_cover_sheet: &str) -> String {
     }
     // No existing cover sheet, prepend it
     format!("{}\n\n{}", new_cover_sheet, markdown)
+}
+
+/// Format quality summary section from quality receipt.
+///
+/// Returns empty string if receipt is None (section is skipped).
+fn format_quality_section(quality: &Option<QualityReceipt>, path: &Path) -> String {
+    let Some(q) = quality else {
+        return String::new();
+    };
+
+    let mut s = String::new();
+    s.push_str("### Quality summary\n\n");
+
+    // Contract changes subsection
+    s.push_str("**Contract changes:**\n");
+    let contract = &q.quality.contract;
+    let has_contract_changes = contract.public_api.as_ref().is_some_and(|c| c.changed)
+        || contract.schema.as_ref().is_some_and(|c| c.changed)
+        || contract.cli.as_ref().is_some_and(|c| c.changed);
+
+    if has_contract_changes {
+        let mut changes = Vec::new();
+        if let Some(ref api) = contract.public_api
+            && api.changed
+        {
+            let breaking = if api.breaking { " (BREAKING)" } else { "" };
+            changes.push(format!("Public API{}", breaking));
+        }
+        if let Some(ref schema) = contract.schema
+            && schema.changed
+        {
+            let breaking = if schema.breaking { " (BREAKING)" } else { "" };
+            changes.push(format!("Schema{}", breaking));
+        }
+        if let Some(ref cli) = contract.cli
+            && cli.changed
+        {
+            let breaking = if cli.breaking { " (BREAKING)" } else { "" };
+            changes.push(format!("CLI{}", breaking));
+        }
+        s.push_str(&format!("- {}\n", changes.join(", ")));
+    } else {
+        s.push_str("- No contract surface changes\n");
+    }
+
+    // Boundary integrity subsection
+    s.push_str("\n**Boundary integrity:**\n");
+    let boundaries = &q.quality.boundaries;
+    s.push_str(&format!("- Modules touched: {}\n", boundaries.modules_touched));
+    if !boundaries.hotspots.is_empty() {
+        s.push_str(&format!("- Hotspots: {}\n", boundaries.hotspots.join(", ")));
+    }
+    if let Some(ref assessment) = boundaries.llm_assessment {
+        let rating = match assessment.rating {
+            BoundaryRating::Improved => "Improved",
+            BoundaryRating::Neutral => "Neutral",
+            BoundaryRating::Degraded => "Degraded",
+        };
+        s.push_str(&format!("- Boundary rating: {}\n", rating));
+    }
+
+    // Verification metrics subsection
+    s.push_str("\n**Verification metrics:**\n");
+    let verification = &q.quality.verification;
+    s.push_str(&format!("- Tests added: {} LOC\n", verification.tests_added_loc));
+    s.push_str(&format!("- Impl added: {} LOC\n", verification.impl_added_loc));
+    if verification.test_density_delta != 0.0 {
+        let sign = if verification.test_density_delta > 0.0 { "+" } else { "" };
+        s.push_str(&format!(
+            "- Test density delta: {}{:.2}\n",
+            sign, verification.test_density_delta
+        ));
+    }
+
+    // Risk indicators subsection
+    s.push_str("\n**Risk indicators:**\n");
+    let risks = &q.quality.risks;
+    let mut has_risks = false;
+    if let Some(ref unsafe_delta) = risks.unsafe_delta
+        && (unsafe_delta.added > 0 || unsafe_delta.removed > 0)
+    {
+        s.push_str(&format!(
+            "- Unsafe delta: +{} / -{}\n",
+            unsafe_delta.added, unsafe_delta.removed
+        ));
+        has_risks = true;
+    }
+    if !risks.deps_added.is_empty() {
+        s.push_str(&format!("- Dependencies added: {}\n", risks.deps_added.join(", ")));
+        has_risks = true;
+    }
+    if !risks.concurrency_primitives_added.is_empty() {
+        s.push_str(&format!(
+            "- Concurrency primitives: {}\n",
+            risks.concurrency_primitives_added.join(", ")
+        ));
+        has_risks = true;
+    }
+    if !has_risks {
+        s.push_str("- No elevated risk indicators\n");
+    }
+
+    s.push_str(&format!("\n`Receipt: {}`\n\n", path.display()));
+    s
+}
+
+/// Format telemetry summary section from telemetry receipt.
+///
+/// Returns empty string if receipt is None (section is skipped).
+fn format_telemetry_section(telemetry: &Option<TelemetryReceipt>, path: &Path) -> String {
+    let Some(t) = telemetry else {
+        return String::new();
+    };
+
+    let mut s = String::new();
+    s.push_str("### Telemetry summary\n\n");
+
+    // Change surface stats
+    s.push_str("**Change surface:**\n");
+    let surface = &t.change_surface;
+    s.push_str(&format!(
+        "- {} files | +{} / -{} lines\n",
+        surface.files_changed, surface.insertions, surface.deletions
+    ));
+    if !surface.crates_touched.is_empty() {
+        s.push_str(&format!("- Crates touched: {}\n", surface.crates_touched.join(", ")));
+    }
+
+    // Probe execution summary
+    s.push_str("\n**Probe execution:**\n");
+    let executed = t.probes.iter().filter(|p| p.status == ProbeStatus::Run).count();
+    let errored = t.probes.iter().filter(|p| p.status == ProbeStatus::Error).count();
+    let skipped = t.not_run.len();
+    s.push_str(&format!("- Executed: {} | Skipped: {} | Errors: {}\n", executed, skipped, errored));
+
+    if errored > 0 {
+        let error_probes: Vec<_> =
+            t.probes.iter().filter(|p| p.status == ProbeStatus::Error).map(|p| &p.name).collect();
+        s.push_str(&format!(
+            "- Failed probes: {}\n",
+            error_probes.iter().map(|s| s.as_str()).collect::<Vec<_>>().join(", ")
+        ));
+    }
+
+    // Contract drift detection
+    if let Some(ref contracts) = t.contracts
+        && (contracts.schema_changed || contracts.public_api_changed || contracts.cli_changed)
+    {
+        s.push_str("\n**Contract drift detected:**\n");
+        if contracts.schema_changed {
+            s.push_str("- Schema changed\n");
+        }
+        if contracts.public_api_changed {
+            s.push_str("- Public API changed\n");
+        }
+        if contracts.cli_changed {
+            s.push_str("- CLI changed\n");
+        }
+        if contracts.breaking {
+            s.push_str("- **BREAKING changes detected**\n");
+        }
+    }
+
+    s.push_str(&format!("\n`Receipt: {}`\n\n", path.display()));
+    s
+}
+
+/// Format timeline/friction section from timeline receipt.
+///
+/// Returns empty string if receipt is None (section is skipped).
+fn format_timeline_section(timeline: &Option<TimelineReceipt>, path: &Path) -> String {
+    let Some(t) = timeline else {
+        return String::new();
+    };
+
+    let mut s = String::new();
+    s.push_str("### Timeline & friction log\n\n");
+
+    // Duration and sessions
+    s.push_str("**Duration:**\n");
+    if let Some(minutes) = t.wall_clock.total_duration_minutes {
+        let hours = minutes / 60;
+        let mins = minutes % 60;
+        if hours > 0 {
+            s.push_str(&format!("- Total: {}h {}m\n", hours, mins));
+        } else {
+            s.push_str(&format!("- Total: {}m\n", mins));
+        }
+    }
+    s.push_str(&format!("- Sessions: {}\n", t.sessions.len()));
+    s.push_str(&format!("- Total commits: {}\n", t.total_commits()));
+
+    // Friction zones
+    if !t.friction_zones.is_empty() {
+        s.push_str("\n**Friction zones** (files touched repeatedly):\n");
+        for zone in &t.friction_zones {
+            s.push_str(&format!("- `{}` ({} touches)\n", zone.path, zone.touch_count));
+        }
+    }
+
+    // Oscillations (design uncertainty)
+    if !t.oscillations.is_empty() {
+        s.push_str("\n**Oscillations** (design uncertainty signals):\n");
+        for osc in &t.oscillations {
+            s.push_str(&format!(
+                "- {}: `{}`\n",
+                format_oscillation_type(osc.oscillation_type),
+                osc.subject
+            ));
+        }
+    }
+
+    // Topology classification
+    s.push_str("\n**Topology:**\n");
+    let (topo_str, topo_emoji) = match t.topology {
+        Topology::Linear => ("Linear", ""),
+        Topology::Cyclical => ("Cyclical", " (iterative refinement)"),
+        Topology::Chaotic => ("Chaotic", " **[REVIEW SIGNAL]**"),
+    };
+    s.push_str(&format!("- Classification: {}{}\n", topo_str, topo_emoji));
+
+    if let Some(conf) = t.topology_confidence {
+        let conf_str = match conf {
+            TimelineConfidence::High => "High",
+            TimelineConfidence::Medium => "Medium",
+            TimelineConfidence::Low => "Low",
+        };
+        s.push_str(&format!("- Confidence: {}\n", conf_str));
+    }
+
+    // Highlight chaotic/cyclical as signals
+    if matches!(t.topology, Topology::Chaotic | Topology::Cyclical) && t.is_high_friction() {
+        s.push_str("\n> **Note:** This PR shows signs of exploration/iteration. ");
+        s.push_str("Consider whether the final design is stable.\n");
+    }
+
+    s.push_str(&format!("\n`Receipt: {}`\n\n", path.display()));
+    s
+}
+
+/// Format oscillation type for display.
+fn format_oscillation_type(ot: gov_receipts::OscillationType) -> &'static str {
+    match ot {
+        gov_receipts::OscillationType::Dependency => "Dependency",
+        gov_receipts::OscillationType::File => "File",
+        gov_receipts::OscillationType::Feature => "Feature",
+        gov_receipts::OscillationType::Approach => "Approach",
+    }
 }
 
 #[cfg(test)]
@@ -400,5 +711,189 @@ Footer"#;
         assert!(COVER_SHEET_END.starts_with("<!--"));
         assert!(COVER_SHEET_START.contains("start"));
         assert!(COVER_SHEET_END.contains("end"));
+    }
+
+    #[test]
+    fn test_format_quality_section_none() {
+        let path = PathBuf::from("receipts/quality.json");
+        let result = format_quality_section(&None, &path);
+        assert!(result.is_empty());
+    }
+
+    #[test]
+    fn test_format_quality_section_with_data() {
+        use gov_receipts::{
+            Boundaries, Contract, ContractChange, Quality, Risks, UnsafeDelta, Verification,
+        };
+
+        let receipt = QualityReceipt {
+            schema_version: "1.0".to_string(),
+            pr: Some(123),
+            run_id: Some("test".to_string()),
+            quality: Quality {
+                contract: Contract {
+                    public_api: Some(ContractChange {
+                        changed: true,
+                        breaking: true,
+                        evidence: vec![],
+                    }),
+                    ..Default::default()
+                },
+                boundaries: Boundaries {
+                    modules_touched: 5,
+                    hotspots: vec!["lib.rs".to_string()],
+                    ..Default::default()
+                },
+                verification: Verification {
+                    tests_added_loc: 100,
+                    impl_added_loc: 200,
+                    test_density_delta: 0.15,
+                    ..Default::default()
+                },
+                risks: Risks {
+                    unsafe_delta: Some(UnsafeDelta { added: 1, removed: 0 }),
+                    deps_added: vec!["serde".to_string()],
+                    ..Default::default()
+                },
+            },
+            meta: None,
+        };
+
+        let path = PathBuf::from("receipts/quality.json");
+        let result = format_quality_section(&Some(receipt), &path);
+
+        assert!(result.contains("### Quality summary"));
+        assert!(result.contains("Public API (BREAKING)"));
+        assert!(result.contains("Modules touched: 5"));
+        assert!(result.contains("Hotspots: lib.rs"));
+        assert!(result.contains("Tests added: 100 LOC"));
+        assert!(result.contains("Test density delta: +0.15"));
+        assert!(result.contains("Unsafe delta: +1 / -0"));
+        assert!(result.contains("Dependencies added: serde"));
+    }
+
+    #[test]
+    fn test_format_telemetry_section_none() {
+        let path = PathBuf::from("receipts/telemetry.json");
+        let result = format_telemetry_section(&None, &path);
+        assert!(result.is_empty());
+    }
+
+    #[test]
+    fn test_format_telemetry_section_with_data() {
+        use gov_receipts::{ChangeSurface, Contracts, ProbeResult};
+
+        let receipt = TelemetryReceipt {
+            schema_version: "1.0".to_string(),
+            pr: Some(123),
+            run_id: "test".to_string(),
+            profile: None,
+            change_surface: ChangeSurface {
+                files_changed: 10,
+                insertions: 500,
+                deletions: 200,
+                crates_touched: vec!["xtask".to_string(), "gov-receipts".to_string()],
+                ..Default::default()
+            },
+            contracts: Some(Contracts {
+                schema_changed: true,
+                breaking: true,
+                ..Default::default()
+            }),
+            safety: None,
+            structure: None,
+            verification: None,
+            probes: vec![
+                ProbeResult {
+                    name: "clippy".to_string(),
+                    version: None,
+                    status: ProbeStatus::Run,
+                    reason: None,
+                    duration_ms: None,
+                    artifact_path: None,
+                },
+                ProbeResult {
+                    name: "test".to_string(),
+                    version: None,
+                    status: ProbeStatus::Error,
+                    reason: Some("timeout".to_string()),
+                    duration_ms: None,
+                    artifact_path: None,
+                },
+            ],
+            not_run: vec![],
+            meta: None,
+        };
+
+        let path = PathBuf::from("receipts/telemetry.json");
+        let result = format_telemetry_section(&Some(receipt), &path);
+
+        assert!(result.contains("### Telemetry summary"));
+        assert!(result.contains("10 files | +500 / -200 lines"));
+        assert!(result.contains("Crates touched: xtask, gov-receipts"));
+        assert!(result.contains("Executed: 1 | Skipped: 0 | Errors: 1"));
+        assert!(result.contains("Failed probes: test"));
+        assert!(result.contains("Schema changed"));
+        assert!(result.contains("BREAKING changes detected"));
+    }
+
+    #[test]
+    fn test_format_timeline_section_none() {
+        let path = PathBuf::from("receipts/timeline.json");
+        let result = format_timeline_section(&None, &path);
+        assert!(result.is_empty());
+    }
+
+    #[test]
+    fn test_format_timeline_section_with_data() {
+        use gov_receipts::{FrictionZone, Oscillation, OscillationType, Session, WallClock};
+
+        let receipt = TimelineReceipt {
+            schema_version: "1.0".to_string(),
+            pr: Some(123),
+            run_id: "test".to_string(),
+            wall_clock: WallClock {
+                first_commit: "2026-01-07T10:00:00Z".parse().unwrap(),
+                last_commit: "2026-01-07T14:00:00Z".parse().unwrap(),
+                pr_created: None,
+                pr_merged: None,
+                total_duration_minutes: Some(150),
+            },
+            sessions: vec![Session {
+                start: "2026-01-07T10:00:00Z".parse().unwrap(),
+                end: "2026-01-07T12:00:00Z".parse().unwrap(),
+                commit_count: 5,
+                classification: None,
+            }],
+            friction_zones: vec![FrictionZone {
+                path: "lib.rs".to_string(),
+                touch_count: 8,
+                commits: vec![],
+            }],
+            oscillations: vec![Oscillation {
+                oscillation_type: OscillationType::Dependency,
+                subject: "serde".to_string(),
+                sequence: vec![],
+            }],
+            convergence: None,
+            topology: Topology::Chaotic,
+            topology_confidence: Some(TimelineConfidence::High),
+            topology_reasons: vec![],
+            events: vec![],
+            meta: None,
+        };
+
+        let path = PathBuf::from("receipts/timeline.json");
+        let result = format_timeline_section(&Some(receipt), &path);
+
+        assert!(result.contains("### Timeline & friction log"));
+        assert!(result.contains("Total: 2h 30m"));
+        assert!(result.contains("Sessions: 1"));
+        assert!(result.contains("Total commits: 5"));
+        assert!(result.contains("`lib.rs` (8 touches)"));
+        assert!(result.contains("Dependency: `serde`"));
+        assert!(result.contains("Classification: Chaotic **[REVIEW SIGNAL]**"));
+        assert!(result.contains("Confidence: High"));
+        assert!(result.contains("This PR shows signs of exploration/iteration"));
     }
 }
