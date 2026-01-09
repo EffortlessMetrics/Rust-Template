@@ -9,7 +9,7 @@ stories: [US-TPL-PLT-001]
 requirements: [REQ-PLT-DOCS-CONSISTENCY]
 acs: [AC-PLT-009, AC-PLT-010]
 adrs: [ADR-0005]
-last_updated: 2026-01-06
+last_updated: 2026-01-07
 ---
 
 # Roadmap: Rust-as-Spec Platform Cell (v3.3.14)
@@ -566,6 +566,78 @@ See [v3.4.0-plan.md](archive/v3.4.0-plan.md) for scope when v3.4.0 work begins.
 
 ---
 
+### 4.7 Publishing & Forensics Track
+
+> **Goal:** Make PR archaeology operational so it yields better cover sheets, an auditable casebook, and concrete factory improvements.
+
+This track runs in parallel with feature work. It builds the "truth surface" that makes large AI-assisted changes trustworthy.
+
+#### P0 — Audit Pack Docs (Foundation) ✅
+
+**Status:** Complete
+
+**Done when:**
+- [x] `docs/audit/AUDIT_PATH.md` exists (15-minute verification guide)
+- [x] `docs/audit/PROVENANCE.md` exists (trust model, automation vs human)
+- [x] `docs/audit/PR_COVER_SHEET.md` exists (canonical format)
+- [x] `docs/audit/RECEIPTS.md` exists (schemas documented)
+- [x] `docs/audit/FAILURE_MODES.md` exists (taxonomy)
+- [x] `docs/audit/CASEBOOK.md` exists (curated exhibits)
+
+#### P1 — Receipt Schemas (Machine Surface)
+
+**Status:** Planned
+
+**Done when:**
+- [ ] `gate.json` schema is stable (what ran, pass/fail, versions, timestamps)
+- [ ] `economics.json` schema is stable (DevLT + compute, allows unknowns)
+- [ ] `dossier.json` schema is stable (scope, findings, exhibit score)
+- [ ] Schemas documented in `docs/audit/RECEIPTS.md`
+
+#### P2 — PR Cover Sheet Generator
+
+**Status:** Planned
+
+**Done when:**
+- [ ] `xtask pr-cover --pr <n> --run-dir <path>` outputs markdown block
+- [ ] Block includes: review map + proof links + known limits + errata + reproduce
+- [ ] Generator is deterministic (same inputs → same output)
+- [ ] Claim updates derived from receipts only
+
+#### P3 — PR Updater (Safe Write)
+
+**Status:** Planned
+
+**Done when:**
+- [ ] `xtask pr-update --pr <n> --run-id <id>` replaces only bounded block
+- [ ] Never touches content outside the cover sheet section
+- [ ] Writes version-controlled copy to `docs/audit/EXHIBITS/PR-<n>.md`
+
+#### P4 — Dossier + Casebook Generator
+
+**Status:** Planned
+
+**Done when:**
+- [ ] `xtask pr-dossier --pr <n>` produces structured dossier JSON
+- [ ] `xtask casebook-gen` builds/updates `docs/audit/CASEBOOK.md` from dossiers
+- [ ] Casebook includes DevLT/compute fields and "what went wrong" sections
+
+#### P5 — Factory Backlog Extractor
+
+**Status:** Planned
+
+**Done when:**
+- [ ] Recurring failure modes counted (by taxonomy)
+- [ ] Top offenders generate issues/friction entries
+- [ ] Backlog ties back to specific PRs/dossiers
+
+#### Optional Future
+
+- P6 — GitHub "Swarm Gate" check-run posting (if GitHub UI needed)
+- P7 — Cross-repo exhibit aggregation (fleet-wide casebook)
+
+---
+
 ## 5. Path Forward Options
 
 > **Current State:** Template v3.3.14 is released. The next step is external validation via fork receipts (v3.4.0 entry criteria).
@@ -919,6 +991,9 @@ The template is "production ready" when:
 
 **v3.5.0+** is the vision for crate extraction—reducing fork burden by publishing reusable machinery.
 
+**Publishing & Forensics** track (§4.7) runs in parallel, building the truth surface for PR
+archaeology and factory improvements. P0 (audit pack docs) is complete.
+
 **Immediate Next Steps:**
 
 1. ✅ v3.3.14 tagged (DevEx improvements + unified issues endpoint)
@@ -932,4 +1007,5 @@ The template is "production ready" when:
 - **API docs are an index, not a guide.** Curl-first examples are a v3.4.0 item.
 - **Fork surface is large.** Crate extraction (v3.5.0+) will address this, but only after real friction justifies it.
 
-The recommended path: fork immediately, capture friction, fix what matters, document what you learned. Don't try to anticipate every need—let real usage tell you what's missing.
+The recommended path: fork immediately, capture friction, fix what matters, document what you
+learned. Don't try to anticipate every need—let real usage tell you what's missing.

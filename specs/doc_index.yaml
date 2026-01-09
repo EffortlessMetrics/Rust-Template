@@ -949,6 +949,16 @@ docs:
     acs: [AC-TPL-CLI-JSON-CORE]
     adrs: [ADR-0016]
 
+  # Unified Issues Endpoint Design
+  - id: DESIGN-PLT-ISSUES-ENDPOINT-001
+    file: docs/design/platform-issues-endpoint.md
+    title: "Unified Issues Endpoint"
+    doc_type: design_doc
+    stories: [US-TPL-PLT-001]
+    requirements: [REQ-PLT-ISSUES-ENDPOINT]
+    acs: [AC-GOV-025]
+    adrs: []
+
   # IDP Tile Specifications
   - id: DESIGN-TPL-IDP-TILES-001
     file: docs/design/DESIGN-IDP-TILES.md
@@ -1232,4 +1242,68 @@ docs:
       - ADR-0005
       - ADR-0006
       - ADR-0017
+
+  # Audit Pack - PR Archaeology and Factory Forensics
+  - id: GUIDE-AUDIT-PATH-001
+    file: docs/audit/AUDIT_PATH.md
+    title: "Audit Path (15 Minutes)"
+    doc_type: guide
+    stories: [US-TPL-PLT-001]
+    requirements: [REQ-PLT-DOCS-CONSISTENCY]
+    acs: [AC-PLT-009, AC-PLT-010]
+    adrs: []
+
+  - id: GUIDE-PROVENANCE-001
+    file: docs/audit/PROVENANCE.md
+    title: "Provenance and Trust Model"
+    doc_type: guide
+    stories: [US-TPL-PLT-001]
+    requirements: [REQ-PLT-DOCS-CONSISTENCY]
+    acs: [AC-PLT-009, AC-PLT-010]
+    adrs: []
+
+  - id: GUIDE-PR-COVER-SHEET-001
+    file: docs/audit/PR_COVER_SHEET.md
+    title: "PR Cover Sheet Format"
+    doc_type: guide
+    stories: [US-TPL-PLT-001]
+    requirements: [REQ-PLT-DOCS-CONSISTENCY]
+    acs: [AC-PLT-009, AC-PLT-010]
+    adrs: []
+
+  - id: GUIDE-RECEIPTS-001
+    file: docs/audit/RECEIPTS.md
+    title: "Receipts Schema and Usage"
+    doc_type: guide
+    stories: [US-TPL-PLT-001]
+    requirements: [REQ-PLT-DOCS-CONSISTENCY]
+    acs: [AC-PLT-009, AC-PLT-010]
+    adrs: []
+
+  - id: GUIDE-FAILURE-MODES-001
+    file: docs/audit/FAILURE_MODES.md
+    title: "Failure Modes Taxonomy"
+    doc_type: guide
+    stories: [US-TPL-PLT-001]
+    requirements: [REQ-PLT-DOCS-CONSISTENCY]
+    acs: [AC-PLT-009, AC-PLT-010]
+    adrs: []
+
+  - id: GUIDE-CASEBOOK-001
+    file: docs/audit/CASEBOOK.md
+    title: "Casebook (Curated Exhibits)"
+    doc_type: guide
+    stories: [US-TPL-PLT-001]
+    requirements: [REQ-PLT-DOCS-CONSISTENCY]
+    acs: [AC-PLT-009, AC-PLT-010]
+    adrs: []
+
+  - id: GUIDE-OPERATING-STANDARD-001
+    file: docs/audit/OPERATING_STANDARD.md
+    title: "Operating Standard for Trusted Change"
+    doc_type: guide
+    stories: [US-TPL-PLT-001]
+    requirements: [REQ-PLT-DOCS-CONSISTENCY]
+    acs: [AC-PLT-009, AC-PLT-010]
+    adrs: []
 
