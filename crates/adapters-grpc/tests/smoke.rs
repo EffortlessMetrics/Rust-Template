@@ -5,34 +5,40 @@ use async_trait::async_trait;
 use business_core::ports::ExampleTaskRepository;
 use model::{ExampleTask, ExampleTaskStatus};
 use std::collections::HashMap;
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
+use tokio::sync::RwLock;
 
-/// In-memory example task repository for testing
+/// In-memory example task repository for testing.
+///
+/// Uses `tokio::sync::RwLock` instead of `std::sync::Mutex` because:
+/// - Async-aware: lock acquisition yields to the executor instead of blocking
+/// - Read-heavy workloads benefit from concurrent read access
+/// - Proper pattern for async trait implementations
 struct InMemoryExampleTaskRepository {
-    tasks: Mutex<HashMap<String, ExampleTask>>,
+    tasks: RwLock<HashMap<String, ExampleTask>>,
 }
 
 impl InMemoryExampleTaskRepository {
     fn new() -> Self {
-        Self { tasks: Mutex::new(HashMap::new()) }
+        Self { tasks: RwLock::new(HashMap::new()) }
     }
 }
 
 #[async_trait]
 impl ExampleTaskRepository for InMemoryExampleTaskRepository {
     async fn save(&self, task: &ExampleTask) -> Result<(), String> {
-        let mut tasks = self.tasks.lock().unwrap();
+        let mut tasks = self.tasks.write().await;
         tasks.insert(task.id.clone(), task.clone());
         Ok(())
     }
 
     async fn find_by_id(&self, id: &str) -> Result<Option<ExampleTask>, String> {
-        let tasks = self.tasks.lock().unwrap();
+        let tasks = self.tasks.read().await;
         Ok(tasks.get(id).cloned())
     }
 
     async fn find_all(&self) -> Result<Vec<ExampleTask>, String> {
-        let tasks = self.tasks.lock().unwrap();
+        let tasks = self.tasks.read().await;
         Ok(tasks.values().cloned().collect())
     }
 
@@ -41,7 +47,7 @@ impl ExampleTaskRepository for InMemoryExampleTaskRepository {
         id: &str,
         status: ExampleTaskStatus,
     ) -> Result<Option<ExampleTask>, String> {
-        let mut tasks = self.tasks.lock().unwrap();
+        let mut tasks = self.tasks.write().await;
         if let Some(task) = tasks.get_mut(id) {
             task.status = status;
             Ok(Some(task.clone()))

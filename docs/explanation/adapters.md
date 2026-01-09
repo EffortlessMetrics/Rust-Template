@@ -715,6 +715,11 @@ This ensures business rules are consistent across services.
 
 Core business logic should be tested WITHOUT any adapters. Use simple in-memory stubs.
 
+**Important:** For async trait implementations, use `tokio::sync::RwLock` instead of
+`std::sync::Mutex`. The async-aware lock yields to the executor during lock acquisition
+instead of blocking the thread. For read-heavy workloads, `RwLock` allows concurrent
+reads while writes remain exclusive.
+
 ```rust
 // crates/core/src/use_cases.rs
 #[cfg(test)]
@@ -722,40 +727,41 @@ mod tests {
     use super::*;
     use crate::ports::TaskRepository;
     use crate::model::{Task, TaskStatus};
-    use std::sync::Mutex;
+    use tokio::sync::RwLock;
     use std::collections::HashMap;
 
-    // In-memory stub - no database needed!
+    // In-memory stub using async-aware RwLock - no database needed!
     struct InMemoryTaskRepository {
-        tasks: Mutex<HashMap<String, Task>>,
+        tasks: RwLock<HashMap<String, Task>>,
     }
 
+    #[async_trait::async_trait]
     impl TaskRepository for InMemoryTaskRepository {
-        fn save(&self, task: &Task) -> Result<(), String> {
-            let mut tasks = self.tasks.lock().unwrap();
+        async fn save(&self, task: &Task) -> Result<(), String> {
+            let mut tasks = self.tasks.write().await;
             tasks.insert(task.id.clone(), task.clone());
             Ok(())
         }
 
-        fn find_by_id(&self, id: &str) -> Result<Option<Task>, String> {
-            let tasks = self.tasks.lock().unwrap();
+        async fn find_by_id(&self, id: &str) -> Result<Option<Task>, String> {
+            let tasks = self.tasks.read().await;
             Ok(tasks.get(id).cloned())
         }
     }
 
-    #[test]
-    fn test_create_task() {
+    #[tokio::test]
+    async fn test_create_task() {
         let repo = InMemoryTaskRepository {
-            tasks: Mutex::new(HashMap::new())
+            tasks: RwLock::new(HashMap::new())
         };
 
-        let task = create_task(&repo, "Test task".to_string()).unwrap();
+        let task = create_task(&repo, "Test task".to_string()).await.unwrap();
 
         assert_eq!(task.title, "Test task");
         assert_eq!(task.status, TaskStatus::Pending);
 
         // Verify it was saved
-        let saved = repo.find_by_id(&task.id).unwrap();
+        let saved = repo.find_by_id(&task.id).await.unwrap();
         assert!(saved.is_some());
     }
 }
