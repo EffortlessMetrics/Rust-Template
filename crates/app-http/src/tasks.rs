@@ -13,6 +13,22 @@ use tracing::instrument;
 
 use crate::AppState;
 
+/// Execute a blocking closure on a dedicated thread pool to avoid blocking the
+/// Tokio async runtime. This wraps sync repository I/O (fs2 file locks, std::fs)
+/// that cannot be safely called from async context.
+///
+/// The label is used for error messages on join failure.
+async fn spawn_blocking_io<T, F>(label: &'static str, f: F) -> Result<T, AppError>
+where
+    T: Send + 'static,
+    F: FnOnce() -> Result<T, business_core::governance::GovernanceError> + Send + 'static,
+{
+    tokio::task::spawn_blocking(f)
+        .await
+        .map_err(|e| AppError::internal_error(format!("spawn_blocking({label}) join: {e}")))?
+        .map_err(AppError::from)
+}
+
 #[derive(Deserialize)]
 pub struct UpdateTaskStatusRequest {
     status: TaskStatus,
@@ -26,8 +42,18 @@ pub async fn update_task_status(
     body: Bytes,
 ) -> Result<impl IntoResponse, AppError> {
     let payload = parse_update_task_status(&headers, &body)?;
-    let service = TaskService::new(state.governance_repo.clone());
-    service.move_task(&TaskId(id), payload.status)?;
+    let repo = state.governance_repo.clone();
+    let task_id = TaskId(id);
+    let new_status = payload.status;
+
+    // Offload blocking file I/O (fs2 locks + std::fs) to spawn_blocking
+    // to avoid starving the Tokio executor under concurrent load.
+    spawn_blocking_io("move_task", move || {
+        let service = TaskService::new(repo);
+        service.move_task(&task_id, new_status)
+    })
+    .await?;
+
     Ok(StatusCode::NO_CONTENT)
 }
 
@@ -70,8 +96,14 @@ fn parse_update_task_status(
 }
 
 pub async fn tasks_ui(State(state): State<AppState>) -> Result<impl IntoResponse, AppError> {
-    let service = TaskService::new(state.governance_repo.clone());
-    let tasks = service.list_tasks()?;
+    let repo = state.governance_repo.clone();
+
+    // Offload blocking file I/O to spawn_blocking to avoid starving the executor.
+    let tasks = spawn_blocking_io("list_tasks", move || {
+        let service = TaskService::new(repo);
+        service.list_tasks()
+    })
+    .await?;
 
     let mut todo = Vec::new();
     let mut in_progress = Vec::new();
