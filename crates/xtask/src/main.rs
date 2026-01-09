@@ -843,6 +843,10 @@ enum Commands {
     /// Computes hard metrics from git diff (files changed, modules touched,
     /// unsafe delta, test/impl LOC) and optionally accepts LLM assessments
     /// for boundary integrity and test depth ratings.
+    ///
+    /// With --llm, obtains semantic analysis from the Historian agent and merges
+    /// boundary/test-depth/risk assessments into the receipt. Use --historian-output
+    /// for offline/testing with pre-generated historian output.
     #[command(next_help_heading = "📋 Publishing & Forensics")]
     ReceiptsQuality {
         /// PR number (optional, included in receipt metadata)
@@ -863,6 +867,16 @@ enum Commands {
         /// LLM-provided notes (repeatable)
         #[arg(long)]
         notes: Vec<String>,
+        /// Enable LLM semantic analysis via Historian agent
+        #[arg(long)]
+        llm: bool,
+        /// Path to existing historian output (for offline/testing use)
+        #[arg(long)]
+        historian_output: Option<std::path::PathBuf>,
+        /// Command template for running historian (use {input} as placeholder).
+        /// Precedence: CLI arg > HISTORIAN_CMD env var > error if not configured.
+        #[arg(long)]
+        historian_cmd: Option<String>,
     },
 
     /// Generate telemetry.json receipt with probe execution results
@@ -903,6 +917,12 @@ enum Commands {
         /// Session gap threshold in minutes (default: 30)
         #[arg(long, default_value = "30")]
         session_gap_minutes: u32,
+        /// Additional path prefixes to exclude from friction analysis (repeatable)
+        #[arg(long = "exclude-prefix")]
+        exclude_prefixes: Vec<String>,
+        /// Include ephemeral directories (.runs/, target/) in analysis (debug only)
+        #[arg(long)]
+        include_ephemeral: bool,
     },
 
     /// Run all receipt emitters for comprehensive PR forensics
@@ -910,7 +930,7 @@ enum Commands {
     /// Generates a complete forensic receipt set by running:
     /// 1. telemetry - change surface facts and probe results
     /// 2. timeline - development pattern analysis from git history
-    /// 3. quality - code quality metrics from diff analysis
+    /// 3. quality - code quality metrics from diff analysis (optionally with LLM)
     /// 4. validate - schema validation of all generated receipts
     #[command(next_help_heading = "📋 Publishing & Forensics")]
     ReceiptsForensic {
@@ -926,6 +946,22 @@ enum Commands {
         /// Output directory for receipts (default: .runs/current)
         #[arg(long, default_value = ".runs/current")]
         output_dir: std::path::PathBuf,
+        /// Additional path prefixes to exclude from friction analysis (repeatable)
+        #[arg(long = "exclude-prefix")]
+        exclude_prefixes: Vec<String>,
+        /// Include ephemeral directories (.runs/, target/) in analysis (debug only)
+        #[arg(long)]
+        include_ephemeral: bool,
+        /// Enable LLM semantic analysis for quality receipt via Historian agent
+        #[arg(long)]
+        llm: bool,
+        /// Path to existing historian markdown output (for offline/testing use)
+        #[arg(long)]
+        historian_output: Option<std::path::PathBuf>,
+        /// Command template for running historian (use {input} as placeholder).
+        /// Precedence: CLI arg > HISTORIAN_CMD env var > error if not configured.
+        #[arg(long)]
+        historian_cmd: Option<String>,
     },
 
     // ============================================================================
@@ -1289,7 +1325,11 @@ fn main() -> Result<()> {
             })
         }
         Commands::ReceiptsGate { pr, output_dir } => {
-            commands::receipts::run_gate(commands::receipts::ReceiptsGateArgs { pr, output_dir })
+            commands::receipts::run_gate(commands::receipts::ReceiptsGateArgs {
+                pr,
+                output_dir,
+                run_id: None,
+            })
         }
         Commands::ReceiptsEconomics {
             pr,
@@ -1327,6 +1367,7 @@ fn main() -> Result<()> {
             devlt_notes,
             compute_notes,
             iteration_notes,
+            run_id: None,
         }),
         Commands::ReceiptsValidate { dir, schema_dir } => {
             commands::receipts::run_validate(commands::receipts::ReceiptsValidateArgs {
@@ -1341,6 +1382,9 @@ fn main() -> Result<()> {
             boundary_rating,
             test_depth_rating,
             notes,
+            llm,
+            historian_output,
+            historian_cmd,
         } => commands::receipts::run_quality(commands::receipts::ReceiptsQualityArgs {
             pr,
             output_dir,
@@ -1348,6 +1392,10 @@ fn main() -> Result<()> {
             boundary_rating,
             test_depth_rating,
             notes,
+            run_id: None,
+            llm,
+            historian_output,
+            historian_cmd,
         }),
         Commands::ReceiptsTelemetry { pr, output_dir, profile, base_branch } => {
             commands::receipts::run_telemetry(commands::receipts::ReceiptsTelemetryArgs {
@@ -1355,25 +1403,47 @@ fn main() -> Result<()> {
                 output_dir,
                 profile,
                 base_branch,
+                run_id: None,
             })
         }
-        Commands::ReceiptsTimeline { pr, output_dir, base_branch, session_gap_minutes } => {
-            commands::receipts::run_timeline(commands::receipts::ReceiptsTimelineArgs {
-                pr,
-                output_dir,
-                base_branch,
-                session_gap_minutes,
-            })
-        }
-        Commands::ReceiptsForensic { pr, profile, base_branch, output_dir } => {
-            commands::receipts::run_forensic(commands::receipts::ReceiptsForensicArgs {
-                pr,
-                output_dir,
-                base_branch,
-                profile,
-                session_gap_minutes: 30,
-            })
-        }
+        Commands::ReceiptsTimeline {
+            pr,
+            output_dir,
+            base_branch,
+            session_gap_minutes,
+            exclude_prefixes,
+            include_ephemeral,
+        } => commands::receipts::run_timeline(commands::receipts::ReceiptsTimelineArgs {
+            pr,
+            output_dir,
+            base_branch,
+            session_gap_minutes,
+            run_id: None,
+            exclude_prefixes,
+            include_ephemeral,
+        }),
+        Commands::ReceiptsForensic {
+            pr,
+            profile,
+            base_branch,
+            output_dir,
+            exclude_prefixes,
+            include_ephemeral,
+            llm,
+            historian_output,
+            historian_cmd,
+        } => commands::receipts::run_forensic(commands::receipts::ReceiptsForensicArgs {
+            pr,
+            output_dir,
+            base_branch,
+            profile,
+            session_gap_minutes: 30,
+            exclude_prefixes,
+            include_ephemeral,
+            llm,
+            historian_output,
+            historian_cmd,
+        }),
         Commands::SuggestNext(args) => commands::suggest_next::run(args),
         Commands::Selftest => commands::selftest::run_with_verbosity(verbosity),
         Commands::KernelSmoke => commands::kernel_smoke::run(),

@@ -148,3 +148,86 @@ Every analysis includes:
 - `analysis_run_id`: unique identifier for this run
 
 Re-analysis appends new entries; prior analyses are preserved for audit trail.
+
+## Quality Appendix Contract
+
+When generating quality assessments for `receipts-quality --llm`, the Historian must include a
+structured appendix between markers. This enables deterministic extraction and merging into the
+quality receipt.
+
+### Appendix Format
+
+```markdown
+<!-- historian:appendix:start -->
+{
+  "boundary_rating": "improved|neutral|degraded",
+  "boundary_notes": ["Note about design alignment...", "Note about coupling..."],
+  "test_depth_rating": "hardened|mixed|shallow",
+  "test_depth_notes": ["Note about test quality...", "Note about coverage..."],
+  "risk_notes": ["Potential risk 1...", "Potential risk 2..."],
+  "assumptions": ["Assumption that affected analysis..."],
+  "evidence_pointers": ["path:crates/foo/src/lib.rs:42", "commit:abc123"],
+  "confidence": "high|medium|low"
+}
+<!-- historian:appendix:end -->
+```
+
+### Rules
+
+1. **Raw JSON only**: The JSON must NOT be wrapped in code fences (no ```json). The markers themselves delimit the content.
+
+2. **Top-level markers**: Markers must appear at top level in the markdown; do not wrap them in a fenced block. Markdown tooling may reflow fenced blocks and accidentally move markers.
+
+3. **Semantic fields only**: The appendix captures LLM judgments, not telemetry. Never include:
+   - LOC counts, coverage percentages, mutation scores
+   - Any numeric metrics the pipeline computes deterministically
+
+4. **All fields optional**: Use `null` or omit fields when evidence is insufficient.
+
+5. **Evidence anchoring**: `evidence_pointers` should reference specific locations:
+   - `path:<file>:<line>` - Source file reference
+   - `commit:<sha>` - Commit reference
+   - `receipt:<path>` - Other receipt reference
+   - `function:<name>` - Function/method reference
+
+6. **Ratings use exact enum values**:
+   - `boundary_rating`: `"improved"`, `"neutral"`, `"degraded"`
+   - `test_depth_rating`: `"hardened"`, `"mixed"`, `"shallow"`
+   - `confidence`: `"high"`, `"medium"`, `"low"`
+
+7. **Notes are claim-labeled**: Follow the LLM Analysis Contract tags:
+   - `[INF]` for inferred judgments
+   - `[REC]` for recommendations
+   - `[DER]` for derived observations
+
+### Example Narrative with Appendix
+
+```markdown
+## Quality Assessment
+
+This PR improves boundary integrity by extracting the HTTP adapter layer from core domain logic.
+
+### Boundaries
+[INF] The extraction follows hexagonal architecture principles, placing IO at the edges.
+[INF] Module coupling reduced - core no longer depends on axum types.
+
+### Verification
+[INF] Tests assert behavior rather than just presence. Error paths are exercised.
+[REC] Consider adding property tests for the new parser.
+
+### Risks
+[INF] No significant risks identified. The unsafe delta is neutral.
+
+<!-- historian:appendix:start -->
+{
+  "boundary_rating": "improved",
+  "boundary_notes": ["[INF] HTTP adapter extraction follows hexagonal architecture", "[INF] Core domain decoupled from framework types"],
+  "test_depth_rating": "hardened",
+  "test_depth_notes": ["[INF] Behavior assertions, not presence checks", "[REC] Add property tests for parser"],
+  "risk_notes": [],
+  "assumptions": ["Assumed axum is the only HTTP framework in use"],
+  "evidence_pointers": ["path:crates/app-http/src/lib.rs:15", "path:crates/core/src/domain.rs:42"],
+  "confidence": "high"
+}
+<!-- historian:appendix:end -->
+```

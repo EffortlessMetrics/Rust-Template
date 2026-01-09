@@ -223,6 +223,9 @@ pub fn run(args: PrCoverArgs) -> Result<()> {
     // Timeline/friction section
     content.push_str(&format_timeline_section(&timeline, &timeline_path));
 
+    // Review path section - dynamic guidance based on signals
+    content.push_str(&format_review_path_section(&quality, &telemetry, &timeline));
+
     // Errata section (proper format)
     content.push_str("### Errata (what we got wrong)\n");
     content.push_str("- Nothing identified in this PR's scope.\n");
@@ -446,8 +449,9 @@ fn format_quality_section(quality: &Option<QualityReceipt>, path: &Path) -> Stri
     if let Some(ref unsafe_delta) = risks.unsafe_delta
         && (unsafe_delta.added > 0 || unsafe_delta.removed > 0)
     {
+        // Quality receipt uses keyword scan from git diff (heuristic)
         s.push_str(&format!(
-            "- Unsafe delta: +{} / -{}\n",
+            "- Unsafe keyword delta: +{} / -{} _(heuristic)_\n",
             unsafe_delta.added, unsafe_delta.removed
         ));
         has_risks = true;
@@ -528,6 +532,35 @@ fn format_telemetry_section(telemetry: &Option<TelemetryReceipt>, path: &Path) -
         }
     }
 
+    // Safety/unsafe code metrics - distinguish heuristic vs measured
+    if let Some(ref safety) = t.safety
+        && (safety.unsafe_added > 0 || safety.unsafe_removed > 0 || safety.geiger_summary.is_some())
+    {
+        s.push_str("\n**Safety analysis:**\n");
+        // Distinguish between measured (cargo-geiger) and heuristic (git diff keyword scan)
+        if safety.geiger_summary.is_some() {
+            s.push_str(&format!(
+                "- Unsafe delta: +{} / -{} _(measured by cargo-geiger)_\n",
+                safety.unsafe_added, safety.unsafe_removed
+            ));
+            if let Some(ref geiger) = safety.geiger_summary {
+                s.push_str(&format!(
+                    "- Total unsafe: {} used, {} unused",
+                    geiger.used_unsafe, geiger.unused_unsafe
+                ));
+                if geiger.forbid_unsafe {
+                    s.push_str(" (forbid(unsafe_code) set)");
+                }
+                s.push('\n');
+            }
+        } else if safety.unsafe_added > 0 || safety.unsafe_removed > 0 {
+            s.push_str(&format!(
+                "- Unsafe keyword delta: +{} / -{} _(heuristic from git diff)_\n",
+                safety.unsafe_added, safety.unsafe_removed
+            ));
+        }
+    }
+
     s.push_str(&format!("\n`Receipt: {}`\n\n", path.display()));
     s
 }
@@ -602,6 +635,200 @@ fn format_timeline_section(timeline: &Option<TimelineReceipt>, path: &Path) -> S
     }
 
     s.push_str(&format!("\n`Receipt: {}`\n\n", path.display()));
+    s
+}
+
+// ============================================================================
+// Review Path Thresholds (prevent noise in small PRs)
+// ============================================================================
+
+/// Minimum friction zones before signaling (applies to total)
+const MIN_FRICTION_ZONES_TOTAL: usize = 3;
+
+/// Minimum friction zones in core_code to always signal (more sensitive for core code)
+const MIN_CORE_CODE_FRICTION: usize = 1;
+
+/// Only emit "no tests added" if impl exceeds this LOC
+const MIN_IMPL_FOR_TEST_WARNING: u32 = 100;
+
+// ============================================================================
+// Review Path Guidance Strings (deduplicated)
+// ============================================================================
+
+const GUIDANCE_REVIEW_HOTSPOTS: &str = "Review hotspots first - these files had the most churn";
+const GUIDANCE_SCAN_FRICTION: &str = "Scan friction zones for potential design issues";
+const GUIDANCE_CHECK_OSCILLATIONS: &str = "Check oscillation subjects for dependency/design churn";
+const GUIDANCE_UNSAFE_JUSTIFICATION: &str = "Require justification for unsafe code additions";
+const GUIDANCE_VERIFY_TEST_COVERAGE: &str = "Verify failure modes are covered by existing tests";
+const GUIDANCE_VERIFY_MIGRATION: &str = "Verify migration path for downstream consumers";
+const GUIDANCE_VERIFY_SCHEMA: &str = "Verify schema migrations are backwards-compatible";
+
+/// Categorize a file path for friction zone analysis.
+/// Used to determine if friction zones are in "core_code" vs other categories.
+fn categorize_path_for_review(path: &str) -> &'static str {
+    // Core code paths
+    if path.starts_with("src/")
+        || path.starts_with("crates/")
+        || path.starts_with("lib/")
+        || path.starts_with("core/")
+        || path.starts_with("packages/")
+        || path.starts_with("apps/")
+    {
+        // Exclude test paths within core code
+        if path.contains("/tests/")
+            || path.contains("_test.rs")
+            || path.ends_with("_tests.rs")
+            || path.contains("/benches/")
+        {
+            return "tests";
+        }
+        return "core_code";
+    }
+
+    // Test paths
+    if path.contains("/tests/")
+        || path.contains("/test_fixtures/")
+        || path.contains("_test.rs")
+        || path.contains("/benches/")
+    {
+        return "tests";
+    }
+
+    // Documentation
+    if path.starts_with("docs/") || path.ends_with(".md") {
+        return "docs";
+    }
+
+    "other"
+}
+
+/// Format review path section based on signals from all receipts.
+/// Provides specific guidance to reviewers based on detected patterns.
+/// Uses thresholds to avoid noise in small PRs.
+fn format_review_path_section(
+    quality: &Option<QualityReceipt>,
+    telemetry: &Option<TelemetryReceipt>,
+    timeline: &Option<TimelineReceipt>,
+) -> String {
+    let mut signals: Vec<String> = Vec::new();
+    let mut guidance: Vec<String> = Vec::new();
+
+    // Check timeline signals with thresholds
+    if let Some(t) = timeline {
+        // Chaotic topology is always significant
+        if matches!(t.topology, Topology::Chaotic) {
+            signals.push("Chaotic topology detected".to_string());
+            guidance.push(GUIDANCE_REVIEW_HOTSPOTS.to_string());
+        }
+
+        // Apply thresholds to friction zones
+        // Only signal if: zones > MIN_FRICTION_ZONES_TOTAL OR core_code zones > MIN_CORE_CODE_FRICTION
+        if !t.friction_zones.is_empty() {
+            let core_code_zones = t
+                .friction_zones
+                .iter()
+                .filter(|z| categorize_path_for_review(&z.path) == "core_code")
+                .count();
+
+            let should_signal_friction = t.friction_zones.len() >= MIN_FRICTION_ZONES_TOTAL
+                || core_code_zones >= MIN_CORE_CODE_FRICTION;
+
+            if should_signal_friction {
+                signals.push(format!(
+                    "{} friction zones ({} in core)",
+                    t.friction_zones.len(),
+                    core_code_zones
+                ));
+                guidance.push(GUIDANCE_SCAN_FRICTION.to_string());
+            }
+        }
+
+        // Filter oscillations: only signal if involves deps or core_code (not docs churn)
+        if !t.oscillations.is_empty() {
+            let significant_oscillations: Vec<_> = t
+                .oscillations
+                .iter()
+                .filter(|osc| {
+                    matches!(osc.oscillation_type, gov_receipts::OscillationType::Dependency)
+                        || categorize_path_for_review(&osc.subject) == "core_code"
+                })
+                .collect();
+
+            if !significant_oscillations.is_empty() {
+                signals
+                    .push(format!("{} significant oscillation(s)", significant_oscillations.len()));
+                guidance.push(GUIDANCE_CHECK_OSCILLATIONS.to_string());
+            }
+        }
+    }
+
+    // Check quality signals
+    if let Some(q) = quality {
+        // Unsafe delta check - always signal unsafe additions
+        if let Some(ref ud) = q.quality.risks.unsafe_delta
+            && ud.added > 0
+        {
+            signals.push(format!("+{} unsafe", ud.added));
+            guidance.push(GUIDANCE_UNSAFE_JUSTIFICATION.to_string());
+        }
+
+        // Test coverage check with threshold
+        let tests = q.quality.verification.tests_added_loc;
+        let impl_loc = q.quality.verification.impl_added_loc;
+        if impl_loc > MIN_IMPL_FOR_TEST_WARNING && tests == 0 {
+            signals.push("No tests added".to_string());
+            guidance.push(GUIDANCE_VERIFY_TEST_COVERAGE.to_string());
+        }
+
+        // Contract changes
+        if let Some(ref api) = q.quality.contract.public_api
+            && api.breaking
+        {
+            signals.push("Breaking API change".to_string());
+            guidance.push(GUIDANCE_VERIFY_MIGRATION.to_string());
+        }
+    }
+
+    // Check telemetry signals
+    if let Some(t) = telemetry
+        && let Some(ref contracts) = t.contracts
+        && contracts.schema_changed
+    {
+        signals.push("Schema changed".to_string());
+        guidance.push(GUIDANCE_VERIFY_SCHEMA.to_string());
+    }
+
+    // Don't show section if no signals
+    if signals.is_empty() {
+        return String::new();
+    }
+
+    // Deduplicate guidance (same guidance can be triggered by multiple signals)
+    // Use stable-order dedup (HashSet) instead of adjacent-only dedup
+    {
+        use std::collections::HashSet;
+        let mut seen = HashSet::new();
+        guidance.retain(|g| seen.insert(g.clone()));
+    }
+
+    let mut s = String::new();
+    s.push_str("### Review path (suggested)\n\n");
+
+    // Signal summary
+    s.push_str("**Signals detected:**\n");
+    for signal in &signals {
+        s.push_str(&format!("- {}\n", signal));
+    }
+
+    // Guidance list
+    if !guidance.is_empty() {
+        s.push_str("\n**Recommended review actions:**\n");
+        for (i, g) in guidance.iter().enumerate() {
+            s.push_str(&format!("{}. {}\n", i + 1, g));
+        }
+    }
+
+    s.push('\n');
     s
 }
 
@@ -768,7 +995,7 @@ Footer"#;
         assert!(result.contains("Hotspots: lib.rs"));
         assert!(result.contains("Tests added: 100 LOC"));
         assert!(result.contains("Test density delta: +0.15"));
-        assert!(result.contains("Unsafe delta: +1 / -0"));
+        assert!(result.contains("Unsafe keyword delta: +1 / -0 _(heuristic)_"));
         assert!(result.contains("Dependencies added: serde"));
     }
 

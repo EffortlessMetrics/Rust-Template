@@ -29,6 +29,149 @@ use std::path::PathBuf;
 use std::process::Command;
 use std::time::Instant;
 
+// ============================================================================
+// Default Exclude Patterns for Timeline Analysis
+// ============================================================================
+
+/// Paths to exclude from friction zone and oscillation analysis.
+/// These are typically generated/ephemeral directories that pollute timeline signals.
+const FRICTION_EXCLUDE_PATTERNS: &[&str] =
+    &[".runs/", "target/", ".git/", "node_modules/", "vendor/", "dist/", "build/", ".cache/"];
+
+/// Normalize Windows path separators to forward slashes.
+/// This ensures path matching works consistently across platforms.
+fn normalize_path_separators(path: &str) -> String {
+    path.replace('\\', "/")
+}
+
+/// Check if a path should be excluded from friction/oscillation analysis.
+/// Normalizes path separators first for cross-platform compatibility.
+///
+/// # Arguments
+/// * `path` - The file path to check
+/// * `extra_excludes` - Additional prefix patterns to exclude
+/// * `include_ephemeral` - If true, skip default exclusions (for debugging)
+fn should_exclude_path(path: &str, extra_excludes: &[String], include_ephemeral: bool) -> bool {
+    let normalized = normalize_path_separators(path);
+
+    // Check default exclusions unless include_ephemeral is set
+    if !include_ephemeral
+        && FRICTION_EXCLUDE_PATTERNS.iter().any(|pattern| normalized.starts_with(pattern))
+    {
+        return true;
+    }
+
+    // Check additional exclusions
+    extra_excludes.iter().any(|prefix| {
+        let normalized_prefix = normalize_path_separators(prefix);
+        normalized.starts_with(&normalized_prefix)
+    })
+}
+
+/// Friction zone category for rollup reporting
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum FrictionCategory {
+    /// Core source code (src/, crates/, lib/)
+    CoreCode,
+    /// Test code and fixtures
+    Tests,
+    /// Documentation (docs/, *.md)
+    Docs,
+    /// CI/CD and infrastructure (.github/, .gitlab-ci.yml, etc.)
+    CiInfra,
+    /// Specifications and schemas
+    Specs,
+    /// Other/unclassified
+    Other,
+}
+
+impl FrictionCategory {
+    /// Categorize a file path
+    pub fn from_path(path: &str) -> Self {
+        // Test paths
+        if path.contains("/tests/")
+            || path.contains("/test_fixtures/")
+            || path.contains("_test.rs")
+            || path.ends_with("_tests.rs")
+            || path.contains("/benches/")
+        {
+            return Self::Tests;
+        }
+
+        // Core code paths
+        if path.starts_with("src/")
+            || path.starts_with("crates/")
+            || path.starts_with("lib/")
+            || path.starts_with("core/")
+            || path.starts_with("packages/")
+            || path.starts_with("apps/")
+        {
+            return Self::CoreCode;
+        }
+
+        // Documentation
+        if path.starts_with("docs/") || path.ends_with(".md") {
+            return Self::Docs;
+        }
+
+        // CI/Infrastructure
+        if path.starts_with(".github/")
+            || path.starts_with(".gitlab-ci")
+            || path.starts_with(".circleci/")
+            || path.starts_with("ci/")
+            || path == "Dockerfile"
+            || path.ends_with(".Dockerfile")
+            || path == "docker-compose.yml"
+            || path.starts_with("scripts/")
+        {
+            return Self::CiInfra;
+        }
+
+        // Specs and schemas
+        if path.starts_with("specs/") || path.ends_with(".schema.json") {
+            return Self::Specs;
+        }
+
+        Self::Other
+    }
+
+    /// Display name for the category
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            Self::CoreCode => "core_code",
+            Self::Tests => "tests",
+            Self::Docs => "docs",
+            Self::CiInfra => "ci_infra",
+            Self::Specs => "specs",
+            Self::Other => "other",
+        }
+    }
+}
+
+/// Rollup friction zones by category
+pub fn categorize_friction_zones(
+    zones: &[FrictionZone],
+) -> HashMap<&'static str, Vec<&FrictionZone>> {
+    let mut by_category: HashMap<&'static str, Vec<&FrictionZone>> = HashMap::new();
+
+    for zone in zones {
+        let category = FrictionCategory::from_path(&zone.path);
+        by_category.entry(category.as_str()).or_default().push(zone);
+    }
+
+    by_category
+}
+
+/// Generate a consistent run_id for receipts.
+/// Format: `{timestamp}-pr{pr_number}` or `{timestamp}-pr0` if no PR.
+pub fn generate_run_id(pr: Option<u32>) -> String {
+    format!(
+        "{}-pr{}",
+        Utc::now().format("%Y-%m-%dT%H-%M-%SZ"),
+        pr.map(|n| n.to_string()).unwrap_or_else(|| "0".to_string())
+    )
+}
+
 /// Arguments for the receipts gate command
 #[derive(Debug, Clone)]
 pub struct ReceiptsGateArgs {
@@ -36,11 +179,13 @@ pub struct ReceiptsGateArgs {
     pub pr: Option<u32>,
     /// Output directory for receipts
     pub output_dir: PathBuf,
+    /// Shared run_id (for forensic orchestration); generated if None
+    pub run_id: Option<String>,
 }
 
 impl Default for ReceiptsGateArgs {
     fn default() -> Self {
-        Self { pr: None, output_dir: PathBuf::from(".runs/current") }
+        Self { pr: None, output_dir: PathBuf::from(".runs/current"), run_id: None }
     }
 }
 
@@ -56,11 +201,8 @@ pub fn run_gate(args: ReceiptsGateArgs) -> Result<()> {
     std::fs::create_dir_all(&receipts_dir)?;
 
     let started_at = Utc::now();
-    let run_id = format!(
-        "{}-pr{}",
-        started_at.format("%Y-%m-%dT%H-%M-%SZ"),
-        args.pr.map(|n| n.to_string()).unwrap_or_else(|| "0".to_string())
-    );
+    // Use provided run_id (for forensic orchestration) or generate new one
+    let run_id = args.run_id.clone().unwrap_or_else(|| generate_run_id(args.pr));
 
     // Get git commit
     let commit = Command::new("git")
@@ -220,6 +362,73 @@ fn get_current_commit_short() -> Option<String> {
         .filter(|s| !s.is_empty())
 }
 
+/// Get current git commit SHA (full form)
+fn get_current_commit_full() -> Option<String> {
+    Command::new("git")
+        .args(["rev-parse", "HEAD"])
+        .output()
+        .ok()
+        .map(|o| String::from_utf8_lossy(&o.stdout).trim().to_string())
+        .filter(|s| !s.is_empty())
+}
+
+/// Get the SHA of a branch or ref
+fn get_ref_sha(ref_name: &str) -> Option<String> {
+    Command::new("git")
+        .args(["rev-parse", ref_name])
+        .output()
+        .ok()
+        .and_then(|o| {
+            if o.status.success() {
+                Some(String::from_utf8_lossy(&o.stdout).trim().to_string())
+            } else {
+                None
+            }
+        })
+        .filter(|s| !s.is_empty())
+}
+
+/// Get top N changed files by numstat
+fn get_numstat_top_n(base_branch: &str, n: usize) -> Vec<serde_json::Value> {
+    let output = Command::new("git").args(["diff", "--numstat", base_branch]).output();
+
+    match output {
+        Ok(out) => {
+            let stdout = String::from_utf8_lossy(&out.stdout);
+            let mut entries: Vec<_> = stdout
+                .lines()
+                .filter_map(|line| {
+                    let parts: Vec<&str> = line.split('\t').collect();
+                    if parts.len() >= 3 {
+                        let added: i64 = parts[0].parse().unwrap_or(0);
+                        let removed: i64 = parts[1].parse().unwrap_or(0);
+                        let file = parts[2].to_string();
+                        Some((added + removed, added, removed, file))
+                    } else {
+                        None
+                    }
+                })
+                .collect();
+
+            // Sort by total churn descending
+            entries.sort_by(|a, b| b.0.cmp(&a.0));
+
+            entries
+                .into_iter()
+                .take(n)
+                .map(|(_, added, removed, file)| {
+                    serde_json::json!({
+                        "file": file,
+                        "added": added,
+                        "removed": removed
+                    })
+                })
+                .collect()
+        }
+        Err(_) => vec![],
+    }
+}
+
 /// Arguments for the receipts economics command
 #[derive(Debug, Clone)]
 pub struct ReceiptsEconomicsArgs {
@@ -257,6 +466,8 @@ pub struct ReceiptsEconomicsArgs {
     pub compute_notes: Option<String>,
     /// Iteration notes (optional)
     pub iteration_notes: Option<String>,
+    /// Shared run_id (for forensic orchestration); generated if None
+    pub run_id: Option<String>,
 }
 
 impl Default for ReceiptsEconomicsArgs {
@@ -279,6 +490,7 @@ impl Default for ReceiptsEconomicsArgs {
             devlt_notes: None,
             compute_notes: None,
             iteration_notes: None,
+            run_id: None,
         }
     }
 }
@@ -303,7 +515,8 @@ pub fn run_economics(args: ReceiptsEconomicsArgs) -> Result<()> {
     let receipts_dir = args.output_dir.join("receipts");
     std::fs::create_dir_all(&receipts_dir)?;
 
-    let run_id = format!("{}-pr{}", Utc::now().format("%Y-%m-%dT%H-%M-%SZ"), args.pr);
+    // Use provided run_id (for forensic orchestration) or generate new one
+    let run_id = args.run_id.clone().unwrap_or_else(|| generate_run_id(Some(args.pr)));
 
     let receipt = EconomicsReceipt::builder()
         .schema_version("1.0")
@@ -575,6 +788,14 @@ pub struct ReceiptsQualityArgs {
     pub test_depth_rating: Option<String>,
     /// LLM-provided notes
     pub notes: Vec<String>,
+    /// Shared run_id (for forensic orchestration); generated if None
+    pub run_id: Option<String>,
+    /// Enable LLM semantic analysis via Historian agent
+    pub llm: bool,
+    /// Path to existing historian output (for offline/testing use)
+    pub historian_output: Option<PathBuf>,
+    /// Command template for running historian (use {input} as placeholder)
+    pub historian_cmd: Option<String>,
 }
 
 impl Default for ReceiptsQualityArgs {
@@ -586,7 +807,267 @@ impl Default for ReceiptsQualityArgs {
             boundary_rating: None,
             test_depth_rating: None,
             notes: Vec::new(),
+            run_id: None,
+            llm: false,
+            historian_output: None,
+            historian_cmd: None,
         }
+    }
+}
+
+// ============================================================================
+// HISTORIAN APPENDIX TYPES AND PARSING
+// ============================================================================
+
+/// Markers for historian appendix extraction
+const HISTORIAN_APPENDIX_START: &str = "<!-- historian:appendix:start -->";
+const HISTORIAN_APPENDIX_END: &str = "<!-- historian:appendix:end -->";
+
+/// Structured appendix from Historian LLM analysis.
+/// All fields are optional - partial appendices are valid.
+#[derive(Debug, Clone, Default, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub struct HistorianQualityAppendix {
+    /// Boundary integrity rating (improved/neutral/degraded)
+    pub boundary_rating: Option<String>,
+    /// Notes about boundary integrity
+    #[serde(default)]
+    pub boundary_notes: Vec<String>,
+
+    /// Test depth rating (hardened/mixed/shallow)
+    pub test_depth_rating: Option<String>,
+    /// Notes about test depth
+    #[serde(default)]
+    pub test_depth_notes: Vec<String>,
+
+    /// Risk notes from LLM analysis
+    #[serde(default)]
+    pub risk_notes: Vec<String>,
+
+    /// Assumptions that materially affected the analysis
+    #[serde(default)]
+    pub assumptions: Vec<String>,
+    /// Evidence pointers (paths, commits, receipts)
+    #[serde(default)]
+    pub evidence_pointers: Vec<String>,
+
+    /// Confidence level (high/medium/low)
+    pub confidence: Option<String>,
+}
+
+/// Extract the JSON appendix from historian markdown output.
+/// Returns the raw JSON string between the markers.
+///
+/// # Errors
+/// - Returns error if start marker not found
+/// - Returns error if end marker not found
+/// - Returns error if JSON is wrapped in code fences
+pub fn extract_historian_appendix_json(markdown: &str) -> Result<&str> {
+    let start = markdown
+        .find(HISTORIAN_APPENDIX_START)
+        .ok_or_else(|| anyhow::anyhow!("Historian appendix start marker not found"))?;
+    let after_start = start + HISTORIAN_APPENDIX_START.len();
+
+    let end = markdown[after_start..]
+        .find(HISTORIAN_APPENDIX_END)
+        .ok_or_else(|| anyhow::anyhow!("Historian appendix end marker not found"))?
+        + after_start;
+
+    let json = markdown[after_start..end].trim();
+
+    // Guardrail: refuse fenced blocks
+    if json.starts_with("```") {
+        return Err(anyhow::anyhow!("Historian appendix must be raw JSON (not in a code fence)"));
+    }
+
+    Ok(json)
+}
+
+/// Parse the historian appendix JSON into a structured type.
+pub fn parse_historian_appendix(json: &str) -> Result<HistorianQualityAppendix> {
+    serde_json::from_str(json).context("Failed to parse historian appendix JSON")
+}
+
+/// Result of obtaining historian analysis
+pub enum HistorianResult {
+    /// Successfully obtained and parsed appendix
+    Success(HistorianQualityAppendix, PathBuf),
+    /// Historian output file provided but extraction/parse failed
+    ParseFailed(String),
+    /// No historian runner configured
+    RunnerNotConfigured,
+    /// Historian command execution failed
+    CommandFailed(String),
+}
+
+/// Obtain historian analysis from file or by running command.
+fn obtain_historian_analysis(
+    args: &ReceiptsQualityArgs,
+    analysis_dir: &std::path::Path,
+) -> HistorianResult {
+    // Priority 1: Read from provided file
+    if let Some(ref output_path) = args.historian_output {
+        match std::fs::read_to_string(output_path) {
+            Ok(content) => {
+                // Copy historian output into run directory for durable evidence
+                // This keeps the receipt self-contained and portable
+                let durable_path = analysis_dir.join("historian.md");
+                if let Err(e) = std::fs::write(&durable_path, &content) {
+                    return HistorianResult::ParseFailed(format!(
+                        "Failed to copy historian output to run directory: {}",
+                        e
+                    ));
+                }
+                println!(
+                    "    → {} (copied from {})",
+                    durable_path.display(),
+                    output_path.display()
+                );
+
+                match extract_historian_appendix_json(&content).and_then(parse_historian_appendix) {
+                    // Return the durable path, not the original
+                    Ok(appendix) => return HistorianResult::Success(appendix, durable_path),
+                    Err(e) => return HistorianResult::ParseFailed(e.to_string()),
+                }
+            }
+            Err(e) => {
+                return HistorianResult::ParseFailed(format!(
+                    "Failed to read historian output: {}",
+                    e
+                ));
+            }
+        }
+    }
+
+    // Priority 2: Run historian command
+    let cmd_template = args.historian_cmd.clone().or_else(|| std::env::var("HISTORIAN_CMD").ok());
+
+    if let Some(template) = cmd_template {
+        // Write input file for historian
+        let input_path = analysis_dir.join("historian_input.json");
+        let output_path = analysis_dir.join("historian.md");
+
+        // Build enriched input for historian
+        // This provides enough context for consistent semantic analysis
+        let receipts_dir = args.output_dir.join("receipts");
+
+        // Find existing receipts (if forensic was run before quality)
+        let telemetry_path = receipts_dir.join("telemetry.json");
+        let timeline_path = receipts_dir.join("timeline.json");
+
+        // Get diff summary for context
+        let diff_stat = get_diff_stat(&args.base_branch);
+        let hotspots = find_hotspots(&args.base_branch);
+        let modules = get_modules_touched_names(&args.base_branch);
+        let numstat_top = get_numstat_top_n(&args.base_branch, 10);
+
+        let input = serde_json::json!({
+            "run_dir": args.output_dir.display().to_string(),
+            "base_branch": args.base_branch,
+            "pr": args.pr,
+            // Git context
+            "head_sha": get_current_commit_full(),
+            "base_sha": get_ref_sha(&args.base_branch),
+            // Existing receipts (paths for reference)
+            "existing_receipts": {
+                "telemetry": if telemetry_path.exists() { Some(telemetry_path.display().to_string()) } else { None },
+                "timeline": if timeline_path.exists() { Some(timeline_path.display().to_string()) } else { None },
+            },
+            // Diff summary for context
+            "diff_summary": {
+                "files_changed": diff_stat.files_changed,
+                "insertions": diff_stat.insertions,
+                "deletions": diff_stat.deletions,
+                "modules_touched": modules,
+                "hotspots": hotspots,
+                "numstat_top_10": numstat_top,
+            }
+        });
+
+        if let Err(e) = std::fs::write(&input_path, serde_json::to_string_pretty(&input).unwrap()) {
+            return HistorianResult::CommandFailed(format!(
+                "Failed to write historian input: {}",
+                e
+            ));
+        }
+        println!("    → {}", input_path.display());
+
+        // Substitute {input} placeholder
+        let cmd = template.replace("{input}", &input_path.display().to_string());
+
+        // Execute command
+        let result = if cfg!(target_os = "windows") {
+            Command::new("cmd").args(["/C", &cmd]).output()
+        } else {
+            Command::new("sh").args(["-lc", &cmd]).output()
+        };
+
+        match result {
+            Ok(output) => {
+                if !output.status.success() {
+                    let stderr = String::from_utf8_lossy(&output.stderr);
+                    return HistorianResult::CommandFailed(format!(
+                        "Historian command failed: {}",
+                        stderr
+                    ));
+                }
+
+                // Write stdout to historian.md
+                let stdout = String::from_utf8_lossy(&output.stdout);
+                if let Err(e) = std::fs::write(&output_path, stdout.as_ref()) {
+                    return HistorianResult::CommandFailed(format!(
+                        "Failed to write historian output: {}",
+                        e
+                    ));
+                }
+                println!("    → {}", output_path.display());
+
+                // Parse the output
+                match std::fs::read_to_string(&output_path) {
+                    Ok(content) => match extract_historian_appendix_json(&content)
+                        .and_then(parse_historian_appendix)
+                    {
+                        Ok(appendix) => return HistorianResult::Success(appendix, output_path),
+                        Err(e) => return HistorianResult::ParseFailed(e.to_string()),
+                    },
+                    Err(e) => {
+                        return HistorianResult::ParseFailed(format!(
+                            "Failed to read historian output: {}",
+                            e
+                        ));
+                    }
+                }
+            }
+            Err(e) => {
+                return HistorianResult::CommandFailed(format!(
+                    "Failed to execute historian command: {}",
+                    e
+                ));
+            }
+        }
+    }
+
+    // No runner configured
+    HistorianResult::RunnerNotConfigured
+}
+
+/// Parse confidence string to LlmConfidence enum
+fn parse_llm_confidence(s: &str) -> Option<gov_receipts::LlmConfidence> {
+    match s.to_lowercase().as_str() {
+        "high" => Some(gov_receipts::LlmConfidence::High),
+        "medium" => Some(gov_receipts::LlmConfidence::Medium),
+        "low" => Some(gov_receipts::LlmConfidence::Low),
+        _ => None,
+    }
+}
+
+/// Parse confidence string to MetaConfidence enum
+fn parse_meta_confidence(s: &str) -> Option<MetaConfidence> {
+    match s.to_lowercase().as_str() {
+        "high" => Some(MetaConfidence::High),
+        "medium" => Some(MetaConfidence::Medium),
+        "low" => Some(MetaConfidence::Low),
+        _ => None,
     }
 }
 
@@ -601,11 +1082,12 @@ pub fn run_quality(args: ReceiptsQualityArgs) -> Result<()> {
     let receipts_dir = args.output_dir.join("receipts");
     std::fs::create_dir_all(&receipts_dir)?;
 
-    let run_id = format!(
-        "{}-pr{}",
-        Utc::now().format("%Y-%m-%dT%H-%M-%SZ"),
-        args.pr.map(|n| n.to_string()).unwrap_or_else(|| "0".to_string())
-    );
+    // Create analysis directory for historian artifacts
+    let analysis_dir = args.output_dir.join("analysis");
+    std::fs::create_dir_all(&analysis_dir)?;
+
+    // Use provided run_id (for forensic orchestration) or generate new one
+    let run_id = args.run_id.clone().unwrap_or_else(|| generate_run_id(args.pr));
 
     // Get diff stats from git
     let diff_stat = get_diff_stat(&args.base_branch);
@@ -623,10 +1105,52 @@ pub fn run_quality(args: ReceiptsQualityArgs) -> Result<()> {
         0.0
     };
 
-    // Build quality metrics
+    // =========================================================================
+    // Obtain historian analysis if --llm is enabled
+    // =========================================================================
+    let mut historian_appendix: Option<HistorianQualityAppendix> = None;
+    let mut historian_path: Option<PathBuf> = None;
+    let mut historian_assumptions: Vec<String> = Vec::new();
+    let mut historian_confidence: Option<MetaConfidence> = None;
+
+    if args.llm {
+        println!("  {} LLM semantic analysis...", "Running".cyan());
+
+        match obtain_historian_analysis(&args, &analysis_dir) {
+            HistorianResult::Success(appendix, path) => {
+                println!("  {} Historian appendix loaded from {}", "OK".green(), path.display());
+                historian_confidence =
+                    appendix.confidence.as_ref().and_then(|c| parse_meta_confidence(c));
+                historian_appendix = Some(appendix);
+                historian_path = Some(path);
+            }
+            HistorianResult::ParseFailed(err) => {
+                println!("  {} Historian appendix parse failed: {}", "WARN".yellow(), err);
+                historian_assumptions.push(format!("historian_appendix_parse_failed: {}", err));
+                historian_confidence = Some(MetaConfidence::Low);
+            }
+            HistorianResult::RunnerNotConfigured => {
+                println!(
+                    "  {} No historian runner configured (use --historian-output or HISTORIAN_CMD)",
+                    "WARN".yellow()
+                );
+                historian_assumptions.push("historian_runner_not_configured".to_string());
+                historian_confidence = Some(MetaConfidence::Low);
+            }
+            HistorianResult::CommandFailed(err) => {
+                println!("  {} Historian command failed: {}", "WARN".yellow(), err);
+                historian_assumptions.push(format!("historian_cmd_failed: {}", err));
+                historian_confidence = Some(MetaConfidence::Low);
+            }
+        }
+    }
+
+    // =========================================================================
+    // Build quality metrics with optional historian merge
+    // =========================================================================
     let mut boundaries = Boundaries { modules_touched, hotspots, llm_assessment: None };
 
-    // Add LLM boundary assessment if provided
+    // Add LLM boundary assessment from CLI args or historian appendix
     if let Some(rating_str) = &args.boundary_rating
         && let Some(rating) = parse_boundary_rating(rating_str)
     {
@@ -638,6 +1162,49 @@ pub fn run_quality(args: ReceiptsQualityArgs) -> Result<()> {
         });
     }
 
+    // Merge historian boundary assessment (semantic fields only)
+    if let Some(ref appendix) = historian_appendix {
+        if let Some(ref rating_str) = appendix.boundary_rating
+            && let Some(rating) = parse_boundary_rating(rating_str)
+        {
+            let existing = boundaries.llm_assessment.take();
+            let mut notes = existing.as_ref().map(|e| e.notes.clone()).unwrap_or_default();
+            notes.extend(appendix.boundary_notes.clone());
+
+            let confidence = appendix
+                .confidence
+                .as_ref()
+                .and_then(|c| parse_llm_confidence(c))
+                .or_else(|| existing.as_ref().and_then(|e| e.confidence));
+
+            let mut evidence = existing.as_ref().map(|e| e.evidence.clone()).unwrap_or_default();
+            evidence.extend(appendix.evidence_pointers.clone());
+
+            boundaries.llm_assessment =
+                Some(LlmBoundaryAssessment { rating, notes, confidence, evidence });
+        } else if !appendix.boundary_notes.is_empty() {
+            // No rating but notes exist - create assessment with neutral rating and low confidence
+            // This preserves LLM signal while explicitly marking the assumption
+            let existing = boundaries.llm_assessment.take();
+            let mut notes = existing.as_ref().map(|e| e.notes.clone()).unwrap_or_default();
+            notes.extend(appendix.boundary_notes.clone());
+
+            let mut evidence = existing.as_ref().map(|e| e.evidence.clone()).unwrap_or_default();
+            evidence.extend(appendix.evidence_pointers.clone());
+
+            boundaries.llm_assessment = Some(LlmBoundaryAssessment {
+                rating: existing
+                    .as_ref()
+                    .map(|e| e.rating)
+                    .unwrap_or(gov_receipts::BoundaryRating::Neutral),
+                notes,
+                confidence: Some(gov_receipts::LlmConfidence::Low),
+                evidence,
+            });
+            historian_assumptions.push("historian_appendix_missing_boundary_rating".to_string());
+        }
+    }
+
     let mut verification = Verification {
         tests_added_loc: tests_loc,
         impl_added_loc: impl_loc,
@@ -645,7 +1212,7 @@ pub fn run_quality(args: ReceiptsQualityArgs) -> Result<()> {
         llm_test_depth: None,
     };
 
-    // Add LLM test depth assessment if provided
+    // Add LLM test depth assessment from CLI args
     if let Some(rating_str) = &args.test_depth_rating
         && let Some(rating) = parse_test_depth_rating(rating_str)
     {
@@ -655,6 +1222,55 @@ pub fn run_quality(args: ReceiptsQualityArgs) -> Result<()> {
             confidence: None,
             evidence: vec![],
         });
+    }
+
+    // Merge historian test depth assessment (semantic fields only)
+    if let Some(ref appendix) = historian_appendix {
+        if let Some(ref rating_str) = appendix.test_depth_rating
+            && let Some(rating) = parse_test_depth_rating(rating_str)
+        {
+            let existing = verification.llm_test_depth.take();
+            let mut notes = existing.as_ref().map(|e| e.notes.clone()).unwrap_or_default();
+            notes.extend(appendix.test_depth_notes.clone());
+
+            let confidence = appendix
+                .confidence
+                .as_ref()
+                .and_then(|c| parse_llm_confidence(c))
+                .or_else(|| existing.as_ref().and_then(|e| e.confidence));
+
+            let mut evidence = existing.as_ref().map(|e| e.evidence.clone()).unwrap_or_default();
+            evidence.extend(appendix.evidence_pointers.clone());
+
+            verification.llm_test_depth =
+                Some(LlmTestDepthAssessment { rating, notes, confidence, evidence });
+        } else if !appendix.test_depth_notes.is_empty() {
+            // No rating but notes exist - create assessment with mixed rating and low confidence
+            // This preserves LLM signal while explicitly marking the assumption
+            let existing = verification.llm_test_depth.take();
+            let mut notes = existing.as_ref().map(|e| e.notes.clone()).unwrap_or_default();
+            notes.extend(appendix.test_depth_notes.clone());
+
+            let mut evidence = existing.as_ref().map(|e| e.evidence.clone()).unwrap_or_default();
+            evidence.extend(appendix.evidence_pointers.clone());
+
+            verification.llm_test_depth = Some(LlmTestDepthAssessment {
+                rating: existing
+                    .as_ref()
+                    .map(|e| e.rating)
+                    .unwrap_or(gov_receipts::TestDepthRating::Mixed),
+                notes,
+                confidence: Some(gov_receipts::LlmConfidence::Low),
+                evidence,
+            });
+            historian_assumptions.push("historian_appendix_missing_test_depth_rating".to_string());
+        }
+    }
+
+    // Build risks with optional historian notes
+    let mut llm_risk_notes = Vec::new();
+    if let Some(ref appendix) = historian_appendix {
+        llm_risk_notes.extend(appendix.risk_notes.clone());
     }
 
     // Store values before moving unsafe_delta
@@ -667,15 +1283,41 @@ pub fn run_quality(args: ReceiptsQualityArgs) -> Result<()> {
         builder = builder.pr(pr_num as u64);
     }
 
-    // Build meta provenance - quality uses medium confidence by default
+    // =========================================================================
+    // Build meta provenance
+    // =========================================================================
+    let base_confidence = if args.llm {
+        // If LLM was requested, use historian confidence or default to medium
+        historian_confidence.unwrap_or(MetaConfidence::Medium)
+    } else {
+        MetaConfidence::Medium
+    };
+
+    let method_id = if args.llm { "quality-v1+llm" } else { "quality-v1" };
+
     let mut meta_builder = ReceiptMeta::builder()
-        .method_id("quality-v1")
+        .method_id(method_id)
         .method_version(1)
         .analysis_run_id(&run_id)
         .input("git_diff")
         .input("git_numstat")
         .assumption(format!("base branch: {}", args.base_branch))
-        .confidence(MetaConfidence::Medium);
+        .confidence(base_confidence);
+
+    // Add historian-specific inputs and assumptions
+    if args.llm {
+        meta_builder = meta_builder.input("historian_appendix");
+        for assumption in &historian_assumptions {
+            meta_builder = meta_builder.assumption(assumption.clone());
+        }
+
+        // Add assumptions from historian appendix
+        if let Some(ref appendix) = historian_appendix {
+            for assumption in &appendix.assumptions {
+                meta_builder = meta_builder.assumption(assumption.clone());
+            }
+        }
+    }
 
     if let Some(commit) = get_current_commit_short() {
         meta_builder = meta_builder.evidence(commit);
@@ -684,6 +1326,18 @@ pub fn run_quality(args: ReceiptsQualityArgs) -> Result<()> {
     // Add evidence pointers for hotspots
     for hotspot in boundaries.hotspots.iter().take(5) {
         meta_builder = meta_builder.evidence(hotspot.clone());
+    }
+
+    // Add historian evidence pointers
+    if let Some(ref appendix) = historian_appendix {
+        for pointer in &appendix.evidence_pointers {
+            meta_builder = meta_builder.evidence(pointer.clone());
+        }
+    }
+
+    // Add pointer to historian narrative if available
+    if let Some(ref path) = historian_path {
+        meta_builder = meta_builder.evidence(format!("analysis:{}", path.display()));
     }
 
     let receipt = builder
@@ -695,7 +1349,7 @@ pub fn run_quality(args: ReceiptsQualityArgs) -> Result<()> {
                 unsafe_delta: Some(unsafe_delta),
                 deps_added: vec![],
                 concurrency_primitives_added: vec![],
-                llm_risk_notes: vec![],
+                llm_risk_notes,
             },
         })
         .meta(meta_builder.build())
@@ -713,6 +1367,14 @@ pub fn run_quality(args: ReceiptsQualityArgs) -> Result<()> {
     println!("  Test density delta: {:.2}", test_density_delta);
     println!("  Unsafe: +{} / -{}", unsafe_added, unsafe_removed);
     println!("  Files changed: {}", diff_stat.files_changed);
+
+    if args.llm {
+        if historian_appendix.is_some() {
+            println!("  LLM: {} (historian appendix merged)", "enabled".green());
+        } else {
+            println!("  LLM: {} (no appendix)", "enabled".yellow());
+        }
+    }
 
     Ok(())
 }
@@ -752,6 +1414,8 @@ pub struct ReceiptsTelemetryArgs {
     pub profile: String,
     /// Base branch for comparison (default: origin/main)
     pub base_branch: String,
+    /// Shared run_id (for forensic orchestration); generated if None
+    pub run_id: Option<String>,
 }
 
 impl Default for ReceiptsTelemetryArgs {
@@ -761,6 +1425,7 @@ impl Default for ReceiptsTelemetryArgs {
             output_dir: PathBuf::from(".runs/current"),
             profile: "fast".to_string(),
             base_branch: "origin/main".to_string(),
+            run_id: None,
         }
     }
 }
@@ -776,11 +1441,8 @@ pub fn run_telemetry(args: ReceiptsTelemetryArgs) -> Result<()> {
     let receipts_dir = args.output_dir.join("receipts");
     std::fs::create_dir_all(&receipts_dir)?;
 
-    let run_id = format!(
-        "{}-pr{}",
-        Utc::now().format("%Y-%m-%dT%H-%M-%SZ"),
-        args.pr.map(|n| n.to_string()).unwrap_or_else(|| "0".to_string())
-    );
+    // Use provided run_id (for forensic orchestration) or generate new one
+    let run_id = args.run_id.clone().unwrap_or_else(|| generate_run_id(args.pr));
 
     // Parse profile
     let profile = match args.profile.to_lowercase().as_str() {
@@ -1355,6 +2017,12 @@ pub struct ReceiptsTimelineArgs {
     pub base_branch: String,
     /// Session gap threshold in minutes (default: 30)
     pub session_gap_minutes: u32,
+    /// Shared run_id (for forensic orchestration); generated if None
+    pub run_id: Option<String>,
+    /// Additional path prefixes to exclude from friction/oscillation analysis
+    pub exclude_prefixes: Vec<String>,
+    /// Include ephemeral directories in analysis (for debugging)
+    pub include_ephemeral: bool,
 }
 
 impl Default for ReceiptsTimelineArgs {
@@ -1364,6 +2032,9 @@ impl Default for ReceiptsTimelineArgs {
             output_dir: PathBuf::from(".runs/current"),
             base_branch: "origin/main".to_string(),
             session_gap_minutes: 30,
+            run_id: None,
+            exclude_prefixes: Vec::new(),
+            include_ephemeral: false,
         }
     }
 }
@@ -1381,6 +2052,16 @@ pub struct ReceiptsForensicArgs {
     pub profile: String,
     /// Session gap threshold in minutes (default: 30)
     pub session_gap_minutes: u32,
+    /// Additional path prefixes to exclude from friction/oscillation analysis
+    pub exclude_prefixes: Vec<String>,
+    /// Include ephemeral directories in analysis (for debugging)
+    pub include_ephemeral: bool,
+    /// Enable LLM semantic analysis via Historian agent for quality receipt
+    pub llm: bool,
+    /// Path to existing historian output (for offline/testing use)
+    pub historian_output: Option<PathBuf>,
+    /// Command template for running historian (use {input} as placeholder)
+    pub historian_cmd: Option<String>,
 }
 
 impl Default for ReceiptsForensicArgs {
@@ -1391,6 +2072,11 @@ impl Default for ReceiptsForensicArgs {
             base_branch: "origin/main".to_string(),
             profile: "fast".to_string(),
             session_gap_minutes: 30,
+            exclude_prefixes: Vec::new(),
+            include_ephemeral: false,
+            llm: false,
+            historian_output: None,
+            historian_cmd: None,
         }
     }
 }
@@ -1406,11 +2092,8 @@ pub fn run_timeline(args: ReceiptsTimelineArgs) -> Result<()> {
     let receipts_dir = args.output_dir.join("receipts");
     std::fs::create_dir_all(&receipts_dir)?;
 
-    let run_id = format!(
-        "{}-pr{}",
-        Utc::now().format("%Y-%m-%dT%H-%M-%SZ"),
-        args.pr.map(|n| n.to_string()).unwrap_or_else(|| "0".to_string())
-    );
+    // Use provided run_id (for forensic orchestration) or generate new one
+    let run_id = args.run_id.clone().unwrap_or_else(|| generate_run_id(args.pr));
 
     // Get commit history
     let commits = get_commit_history(&args.base_branch);
@@ -1437,10 +2120,12 @@ pub fn run_timeline(args: ReceiptsTimelineArgs) -> Result<()> {
     let sessions = identify_sessions(&commits, args.session_gap_minutes);
 
     // Find friction zones (files touched multiple times)
-    let friction_zones = find_friction_zones(&args.base_branch);
+    let friction_zones =
+        find_friction_zones(&args.base_branch, &args.exclude_prefixes, args.include_ephemeral);
 
     // Detect oscillations (add/remove/add patterns indicating uncertainty)
-    let oscillations = detect_oscillations(&args.base_branch);
+    let oscillations =
+        detect_oscillations(&args.base_branch, &args.exclude_prefixes, args.include_ephemeral);
 
     // Detect convergence (how the PR stabilized toward completion)
     let convergence = detect_convergence(&args.base_branch, &commits);
@@ -1509,6 +2194,22 @@ pub fn run_timeline(args: ReceiptsTimelineArgs) -> Result<()> {
     println!("  Commits: {}", commits.len());
     println!("  Sessions: {}", receipt.sessions.len());
     println!("  Friction zones: {}", receipt.friction_zones.len());
+
+    // Show category rollup for friction zones
+    if !receipt.friction_zones.is_empty() {
+        let by_category = categorize_friction_zones(&receipt.friction_zones);
+        let mut categories: Vec<_> = by_category.iter().collect();
+        categories.sort_by_key(|(_, zones)| std::cmp::Reverse(zones.len()));
+        print!("    Categories: ");
+        for (i, (cat, zones)) in categories.iter().enumerate() {
+            if i > 0 {
+                print!(", ");
+            }
+            print!("{}={}", cat, zones.len());
+        }
+        println!();
+    }
+
     println!("  Oscillations: {}", receipt.oscillations.len());
     println!("  Topology: {:?} ({:?} confidence)", receipt.topology, receipt.topology_confidence);
     if let Some(ref conv) = receipt.convergence {
@@ -1552,6 +2253,12 @@ pub fn run_forensic(args: ReceiptsForensicArgs) -> Result<()> {
         format!("Failed to create receipts directory: {}", receipts_dir.display())
     })?;
 
+    // Generate a SHARED run_id for all receipts in this forensic run
+    // This ensures all receipts from the same analysis can be correlated
+    let shared_run_id = generate_run_id(Some(args.pr));
+    println!("  Run ID: {}", shared_run_id);
+    println!();
+
     // Track results for summary
     let mut results: Vec<(&str, bool, String)> = Vec::new();
     let start_time = Instant::now();
@@ -1563,6 +2270,7 @@ pub fn run_forensic(args: ReceiptsForensicArgs) -> Result<()> {
         output_dir: args.output_dir.clone(),
         profile: args.profile.clone(),
         base_branch: args.base_branch.clone(),
+        run_id: Some(shared_run_id.clone()),
     });
     match &telemetry_result {
         Ok(()) => results.push(("telemetry", true, "generated".to_string())),
@@ -1577,6 +2285,9 @@ pub fn run_forensic(args: ReceiptsForensicArgs) -> Result<()> {
         output_dir: args.output_dir.clone(),
         base_branch: args.base_branch.clone(),
         session_gap_minutes: args.session_gap_minutes,
+        run_id: Some(shared_run_id.clone()),
+        exclude_prefixes: args.exclude_prefixes.clone(),
+        include_ephemeral: args.include_ephemeral,
     });
     match &timeline_result {
         Ok(()) => results.push(("timeline", true, "generated".to_string())),
@@ -1584,8 +2295,9 @@ pub fn run_forensic(args: ReceiptsForensicArgs) -> Result<()> {
     }
     println!();
 
-    // 3. Quality receipt (can use telemetry data)
-    println!("{}", "Step 3/4: Generating quality receipt...".cyan());
+    // 3. Quality receipt (can use telemetry data, optionally with LLM analysis)
+    let llm_note = if args.llm { " (with LLM)" } else { "" };
+    println!("{}", format!("Step 3/4: Generating quality receipt{}...", llm_note).cyan());
     let quality_result = run_quality(ReceiptsQualityArgs {
         pr: Some(args.pr),
         output_dir: args.output_dir.clone(),
@@ -1593,6 +2305,10 @@ pub fn run_forensic(args: ReceiptsForensicArgs) -> Result<()> {
         boundary_rating: None,
         test_depth_rating: None,
         notes: vec![],
+        run_id: Some(shared_run_id.clone()),
+        llm: args.llm,
+        historian_output: args.historian_output.clone(),
+        historian_cmd: args.historian_cmd.clone(),
     });
     match &quality_result {
         Ok(()) => results.push(("quality", true, "generated".to_string())),
@@ -2199,7 +2915,16 @@ fn classify_session(commit_count: u32, duration_minutes: i64) -> Option<SessionC
 }
 
 /// Find friction zones (files touched in multiple commits)
-fn find_friction_zones(base_branch: &str) -> Vec<FrictionZone> {
+///
+/// # Arguments
+/// * `base_branch` - Base branch for comparison
+/// * `extra_excludes` - Additional path prefixes to exclude
+/// * `include_ephemeral` - If true, include ephemeral directories (for debugging)
+fn find_friction_zones(
+    base_branch: &str,
+    extra_excludes: &[String],
+    include_ephemeral: bool,
+) -> Vec<FrictionZone> {
     let output = Command::new("git")
         .args(["log", "--name-only", "--pretty=format:%H", &format!("{}..HEAD", base_branch)])
         .output();
@@ -2218,10 +2943,13 @@ fn find_friction_zones(base_branch: &str) -> Vec<FrictionZone> {
                 }
             }
 
-            // Filter to files touched 2+ times
+            // Filter to files touched 2+ times, excluding ephemeral directories
             file_commits
                 .into_iter()
-                .filter(|(_, commits)| commits.len() >= 2)
+                .filter(|(path, commits)| {
+                    !should_exclude_path(path, extra_excludes, include_ephemeral)
+                        && commits.len() >= 2
+                })
                 .map(|(path, commits)| FrictionZone {
                     path,
                     touch_count: commits.len() as u32,
@@ -2339,7 +3067,16 @@ impl SubjectHistory {
 /// This function detects:
 /// - Dependency oscillations: deps added then removed (or vice versa)
 /// - File oscillations: files created then deleted (or vice versa)
-pub fn detect_oscillations(base_branch: &str) -> Vec<Oscillation> {
+///
+/// # Arguments
+/// * `base_branch` - Base branch for comparison
+/// * `extra_excludes` - Additional path prefixes to exclude from file oscillations
+/// * `include_ephemeral` - If true, include ephemeral directories (for debugging)
+pub fn detect_oscillations(
+    base_branch: &str,
+    extra_excludes: &[String],
+    include_ephemeral: bool,
+) -> Vec<Oscillation> {
     let mut oscillations = Vec::new();
 
     // Get commit list from oldest to newest
@@ -2353,7 +3090,8 @@ pub fn detect_oscillations(base_branch: &str) -> Vec<Oscillation> {
     oscillations.extend(dep_oscillations);
 
     // Detect file oscillations
-    let file_oscillations = detect_file_oscillations(base_branch, &commits);
+    let file_oscillations =
+        detect_file_oscillations(base_branch, &commits, extra_excludes, include_ephemeral);
     oscillations.extend(file_oscillations);
 
     oscillations
@@ -2537,7 +3275,18 @@ fn looks_like_dependency_line(line: &str) -> bool {
 }
 
 /// Detect file oscillations by tracking file additions/deletions across commits
-fn detect_file_oscillations(base_branch: &str, commits: &[String]) -> Vec<Oscillation> {
+///
+/// # Arguments
+/// * `base_branch` - Base branch for comparison
+/// * `commits` - List of commit SHAs
+/// * `extra_excludes` - Additional path prefixes to exclude
+/// * `include_ephemeral` - If true, include ephemeral directories (for debugging)
+fn detect_file_oscillations(
+    base_branch: &str,
+    commits: &[String],
+    extra_excludes: &[String],
+    include_ephemeral: bool,
+) -> Vec<Oscillation> {
     let mut file_history: HashMap<String, SubjectHistory> = HashMap::new();
 
     for (i, commit) in commits.iter().enumerate() {
@@ -2556,6 +3305,11 @@ fn detect_file_oscillations(base_branch: &str, commits: &[String]) -> Vec<Oscill
                     let status = parts[0];
                     let file_path = parts[1];
 
+                    // Skip ephemeral directories
+                    if should_exclude_path(file_path, extra_excludes, include_ephemeral) {
+                        continue;
+                    }
+
                     let action = match status {
                         "A" => SubjectAction::Add,
                         "D" => SubjectAction::Remove,
@@ -2571,7 +3325,7 @@ fn detect_file_oscillations(base_branch: &str, commits: &[String]) -> Vec<Oscill
         }
     }
 
-    // Convert histories to oscillations
+    // Convert histories to oscillations (ephemeral paths already filtered above)
     file_history
         .into_iter()
         .filter_map(|(file_path, history)| {
@@ -2832,5 +3586,229 @@ diff --git a/Cargo.toml b/Cargo.toml
         assert_eq!(FileCategory::Receipts.as_str(), "receipts");
         assert_eq!(FileCategory::Config.as_str(), "config");
         assert_eq!(FileCategory::Impl.as_str(), "impl");
+    }
+
+    // ========================================================================
+    // Path Normalization Tests
+    // ========================================================================
+
+    #[test]
+    fn normalize_path_separators_converts_backslashes() {
+        // Windows-style paths
+        assert_eq!(normalize_path_separators(r"crates\xtask\src"), "crates/xtask/src");
+        assert_eq!(normalize_path_separators(r".runs\pr\123"), ".runs/pr/123");
+        assert_eq!(normalize_path_separators(r"target\debug\foo"), "target/debug/foo");
+    }
+
+    #[test]
+    fn normalize_path_separators_preserves_forward_slashes() {
+        // Unix-style paths remain unchanged
+        assert_eq!(normalize_path_separators("crates/xtask/src"), "crates/xtask/src");
+        assert_eq!(normalize_path_separators(".runs/pr/123"), ".runs/pr/123");
+    }
+
+    #[test]
+    fn should_exclude_path_with_defaults() {
+        // Default exclusions with empty extra excludes
+        let empty_excludes: Vec<String> = vec![];
+
+        assert!(should_exclude_path(".runs/current/foo.json", &empty_excludes, false));
+        assert!(should_exclude_path("target/debug/foo", &empty_excludes, false));
+        assert!(should_exclude_path(".git/objects/abc", &empty_excludes, false));
+
+        // Non-excluded paths
+        assert!(!should_exclude_path("src/main.rs", &empty_excludes, false));
+        assert!(!should_exclude_path("crates/foo/src/lib.rs", &empty_excludes, false));
+    }
+
+    #[test]
+    fn should_exclude_path_with_windows_separators() {
+        let empty_excludes: Vec<String> = vec![];
+
+        // Windows-style .runs path should be excluded
+        assert!(should_exclude_path(r".runs\current\foo.json", &empty_excludes, false));
+        assert!(should_exclude_path(r"target\debug\foo", &empty_excludes, false));
+    }
+
+    #[test]
+    fn should_exclude_path_with_extra_excludes() {
+        let extra_excludes = vec!["vendor/".to_string(), "custom_dir/".to_string()];
+
+        // Extra exclusions
+        assert!(should_exclude_path("vendor/crate/src", &extra_excludes, false));
+        assert!(should_exclude_path("custom_dir/file.txt", &extra_excludes, false));
+
+        // Non-excluded
+        assert!(!should_exclude_path("src/main.rs", &extra_excludes, false));
+    }
+
+    #[test]
+    fn should_exclude_path_include_ephemeral_flag() {
+        let empty_excludes: Vec<String> = vec![];
+
+        // With include_ephemeral=true, default exclusions are skipped
+        assert!(!should_exclude_path(".runs/current/foo.json", &empty_excludes, true));
+        assert!(!should_exclude_path("target/debug/foo", &empty_excludes, true));
+
+        // But extra exclusions still apply
+        let extra = vec!["always_exclude/".to_string()];
+        assert!(should_exclude_path("always_exclude/file.txt", &extra, true));
+    }
+
+    // ========================================================================
+    // HISTORIAN APPENDIX TESTS
+    // ========================================================================
+
+    #[test]
+    fn extract_historian_appendix_valid() {
+        let markdown = r#"
+# Quality Assessment
+
+This is narrative content.
+
+<!-- historian:appendix:start -->
+{
+  "boundary_rating": "improved",
+  "boundary_notes": ["Note 1", "Note 2"],
+  "confidence": "high"
+}
+<!-- historian:appendix:end -->
+"#;
+
+        let json = extract_historian_appendix_json(markdown).unwrap();
+        assert!(json.contains("boundary_rating"));
+        assert!(json.contains("improved"));
+    }
+
+    #[test]
+    fn extract_historian_appendix_missing_start_marker() {
+        let markdown = r#"
+# Quality Assessment
+No markers here.
+"#;
+
+        let result = extract_historian_appendix_json(markdown);
+        assert!(result.is_err());
+        assert!(result.unwrap_err().to_string().contains("start marker not found"));
+    }
+
+    #[test]
+    fn extract_historian_appendix_missing_end_marker() {
+        let markdown = r#"
+<!-- historian:appendix:start -->
+{ "boundary_rating": "improved" }
+"#;
+
+        let result = extract_historian_appendix_json(markdown);
+        assert!(result.is_err());
+        assert!(result.unwrap_err().to_string().contains("end marker not found"));
+    }
+
+    #[test]
+    fn extract_historian_appendix_rejects_fenced_json() {
+        let markdown = r#"
+<!-- historian:appendix:start -->
+```json
+{ "boundary_rating": "improved" }
+```
+<!-- historian:appendix:end -->
+"#;
+
+        let result = extract_historian_appendix_json(markdown);
+        assert!(result.is_err());
+        assert!(result.unwrap_err().to_string().contains("code fence"));
+    }
+
+    #[test]
+    fn parse_historian_appendix_full() {
+        let json = r#"{
+            "boundary_rating": "improved",
+            "boundary_notes": ["Note 1", "Note 2"],
+            "test_depth_rating": "hardened",
+            "test_depth_notes": ["Test note"],
+            "risk_notes": ["Risk 1"],
+            "assumptions": ["Assumption 1"],
+            "evidence_pointers": ["path:lib.rs:42"],
+            "confidence": "high"
+        }"#;
+
+        let appendix = parse_historian_appendix(json).unwrap();
+        assert_eq!(appendix.boundary_rating, Some("improved".to_string()));
+        assert_eq!(appendix.boundary_notes.len(), 2);
+        assert_eq!(appendix.test_depth_rating, Some("hardened".to_string()));
+        assert_eq!(appendix.test_depth_notes.len(), 1);
+        assert_eq!(appendix.risk_notes.len(), 1);
+        assert_eq!(appendix.assumptions.len(), 1);
+        assert_eq!(appendix.evidence_pointers.len(), 1);
+        assert_eq!(appendix.confidence, Some("high".to_string()));
+    }
+
+    #[test]
+    fn parse_historian_appendix_partial() {
+        let json = r#"{
+            "boundary_rating": "neutral",
+            "confidence": "low"
+        }"#;
+
+        let appendix = parse_historian_appendix(json).unwrap();
+        assert_eq!(appendix.boundary_rating, Some("neutral".to_string()));
+        assert!(appendix.boundary_notes.is_empty());
+        assert!(appendix.test_depth_rating.is_none());
+        assert_eq!(appendix.confidence, Some("low".to_string()));
+    }
+
+    #[test]
+    fn parse_historian_appendix_empty() {
+        let json = "{}";
+
+        let appendix = parse_historian_appendix(json).unwrap();
+        assert!(appendix.boundary_rating.is_none());
+        assert!(appendix.boundary_notes.is_empty());
+        assert!(appendix.confidence.is_none());
+    }
+
+    #[test]
+    fn parse_llm_confidence_valid() {
+        assert_eq!(parse_llm_confidence("high"), Some(gov_receipts::LlmConfidence::High));
+        assert_eq!(parse_llm_confidence("medium"), Some(gov_receipts::LlmConfidence::Medium));
+        assert_eq!(parse_llm_confidence("low"), Some(gov_receipts::LlmConfidence::Low));
+        assert_eq!(parse_llm_confidence("HIGH"), Some(gov_receipts::LlmConfidence::High)); // Case insensitive
+    }
+
+    #[test]
+    fn parse_llm_confidence_invalid() {
+        assert!(parse_llm_confidence("invalid").is_none());
+        assert!(parse_llm_confidence("").is_none());
+    }
+
+    #[test]
+    fn parse_meta_confidence_valid() {
+        assert_eq!(parse_meta_confidence("high"), Some(MetaConfidence::High));
+        assert_eq!(parse_meta_confidence("medium"), Some(MetaConfidence::Medium));
+        assert_eq!(parse_meta_confidence("low"), Some(MetaConfidence::Low));
+    }
+
+    #[test]
+    fn parse_historian_appendix_notes_only() {
+        // Tests that appendices with notes but no ratings are valid
+        // The merge logic should default to neutral/mixed with low confidence
+        let json = r#"{
+            "boundary_notes": ["[INF] Boundary work detected but impact unclear"],
+            "test_depth_notes": ["[INF] Tests added but coverage unclear"],
+            "risk_notes": ["[INF] Large change surface"],
+            "assumptions": ["Assumed incremental refactor"],
+            "evidence_pointers": ["path:crates/core/src/lib.rs:100"],
+            "confidence": "low"
+        }"#;
+
+        let appendix = parse_historian_appendix(json).unwrap();
+        // Ratings should be None - the merge logic will default them
+        assert!(appendix.boundary_rating.is_none());
+        assert!(appendix.test_depth_rating.is_none());
+        // But notes should be present
+        assert_eq!(appendix.boundary_notes.len(), 1);
+        assert_eq!(appendix.test_depth_notes.len(), 1);
+        assert_eq!(appendix.risk_notes.len(), 1);
+        assert_eq!(appendix.confidence, Some("low".to_string()));
     }
 }
