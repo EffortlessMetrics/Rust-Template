@@ -28,6 +28,7 @@ tonic-prost-build = "0.14.2"
 
 [dev-dependencies]
 async-trait.workspace = true
+chrono.workspace = true
 
 [features]
 default = []
