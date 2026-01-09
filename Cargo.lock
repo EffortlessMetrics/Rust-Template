@@ -1557,6 +1557,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "gov-receipts"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "gov-xtask-core"
 version = "0.1.0"
 dependencies = [
@@ -5434,6 +5443,7 @@ dependencies = [
  "clap",
  "colored",
  "glob",
+ "gov-receipts",
  "gov-xtask-core",
  "ignore",
  "jsonschema",

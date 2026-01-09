@@ -1,0 +1,323 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://rust-as-spec.example/schemas/quality.schema.json",
+  "title": "QualityReceipt",
+  "description": "Quality receipt for tracking code quality metrics, contract changes, boundary integrity, verification depth, and risk indicators in PRs",
+  "type": "object",
+  "required": ["schema_version", "quality"],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "description": "Schema version for forward compatibility",
+      "default": "1.0"
+    },
+    "pr": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "PR number this receipt is associated with"
+    },
+    "run_id": {
+      "type": "string",
+      "description": "Run ID for correlation with gate and economics receipts"
+    },
+    "quality": {
+      "$ref": "#/$defs/Quality"
+    },
+    "meta": {
+      "$ref": "#/$defs/ReceiptMeta",
+      "description": "Meta provenance for re-analysis and method versioning"
+    }
+  },
+  "$defs": {
+    "Quality": {
+      "type": "object",
+      "description": "Quality metrics for a PR or change",
+      "required": ["contract", "boundaries", "verification", "risks"],
+      "properties": {
+        "contract": {
+          "$ref": "#/$defs/Contract"
+        },
+        "boundaries": {
+          "$ref": "#/$defs/Boundaries"
+        },
+        "verification": {
+          "$ref": "#/$defs/Verification"
+        },
+        "risks": {
+          "$ref": "#/$defs/Risks"
+        }
+      }
+    },
+    "Contract": {
+      "type": "object",
+      "description": "Contract surface changes (public API, schema, CLI)",
+      "properties": {
+        "public_api": {
+          "$ref": "#/$defs/ContractChange",
+          "description": "Public API contract changes"
+        },
+        "schema": {
+          "$ref": "#/$defs/ContractChange",
+          "description": "Schema contract changes"
+        },
+        "cli": {
+          "$ref": "#/$defs/ContractChange",
+          "description": "CLI contract changes"
+        }
+      }
+    },
+    "ContractChange": {
+      "type": "object",
+      "description": "Details of a contract change",
+      "required": ["changed", "breaking"],
+      "properties": {
+        "changed": {
+          "type": "boolean",
+          "description": "Whether this contract surface changed"
+        },
+        "breaking": {
+          "type": "boolean",
+          "description": "Whether the change is breaking (incompatible with prior versions)"
+        },
+        "evidence": {
+          "type": "array",
+          "description": "Evidence pointers supporting the assessment (file paths, function names, diff hunks)",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        }
+      }
+    },
+    "Boundaries": {
+      "type": "object",
+      "description": "Boundary integrity and change surface metrics",
+      "required": ["modules_touched", "hotspots"],
+      "properties": {
+        "modules_touched": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of distinct modules touched by this change"
+        },
+        "hotspots": {
+          "type": "array",
+          "description": "Files or modules with high churn or concentrated changes",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "llm_assessment": {
+          "$ref": "#/$defs/LlmBoundaryAssessment",
+          "description": "Optional LLM assessment of boundary integrity (design alignment, coupling, cohesion)"
+        }
+      }
+    },
+    "LlmBoundaryAssessment": {
+      "type": "object",
+      "description": "LLM-generated assessment of boundary integrity",
+      "required": ["rating"],
+      "properties": {
+        "rating": {
+          "$ref": "#/$defs/BoundaryRating",
+          "description": "Overall boundary integrity rating"
+        },
+        "notes": {
+          "type": "array",
+          "description": "Observations about design alignment, coupling, and cohesion",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "confidence": {
+          "$ref": "#/$defs/Confidence",
+          "description": "Confidence level of the assessment"
+        },
+        "evidence": {
+          "type": "array",
+          "description": "Evidence pointers supporting the assessment",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        }
+      }
+    },
+    "BoundaryRating": {
+      "type": "string",
+      "enum": ["improved", "neutral", "degraded"],
+      "description": "Rating of how the change affects boundary integrity"
+    },
+    "Verification": {
+      "type": "object",
+      "description": "Verification and test coverage metrics",
+      "required": ["tests_added_loc", "impl_added_loc", "test_density_delta"],
+      "properties": {
+        "tests_added_loc": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Lines of test code added"
+        },
+        "impl_added_loc": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Lines of implementation code added"
+        },
+        "test_density_delta": {
+          "type": "number",
+          "description": "Change in test density ratio (tests_added_loc / impl_added_loc). Positive means more tests per impl line."
+        },
+        "llm_test_depth": {
+          "$ref": "#/$defs/LlmTestDepthAssessment",
+          "description": "Optional LLM assessment of test depth and quality"
+        }
+      }
+    },
+    "LlmTestDepthAssessment": {
+      "type": "object",
+      "description": "LLM-generated assessment of test depth and quality",
+      "required": ["rating"],
+      "properties": {
+        "rating": {
+          "$ref": "#/$defs/TestDepthRating",
+          "description": "Overall test depth rating"
+        },
+        "notes": {
+          "type": "array",
+          "description": "Observations about test quality, behavior vs presence assertions, error path coverage",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "confidence": {
+          "$ref": "#/$defs/Confidence",
+          "description": "Confidence level of the assessment"
+        },
+        "evidence": {
+          "type": "array",
+          "description": "Evidence pointers supporting the assessment",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        }
+      }
+    },
+    "TestDepthRating": {
+      "type": "string",
+      "enum": ["hardened", "mixed", "shallow"],
+      "description": "Rating of test depth: hardened (robust, behavior-asserting), mixed (some gaps), shallow (presence-only or minimal)"
+    },
+    "Risks": {
+      "type": "object",
+      "description": "Risk indicators and safety markers",
+      "properties": {
+        "unsafe_delta": {
+          "$ref": "#/$defs/UnsafeDelta",
+          "description": "Changes to unsafe code usage"
+        },
+        "deps_added": {
+          "type": "array",
+          "description": "New dependencies added by this change",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "concurrency_primitives_added": {
+          "type": "array",
+          "description": "New concurrency primitives introduced (Mutex, RwLock, Arc, channels, atomics, etc.)",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "llm_risk_notes": {
+          "type": "array",
+          "description": "LLM-generated notes about potential risks, concerns, or areas requiring attention",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        }
+      }
+    },
+    "UnsafeDelta": {
+      "type": "object",
+      "description": "Change in unsafe code usage",
+      "required": ["added", "removed"],
+      "properties": {
+        "added": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of unsafe blocks/functions added"
+        },
+        "removed": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of unsafe blocks/functions removed"
+        }
+      }
+    },
+    "Confidence": {
+      "type": "string",
+      "enum": ["high", "medium", "low"],
+      "description": "Confidence level for LLM assessments: high (strong evidence), medium (reasonable inference), low (limited evidence)"
+    },
+    "ReceiptMeta": {
+      "type": "object",
+      "description": "Meta provenance header for re-analysis and method versioning",
+      "required": ["method_id", "method_version", "analysis_run_id", "confidence"],
+      "properties": {
+        "method_id": {
+          "type": "string",
+          "description": "Identifier for the analysis method used (e.g., 'telemetry-v1', 'timeline-v1')"
+        },
+        "method_version": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Version of the analysis method. Bump when logic changes materially."
+        },
+        "analysis_run_id": {
+          "type": "string",
+          "description": "Unique identifier for this analysis run (typically matches run_id)"
+        },
+        "inputs_used": {
+          "type": "array",
+          "description": "List of inputs relied on for this analysis (e.g., 'git_diff', 'gate.json', 'pr_comments')",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "assumptions": {
+          "type": "array",
+          "description": "Assumptions that materially affect conclusions",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "confidence": {
+          "$ref": "#/$defs/MetaConfidence",
+          "description": "Confidence level of the analysis results"
+        },
+        "evidence_pointers": {
+          "type": "array",
+          "description": "Evidence pointers (5-15 anchors): file paths, function names, receipt refs, commit SHAs",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        }
+      }
+    },
+    "MetaConfidence": {
+      "type": "string",
+      "enum": ["high", "medium", "low"],
+      "description": "Confidence level: high (exhibit profile, full tooling), medium (full profile), low (fast profile, incomplete data)"
+    }
+  }
+}

@@ -1,0 +1,158 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://rust-as-spec.example/schemas/gate.schema.json",
+  "title": "GateReceipt",
+  "description": "Gate receipt for recording gate execution results (fmt, clippy, tests, selftest)",
+  "type": "object",
+  "required": ["schema_version", "run_id", "commit", "started_at", "finished_at", "gates", "overall_status", "repo_version", "environment"],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "description": "Schema version for forward compatibility",
+      "default": "1.0"
+    },
+    "run_id": {
+      "type": "string",
+      "description": "Unique identifier for this run (e.g., '2026-01-07T14-32-00Z-pr209')"
+    },
+    "pr": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "PR number, if this run is associated with a pull request"
+    },
+    "commit": {
+      "type": "string",
+      "description": "Git commit SHA"
+    },
+    "started_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the gate run started (ISO 8601 datetime)"
+    },
+    "finished_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the gate run finished (ISO 8601 datetime)"
+    },
+    "gates": {
+      "type": "array",
+      "description": "Results for each individual gate",
+      "items": {
+        "$ref": "#/$defs/GateResult"
+      }
+    },
+    "overall_status": {
+      "$ref": "#/$defs/GateStatus",
+      "description": "Overall status of the gate run"
+    },
+    "repo_version": {
+      "type": "string",
+      "description": "Repository version (e.g., 'v3.3.14')"
+    },
+    "environment": {
+      "$ref": "#/$defs/Environment"
+    }
+  },
+  "$defs": {
+    "GateStatus": {
+      "type": "string",
+      "enum": ["pass", "fail", "skipped"],
+      "description": "Status of a gate execution"
+    },
+    "GateResult": {
+      "type": "object",
+      "description": "Result of a single gate execution",
+      "required": ["name", "command", "status", "duration_ms"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Gate name (e.g., 'fmt', 'clippy', 'tests', 'selftest')"
+        },
+        "command": {
+          "type": "string",
+          "description": "Command that was executed"
+        },
+        "status": {
+          "$ref": "#/$defs/GateStatus"
+        },
+        "duration_ms": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Duration in milliseconds"
+        },
+        "details": {
+          "$ref": "#/$defs/GateDetails",
+          "description": "Additional details specific to the gate type"
+        }
+      }
+    },
+    "GateDetails": {
+      "oneOf": [
+        { "$ref": "#/$defs/TestDetails" },
+        { "$ref": "#/$defs/SelftestDetails" },
+        { "type": "object", "description": "Generic key-value details for other gates" }
+      ],
+      "description": "Gate-specific details (tests, selftest, or generic)"
+    },
+    "TestDetails": {
+      "type": "object",
+      "description": "Test execution details",
+      "required": ["passed", "failed"],
+      "properties": {
+        "passed": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of tests that passed"
+        },
+        "failed": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of tests that failed"
+        },
+        "ignored": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 0,
+          "description": "Number of tests that were ignored"
+        }
+      }
+    },
+    "SelftestDetails": {
+      "type": "object",
+      "description": "Selftest execution details",
+      "required": ["steps_passed", "steps_total"],
+      "properties": {
+        "steps_passed": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of selftest steps that passed"
+        },
+        "steps_total": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Total number of selftest steps"
+        }
+      }
+    },
+    "Environment": {
+      "type": "object",
+      "description": "Environment information for the gate run",
+      "required": ["os", "rust_version"],
+      "properties": {
+        "os": {
+          "type": "string",
+          "description": "Operating system (e.g., 'linux', 'darwin', 'windows')"
+        },
+        "rust_version": {
+          "type": "string",
+          "description": "Rust version (e.g., '1.83.0')"
+        },
+        "nix_shell": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether the run was inside a Nix shell"
+        }
+      }
+    }
+  }
+}
