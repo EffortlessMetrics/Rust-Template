@@ -165,8 +165,8 @@
     },
     "ExhibitScore": {
       "type": "object",
-      "description": "Quality scores for the exhibit (0-5 scale where 5 is best)",
-      "required": ["scope_clarity", "proof_completeness", "errata_quality", "factory_delta", "total", "max"],
+      "description": "Quality scores for the exhibit (0-5 scale where 5 is best). Five criteria: scope_clarity, proof_completeness, errata_quality, factory_delta, overall_coherence → max = 25.",
+      "required": ["scope_clarity", "proof_completeness", "errata_quality", "factory_delta", "overall_coherence", "total", "max"],
       "properties": {
         "scope_clarity": {
           "type": "integer",
@@ -191,6 +191,12 @@
           "minimum": 0,
           "maximum": 5,
           "description": "Quality of factory delta documentation (0-5)"
+        },
+        "overall_coherence": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 5,
+          "description": "Overall coherence and narrative quality (0-5)"
         },
         "total": {
           "type": "integer",

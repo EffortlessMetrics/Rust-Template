@@ -113,6 +113,8 @@ pub struct Erratum {
 /// Quality scores for the exhibit.
 ///
 /// Scores are on a 0-5 scale where 5 is best.
+/// Five criteria: scope_clarity, proof_completeness, errata_quality,
+/// factory_delta, overall_coherence → max = 25.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ExhibitScore {
     /// Clarity of scope definition (0-5).
@@ -126,6 +128,9 @@ pub struct ExhibitScore {
 
     /// Quality of factory delta documentation (0-5).
     pub factory_delta: u8,
+
+    /// Overall coherence and narrative quality (0-5).
+    pub overall_coherence: u8,
 
     /// Total score.
     pub total: u8,
@@ -182,6 +187,7 @@ impl Default for ExhibitScore {
             proof_completeness: 0,
             errata_quality: 0,
             factory_delta: 0,
+            overall_coherence: 0,
             total: 0,
             max: 25,
         }
@@ -326,7 +332,8 @@ mod tests {
                 proof_completeness: 5,
                 errata_quality: 5,
                 factory_delta: 3,
-                total: 18,
+                overall_coherence: 4,
+                total: 22,
                 max: 25,
             },
             factory_delta: FactoryDelta {

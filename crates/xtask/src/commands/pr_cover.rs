@@ -665,38 +665,37 @@ const GUIDANCE_VERIFY_SCHEMA: &str = "Verify schema migrations are backwards-com
 
 /// Categorize a file path for friction zone analysis.
 /// Used to determine if friction zones are in "core_code" vs other categories.
+///
+/// Test paths are checked first to ensure test_fixtures/ under crates/ are
+/// correctly classified as tests, not core_code.
 fn categorize_path_for_review(path: &str) -> &'static str {
-    // Core code paths
-    if path.starts_with("src/")
-        || path.starts_with("crates/")
-        || path.starts_with("lib/")
-        || path.starts_with("core/")
-        || path.starts_with("packages/")
-        || path.starts_with("apps/")
-    {
-        // Exclude test paths within core code
-        if path.contains("/tests/")
-            || path.contains("_test.rs")
-            || path.ends_with("_tests.rs")
-            || path.contains("/benches/")
-        {
-            return "tests";
-        }
-        return "core_code";
-    }
+    // Normalize Windows separators for consistent matching
+    let p = path.replace('\\', "/");
 
-    // Test paths
-    if path.contains("/tests/")
-        || path.contains("/test_fixtures/")
-        || path.contains("_test.rs")
-        || path.contains("/benches/")
+    // Test paths - check FIRST to catch test_fixtures/, etc. under crates/
+    if p.contains("/tests/")
+        || p.contains("/test_fixtures/")
+        || p.contains("_test.rs")
+        || p.ends_with("_tests.rs")
+        || p.contains("/benches/")
     {
         return "tests";
     }
 
     // Documentation
-    if path.starts_with("docs/") || path.ends_with(".md") {
+    if p.starts_with("docs/") || p.ends_with(".md") {
         return "docs";
+    }
+
+    // Core code paths
+    if p.starts_with("src/")
+        || p.starts_with("crates/")
+        || p.starts_with("lib/")
+        || p.starts_with("core/")
+        || p.starts_with("packages/")
+        || p.starts_with("apps/")
+    {
+        return "core_code";
     }
 
     "other"
@@ -1122,5 +1121,30 @@ Footer"#;
         assert!(result.contains("Classification: Chaotic **[REVIEW SIGNAL]**"));
         assert!(result.contains("Confidence: High"));
         assert!(result.contains("This PR shows signs of exploration/iteration"));
+    }
+
+    #[test]
+    fn test_categorize_path_for_review() {
+        // Core code paths
+        assert_eq!(categorize_path_for_review("src/lib.rs"), "core_code");
+        assert_eq!(categorize_path_for_review("crates/foo/src/lib.rs"), "core_code");
+
+        // Test paths - including test_fixtures under crates/
+        assert_eq!(categorize_path_for_review("crates/foo/test_fixtures/x.json"), "tests");
+        assert_eq!(categorize_path_for_review("crates/foo/tests/integration.rs"), "tests");
+        assert_eq!(categorize_path_for_review("src/foo_test.rs"), "tests");
+        assert_eq!(categorize_path_for_review("src/foo_tests.rs"), "tests");
+        assert_eq!(categorize_path_for_review("crates/foo/benches/bench.rs"), "tests");
+
+        // Documentation
+        assert_eq!(categorize_path_for_review("docs/README.md"), "docs");
+        assert_eq!(categorize_path_for_review("CHANGELOG.md"), "docs");
+
+        // Other
+        assert_eq!(categorize_path_for_review("Cargo.toml"), "other");
+        assert_eq!(categorize_path_for_review(".github/workflows/ci.yml"), "other");
+
+        // Windows path normalization
+        assert_eq!(categorize_path_for_review("crates\\foo\\test_fixtures\\x.json"), "tests");
     }
 }

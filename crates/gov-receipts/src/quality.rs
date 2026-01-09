@@ -89,7 +89,6 @@ pub struct Boundaries {
 
     /// Files or modules with high churn.
     #[serde(default)]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub hotspots: Vec<String>,
 
     /// Optional LLM assessment of boundary integrity.
@@ -361,5 +360,13 @@ mod tests {
         assert_eq!(serde_json::to_string(&TestDepthRating::Hardened).unwrap(), r#""hardened""#);
         assert_eq!(serde_json::to_string(&TestDepthRating::Mixed).unwrap(), r#""mixed""#);
         assert_eq!(serde_json::to_string(&TestDepthRating::Shallow).unwrap(), r#""shallow""#);
+    }
+
+    #[test]
+    fn test_empty_hotspots_serialize() {
+        // Regression test: empty hotspots must serialize (schema requires the field)
+        let boundaries = Boundaries { modules_touched: 1, hotspots: vec![], ..Default::default() };
+        let json = serde_json::to_string(&boundaries).unwrap();
+        assert!(json.contains(r#""hotspots":[]"#), "empty hotspots must be serialized");
     }
 }
