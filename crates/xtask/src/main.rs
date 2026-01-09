@@ -709,6 +709,261 @@ enum Commands {
     #[command(next_help_heading = "🚢 Releases")]
     SbomLocal,
 
+    /// Generate PR cover sheet from receipts
+    #[command(next_help_heading = "🚢 Releases")]
+    PrCover {
+        /// PR number
+        #[arg(long)]
+        pr: u32,
+        /// Directory containing receipts (default: .runs/pr/{pr}/latest/)
+        #[arg(long)]
+        run_dir: Option<std::path::PathBuf>,
+        /// Output file (default: stdout)
+        #[arg(long, short)]
+        output: Option<std::path::PathBuf>,
+        /// Description of what changed (optional)
+        #[arg(long, short)]
+        description: Option<String>,
+    },
+
+    /// Update PR body with cover sheet (bounded replacement)
+    #[command(next_help_heading = "🚢 Releases")]
+    PrUpdate {
+        /// PR number
+        #[arg(long)]
+        pr: u32,
+        /// Directory containing receipts (default: .runs/pr/{pr}/latest/)
+        #[arg(long)]
+        run_dir: Option<std::path::PathBuf>,
+        /// Description of what changed (optional)
+        #[arg(long, short)]
+        description: Option<String>,
+        /// Save a copy to docs/audit/EXHIBITS/PR-{n}.md
+        #[arg(long)]
+        save_exhibit: bool,
+        /// Dry run: show what would be updated without making changes
+        #[arg(long)]
+        dry_run: bool,
+    },
+
+    // ============================================================================
+    // PUBLISHING & FORENSICS (Receipts, evidence, audit trails)
+    // ============================================================================
+    /// Run gates and emit gate.json receipt
+    ///
+    /// Executes validation gates (fmt, clippy, tests) and generates a structured
+    /// JSON receipt in `.runs/current/receipts/gate.json` for CI pipelines,
+    /// IDP integrations, and audit trails.
+    #[command(next_help_heading = "📋 Publishing & Forensics")]
+    ReceiptsGate {
+        /// PR number (optional, included in receipt metadata)
+        #[arg(long)]
+        pr: Option<u32>,
+        /// Output directory for receipts (default: .runs/current)
+        #[arg(long, default_value = ".runs/current")]
+        output_dir: std::path::PathBuf,
+    },
+
+    /// Generate economics.json receipt for DevLT and compute tracking
+    ///
+    /// Records developer time, compute spend, iteration counts, and value delivered.
+    /// Supports confidence levels (measured/estimated/unknown) for honest reporting.
+    #[command(next_help_heading = "📋 Publishing & Forensics")]
+    ReceiptsEconomics {
+        /// PR number (required)
+        #[arg(long)]
+        pr: u32,
+        /// Output directory for receipts (default: .runs/current)
+        #[arg(long, default_value = ".runs/current")]
+        output_dir: std::path::PathBuf,
+        /// Author time in minutes
+        #[arg(long)]
+        author_minutes: Option<u32>,
+        /// Author time confidence: measured, estimated, unknown (default: unknown)
+        #[arg(long, default_value = "unknown")]
+        author_confidence: String,
+        /// Review time in minutes
+        #[arg(long)]
+        review_minutes: Option<u32>,
+        /// Review time confidence: measured, estimated, unknown (default: unknown)
+        #[arg(long, default_value = "unknown")]
+        review_confidence: String,
+        /// Number of human interventions required
+        #[arg(long, default_value = "0")]
+        interventions: u32,
+        /// Compute cost in USD
+        #[arg(long)]
+        compute_usd: Option<f64>,
+        /// Compute confidence: measured, estimated, unknown (default: unknown)
+        #[arg(long, default_value = "unknown")]
+        compute_confidence: String,
+        /// Number of CI/gate runs
+        #[arg(long, default_value = "0")]
+        runs: u32,
+        /// Number of failed gate runs before success
+        #[arg(long, default_value = "0")]
+        failed_gates: u32,
+        /// Number of fix-and-retry loops
+        #[arg(long, default_value = "0")]
+        fix_loops: u32,
+        /// Description of uncertainty reduced
+        #[arg(long)]
+        uncertainty_reduced: Option<String>,
+        /// Description of rework prevented
+        #[arg(long)]
+        rework_prevented: Option<String>,
+        /// DevLT notes
+        #[arg(long)]
+        devlt_notes: Option<String>,
+        /// Compute notes
+        #[arg(long)]
+        compute_notes: Option<String>,
+        /// Iteration notes
+        #[arg(long)]
+        iteration_notes: Option<String>,
+    },
+
+    /// Validate receipt JSON files against their schemas
+    ///
+    /// Finds all `receipts/*.json` files in the run directory, matches each
+    /// to its schema (gate.json -> gate.schema.json), and validates.
+    /// Exits with non-zero code if any validation fails.
+    #[command(next_help_heading = "📋 Publishing & Forensics")]
+    ReceiptsValidate {
+        /// Run directory containing receipts/ subdirectory
+        #[arg(long, default_value = ".runs/current")]
+        dir: std::path::PathBuf,
+        /// Schema directory (default: specs/schemas/)
+        #[arg(long, default_value = "specs/schemas")]
+        schema_dir: std::path::PathBuf,
+    },
+
+    /// Generate quality.json receipt with code quality metrics
+    ///
+    /// Computes hard metrics from git diff (files changed, modules touched,
+    /// unsafe delta, test/impl LOC) and optionally accepts LLM assessments
+    /// for boundary integrity and test depth ratings.
+    ///
+    /// With --llm, obtains semantic analysis from the Historian agent and merges
+    /// boundary/test-depth/risk assessments into the receipt. Use --historian-output
+    /// for offline/testing with pre-generated historian output.
+    #[command(next_help_heading = "📋 Publishing & Forensics")]
+    ReceiptsQuality {
+        /// PR number (optional, included in receipt metadata)
+        #[arg(long)]
+        pr: Option<u32>,
+        /// Output directory for receipts (default: .runs/current)
+        #[arg(long, default_value = ".runs/current")]
+        output_dir: std::path::PathBuf,
+        /// Base branch for comparison (default: origin/main)
+        #[arg(long, default_value = "origin/main")]
+        base_branch: String,
+        /// LLM-provided boundary rating (improved/neutral/degraded)
+        #[arg(long)]
+        boundary_rating: Option<String>,
+        /// LLM-provided test depth rating (hardened/mixed/shallow)
+        #[arg(long)]
+        test_depth_rating: Option<String>,
+        /// LLM-provided notes (repeatable)
+        #[arg(long)]
+        notes: Vec<String>,
+        /// Enable LLM semantic analysis via Historian agent
+        #[arg(long)]
+        llm: bool,
+        /// Path to existing historian output (for offline/testing use)
+        #[arg(long)]
+        historian_output: Option<std::path::PathBuf>,
+        /// Command template for running historian (use {input} as placeholder).
+        /// Precedence: CLI arg > HISTORIAN_CMD env var > error if not configured.
+        #[arg(long)]
+        historian_cmd: Option<String>,
+    },
+
+    /// Generate telemetry.json receipt with probe execution results
+    ///
+    /// Captures change surface from git diff, contract change detection,
+    /// and probe execution status based on the selected profile.
+    #[command(next_help_heading = "📋 Publishing & Forensics")]
+    ReceiptsTelemetry {
+        /// PR number (optional, included in receipt metadata)
+        #[arg(long)]
+        pr: Option<u32>,
+        /// Output directory for receipts (default: .runs/current)
+        #[arg(long, default_value = ".runs/current")]
+        output_dir: std::path::PathBuf,
+        /// Probe profile: fast (quick CI), full (comprehensive), exhibit (forensic)
+        #[arg(long, default_value = "fast")]
+        profile: String,
+        /// Base branch for comparison (default: origin/main)
+        #[arg(long, default_value = "origin/main")]
+        base_branch: String,
+    },
+
+    /// Generate timeline.json receipt from commit history
+    ///
+    /// Analyzes commit history to identify sessions, friction zones,
+    /// oscillation patterns, and classifies overall development topology.
+    #[command(next_help_heading = "📋 Publishing & Forensics")]
+    ReceiptsTimeline {
+        /// PR number (optional, included in receipt metadata)
+        #[arg(long)]
+        pr: Option<u32>,
+        /// Output directory for receipts (default: .runs/current)
+        #[arg(long, default_value = ".runs/current")]
+        output_dir: std::path::PathBuf,
+        /// Base branch for comparison (default: origin/main)
+        #[arg(long, default_value = "origin/main")]
+        base_branch: String,
+        /// Session gap threshold in minutes (default: 30)
+        #[arg(long, default_value = "30")]
+        session_gap_minutes: u32,
+        /// Additional path prefixes to exclude from friction analysis (repeatable)
+        #[arg(long = "exclude-prefix")]
+        exclude_prefixes: Vec<String>,
+        /// Include ephemeral directories (.runs/, target/) in analysis (debug only)
+        #[arg(long)]
+        include_ephemeral: bool,
+    },
+
+    /// Run all receipt emitters for comprehensive PR forensics
+    ///
+    /// Generates a complete forensic receipt set by running:
+    /// 1. telemetry - change surface facts and probe results
+    /// 2. timeline - development pattern analysis from git history
+    /// 3. quality - code quality metrics from diff analysis (optionally with LLM)
+    /// 4. validate - schema validation of all generated receipts
+    #[command(next_help_heading = "📋 Publishing & Forensics")]
+    ReceiptsForensic {
+        /// PR number (required)
+        #[arg(long)]
+        pr: u32,
+        /// Probe profile: fast (quick CI), full (comprehensive), exhibit (forensic)
+        #[arg(long, default_value = "fast")]
+        profile: String,
+        /// Base branch for comparison (default: origin/main)
+        #[arg(long, default_value = "origin/main")]
+        base_branch: String,
+        /// Output directory for receipts (default: .runs/current)
+        #[arg(long, default_value = ".runs/current")]
+        output_dir: std::path::PathBuf,
+        /// Additional path prefixes to exclude from friction analysis (repeatable)
+        #[arg(long = "exclude-prefix")]
+        exclude_prefixes: Vec<String>,
+        /// Include ephemeral directories (.runs/, target/) in analysis (debug only)
+        #[arg(long)]
+        include_ephemeral: bool,
+        /// Enable LLM semantic analysis for quality receipt via Historian agent
+        #[arg(long)]
+        llm: bool,
+        /// Path to existing historian markdown output (for offline/testing use)
+        #[arg(long)]
+        historian_output: Option<std::path::PathBuf>,
+        /// Command template for running historian (use {input} as placeholder).
+        /// Precedence: CLI arg > HISTORIAN_CMD env var > error if not configured.
+        #[arg(long)]
+        historian_cmd: Option<String>,
+    },
+
     // ============================================================================
     // SERVICE SETUP (Initialization & configuration)
     // ============================================================================
@@ -1052,6 +1307,143 @@ fn main() -> Result<()> {
         Commands::ReleaseBundle { version } => commands::release_bundle::run(&version),
         Commands::ReleaseVerify => commands::release_verify::run(),
         Commands::SbomLocal => commands::sbom_local::run(),
+        Commands::PrCover { pr, run_dir, output, description } => {
+            commands::pr_cover::run(commands::pr_cover::PrCoverArgs {
+                pr,
+                run_dir,
+                output,
+                description,
+            })
+        }
+        Commands::PrUpdate { pr, run_dir, description, save_exhibit, dry_run } => {
+            commands::pr_update::run(commands::pr_update::PrUpdateArgs {
+                pr,
+                run_dir,
+                description,
+                save_exhibit,
+                dry_run,
+            })
+        }
+        Commands::ReceiptsGate { pr, output_dir } => {
+            commands::receipts::run_gate(commands::receipts::ReceiptsGateArgs {
+                pr,
+                output_dir,
+                run_id: None,
+            })
+        }
+        Commands::ReceiptsEconomics {
+            pr,
+            output_dir,
+            author_minutes,
+            author_confidence,
+            review_minutes,
+            review_confidence,
+            interventions,
+            compute_usd,
+            compute_confidence,
+            runs,
+            failed_gates,
+            fix_loops,
+            uncertainty_reduced,
+            rework_prevented,
+            devlt_notes,
+            compute_notes,
+            iteration_notes,
+        } => commands::receipts::run_economics(commands::receipts::ReceiptsEconomicsArgs {
+            pr,
+            output_dir,
+            author_minutes,
+            author_confidence,
+            review_minutes,
+            review_confidence,
+            interventions,
+            compute_usd,
+            compute_confidence,
+            runs,
+            failed_gates,
+            fix_loops,
+            uncertainty_reduced,
+            rework_prevented,
+            devlt_notes,
+            compute_notes,
+            iteration_notes,
+            run_id: None,
+        }),
+        Commands::ReceiptsValidate { dir, schema_dir } => {
+            commands::receipts::run_validate(commands::receipts::ReceiptsValidateArgs {
+                run_dir: dir,
+                schema_dir,
+            })
+        }
+        Commands::ReceiptsQuality {
+            pr,
+            output_dir,
+            base_branch,
+            boundary_rating,
+            test_depth_rating,
+            notes,
+            llm,
+            historian_output,
+            historian_cmd,
+        } => commands::receipts::run_quality(commands::receipts::ReceiptsQualityArgs {
+            pr,
+            output_dir,
+            base_branch,
+            boundary_rating,
+            test_depth_rating,
+            notes,
+            run_id: None,
+            llm,
+            historian_output,
+            historian_cmd,
+        }),
+        Commands::ReceiptsTelemetry { pr, output_dir, profile, base_branch } => {
+            commands::receipts::run_telemetry(commands::receipts::ReceiptsTelemetryArgs {
+                pr,
+                output_dir,
+                profile,
+                base_branch,
+                run_id: None,
+            })
+        }
+        Commands::ReceiptsTimeline {
+            pr,
+            output_dir,
+            base_branch,
+            session_gap_minutes,
+            exclude_prefixes,
+            include_ephemeral,
+        } => commands::receipts::run_timeline(commands::receipts::ReceiptsTimelineArgs {
+            pr,
+            output_dir,
+            base_branch,
+            session_gap_minutes,
+            run_id: None,
+            exclude_prefixes,
+            include_ephemeral,
+        }),
+        Commands::ReceiptsForensic {
+            pr,
+            profile,
+            base_branch,
+            output_dir,
+            exclude_prefixes,
+            include_ephemeral,
+            llm,
+            historian_output,
+            historian_cmd,
+        } => commands::receipts::run_forensic(commands::receipts::ReceiptsForensicArgs {
+            pr,
+            output_dir,
+            base_branch,
+            profile,
+            session_gap_minutes: 30,
+            exclude_prefixes,
+            include_ephemeral,
+            llm,
+            historian_output,
+            historian_cmd,
+        }),
         Commands::SuggestNext(args) => commands::suggest_next::run(args),
         Commands::Selftest => commands::selftest::run_with_verbosity(verbosity),
         Commands::KernelSmoke => commands::kernel_smoke::run(),
@@ -1345,6 +1737,15 @@ pub fn all_command_names() -> Vec<&'static str> {
         "migrate",
         "pin-actions",
         "policy-test",
+        "pr-cover",
+        "pr-update",
+        "receipts-gate",
+        "receipts-economics",
+        "receipts-validate",
+        "receipts-quality",
+        "receipts-telemetry",
+        "receipts-timeline",
+        "receipts-forensic",
         "release-prepare",
         "release-bundle",
         "release-verify",

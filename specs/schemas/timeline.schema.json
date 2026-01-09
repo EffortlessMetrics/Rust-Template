@@ -1,0 +1,318 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://rust-as-spec.example/schemas/timeline.schema.json",
+  "title": "TimelineReceipt",
+  "description": "Temporal topology - how the PR evolved, friction zones, convergence patterns",
+  "type": "object",
+  "required": ["schema_version", "run_id", "wall_clock", "topology"],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "description": "Schema version for forward compatibility",
+      "default": "1.0"
+    },
+    "pr": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "PR number this receipt is associated with"
+    },
+    "run_id": {
+      "type": "string",
+      "description": "Unique identifier for this run (e.g., '2026-01-07T14-32-00Z-pr209')"
+    },
+    "wall_clock": {
+      "$ref": "#/$defs/WallClock"
+    },
+    "sessions": {
+      "type": "array",
+      "description": "Burst sessions of activity (contiguous commit clusters)",
+      "items": {
+        "$ref": "#/$defs/Session"
+      },
+      "default": []
+    },
+    "friction_zones": {
+      "type": "array",
+      "description": "Files/modules with repeated touches over many commits (churn indicators)",
+      "items": {
+        "$ref": "#/$defs/FrictionZone"
+      },
+      "default": []
+    },
+    "oscillations": {
+      "type": "array",
+      "description": "Add/remove/add signals indicating uncertainty or approach changes",
+      "items": {
+        "$ref": "#/$defs/Oscillation"
+      },
+      "default": []
+    },
+    "convergence": {
+      "$ref": "#/$defs/Convergence",
+      "description": "How the PR stabilized toward completion"
+    },
+    "topology": {
+      "$ref": "#/$defs/Topology",
+      "description": "Overall evolution pattern of the PR"
+    },
+    "topology_confidence": {
+      "$ref": "#/$defs/Confidence",
+      "description": "Confidence level of the topology classification"
+    },
+    "topology_reasons": {
+      "type": "array",
+      "description": "Evidence supporting the topology classification",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    },
+    "events": {
+      "type": "array",
+      "description": "Human intervention events during PR lifecycle",
+      "items": {
+        "$ref": "#/$defs/Event"
+      },
+      "default": []
+    },
+    "meta": {
+      "$ref": "#/$defs/ReceiptMeta",
+      "description": "Meta provenance for re-analysis and method versioning"
+    }
+  },
+  "$defs": {
+    "Topology": {
+      "type": "string",
+      "enum": ["linear", "cyclical", "chaotic"],
+      "description": "Overall evolution pattern: linear (steady progress), cyclical (repeated refinement), chaotic (unclear direction)"
+    },
+    "Confidence": {
+      "type": "string",
+      "enum": ["high", "medium", "low"],
+      "description": "Confidence level: high (strong evidence), medium (reasonable inference), low (limited evidence)"
+    },
+    "SessionClassification": {
+      "type": "string",
+      "enum": ["machine_grind", "human_work", "mixed"],
+      "description": "Classification of activity burst: machine_grind (rapid automated commits), human_work (spaced deliberate commits), mixed"
+    },
+    "OscillationType": {
+      "type": "string",
+      "enum": ["dependency", "file", "feature", "approach"],
+      "description": "Type of oscillation: dependency (deps added/removed), file (file created/deleted), feature (feature flag toggled), approach (architectural pivot)"
+    },
+    "OscillationAction": {
+      "type": "string",
+      "enum": ["add", "remove", "modify"],
+      "description": "Action in an oscillation sequence"
+    },
+    "EventType": {
+      "type": "string",
+      "enum": ["review_requested", "changes_requested", "approved", "comment", "pr_edit"],
+      "description": "Type of human intervention event"
+    },
+    "WallClock": {
+      "type": "object",
+      "description": "Wall clock timestamps for the PR lifecycle",
+      "required": ["first_commit", "last_commit"],
+      "properties": {
+        "first_commit": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp of the first commit in the PR"
+        },
+        "last_commit": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp of the last commit in the PR"
+        },
+        "pr_created": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp when the PR was opened"
+        },
+        "pr_merged": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp when the PR was merged (if merged)"
+        },
+        "total_duration_minutes": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Total elapsed time from first commit to last commit in minutes"
+        }
+      }
+    },
+    "Session": {
+      "type": "object",
+      "description": "A burst session of activity (contiguous commits within a time window)",
+      "required": ["start", "end", "commit_count"],
+      "properties": {
+        "start": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Session start timestamp"
+        },
+        "end": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Session end timestamp"
+        },
+        "commit_count": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Number of commits in this session"
+        },
+        "classification": {
+          "$ref": "#/$defs/SessionClassification",
+          "description": "Inferred session type based on commit frequency and patterns"
+        }
+      }
+    },
+    "FrictionZone": {
+      "type": "object",
+      "description": "A file or module with repeated touches indicating friction or churn",
+      "required": ["path", "touch_count"],
+      "properties": {
+        "path": {
+          "type": "string",
+          "description": "File path or module name"
+        },
+        "touch_count": {
+          "type": "integer",
+          "minimum": 2,
+          "description": "Number of times this path was modified across commits"
+        },
+        "commits": {
+          "type": "array",
+          "description": "Commit SHAs that touched this path",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        }
+      }
+    },
+    "Oscillation": {
+      "type": "object",
+      "description": "An add/remove/add pattern indicating uncertainty or approach changes",
+      "required": ["type", "subject"],
+      "properties": {
+        "type": {
+          "$ref": "#/$defs/OscillationType"
+        },
+        "subject": {
+          "type": "string",
+          "description": "The thing that oscillated (e.g., 'serde', 'config.rs', 'async-runtime')"
+        },
+        "sequence": {
+          "type": "array",
+          "description": "Sequence of actions showing the oscillation pattern",
+          "items": {
+            "$ref": "#/$defs/OscillationAction"
+          },
+          "default": []
+        }
+      }
+    },
+    "Convergence": {
+      "type": "object",
+      "description": "Signals of PR stabilization toward completion",
+      "properties": {
+        "inflection_commit": {
+          "type": "string",
+          "description": "Commit SHA where churn collapsed and stabilization began"
+        },
+        "last_n_commits_stable": {
+          "type": "boolean",
+          "description": "Whether the final commits show stable, non-churning changes",
+          "default": false
+        },
+        "stable_categories": {
+          "type": "array",
+          "description": "Categories of changes in the stable final commits (e.g., 'tests', 'docs', 'receipts')",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        }
+      }
+    },
+    "Event": {
+      "type": "object",
+      "description": "A human intervention event during the PR lifecycle",
+      "required": ["type", "timestamp"],
+      "properties": {
+        "type": {
+          "$ref": "#/$defs/EventType"
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time",
+          "description": "When the event occurred"
+        },
+        "actor": {
+          "type": "string",
+          "description": "GitHub username or identifier of the person who triggered the event"
+        },
+        "summary": {
+          "type": "string",
+          "description": "Brief summary of the event (e.g., review comment text, requested changes)"
+        }
+      }
+    },
+    "ReceiptMeta": {
+      "type": "object",
+      "description": "Meta provenance header for re-analysis and method versioning",
+      "required": ["method_id", "method_version", "analysis_run_id", "confidence"],
+      "properties": {
+        "method_id": {
+          "type": "string",
+          "description": "Identifier for the analysis method used (e.g., 'telemetry-v1', 'timeline-v1')"
+        },
+        "method_version": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Version of the analysis method. Bump when logic changes materially."
+        },
+        "analysis_run_id": {
+          "type": "string",
+          "description": "Unique identifier for this analysis run (typically matches run_id)"
+        },
+        "inputs_used": {
+          "type": "array",
+          "description": "List of inputs relied on for this analysis (e.g., 'git_diff', 'gate.json', 'pr_comments')",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "assumptions": {
+          "type": "array",
+          "description": "Assumptions that materially affect conclusions",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "confidence": {
+          "$ref": "#/$defs/MetaConfidence",
+          "description": "Confidence level of the analysis results"
+        },
+        "evidence_pointers": {
+          "type": "array",
+          "description": "Evidence pointers (5-15 anchors): file paths, function names, receipt refs, commit SHAs",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        }
+      }
+    },
+    "MetaConfidence": {
+      "type": "string",
+      "enum": ["high", "medium", "low"],
+      "description": "Confidence level: high (exhibit profile, full tooling), medium (full profile), low (fast profile, incomplete data)"
+    }
+  }
+}

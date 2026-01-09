@@ -1,0 +1,433 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://rust-as-spec.example/schemas/dossier.schema.json",
+  "title": "Dossier",
+  "description": "Structured PR analysis for casebook generation and audit purposes",
+  "type": "object",
+  "required": ["schema_version", "pr", "title", "merged_at", "scope", "intent", "exhibit_score", "factory_delta"],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "description": "Schema version for forward compatibility",
+      "default": "1.0"
+    },
+    "pr": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "PR number"
+    },
+    "title": {
+      "type": "string",
+      "description": "PR title"
+    },
+    "merged_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the PR was merged (ISO 8601 datetime)"
+    },
+    "scope": {
+      "$ref": "#/$defs/Scope"
+    },
+    "intent": {
+      "$ref": "#/$defs/Intent"
+    },
+    "findings": {
+      "type": "array",
+      "default": [],
+      "description": "Findings from analysis",
+      "items": {
+        "$ref": "#/$defs/Finding"
+      }
+    },
+    "errata": {
+      "type": "array",
+      "default": [],
+      "description": "Errata or corrections for previous claims",
+      "items": {
+        "$ref": "#/$defs/Erratum"
+      }
+    },
+    "exhibit_score": {
+      "$ref": "#/$defs/ExhibitScore"
+    },
+    "factory_delta": {
+      "$ref": "#/$defs/FactoryDelta"
+    },
+    "quality": {
+      "$ref": "#/$defs/Quality"
+    }
+  },
+  "$defs": {
+    "Scope": {
+      "type": "object",
+      "description": "Scope of changes in the PR",
+      "properties": {
+        "top_dirs": {
+          "type": "array",
+          "default": [],
+          "description": "Top-level directories affected",
+          "items": {
+            "type": "string"
+          }
+        },
+        "files_changed": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 0,
+          "description": "Number of files changed"
+        },
+        "lines_added": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 0,
+          "description": "Lines added"
+        },
+        "lines_removed": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 0,
+          "description": "Lines removed"
+        }
+      }
+    },
+    "Intent": {
+      "type": "object",
+      "description": "Intent and linkage for the PR",
+      "properties": {
+        "issue_links": {
+          "type": "array",
+          "default": [],
+          "description": "Related issue numbers (e.g., ['#76'])",
+          "items": {
+            "type": "string"
+          }
+        },
+        "spec_links": {
+          "type": "array",
+          "default": [],
+          "description": "Related specification IDs (e.g., ['REQ-PLT-ISSUES-001'])",
+          "items": {
+            "type": "string"
+          }
+        },
+        "ac_links": {
+          "type": "array",
+          "default": [],
+          "description": "Related acceptance criteria IDs",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "Finding": {
+      "type": "object",
+      "description": "A finding from PR analysis",
+      "required": ["category", "description"],
+      "properties": {
+        "category": {
+          "type": "string",
+          "description": "Finding severity or category (e.g., 'warning', 'info', 'error')"
+        },
+        "description": {
+          "type": "string",
+          "description": "Description of the finding"
+        },
+        "locations": {
+          "type": "array",
+          "default": [],
+          "description": "Files or locations affected (e.g., ['src/lib.rs:42'])",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "Erratum": {
+      "type": "object",
+      "description": "An erratum or correction for a previous claim",
+      "required": ["original", "correction"],
+      "properties": {
+        "original": {
+          "type": "string",
+          "description": "What was originally stated or claimed"
+        },
+        "correction": {
+          "type": "string",
+          "description": "The correction"
+        },
+        "corrected_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "When the correction was made (ISO 8601 datetime)"
+        }
+      }
+    },
+    "ExhibitScore": {
+      "type": "object",
+      "description": "Quality scores for the exhibit (0-5 scale where 5 is best). Five criteria: scope_clarity, proof_completeness, errata_quality, factory_delta, overall_coherence → max = 25.",
+      "required": ["scope_clarity", "proof_completeness", "errata_quality", "factory_delta", "overall_coherence", "total", "max"],
+      "properties": {
+        "scope_clarity": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 5,
+          "description": "Clarity of scope definition (0-5)"
+        },
+        "proof_completeness": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 5,
+          "description": "Completeness of proof/evidence (0-5)"
+        },
+        "errata_quality": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 5,
+          "description": "Quality of errata handling (0-5)"
+        },
+        "factory_delta": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 5,
+          "description": "Quality of factory delta documentation (0-5)"
+        },
+        "overall_coherence": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 5,
+          "description": "Overall coherence and narrative quality (0-5)"
+        },
+        "total": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Total score"
+        },
+        "max": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 25,
+          "description": "Maximum possible score"
+        }
+      }
+    },
+    "FactoryDelta": {
+      "type": "object",
+      "description": "Changes to the governance factory",
+      "properties": {
+        "gates_added": {
+          "type": "array",
+          "default": [],
+          "description": "Gates added or enhanced",
+          "items": {
+            "type": "string"
+          }
+        },
+        "contracts_tightened": {
+          "type": "array",
+          "default": [],
+          "description": "Contracts tightened or added",
+          "items": {
+            "type": "string"
+          }
+        },
+        "docs_updated": {
+          "type": "array",
+          "default": [],
+          "description": "Documentation updated",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "Quality": {
+      "type": "object",
+      "description": "Quality receipt capturing contract, boundary, verification, and risk metrics",
+      "properties": {
+        "contract": {
+          "$ref": "#/$defs/ContractQuality"
+        },
+        "boundaries": {
+          "$ref": "#/$defs/BoundariesQuality"
+        },
+        "verification": {
+          "$ref": "#/$defs/VerificationQuality"
+        },
+        "risks": {
+          "$ref": "#/$defs/RisksQuality"
+        }
+      }
+    },
+    "ContractQuality": {
+      "type": "object",
+      "description": "Contract surface changes (public API, schemas)",
+      "properties": {
+        "public_api": {
+          "$ref": "#/$defs/ContractChange"
+        },
+        "schema": {
+          "$ref": "#/$defs/ContractChange"
+        }
+      }
+    },
+    "ContractChange": {
+      "type": "object",
+      "description": "A contract change indicator",
+      "properties": {
+        "changed": {
+          "type": "boolean",
+          "description": "Whether the contract changed"
+        },
+        "breaking": {
+          "type": "boolean",
+          "description": "Whether the change is breaking"
+        },
+        "evidence": {
+          "type": "array",
+          "default": [],
+          "description": "Evidence pointers (file paths, diffs, etc.)",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "BoundariesQuality": {
+      "type": "object",
+      "description": "Module boundary and architecture metrics",
+      "properties": {
+        "modules_touched": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of modules touched by the change"
+        },
+        "hotspots": {
+          "type": "array",
+          "default": [],
+          "description": "Files or modules that are hotspots for change",
+          "items": {
+            "type": "string"
+          }
+        },
+        "llm_assessment": {
+          "$ref": "#/$defs/LlmAssessment"
+        }
+      }
+    },
+    "VerificationQuality": {
+      "type": "object",
+      "description": "Verification and test coverage metrics",
+      "properties": {
+        "tests_added_loc": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Lines of test code added"
+        },
+        "impl_added_loc": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Lines of implementation code added"
+        },
+        "test_density_delta": {
+          "type": "number",
+          "description": "Change in test density (tests_added_loc / impl_added_loc)"
+        },
+        "llm_test_depth": {
+          "$ref": "#/$defs/LlmTestDepth"
+        }
+      }
+    },
+    "RisksQuality": {
+      "type": "object",
+      "description": "Risk indicators for the change",
+      "properties": {
+        "unsafe_delta": {
+          "$ref": "#/$defs/UnsafeDelta"
+        },
+        "deps_added": {
+          "type": "array",
+          "default": [],
+          "description": "Dependencies added by the change",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "LlmAssessment": {
+      "type": "object",
+      "description": "LLM-generated assessment of boundary quality",
+      "properties": {
+        "rating": {
+          "type": "string",
+          "enum": ["improved", "neutral", "degraded"],
+          "description": "Overall rating of boundary quality change"
+        },
+        "notes": {
+          "type": "array",
+          "default": [],
+          "description": "Notes explaining the assessment",
+          "items": {
+            "type": "string"
+          }
+        },
+        "confidence": {
+          "type": "string",
+          "enum": ["high", "medium", "low"],
+          "description": "Confidence level of the assessment"
+        },
+        "evidence": {
+          "type": "array",
+          "default": [],
+          "description": "Evidence pointers supporting the assessment",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "LlmTestDepth": {
+      "type": "object",
+      "description": "LLM-generated assessment of test depth",
+      "properties": {
+        "rating": {
+          "type": "string",
+          "enum": ["hardened", "mixed", "shallow"],
+          "description": "Overall rating of test depth"
+        },
+        "notes": {
+          "type": "array",
+          "default": [],
+          "description": "Notes explaining the assessment",
+          "items": {
+            "type": "string"
+          }
+        },
+        "confidence": {
+          "type": "string",
+          "enum": ["high", "medium", "low"],
+          "description": "Confidence level of the assessment"
+        }
+      }
+    },
+    "UnsafeDelta": {
+      "type": "object",
+      "description": "Changes to unsafe code blocks",
+      "properties": {
+        "added": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 0,
+          "description": "Number of unsafe blocks added"
+        },
+        "removed": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 0,
+          "description": "Number of unsafe blocks removed"
+        }
+      }
+    }
+  }
+}
