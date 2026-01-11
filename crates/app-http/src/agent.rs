@@ -77,69 +77,95 @@ pub fn router(state: AppState) -> Router<AppState> {
     Router::new().route("/platform/agent/hints", get(agent_hints)).with_state(state)
 }
 
+/// Data loaded from blocking file I/O operations.
+/// Grouped into a struct so we can load everything in a single spawn_blocking call.
+struct BlockingIoData {
+    tasks: Vec<gov_model::Task>,
+    task_definitions:
+        std::collections::HashMap<String, adapters_spec_fs::tasks_def::TaskDefinition>,
+    ac_index: hints::AcCoverageIndex,
+    ledger: spec_runtime::SpecLedger,
+    valid_ac_ids: std::collections::HashSet<String>,
+    valid_req_ids: std::collections::HashSet<String>,
+    devex_spec: serde_yaml::Value,
+}
+
 #[instrument(skip(state, filters), fields(owner = ?filters.owner, label = ?filters.label, requirement = ?filters.requirement, kind = ?filters.kind))]
 async fn agent_hints(
     State(state): State<AppState>,
     Query(filters): Query<HintsFilters>,
 ) -> Result<Json<AgentHintsResponse>, crate::AppError> {
-    let service = TaskService::new(state.governance_repo.clone());
-    let tasks = service.list_tasks().map_err(|e| {
+    // Clone data needed for the blocking task
+    let repo = state.governance_repo.clone();
+    let workspace_root = state.workspace_root.clone();
+
+    // Offload all blocking file I/O (fs2 locks, std::fs reads, YAML parsing)
+    // to spawn_blocking to avoid starving the Tokio executor under concurrent load.
+    let io_data = tokio::task::spawn_blocking(move || {
+        // Load tasks from governance repo (uses fs2 file locks)
+        let service = TaskService::new(repo);
+        let tasks = service.list_tasks().map_err(|e| format!("Failed to list tasks: {}", e))?;
+
+        // Load full task definitions from tasks.yaml for rich metadata
+        let tasks_path = workspace_root.join("specs/tasks.yaml");
+        let task_definitions = adapters_spec_fs::tasks_def::load_tasks_definitions(&tasks_path)
+            .map_err(|e| format!("Failed to load task definitions: {}", e))?;
+
+        // Load AC coverage from feature_status.md
+        let feature_status_path = workspace_root.join("docs/feature_status.md");
+        let ac_index = hints::parse_feature_status(&feature_status_path)
+            .map_err(|e| format!("Failed to parse feature_status.md: {}", e))?;
+
+        // Load spec_ledger for referential integrity validation
+        let ledger_path = workspace_root.join("specs/spec_ledger.yaml");
+        let ledger = spec_runtime::load_spec_ledger(&ledger_path)
+            .map_err(|e| format!("Failed to load spec_ledger: {}", e))?;
+        let valid_ac_ids = spec_runtime::build_ac_id_index(&ledger);
+        let valid_req_ids = spec_runtime::build_req_id_index(&ledger);
+
+        // Load devex_flows.yaml for flow-based command sequences
+        let devex_path = workspace_root.join("specs/devex_flows.yaml");
+        let devex_content = std::fs::read_to_string(&devex_path)
+            .map_err(|e| format!("Failed to read devex_flows.yaml: {}", e))?;
+        let devex_spec: serde_yaml::Value = serde_yaml::from_str(&devex_content)
+            .map_err(|e| format!("Failed to parse devex_flows.yaml: {}", e))?;
+
+        Ok::<_, String>(BlockingIoData {
+            tasks,
+            task_definitions,
+            ac_index,
+            ledger,
+            valid_ac_ids,
+            valid_req_ids,
+            devex_spec,
+        })
+    })
+    .await
+    .map_err(|e| {
         crate::AppError::new(
             axum::http::StatusCode::INTERNAL_SERVER_ERROR,
             crate::ErrorCode::InternalError,
-            format!("Failed to list tasks: {}", e),
+            format!("spawn_blocking(agent_hints_io) join: {}", e),
+        )
+    })?
+    .map_err(|e| {
+        crate::AppError::new(
+            axum::http::StatusCode::INTERNAL_SERVER_ERROR,
+            crate::ErrorCode::InternalError,
+            e,
         )
     })?;
 
-    // Load full task definitions from tasks.yaml for rich metadata
-    let tasks_path = state.workspace_root.join("specs/tasks.yaml");
-    let task_definitions = adapters_spec_fs::tasks_def::load_tasks_definitions(&tasks_path)
-        .map_err(|e| {
-            crate::AppError::new(
-                axum::http::StatusCode::INTERNAL_SERVER_ERROR,
-                crate::ErrorCode::InternalError,
-                format!("Failed to load task definitions: {}", e),
-            )
-        })?;
-
-    // Load AC coverage from feature_status.md
-    let feature_status_path = state.workspace_root.join("docs/feature_status.md");
-    let ac_index = hints::parse_feature_status(&feature_status_path).map_err(|e| {
-        crate::AppError::new(
-            axum::http::StatusCode::INTERNAL_SERVER_ERROR,
-            crate::ErrorCode::InternalError,
-            format!("Failed to parse feature_status.md: {}", e),
-        )
-    })?;
-
-    // Load spec_ledger for referential integrity validation (AC-TPL-HINTS-REFERENTIAL-INTEGRITY)
-    let ledger_path = state.workspace_root.join("specs/spec_ledger.yaml");
-    let ledger = spec_runtime::load_spec_ledger(&ledger_path).map_err(|e| {
-        crate::AppError::new(
-            axum::http::StatusCode::INTERNAL_SERVER_ERROR,
-            crate::ErrorCode::InternalError,
-            format!("Failed to load spec_ledger: {}", e),
-        )
-    })?;
-    let valid_ac_ids = spec_runtime::build_ac_id_index(&ledger);
-    let valid_req_ids = spec_runtime::build_req_id_index(&ledger);
-
-    // Load devex_flows.yaml for flow-based command sequences
-    let devex_path = state.workspace_root.join("specs/devex_flows.yaml");
-    let devex_content = std::fs::read_to_string(&devex_path).map_err(|e| {
-        crate::AppError::new(
-            axum::http::StatusCode::INTERNAL_SERVER_ERROR,
-            crate::ErrorCode::InternalError,
-            format!("Failed to read devex_flows.yaml: {}", e),
-        )
-    })?;
-    let devex_spec: serde_yaml::Value = serde_yaml::from_str(&devex_content).map_err(|e| {
-        crate::AppError::new(
-            axum::http::StatusCode::INTERNAL_SERVER_ERROR,
-            crate::ErrorCode::InternalError,
-            format!("Failed to parse devex_flows.yaml: {}", e),
-        )
-    })?;
+    // Destructure the loaded data
+    let BlockingIoData {
+        tasks,
+        task_definitions,
+        ac_index,
+        ledger,
+        valid_ac_ids,
+        valid_req_ids,
+        devex_spec,
+    } = io_data;
 
     // Convert governance tasks to spec_runtime tasks
     let runtime_tasks: Vec<spec_runtime::Task> = tasks

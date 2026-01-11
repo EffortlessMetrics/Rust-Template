@@ -75,6 +75,31 @@ Once you have the PR title and body ready, create the PR with `gh pr create`.
 
 Default: create as **draft**, unless `$ARGUMENTS` clearly indicates "ready".
 
+## Known workflow issues
+
+### `gh pr edit` fails with Projects (classic)
+
+If you need to update a PR body after creation, `gh pr edit` may fail with:
+```
+GraphQL: Cannot query field "projectCards" on type "PullRequest"
+```
+
+This is a GitHub CLI bug affecting repos with Projects (classic) enabled.
+
+**Workaround:** Use REST API directly:
+```bash
+gh api -X PATCH /repos/{owner}/{repo}/pulls/{pr_number} -f body='...'
+```
+
+Or use a heredoc for complex bodies:
+```bash
+gh api -X PATCH /repos/{owner}/{repo}/pulls/{pr_number} \
+  -f body="$(cat <<'EOF'
+Your PR body here
+EOF
+)"
+```
+
 ## Useful tools (guidance)
 
 Use what fits the repo and what supports the claims you plan to make:
