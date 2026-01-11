@@ -2,6 +2,7 @@ use axum::Router;
 use cucumber::World as CucumberWorld;
 use http::HeaderMap;
 use std::{collections::HashMap, fs, path::Path, path::PathBuf, process::Command};
+use testing::process::EnvVarGuard;
 
 /// RAII guard for git worktrees created during tests.
 ///
@@ -259,22 +260,20 @@ impl World {
     /// 1. The actual auth config is stored in World (per-scenario)
     /// 2. We set env vars just before creating the app
     /// 3. The app copies the config at creation time
+    /// 4. EnvVarGuard serializes access and restores state on drop
     pub fn reload_app(&mut self) {
-        // Set env vars from World's isolated auth config before creating app.
-        // This ensures the app picks up this scenario's auth configuration
-        // regardless of what other parallel scenarios have done.
-        // SAFETY: Tests mutate process env in a single-threaded-per-scenario manner.
-        unsafe {
-            if let Some(ref mode) = self.platform_auth_mode {
-                std::env::set_var("PLATFORM_AUTH_MODE", mode);
-            } else {
-                std::env::remove_var("PLATFORM_AUTH_MODE");
-            }
-            if let Some(ref token) = self.platform_auth_token {
-                std::env::set_var("PLATFORM_AUTH_TOKEN", token);
-            } else {
-                std::env::remove_var("PLATFORM_AUTH_TOKEN");
-            }
+        // Use EnvVarGuard to safely set env vars from World's isolated auth config.
+        // The guard serializes access via a global lock and restores the original
+        // values on drop, ensuring no cross-scenario pollution.
+        let guard = EnvVarGuard::new(&["PLATFORM_AUTH_MODE", "PLATFORM_AUTH_TOKEN"]);
+
+        match self.platform_auth_mode.as_deref() {
+            Some(mode) => guard.set("PLATFORM_AUTH_MODE", mode),
+            None => guard.remove("PLATFORM_AUTH_MODE"),
+        }
+        match self.platform_auth_token.as_deref() {
+            Some(tok) => guard.set("PLATFORM_AUTH_TOKEN", tok),
+            None => guard.remove("PLATFORM_AUTH_TOKEN"),
         }
 
         let specs_dir = self._temp_dir.path().join("specs");
@@ -283,6 +282,7 @@ impl World {
         self.app =
             app_http::app_with_workspace_root(governance_repo, self._temp_dir.path().to_path_buf())
                 .expect("valid auth config in reload_app");
+        // Guard drops here, restoring original env var state
     }
 
     /// Set platform auth configuration for this scenario.

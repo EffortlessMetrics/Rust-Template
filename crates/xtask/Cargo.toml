@@ -5,7 +5,7 @@ edition.workspace = true
 rust-version.workspace = true
 publish.workspace = true
 [dependencies]
-clap = { version = "4.5.53", features = ["derive"] }
+clap = { version = "4.5.54", features = ["derive"] }
 anyhow.workspace = true
 colored = "3.0.0"
 serde.workspace = true
@@ -24,7 +24,8 @@ which = "8.0.0"
 chrono.workspace = true
 business-core = { path = "../business-core" }
 gov-receipts = { path = "../gov-receipts" }
-jsonschema = "0.37.4"
+jsonschema = "0.38.1"
+testing = { path = "../testing" }
 
 [dev-dependencies]
 tempfile.workspace = true

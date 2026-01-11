@@ -1,6 +1,7 @@
 use anyhow::Result;
 use colored::Colorize;
 use std::env;
+use testing::process::EnvVarGuard;
 
 pub fn run() -> Result<()> {
     println!("{}", "🔄 Running CI checks locally...".blue().bold());
@@ -22,20 +23,13 @@ pub fn run() -> Result<()> {
     // Step 2: Template selftest
     println!("{}", "[2/4] Template selftest...".bold());
 
-    // Prevent recursive BDD execution when ci-local runs inside the acceptance suite
-    let prev_skip_bdd = env::var("XTASK_SKIP_BDD").ok();
-    // SAFETY: Tests flip this flag to avoid recursive BDD execution during nested selftest runs.
-    unsafe {
-        env::set_var("XTASK_SKIP_BDD", "1");
-    }
-    let selftest_result = crate::commands::selftest::run_with_verbosity(crate::Verbosity::Normal);
-    unsafe {
-        if let Some(prev) = prev_skip_bdd {
-            env::set_var("XTASK_SKIP_BDD", prev);
-        } else {
-            env::remove_var("XTASK_SKIP_BDD");
-        }
-    }
+    // Prevent recursive BDD execution when ci-local runs inside the acceptance suite.
+    // Using EnvVarGuard for safe scoped mutation that auto-restores on drop.
+    let selftest_result = {
+        let guard = EnvVarGuard::new(&["XTASK_SKIP_BDD"]);
+        guard.set("XTASK_SKIP_BDD", "1");
+        crate::commands::selftest::run_with_verbosity(crate::Verbosity::Normal)
+    }; // XTASK_SKIP_BDD restored here
 
     match selftest_result {
         Ok(_) => println!("{} selftest passed\n", "✓".green()),

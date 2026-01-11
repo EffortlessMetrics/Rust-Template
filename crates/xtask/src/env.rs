@@ -51,64 +51,38 @@ pub fn describe_mode() -> &'static str {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::sync::Mutex;
-
-    /// Global lock to ensure env var tests don't run concurrently
-    /// This prevents flaky tests from concurrent modifications
-    static ENV_LOCK: Mutex<()> = Mutex::new(());
+    use testing::process::EnvVarGuard;
 
     /// Environment variable names recognized by this module
-    pub const CI_ENV_VARS: &[&str] =
+    const CI_ENV_VARS: &[&str] =
         &["CI", "GITHUB_ACTIONS", "GITLAB_CI", "CIRCLECI", "JENKINS_URL", "BUILDKITE"];
 
-    pub const XTASK_ENV_VARS: &[&str] =
+    const XTASK_ENV_VARS: &[&str] =
         &["XTASK_NONINTERACTIVE", "XTASK_LOW_RESOURCES", "XTASK_SKIP_BDD"];
 
-    /// Helper to run a test with specific env vars set, restoring afterward
-    ///
-    /// # Safety
-    /// This uses unsafe env var manipulation which is safe in tests because:
-    /// 1. Tests run with a global lock preventing concurrent access
-    /// 2. All env vars are restored after the test completes
-    fn with_env<F, R>(vars: &[(&str, &str)], f: F) -> R
+    /// All env vars that these tests care about
+    fn all_env_vars() -> Vec<&'static str> {
+        CI_ENV_VARS.iter().chain(XTASK_ENV_VARS.iter()).copied().collect()
+    }
+
+    /// Helper to run a test with specific env vars set
+    fn with_env<F, R>(vars: &[(&'static str, &str)], f: F) -> R
     where
         F: FnOnce() -> R,
     {
-        let _lock = ENV_LOCK.lock().unwrap();
+        let guard = EnvVarGuard::new(&all_env_vars());
 
-        // Save current values and clear all relevant vars
-        let saved: Vec<(String, Option<String>)> = CI_ENV_VARS
-            .iter()
-            .chain(XTASK_ENV_VARS.iter())
-            .map(|&k| (k.to_string(), env::var(k).ok()))
-            .collect();
-
-        // SAFETY: We hold the ENV_LOCK and restore all values after the test
-        unsafe {
-            // Clear all to get a clean state
-            for &var in CI_ENV_VARS.iter().chain(XTASK_ENV_VARS.iter()) {
-                env::remove_var(var);
-            }
-
-            // Set the requested vars
-            for (key, value) in vars {
-                env::set_var(key, value);
-            }
+        // Clear all to get a clean state
+        for &var in CI_ENV_VARS.iter().chain(XTASK_ENV_VARS.iter()) {
+            guard.remove(var);
         }
 
-        let result = f();
-
-        // SAFETY: Restore original values - we hold the ENV_LOCK
-        unsafe {
-            for (key, original) in saved {
-                match original {
-                    Some(val) => env::set_var(&key, val),
-                    None => env::remove_var(&key),
-                }
-            }
+        // Set the requested vars
+        for (key, value) in vars {
+            guard.set(key, value);
         }
 
-        result
+        f()
     }
 
     // =========================================================================

@@ -31,5 +31,8 @@ telemetry = { path = "../telemetry" }
 adapters-spec-fs = { path = "../adapters-spec-fs" }
 spec-runtime = { path = "../spec-runtime" }
 ac-kernel = { path = "../ac-kernel" }
+testing = { path = "../testing" }
 tracing.workspace = true
 tempfile.workspace = true
+
+[dev-dependencies]

@@ -2,6 +2,7 @@ use acceptance::{AcCoverageWriter, World};
 use cucumber::{World as _, WriterExt, writer};
 use gherkin::tagexpr::TagOperation;
 use std::fs::File;
+use testing::process::EnvVarGuard;
 
 // Platform-specific null device
 #[cfg(unix)]
@@ -15,6 +16,10 @@ use acceptance::steps;
 
 #[tokio::main]
 async fn main() {
+    // Guard for cucumber env vars - held until process exits.
+    // This serializes env var access and provides safe wrappers for mutation.
+    let env_guard = EnvVarGuard::new(&["CUCUMBER_FILTER_TAGS", "CUCUMBER_TAG_EXPRESSION"]);
+
     // Print a backtrace for any panic so failures in steps are easier to debug.
     std::panic::set_hook(Box::new(|info| {
         eprintln!("panic: {info}");
@@ -97,17 +102,18 @@ async fn main() {
         }
 
         if !parts.is_empty() {
-            // SAFETY: Adjusting process env vars for test filtering only.
-            unsafe {
-                std::env::set_var("CUCUMBER_FILTER_TAGS", parts.join(" and "));
-            }
+            env_guard.set("CUCUMBER_FILTER_TAGS", &parts.join(" and "));
         }
     }
 
-    // SAFETY: Clear alias env var to avoid leaking into child commands.
-    unsafe {
-        std::env::remove_var("CUCUMBER_TAG_EXPRESSION");
-    }
+    // Clear alias env var to avoid leaking into child commands.
+    env_guard.remove("CUCUMBER_TAG_EXPRESSION");
+
+    // Drop the guard before running cucumber to release PROCESS_LOCK.
+    // This is important because scenarios may call reload_app() which also
+    // uses EnvVarGuard, and holding the lock here would cause a deadlock.
+    // The env vars we just set will persist for the process lifetime.
+    drop(env_guard);
 
     // Use filter_run_and_exit with coverage and JUnit writers
     // The JUnit file may be empty due to the cucumber-rs exit() issue documented above.
