@@ -339,6 +339,14 @@ async fn given_add_selective_feature(world: &mut World) {
 
 #[when(r#"I run "cargo xtask test-changed" in plan-only mode"#)]
 async fn when_run_test_changed_plan_only(world: &mut World) {
+    // Get the worktree path to set XTASK_REPO_ROOT so test-changed analyzes
+    // changes in the worktree rather than the main repository
+    let repo_root = workspace_root(world);
+    let repo_root_str = repo_root.to_string_lossy().to_string();
+
+    // Store repo root in context env so execute_command picks it up
+    world.xtask_context_mut().env.insert("XTASK_REPO_ROOT".to_string(), repo_root_str);
+
     execute_command(
         world,
         "cargo xtask test-changed --plan-only",
