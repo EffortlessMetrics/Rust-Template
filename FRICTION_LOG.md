@@ -71,6 +71,12 @@ Create a YAML file in `friction/` following the schema in `specs/friction_schema
 
 ### Open
 
+- **FRICTION-GATE-001** (2026-01-10) - Non-deterministic feature_status.md generation
+  - **Category:** tooling
+  - **Severity:** medium
+  - **Workaround:** Clear `target/ac/coverage.jsonl` before running selftest
+  - **Details:** [friction/FRICTION-GATE-001.yaml](friction/FRICTION-GATE-001.yaml)
+
 - **FRICTION-TEST-001** (2026-01-06) - Env var test isolation issue in selftest budget parsing
   - **Category:** testing
   - **Severity:** medium
