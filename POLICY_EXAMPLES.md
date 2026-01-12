@@ -285,13 +285,13 @@ DENIED: has literal value for sensitive env var 'DATABASE_URL'
 **LLM learns:** Use `envFrom.secretRef` instead
 
 ### Scenario 2: LLM migrates to K8s
-**LLM sees:** Environment variable `STRIPE_API_KEY=EXAMPLE_KEY_...`
+**LLM sees:** Environment variable `STRIPE_API_KEY=<secret>`
 
 **LLM might try:**
 ```yaml
 env:
 - name: STRIPE_API_KEY
-  value: "EXAMPLE_KEY_..."
+  value: "<literal-secret>"
 ```
 
 **Policy response:**
