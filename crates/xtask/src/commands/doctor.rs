@@ -427,6 +427,7 @@ fn check_libz_availability() -> Result<String, String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use testing::process::EnvVarGuard;
 
     #[test]
     fn test_check_rust_version_accepts_valid_versions() {
@@ -507,8 +508,6 @@ mod tests {
 
     #[test]
     fn test_check_sccache_health_when_not_configured() {
-        use testing::process::EnvVarGuard;
-
         // When RUSTC_WRAPPER is not set, sccache check should pass
         // This test validates the function logic without requiring sccache to be installed
         let guard = EnvVarGuard::new(&["RUSTC_WRAPPER"]);
@@ -521,8 +520,6 @@ mod tests {
 
     #[test]
     fn test_check_sccache_health_with_other_wrapper() {
-        use testing::process::EnvVarGuard;
-
         // When RUSTC_WRAPPER is set to something else, should report it
         let guard = EnvVarGuard::new(&["RUSTC_WRAPPER"]);
         guard.set("RUSTC_WRAPPER", "some-other-wrapper");

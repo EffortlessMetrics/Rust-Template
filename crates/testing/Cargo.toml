@@ -7,7 +7,7 @@ publish = false
 description = "Shared testing utilities for safe environment and process state manipulation"
 
 [dependencies]
-# No runtime dependencies - this is a test utility
+parking_lot.workspace = true
 
 [lints]
 workspace = true

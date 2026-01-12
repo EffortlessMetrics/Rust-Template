@@ -4281,6 +4281,9 @@ dependencies = [
 [[package]]
 name = "testing"
 version = "3.3.14"
+dependencies = [
+ "parking_lot",
+]
 
 [[package]]
 name = "textwrap"

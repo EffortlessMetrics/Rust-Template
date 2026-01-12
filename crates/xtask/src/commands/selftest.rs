@@ -1256,7 +1256,6 @@ mod tests {
     #[test]
     fn strict_ac_coverage_env_var_parsing() {
         use std::env;
-        use testing::process::EnvVarGuard;
 
         // Test parsing logic (same as in run_ac_coverage_check)
         let parse_strict = || env::var("XTASK_STRICT_AC_COVERAGE").unwrap_or_default() == "1";
@@ -1287,7 +1286,6 @@ mod tests {
     #[test]
     fn kernel_unknown_budget_env_var_parsing() {
         use std::env;
-        use testing::process::EnvVarGuard;
 
         // Test parsing logic (same as in run_ac_coverage_check)
         let parse_budget = || {

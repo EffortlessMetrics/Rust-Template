@@ -2,22 +2,32 @@
 //!
 //! These guards are designed for test code that needs to temporarily modify
 //! process-global state (environment variables, current working directory).
+//!
+//! The guards are reentrant-safe: nested guards in the same thread work correctly,
+//! with inner guards snapshotting and restoring "current" (possibly already mutated)
+//! state, and outer guards restoring original state.
 
 // This module is the canonical implementation of process-global state guards.
 // It must use the disallowed methods to provide safe wrappers for them.
 #![allow(clippy::disallowed_methods)]
 
+use parking_lot::{ReentrantMutex, ReentrantMutexGuard};
 use std::path::{Path, PathBuf};
-use std::sync::{Mutex, MutexGuard, OnceLock};
+use std::sync::OnceLock;
 
 /// Global lock serializing all process-global state modifications.
 ///
+/// This is a reentrant mutex to support nested guard patterns:
+/// - Inner guard snapshots "current" state (possibly already mutated by outer)
+/// - Inner drop restores to that "current" state
+/// - Outer drop restores to original state
+///
 /// This single lock covers both env vars and cwd to prevent any possibility
 /// of concurrent modification of process-global state.
-static PROCESS_LOCK: OnceLock<Mutex<()>> = OnceLock::new();
+static PROCESS_LOCK: OnceLock<ReentrantMutex<()>> = OnceLock::new();
 
-fn lock() -> MutexGuard<'static, ()> {
-    PROCESS_LOCK.get_or_init(|| Mutex::new(())).lock().unwrap()
+fn lock() -> ReentrantMutexGuard<'static, ()> {
+    PROCESS_LOCK.get_or_init(|| ReentrantMutex::new(())).lock()
 }
 
 /// RAII guard for process environment variables.
@@ -41,7 +51,7 @@ fn lock() -> MutexGuard<'static, ()> {
 /// } // Environment restored automatically
 /// ```
 pub struct EnvVarGuard {
-    _lock: MutexGuard<'static, ()>,
+    _lock: ReentrantMutexGuard<'static, ()>,
     snapshot: Vec<(&'static str, Option<String>)>,
 }
 
@@ -58,11 +68,8 @@ impl EnvVarGuard {
 
     /// Set an environment variable.
     ///
-    /// # Safety
-    ///
-    /// This is safe because:
-    /// 1. We hold the global PROCESS_LOCK, preventing concurrent modifications
-    /// 2. The value will be restored on Drop
+    /// The global process lock is held for the duration of this guard's lifetime,
+    /// preventing concurrent modifications. The value will be restored on Drop.
     pub fn set(&self, key: &'static str, value: &str) {
         // SAFETY: env mutation is process-global; we serialize via PROCESS_LOCK
         // and restore on Drop.
@@ -71,11 +78,8 @@ impl EnvVarGuard {
 
     /// Remove an environment variable.
     ///
-    /// # Safety
-    ///
-    /// This is safe because:
-    /// 1. We hold the global PROCESS_LOCK, preventing concurrent modifications
-    /// 2. The value will be restored on Drop
+    /// The global process lock is held for the duration of this guard's lifetime,
+    /// preventing concurrent modifications. The value will be restored on Drop.
     pub fn remove(&self, key: &'static str) {
         // SAFETY: env mutation is process-global; we serialize via PROCESS_LOCK
         // and restore on Drop.
@@ -119,7 +123,7 @@ impl Drop for EnvVarGuard {
 /// } // Original working directory restored automatically
 /// ```
 pub struct CwdGuard {
-    _lock: MutexGuard<'static, ()>,
+    _lock: ReentrantMutexGuard<'static, ()>,
     original: PathBuf,
 }
 
@@ -171,8 +175,9 @@ mod tests {
     fn env_var_guard_restores_removed_var() {
         let test_key = "TESTING_CRATE_REMOVE_VAR";
 
-        // Set initial value
-        unsafe { env::set_var(test_key, "initial") };
+        // Set initial value using a guard (reentrant lock allows nesting)
+        let setup_guard = EnvVarGuard::new(&[test_key]);
+        setup_guard.set(test_key, "initial");
 
         {
             let guard = EnvVarGuard::new(&[test_key]);
@@ -180,11 +185,11 @@ mod tests {
             assert!(env::var(test_key).is_err());
         }
 
-        // Should be restored
+        // Should be restored to "initial" (set by outer guard)
         assert_eq!(env::var(test_key).ok(), Some("initial".to_string()));
 
-        // Cleanup
-        unsafe { env::remove_var(test_key) };
+        // Cleanup: outer guard restores original state on drop
+        drop(setup_guard);
     }
 
     #[test]
