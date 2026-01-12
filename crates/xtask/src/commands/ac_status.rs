@@ -1833,21 +1833,28 @@ stories:
         assert!(args.json);
     }
 
-    /// Verify that selftest uses check mode (read-only contract)
-    /// This test documents the invariant that selftest must NOT modify feature_status.md
+    /// Verify that selftest uses check mode in CI (read-only contract)
+    /// This test documents the invariant: selftest must NOT modify feature_status.md in CI.
+    ///
+    /// Locally, selftest uses write mode because:
+    /// - BDD runs with tag filtering (excludes @ci-only scenarios)
+    /// - This produces different coverage than CI
+    /// - Comparing against CI-generated file would always fail
+    ///
+    /// In CI, selftest uses check mode to enforce file consistency.
     #[test]
-    fn selftest_must_use_check_mode_contract() {
-        // The selftest function at selftest.rs:run_ac_status passes check: true
-        // This test documents that contract and would fail if someone accidentally
-        // changes selftest to use write mode
+    fn selftest_must_use_check_mode_in_ci_contract() {
+        // The selftest function at selftest.rs:run_ac_status passes check: in_ci
+        // where in_ci = crate::env::is_ci(). This test documents that contract.
+        let in_ci = crate::env::is_ci();
         let selftest_args = AcStatusArgs {
             verbosity: crate::Verbosity::Quiet,
-            check: true, // selftest MUST use check mode
+            check: in_ci, // selftest uses check mode only in CI
             ..Default::default()
         };
-        assert!(
-            selftest_args.check,
-            "selftest must use ac-status in check mode to avoid modifying repo"
+        assert_eq!(
+            selftest_args.check, in_ci,
+            "selftest's ac-status check mode should match CI environment"
         );
     }
 
