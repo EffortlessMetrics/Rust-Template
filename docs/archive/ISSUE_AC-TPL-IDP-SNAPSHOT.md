@@ -102,7 +102,7 @@ Feature: Developer Experience Commands
 
 ## Implementation Details
 
-**Implementation:** `/home/steven/code/Rust/Rust-Template/crates/xtask/src/commands/idp_snapshot.rs`
+**Implementation:** `crates/xtask/src/commands/idp_snapshot.rs`
 
 ### Output Structure
 

@@ -3,7 +3,7 @@
 **Generated**: 2025-12-02T09:22:00Z
 **Platform Version**: v3.3.6
 **Agent**: Omega (Comprehensive Health Analyst)
-**Baseline Comparison**: `/home/steven/code/Rust/Rust-Template/docs/receipts/GROUND_TRUTH_2025-12-02.md`
+**Baseline Comparison**: `docs/receipts/GROUND_TRUTH_2025-12-02.md`
 
 ---
 

@@ -1000,10 +1000,10 @@ secrets:
 
 ## Related Documentation
 
-- **Agent Guide:** `/home/steven/code/Rust/Rust-Template/docs/AGENT_GUIDE.md`
-- **Missing Manual:** `/home/steven/code/Rust/Rust-Template/docs/MISSING_MANUAL.md`
-- **How-to: Add HTTP Endpoint:** `/home/steven/code/Rust/Rust-Template/docs/how-to/add-http-endpoint.md`
-- **Platform Contracts:** `/home/steven/code/Rust/Rust-Template/docs/explanation/TEMPLATE-CONTRACTS.md`
+- **Agent Guide:** `docs/AGENT_GUIDE.md`
+- **Missing Manual:** `docs/MISSING_MANUAL.md`
+- **How-to: Add HTTP Endpoint:** `docs/how-to/add-http-endpoint.md`
+- **Platform Contracts:** `docs/explanation/TEMPLATE-CONTRACTS.md`
 
 ---
 

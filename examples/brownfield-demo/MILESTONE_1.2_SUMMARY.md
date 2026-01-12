@@ -12,7 +12,7 @@ Create a working proof-of-concept of `rust_iac_xtask_core` in a separate reposit
 
 ### 1. rust_iac_xtask_core Library ✅
 
-**Location**: `/home/steven/code/Rust/Rust-Template/rust_iac_xtask_core/`
+**Location**: `rust_iac_xtask_core/`
 
 **Purpose**: Core library providing reusable commands for Rust IaC automation.
 
@@ -51,7 +51,7 @@ test result: ok. 2 passed; 0 failed; 0 ignored
 
 ### 2. Brownfield Demo ✅
 
-**Location**: `/home/steven/code/Rust/Rust-Template/examples/brownfield-demo/`
+**Location**: `examples/brownfield-demo/`
 
 **Purpose**: Demonstrates integrating Rust IaC tooling into an existing project.
 

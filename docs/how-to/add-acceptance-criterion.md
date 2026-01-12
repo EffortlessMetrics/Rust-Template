@@ -453,9 +453,9 @@ cargo xtask ac-status
 **Output:**
 
 ```
-Parsing ledger: /home/steven/code/Rust/Rust-Template/specs/spec_ledger.yaml
+Parsing ledger: specs/spec_ledger.yaml
   Found 134 ACs
-Parsing AC coverage (primary path): /home/steven/code/Rust/Rust-Template/target/ac/coverage.jsonl
+Parsing AC coverage (primary path): target/ac/coverage.jsonl
   Found 1 scenarios
   Found results for 1 ACs
 Running unit tests for AC mappings...

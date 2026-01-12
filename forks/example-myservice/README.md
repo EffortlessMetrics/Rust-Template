@@ -67,7 +67,7 @@ Let's trace **AC-MYSERV-004** through the entire system to understand the AC →
 
 ### Step 1: Spec Ledger Definition
 
-Location: `/home/steven/code/Rust/Rust-Template/specs/spec_ledger.yaml` (lines 1829-1841)
+Location: `specs/spec_ledger.yaml` (lines 1829-1841)
 
 ```yaml
 stories:
@@ -99,7 +99,7 @@ stories:
 
 ### Step 2: BDD Scenario
 
-Location: `/home/steven/code/Rust/Rust-Template/specs/features/myserv_todos.feature` (lines 42-54)
+Location: `specs/features/myserv_todos.feature` (lines 42-54)
 
 ```gherkin
 @AC-MYSERV-004
@@ -126,7 +126,7 @@ Scenario: DELETE /todos/:id with non-existent id returns 404
 
 ### Step 3: Step Definitions
 
-Location: `/home/steven/code/Rust/Rust-Template/crates/acceptance/src/steps/myserv.rs` (lines 55-88)
+Location: `crates/acceptance/src/steps/myserv.rs` (lines 55-88)
 
 ```rust
 #[when(regex = r#"^I send a DELETE request to "([^"]+)"$"#)]
@@ -178,7 +178,7 @@ async fn when_delete_request(world: &mut World, path: String) {
 
 ### Step 4: Handler Implementation
 
-Location: `/home/steven/code/Rust/Rust-Template/crates/app-http/src/todos.rs` (lines 238-254)
+Location: `crates/app-http/src/todos.rs` (lines 238-254)
 
 ```rust
 /// DELETE /todos/:id - Delete a todo by ID
@@ -215,7 +215,7 @@ async fn delete_todo(
 
 ### Step 5: Model Definition
 
-Location: `/home/steven/code/Rust/Rust-Template/crates/model/src/lib.rs`
+Location: `crates/model/src/lib.rs`
 
 ```rust
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -528,23 +528,23 @@ curl -X DELETE http://localhost:8080/todos/test-1
 ## Related Documentation
 
 ### Getting Started
-- `/home/steven/code/Rust/Rust-Template/docs/how-to/first-hour.md` - Template onboarding guide
-- `/home/steven/code/Rust/Rust-Template/docs/tutorials/day-1-first-change.md` - Your first code change
-- `/home/steven/code/Rust/Rust-Template/docs/tutorials/day-7-first-real-feature.md` - Building a full feature
+- `docs/how-to/first-hour.md` - Template onboarding guide
+- `docs/tutorials/day-1-first-change.md` - Your first code change
+- `docs/tutorials/day-7-first-real-feature.md` - Building a full feature
 
 ### AC-Driven Development
-- `/home/steven/code/Rust/Rust-Template/docs/tutorials/first-ac-change.md` - How to modify an AC
-- `/home/steven/code/Rust/Rust-Template/CLAUDE.md` - Full governance workflow guide
-- `/home/steven/code/Rust/Rust-Template/docs/AGENT_GUIDE.md` - Using platform APIs for development
+- `docs/tutorials/first-ac-change.md` - How to modify an AC
+- `CLAUDE.md` - Full governance workflow guide
+- `docs/AGENT_GUIDE.md` - Using platform APIs for development
 
 ### Architecture
-- `/home/steven/code/Rust/Rust-Template/docs/explanation/TEMPLATE-CONTRACTS.md` - Design principles
-- `/home/steven/code/Rust/Rust-Template/specs/spec_ledger.yaml` - All ACs and requirements
-- `/home/steven/code/Rust/Rust-Template/specs/devex_flows.yaml` - Developer workflows
+- `docs/explanation/TEMPLATE-CONTRACTS.md` - Design principles
+- `specs/spec_ledger.yaml` - All ACs and requirements
+- `specs/devex_flows.yaml` - Developer workflows
 
 ### Testing
-- BDD scenarios: `/home/steven/code/Rust/Rust-Template/specs/features/`
-- Step definitions: `/home/steven/code/Rust/Rust-Template/crates/acceptance/src/steps/`
+- BDD scenarios: `specs/features/`
+- Step definitions: `crates/acceptance/src/steps/`
 - Run: `cargo xtask bdd --help` for all BDD options
 
 ---
