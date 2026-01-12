@@ -11,6 +11,7 @@ use colored::Colorize;
 use std::env;
 use std::path::{Path, PathBuf};
 use std::time::Instant;
+use testing::process::EnvVarGuard;
 
 /// Result of a single selftest step
 struct StepResult {
@@ -58,17 +59,20 @@ pub fn run_with_verbosity(verbosity: crate::Verbosity) -> Result<()> {
     println!("{}", "  Template Self-Test Suite".blue());
     println!("{}", "======================================".blue());
 
-    if low_resource_mode {
+    // Guard for CARGO_BUILD_JOBS in low-resource mode.
+    // Using EnvVarGuard ensures proper restoration on function exit.
+    let _cargo_jobs_guard: Option<EnvVarGuard> = if low_resource_mode {
         println!("{}", "  Running in low-resource mode".yellow());
         println!("{}", "  (XTASK_LOW_RESOURCES=1)".yellow());
 
-        // Set CARGO_BUILD_JOBS=1 for limited parallelism
-        // SAFETY: We're setting this at the start of selftest before any child processes are spawned.
-        // This is the intended use case for controlling cargo build parallelism.
-        unsafe {
-            env::set_var("CARGO_BUILD_JOBS", "1");
-        }
-    }
+        // Set CARGO_BUILD_JOBS=1 for limited parallelism using EnvVarGuard
+        // for safe scoped mutation.
+        let guard = EnvVarGuard::new(&["CARGO_BUILD_JOBS"]);
+        guard.set("CARGO_BUILD_JOBS", "1");
+        Some(guard)
+    } else {
+        None
+    };
 
     println!();
 
@@ -579,11 +583,10 @@ fn run_ac_status(verbosity: crate::Verbosity) -> Result<()> {
         );
     }
 
-    let prev_no_regen = env::var("XTASK_NO_REGEN").ok();
-    // SAFETY: This flag prevents ac-status from re-running BDD during selftest.
-    unsafe {
-        env::set_var("XTASK_NO_REGEN", "1");
-    }
+    // Use EnvVarGuard for safe scoped mutation of XTASK_NO_REGEN.
+    // This flag prevents ac-status from re-running BDD during selftest.
+    let guard = EnvVarGuard::new(&["XTASK_NO_REGEN"]);
+    guard.set("XTASK_NO_REGEN", "1");
 
     let before_status = std::fs::read_to_string("docs/feature_status.md").unwrap_or_default();
 
@@ -594,14 +597,8 @@ fn run_ac_status(verbosity: crate::Verbosity) -> Result<()> {
         ..Default::default()
     });
 
-    // SAFETY: Restore previous XTASK_NO_REGEN value after the ac-status run.
-    unsafe {
-        if let Some(prev) = prev_no_regen {
-            env::set_var("XTASK_NO_REGEN", prev);
-        } else {
-            env::remove_var("XTASK_NO_REGEN");
-        }
-    }
+    // Guard dropped here restores XTASK_NO_REGEN automatically
+    drop(guard);
 
     result?;
 
@@ -1263,29 +1260,22 @@ mod tests {
         // Test parsing logic (same as in run_ac_coverage_check)
         let parse_strict = || env::var("XTASK_STRICT_AC_COVERAGE").unwrap_or_default() == "1";
 
+        // Use EnvVarGuard for safe env var manipulation in tests
+        let guard = EnvVarGuard::new(&["XTASK_STRICT_AC_COVERAGE"]);
+
         // Default behavior: strict mode is off
-        // SAFETY: Tests run single-threaded when using this env var
-        unsafe {
-            env::remove_var("XTASK_STRICT_AC_COVERAGE");
-        }
+        guard.remove("XTASK_STRICT_AC_COVERAGE");
         assert!(!parse_strict(), "Default should be non-strict");
 
         // Explicit "0" should be non-strict
-        unsafe {
-            env::set_var("XTASK_STRICT_AC_COVERAGE", "0");
-        }
+        guard.set("XTASK_STRICT_AC_COVERAGE", "0");
         assert!(!parse_strict(), "Explicit 0 should be non-strict");
 
         // "1" enables strict mode
-        unsafe {
-            env::set_var("XTASK_STRICT_AC_COVERAGE", "1");
-        }
+        guard.set("XTASK_STRICT_AC_COVERAGE", "1");
         assert!(parse_strict(), "1 should enable strict mode");
 
-        // Clean up
-        unsafe {
-            env::remove_var("XTASK_STRICT_AC_COVERAGE");
-        }
+        // Env vars restored automatically when guard drops
     }
 
     /// Test that KERNEL_UNKNOWN_BUDGET env var is recognized
@@ -1310,45 +1300,33 @@ mod tests {
             }
         };
 
-        // SAFETY: Tests run single-threaded when using these env vars
-        unsafe {
-            env::remove_var("XTASK_STRICT_AC_COVERAGE");
-            env::remove_var("KERNEL_UNKNOWN_BUDGET");
-        }
+        // Use EnvVarGuard for safe env var manipulation in tests
+        let guard = EnvVarGuard::new(&["XTASK_STRICT_AC_COVERAGE", "KERNEL_UNKNOWN_BUDGET"]);
+
+        guard.remove("XTASK_STRICT_AC_COVERAGE");
+        guard.remove("KERNEL_UNKNOWN_BUDGET");
 
         // Default behavior: unlimited budget
         assert_eq!(parse_budget(), usize::MAX, "Default should be unlimited");
 
         // Explicit budget of 10
-        unsafe {
-            env::set_var("KERNEL_UNKNOWN_BUDGET", "10");
-        }
+        guard.set("KERNEL_UNKNOWN_BUDGET", "10");
         assert_eq!(parse_budget(), 10, "Should parse budget=10");
 
         // Explicit budget of 0 (same as strict mode)
-        unsafe {
-            env::set_var("KERNEL_UNKNOWN_BUDGET", "0");
-        }
+        guard.set("KERNEL_UNKNOWN_BUDGET", "0");
         assert_eq!(parse_budget(), 0, "Should parse budget=0");
 
         // Invalid budget (non-numeric) falls back to unlimited
-        unsafe {
-            env::set_var("KERNEL_UNKNOWN_BUDGET", "invalid");
-        }
+        guard.set("KERNEL_UNKNOWN_BUDGET", "invalid");
         assert_eq!(parse_budget(), usize::MAX, "Invalid should fall back to unlimited");
 
         // Strict mode overrides any KERNEL_UNKNOWN_BUDGET
-        unsafe {
-            env::set_var("KERNEL_UNKNOWN_BUDGET", "100");
-            env::set_var("XTASK_STRICT_AC_COVERAGE", "1");
-        }
+        guard.set("KERNEL_UNKNOWN_BUDGET", "100");
+        guard.set("XTASK_STRICT_AC_COVERAGE", "1");
         assert_eq!(parse_budget(), 0, "Strict mode should override budget to 0");
 
-        // Clean up
-        unsafe {
-            env::remove_var("XTASK_STRICT_AC_COVERAGE");
-            env::remove_var("KERNEL_UNKNOWN_BUDGET");
-        }
+        // Env vars restored automatically when guard drops
     }
 
     /// Verify that run_ac_status uses check mode (read-only contract).

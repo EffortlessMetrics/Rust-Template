@@ -12,10 +12,20 @@ use std::{collections::HashSet, env, fs, path::Path, path::PathBuf, process::Com
 
 use super::ac_parsing::{AC_PATTERN_WITH_AT, parse_features_with_metadata};
 
-/// Get the repository root from CARGO_MANIFEST_DIR.
+/// Get the repository root.
 ///
-/// This is immune to CWD changes from other tests or code paths.
+/// Resolution order:
+/// 1. `XTASK_REPO_ROOT` environment variable (if set) - used by acceptance tests
+/// 2. `CARGO_MANIFEST_DIR` compile-time path (default)
+///
+/// The env var override allows acceptance tests to run in worktrees while
+/// having test-changed analyze changes in that worktree rather than the
+/// main repository.
 fn repo_root() -> PathBuf {
+    if let Ok(root) = env::var("XTASK_REPO_ROOT") {
+        return PathBuf::from(root);
+    }
+
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .parent()
         .expect("xtask crate should be in crates/")

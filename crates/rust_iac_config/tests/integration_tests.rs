@@ -2,6 +2,7 @@ use rust_iac_config::{ConfigError, IaCConfig};
 use std::fs;
 use std::path::PathBuf;
 use tempfile::TempDir;
+use testing::process::CwdGuard;
 
 #[test]
 fn test_load_valid_config() {
@@ -100,7 +101,6 @@ project:
 }
 
 #[test]
-#[ignore = "Flaky due to set_current_dir affecting global process state; fails when run with other tests"]
 fn test_duplicate_environment_names() {
     let temp_dir = TempDir::new().unwrap();
     let config_path = temp_dir.path().join("config.yaml");
@@ -125,12 +125,9 @@ validation:
 
     fs::write(&config_path, config_content).unwrap();
 
-    let original_dir = std::env::current_dir().unwrap();
-    std::env::set_current_dir(temp_dir.path()).unwrap();
+    let _guard = CwdGuard::chdir(temp_dir.path());
 
     let result = IaCConfig::from_file(&PathBuf::from("config.yaml"));
-
-    std::env::set_current_dir(original_dir).unwrap();
 
     assert!(result.is_err());
     match result {
@@ -142,7 +139,6 @@ validation:
 }
 
 #[test]
-#[ignore = "Flaky due to set_current_dir affecting global process state; fails when run with other tests"]
 fn test_manifests_directory_not_found() {
     let temp_dir = TempDir::new().unwrap();
     let config_path = temp_dir.path().join("config.yaml");
@@ -163,12 +159,9 @@ validation:
 
     fs::write(&config_path, config_content).unwrap();
 
-    let original_dir = std::env::current_dir().unwrap();
-    std::env::set_current_dir(temp_dir.path()).unwrap();
+    let _guard = CwdGuard::chdir(temp_dir.path());
 
     let result = IaCConfig::from_file(&PathBuf::from("config.yaml"));
-
-    std::env::set_current_dir(original_dir).unwrap();
 
     assert!(result.is_err());
     match result {
@@ -204,12 +197,9 @@ validation:
 
     fs::write(&config_path, config_content).unwrap();
 
-    let original_dir = std::env::current_dir().unwrap();
-    std::env::set_current_dir(temp_dir.path()).unwrap();
+    let _guard = CwdGuard::chdir(temp_dir.path());
 
     let result = IaCConfig::from_file(&PathBuf::from("config.yaml"));
-
-    std::env::set_current_dir(original_dir).unwrap();
 
     assert!(result.is_err());
     match result {
@@ -222,7 +212,6 @@ validation:
 }
 
 #[test]
-#[ignore = "Flaky due to set_current_dir affecting global process state; fails when run with other tests"]
 fn test_find_environment() {
     let temp_dir = TempDir::new().unwrap();
     let config_path = temp_dir.path().join("config.yaml");
@@ -247,12 +236,9 @@ validation:
 
     fs::write(&config_path, config_content).unwrap();
 
-    let original_dir = std::env::current_dir().unwrap();
-    std::env::set_current_dir(temp_dir.path()).unwrap();
+    let _guard = CwdGuard::chdir(temp_dir.path());
 
     let config = IaCConfig::from_file(&PathBuf::from("config.yaml")).unwrap();
-
-    std::env::set_current_dir(original_dir).unwrap();
 
     // Test case-insensitive lookup
     assert!(config.find_environment("dev").is_some());
@@ -268,7 +254,6 @@ validation:
 }
 
 #[test]
-#[ignore = "Requires working directory changes which may not work in all test environments"]
 fn test_required_directories_validation() {
     let temp_dir = TempDir::new().unwrap();
     let config_path = temp_dir.path().join("config.yaml");
@@ -290,12 +275,9 @@ validation:
 
     fs::write(&config_path, config_content).unwrap();
 
-    let original_dir = std::env::current_dir().unwrap();
-    std::env::set_current_dir(temp_dir.path()).unwrap();
+    let _guard = CwdGuard::chdir(temp_dir.path());
 
     let result = IaCConfig::from_file(&PathBuf::from("config.yaml"));
-
-    std::env::set_current_dir(original_dir).unwrap();
 
     assert!(result.is_err());
     match result {
@@ -307,7 +289,6 @@ validation:
 }
 
 #[test]
-#[ignore = "Flaky due to set_current_dir affecting global process state; fails when run with other tests"]
 fn test_required_files_validation() {
     let temp_dir = TempDir::new().unwrap();
     let config_path = temp_dir.path().join("config.yaml");
@@ -325,12 +306,9 @@ validation:
 
     fs::write(&config_path, config_content).unwrap();
 
-    let original_dir = std::env::current_dir().unwrap();
-    std::env::set_current_dir(temp_dir.path()).unwrap();
+    let _guard = CwdGuard::chdir(temp_dir.path());
 
     let result = IaCConfig::from_file(&PathBuf::from("config.yaml"));
-
-    std::env::set_current_dir(original_dir).unwrap();
 
     assert!(result.is_err());
     match result {
@@ -370,12 +348,9 @@ validation:
 
     fs::write(&config_path, config_content).unwrap();
 
-    let original_dir = std::env::current_dir().unwrap();
-    std::env::set_current_dir(temp_dir.path()).unwrap();
+    let _guard = CwdGuard::chdir(temp_dir.path());
 
     let config = IaCConfig::from_file(&PathBuf::from("config.yaml")).unwrap();
-
-    std::env::set_current_dir(original_dir).unwrap();
 
     let names = config.environment_names();
     assert_eq!(names, vec!["dev", "staging", "prod"]);
@@ -405,12 +380,9 @@ validation:
 
     fs::write(&config_path, config_content).unwrap();
 
-    let original_dir = std::env::current_dir().unwrap();
-    std::env::set_current_dir(temp_dir.path()).unwrap();
+    let _guard = CwdGuard::chdir(temp_dir.path());
 
     let config = IaCConfig::from_file(&PathBuf::from("config.yaml")).unwrap();
-
-    std::env::set_current_dir(original_dir).unwrap();
 
     assert_eq!(
         config.project.description,

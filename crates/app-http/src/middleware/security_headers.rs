@@ -325,6 +325,7 @@ mod tests {
     use super::*;
     use axum::{body::Body, http::HeaderValue, response::Response};
     use serial_test::serial;
+    use testing::process::EnvVarGuard;
 
     #[test]
     fn test_security_headers_config_default() {
@@ -393,52 +394,40 @@ mod tests {
     #[serial]
     fn test_development_csp() {
         // Test that development CSP is more permissive
-        unsafe {
-            std::env::set_var("ENV", "development");
-        }
+        let guard = EnvVarGuard::new(&["ENV"]);
+        guard.set("ENV", "development");
+
         let config = SecurityHeadersConfig::from_sources(None);
 
         let csp = config.content_security_policy.unwrap();
         assert!(csp.contains("'unsafe-inline'"));
         assert!(csp.contains("'unsafe-eval'"));
         assert!(csp.contains("localhost"));
-
-        unsafe {
-            std::env::remove_var("ENV");
-        }
     }
 
     #[test]
     #[serial]
     fn test_production_csp() {
         // Test that production CSP is stricter
-        unsafe {
-            std::env::set_var("ENV", "production");
-        }
+        let guard = EnvVarGuard::new(&["ENV"]);
+        guard.set("ENV", "production");
+
         let config = SecurityHeadersConfig::from_sources(None);
 
         let csp = config.content_security_policy.unwrap();
         assert!(!csp.contains("'unsafe-inline'"));
         assert!(!csp.contains("'unsafe-eval'"));
         assert!(!csp.contains("localhost"));
-
-        unsafe {
-            std::env::remove_var("ENV");
-        }
     }
 
     #[test]
     #[serial]
     fn test_hsts_disabled_in_development() {
-        unsafe {
-            std::env::set_var("ENV", "development");
-        }
+        let guard = EnvVarGuard::new(&["ENV"]);
+        guard.set("ENV", "development");
+
         let config = SecurityHeadersConfig::from_sources(None);
 
         assert!(config.strict_transport_security.is_none());
-
-        unsafe {
-            std::env::remove_var("ENV");
-        }
     }
 }

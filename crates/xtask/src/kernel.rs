@@ -215,41 +215,24 @@ pub fn kernel_with_history_dir(history_dir: PathBuf) -> anyhow::Result<AcKernel>
 mod tests {
     use super::*;
     use std::path::Path;
-    use std::sync::{Mutex, OnceLock};
+    use testing::process::EnvVarGuard;
 
-    /// Run a closure with SPEC_ROOT temporarily set (or unset), serialized
-    /// across all tests in this module.
+    /// Run a closure with SPEC_ROOT temporarily set (or unset).
     ///
     /// This ensures tests that modify SPEC_ROOT don't race against each other.
+    /// Uses `EnvVarGuard` which holds a global lock and restores on drop.
     fn with_spec_root<R, F>(value: Option<&Path>, f: F) -> R
     where
         F: FnOnce() -> R,
     {
-        // One global lock shared by *all* tests using with_spec_root.
-        static ENV_LOCK: OnceLock<Mutex<()>> = OnceLock::new();
-        let _guard = ENV_LOCK.get_or_init(|| Mutex::new(())).lock().unwrap();
+        let guard = EnvVarGuard::new(&["SPEC_ROOT"]);
 
-        let original = std::env::var("SPEC_ROOT").ok();
-
-        // SAFETY: We hold a mutex lock to serialize all env var modifications
-        unsafe {
-            match value {
-                Some(path) => std::env::set_var("SPEC_ROOT", path),
-                None => std::env::remove_var("SPEC_ROOT"),
-            }
+        match value {
+            Some(path) => guard.set("SPEC_ROOT", path.to_str().unwrap()),
+            None => guard.remove("SPEC_ROOT"),
         }
 
-        let result = f();
-
-        // SAFETY: We hold the mutex lock
-        unsafe {
-            match original {
-                Some(val) => std::env::set_var("SPEC_ROOT", val),
-                None => std::env::remove_var("SPEC_ROOT"),
-            }
-        }
-
-        result
+        f()
     }
 
     #[test]

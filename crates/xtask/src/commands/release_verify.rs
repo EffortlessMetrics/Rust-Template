@@ -1,6 +1,7 @@
 use anyhow::Result;
 use colored::Colorize;
 use std::env;
+use testing::process::EnvVarGuard;
 
 pub fn run() -> Result<()> {
     println!("{}", "🚀 Running release verification...".blue().bold());
@@ -8,21 +9,14 @@ pub fn run() -> Result<()> {
 
     let mut failed = Vec::new();
 
-    // Run selftest without re-entering the BDD harness
+    // Run selftest without re-entering the BDD harness.
+    // Using EnvVarGuard for safe scoped mutation that auto-restores on drop.
     println!("{}", "[1/3] Running selftest...".bold());
-    let prev_skip_bdd = env::var("XTASK_SKIP_BDD").ok();
-    // SAFETY: Nested selftest runs within BDD need to skip BDD recursion.
-    unsafe {
-        env::set_var("XTASK_SKIP_BDD", "1");
-    }
-    let selftest_result = crate::commands::selftest::run_with_verbosity(crate::Verbosity::Normal);
-    unsafe {
-        if let Some(prev) = prev_skip_bdd {
-            env::set_var("XTASK_SKIP_BDD", prev);
-        } else {
-            env::remove_var("XTASK_SKIP_BDD");
-        }
-    }
+    let selftest_result = {
+        let guard = EnvVarGuard::new(&["XTASK_SKIP_BDD"]);
+        guard.set("XTASK_SKIP_BDD", "1");
+        crate::commands::selftest::run_with_verbosity(crate::Verbosity::Normal)
+    }; // XTASK_SKIP_BDD restored here
 
     match selftest_result {
         Ok(_) => println!("{} Selftest passed\n", "✓".green()),

@@ -427,6 +427,7 @@ fn check_libz_availability() -> Result<String, String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use testing::process::EnvVarGuard;
 
     #[test]
     fn test_check_rust_version_accepts_valid_versions() {
@@ -509,9 +510,8 @@ mod tests {
     fn test_check_sccache_health_when_not_configured() {
         // When RUSTC_WRAPPER is not set, sccache check should pass
         // This test validates the function logic without requiring sccache to be installed
-        unsafe {
-            std::env::remove_var("RUSTC_WRAPPER");
-        }
+        let guard = EnvVarGuard::new(&["RUSTC_WRAPPER"]);
+        guard.remove("RUSTC_WRAPPER");
 
         let result = check_sccache_health();
         assert!(result.is_ok(), "Should succeed when RUSTC_WRAPPER not set");
@@ -521,16 +521,12 @@ mod tests {
     #[test]
     fn test_check_sccache_health_with_other_wrapper() {
         // When RUSTC_WRAPPER is set to something else, should report it
-        unsafe {
-            std::env::set_var("RUSTC_WRAPPER", "some-other-wrapper");
-        }
+        let guard = EnvVarGuard::new(&["RUSTC_WRAPPER"]);
+        guard.set("RUSTC_WRAPPER", "some-other-wrapper");
 
         let result = check_sccache_health();
         assert!(result.is_ok(), "Should succeed with other wrapper");
         assert!(result.unwrap().contains("RUSTC_WRAPPER=some-other-wrapper"));
-
-        unsafe {
-            std::env::remove_var("RUSTC_WRAPPER");
-        }
+        // guard drops and restores RUSTC_WRAPPER automatically
     }
 }

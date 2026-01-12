@@ -8,17 +8,13 @@ use axum::{
     http::{Method, Request, StatusCode},
 };
 use business_core::governance::{GovernanceError, GovernanceRepository, Task, TaskId, TaskStatus};
-use std::{
-    env,
-    path::PathBuf,
-    sync::{Arc, OnceLock},
-};
-use tokio::sync::{Mutex, MutexGuard};
+use std::{path::PathBuf, sync::Arc};
+use testing::process::EnvVarGuard;
 use tower::ServiceExt;
 
 use app_http::app_with_workspace_root;
 
-/// All env vars that these tests read/write (keep in sync with `clean_env_vars()`).
+/// All env vars that these tests read/write.
 const TEST_ENV_VARS: &[&str] = &[
     // App environment
     "ENV",
@@ -43,49 +39,15 @@ const TEST_ENV_VARS: &[&str] = &[
     "CROSS_ORIGIN_RESOURCE_POLICY",
 ];
 
-// Global environment lock to serialize test access to environment variables.
-static ENV_LOCK: OnceLock<Mutex<()>> = OnceLock::new();
-
-async fn get_env_lock() -> MutexGuard<'static, ()> {
-    ENV_LOCK.get_or_init(|| Mutex::new(())).lock().await
-}
-
-/// RAII guard for environment variable management
-struct EnvVarGuard {
-    _lock: MutexGuard<'static, ()>,
-    snapshot: Vec<(&'static str, Option<String>)>,
-}
-
-impl EnvVarGuard {
-    /// Create a new guard that snapshots current environment and cleans it
-    async fn new() -> Self {
-        let lock = get_env_lock().await;
-
-        // Snapshot current environment variables
-        let snapshot = TEST_ENV_VARS.iter().copied().map(|k| (k, env::var(k).ok())).collect();
-
-        // Clean environment
-        clean_env_vars();
-
-        Self { _lock: lock, snapshot }
+/// Create an environment guard that clears all test env vars.
+/// Returns an EnvVarGuard that can be used to set specific vars.
+fn clean_test_env() -> EnvVarGuard {
+    let guard = EnvVarGuard::new(TEST_ENV_VARS);
+    // Clear all test env vars
+    for key in TEST_ENV_VARS {
+        guard.remove(key);
     }
-
-    /// Set an environment variable during the test
-    fn set_var(&self, key: &'static str, value: &str) {
-        unsafe { env::set_var(key, value) };
-    }
-}
-
-impl Drop for EnvVarGuard {
-    fn drop(&mut self) {
-        // Restore exactly what we observed before the test ran.
-        for (key, value) in self.snapshot.iter() {
-            match value {
-                Some(val) => unsafe { env::set_var(*key, val) },
-                None => unsafe { env::remove_var(*key) },
-            };
-        }
-    }
+    guard
 }
 
 #[derive(Clone)]
@@ -113,17 +75,10 @@ fn test_workspace_root() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).parent().unwrap().parent().unwrap().to_path_buf()
 }
 
-/// Clean environment variables that might affect test isolation
-fn clean_env_vars() {
-    for &k in TEST_ENV_VARS {
-        unsafe { env::remove_var(k) };
-    }
-}
-
 #[tokio::test]
 async fn test_cors_headers_present_in_response() {
     // Use environment guard to serialize access and ensure clean state
-    let _env_guard = EnvVarGuard::new().await;
+    let _env_guard = clean_test_env();
 
     let workspace_root = test_workspace_root();
     let repo = Arc::new(NoopRepo);
@@ -145,7 +100,7 @@ async fn test_cors_headers_present_in_response() {
 #[tokio::test]
 async fn test_cors_preflight_request_handling() {
     // Use environment guard to serialize access and ensure clean state
-    let _env_guard = EnvVarGuard::new().await;
+    let _env_guard = clean_test_env();
 
     let workspace_root = test_workspace_root();
     let repo = Arc::new(NoopRepo);
@@ -171,7 +126,7 @@ async fn test_cors_preflight_request_handling() {
 #[tokio::test]
 async fn test_cors_rejects_unauthorized_origin() {
     // Use environment guard to serialize access and ensure clean state
-    let _env_guard = EnvVarGuard::new().await;
+    let _env_guard = clean_test_env();
 
     let workspace_root = test_workspace_root();
     let repo = Arc::new(NoopRepo);
@@ -194,7 +149,7 @@ async fn test_cors_rejects_unauthorized_origin() {
 #[tokio::test]
 async fn test_security_headers_present_in_response() {
     // Use environment guard to serialize access and ensure clean state
-    let _env_guard = EnvVarGuard::new().await;
+    let _env_guard = clean_test_env();
 
     let workspace_root = test_workspace_root();
     let repo = Arc::new(NoopRepo);
@@ -223,7 +178,7 @@ async fn test_security_headers_present_in_response() {
 #[tokio::test]
 async fn test_csp_header_contains_directives() {
     // Use environment guard to serialize access and ensure clean state
-    let _env_guard = EnvVarGuard::new().await;
+    let _env_guard = clean_test_env();
 
     let workspace_root = test_workspace_root();
     let repo = Arc::new(NoopRepo);
@@ -246,7 +201,7 @@ async fn test_csp_header_contains_directives() {
 #[tokio::test]
 async fn test_permissions_policy_restricts_features() {
     // Use environment guard to serialize access and ensure clean state
-    let _env_guard = EnvVarGuard::new().await;
+    let _env_guard = clean_test_env();
 
     let workspace_root = test_workspace_root();
     let repo = Arc::new(NoopRepo);
@@ -273,7 +228,7 @@ async fn test_permissions_policy_restricts_features() {
 #[tokio::test]
 async fn test_cross_origin_headers_present() {
     // Use environment guard to serialize access and ensure clean state
-    let _env_guard = EnvVarGuard::new().await;
+    let _env_guard = clean_test_env();
 
     let workspace_root = test_workspace_root();
     let repo = Arc::new(NoopRepo);
@@ -295,10 +250,10 @@ async fn test_cross_origin_headers_present() {
 #[tokio::test]
 async fn test_hsts_header_in_production() {
     // Use environment guard to serialize access and ensure clean state
-    let env_guard = EnvVarGuard::new().await;
+    let env_guard = clean_test_env();
 
     // Test with production environment
-    env_guard.set_var("ENV", "production");
+    env_guard.set("ENV", "production");
 
     let workspace_root = test_workspace_root();
     let repo = Arc::new(NoopRepo);
@@ -318,16 +273,16 @@ async fn test_hsts_header_in_production() {
         assert!(hsts.contains("includeSubDomains"));
     }
 
-    // Environment variables are automatically restored when env_guard goes out of scope
+    // Environment variables are automatically restored when guard goes out of scope
 }
 
 #[tokio::test]
 async fn test_no_hsts_header_in_development() {
     // Use environment guard to serialize access and ensure clean state
-    let env_guard = EnvVarGuard::new().await;
+    let env_guard = clean_test_env();
 
     // Test with development environment
-    env_guard.set_var("ENV", "development");
+    env_guard.set("ENV", "development");
 
     let workspace_root = test_workspace_root();
     let repo = Arc::new(NoopRepo);
@@ -341,16 +296,16 @@ async fn test_no_hsts_header_in_development() {
     // Should NOT have HSTS header in development
     assert!(!response.headers().contains_key("strict-transport-security"));
 
-    // Environment variables are automatically restored when env_guard goes out of scope
+    // Environment variables are automatically restored when guard goes out of scope
 }
 
 #[tokio::test]
 async fn test_cors_config_custom_origins() {
     // Use environment guard to serialize access and ensure clean state
-    let env_guard = EnvVarGuard::new().await;
+    let env_guard = clean_test_env();
 
     // Test custom CORS configuration
-    env_guard.set_var("CORS_ALLOWED_ORIGINS", "https://example.com,https://api.example.com");
+    env_guard.set("CORS_ALLOWED_ORIGINS", "https://example.com,https://api.example.com");
 
     let workspace_root = test_workspace_root();
     let repo = Arc::new(NoopRepo);
@@ -372,16 +327,16 @@ async fn test_cors_config_custom_origins() {
         "https://example.com"
     );
 
-    // Environment variables are automatically restored when env_guard goes out of scope
+    // Environment variables are automatically restored when guard goes out of scope
 }
 
 #[tokio::test]
 async fn test_security_headers_can_be_disabled() {
     // Use environment guard to serialize access and ensure clean state
-    let env_guard = EnvVarGuard::new().await;
+    let env_guard = clean_test_env();
 
     // Test with security headers disabled
-    env_guard.set_var("SECURITY_HEADERS_ENABLED", "false");
+    env_guard.set("SECURITY_HEADERS_ENABLED", "false");
 
     let workspace_root = test_workspace_root();
     let repo = Arc::new(NoopRepo);
@@ -397,16 +352,16 @@ async fn test_security_headers_can_be_disabled() {
     assert!(!response.headers().contains_key("x-content-type-options"));
     assert!(!response.headers().contains_key("content-security-policy"));
 
-    // Environment variables are automatically restored when env_guard goes out of scope
+    // Environment variables are automatically restored when guard goes out of scope
 }
 
 #[tokio::test]
 async fn test_cors_can_be_disabled() {
     // Use environment guard to serialize access and ensure clean state
-    let env_guard = EnvVarGuard::new().await;
+    let env_guard = clean_test_env();
 
     // Test with CORS disabled
-    env_guard.set_var("CORS_ENABLED", "false");
+    env_guard.set("CORS_ENABLED", "false");
 
     let workspace_root = test_workspace_root();
     let repo = Arc::new(NoopRepo);
@@ -424,13 +379,13 @@ async fn test_cors_can_be_disabled() {
     // Should NOT have CORS headers when disabled
     assert!(!response.headers().contains_key("access-control-allow-origin"));
 
-    // Environment variables are automatically restored when env_guard goes out of scope
+    // Environment variables are automatically restored when guard goes out of scope
 }
 
 #[tokio::test]
 async fn test_request_id_header_preserved_with_security_middleware() {
     // Use environment guard to serialize access and ensure clean state
-    let _env_guard = EnvVarGuard::new().await;
+    let _env_guard = clean_test_env();
 
     let workspace_root = test_workspace_root();
     let repo = Arc::new(NoopRepo);

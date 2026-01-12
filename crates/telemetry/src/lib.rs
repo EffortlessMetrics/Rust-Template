@@ -129,6 +129,7 @@ pub fn init_test() {
 
 #[cfg(test)]
 mod tests {
+    use testing::process::EnvVarGuard;
     use tracing_subscriber::EnvFilter;
 
     /// Tests that EnvFilter correctly parses valid RUST_LOG values.
@@ -291,67 +292,37 @@ mod tests {
 
     /// Tests that environment variable parsing follows expected behavior.
     ///
-    /// Note: These tests use `unsafe` blocks because modifying environment
-    /// variables is not thread-safe in Rust 2024 edition. We're careful to
-    /// save and restore the original value.
+    /// Note: These tests use `EnvVarGuard` from the `testing` crate to safely
+    /// modify environment variables with proper serialization and automatic restore.
     #[test]
     fn rust_log_env_parsing_uses_default_when_unset() {
         // EnvFilter::try_from_default_env() will fail if RUST_LOG is unset,
         // which is the expected behavior that triggers our fallback to "info"
         // We simulate this by using try_from_default_env's error case
 
-        // Save current value
-        let original = std::env::var("RUST_LOG").ok();
-
-        // SAFETY: This test runs in isolation and we restore the original value.
-        // Environment variable modification is inherently not thread-safe, but
-        // in a single-threaded test context this is acceptable.
-        unsafe {
-            std::env::remove_var("RUST_LOG");
-        }
+        let guard = EnvVarGuard::new(&["RUST_LOG"]);
+        guard.remove("RUST_LOG");
 
         // This should return an error when RUST_LOG is not set
         let result = EnvFilter::try_from_default_env();
 
-        // Restore original value if it existed
-        // SAFETY: Restoring the original environment state.
-        if let Some(val) = original {
-            unsafe {
-                std::env::set_var("RUST_LOG", val);
-            }
-        }
-
         // When RUST_LOG is not set, try_from_default_env returns an error
         // and our code falls back to "info"
         assert!(result.is_err(), "should fail when RUST_LOG is not set, triggering fallback");
+
+        // Automatic restore on drop
     }
 
     #[test]
     fn rust_log_env_parsing_succeeds_when_set() {
-        // Save current value
-        let original = std::env::var("RUST_LOG").ok();
-
-        // SAFETY: This test runs in isolation and we restore the original value.
-        // Set a test value
-        unsafe {
-            std::env::set_var("RUST_LOG", "debug");
-        }
+        let guard = EnvVarGuard::new(&["RUST_LOG"]);
+        guard.set("RUST_LOG", "debug");
 
         // This should succeed when RUST_LOG is set
         let result = EnvFilter::try_from_default_env();
 
-        // SAFETY: Restoring the original environment state.
-        // Restore original value or remove if it wasn't set
-        if let Some(val) = original {
-            unsafe {
-                std::env::set_var("RUST_LOG", val);
-            }
-        } else {
-            unsafe {
-                std::env::remove_var("RUST_LOG");
-            }
-        }
-
         assert!(result.is_ok(), "should succeed when RUST_LOG is set");
+
+        // Automatic restore on drop
     }
 }

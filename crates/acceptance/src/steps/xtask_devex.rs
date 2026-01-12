@@ -30,14 +30,9 @@ async fn given_valid_workspace(_world: &mut World) {
 }
 
 #[given("I am in a Nix devshell")]
-async fn given_in_nix_devshell(_world: &mut World) {
-    // Simulate a devshell environment when not already inside one
-    if std::env::var("IN_NIX_SHELL").is_err() {
-        // SAFETY: Adjusting process env var for test isolation
-        unsafe {
-            std::env::set_var("IN_NIX_SHELL", "1");
-        }
-    }
+async fn given_in_nix_devshell(world: &mut World) {
+    // Set env var on child process context, not global process env
+    world.xtask_context_mut().env.insert("IN_NIX_SHELL".to_string(), "1".to_string());
 }
 
 #[given("the governance specifications are loaded")]
@@ -344,6 +339,14 @@ async fn given_add_selective_feature(world: &mut World) {
 
 #[when(r#"I run "cargo xtask test-changed" in plan-only mode"#)]
 async fn when_run_test_changed_plan_only(world: &mut World) {
+    // Get the worktree path to set XTASK_REPO_ROOT so test-changed analyzes
+    // changes in the worktree rather than the main repository
+    let repo_root = workspace_root(world);
+    let repo_root_str = repo_root.to_string_lossy().to_string();
+
+    // Store repo root in context env so execute_command picks it up
+    world.xtask_context_mut().env.insert("XTASK_REPO_ROOT".to_string(), repo_root_str);
+
     execute_command(
         world,
         "cargo xtask test-changed --plan-only",
@@ -3195,12 +3198,9 @@ async fn then_exit_code_reflects_command_result(world: &mut World) {
 }
 
 #[given("automation mode is enabled")]
-async fn given_automation_mode(_world: &mut World) {
-    // Set CI environment variable to simulate automation mode
-    // SAFETY: This is a test context where we control the environment
-    unsafe {
-        std::env::set_var("CI", "1");
-    }
+async fn given_automation_mode(world: &mut World) {
+    // Set CI environment variable on child process context, not global process env
+    world.xtask_context_mut().env.insert("CI".to_string(), "1".to_string());
 }
 
 #[when("commands succeed in non-interactive mode")]

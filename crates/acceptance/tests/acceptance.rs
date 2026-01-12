@@ -2,6 +2,7 @@ use acceptance::{AcCoverageWriter, World};
 use cucumber::{World as _, WriterExt, writer};
 use gherkin::tagexpr::TagOperation;
 use std::fs::File;
+use std::sync::Arc;
 
 // Platform-specific null device
 #[cfg(unix)]
@@ -66,48 +67,9 @@ async fn main() {
     let coverage_writer = AcCoverageWriter::<World>::new(&coverage_path)
         .expect("Failed to create AC coverage writer");
 
-    let raw_tag_expr = std::env::var("CUCUMBER_TAG_EXPRESSION").ok();
-    let explicit_expr_set = raw_tag_expr.is_some();
-    let in_ci = std::env::var("CI").is_ok();
-    let normalized_expr = raw_tag_expr.as_deref().and_then(normalize_tag_expression);
-    let wip_requested = raw_tag_expr
-        .as_deref()
-        .map(|expr| expr.contains("wip") || expr.contains("WIP"))
-        .unwrap_or(false);
-
-    if std::env::var("CUCUMBER_FILTER_TAGS").is_err() {
-        let mut parts = Vec::new();
-
-        if let Some(expr) = normalized_expr.as_deref() {
-            parts.push(format!("({expr})"));
-        } else if !explicit_expr_set && !in_ci {
-            parts.push("not @ci-only".to_string());
-        }
-
-        if !wip_requested {
-            parts.push("not @wip".to_string());
-        }
-
-        if cfg!(windows) {
-            parts.push("not @unix_only".to_string());
-        }
-
-        if cfg!(unix) {
-            parts.push("not @windows_only".to_string());
-        }
-
-        if !parts.is_empty() {
-            // SAFETY: Adjusting process env vars for test filtering only.
-            unsafe {
-                std::env::set_var("CUCUMBER_FILTER_TAGS", parts.join(" and "));
-            }
-        }
-    }
-
-    // SAFETY: Clear alias env var to avoid leaking into child commands.
-    unsafe {
-        std::env::remove_var("CUCUMBER_TAG_EXPRESSION");
-    }
+    // Build tag filter configuration once at startup.
+    // All filtering is done in the closure - no env var mutation needed.
+    let tag_filter = Arc::new(build_tag_filter());
 
     // Use filter_run_and_exit with coverage and JUnit writers
     // The JUnit file may be empty due to the cucumber-rs exit() issue documented above.
@@ -130,33 +92,93 @@ async fn main() {
         .filter_run_and_exit(
             features_path.to_str().unwrap_or("specs/features"),
             move |feature, rule, scenario| {
-                let tags: Vec<String> = feature
+                let tags: Vec<&str> = feature
                     .tags
                     .iter()
                     .chain(rule.iter().flat_map(|r| r.tags.iter()))
                     .chain(scenario.tags.iter())
-                    .map(|t| t.trim_start_matches('@').to_string())
+                    .map(|t| t.trim_start_matches('@'))
                     .collect();
 
-                let is_windows_only = tags.iter().any(|t| t == "windows_only");
-                let is_unix_only = tags.iter().any(|t| t == "unix_only");
-
-                if cfg!(windows) && is_unix_only {
-                    return false;
-                }
-
-                if cfg!(unix) && is_windows_only {
-                    return false;
-                }
-
-                if !wip_requested && tags.iter().any(|t| t.eq_ignore_ascii_case("wip")) {
-                    return false;
-                }
-
-                true
+                tag_filter.should_run(&tags)
             },
         )
         .await;
+}
+
+/// Tag filter configuration built once at startup.
+struct TagFilter {
+    /// Parsed user expression (from CUCUMBER_TAG_EXPRESSION), if valid.
+    user_expr: Option<TagOperation>,
+    /// Whether we're running in CI (affects default @ci-only filtering).
+    in_ci: bool,
+    /// Whether @wip scenarios were explicitly requested.
+    wip_requested: bool,
+}
+
+impl TagFilter {
+    /// Evaluate whether a scenario with the given tags should run.
+    fn should_run(&self, tags: &[&str]) -> bool {
+        // Platform-specific filtering (always applied)
+        let is_windows_only = tags.contains(&"windows_only");
+        let is_unix_only = tags.contains(&"unix_only");
+
+        if cfg!(windows) && is_unix_only {
+            return false;
+        }
+        if cfg!(unix) && is_windows_only {
+            return false;
+        }
+
+        // WIP filtering (unless explicitly requested)
+        if !self.wip_requested && tags.iter().any(|t| t.eq_ignore_ascii_case("wip")) {
+            return false;
+        }
+
+        // User expression filtering (if provided and valid)
+        if let Some(expr) = &self.user_expr {
+            return eval_tag_expr(expr, tags);
+        }
+
+        // Default: exclude @ci-only when not in CI
+        if !self.in_ci && tags.contains(&"ci-only") {
+            return false;
+        }
+
+        true
+    }
+}
+
+/// Build tag filter from environment variables.
+fn build_tag_filter() -> TagFilter {
+    let raw_tag_expr = std::env::var("CUCUMBER_TAG_EXPRESSION").ok();
+    let in_ci = std::env::var("CI").is_ok();
+
+    let wip_requested = raw_tag_expr
+        .as_deref()
+        .map(|expr| expr.contains("wip") || expr.contains("WIP"))
+        .unwrap_or(false);
+
+    let user_expr = raw_tag_expr.as_deref().and_then(|expr| {
+        let trimmed = expr.trim();
+        if trimmed.is_empty() {
+            return None;
+        }
+        // Try parsing as a tag expression
+        if let Ok(parsed) = trimmed.parse::<TagOperation>() {
+            return Some(parsed);
+        }
+        // Fallback: parse as comma/pipe-separated list and convert to OR expression
+        let tags = parse_simple_tag_list(trimmed);
+        if tags.is_empty() {
+            return None;
+        }
+        let or_expr =
+            tags.into_iter().map(|tag| format!("@{tag}")).collect::<Vec<_>>().join(" or ");
+        or_expr.parse::<TagOperation>().ok()
+    });
+
+    TagFilter { user_expr, in_ci, wip_requested }
 }
 
 fn parse_simple_tag_list(expr: &str) -> Vec<String> {
@@ -169,21 +191,16 @@ fn parse_simple_tag_list(expr: &str) -> Vec<String> {
         .collect()
 }
 
-fn normalize_tag_expression(expr: &str) -> Option<String> {
-    let trimmed = expr.trim();
-    if trimmed.is_empty() {
-        return None;
-    }
-
-    if trimmed.parse::<TagOperation>().is_ok() {
-        return Some(trimmed.to_string());
-    }
-
-    let tags = parse_simple_tag_list(trimmed);
-    if tags.is_empty() {
-        None
-    } else {
-        Some(tags.into_iter().map(|tag| format!("@{tag}")).collect::<Vec<_>>().join(" or "))
+/// Evaluate a tag expression against a set of tags.
+fn eval_tag_expr(expr: &TagOperation, tags: &[&str]) -> bool {
+    match expr {
+        TagOperation::Tag(tag) => {
+            let tag_name = tag.trim_start_matches('@');
+            tags.iter().any(|t| t.eq_ignore_ascii_case(tag_name))
+        }
+        TagOperation::Not(inner) => !eval_tag_expr(inner, tags),
+        TagOperation::And(left, right) => eval_tag_expr(left, tags) && eval_tag_expr(right, tags),
+        TagOperation::Or(left, right) => eval_tag_expr(left, tags) || eval_tag_expr(right, tags),
     }
 }
 
