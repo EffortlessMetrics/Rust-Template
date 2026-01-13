@@ -29,4 +29,5 @@
 //! } // MY_VAR automatically restored to original value
 //! ```
 
+pub mod fakes;
 pub mod process;
