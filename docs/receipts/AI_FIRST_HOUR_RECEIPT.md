@@ -43,6 +43,7 @@
 - [ ] `ac-status --summary` – AC coverage retrieved
 
 **Environment details:**
+
 ```
 Rust version: [rustc --version output]
 Nix version: [nix --version output]
@@ -61,6 +62,7 @@ Platform: [Linux/macOS/Windows]
 **Command:** `curl -s http://localhost:8080/platform/status | jq '.governance'`
 
 **Response (key fields):**
+
 ```json
 {
   "selftest_status": "[pass|fail]",
@@ -91,6 +93,7 @@ Platform: [Linux/macOS/Windows]
 **Command:** `curl -s http://localhost:8080/platform/graph | jq '.governance | {stories: .stories | length, requirements: .requirements | length, acs: .acceptance_criteria | length}'`
 
 **Governance counts:**
+
 ```json
 {
   "stories": [number],
@@ -185,13 +188,16 @@ List any friction points that should be fed back:
 
 ## Agent Observations
 
-### What worked well:
+### What worked well
+
 - [List things that worked smoothly]
 
-### What could be improved:
+### What could be improved
+
 - [List areas for improvement]
 
-### Comparison to expected workflow:
+### Comparison to expected workflow
+
 - [Did the agent follow docs/how-to/ai-first-hour.md?]
 - [Any deviations and why?]
 

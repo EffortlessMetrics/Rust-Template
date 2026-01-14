@@ -58,6 +58,7 @@ Implemented a structured question artifact system that allows flows to emit YAML
 - Link to questions/ directory for review
 
 **Output example:**
+
 ```
 Questions:
   Open:        1
@@ -77,6 +78,7 @@ Questions:
 - Questions section in governance status
 
 **JSON response includes:**
+
 ```json
 {
   "governance": {
@@ -135,6 +137,7 @@ Questions:
 ## File Inventory
 
 ### Created Files (7)
+
 1. `/specs/questions_schema.yaml` - Schema definition
 2. `/questions/README.md` - Developer documentation
 3. `/questions/Q-EXAMPLE-001.yaml` - Example artifact
@@ -143,6 +146,7 @@ Questions:
 6. `/AC-TPL-QUESTIONS-LOGGED-IMPLEMENTATION.md` - This document
 
 ### Modified Files (4)
+
 1. `../../crates/xtask/src/commands/mod.rs` - Added questions module
 2. `../../crates/xtask/src/commands/status.rs` - Added question statistics
 3. `../../crates/app-http/src/platform.rs` - Added /platform/status integration
@@ -152,18 +156,21 @@ Questions:
 ## Validation
 
 ### Compilation
+
 ```bash
 cargo build -p xtask   # ✅ SUCCESS
 cargo build -p app-http # ✅ SUCCESS
 ```
 
 ### Status Output
+
 ```bash
 cargo xtask status
 # ✅ Shows Questions section with counts
 ```
 
 ### Platform API
+
 ```bash
 curl http://localhost:8080/platform/status | jq '.governance.questions'
 # ✅ Returns question counts in JSON
@@ -279,11 +286,13 @@ While AC-TPL-QUESTIONS-LOGGED is complete, these enhancements would add value:
 To validate AC-TPL-QUESTIONS-LOGGED:
 
 1. **Manual smoke test:**
+
    ```bash
    cargo xtask status  # Verify Questions section appears
    ```
 
 2. **Platform API test:**
+
    ```bash
    cargo run -p app-http &
    sleep 2
@@ -291,11 +300,13 @@ To validate AC-TPL-QUESTIONS-LOGGED:
    ```
 
 3. **BDD test (when step definitions implemented):**
+
    ```bash
    cargo xtask bdd --tags @AC-TPL-QUESTIONS-LOGGED
    ```
 
 4. **Flow integration test:**
+
    ```bash
    # Trigger bundle flow with nonexistent task
    cargo xtask bundle test_nonexistent_task

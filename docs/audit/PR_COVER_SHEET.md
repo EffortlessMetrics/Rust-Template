@@ -152,33 +152,41 @@ Use this errata section:
 ## Anti-Patterns (Don't Do This)
 
 ### Vague scope
+
 ```markdown
 ### What changed
 - Updated some files and fixed some issues
 ```
+
 **Why bad:** Unbounded, reviewer can't focus
 
 ### Claims without receipts
+
 ```markdown
 ### Proof
 - Tests pass ✅
 - Security is good ✅
 ```
+
 **Why bad:** No evidence, no links
 
 ### Hidden wrongness
+
 ```markdown
 ### Errata
 - (none)
 ```
+
 **Why bad if something was wrong:** Silent drift, no factory improvement
 
 ### Fake precision
+
 ```markdown
 ### Unified budget
 - DevLT: 47 minutes
 - Compute: $3.27
 ```
+
 **Why bad:** False precision suggests certainty we don't have. Use bands.
 
 ---

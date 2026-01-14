@@ -36,6 +36,7 @@ The current `.llmignore` implementation is minimal and has semantic inconsistenc
 ## Current Implementation Analysis
 
 ### Code Location
+
 `../../crates/xtask/src/commands/bundle.rs`
 
 ### Current Semantics (lines 178-201)
@@ -132,7 +133,7 @@ fn load_ignore_patterns(workspace_root: &Path) -> Result<Vec<String>> {
 **Stats:**
 - Downloads: 81,820,905
 - Maintained by: BurntSushi (ripgrep author)
-- Documentation: https://docs.rs/ignore
+- Documentation: <https://docs.rs/ignore>
 - Used by: ripgrep, fd, numerous other tools
 
 **Features:**
@@ -160,7 +161,7 @@ fn load_ignore_patterns(workspace_root: &Path) -> Result<Vec<String>> {
 **Stats:**
 - Downloads: 116,248,645
 - Maintained by: BurntSushi
-- Documentation: https://docs.rs/globset
+- Documentation: <https://docs.rs/globset>
 
 **Features:**
 - Fast glob matching
@@ -201,6 +202,7 @@ Use the `ignore` crate's `gitignore::Gitignore` module for pattern matching.
 **Changes Required:**
 
 1. Add dependency to `crates/xtask/Cargo.toml`:
+
 ```toml
 ignore = "0.4"
 ```
@@ -356,8 +358,11 @@ Lines starting with `#` are ignored.
 ### Example 1: Ignore all test directories
 
 ```
+
 # .llm/.llmignore
+
 tests/
+
 ```
 
 Matches:
@@ -371,17 +376,23 @@ Does NOT match:
 ### Example 2: Ignore target and node_modules
 
 ```
+
 # .llm/.llmignore
+
 target/
 node_modules/
+
 ```
 
 ### Example 3: Ignore files with specific names
 
 ```
+
 # .llm/.llmignore
+
 Cargo.lock
 .DS_Store
+
 ```
 
 Matches:
@@ -548,19 +559,25 @@ The `.llm/.llmignore` file uses standard gitignore syntax to exclude files from 
 **Common patterns:**
 
 ```
+
 # Ignore all log files
+
 *.log
 
 # Ignore build artifacts
+
 target/
 dist/
 
 # Ignore test files
+
 test_*.rs
 *_test.go
 
 # But keep important files
+
 !error.log
+
 ```
 
 For full syntax reference, see [gitignore documentation](https://git-scm.com/docs/gitignore).
@@ -681,7 +698,7 @@ docs/drafts/
 
 ## References
 
-- `ignore` crate documentation: https://docs.rs/ignore
-- gitignore specification: https://git-scm.com/docs/gitignore
-- ripgrep (uses `ignore` crate): https://github.com/BurntSushi/ripgrep
+- `ignore` crate documentation: <https://docs.rs/ignore>
+- gitignore specification: <https://git-scm.com/docs/gitignore>
+- ripgrep (uses `ignore` crate): <https://github.com/BurntSushi/ripgrep>
 - Current implementation: `crates/xtask/src/commands/bundle.rs:158-201`

@@ -31,6 +31,7 @@ When CI is unavailable:
 In PR bodies:
 
 **If CI is active and meaningful:**
+
 ```markdown
 ### Evidence & Verification
 CI workflow `tier1-selftest.yml` ran successfully.
@@ -38,6 +39,7 @@ Gate receipts: [link or embedded]
 ```
 
 **If CI is disabled:**
+
 ```markdown
 ### Evidence & Verification
 CI disabled; local gate canonical.
@@ -48,6 +50,7 @@ cargo xtask selftest
 ```
 
 Gate receipts: `target/receipts/gate.json` (committed or linked)
+
 ```
 
 ### 4. Friction log captures CI posture changes

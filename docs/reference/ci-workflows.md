@@ -195,6 +195,7 @@ cargo xtask kernel-status
 ### Primary Validation Workflows
 
 #### `tier1-selftest.yml` - Main Merge Gate
+
 **Purpose:** Full governance validation in canonical Tier 1 environment
 **Triggers:** Push to `main`, pull requests to `main`
 **Runtime:** 10-20 minutes (warm cache)
@@ -217,6 +218,7 @@ cargo xtask kernel-status
 - Graph integrity is broken (e.g., orphaned requirements)
 
 **How to debug:**
+
 ```bash
 # Run locally in Nix shell
 nix develop
@@ -231,6 +233,7 @@ cargo xtask ac-status       # If AC mapping fails
 ---
 
 #### `ci-template-selftest.yml` - Multi-Platform Validation
+
 **Purpose:** Validate on Linux, macOS, and Windows (all tiers)
 **Triggers:** Push to `main` or `claude/**`, all pull requests
 **Runtime:** 10-30 minutes depending on platform
@@ -248,6 +251,7 @@ cargo xtask ac-status       # If AC mapping fails
 
 **Clean Git State Enforcement:**
 After selftest runs, the workflow verifies that generated artifacts (like `feature_status.md`) are committed. If the git tree is dirty, the workflow fails with:
+
 ```
 ❌ Git tree is dirty after running selftest.
 💡 Please run 'cargo xtask selftest' locally and commit the changes.
@@ -262,6 +266,7 @@ After selftest runs, the workflow verifies that generated artifacts (like `featu
 ### Code Quality Workflows
 
 #### `ci-lints.yml` - Code Quality (Rust + TypeScript Config)
+
 **Purpose:** Fast linting, formatting, and config governance checks
 **Triggers:** Pull requests (excluding docs changes)
 **Runtime:** 3-5 minutes (warm cache)
@@ -279,6 +284,7 @@ After selftest runs, the workflow verifies that generated artifacts (like `featu
    - All clippy warnings are errors
 
 **Path Filters:**
+
 ```yaml
 paths-ignore: ['**/*.md', 'docs/**']
 ```
@@ -290,6 +296,7 @@ paths-ignore: ['**/*.md', 'docs/**']
 - TypeScript config doesn't meet standards
 
 **How to fix:**
+
 ```bash
 # Format code
 cargo fmt
@@ -307,6 +314,7 @@ cargo test
 ---
 
 #### `ci-msrv.yml` - Minimum Supported Rust Version
+
 **Purpose:** Ensure compatibility with MSRV (1.89.0)
 **Triggers:** Pull requests
 **Runtime:** 10-15 minutes
@@ -327,6 +335,7 @@ cargo test
 ---
 
 #### `ci-coverage.yml` - Test Coverage
+
 **Purpose:** Measure test coverage and enforce floor (60%)
 **Triggers:** Pull requests (changes to code/tests/specs)
 **Runtime:** 15-25 minutes
@@ -335,6 +344,7 @@ cargo test
 **Coverage Floor:** 60% line coverage
 
 **What it does:**
+
 ```bash
 cargo llvm-cov --workspace --json --output-path cov.json
 # Then enforces PCT >= 60
@@ -355,6 +365,7 @@ cargo llvm-cov --workspace --json --output-path cov.json
 ### Governance and Spec Validation
 
 #### `ci-governance.yml` - Governance PR Checks
+
 **Purpose:** Validate spec changes and PR titles
 **Triggers:** Pull requests (changes to `specs/**`)
 **Runtime:** 5-10 minutes
@@ -366,6 +377,7 @@ cargo llvm-cov --workspace --json --output-path cov.json
 3. Posts hint if title doesn't follow convention
 
 **PR Title Convention:**
+
 ```
 AC-123: Implement platform status endpoint
 US-456: Add user authentication
@@ -381,6 +393,7 @@ FT-789: Feature toggle for beta features
 ---
 
 #### `ci-gherkin.yml` - BDD Scenario Validation
+
 **Purpose:** Lint Gherkin files and enforce AC tagging
 **Triggers:** Changes to `specs/features/**` or `spec_ledger.yaml`
 **Runtime:** 3-5 minutes
@@ -391,6 +404,7 @@ FT-789: Feature toggle for beta features
 2. Every Scenario has exactly one `@AC-####` tag
 
 **Example Valid Scenario:**
+
 ```gherkin
 @AC-TPL-001
 Scenario: Health endpoint returns 200 OK
@@ -400,6 +414,7 @@ Scenario: Health endpoint returns 200 OK
 ```
 
 **Example Invalid Scenario:**
+
 ```gherkin
 # ❌ No AC tag
 Scenario: Health endpoint returns 200 OK
@@ -420,6 +435,7 @@ Scenario: Health endpoint returns 200 OK
 - Scenario has zero or multiple `@AC-####` tags
 
 **How to fix:**
+
 ```bash
 # Lint locally
 npx gherkin-lint -c .gherkin-lintrc specs/features
@@ -430,6 +446,7 @@ npx gherkin-lint -c .gherkin-lintrc specs/features
 ---
 
 #### `ci-ac.yml` - Acceptance Criteria Status
+
 **Purpose:** Run BDD tests and generate AC status report
 **Triggers:** Changes to features, specs, or acceptance tests
 **Runtime:** 15-25 minutes
@@ -453,6 +470,7 @@ npx gherkin-lint -c .gherkin-lintrc specs/features
 - AC coverage policy fails (kernel AC has no tests)
 
 **How to fix:**
+
 ```bash
 # Run BDD tests locally
 cargo xtask bdd
@@ -467,6 +485,7 @@ cargo xtask ac-suggest-scenarios AC-PLT-XXX
 ---
 
 #### `ci-policy-verify.yml` - Policy-as-Code Enforcement
+
 **Purpose:** Validate Rego policies and test data
 **Triggers:** Changes to `policy/**`
 **Runtime:** 5-10 minutes
@@ -489,6 +508,7 @@ cargo xtask ac-suggest-scenarios AC-PLT-XXX
 - Policy logic is incorrect
 
 **How to fix:**
+
 ```bash
 # Test policies locally
 cargo xtask policy-test
@@ -502,6 +522,7 @@ conftest test -p policy/ <input-file>
 ### Security Workflows
 
 #### `ci-security.yml` - Security Scanning
+
 **Purpose:** Scan for vulnerabilities, secrets, and license issues
 **Triggers:** Pull requests (excluding docs), scheduled daily
 **Runtime:** 5-10 minutes
@@ -528,6 +549,7 @@ conftest test -p policy/ <input-file>
 - Cargo audit finds CVEs in dependencies
 
 **How to fix:**
+
 ```bash
 # Run audit locally
 cargo xtask audit
@@ -544,6 +566,7 @@ cargo update -p <dependency-name>
 ---
 
 #### `ci-supply-chain.yml` - SBOM and Provenance
+
 **Purpose:** Generate SBOM and sign release artifacts
 **Triggers:** Git tags matching `v*.*.*` (e.g., `v3.3.12`)
 **Runtime:** 15-20 minutes
@@ -565,6 +588,7 @@ cargo update -p <dependency-name>
 - `attestations: write` - GitHub Attestations API
 
 **How to use:**
+
 ```bash
 # Create release
 git tag v3.3.12
@@ -582,6 +606,7 @@ git push origin v3.3.12
 ### API and Contract Validation
 
 #### `ci-openapi.yml` - OpenAPI Schema Validation
+
 **Purpose:** Validate OpenAPI specs and detect breaking changes
 **Triggers:** Changes to API spec files
 **Runtime:** 10-15 minutes
@@ -601,6 +626,7 @@ git push origin v3.3.12
 - Breaking changes detected in stable API
 
 **How to fix:**
+
 ```bash
 # Validate locally
 npx @openapitools/openapi-generator-cli validate -i specs/openapi.yaml
@@ -612,6 +638,7 @@ npx oasdiff breaking specs/openapi-old.yaml specs/openapi-new.yaml
 ---
 
 #### `ci-proto.yml` - Protobuf Validation
+
 **Purpose:** Validate `.proto` files and check compatibility
 **Triggers:** Changes to `*.proto` files
 **Runtime:** 5-10 minutes
@@ -631,6 +658,7 @@ npx oasdiff breaking specs/openapi-old.yaml specs/openapi-new.yaml
 - Field numbering conflicts
 
 **How to fix:**
+
 ```bash
 # Lint locally
 buf lint
@@ -644,6 +672,7 @@ buf breaking --against main
 ### Specialized Checks
 
 #### `ci-db.yml` - Database Migration Tests
+
 **Purpose:** Test database migrations for correctness
 **Triggers:** Changes to migration files
 **Runtime:** 8-12 minutes
@@ -666,6 +695,7 @@ buf breaking --against main
 ---
 
 #### `ci-docs.yml` - Documentation Build
+
 **Purpose:** Build and validate documentation
 **Triggers:** Changes to `docs/**`
 **Runtime:** 3-5 minutes
@@ -702,6 +732,7 @@ Version strings in documentation are checked for consistency with `specs/spec_le
    - Use for version tags that are intentionally frozen (e.g., `v3.3.9-kernel`)
    - Use for historical references or snapshots
    - Example:
+
      ```markdown
      <!-- doclint:disable orphan-version -->
      The kernel baseline is frozen at v3.3.9-kernel.
@@ -722,6 +753,7 @@ Version strings in documentation are checked for consistency with `specs/spec_le
 All governed docs must have YAML front-matter that matches their entry in `specs/doc_index.yaml`.
 
 **Required front-matter fields:**
+
 ```yaml
 ---
 id: UNIQUE-DOC-ID
@@ -733,11 +765,13 @@ version: 3.3.12  # Must match spec_ledger template_version
 ```
 
 **Sync front-matter:**
+
 ```bash
 cargo xtask docs-frontmatter-sync
 ```
 
 **Validate:**
+
 ```bash
 cargo xtask docs-check
 ```
@@ -768,6 +802,7 @@ Locally, developers can iterate without being blocked by doc warnings, but must 
 ---
 
 #### `ci-nix.yml` - Nix Flake Validation
+
 **Purpose:** Validate Nix development environment
 **Triggers:** Changes to `flake.nix` or `flake.lock`
 **Runtime:** 3-5 minutes
@@ -784,6 +819,7 @@ Locally, developers can iterate without being blocked by doc warnings, but must 
 - Version conflicts
 
 **How to fix:**
+
 ```bash
 # Check flake locally
 nix flake check
@@ -795,6 +831,7 @@ nix flake update
 ---
 
 #### `ci-features.yml` - Feature Flag Matrix
+
 **Purpose:** Test all feature flag combinations
 **Triggers:** Pull requests
 **Runtime:** 15-20 minutes
@@ -817,6 +854,7 @@ nix flake update
 ---
 
 #### `ci-flags.yml` - Flag Policy Enforcement
+
 **Purpose:** Validate feature flag configurations
 **Triggers:** Changes to flags
 **Runtime:** 5-10 minutes
@@ -830,6 +868,7 @@ nix flake update
 ---
 
 #### `ci-flags-warn.yml` - Flag Best Practices (Informational)
+
 **Purpose:** Non-blocking warnings for flag usage
 **Triggers:** Changes to flags
 **Runtime:** 3-5 minutes
@@ -843,6 +882,7 @@ nix flake update
 ---
 
 #### `ci-events.yml` - Event Schema Validation
+
 **Purpose:** Validate event schemas and contracts
 **Triggers:** Changes to event definitions
 **Runtime:** 8-10 minutes
@@ -856,6 +896,7 @@ nix flake update
 ---
 
 #### `ci-privacy.yml` - Privacy Compliance
+
 **Purpose:** Validate privacy annotations and policies
 **Triggers:** Changes to privacy configs
 **Runtime:** 3-5 minutes
@@ -869,6 +910,7 @@ nix flake update
 ---
 
 #### `ci-scope-guard.yml` - Scope Isolation
+
 **Purpose:** Verify scope boundaries are maintained
 **Triggers:** Pull requests
 **Runtime:** 3-5 minutes
@@ -884,6 +926,7 @@ nix flake update
 ### Maintenance and Automation
 
 #### `maintenance-pin-actions.yml` - Action Version Management
+
 **Purpose:** Track updates to GitHub Actions
 **Triggers:** Scheduled monthly
 **Runtime:** 2-3 minutes
@@ -966,6 +1009,7 @@ Or configure via web UI:
 #### Scenario: `tier1-selftest.yml` fails at "Policy tests" step
 
 **Symptom:**
+
 ```
 [5/7] Running policy tests...
   ✗ Policy tests failed
@@ -973,6 +1017,7 @@ FAIL - AC-TPL-001 has no tests
 ```
 
 **Diagnosis:**
+
 ```bash
 # Run policy tests locally
 cargo xtask policy-test
@@ -982,6 +1027,7 @@ cargo xtask ac-coverage | grep "❌"
 ```
 
 **Fix:**
+
 ```bash
 # Add tests array to AC in spec_ledger.yaml
 # Example:
@@ -1001,6 +1047,7 @@ cargo xtask ac-suggest-scenarios AC-TPL-001
 #### Scenario: `ci-lints.yml` fails with clippy warnings
 
 **Symptom:**
+
 ```
 error: unused variable: `foo`
   --> src/main.rs:10:9
@@ -1013,6 +1060,7 @@ error: unused variable: `foo`
 Clippy treats all warnings as errors in CI.
 
 **Fix:**
+
 ```bash
 # Fix automatically where possible
 cargo clippy --fix --allow-dirty
@@ -1027,6 +1075,7 @@ let foo = 42;
 #### Scenario: `ci-security.yml` fails with cargo audit
 
 **Symptom:**
+
 ```
 error: 1 vulnerability found!
 crate:  openssl
@@ -1038,6 +1087,7 @@ warning: openssl vulnerable to CVE-2023-XXXXX
 Dependency has known vulnerability.
 
 **Fix:**
+
 ```bash
 # Update vulnerable dependency
 cargo update -p openssl
@@ -1050,6 +1100,7 @@ cargo update -p openssl
 #### Scenario: `ci-gherkin.yml` fails with "Scenario must have exactly one @AC-#### tag"
 
 **Symptom:**
+
 ```
 specs/features/health.feature: Scenario at line 15 must have exactly one @AC-#### tag (found 0: [])
 ```
@@ -1058,6 +1109,7 @@ specs/features/health.feature: Scenario at line 15 must have exactly one @AC-###
 BDD scenario is missing `@AC-####` tag.
 
 **Fix:**
+
 ```gherkin
 # Before (invalid)
 Scenario: Health endpoint returns 200 OK
@@ -1078,6 +1130,7 @@ Scenario: Health endpoint returns 200 OK
 #### Scenario: `ci-ac.yml` fails with "Git tree is dirty"
 
 **Symptom:**
+
 ```
 ❌ Git tree is dirty after running selftest. The following files were modified:
   docs/feature_status.md
@@ -1089,6 +1142,7 @@ Scenario: Health endpoint returns 200 OK
 Generated documentation is out of sync.
 
 **Fix:**
+
 ```bash
 # Run selftest locally
 cargo xtask selftest
@@ -1104,6 +1158,7 @@ git push
 #### Scenario: `ci-coverage.yml` fails with "coverage below floor"
 
 **Symptom:**
+
 ```
 coverage=58%
 test: 58 >= 60 failed
@@ -1113,6 +1168,7 @@ test: 58 >= 60 failed
 Line coverage dropped below 60% floor.
 
 **Fix:**
+
 ```bash
 # Generate coverage report locally
 cargo llvm-cov --html
@@ -1133,11 +1189,13 @@ Kernel (must_have_ac=true) acceptance criteria are enforced as a hard gate in CI
 **How it works:**
 
 - Locally:
+
   ```bash
   cargo xtask selftest
   ```
 
 - In CI (`tier1-selftest.yml` on main branch):
+
   ```bash
   XTASK_STRICT_AC_COVERAGE=1 cargo xtask selftest
   ```
@@ -1320,6 +1378,7 @@ The CI system uses multiple caching layers for optimal performance:
 **Effect:** 70-80% faster builds on cache hit
 
 **Configuration:**
+
 ```yaml
 - uses: Swatinem/rust-cache@v2
 ```
@@ -1338,6 +1397,7 @@ The CI system uses multiple caching layers for optimal performance:
 **Effect:** 50-60% faster incremental builds
 
 **Configuration:**
+
 ```yaml
 - name: Enable sccache
   run: |
@@ -1359,6 +1419,7 @@ The CI system uses multiple caching layers for optimal performance:
 **Effect:** 90% faster Nix setup (5s instead of 5min)
 
 **Configuration:**
+
 ```yaml
 - uses: cachix/install-nix-action@v27
 ```
@@ -1382,11 +1443,13 @@ Based on typical runs:
 #### For Workflow Authors
 
 1. **Use path filters aggressively:**
+
    ```yaml
    paths-ignore: ['**/*.md', 'docs/**', '*.txt']
    ```
 
 2. **Cancel stale runs:**
+
    ```yaml
    concurrency:
      group: ${{ github.workflow }}-${{ github.ref }}
@@ -1394,6 +1457,7 @@ Based on typical runs:
    ```
 
 3. **Split long jobs into parallel jobs:**
+
    ```yaml
    jobs:
      test-1:
@@ -1403,6 +1467,7 @@ Based on typical runs:
    ```
 
 4. **Use conditional steps:**
+
    ```yaml
    - name: Upload coverage
      if: github.event_name == 'push'

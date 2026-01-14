@@ -25,12 +25,12 @@ graph TD
     E --> F[RBAC Middleware]
     F --> G[Business Logic Handlers]
     G --> H[Advanced Monitoring]
-    
+
     I[Configuration] --> B
     I --> C
     I --> E
     I --> F
-    
+
     J[OAuth2 Providers] --> E
     K[Metrics Collection] --> H
 ```
@@ -38,6 +38,7 @@ graph TD
 ## Gap 1: Security Headers Middleware
 
 ### Success Criteria
+
 - CORS headers properly configured for specific origins
 - CSP headers prevent XSS attacks
 - HSTS headers enforce HTTPS in production
@@ -47,6 +48,7 @@ graph TD
 ### Implementation Tasks
 
 #### 1.1 Create Security Headers Configuration
+
 - File: `crates/app-http/src/security/headers.rs`
 - Define `SecurityHeadersConfig` struct with:
   - CORS origins (Vec<String>)
@@ -56,6 +58,7 @@ graph TD
   - HSTS preload (bool)
 
 #### 1.2 Implement Security Headers Middleware
+
 - File: `crates/app-http/src/middleware/security_headers.rs`
 - Implement `security_headers_middleware` function
 - Add CORS headers based on configuration
@@ -64,10 +67,12 @@ graph TD
 - Add other security headers (X-Frame-Options, X-Content-Type-Options)
 
 #### 1.3 Update Configuration Schema
+
 - Add security headers settings to `specs/config_schema.yaml`
 - Environment-specific defaults (dev: permissive, prod: strict)
 
 #### 1.4 Integration
+
 - Add middleware to router in `crates/app-http/src/lib.rs`
 - Ensure proper ordering (before auth middleware)
 
@@ -87,6 +92,7 @@ settings:
 ## Gap 2: Rate Limiting Middleware
 
 ### Success Criteria
+
 - IP-based rate limiting with configurable limits
 - Different limits per endpoint type (API vs UI)
 - Sliding window implementation
@@ -96,6 +102,7 @@ settings:
 ### Implementation Tasks
 
 #### 2.1 Create Rate Limiting Configuration
+
 - File: `crates/app-http/src/security/rate_limit.rs`
 - Define `RateLimitConfig` struct:
   - Requests per minute (u32)
@@ -104,6 +111,7 @@ settings:
   - Endpoint-specific overrides
 
 #### 2.2 Implement Rate Limiting Middleware
+
 - File: `crates/app-http/src/middleware/rate_limit.rs`
 - Implement sliding window algorithm
 - IP address extraction from request
@@ -111,11 +119,13 @@ settings:
 - Fallback to in-memory when Redis unavailable
 
 #### 2.3 Add Dependencies
+
 - Add `governor` crate for rate limiting
 - Add `redis` crate for distributed storage
 - Update `crates/app-http/Cargo.toml`
 
 #### 2.4 Configuration Integration
+
 - Add rate limiting settings to config schema
 - Environment-specific defaults
 
@@ -132,6 +142,7 @@ settings:
 ## Gap 3: Advanced Monitoring
 
 ### Success Criteria
+
 - Business metrics beyond HTTP (user actions, feature usage)
 - SLA tracking with alerts
 - Custom metric registration API
@@ -141,24 +152,28 @@ settings:
 ### Implementation Tasks
 
 #### 3.1 Extend Metrics System
+
 - File: `crates/app-http/src/metrics/business.rs`
 - Add business metric types (counters, gauges, histograms)
 - Implement SLA tracking metrics
 - Create metric registration API
 
 #### 3.2 Business Metrics Collection
+
 - Track user actions (login, create, update, delete)
 - Track feature usage patterns
 - Track error rates by business context
 - Track performance by operation type
 
 #### 3.3 SLA Monitoring
+
 - Define SLA thresholds (response time, error rate)
 - Implement SLA breach detection
 - Alert integration points
 - SLA reporting endpoints
 
 #### 3.4 Dashboard Integration
+
 - Extend `/platform/status` with business metrics
 - Add `/platform/metrics/business` endpoint
 - Add `/platform/sla` endpoint
@@ -180,6 +195,7 @@ metrics::counter!("sla_breaches_total", "sla_type" => "response_time").increment
 ## Gap 4: OAuth2 Integration
 
 ### Success Criteria
+
 - Google OAuth2 provider integration
 - GitHub OAuth2 provider integration
 - JWT token generation with user claims
@@ -189,6 +205,7 @@ metrics::counter!("sla_breaches_total", "sla_type" => "response_time").increment
 ### Implementation Tasks
 
 #### 4.1 OAuth2 Configuration
+
 - File: `crates/app-http/src/security/oauth2.rs`
 - Define OAuth2 provider configurations
 - Client ID and secret management
@@ -196,23 +213,27 @@ metrics::counter!("sla_breaches_total", "sla_type" => "response_time").increment
 - Scope definitions
 
 #### 4.2 OAuth2 Flow Implementation
+
 - Authorization endpoint (`/auth/oauth2/{provider}`)
 - Callback endpoint (`/auth/oauth2/{provider}/callback`)
 - Token exchange and JWT generation
 - User profile retrieval
 
 #### 4.3 User Management
+
 - Extend user model with OAuth2 identities
 - User profile storage in database
 - Session management with refresh tokens
 - Token revocation and logout
 
 #### 4.4 Provider Implementations
+
 - Google OAuth2 integration
 - GitHub OAuth2 integration
 - Extensible provider system for future additions
 
 #### 4.5 Dependencies
+
 - Add `oauth2` crate
 - Add `reqwest` for HTTP calls
 - Add user management database migrations
@@ -232,6 +253,7 @@ settings:
 ## Gap 5: RBAC System
 
 ### Success Criteria
+
 - Role-based access control (admin, user, readonly)
 - Permission system for fine-grained control
 - Role assignment and management
@@ -241,12 +263,14 @@ settings:
 ### Implementation Tasks
 
 #### 5.1 RBAC Configuration
+
 - File: `crates/app-http/src/security/rbac.rs`
 - Define role and permission structures
 - Create role hierarchy system
 - Permission checking functions
 
 #### 5.2 Database Schema
+
 - Add roles table
 - Add permissions table
 - Add user_roles junction table
@@ -254,12 +278,14 @@ settings:
 - Database migrations for new tables
 
 #### 5.3 RBAC Middleware
+
 - File: `crates/app-http/src/middleware/rbac.rs`
 - Extract user roles from JWT claims
 - Check permissions for endpoints
 - Role-based access control
 
 #### 5.4 Role Management
+
 - Admin endpoints for role management
 - User role assignment endpoints
 - Permission management endpoints
@@ -297,6 +323,7 @@ pub enum Permission {
 ## Integration Strategy
 
 ### Middleware Ordering
+
 1. Security Headers (first - applies to all requests)
 2. Rate Limiting (second - protects all downstream)
 3. Request ID (third - enables correlation)
@@ -304,12 +331,14 @@ pub enum Permission {
 5. RBAC (fifth - authorization)
 
 ### Configuration Management
+
 - Extend existing `specs/config_schema.yaml`
 - Environment-specific defaults
 - Validation rules for new configurations
 - Backward compatibility with existing configs
 
 ### Database Changes
+
 - New migrations for OAuth2 and RBAC tables
 - Indexes for performance
 - Foreign key relationships
@@ -318,6 +347,7 @@ pub enum Permission {
 ## Testing Strategy
 
 ### Unit Tests
+
 - Each middleware function tested in isolation
 - Configuration validation tests
 - Rate limiting algorithm tests
@@ -325,6 +355,7 @@ pub enum Permission {
 - RBAC permission tests
 
 ### Integration Tests
+
 - End-to-end authentication flows
 - Rate limiting integration tests
 - Security headers validation tests
@@ -332,6 +363,7 @@ pub enum Permission {
 - Role-based access control tests
 
 ### Security Tests
+
 - OWASP security header validation
 - Rate limiting bypass attempts
 - OAuth2 attack vectors
@@ -341,24 +373,28 @@ pub enum Permission {
 ## Migration Path
 
 ### Phase 1: Foundation
+
 1. Implement security headers middleware
 2. Implement rate limiting middleware
 3. Update configuration schema
 4. Add comprehensive tests
 
 ### Phase 2: Authentication Enhancement
+
 1. Implement OAuth2 integration
 2. Add user management
 3. Update auth middleware
 4. Migration scripts for existing users
 
 ### Phase 3: Authorization
+
 1. Implement RBAC system
 2. Add role management endpoints
 3. Update all endpoints with RBAC
 4. Default role assignment for existing users
 
 ### Phase 4: Monitoring
+
 1. Implement business metrics
 2. Add SLA tracking
 3. Create monitoring dashboards
@@ -367,6 +403,7 @@ pub enum Permission {
 ## Success Metrics
 
 ### Technical Metrics
+
 - All middleware tests passing
 - Security headers passing OWASP tests
 - Rate limiting functioning under load
@@ -374,6 +411,7 @@ pub enum Permission {
 - RBAC permissions correctly enforced
 
 ### Business Metrics
+
 - Zero security vulnerabilities in new code
 - 99.9% uptime during deployment
 - <100ms response time for 95% of requests
@@ -381,6 +419,7 @@ pub enum Permission {
 - Successful user migrations
 
 ### Operational Metrics
+
 - Configuration validation passing
 - Database migrations successful
 - Monitoring dashboards functional
@@ -390,12 +429,14 @@ pub enum Permission {
 ## Dependencies and Risks
 
 ### New Dependencies
+
 - `governor` for rate limiting
 - `redis` for distributed rate limiting
 - `oauth2` for OAuth2 flows
 - Additional database migrations
 
 ### Implementation Risks
+
 - Breaking changes to existing auth system
 - Performance impact of additional middleware
 - Configuration complexity
@@ -403,6 +444,7 @@ pub enum Permission {
 - OAuth2 provider API changes
 
 ### Mitigation Strategies
+
 - Feature flags for gradual rollout
 - Comprehensive testing before deployment
 - Backward compatibility maintenance

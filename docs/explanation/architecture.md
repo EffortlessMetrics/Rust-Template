@@ -85,6 +85,7 @@ crates/
 **Anti-pattern:** Business logic in handlers. Keep handlers thin: translate and delegate.
 
 **Example:**
+
 ```rust
 async fn get_task(Path(task_id): Path<String>) -> Result<...> {
     // Validate HTTP inputs
@@ -113,6 +114,7 @@ async fn get_task(Path(task_id): Path<String>) -> Result<...> {
 **Anti-pattern:** Depending on app-http, databases, or any infrastructure.
 
 **Example:**
+
 ```rust
 pub fn validate_task_id(id: &str) -> bool {
     id.starts_with("TASK-")
@@ -203,6 +205,7 @@ The template follows hexagonal (ports and adapters) architecture:
 **Rule:** Dependencies point inward to the domain.
 
 **Correct:**
+
 ```rust
 // app-http/src/main.rs
 use core::tasks;
@@ -214,6 +217,7 @@ async fn get_task(...) {
 ```
 
 **Wrong:**
+
 ```rust
 // core/src/tasks.rs
 use app_http::handlers; // Domain depends on adapter - avoid.
@@ -256,6 +260,7 @@ The template encodes three governance layers:
 **File:** `specs/spec_ledger.yaml`
 
 **Structure:**
+
 ```yaml
 stories:
   - id: US-TPL-001
@@ -314,6 +319,7 @@ The template bakes in observability from day zero:
 **Setup:** `telemetry::init()` in `app-http/main.rs`.
 
 **Filtering:** RUST_LOG environment variable.
+
 ```bash
 RUST_LOG=info cargo run              # Default
 RUST_LOG=debug cargo run             # Verbose
@@ -323,6 +329,7 @@ RUST_LOG=app_http=trace cargo run    # Specific crate
 ### Structured Logging
 
 **Pattern:** Use `#[instrument]` on handlers.
+
 ```rust
 #[instrument(skip(path))]
 async fn get_task(Path(task_id): Path<String>) -> Result<...> {
@@ -332,6 +339,7 @@ async fn get_task(Path(task_id): Path<String>) -> Result<...> {
 ```
 
 **Output:**
+
 ```
 INFO app_http::get_task{task_id="TASK-001"}: Fetching task
 ```

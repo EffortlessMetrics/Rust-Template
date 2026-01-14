@@ -1,5 +1,6 @@
 <!-- doclint:disable orphan-version -->
 # Platform Health Report: Rust-as-Spec Template Cell
+
 **Generated**: 2025-12-02T09:22:00Z
 **Platform Version**: v3.3.6
 **Agent**: Omega (Comprehensive Health Analyst)
@@ -10,11 +11,13 @@
 ## Executive Summary
 
 ### Overall Health Score: **85/100** (GOOD)
+
 **Trend**: ⬆️ **Stable** (maintaining good health)
 
 The Rust-as-Spec platform is in good health with strong governance foundations, comprehensive BDD coverage, and effective tooling. The platform demonstrates mature CI/CD practices with 29 workflow files and robust acceptance criteria tracking. **SELFTEST COMPLETED**: 10/11 test suites passing, with 4 kernel AC failures that are well-understood and have clear remediation paths.
 
 ### Key Highlights
+
 - ✅ **92/112 ACs passing** (82% pass rate) - **87 ACs with test results**
 - ✅ **203 BDD scenarios** across 22 feature files (all passing)
 - ✅ **5 governed Skills** and **1 Agent** defined (all passing governance checks)
@@ -29,6 +32,7 @@ The Rust-as-Spec platform is in good health with strong governance foundations, 
 ## 1. Governance State
 
 ### Acceptance Criteria Status
+
 | Status | Count | Percentage | Change from Baseline |
 |--------|-------|------------|---------------------|
 | **PASSING** | 92 | 82.1% | +5 ACs (improved) |
@@ -47,6 +51,7 @@ The Rust-as-Spec platform is in good health with strong governance foundations, 
 #### Kernel AC Failures (BLOCKING)
 
 ##### 1. AC-PLT-021: service-init command updates service branding
+
 - **Requirement**: REQ-PLT-ONBOARDING
 - **Story**: US-TPL-PLT-001
 - **Status**: FAILING (Kernel)
@@ -55,6 +60,7 @@ The Rust-as-Spec platform is in good health with strong governance foundations, 
 - **Priority**: High
 
 ##### 2. AC-TPL-CLI-JSON-OUTPUT: Core commands support --format json
+
 - **Requirement**: REQ-PLT-DEVEX-CONTRACT
 - **Story**: US-TPL-PLT-001
 - **Status**: FAILING (Kernel)
@@ -63,6 +69,7 @@ The Rust-as-Spec platform is in good health with strong governance foundations, 
 - **Priority**: High
 
 ##### 3. AC-TPL-IDP-SNAPSHOT: idp-snapshot command generates valid JSON
+
 - **Requirement**: REQ-TPL-IDP-SNAPSHOT
 - **Story**: US-TPL-PHILOSOPHY-001
 - **Status**: FAILING (Kernel)
@@ -71,6 +78,7 @@ The Rust-as-Spec platform is in good health with strong governance foundations, 
 - **Priority**: High
 
 ##### 4. AC-TPL-XTASK-NONINTERACTIVE: Commands work in non-interactive mode
+
 - **Requirement**: REQ-TPL-AUTOMATION-BEHAVIOUR
 - **Story**: US-TPL-PLT-001
 - **Status**: FAILING (Kernel)
@@ -83,6 +91,7 @@ The Rust-as-Spec platform is in good health with strong governance foundations, 
 #### Non-Kernel AC Failures (INFORMATIONAL)
 
 ##### 5. AC-TPL-PLATFORM-AUTH-BASIC: Platform endpoints support HTTP Basic auth
+
 - **Requirement**: REQ-TPL-PLATFORM-AUTH
 - **Story**: US-TPL-PLT-001
 - **Status**: FAILING (Non-Kernel)
@@ -91,6 +100,7 @@ The Rust-as-Spec platform is in good health with strong governance foundations, 
 - **Priority**: Medium (not blocking)
 
 ### Graph Invariants
+
 All core graph invariants are PASSING:
 - ✅ **AC-TPL-GRAPH-AC-HAS-TEST**: Every AC has at least one test
 - ✅ **AC-TPL-GRAPH-REQ-HAS-AC**: Every REQ has at least one AC
@@ -98,6 +108,7 @@ All core graph invariants are PASSING:
 - ✅ **AC-TPL-GRAPH-SELFTEST**: Selftest validates governance graph
 
 ### Stories and Requirements
+
 - **6 Stories** defined in `specs/spec_ledger.yaml`
 - **42 Requirements** mapped to ACs
 - **112 Acceptance Criteria** with full traceability
@@ -108,6 +119,7 @@ All core graph invariants are PASSING:
 ## 2. Codebase Health
 
 ### Code Metrics
+
 | Metric | Value | Assessment |
 |--------|-------|------------|
 | Total Rust LOC | 38,118 | Large, well-structured |
@@ -119,6 +131,7 @@ All core graph invariants are PASSING:
 | CI Workflows | 29 | Robust automation |
 
 ### Crate Architecture
+
 The platform follows hexagonal architecture with clear boundaries:
 - **Business Core**: Domain logic (business-core)
 - **Adapters**: DB (sqlx), gRPC, HTTP, spec-fs
@@ -127,6 +140,7 @@ The platform follows hexagonal architecture with clear boundaries:
 - **Testing**: Acceptance test harness with 203 scenarios
 
 ### Test Coverage
+
 - **Unit Tests**: 239 tests captured (3 passed in last run)
 - **Integration Tests**: BDD-based acceptance testing
 - **Acceptance Tests**: 203 scenarios across 22 features
@@ -138,6 +152,7 @@ The platform follows hexagonal architecture with clear boundaries:
 ## 3. DevEx Indicators
 
 ### Available Workflows (58 commands organized in 7 categories)
+
 1. **Onboarding** (8 commands): check, ci-local, dev-up, doctor, install-hooks, selftest, service-init, status
 2. **Design & AC** (6 commands): ac-new, ac-status, adr-check, adr-new, bdd, bundle
 3. **Security** (3 commands): audit, coverage, sbom-local
@@ -147,12 +162,14 @@ The platform follows hexagonal architecture with clear boundaries:
 7. **Meta** (1 command): help-flows
 
 ### Skills and Agents
+
 - **5 Governed Skills**: bootstrap-dev-env, governed-feature-dev, governed-maintenance, governed-release, governed-governance-debug
 - **1 Agent Definition**: example-agent.md (passes governance checks)
 - All Skills pass `skills-lint` validation
 - All Agents pass `agents-lint` validation
 
 ### Documentation Completeness
+
 - **158 markdown documents** across /docs hierarchy
 - **INDEX.md**: Comprehensive documentation index
 - **TROUBLESHOOTING.md**: Common issues documented
@@ -161,6 +178,7 @@ The platform follows hexagonal architecture with clear boundaries:
 - **MISSING_MANUAL.md**: Hidden knowledge captured
 
 ### Friction Log Status
+
 | Status | Count | Severity Distribution |
 |--------|-------|----------------------|
 | **OPEN** | 1 | Medium: 1 |
@@ -180,6 +198,7 @@ The platform follows hexagonal architecture with clear boundaries:
 ## 4. Platform APIs and Introspection
 
 ### Available Platform Endpoints
+
 - `/platform/status` - Governance health dashboard
 - `/platform/graph` - Full governance graph (stories → REQs → ACs → tests)
 - `/platform/schema` - Machine-readable platform schema
@@ -194,6 +213,7 @@ The platform follows hexagonal architecture with clear boundaries:
 - `/platform/questions` - Design questions tracking
 
 ### Web UI
+
 - Dashboard available at `/ui` (backstage integration ready)
 - Real-time governance state visualization
 - Same data CI enforces, visible to developers
@@ -203,6 +223,7 @@ The platform follows hexagonal architecture with clear boundaries:
 ## 5. CI/CD Health
 
 ### CI Workflows (29 files)
+
 - **tier1-selftest.yml**: Full governance gate (11-step selftest)
 - **ci-template-selftest.yml**: Template-specific checks
 - **ci-agents.yml**: Agent definition validation
@@ -212,6 +233,7 @@ The platform follows hexagonal architecture with clear boundaries:
 - **policy-test.yml**: OPA/Rego policy enforcement
 
 ### CI Optimization Status
+
 - Recent improvements documented in `CI_OPTIMIZATION_SUMMARY.md`
 - sccache integration for build caching
 - Parallel job execution where possible
@@ -222,6 +244,7 @@ The platform follows hexagonal architecture with clear boundaries:
 ## 6. Comparison to Ground Truth Baseline
 
 ### AC Status Changes
+
 | Metric | Baseline (2025-12-02 03:32 UTC) | Current (2025-12-02 09:24 UTC) | Delta |
 |--------|-------------------------------|-------------------------------|-------|
 | Total ACs | 112 | 112 | 0 |
@@ -234,12 +257,14 @@ The platform follows hexagonal architecture with clear boundaries:
 **Status Confirmed**: Selftest completed successfully (10/11 test suites passing). AC mapping is working correctly. The +5 passing ACs indicates improved test coverage since baseline. The +1 failing AC is AC-TPL-PLATFORM-AUTH-BASIC (non-kernel, informational).
 
 ### Infrastructure Fixes Applied
+
 ✅ **JUnit XML Infrastructure Fixed** (from Ground Truth):
 - Removed `std::process::exit(0)` from acceptance.rs:179
 - Buffer flushing now completes before process termination
 - JUnit XML file is 191K with valid test results
 
 ### Failing ACs from Baseline
+
 Baseline identified 4 failing ACs:
 1. **AC-PLT-021** - service-init command (STILL FAILING - kernel)
 2. **AC-TPL-IDP-SNAPSHOT** - idp-snapshot JSON generation (STILL FAILING - kernel)
@@ -257,6 +282,7 @@ Baseline identified 4 failing ACs:
 ## 7. Task Management
 
 ### Task Status Distribution
+
 | Status | Count | Percentage |
 |--------|-------|------------|
 | **Todo** | 2 | 5.6% |
@@ -266,6 +292,7 @@ Baseline identified 4 failing ACs:
 | **Review** | 0 | 0% |
 
 ### Active Tasks (InProgress)
+
 1. **TASK-TPL-STATUS-CLI-001**: Implement CLI governance status dashboard (AC-PLT-017)
 2. **implement_ac**: Implement Acceptance Criterion (AC-TPL-SUGGEST-NEXT-CLI)
 3. **TASK-ADOPT-FORKS-001**: Template sanity acceptance for first fork
@@ -274,6 +301,7 @@ Baseline identified 4 failing ACs:
 6. **TASK-DX-TOOLING-001**: xtask doctor lint for rust-analyzer ABI risk
 
 ### Recently Completed (Done)
+
 - ✅ TASK-TPL-REL-BUNDLE-3-1-0: Release-bundle command
 - ✅ TASK-TPL-SKILLS-TOOLING-001: Port Skills tooling from Python to Rust
 - ✅ TASK-VERS-ENGINE-001-004: Complete versioning engine implementation
@@ -284,6 +312,7 @@ Baseline identified 4 failing ACs:
 ## 8. Recommended Next Actions
 
 ### Immediate (Critical Path - UPDATED BASED ON SELFTEST)
+
 1. **Fix 4 Kernel AC Failures** (Priority: Critical - BLOCKING RELEASE)
    - **AC-PLT-021**: Implement service-init command
    - **AC-TPL-CLI-JSON-OUTPUT**: Add JSON output to core commands
@@ -307,6 +336,7 @@ Baseline identified 4 failing ACs:
    - ✅ Output captured for analysis
 
 ### Short-term (This Sprint)
+
 4. **Verify Agent Hints Implementation**
    - All HTTP API tests passing in BDD suite
    - CLI tests failing due to Nix environment detection
@@ -324,6 +354,7 @@ Baseline identified 4 failing ACs:
    - Add to release-prepare checklist
 
 ### Medium-term (Next 2 Sprints)
+
 7. **Improve Test Coverage Visibility**
    - Current: AC status shows 0 passing (regression)
    - Target: Restore 87+ passing ACs from baseline
@@ -343,6 +374,7 @@ Baseline identified 4 failing ACs:
    - Review: Weekly friction triage
 
 ### Long-term (Roadmap)
+
 10. **v3.4.0 Release Planning**
     - IDP-ready kernel release (TASK-REL-340-PLAN-001)
     - Complete Agent Hints API stabilization
@@ -366,6 +398,7 @@ Baseline identified 4 failing ACs:
 ## 9. Health Score Breakdown
 
 ### Component Scores
+
 | Component | Score | Weight | Weighted Score | Trend |
 |-----------|-------|--------|----------------|-------|
 | Governance | 90 | 30% | 27 | ⬆️ Stable |
@@ -379,6 +412,7 @@ Baseline identified 4 failing ACs:
 ### Component Analysis
 
 #### Governance (90/100) - EXCELLENT
+
 **Strengths**:
 - Complete traceability: Stories → REQs → ACs → Tests
 - All graph invariants passing
@@ -390,6 +424,7 @@ Baseline identified 4 failing ACs:
 - AC status reporting regression (critical)
 
 #### Tests (85/100) - STRONG
+
 **Strengths**:
 - 203 BDD scenarios across 22 features (all passing)
 - 239 unit tests captured
@@ -404,6 +439,7 @@ Baseline identified 4 failing ACs:
 - Test coverage baseline (65%) not verified in this run
 
 #### Documentation (95/100) - OUTSTANDING
+
 **Strengths**:
 - 158 documentation files
 - Comprehensive QUICKSTART, AGENT_GUIDE, MISSING_MANUAL
@@ -414,6 +450,7 @@ Baseline identified 4 failing ACs:
 - Minor: Some docs may be stale (version references)
 
 #### CI/CD (85/100) - STRONG
+
 **Strengths**:
 - 29 workflow files covering all aspects
 - Tier-1 selftest as single gate
@@ -425,6 +462,7 @@ Baseline identified 4 failing ACs:
 - CI optimization still in progress
 
 #### DevEx (80/100) - GOOD
+
 **Strengths**:
 - 58 xtask commands across 7 categories
 - One-command setup (cargo xtask dev-up)
@@ -437,6 +475,7 @@ Baseline identified 4 failing ACs:
 - Onboarding still 15 minutes (target: < 10)
 
 #### Architecture (95/100) - EXCELLENT
+
 **Strengths**:
 - Clean hexagonal architecture
 - 12 well-bounded crates
@@ -451,6 +490,7 @@ Baseline identified 4 failing ACs:
 ## 10. Risk Assessment
 
 ### High Risks
+
 1. **~~AC Status Reporting Regression~~** ✅ **RESOLVED** (Severity: High, Probability: High)
    - **Status**: FALSE ALARM - ac-status works correctly when run via selftest
    - **Root Cause**: Earlier manual run incomplete, selftest authoritative
@@ -458,6 +498,7 @@ Baseline identified 4 failing ACs:
    - **Lesson**: Always trust selftest over individual command runs
 
 ### Medium Risks
+
 2. **Nix Environment Dependency** (Severity: Medium, Probability: Medium)
    - **Impact**: Non-interactive CI/automation friction
    - **Mitigation**: Implement --no-nix fallback
@@ -471,6 +512,7 @@ Baseline identified 4 failing ACs:
    - **Timeline**: Fix with ac-status restoration
 
 ### Low Risks
+
 4. **Documentation Drift** (Severity: Low, Probability: Medium)
    - **Impact**: Minor confusion during onboarding
    - **Mitigation**: Regular docs review in precommit
@@ -482,6 +524,7 @@ Baseline identified 4 failing ACs:
 ## 11. Trend Analysis
 
 ### Improvements Since Baseline
+
 - ✅ **Agent Hints API**: AC-TPL-AGENT-HINTS now passing (was failing in baseline)
 - ✅ **JUnit XML Infrastructure**: Fixed buffer flushing issue (baseline finding confirmed)
 - ✅ **Governance**: All Skills and Agents pass lint checks
@@ -491,11 +534,13 @@ Baseline identified 4 failing ACs:
 - ✅ **Passing ACs**: 87 → 92 (+5 ACs, improvement)
 
 ### Regressions Since Baseline
+
 - ⚠️ **AC-TPL-CLI-JSON-OUTPUT**: New failure (core commands lack JSON output)
 - ⚠️ **AC-TPL-PLATFORM-AUTH-BASIC**: New failure (platform auth not implemented)
 - ⚠️ **Net Failures**: 4 → 5 (+1, minor regression)
 
 ### Stable Components
+
 - ✅ Codebase size (38K LOC)
 - ✅ Architecture (12 crates, hexagonal)
 - ✅ BDD coverage (203 scenarios)
@@ -509,6 +554,7 @@ Baseline identified 4 failing ACs:
 The Rust-as-Spec platform demonstrates **strong foundational health** with excellent governance, comprehensive documentation, and mature CI/CD practices. The platform is well-positioned for autonomous agent work with clear specs, strong traceability, and robust tooling. **SELFTEST COMPLETED**: 10/11 test suites passing, confirming platform stability.
 
 ### Critical Path Forward (UPDATED AFTER SELFTEST)
+
 1. **✅ ~~Restore AC status reporting~~** - RESOLVED (selftest confirms 87 ACs with results)
 2. **Fix 4 kernel AC failures** to achieve full selftest green
    - AC-PLT-021 (service-init command)
@@ -519,6 +565,7 @@ The Rust-as-Spec platform demonstrates **strong foundational health** with excel
 4. **Document remediation** in Ground Truth receipt (track 4 kernel AC fixes)
 
 ### Strategic Strengths
+
 - Outstanding documentation coverage (158 files)
 - Mature governance with full traceability
 - Comprehensive BDD suite (203 scenarios)
@@ -526,6 +573,7 @@ The Rust-as-Spec platform demonstrates **strong foundational health** with excel
 - Effective friction log process
 
 ### Areas for Investment
+
 - Test visibility and AC mapping robustness
 - Non-interactive execution mode
 - Coverage baseline increase (65% → 75%)

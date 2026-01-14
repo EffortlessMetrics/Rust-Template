@@ -25,8 +25,8 @@ These items **MUST** be resolved before v3.3.13 can be released.
 
 ### 1. Missing Release Evidence Document
 
-**Severity:** 🔴 CRITICAL  
-**Location:** [`release_evidence/v3.3.13.md`](../release_evidence/v3.3.13.md)  
+**Severity:** 🔴 CRITICAL
+**Location:** [`release_evidence/v3.3.13.md`](../release_evidence/v3.3.13.md)
 **Status:** File does not exist
 
 The release evidence document is the authoritative record of what changed in this version. Without it, there is no auditable trail of the release contents.
@@ -46,8 +46,8 @@ Run `cargo xtask release-bundle 3.3.13` to generate the evidence document.
 
 ### 2. Missing Fork Dry-Run Receipt
 
-**Severity:** 🔴 CRITICAL  
-**Location:** [`docs/receipts/FORK_DRY_RUN_YYYY-MM-DD.md`](../docs/receipts/FORK_DRY_RUN_TEMPLATE.md)  
+**Severity:** 🔴 CRITICAL
+**Location:** [`docs/receipts/FORK_DRY_RUN_YYYY-MM-DD.md`](../docs/receipts/FORK_DRY_RUN_TEMPLATE.md)
 **Status:** No receipt exists for v3.3.13
 
 The fork dry-run receipt proves that a competent user can adopt the kernel following only the documentation. This is a critical validation that the template is actually usable as-is.
@@ -68,8 +68,8 @@ Perform a fork dry-run using the template and document the results.
 
 ### 3. Missing AI First-Hour Receipt
 
-**Severity:** 🔴 CRITICAL  
-**Location:** [`docs/receipts/AI_FIRST_HOUR_YYYY-MM-DD.md`](../docs/receipts/AI_FIRST_HOUR_RECEIPT.md)  
+**Severity:** 🔴 CRITICAL
+**Location:** [`docs/receipts/AI_FIRST_HOUR_YYYY-MM-DD.md`](../docs/receipts/AI_FIRST_HOUR_RECEIPT.md)
 **Status:** No receipt exists for v3.3.13
 
 The AI first-hour receipt proves that an AI agent can autonomously orient and begin work using the platform's structured APIs. This validates the agent-native interfaces.
@@ -95,8 +95,8 @@ These items should be addressed before release but may not be absolute blockers 
 
 ### 1. Missing docs/api/ Directory
 
-**Severity:** 🟠 HIGH  
-**Location:** [`docs/api/`](../docs/)  
+**Severity:** 🟠 HIGH
+**Location:** [`docs/api/`](../docs/)
 **Status:** Directory does not exist
 
 The API documentation directory is expected to contain detailed documentation for platform endpoints. Without it, users and IDP integrations lack comprehensive API reference.
@@ -119,8 +119,8 @@ Create API documentation with examples for all platform endpoints.
 
 ### 2. Self-Referential Placeholders (99 found)
 
-**Severity:** 🟠 HIGH  
-**Pattern:** AC-XXX, REQ-XXX, etc.  
+**Severity:** 🟠 HIGH
+**Pattern:** AC-XXX, REQ-XXX, etc.
 **Status:** 99 placeholders found across documentation
 
 Self-referential placeholders indicate incomplete documentation or examples that haven't been updated with actual IDs. This makes the template harder to use and understand.
@@ -141,8 +141,8 @@ These are nice-to-have improvements that can be deferred if needed.
 
 ### 1. Fork Registry Outdated
 
-**Severity:** 🟡 MEDIUM  
-**Location:** [`forks/fork_registry.yaml`](../forks/fork_registry.yaml)  
+**Severity:** 🟡 MEDIUM
+**Location:** [`forks/fork_registry.yaml`](../forks/fork_registry.yaml)
 **Status:** No forks based on v3.3.9-kernel
 
 The fork registry shows 2 forks:
@@ -164,7 +164,7 @@ These areas are in good condition and do not block the release.
 
 ### 1. Version Alignment ✅
 
-**Canonical Version:** 3.3.13 (from [`specs/spec_ledger.yaml`](../specs/spec_ledger.yaml:6))  
+**Canonical Version:** 3.3.13 (from [`specs/spec_ledger.yaml`](../specs/spec_ledger.yaml:6))
 **Status:** Consistent across key documentation files
 
 Version alignment is properly maintained across:
@@ -178,9 +178,9 @@ Version alignment is properly maintained across:
 
 ### 2. Test Coverage ✅
 
-**Total ACs:** 133  
-**Kernel ACs:** 72 (100% PASSING)  
-**Selftest Gates:** 11/11 PASSING  
+**Total ACs:** 133
+**Kernel ACs:** 72 (100% PASSING)
+**Selftest Gates:** 11/11 PASSING
 **BDD Tests:** 24 feature files
 
 All kernel acceptance criteria are passing. The CI workflows are operational with proper gating. There are no test-related blockers.
@@ -189,7 +189,7 @@ All kernel acceptance criteria are passing. The CI workflows are operational wit
 
 ### 3. Security Configuration Documentation ✅
 
-**Location:** [`docs/SECURITY.md`](../docs/SECURITY.md)  
+**Location:** [`docs/SECURITY.md`](../docs/SECURITY.md)
 **Status:** Exists and properly linked
 
 Security configuration documentation is present and accessible from key locations.
@@ -236,9 +236,11 @@ CI workflows are functioning correctly:
 ### Phase 1: Critical Evidence Generation (Required for Release)
 
 1. **Generate Release Evidence**
+
    ```bash
    cargo xtask release-bundle 3.3.13
    ```
+
    This will create [`release_evidence/v3.3.13.md`](../release_evidence/v3.3.13.md) with all required content.
 
 2. **Perform Fork Dry-Run**
@@ -279,23 +281,23 @@ flowchart TD
     B --> C[Generate Release Evidence]
     B --> D[Perform Fork Dry-Run]
     B --> E[Perform AI First-Hour]
-    
+
     C --> F{Evidence Complete?}
     D --> F
     E --> F
-    
+
     F -->|No| G[Address Gaps]
     F -->|Yes| H{High Priority Gaps}
-    
+
     H --> I[Create API Documentation]
     H --> J[Resolve Placeholders]
-    
+
     I --> K{Gaps Resolved?}
     J --> K
-    
+
     K -->|No| G
     K -->|Yes| L[Release Ready]
-    
+
     G --> B
     L --> M[Tag and Release v3.3.13]
 ```

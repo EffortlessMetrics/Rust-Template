@@ -51,6 +51,7 @@ After `dev-up` completes successfully, you're ready to start the service and int
 ### Platform-Specific Notes
 
 **Linux/macOS with Nix:**
+
 ```bash
 nix develop
 cargo run -p xtask -- dev-up
@@ -58,6 +59,7 @@ cargo run -p xtask -- dev-up
 ```
 
 **WSL2 with Nix:**
+
 ```bash
 # Inside WSL2 Ubuntu shell
 nix develop
@@ -66,6 +68,7 @@ cargo run -p xtask -- dev-up
 ```
 
 **Native Windows (Known Caveat):**
+
 ```powershell
 # Runs successfully, but may intermittently fail on `cargo rebuild` with:
 # error: failed to remove xtask.exe: os error 5
@@ -86,6 +89,7 @@ cargo run -p xtask -- dev-up
 ### Query Available Tasks
 
 **CLI - List Tasks:**
+
 ```bash
 # List all tasks with details (ID, status, requirement, ACs, owner, title)
 cargo xtask tasks-list
@@ -99,6 +103,7 @@ cargo xtask tasks-list
 ```
 
 **CLI - Create Task:**
+
 ```bash
 # Create a new task (validates requirement and ACs exist in spec_ledger.yaml)
 cargo xtask task-create \
@@ -113,6 +118,7 @@ cargo xtask task-create \
 ```
 
 **CLI - Update Task:**
+
 ```bash
 # Update task status (enforces valid transitions via business-core)
 cargo xtask task-update \
@@ -126,6 +132,7 @@ cargo xtask task-update \
 ```
 
 **HTTP API - GET Tasks:**
+
 ```bash
 # List all tasks
 curl http://localhost:8080/platform/tasks
@@ -138,6 +145,7 @@ curl "http://localhost:8080/platform/tasks?req=REQ-TPL-HEALTH"
 ```
 
 **Response structure:**
+
 ```json
 {
   "tasks": [
@@ -159,6 +167,7 @@ curl "http://localhost:8080/platform/tasks?req=REQ-TPL-HEALTH"
 ```
 
 **HTTP API - Update Task Status:**
+
 ```bash
 # Transition task to next status
 curl -X POST http://localhost:8080/platform/tasks/TASK-001/status \
@@ -170,6 +179,7 @@ curl -X POST http://localhost:8080/platform/tasks/TASK-001/status \
 ```
 
 **Visualize Task Dependencies:**
+
 ```bash
 # Get task dependency graph as JSON
 curl http://localhost:8080/platform/tasks/graph
@@ -219,6 +229,7 @@ curl 'http://localhost:8080/platform/tasks/graph?format=mermaid'
 - Detect tasks that are blocking multiple other tasks (high priority)
 
 **Simple Agent Loop Example:**
+
 ```bash
 # 1. Get prioritized hints
 curl http://localhost:8080/platform/agent/hints | jq '.hints[0]'
@@ -254,6 +265,7 @@ cargo xtask suggest-next --task implement_ac --json
 ```
 
 **HTTP API:**
+
 ```bash
 curl "http://localhost:8080/platform/tasks/suggest-next?task=implement_ac"
 ```
@@ -275,6 +287,7 @@ curl http://localhost:8080/platform/agent/hints
 ```
 
 **Response structure:**
+
 ```json
 {
   "hints": [
@@ -422,12 +435,14 @@ curl http://localhost:8080/platform/devex/flows
 The `/platform/schema` endpoint provides comprehensive JSON Schema definitions for all YAML configuration files in the platform, enabling validation, code generation, and machine-readable documentation.
 
 **Get All Schemas:**
+
 ```bash
 # Get comprehensive schema information
 curl http://localhost:8080/platform/schema
 ```
 
 **Response structure:**
+
 ```json
 {
   "schemas": [
@@ -465,6 +480,7 @@ curl http://localhost:8080/platform/schema
 ```
 
 **Get Individual Schema by Name:**
+
 ```bash
 # Get schema for tasks.yaml
 curl http://localhost:8080/platform/schema/tasks
@@ -494,6 +510,7 @@ curl http://localhost:8080/platform/schema/config
 - **Tooling Development**: Build external tools that interact with platform specs
 
 **Validation workflow example:**
+
 ```bash
 # 1. Get the schema
 curl http://localhost:8080/platform/schema/tasks > /tmp/tasks.schema.json
@@ -518,6 +535,7 @@ yq eval -o=json specs/tasks.yaml | \
 Questions are structured artifacts created when flows or agents encounter ambiguity that requires human decision-making. They prevent work from stalling while capturing the context and options for later resolution.
 
 **CLI - View Questions:**
+
 ```bash
 # View all questions with counts
 cargo xtask status
@@ -536,6 +554,7 @@ cargo xtask status
 ```
 
 **API - Query Questions:**
+
 ```bash
 # Get question counts and top open questions
 curl http://localhost:8080/platform/status
@@ -601,6 +620,7 @@ cargo xtask bundle implement_ac --ac AC-PLT-XXX
 ```
 
 **Expected output from ac-coverage:**
+
 ```
 Feature: Platform Graph Visualization
   ✅ AC-PLT-GRAPH-001: Export graph as JSON
@@ -650,6 +670,7 @@ cargo xtask bdd
 #### Before Committing
 
 **Recommended workflow (fast):**
+
 ```bash
 # 1. Test only what changed
 cargo xtask test-changed
@@ -661,6 +682,7 @@ cargo xtask ac-coverage
 ```
 
 **Full validation (use Tier-1 environment):**
+
 ```bash
 # In WSL2 or Linux with Nix (matches CI)
 nix develop
@@ -721,6 +743,7 @@ See `docs/SELECTIVE_TESTING.md` for complete guide.
 - Step 5-8: **Governance is violated** (cannot merge)
 
 **Agent Decision Tree:**
+
 ```
 Run cargo xtask selftest
   ├─ All pass → ✅ Work is valid, can proceed
@@ -746,19 +769,19 @@ cargo xtask ac-status --json  # Machine-readable AC table
 
 **How to interpret selftest:**
 
-* If `selftest` is **green**:
+- If `selftest` is **green**:
 
-  * All kernel ACs (`must_have_ac: true`) are passing.
-  * Template ACs are either passing or explicitly marked as template/meta.
-  * Agents can assume the platform APIs (`/platform/*`) and DevEx commands behave as documented.
+  - All kernel ACs (`must_have_ac: true`) are passing.
+  - Template ACs are either passing or explicitly marked as template/meta.
+  - Agents can assume the platform APIs (`/platform/*`) and DevEx commands behave as documented.
 
-* If `selftest` is **red**:
+- If `selftest` is **red**:
 
-  * The failure will be associated with one of the 8 gates:
+  - The failure will be associated with one of the 8 gates:
 
-    * Core checks, BDD, AC/ADR mapping, Bundler, Policy tests,
+    - Core checks, BDD, AC/ADR mapping, Bundler, Policy tests,
       DevEx contract, Graph invariants, AC coverage.
-  * Agents should:
+  - Agents should:
 
     1. Call `GET /platform/status` and inspect the `governance` section.
     2. Call `GET /platform/graph` to see which ACs/REQs/tests are failing.
@@ -775,22 +798,22 @@ cargo xtask ac-status --json
 
 has, for each AC:
 
-* `status`: `"pass" | "fail" | "unknown"`
-* `tags`: classification (`kernel`, `template`, `philosophy`, `governance`, `harness`, etc.)
-* `must_have_ac`: `true` for kernel ACs
-* `tests_total` / `tests_executed`: how much coverage exists
+- `status`: `"pass" | "fail" | "unknown"`
+- `tags`: classification (`kernel`, `template`, `philosophy`, `governance`, `harness`, etc.)
+- `must_have_ac`: `true` for kernel ACs
+- `tests_total` / `tests_executed`: how much coverage exists
 
 Recommended agent behaviour:
 
-* Treat `status == "pass" && must_have_ac == true` as "safe to rely on".
-* Treat `status == "fail"` as "do not trust this behaviour" and either:
+- Treat `status == "pass" && must_have_ac == true` as "safe to rely on".
+- Treat `status == "fail"` as "do not trust this behaviour" and either:
 
-  * avoid using it, or
-  * surface a question via `question-new` / `/platform/questions`.
-* Treat `status == "unknown"` as:
+  - avoid using it, or
+  - surface a question via `question-new` / `/platform/questions`.
+- Treat `status == "unknown"` as:
 
-  * OK if tags include `harness` or `example` (meta/CI-only),
-  * otherwise: suspect, worth surfacing as a question.
+  - OK if tags include `harness` or `example` (meta/CI-only),
+  - otherwise: suspect, worth surfacing as a question.
 
 ### Incremental Validation
 
@@ -877,6 +900,7 @@ Understanding when to use each artifact type is critical for effective governanc
 - "Error message doesn't explain which file is invalid"
 
 **Commands:**
+
 ```bash
 # List friction entries
 cargo xtask friction-list
@@ -902,6 +926,7 @@ cargo xtask friction-gh-link FRICTION-TOOL-001 "#123"  # Also accepts # prefix
 ```
 
 **API:**
+
 ```bash
 # Get friction summary from status
 curl http://localhost:8080/platform/status | jq '.governance.friction'
@@ -914,6 +939,7 @@ curl http://localhost:8080/platform/friction/FRICTION-AGENT-001
 ```
 
 **Response structure (GET /platform/friction):**
+
 ```json
 {
   "entries": [
@@ -949,6 +975,7 @@ curl http://localhost:8080/platform/friction/FRICTION-AGENT-001
 - "Decision to use YAML for specs instead of JSON"
 
 **Command:**
+
 ```bash
 cargo xtask adr-new "Title of architectural decision"
 ```
@@ -982,6 +1009,7 @@ cargo xtask adr-new "Title of architectural decision"
 - "AC description ambiguous - multiple interpretations"
 
 **Commands:**
+
 ```bash
 # Show questions summary
 cargo xtask status  # Shows open questions
@@ -1012,6 +1040,7 @@ cargo xtask question-resolve --id Q-BUNDLE-002 --resolved-by human \
 ```
 
 **API:**
+
 ```bash
 # Get question summary from status
 curl http://localhost:8080/platform/status | jq '.governance.questions'
@@ -1027,6 +1056,7 @@ curl http://localhost:8080/platform/questions/Q-EXAMPLE-001
 ```
 
 **Response structure (GET /platform/questions):**
+
 ```json
 {
   "questions": [
@@ -1044,6 +1074,7 @@ curl http://localhost:8080/platform/questions/Q-EXAMPLE-001
 ```
 
 **Response structure (GET /platform/questions/{id}):**
+
 ```json
 {
   "id": "Q-EXAMPLE-001",
@@ -1087,6 +1118,7 @@ The `issues-search` command provides unified search across friction entries, que
 - Quick lookup by ID without knowing the artifact type
 
 **Examples:**
+
 ```bash
 # Search across all artifact types by keyword
 cargo xtask issues-search "bundle"
@@ -1123,6 +1155,7 @@ cargo xtask issues-search "test" --limit 10
 - Default limit is 50 results
 
 **Response structure (--json):**
+
 ```json
 {
   "query": "bundle",
@@ -1155,11 +1188,13 @@ cargo xtask issues-search "test" --limit 10
 - "Compliance fork for regulated industries"
 
 **Command:**
+
 ```bash
 cargo xtask fork-list  # List all registered forks
 ```
 
 **API:**
+
 ```bash
 # Get all forks
 curl http://localhost:8080/platform/forks
@@ -1169,6 +1204,7 @@ curl http://localhost:8080/platform/forks/FORK-KHUB-001
 ```
 
 **Response structure (GET /platform/forks):**
+
 ```json
 {
   "forks": [
@@ -1185,6 +1221,7 @@ curl http://localhost:8080/platform/forks/FORK-KHUB-001
 ```
 
 **Response structure (GET /platform/forks/{name}):**
+
 ```json
 {
   "id": "FORK-KHUB-001",
@@ -1320,17 +1357,20 @@ cargo xtask bundle <task_id>
 Don't parse code ASTs. Instead:
 
 1. **Read ADRs:**
+
    ```bash
    ls docs/adr/
    # Each ADR answers: What decision? Why? Consequences?
    ```
 
 2. **Read design docs:**
+
    ```bash
    curl http://localhost:8080/platform/docs/index | jq '.docs[] | select(.type=="design_doc")'
    ```
 
 3. **Inspect graph:**
+
    ```bash
    curl http://localhost:8080/platform/graph | jq
    ```
@@ -1344,21 +1384,24 @@ Don't parse code ASTs. Instead:
 **Step-by-Step Diagnosis:**
 
 1. **Identify which step failed:**
+
    ```
    [5/7] Running policy tests...
      ✗ Policy tests failed
    ```
 
 2. **Run that step in isolation:**
+
    ```bash
    cargo xtask policy-test
    ```
 
 3. **Read the error output:**
+
    ```
    Ledger Policy:
      ✗ ledger_valid.json (expected pass, got fail)
-     
+
    FAIL - AC-TPL-001 has no tests
    ```
 
@@ -1366,6 +1409,7 @@ Don't parse code ASTs. Instead:
    - In this case: Add `tests: [{ type: bdd, tag: "@AC-TPL-001" }]` to AC in `spec_ledger.yaml`
 
 5. **Re-run selftest:**
+
    ```bash
    cargo xtask selftest
    ```
@@ -1558,7 +1602,6 @@ curl http://localhost:8080/platform/ui/contract              # UI contract speci
 
 - `XTASK_LOW_RESOURCES=1`: Set this if running on a constrained environment (low RAM/CPU) to serialize builds and disable heavy caching.
 
-
 ### Essential URLs
 
 - Dashboard: `http://localhost:8080/ui`
@@ -1577,4 +1620,3 @@ curl http://localhost:8080/platform/ui/contract              # UI contract speci
 - [DevEx Flows Reference](../specs/devex_flows.yaml) - All available workflows
 - [Tasks Reference](../specs/tasks.yaml) - All available tasks
 - [xtask Commands Reference](reference/xtask-commands.md) - Complete command documentation
-

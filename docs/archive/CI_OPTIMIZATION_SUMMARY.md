@@ -14,6 +14,7 @@ Analyzed 28 GitHub Actions workflows and implemented optimizations that are expe
 ## Key Changes
 
 ### ✅ Created Composite Actions (DRY)
+
 - `.github/actions/setup-rust-nix/` - One-step Rust + Nix + caching setup
 - `.github/actions/sccache-stats/` - Consistent sccache stats reporting
 
@@ -29,6 +30,7 @@ Analyzed 28 GitHub Actions workflows and implemented optimizations that are expe
 | `ci-supply-chain.yml` | Migrated to composite action | Consistent caching |
 
 ### ✅ Improved Artifact Management
+
 - Added SHA to artifact names: `coverage-report-${{ github.sha }}`
 - Added fail-fast checks: `if-no-files-found: error`
 - Better naming: `tier1-selftest-artifacts` vs generic `selftest-artifacts`
@@ -36,22 +38,27 @@ Analyzed 28 GitHub Actions workflows and implemented optimizations that are expe
 ## Issues Identified
 
 ### 1. Caching Inconsistencies
+
 - **Problem:** 3 workflows missing rust-cache/sccache (15-30% slower builds)
 - **Fixed:** Migrated to composite action, consistent caching everywhere
 
 ### 2. Duplication
+
 - **Problem:** Setup steps duplicated 15+ times (hard to maintain)
 - **Fixed:** Created composite actions (20+ lines → 2 lines per workflow)
 
 ### 3. Missing Concurrency Control
+
 - **Problem:** `ci-agents.yml` ran multiple times for same PR (wasted CI minutes)
 - **Fixed:** Added concurrency groups to cancel stale runs
 
 ### 4. Artifact Naming
+
 - **Problem:** Ambiguous names (`cov-json`, `feature-status`) caused collisions
 - **Fixed:** Added SHA/unique identifiers to all artifact names
 
 ### 5. MSRV Not Testing
+
 - **Problem:** MSRV workflow only built, didn't test (missed MSRV-specific failures)
 - **Fixed:** Added test execution step
 

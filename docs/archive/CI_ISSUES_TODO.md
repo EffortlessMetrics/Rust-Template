@@ -116,8 +116,27 @@ Option A: Create minimal `backstage/docs/` structure:
 
 ```bash
 mkdir -p backstage/docs
-echo "# Backstage Integration" > backstage/docs/index.md
-echo "Documentation coming soon." >> backstage/docs/index.md
+cat > backstage/docs/index.md << 'EOF'
+# Backstage Integration
+
+This section documents the Backstage plugin integration for the Rust-as-Spec template.
+
+## Overview
+
+The Backstage plugin provides a developer portal interface for interacting with the template's acceptance criteria, specifications, and governance features.
+
+## Architecture
+
+[To be documented - Plugin architecture and component interactions]
+
+## Development
+
+[To be documented - Setup instructions and development workflow]
+
+## Integration
+
+[To be documented - API contracts and integration points]
+EOF
 ```
 
 Option B: Remove the backstage docs check from CI until the plugin is fully implemented:
@@ -287,7 +306,7 @@ The Gitleaks GitHub Action requires a license key (free or commercial) to be sto
 
 Option A: Get a free Gitleaks license and add it as a GitHub secret:
 
-1. Visit https://gitleaks.io/ and sign up for a free license
+1. Visit <https://gitleaks.io/> and sign up for a free license
 2. Copy the license key
 3. Add as repository secret:
    - Go to repo Settings → Secrets and variables → Actions

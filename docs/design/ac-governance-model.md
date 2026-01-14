@@ -124,6 +124,7 @@ SLO enforcement over snapshot history:
 ### 3.3 CI Configuration
 
 In `specs/required_checks.yaml`:
+
 ```yaml
 required_checks:
   - tier1-selftest  # Runs selftest with strict AC coverage
@@ -138,21 +139,25 @@ On `main` / `release/*` branches:
 The following SLOs are enforced on `main` branch in `.github/workflows/tier1-selftest.yml`:
 
 **Selftest (strict mode):**
+
 ```yaml
 env:
   XTASK_STRICT_AC_COVERAGE: ${{ github.ref == 'refs/heads/main' && '1' || '' }}
 run: nix develop -c cargo xtask selftest
 ```
+
 - Fails if any `must_have_ac=true` AC has status `unknown`
 - All kernel ACs must be covered by tests
 
 **SLO gate (kernel):**
+
 ```bash
 cargo xtask ac-slo \
   --dir artifacts/ac-status \
   --min-coverage 80.0 \
   --max-blockers 0
 ```
+
 - `--min-coverage 80.0`: Overall AC coverage must be ≥80%
 - `--max-blockers 0`: No kernel (`must_have_ac=true`) ACs may be failing or unknown
 - Only applies to snapshots in the artifacts directory
@@ -197,6 +202,7 @@ Use these criteria:
 ### 5.3 CI Integration
 
 Wire these commands into your CI:
+
 ```yaml
 # Required for all PRs
 - cargo xtask selftest

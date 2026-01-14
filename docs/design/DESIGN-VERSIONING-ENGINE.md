@@ -109,12 +109,14 @@ impl VersionEngine {
 ### 4. Integration Points
 
 **release-prepare:**
+
 ```rust
 let engine = VersionEngine::from_manifest("specs/version_manifest.yaml")?;
 engine.update_all(&new_version)?;
 ```
 
 **docs-check:**
+
 ```rust
 let engine = VersionEngine::from_manifest("specs/version_manifest.yaml")?;
 let report = engine.validate_all()?;

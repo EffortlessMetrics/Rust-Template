@@ -159,6 +159,7 @@ See [how-to/security-configuration.md](how-to/security-configuration.md) for aut
 ## Run Tests
 
 **During development** (fast):
+
 ```bash
 cargo xtask check           # fmt + clippy + tests (~30s)
 cargo xtask test-changed    # Test what you edited (seconds to minutes)
@@ -166,6 +167,7 @@ cargo xtask test-ac AC-PLT-001  # Test specific AC
 ```
 
 **Before PR** (full validation):
+
 ```bash
 cargo xtask selftest        # 11-step governance validation (10-20 min)
 ```
@@ -233,6 +235,7 @@ cargo xtask selftest  # Before PR
 ## Command Cheat Sheet
 
 ### Environment
+
 ```bash
 cargo xtask doctor          # Check setup
 cargo xtask status          # Governance dashboard
@@ -240,6 +243,7 @@ cargo xtask version         # Kernel version
 ```
 
 ### Development
+
 ```bash
 cargo xtask check           # Fast validation
 cargo xtask test-changed    # Test affected code
@@ -248,6 +252,7 @@ cargo xtask selftest        # Full governance gate
 ```
 
 ### Specs & ACs
+
 ```bash
 cargo xtask ac-coverage     # Show AC test coverage
 cargo xtask ac-status       # Generate status report
@@ -256,6 +261,7 @@ cargo xtask tasks-list      # Available work items
 ```
 
 ### Documentation
+
 ```bash
 cargo xtask docs-check      # Validate docs
 cargo xtask adr-new "Title" # New ADR
@@ -263,6 +269,7 @@ cargo xtask spellcheck      # Run spellcheck
 ```
 
 ### Governance
+
 ```bash
 cargo xtask policy-test     # Run OPA/Rego policies
 cargo xtask graph-export    # Export governance graph
@@ -270,6 +277,7 @@ cargo xtask audit           # Security audit
 ```
 
 ### LLM/Agent
+
 ```bash
 cargo xtask bundle <task>             # Generate LLM context
 cargo xtask suggest-next --task <id>  # Get workflow guidance
@@ -328,9 +336,9 @@ cargo xtask help-flows                # Available flows
 - Guidance: `cargo xtask suggest-next --task <id>`
 
 **Common Tasks:**
-- Add feature: [governed-feature-dev skill](.claude/skills/governed-feature-dev/SKILL.md)
-- Fix drift: [governed-maintenance skill](.claude/skills/governed-maintenance/SKILL.md)
-- Release: [governed-release skill](.claude/skills/governed-release/SKILL.md)
+- Add feature: [governed-feature-dev skill](../.claude/skills/governed-feature-dev/SKILL.md)
+- Fix drift: [governed-maintenance skill](../.claude/skills/governed-maintenance/SKILL.md)
+- Release: [governed-release skill](../.claude/skills/governed-release/SKILL.md)
 - Integrate with IDP/portal: [Integrate with IDP or Agent](./how-to/integrate-idp-or-agent.md)
 
 ---

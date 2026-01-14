@@ -31,6 +31,7 @@ The xtask system recognizes several environment variables that affect behavior i
 - Automatically set by GitHub Actions, GitLab CI, CircleCI, etc.
 
 **Example:**
+
 ```bash
 CI=1 cargo xtask selftest
 ```
@@ -45,6 +46,7 @@ CI=1 cargo xtask selftest
 - Useful for automation scripts outside traditional CI
 
 **Example:**
+
 ```bash
 XTASK_NONINTERACTIVE=1 cargo xtask doctor
 ```
@@ -59,6 +61,7 @@ XTASK_NONINTERACTIVE=1 cargo xtask doctor
 - Suitable for ARM runners, free-tier CI, or constrained environments
 
 **Example:**
+
 ```bash
 XTASK_LOW_RESOURCES=1 cargo xtask check
 ```
@@ -73,6 +76,7 @@ XTASK_LOW_RESOURCES=1 cargo xtask check
 - Normal users should leave this unset; Tier-1 selftest is expected to run BDD
 
 **Example:**
+
 ```bash
 XTASK_SKIP_BDD=1 cargo xtask check
 ```
@@ -86,6 +90,7 @@ XTASK_SKIP_BDD=1 cargo xtask check
 - Defaults to `origin/main`
 
 **Example:**
+
 ```bash
 XTASK_CHANGED_BASE=origin/develop cargo xtask test-changed
 ```
@@ -220,7 +225,7 @@ Detection Flags
 For machine-readable output:
 
 ```bash
-$ cargo xtask env-mode --json
+cargo xtask env-mode --json
 ```
 
 ### Environment Mode Matrix
@@ -278,11 +283,13 @@ The xtask system uses standard Unix exit codes:
 ### sccache Library Issues
 
 If you see errors like:
+
 ```
 error while loading shared libraries: libz.so.1
 ```
 
 **Fix:** Set `RUSTC_WRAPPER=""` or ensure you're in the Nix shell:
+
 ```bash
 RUSTC_WRAPPER="" cargo xtask selftest
 # or
@@ -294,11 +301,13 @@ nix develop --command cargo xtask selftest
 If `selftest` fails with conftest errors:
 
 **In CI:** This is a hard failure. Install conftest or skip BDD:
+
 ```bash
 XTASK_SKIP_BDD=1 cargo xtask check
 ```
 
 **Locally:** Warning only. Install via:
+
 ```bash
 nix develop  # Provides conftest
 # or

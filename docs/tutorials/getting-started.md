@@ -37,6 +37,7 @@ nix develop
 ```
 
 **Expected output:**
+
 ```
 warning: creating lock file...
 (nix:rust-template-env)
@@ -51,6 +52,7 @@ cargo xtask dev-up
 ```
 
 **Expected output:**
+
 ```
 ======================================
   Rust-as-Spec Platform Cell Bootstrap
@@ -125,6 +127,7 @@ cargo run -p app-http
 ```
 
 **Expected output:**
+
 ```
 INFO app_http: Starting HTTP service
 INFO app_http: Listening on 0.0.0.0:8080
@@ -192,6 +195,7 @@ cargo xtask check
 ```
 
 **Expected:**
+
 ```
 Running format check...
 Running clippy...
@@ -202,6 +206,7 @@ Running tests...
 ### 4. Test the change
 
 Start the server again and verify:
+
 ```bash
 cargo run -p app-http &
 curl http://localhost:8080/platform/debug/info | jq .template_version
@@ -251,6 +256,7 @@ Scenario: Platform metrics endpoint returns prometheus format
 **3. Implement (add handler and wire route)**
 
 **4. Validate:**
+
 ```bash
 cargo xtask bdd
 cargo xtask ac-status
@@ -277,6 +283,7 @@ cargo xtask bundle implement_ac
 ```
 
 **Output:**
+
 ```
 Generating LLM context bundle for task: implement_ac
 Bundle written to: bundle/implement_ac/context.md
@@ -324,15 +331,18 @@ See `docs/how-to/use-llm-bundles.md` for best practices.
 
 ## Next Steps
 
-### For Learning:
+### For Learning
+
 - **Read:** `docs/explanation/architecture.md` - Understand design decisions
 - **Tutorial:** `docs/tutorials/first-ac-change.md` - Complete AC workflow
 
-### For Building:
+### For Building
+
 - **How-to:** `docs/how-to/new-service-from-template.md` - Adapt for your service
 - **How-to:** `docs/how-to/use-llm-bundles.md` - LLM best practices
 
-### For Reference:
+### For Reference
+
 - **API:** `TEMPLATE_API.md` - All xtask commands and schemas
 - **Profiles:** `docs/reference/branch-protection-profiles.md` - CI configuration
 
@@ -342,11 +352,13 @@ See `docs/how-to/use-llm-bundles.md` for best practices.
 
 **`nix develop` fails:**
 - Ensure Nix is installed:
+
   ```bash
   curl -L https://nixos.org/nix/install -o nix_install.sh
   sh nix_install.sh --daemon
   rm nix_install.sh
   ```
+
 - Check Nix flakes are enabled: `nix-env --version`
 
 **`xtask dev-up` fails on format check:**
@@ -377,4 +389,3 @@ You've now seen the template's core workflow:
 The template enforces quality by default - doing things right is the path of least resistance.
 
 Welcome to Rust-as-Spec development!
-

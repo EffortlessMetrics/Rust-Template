@@ -165,7 +165,7 @@ Use this space for:
 
 ---
 
-## Example Filled-In ADR (delete this section when using template):
+## Example Filled-In ADR (delete this section when using template)
 
 ```markdown
 # ADR-PILOT-001: Use Dedicated Handler Module for Todos Endpoint

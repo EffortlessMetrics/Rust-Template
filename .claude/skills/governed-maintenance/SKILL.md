@@ -72,7 +72,7 @@ cargo xtask doctor
 
 **Common fixes:**
 - Update Rust: `rustup update`
-- Install conftest: `nix profile install nixpkgs#conftest` or https://www.conftest.dev/install/
+- Install conftest: `nix profile install nixpkgs#conftest` or <https://www.conftest.dev/install/>
 - Configure git: `git config --global user.name "Your Name"`
 
 #### Security Audit
@@ -86,6 +86,7 @@ cargo xtask audit
 - License compliance (via cargo-deny)
 
 **Fix vulnerabilities:**
+
 ```bash
 # Update specific crate
 cargo update <affected-crate>
@@ -151,6 +152,7 @@ cargo xtask policy-test
 
 **Fix:**
 Edit `specs/spec_ledger.yaml` to comply with policies:
+
 ```yaml
 - id: REQ-TPL-EXAMPLE
   title: "Example requirement"
@@ -289,7 +291,7 @@ Maintenance complete when:
 
 ## Error Handling
 
-### If doctor fails:
+### If doctor fails
 
 ```bash
 # Run doctor with verbose output
@@ -301,7 +303,7 @@ cargo xtask doctor -v
 # - Git not configured: git config --global user.name/email
 ```
 
-### If audit finds vulnerabilities:
+### If audit finds vulnerabilities
 
 ```bash
 # Get details
@@ -317,7 +319,7 @@ cargo update <crate>
 # - Document risk acceptance in friction log
 ```
 
-### If policy-test fails:
+### If policy-test fails
 
 ```bash
 # Get detailed output
@@ -330,7 +332,7 @@ cargo xtask policy-test -v
 # - Link ADRs to requirements
 ```
 
-### If docs-check fails:
+### If docs-check fails
 
 ```bash
 # Get details

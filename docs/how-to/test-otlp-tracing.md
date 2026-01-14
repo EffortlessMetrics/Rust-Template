@@ -54,7 +54,7 @@ curl http://localhost:8080/metrics
 
 ### 4. View Traces in Jaeger UI
 
-1. Open your browser to http://localhost:16686
+1. Open your browser to <http://localhost:16686>
 2. Select **app-http** from the "Service" dropdown
 3. Click "Find Traces"
 4. You should see traces for the HTTP requests you made
@@ -184,16 +184,18 @@ OTLP_ENDPOINT=http://localhost:4317 \
 Use this checklist to validate OTLP integration:
 
 - [ ] **Application starts with OTLP enabled**
+
   ```bash
   OTLP_ENDPOINT=http://localhost:4317 cargo run -p app-http --features telemetry/otlp
   ```
 
 - [ ] **Traces appear in Jaeger UI**
-  - Open http://localhost:16686
+  - Open <http://localhost:16686>
   - Select "app-http" service
   - See traces for HTTP requests
 
 - [ ] **Application falls back gracefully when collector is down**
+
   ```bash
   # Stop Jaeger, then run app
   docker stop jaeger
@@ -202,12 +204,14 @@ Use this checklist to validate OTLP integration:
   ```
 
 - [ ] **Application works without OTLP feature**
+
   ```bash
   cargo run -p app-http
   # Should work with console tracing only
   ```
 
 - [ ] **All tests pass with and without OTLP feature**
+
   ```bash
   cargo test --workspace
   cargo test --workspace --features telemetry/otlp
@@ -257,4 +261,3 @@ Use this checklist to validate OTLP integration:
 - [OpenTelemetry Rust Documentation](https://github.com/open-telemetry/opentelemetry-rust)
 - [Jaeger Documentation](https://www.jaegertracing.io/docs/)
 - [OTLP Specification](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/protocol/otlp.md)
-

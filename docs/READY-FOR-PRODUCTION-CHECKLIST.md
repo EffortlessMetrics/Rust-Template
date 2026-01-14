@@ -50,6 +50,7 @@ This checklist ensures the Rust Template is "fully working properly" and ready f
 - [ ] Save changes
 
 **Verify:**
+
 ```bash
 # Try to push directly to main (should fail)
 git checkout main
@@ -64,6 +65,7 @@ git reset --hard HEAD~1  # Undo test commit
 **Status:** ⚠️ CI currently failing due to billing issue
 
 **Note:** As of last check, GitHub Actions is failing with:
+
 ```
 The job was not started because recent account payments have failed
 or your spending limit needs to be increased.
@@ -75,6 +77,7 @@ or your spending limit needs to be increased.
 - [ ] Increase spending limit if needed (or enable for public repos)
 
 **Verify:**
+
 ```bash
 # After fixing billing, trigger a CI run
 git checkout -b test/ci-verification
@@ -102,6 +105,7 @@ gh pr close && git checkout main && git branch -D test/ci-verification
 **Steps:**
 
 1. **Start a local K8s cluster:**
+
    ```bash
    # Using kind (recommended)
    kind create cluster --name template-test
@@ -109,6 +113,7 @@ gh pr close && git checkout main && git branch -D test/ci-verification
    ```
 
 2. **Build the Docker image:**
+
    ```bash
    docker build -t app-http:dev -f crates/app-http/Dockerfile .
 
@@ -117,6 +122,7 @@ gh pr close && git checkout main && git branch -D test/ci-verification
    ```
 
 3. **Deploy to dev:**
+
    ```bash
    kubectl apply -k infra/k8s/dev/
    kubectl get pods -n app-http-dev -w
@@ -124,6 +130,7 @@ gh pr close && git checkout main && git branch -D test/ci-verification
    ```
 
 4. **Verify health endpoint:**
+
    ```bash
    kubectl port-forward -n app-http-dev svc/app-http 8080:80 &
    curl http://localhost:8080/health
@@ -136,6 +143,7 @@ gh pr close && git checkout main && git branch -D test/ci-verification
    ```
 
 5. **Test staging overlay:**
+
    ```bash
    kubectl apply -k infra/k8s/staging/
    kubectl get pods -n app-http-staging
@@ -143,6 +151,7 @@ gh pr close && git checkout main && git branch -D test/ci-verification
    ```
 
 6. **Test prod overlay:**
+
    ```bash
    kubectl apply -k infra/k8s/prod/
    kubectl get pods -n app-http-prod
@@ -154,6 +163,7 @@ gh pr close && git checkout main && git branch -D test/ci-verification
    ```
 
 7. **Validate policies against deployed manifests:**
+
    ```bash
    kubectl get deployment -n app-http-prod app-http -o yaml | \
      conftest test -p policy/k8s.rego -
@@ -161,6 +171,7 @@ gh pr close && git checkout main && git branch -D test/ci-verification
    ```
 
 8. **Cleanup:**
+
    ```bash
    kind delete cluster --name template-test
    ```
@@ -222,11 +233,13 @@ Once this checklist is complete, the template is **done**. Further evolution sho
 ## Summary
 
 ### Fully Automated ✅
+
 - Template code (endpoints, ACs, BDD, policies, xtask, IAC) – **COMPLETE**
 - Nix devShell with tooling – **COMPLETE**
 - Documentation – **COMPLETE**
 
 ### Manual Steps Required 📋
+
 - Apply branch protection in GitHub UI
 - Fix CI billing (if needed)
 - Optional: Test local K8s deployment
@@ -238,4 +251,3 @@ Once this checklist is complete, the template is **done**. Further evolution sho
 The code is green, policies enforce contracts, and multi-env infrastructure is in place. The remaining steps are operational (branch protection, CI billing) rather than development work.
 
 **The template is ready to use. Stop adding features. Start using it.**
-

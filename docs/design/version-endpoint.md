@@ -16,10 +16,13 @@ adrs:
 # Version Information Strategy
 
 ## Context
+
 Deployment verification requires knowing exactly what version is running.
 
 ## Design
+
 Expose `/version` endpoint returning JSON:
+
 ```json
 {
   "version": "1.2.3",
@@ -29,4 +32,5 @@ Expose `/version` endpoint returning JSON:
 ```
 
 ## Implementation
+
 Inject build-time variables via `build.rs` or environment variables.

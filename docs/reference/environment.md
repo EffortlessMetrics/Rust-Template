@@ -180,6 +180,7 @@ cargo xtask selftest  # Should work, but slower than Nix
 ### Linux
 
 **Tier-1 setup:**
+
 ```bash
 nix develop
 cargo xtask doctor
@@ -191,6 +192,7 @@ cargo xtask selftest
 ### macOS
 
 **Tier-1 setup:**
+
 ```bash
 nix develop  # May take 2-5 min on first run to build native packages
 cargo xtask doctor
@@ -271,6 +273,7 @@ nix develop
 **Expected:** Harmless. Nix 2.30+ deprecated this setting. Safe to ignore.
 
 **To silence:**
+
 ```bash
 # Edit ~/.config/nix/nix.conf and remove or comment out:
 # experimental-features = nix-flakes lazy-trees

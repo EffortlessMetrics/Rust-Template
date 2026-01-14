@@ -37,6 +37,7 @@ This guide covers the implementation of comprehensive code quality improvements 
 - Builder pattern implementation for fluent error creation
 
 **Error Type Design**:
+
 ```rust
 pub struct AppError {
     // Reduced to <100 bytes total
@@ -71,9 +72,10 @@ impl AppError {
 - Resource cleanup with proper error handling
 
 **Key Patterns Applied**:
+
 ```rust
 // Before: panic!("Database connection failed")
-// After: 
+// After:
 match database_connection() {
     Ok(conn) => conn,
     Err(e) => {
@@ -83,7 +85,7 @@ match database_connection() {
 }
 
 // Before: let config = config.expect("Config must exist");
-// After: 
+// After:
 let config = match std::fs::read_to_string("config.yaml") {
     Ok(content) => serde_yaml::from_str(&content)?,
     Err(e) => {
@@ -105,6 +107,7 @@ let config = match std::fs::read_to_string("config.yaml") {
 - Serialization support for API responses
 
 **TaskStatus Design**:
+
 ```rust
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum TaskStatus {
@@ -112,7 +115,7 @@ pub enum TaskStatus {
     Todo,
     InProgress,
     Done,
-    
+
     // Governance-facing statuses
     Review,
     Blocked,
@@ -127,7 +130,7 @@ impl TaskStatus {
             // ... comprehensive alias mapping
         }
     }
-    
+
     // Validation methods for status transitions
     pub fn can_transition_from(&self, from: &TaskStatus) -> bool {
         matches!(from, TaskStatus::Todo | TaskStatus::InProgress)

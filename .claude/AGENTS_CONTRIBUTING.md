@@ -80,22 +80,27 @@ CI will run:
 ## Troubleshooting
 
 ### agents-lint says "name must match filename"
+
 File is `.claude/agents/my-agent.md` but frontmatter says `name: my_agent`?
 - **Fix**: Make them match: `name: my-agent`
 
 ### agents-lint says "Skill X not found"
+
 You referenced `skills: my-skill` but it doesn't exist?
 - **Fix**: Either create the Skill in `.claude/skills/my-skill/SKILL.md` or remove the reference
 
 ### agents-lint says "Tabs found"
+
 Your editor inserted tabs instead of spaces?
 - **Fix**: Open agent file, replace all tabs with spaces (configure editor)
 
 ### Precommit fails on "agents-lint"
+
 Changes to `.claude/agents/` or spec triggered lint?
 - **Fix**: Run `cargo xtask agents-lint` to see errors and fix them
 
 ### selftest Step 3 fails (Agents governance)
+
 One or more agents are invalid?
 - **Fix**: Run `cargo xtask agents-lint` to list issues; fix each one
 
@@ -192,6 +197,7 @@ Your agent must pass:
 ## Checklists
 
 ### Before Commit
+
 - [ ] `cargo xtask agents-lint` passes (no errors)
 - [ ] `cargo xtask precommit` passes
 - [ ] Agent file matches spec_ledger.yaml REQ/AC IDs
@@ -199,6 +205,7 @@ Your agent must pass:
 - [ ] No hardcoded secrets (API keys, tokens, credentials)
 
 ### Before PR Merge
+
 - [ ] CI job `.github/workflows/ci-agents.yml` passed
 - [ ] `selftest` Step 3/10 passed
 - [ ] PR review approved (especially for high-risk modes)

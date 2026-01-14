@@ -32,6 +32,7 @@ This document proposes a structured JSON report format for acceptance test resul
 - Employs `.tee()` combinator to output to both console and JUnit file
 
 **Key Code:**
+
 ```rust
 World::cucumber()
     .with_writer(

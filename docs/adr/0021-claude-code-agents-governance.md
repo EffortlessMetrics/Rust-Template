@@ -42,6 +42,7 @@ Each project agent (in `.claude/agents/*.md`) must have:
    - AC: What must be true for the agent to be "correct"? (e.g., "correctly implements feature workflow")
 
 2. **YAML frontmatter** with structured metadata
+
    ```yaml
    ---
    name: my-agent                    # kebab-case, ≤64 chars, unique
@@ -153,6 +154,7 @@ Governance enables:
 ## 5. Implementation Plan
 
 ### Phase 1: Core Validation (MVP)
+
 - ✅ agents-lint command with kernel AC checks (name, description, permissions, skills)
 - ✅ Selftest integration (Step 3/10)
 - ✅ Precommit integration (change-aware)
@@ -160,11 +162,13 @@ Governance enables:
 - ✅ Docs: AGENTS_GOVERNANCE.md, AGENTS_TEMPLATE.md, AGENTS_VALIDATION.md
 
 ### Phase 2: Enhanced Validation (Planned)
+
 - Secret detection (error on hardcoded API keys)
 - Least-privilege warnings (read-only agent + write tools)
 - Description quality heuristics (generic vs. specific)
 
 ### Phase 3: Integration (Planned)
+
 - CI workflow (`.github/workflows/ci-agents.yml`)
 - BDD scenarios for agents (in `specs/features/xtask_devex.feature`)
 - Agent registry/dashboard (if needed)

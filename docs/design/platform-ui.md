@@ -35,6 +35,7 @@ Provide a web-based dashboard served by the same binary at `/ui` or `/` that ren
 - Simple HTML/CSS for dashboard and flows tables
 
 **Structure**:
+
 ```
 static/
 +-- index.html       # Dashboard + navigation

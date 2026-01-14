@@ -30,6 +30,7 @@ Services included:
 ## Implementation Approach
 
 Create `docker-compose.yaml`:
+
 ```yaml
 version: '3.8'
 services:
@@ -50,6 +51,7 @@ services:
 ```
 
 Update `README.md` and `docs/dev-environment.md` with:
+
 ```bash
 docker-compose up -d
 cargo run

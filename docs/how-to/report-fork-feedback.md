@@ -65,6 +65,7 @@ Choose your path based on what you found:
 ### Steps
 
 1. **Document in your fork's FRICTION_LOG.md first**
+
    ```bash
    # In your fork
    cargo xtask friction-new \
@@ -73,6 +74,7 @@ Choose your path based on what you found:
      --severity medium \
      --summary "Bundle filtering by REQ/AC doesn't support wildcards"
    ```
+
    - This captures context in your environment
    - See your fork's `FRICTION_LOG.md` for format and categories
 

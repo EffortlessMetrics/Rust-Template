@@ -32,6 +32,7 @@ New to this repository? Start here:
 ## Strategic Documents
 
 ### Status & Vision
+
 - **[ROADMAP.md](ROADMAP.md)** - Current state (v3.3.14), pilot plan, future direction
 - **[KERNEL_SNAPSHOT.md](KERNEL_SNAPSHOT.md)** - v3.3.9-kernel frozen baseline, AC status, capabilities
 - **[IDP_CELL_CONTRACT.md](IDP_CELL_CONTRACT.md)** - IDP integration contract (surfaces, trust model, versioning)
@@ -39,10 +40,12 @@ New to this repository? Start here:
 - **[PILOT-PROJECT-PLAN.md](PILOT-PROJECT-PLAN.md)** - Pilot project planning and validation
 
 ### Constitution & Governance
+
 - **[CLAUDE.md](../CLAUDE.md)** - Repository constitution and operating manual for autonomous agents
 - **[CONSTITUTION.md](CONSTITUTION.md)** - Core principles and governance model
 
 ### For Agents (LLMs)
+
 - **[AGENT_GUIDE.md](AGENT_GUIDE.md)** - Operational guide for LLMs driving workflows
 - **[AGENT_SKILLS.md](AGENT_SKILLS.md)** - Available skills and when to use them
 - **[MISSING_MANUAL.md](MISSING_MANUAL.md)** - Unwritten knowledge and edge cases
@@ -52,11 +55,13 @@ New to this repository? Start here:
 ## Getting Started
 
 ### Installation & Setup
+
 - **[QUICKSTART.md](QUICKSTART.md)** - 15-minute fast path to productivity
 - **[dev-environment.md](dev-environment.md)** - Development environment setup and configuration
 - **[Windows Development Guide](how-to/windows-development.md)** - Complete Windows setup (WSL2 + native, Tier-2 support)
 
 ### First Steps
+
 - **[Getting Started Tutorial](tutorials/getting-started.md)** - Complete walkthrough for new users
 - **[First AC Change](tutorials/first-ac-change.md)** - Implement your first acceptance criterion
 - **[Day 1: First Change](tutorials/day-1-first-change.md)** - Your first day with the template
@@ -68,6 +73,7 @@ New to this repository? Start here:
 ## How-To Guides
 
 ### Adoption & Setup
+
 - **[Adopt Kernel](how-to/adopt-kernel.md)** - **Kernel adoption guide for forks (v3.3.9-kernel+)** ⭐
 - **[Fork and Build Your First Feature](how-to/fork-and-build-first-feature.md)** - Golden path: fork to feature in 2-3 hours
 - **[Add Governance to Existing Repo](how-to/add-governance-to-existing-repo.md)** - Brownfield adoption (complete guide)
@@ -77,22 +83,26 @@ New to this repository? Start here:
 - **[Second Service LLM Sanity Check](how-to/second-service-llm-sanity.md)** - Validating second service with LLM assistance
 
 ### Fork Customization (Complete Guide)
+
 - **[First Fork Guide](how-to/FIRST_FORK.md)** - Complete first-time fork setup (20 min)
 - **[Change Template Opinions](how-to/change-template-opinion.md)** - Override or relax template defaults safely (with worked examples)
 - **[Reconcile Kernel Updates](how-to/reconcile-kernel-updates.md)** - Pull upstream fixes without losing customizations
 - **[Report Fork Feedback](how-to/report-fork-feedback.md)** - How to report issues and improvements
 
 ### Development Workflows
+
 - **[Add Acceptance Criterion](how-to/add-acceptance-criterion.md)** - Creating new ACs in the spec ledger
 - **[Add HTTP Endpoint](how-to/add-http-endpoint.md)** - Adding new API endpoints
 - **[Change OpenAPI Safely](how-to/change-openapi-safely.md)** - Modifying API contracts without breaking changes
 - **[Using LLM Bundles](how-to/use-llm-bundles.md)** - Bounded context for AI assistance
 
 ### CI/CD & Branch Protection
+
 - **[Setup Branch Protection](how-to/setup-branch-protection.md)** - Configuring branch protection rules
 - **[Setup Tag Signing](how-to/setup-tag-signing.md)** - GPG signing for releases
 
 ### Operations & Deployment
+
 - **[Deploy to Dev Environment](how-to/deploy-dev.md)** - Development deployment guide
 - **[Test OTLP Tracing](how-to/test-otlp-tracing.md)** - OpenTelemetry tracing setup and validation
 
@@ -101,16 +111,19 @@ New to this repository? Start here:
 ## Reference Documentation
 
 ### Platform & Environment
+
 - **[Platform Support Reference](reference/platform-support.md)** - Complete platform support matrix, Tier 1/Tier 2, Windows guidance
 - **[xtask Command Reference](reference/xtask-commands.md)** - All CLI commands and options
 
 ### CI/CD & Branch Protection
+
 - **[CI Workflows Reference](reference/ci-workflows.md)** - Comprehensive CI workflow documentation
 - **[CI Coverage](reference/ci-coverage.md)** - CI coverage matrix and validation
 - **[Required Checks](reference/required-checks.md)** - Required CI checks for merge
 - **[Branch Protection Profiles](reference/branch-protection-profiles.md)** - Branch protection configuration options
 
 ### Architecture & Design
+
 - **[ADR Index](adr/README.md)** - All architecture decision records
   - **[ADR-0001: Hexagonal Architecture](adr/0001-hexagonal-architecture.md)** - Ports & adapters pattern
   - **[ADR-0002: Nix-First Dev Environment](adr/0002-nix-first-dev-env.md)** - Tier-1 reproducible environments
@@ -129,18 +142,22 @@ New to this repository? Start here:
 Working code examples demonstrating platform integration patterns:
 
 ### IDP Integration
+
 - **[Backstage Plugin Example](../examples/backstage-plugin/README.md)** - React TypeScript plugin for governance tiles
 - **[Port.io Integration Guide](how-to/implement-port-integration.md)** - Python-based IDP ingestion
 
 ### Agent & Automation
+
 - **[Agent Pilot Example](../examples/agent-pilot/README.md)** - Python agent pilot for autonomous workflows
 - **[Agent Guide](AGENT_GUIDE.md)** - Operational guide for LLM agents
 
 ### Adoption Patterns
+
 - **[Brownfield Demo](../examples/brownfield-demo/README.md)** - Adding governance to existing services
 - **[Fork Customization](../examples/fork-customization/README.md)** - Template fork and customization patterns
 
 ### Fork Examples
+
 - **[Example MyService Fork](../forks/example-myservice/README.md)** - Minimal fork demonstrating domain customization
 - **[Fork Registry](../forks/README.md)** - Fork management and tracking
 
@@ -153,6 +170,7 @@ Working code examples demonstrating platform integration patterns:
 Deeper understanding of concepts:
 
 ### Core Concepts
+
 - **[Rust-as-Spec Overview](explanation/rust-as-spec-overview.md)** - Complete technical architecture
 - **[Architecture](explanation/architecture.md)** - System architecture overview
 - **[Template Architecture](explanation/template-architecture.md)** - Template-specific architecture
@@ -161,12 +179,14 @@ Deeper understanding of concepts:
 - **[IDP Positioning](explanation/idp-positioning.md)** - Internal Developer Platform positioning
 
 ### Patterns & Design
+
 - **[Adoption Patterns](explanation/adoption-patterns.md)** - Template vs upstream vs generator
 - **[Adapters](explanation/adapters.md)** - Adapter pattern in hexagonal architecture
 - **[Infra Modules](explanation/infra-modules.md)** - Infrastructure module design
 - **[Supply Chain Hardening](explanation/supply-chain-hardening.md)** - Security and supply chain
 
 ### Template Management
+
 - **[Template Contracts](explanation/TEMPLATE-CONTRACTS.md)** - Template versioning and contracts
 - **[Template Foundation vs Examples](explanation/template-foundation-vs-examples.md)** - Kernel vs examples
 - **[Template Versioning](explanation/template-versioning.md)** - Version management strategy
@@ -190,6 +210,7 @@ Step-by-step learning paths:
 Active design documents for current and future work:
 
 ### Platform & Runtime
+
 - **[Platform DevEx](design/platform-devex.md)** - Developer experience design
 - **[Platform Introspection](design/platform-introspection.md)** - Runtime introspection APIs
 - **[Platform Runtime Contract](design/platform-runtime-contract.md)** - Platform runtime guarantees
@@ -198,11 +219,13 @@ Active design documents for current and future work:
 - **[IDP Tile Specifications](design/DESIGN-IDP-TILES.md)** - IDP tile specifications for platform integration
 
 ### Governance & Validation
+
 - **[Governance Hooks](design/governance-hooks.md)** - Pre-commit and CI governance hooks
 - **[Graph Invariants](design/graph-invariants.md)** - Governance graph structural rules
 - **[GOV-WRITE-001](design/gov-write-001.md)** - Write operations in governance
 
 ### Developer Experience
+
 - **[Agent Interface](design/agent-interface.md)** - LLM agent interface design
 - **[Skills Guide](design/skills-guide.md)** - Skills system design
 - **[Skills Tooling](design/skills-tooling.md)** - Skills implementation tooling
@@ -211,12 +234,14 @@ Active design documents for current and future work:
 - **[LLMignore Semantics](design/llmignore-semantics.md)** - LLM context filtering
 
 ### Endpoints & APIs
+
 - **[Health Endpoint](design/health-endpoint.md)** - Service health endpoint design
 - **[Version Endpoint](design/version-endpoint.md)** - Version information endpoint
 - **[Error Handling](design/error-handling.md)** - Error handling strategy
 - **[Metrics](design/metrics.md)** - Metrics and observability
 
 ### Release & Testing
+
 - **[Release Bundling](design/release-bundling.md)** - Release artifact generation
 - **[AC Structured Report](design/ac-structured-report.md)** - Acceptance criteria reporting
 - **[Task Lifecycle](design/task-lifecycle.md)** - Task state management
@@ -234,11 +259,11 @@ Active design documents for current and future work:
 
 Historical and current planning documents:
 
-- **[v2.1.0 Plan](v2.1.0-plan.md)** - Historical release plan
-- **[v2.2.0 Plan](v2.2.0-plan.md)** - Historical release plan
-- **[v2.2.0 Execution Roadmap](v2.2.0-execution-roadmap.md)** - Historical execution plan
-- **[v2.2.0 Tracker](v2.2.0-tracker.md)** - Historical progress tracker
-- **[v2.3.0 Plan](v2.3.0-plan.md)** - Historical release plan
+- **[v2.1.0 Plan](archive/v2.1.0-plan.md)** - Historical release plan
+- **[v2.2.0 Plan](archive/v2.2.0-plan.md)** - Historical release plan
+- **[v2.2.0 Execution Roadmap](archive/v2.2.0-execution-roadmap.md)** - Historical execution plan
+- **[v2.2.0 Tracker](archive/v2.2.0-tracker.md)** - Historical progress tracker
+- **[v2.3.0 Plan](archive/v2.3.0-plan.md)** - Historical release plan
 - **[Health Endpoint v1 Plan](plans/health-endpoint-v1.md)** - Feature-specific plan
 
 ---
@@ -252,7 +277,7 @@ Historical and current planning documents:
 ## Release Documentation
 
 - **[RELEASE_PLAYBOOK.md](RELEASE_PLAYBOOK.md)** - Release process and checklist
-- **[RELEASE_v2.5.0.md](RELEASE_v2.5.0.md)** - v2.5.0 release notes
+- **[RELEASE_v2.5.0.md](archive/RELEASE_v2.5.0.md)** - v2.5.0 release notes
 - **[READY-FOR-PRODUCTION-CHECKLIST.md](READY-FOR-PRODUCTION-CHECKLIST.md)** - Production readiness criteria
 
 ---
@@ -276,10 +301,13 @@ When updating documentation:
 
 1. **Update `specs/doc_index.yaml`** if adding/moving/renaming docs
 2. **Sync front-matter** with doc_index entries:
+
    ```bash
    cargo xtask docs-frontmatter-sync
    ```
+
 3. **Validate governance**:
+
    ```bash
    cargo xtask docs-check
    ```
@@ -351,7 +379,7 @@ Scaffolds you can copy:
 
 ## Historical & Meta Documents
 
-- **[implementation-summary-2025-11-15.md](implementation-summary-2025-11-15.md)** - Historical implementation summary
+- **[implementation-summary-2025-11-15.md](archive/implementation-summary-2025-11-15.md)** - Historical implementation summary
 - **[TECHNICAL-FREEZE-COMPLETE.md](TECHNICAL-FREEZE-COMPLETE.md)** - Technical freeze milestone
 - **[meta_contract_phase1.3.md](meta_contract_phase1.3.md)** - Meta-contract development phase
 - **[ci-examples.md](ci-examples.md)** - CI configuration examples
@@ -360,7 +388,7 @@ Scaffolds you can copy:
 
 ## API Documentation
 
-- **[API Test Documentation](api/test.md)** - API testing documentation
+ Documentation is available in the `docs/api/` folder.
 
 ---
 
@@ -385,6 +413,7 @@ Current status (v3.3.14):
 ## Document Conventions
 
 ### File Naming
+
 - How-tos: `how-to/{verb}-{noun}.md` (e.g., `how-to/add-governance-to-existing-repo.md`)
 - Tutorials: `tutorials/{task-name}.md` (e.g., `tutorials/first-ac-change.md`)
 - Explanations: `explanation/{concept}.md` (e.g., `explanation/rust-as-spec-overview.md`)
@@ -392,6 +421,7 @@ Current status (v3.3.14):
 - Design: `design/{feature-name}.md` (e.g., `design/platform-ui.md`)
 
 ### Front Matter
+
 All docs should have YAML front-matter:
 
 ```yaml
@@ -406,6 +436,7 @@ related_requirements: [REQ-ID-1, REQ-ID-2]
 ```
 
 ### Cross-Linking
+
 - Use relative paths: `[Text](../how-to/file.md)`
 - Use file:// URIs for code: `[spec_ledger.yaml](file:///path/to/spec_ledger.yaml)`
 - Link to specific lines: `[graph.rs:L123](file:///path/to/graph.rs#L123)`

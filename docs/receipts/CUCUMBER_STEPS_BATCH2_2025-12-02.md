@@ -25,6 +25,7 @@ Batch 2 adds comprehensive JSON validation capabilities and environment variable
 **Location:** `../../crates/acceptance/src/steps/xtask_devex.rs` (lines 2850-2869)
 
 **Usage Example:**
+
 ```gherkin
 When I run "cargo xtask idp-snapshot"
 Then the output should be valid JSON
@@ -51,6 +52,7 @@ And the JSON should contain field "governance_health"
 **Location:** `../../crates/acceptance/src/steps/xtask_devex.rs` (lines 2871-2904)
 
 **Usage Example:**
+
 ```gherkin
 When I run "cargo xtask idp-snapshot"
 Then the output should be valid JSON
@@ -79,6 +81,7 @@ And the JSON field "governance_health" should have "ac_coverage"
 **Location:** `../../crates/acceptance/src/steps/xtask_devex.rs` (lines 2906-2940)
 
 **Usage Example:**
+
 ```gherkin
 When I run "cargo xtask idp-snapshot --output /tmp/idp-test.json"
 Then the command should succeed
@@ -114,6 +117,7 @@ And the file should contain valid JSON
 **Location:** `../../crates/acceptance/src/steps/xtask_devex.rs` (lines 209-212)
 
 **Usage Example:**
+
 ```gherkin
 Given the environment variable "CI" is set to "1"
 And the environment variable "XTASK_NONINTERACTIVE" is set to "1"
@@ -144,18 +148,22 @@ And the output should indicate CI mode
 The following cleanup steps were already implemented in batch 1 and are documented here for reference:
 
 #### `I clean up the selective testing worktree`
+
 - **Location:** `xtask_devex.rs:356`
 - Removes temporary git worktree created for `test-changed` scenarios
 
 #### `I clean up created question test artifacts`
+
 - **Location:** `xtask_devex.rs:369`
 - Removes test question YAML files (Q-TEST-*.yaml) from questions directory
 
 #### `I clean up the test ADR file`
+
 - **Location:** `xtask_devex.rs:1969`
 - Removes test ADR files created during ADR workflow tests
 
 #### `I clean up the service-init test files`
+
 - **Location:** `xtask_devex.rs:2569`
 - Removes test files created by `service-init` command tests
 
@@ -164,14 +172,18 @@ The following cleanup steps were already implemented in batch 1 and are document
 ## Test Results
 
 ### Compilation
+
 ✅ **All code compiles successfully**
+
 ```
 cargo check --package acceptance
 Finished `dev` profile [unoptimized + debuginfo] target(s) in 47.18s
 ```
 
 ### BDD Test Suite
+
 ✅ **All acceptance tests pass**
+
 ```
 cargo xtask bdd
 ✓ Acceptance tests passed
@@ -229,12 +241,14 @@ Environment variables are:
 ## Related Work
 
 ### Batch 1 Steps (Already Implemented)
+
 - HTTP request/response steps
 - Basic command execution steps
 - File existence and content checks
 - Basic cleanup steps
 
 ### Future Batches (Potential)
+
 - Array field validation (check array contents, length constraints)
 - Numeric field validation (ranges, comparisons)
 - Date/timestamp validation
@@ -276,8 +290,8 @@ Before committing new steps:
 
 ## References
 
-- **Cucumber Documentation:** https://cucumber.io/docs/cucumber/
-- **Cucumber Rust:** https://github.com/cucumber-rs/cucumber
+- **Cucumber Documentation:** <https://cucumber.io/docs/cucumber/>
+- **Cucumber Rust:** <https://github.com/cucumber-rs/cucumber>
 - **Acceptance Test Crate:** `../../crates/acceptance/`
 - **Feature Files:** `../../specs/features/`
 - **World State:** `../../crates/acceptance/src/world.rs`

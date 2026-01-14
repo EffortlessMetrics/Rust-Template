@@ -43,11 +43,13 @@
 1. **Fix app initialization in world.rs** (lines 143-147)
 
    **Current code:**
+
    ```rust
    app: app_http::app(governance_repo),
    ```
 
    **Change to:**
+
    ```rust
    app: app_http::app_with_workspace_root(
        governance_repo,
@@ -60,6 +62,7 @@
 2. **Add app reload after task creation** (`crates/acceptance/src/steps/governance_tasks.rs` after line 145)
 
    **Add this code:**
+
    ```rust
    // Reload the app to reflect task changes
    world.reload_app();

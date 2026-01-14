@@ -298,6 +298,7 @@ Result: Credentials refreshed
 ## Version History
 
 - v1.0.0 (2025-11-27): Initial release
+
 ```
 
 ### Step 4: Format & Validate
@@ -396,12 +397,14 @@ Use this checklist to ensure your Skill passes governance:
 ### ❌ Creating Skill without REQ/AC
 
 **Wrong**:
+
 ```bash
 mkdir .claude/skills/my-skill
 # Create SKILL.md without governance
 ```
 
 **Right**:
+
 ```yaml
 # First, add REQ + AC to spec_ledger.yaml
 # Then create SKILL.md
@@ -411,11 +414,13 @@ mkdir .claude/skills/my-skill
 ### ❌ Vague description
 
 **Wrong**:
+
 ```yaml
 description: "Helps with development"
 ```
 
 **Right**:
+
 ```yaml
 description: >
   AC-first feature development workflow. Use when implementing tasks
@@ -426,6 +431,7 @@ description: >
 ### ❌ One Skill per command
 
 **Wrong**:
+
 ```
 .claude/skills/skill-check/SKILL.md
 .claude/skills/skill-bdd/SKILL.md
@@ -433,6 +439,7 @@ description: >
 ```
 
 **Right**:
+
 ```
 .claude/skills/governed-feature-dev/SKILL.md  # Wraps entire ac_first flow
 ```
@@ -442,6 +449,7 @@ description: >
 **Wrong**: Push without running `skills-lint` and `selftest`
 
 **Right**:
+
 ```bash
 cargo xtask skills-lint    # No errors
 cargo xtask selftest       # All steps pass

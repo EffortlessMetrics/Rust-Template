@@ -15,10 +15,13 @@ adrs:
 # Standardized Error Handling
 
 ## Context
+
 Services need a consistent error response format for clients to reliably handle failures.
 
 ## Design
+
 All 4xx/5xx responses return a JSON envelope:
+
 ```json
 {
   "error": {
@@ -30,4 +33,5 @@ All 4xx/5xx responses return a JSON envelope:
 ```
 
 ## Implementation
+
 Middleware captures errors and formats them. `X-Request-ID` is propagated.

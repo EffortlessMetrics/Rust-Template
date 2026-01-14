@@ -44,6 +44,7 @@ This guide uses a FAQ format organized by problem domain. Use your browser's sea
 ### Q: "nix: command not found" after installation
 
 **Symptom:**
+
 ```bash
 $ nix develop
 bash: nix: command not found
@@ -52,6 +53,7 @@ bash: nix: command not found
 **Cause:** Nix profile not loaded in current shell
 
 **Diagnostic:**
+
 ```bash
 # Check if Nix is installed
 ls ~/.nix-profile/
@@ -61,6 +63,7 @@ echo $NIX_PROFILES
 ```
 
 **Fix:**
+
 ```bash
 # Source Nix profile manually
 source ~/.nix-profile/etc/profile.d/nix.sh
@@ -74,6 +77,7 @@ exit
 ```
 
 **Prevention:**
+
 ```bash
 # Verify shell profile includes Nix
 grep nix ~/.bashrc  # or ~/.zshrc
@@ -85,6 +89,7 @@ grep nix ~/.bashrc  # or ~/.zshrc
 ### Q: "conftest not found" but I'm in nix develop
 
 **Symptom:**
+
 ```bash
 $ cargo xtask policy-test
 Error: conftest not available
@@ -93,6 +98,7 @@ Error: conftest not available
 **Cause:** Nix flake may need updating
 
 **Diagnostic:**
+
 ```bash
 # Verify conftest is available in devshell
 nix develop -c conftest --version
@@ -100,6 +106,7 @@ nix develop -c conftest --version
 ```
 
 **Fix:**
+
 ```bash
 # Update flake lock
 nix flake update
@@ -113,6 +120,7 @@ conftest --version
 ```
 
 **Alternative (Tier 2 - Native toolchain):**
+
 ```bash
 # Install conftest via cargo-binstall
 cargo install cargo-binstall
@@ -127,12 +135,14 @@ conftest --version
 ### Q: "cargo xtask doctor" reports issues
 
 **Symptom:**
+
 ```bash
 $ cargo xtask doctor
 ⚠️ Some checks failed
 ```
 
 **Diagnostic:**
+
 ```bash
 # Run doctor with verbose output
 cargo xtask doctor
@@ -159,12 +169,14 @@ conftest --version
 ### Q: Nix flake check fails
 
 **Symptom:**
+
 ```bash
 $ nix flake check
 error: builder for '/nix/store/...' failed
 ```
 
 **Diagnostic:**
+
 ```bash
 # Check flake validity
 nix flake metadata
@@ -174,6 +186,7 @@ nix build .#packages.x86_64-linux.default --show-trace
 ```
 
 **Fix:**
+
 ```bash
 # Update flake inputs
 nix flake update
@@ -190,6 +203,7 @@ nix develop
 ### Q: "warning: unknown setting 'lazy-trees'" appears in Nix output
 
 **Symptom:**
+
 ```bash
 $ nix develop
 warning: unknown setting 'lazy-trees'
@@ -200,6 +214,7 @@ warning: unknown setting 'lazy-trees'
 **Impact:** Cosmetic only - does not affect functionality. The warning is safe to ignore.
 
 **Diagnostic:**
+
 ```bash
 # Check Nix version
 nix --version
@@ -211,6 +226,7 @@ grep lazy-trees /etc/nix/nix.conf
 ```
 
 **Fix (System-wide - requires sudo):**
+
 ```bash
 # Override in custom config
 echo "# Override deprecated lazy-trees setting from managed config" | sudo tee -a /etc/nix/nix.custom.conf
@@ -232,6 +248,7 @@ nix develop
 ### Q: Nix devshell: rustc/libz.so.1 / sccache error
 
 **Symptom:**
+
 ```bash
 $ nix develop -c cargo xtask ac-status
 error while loading shared libraries: libz.so.1: cannot open shared object file
@@ -266,6 +283,7 @@ devShells = forAllSystems ({ pkgs, rust, ... }: {
 ```
 
 Then run:
+
 ```bash
 nix flake update
 cargo xtask check  # Should now pass
@@ -274,17 +292,20 @@ cargo xtask check  # Should now pass
 **See also:** `docs/how-to/nix-environment-issues.md` for detailed explanation and additional context.
 
 **Workaround (Option 1 - if flake.nix fix is not possible):** Run xtask as if already inside Nix shell
+
 ```bash
 # Inside nix develop, or with environment simulated:
 IN_NIX_SHELL=1 RUSTC_WRAPPER="" ./target/release/xtask ac-status
 ```
 
 **Workaround (Option 2):** Disable sccache for the session
+
 ```bash
 RUSTC_WRAPPER="" cargo xtask ac-status
 ```
 
 **Workaround (Option 3):** Use low-resource mode
+
 ```bash
 XTASK_LOW_RESOURCES=1 cargo xtask ac-status
 ```
@@ -298,6 +319,7 @@ XTASK_LOW_RESOURCES=1 cargo xtask ac-status
 > **Status: RESOLVED (v3.3.12+)** — This issue has been fixed in the devshell. The flake.nix now ensures Nix-managed sccache is used via PATH ordering and RUSTC_WRAPPER. If you're still seeing this issue, ensure you're on the latest flake.nix.
 
 **Symptom (historical):**
+
 ```bash
 $ nix develop -c cargo xtask ac-status
 # Completes silently, but target/junit/acceptance.xml is empty
@@ -311,6 +333,7 @@ error while loading shared libraries: libz.so.1: cannot open shared object file
 3. Ensures zlib is available in `LD_LIBRARY_PATH`
 
 **Verify the fix:**
+
 ```bash
 nix develop -c bash -lc 'which sccache; sccache --version; echo "$RUSTC_WRAPPER"'
 # Should show /nix/store/.../bin/sccache (not ~/.cargo/bin/sccache)
@@ -322,17 +345,20 @@ nix develop -c bash -lc 'which sccache; sccache --version; echo "$RUSTC_WRAPPER"
 If you're on an older template version, these workarounds still apply:
 
 **Workaround (Option 1):** Run inside interactive nix develop shell
+
 ```bash
 nix develop
 cargo xtask ac-status
 ```
 
 **Workaround (Option 2):** Disable sccache for the command
+
 ```bash
 RUSTC_WRAPPER="" nix develop -c cargo xtask ac-status
 ```
 
 **Workaround (Option 3):** Use low-resource mode
+
 ```bash
 XTASK_LOW_RESOURCES=1 nix develop -c cargo xtask ac-status
 ```
@@ -404,6 +430,7 @@ nix develop -c cargo build
 ### Q: "failed to remove xtask.exe" (os error 5) on Windows
 
 **Symptom:**
+
 ```
 error: failed to remove file 'target\debug\xtask.exe'
 Caused by: Access is denied. (os error 5)
@@ -414,6 +441,7 @@ Caused by: Access is denied. (os error 5)
 **This is NOT a test failure.** It's a Windows platform limitation.
 
 **Diagnostic:**
+
 ```powershell
 # Check what's using the file
 tasklist | findstr "xtask cargo"
@@ -423,6 +451,7 @@ Get-MpComputerStatus | Select-Object RealTimeProtectionEnabled
 ```
 
 **Fix (Recommended):** Exclude target/ from antivirus
+
 ```powershell
 # Windows Defender (run as Administrator)
 Add-MpPreference -ExclusionPath "C:\Code\Rust-Template\target"
@@ -432,6 +461,7 @@ Get-MpPreference | Select-Object -ExpandProperty ExclusionPath
 ```
 
 **Fix (Alternative):** Use WSL2 for canonical validation
+
 ```bash
 # In WSL2
 wsl
@@ -441,6 +471,7 @@ cargo xtask selftest
 ```
 
 **Fix (Quick workaround):**
+
 ```powershell
 # Kill processes and retry
 taskkill /F /IM cargo.exe
@@ -456,6 +487,7 @@ cargo xtask selftest
 ### Q: "linker 'link.exe' not found" on Windows
 
 **Symptom:**
+
 ```
 error: linker `link.exe` not found
 ```
@@ -463,6 +495,7 @@ error: linker `link.exe` not found
 **Cause:** Visual Studio Build Tools not installed
 
 **Fix:**
+
 ```powershell
 # Install via winget
 winget install Microsoft.VisualStudio.2022.BuildTools
@@ -475,6 +508,7 @@ winget install Microsoft.VisualStudio.2022.BuildTools
 ```
 
 **Alternative:** Install full Visual Studio Community
+
 ```powershell
 winget install Microsoft.VisualStudio.2022.Community
 ```
@@ -484,6 +518,7 @@ winget install Microsoft.VisualStudio.2022.Community
 ### Q: OpenSSL linking errors on Windows
 
 **Symptom:**
+
 ```
 error: failed to run custom build command for `openssl-sys`
 ```
@@ -491,6 +526,7 @@ error: failed to run custom build command for `openssl-sys`
 **Cause:** Windows doesn't ship OpenSSL by default
 
 **Fix (Option 1):** Use vcpkg (recommended)
+
 ```powershell
 # Install vcpkg
 git clone https://github.com/microsoft/vcpkg.git C:\vcpkg
@@ -511,6 +547,7 @@ cd C:\vcpkg
 ```
 
 **Fix (Option 2):** Use WSL2
+
 ```bash
 # WSL2 has OpenSSL via Nix devshell
 wsl
@@ -528,6 +565,7 @@ cargo build
 **Cause:** Repository cloned in `/mnt/c/` (Windows filesystem)
 
 **Diagnostic:**
+
 ```bash
 # Check where repo is located
 pwd
@@ -535,6 +573,7 @@ pwd
 ```
 
 **Fix:** Move to WSL2 native filesystem
+
 ```bash
 # Clone to WSL2 native filesystem
 cd ~
@@ -555,6 +594,7 @@ pwd
 ### Q: "out of memory" during compilation
 
 **Symptom:**
+
 ```
 error: linking with `cc` failed: signal: 9 (SIGKILL)
 ```
@@ -562,6 +602,7 @@ error: linking with `cc` failed: signal: 9 (SIGKILL)
 **Cause:** Insufficient RAM or swap space
 
 **Fix (Quick):** Reduce parallel jobs
+
 ```bash
 # Set environment variable
 export CARGO_BUILD_JOBS=1
@@ -571,6 +612,7 @@ XTASK_LOW_RESOURCES=1 cargo xtask check
 ```
 
 **Fix (Permanent):** Configure Cargo
+
 ```bash
 # Edit ~/.cargo/config.toml
 [build]
@@ -578,12 +620,14 @@ jobs = 2  # Reduce from default (num CPUs)
 ```
 
 **WSL2 specific:** Limit WSL2 memory
+
 ```powershell
 # In Windows, create/edit C:\Users\YourName\.wslconfig
 notepad $env:USERPROFILE\.wslconfig
 ```
 
 Add:
+
 ```ini
 [wsl2]
 memory=4GB
@@ -591,6 +635,7 @@ processors=2
 ```
 
 Restart WSL:
+
 ```powershell
 wsl --shutdown
 wsl
@@ -601,6 +646,7 @@ wsl
 ### Q: "path with spaces" errors
 
 **Symptom:**
+
 ```
 error: could not execute process
 The system cannot find the path specified.
@@ -609,6 +655,7 @@ The system cannot find the path specified.
 **Cause:** Repository cloned to path with spaces (e.g., `C:\Users\Your Name\Code\`)
 
 **Fix:** Move to path without spaces
+
 ```powershell
 # ❌ BAD: C:\Users\Your Name\Documents\Code\
 # ✅ GOOD: C:\Code\
@@ -629,6 +676,7 @@ git clone https://github.com/EffortlessMetrics/Rust-Template.git
 **Symptom:** `cargo test` passes on your machine but fails in GitHub Actions
 
 **Diagnostic:**
+
 ```bash
 # Check which environment you're using
 echo $NIX_PROFILES  # Should show Nix paths if in Tier 1
@@ -651,6 +699,7 @@ rustc --version  # Local
 | Timing issues | Tests have race conditions | Fix test isolation |
 
 **Fix:** Match CI environment
+
 ```bash
 # Use Tier 1 environment (matches CI)
 nix develop
@@ -662,6 +711,7 @@ cargo test --workspace
 ### Q: Specific test fails with "connection refused"
 
 **Symptom:**
+
 ```
 Error: Connection refused (os error 111)
 test tests::api_integration ... FAILED
@@ -670,6 +720,7 @@ test tests::api_integration ... FAILED
 **Cause:** Test expects service to be running, or port already in use
 
 **Diagnostic:**
+
 ```bash
 # Check if service is running
 curl http://localhost:8080/health
@@ -680,6 +731,7 @@ netstat -ano | findstr :8080  # Windows
 ```
 
 **Fix (Option 1):** Stop conflicting service
+
 ```bash
 # Find process using port
 lsof -i :8080  # Note the PID
@@ -691,6 +743,7 @@ taskkill /PID <PID> /F
 ```
 
 **Fix (Option 2):** Use dynamic port in tests
+
 ```rust
 // In test code, use port 0 for dynamic allocation
 let listener = TcpListener::bind("127.0.0.1:0")?;
@@ -702,6 +755,7 @@ let port = listener.local_addr()?.port();
 ### Q: BDD tests fail with "step not found"
 
 **Symptom:**
+
 ```
 Undefined step: Given the service is running
 Feature: Health endpoint
@@ -712,6 +766,7 @@ Feature: Health endpoint
 **Cause:** Step definition missing or not imported
 
 **Diagnostic:**
+
 ```bash
 # Search for step definition
 grep -r "the service is running" crates/acceptance/src/
@@ -721,6 +776,7 @@ cat crates/acceptance/tests/acceptance.rs
 ```
 
 **Fix:** Add step definition
+
 ```rust
 // In crates/acceptance/src/steps/service.rs
 use cucumber::given;
@@ -742,21 +798,24 @@ mod steps {
 ### Q: Test isolation failures (tests pass individually, fail together)
 
 **Symptom:**
+
 ```bash
-$ cargo test test_a test_b  # Both fail
-$ cargo test test_a  # Passes
-$ cargo test test_b  # Passes
+cargo test test_a test_b  # Both fail
+cargo test test_a  # Passes
+cargo test test_b  # Passes
 ```
 
 **Cause:** Shared state between tests (global variables, filesystem, ports)
 
 **Diagnostic:**
+
 ```bash
 # Run with single thread to see if order-dependent
 cargo test -- --test-threads=1
 ```
 
 **Fix:** Isolate tests
+
 ```rust
 // Use unique identifiers per test
 #[test]
@@ -782,6 +841,7 @@ fn test_b() {
 **Symptom:** PR cannot be merged, shows red X
 
 **Diagnostic:**
+
 ```bash
 # Check CI workflow logs in GitHub Actions tab
 # Look for which check failed:
@@ -801,6 +861,7 @@ fn test_b() {
 | **ci-security** | Audit findings | Run `cargo audit` and address CVEs |
 
 **Fix:** Reproduce locally
+
 ```bash
 # Match CI environment
 nix develop
@@ -817,6 +878,7 @@ cargo audit  # For ci-security
 ### Q: CI timeout (job exceeded maximum time)
 
 **Symptom:**
+
 ```
 Error: The operation was canceled.
 The job running on runner GitHub Actions X has exceeded the maximum execution time of 360 minutes.
@@ -825,6 +887,7 @@ The job running on runner GitHub Actions X has exceeded the maximum execution ti
 **Cause:** Infinite loop, deadlock, or missing cache
 
 **Diagnostic:**
+
 ```bash
 # Check workflow logs for where it hung
 # Look for last completed step
@@ -834,6 +897,7 @@ The job running on runner GitHub Actions X has exceeded the maximum execution ti
 ```
 
 **Fix:** If reproducible locally
+
 ```bash
 # Add timeout to specific tests
 #[test]
@@ -845,6 +909,7 @@ timeout 30s cargo test
 ```
 
 **Fix:** If only in CI
+
 ```yaml
 # In .github/workflows/*.yml
 # Increase timeout or split into parallel jobs
@@ -856,6 +921,7 @@ timeout-minutes: 45  # Increase from default 30
 ### Q: "No space left on device" in CI
 
 **Symptom:**
+
 ```
 error: No space left on device (os error 28)
 ```
@@ -863,6 +929,7 @@ error: No space left on device (os error 28)
 **Cause:** GitHub Actions runner disk full (target/ directory, caches)
 
 **Fix (In workflow):**
+
 ```yaml
 # Add cleanup step before build
 - name: Free disk space
@@ -873,6 +940,7 @@ error: No space left on device (os error 28)
 ```
 
 **Fix (For local):**
+
 ```bash
 # Clean Cargo build artifacts
 cargo clean
@@ -893,6 +961,7 @@ docker system prune -af
 **Cause:** Branch protection rule references check name that doesn't exist or isn't required
 
 **Diagnostic:**
+
 ```bash
 # Check required status checks
 # GitHub repo → Settings → Branches → Branch protection rule for `main`
@@ -908,6 +977,7 @@ docker system prune -af
 4. Save
 
 **Verify:**
+
 ```bash
 # Make a test PR
 # Check that required checks appear in PR status section
@@ -920,6 +990,7 @@ docker system prune -af
 ### Q: Service startup panics with "Invalid platform auth configuration"
 
 **Symptom:**
+
 ```
 FATAL: Invalid platform auth configuration: Invalid auth mode 'bearer'.
 Valid options: basic, jwt, none, open
@@ -928,6 +999,7 @@ Valid options: basic, jwt, none, open
 **Cause:** `PLATFORM_AUTH_MODE` set to an unrecognized value
 
 **Fix:**
+
 ```bash
 # Use a valid auth mode
 export PLATFORM_AUTH_MODE=jwt    # or: basic, open, none
@@ -940,6 +1012,7 @@ export PLATFORM_AUTH_MODE=jwt    # or: basic, open, none
 ### Q: Write requests return 401 Unauthorized
 
 **Symptom:**
+
 ```bash
 curl -X POST http://localhost:8080/platform/tasks/TASK-001/status \
   -H "Content-Type: application/json" \
@@ -950,12 +1023,14 @@ curl -X POST http://localhost:8080/platform/tasks/TASK-001/status \
 **Cause:** Auth enabled but credentials not provided or invalid
 
 **Diagnostic:**
+
 ```bash
 # Check current auth mode
 curl -s http://localhost:8080/platform/status | jq '.config.auth // .auth // empty'
 ```
 
 **Fix:**
+
 ```bash
 # For basic auth
 curl -X POST http://localhost:8080/platform/tasks/TASK-001/status \
@@ -979,6 +1054,7 @@ curl -X POST http://localhost:8080/platform/tasks/TASK-001/status \
 **Cause:** Origin not in allowed list
 
 **Diagnostic:**
+
 ```bash
 # Check if your origin is allowed
 curl -X OPTIONS http://localhost:8080/api/echo \
@@ -988,6 +1064,7 @@ curl -X OPTIONS http://localhost:8080/api/echo \
 ```
 
 **Fix:**
+
 ```bash
 # Add your origin
 export CORS_ALLOWED_ORIGINS="https://your-app.com,http://localhost:3000"
@@ -1003,6 +1080,7 @@ export CORS_ALLOWED_ORIGINS="https://your-app.com,http://localhost:3000"
 3. **Wrong secret:** Signing secret doesn't match `PLATFORM_JWT_SECRET`
 
 **Diagnostic:**
+
 ```bash
 # Enable debug logging
 export RUST_LOG=debug
@@ -1011,6 +1089,7 @@ cargo run -p app-http
 ```
 
 **Fix:** Ensure JWT contains all required claims:
+
 ```json
 {
   "sub": "user-id",
@@ -1045,6 +1124,7 @@ cargo run -p app-http
 **Symptom:** Commit succeeds even when code is unformatted
 
 **Diagnostic:**
+
 ```bash
 # Check if hook exists
 ls -la .git/hooks/pre-commit
@@ -1057,6 +1137,7 @@ ls -l .git/hooks/pre-commit  # Should show -rwxr-xr-x
 ```
 
 **Fix:**
+
 ```bash
 # Reinstall hooks
 cargo xtask install-hooks
@@ -1073,6 +1154,7 @@ chmod +x .git/hooks/pre-commit
 ### Q: Pre-commit hook fails with "cargo: command not found"
 
 **Symptom:**
+
 ```bash
 $ git commit -m "test"
 .git/hooks/pre-commit: line 3: cargo: command not found
@@ -1081,6 +1163,7 @@ $ git commit -m "test"
 **Cause:** Cargo not in PATH when Git runs hook
 
 **Diagnostic:**
+
 ```bash
 # Check cargo PATH
 which cargo
@@ -1088,6 +1171,7 @@ echo $PATH | grep cargo
 ```
 
 **Fix (Linux/macOS):**
+
 ```bash
 # Ensure cargo is in PATH for all shells
 # Add to ~/.bashrc or ~/.zshrc
@@ -1098,6 +1182,7 @@ source ~/.bashrc  # or ~/.zshrc
 ```
 
 **Fix (Windows):**
+
 ```powershell
 # Add to PATH environment variable
 # 1. System Properties → Environment Variables
@@ -1107,6 +1192,7 @@ source ~/.bashrc  # or ~/.zshrc
 ```
 
 **Verify:**
+
 ```bash
 # Close and reopen terminal
 which cargo  # Should show path
@@ -1118,6 +1204,7 @@ git commit -m "test"  # Should run hook
 ### Q: Pre-commit hook blocks commit but tests pass
 
 **Symptom:**
+
 ```bash
 $ cargo test
 test result: ok. 42 passed; 0 failed
@@ -1129,6 +1216,7 @@ error: tests failed
 **Cause:** Hook runs different checks than `cargo test`
 
 **Diagnostic:**
+
 ```bash
 # Check what the hook does
 cat .git/hooks/pre-commit
@@ -1140,6 +1228,7 @@ cat .git/hooks/pre-commit
 ```
 
 **Fix:** Run same checks manually
+
 ```bash
 # Match hook checks
 cargo fmt --check
@@ -1157,6 +1246,7 @@ cargo xtask check
 **Symptom:** Need to commit urgently but hook fails
 
 **Fix (Use sparingly):**
+
 ```bash
 # Skip hook for one commit
 git commit --no-verify -m "fix: emergency hotfix"
@@ -1166,6 +1256,7 @@ git commit --no-verify -m "fix: emergency hotfix"
 ```
 
 **Proper workflow:**
+
 ```bash
 # 1. Fix the failures
 cargo xtask check
@@ -1181,6 +1272,7 @@ git commit -m "fix: proper commit"
 ### Q: Git hooks fail on Windows
 
 **Symptom:**
+
 ```
 error: cannot spawn .git/hooks/pre-commit: No such file or directory
 ```
@@ -1188,6 +1280,7 @@ error: cannot spawn .git/hooks/pre-commit: No such file or directory
 **Cause:** Line endings converted to CRLF or Git for Windows not installed
 
 **Diagnostic:**
+
 ```powershell
 # Check line endings
 file .git/hooks/pre-commit
@@ -1199,6 +1292,7 @@ where sh.exe
 ```
 
 **Fix (Line endings):**
+
 ```bash
 # In Git Bash
 dos2unix .git/hooks/pre-commit
@@ -1208,12 +1302,14 @@ cargo xtask install-hooks
 ```
 
 **Fix (Missing Git for Windows):**
+
 ```powershell
 winget install Git.Git
 # Restart terminal
 ```
 
 **Prevention:**
+
 ```powershell
 # Configure Git to preserve LF for shell scripts
 git config --global core.autocrlf input
@@ -1224,6 +1320,7 @@ git config --global core.autocrlf input
 ### Q: WSL2 Docker integration not working
 
 **Symptom:**
+
 ```bash
 $ docker ps
 Cannot connect to the Docker daemon at unix:///var/run/docker.sock
@@ -1239,6 +1336,7 @@ Cannot connect to the Docker daemon at unix:///var/run/docker.sock
 5. Click "Apply & Restart"
 
 **Verify:**
+
 ```bash
 # In WSL2
 docker --version
@@ -1250,6 +1348,7 @@ docker ps
 ### Q: "Access denied" on Windows file operations
 
 **Symptom:**
+
 ```
 error: Access denied. (os error 5)
 ```
@@ -1257,6 +1356,7 @@ error: Access denied. (os error 5)
 **Cause:** File in use by another process or insufficient permissions
 
 **Diagnostic:**
+
 ```powershell
 # Check what's using the file
 tasklist | findstr "cargo rust"
@@ -1266,6 +1366,7 @@ Get-Process | Where-Object {$_.Description -like "*Defender*"}
 ```
 
 **Fix:**
+
 ```powershell
 # Close VS Code and other IDEs
 # Stop rust-analyzer
@@ -1288,6 +1389,7 @@ taskkill /F /IM cargo.exe
 ### Q: "Policy test failed" but I didn't touch policies
 
 **Symptom:**
+
 ```bash
 $ cargo xtask policy-test
 Ledger Policy:
@@ -1298,6 +1400,7 @@ FAIL - AC-TPL-001 has no tests
 **Cause:** Spec ledger changed but tests not updated
 
 **Diagnostic:**
+
 ```bash
 # Check which AC is missing tests
 cargo xtask ac-coverage | grep "❌"
@@ -1307,6 +1410,7 @@ cat specs/spec_ledger.yaml | grep "AC-TPL-001"
 ```
 
 **Fix:** Add tests to AC
+
 ```yaml
 # In specs/spec_ledger.yaml
 acceptance_criteria:
@@ -1322,18 +1426,21 @@ acceptance_criteria:
 ### Q: "conftest not found" during policy tests
 
 **Symptom:**
+
 ```bash
 $ cargo xtask policy-test
 Error: conftest not available
 ```
 
 **Fix (Tier 1):**
+
 ```bash
 nix develop
 cargo xtask policy-test
 ```
 
 **Fix (Tier 2):**
+
 ```bash
 cargo install cargo-binstall
 cargo binstall conftest
@@ -1345,6 +1452,7 @@ cargo xtask policy-test
 ### Q: Policy test fails with "undefined variable"
 
 **Symptom:**
+
 ```
 Error: undefined variable in policy: input.ledger.stories
 ```
@@ -1352,6 +1460,7 @@ Error: undefined variable in policy: input.ledger.stories
 **Cause:** Policy expects structure that doesn't exist in test fixture
 
 **Diagnostic:**
+
 ```bash
 # Check policy file
 cat policy/ledger.rego
@@ -1361,6 +1470,7 @@ cat policy/testdata/ledger_valid.json
 ```
 
 **Fix:** Update test fixture to match policy expectations
+
 ```json
 // In policy/testdata/ledger_valid.json
 {
@@ -1377,6 +1487,7 @@ cat policy/testdata/ledger_valid.json
 ### Q: BDD tests fail with "scenario undefined"
 
 **Symptom:**
+
 ```
 Feature: Platform Health
   Scenario: Health endpoint returns 200
@@ -1384,6 +1495,7 @@ Feature: Platform Health
 ```
 
 **Fix:** Implement step definition
+
 ```rust
 // In crates/acceptance/src/steps/service.rs
 use cucumber::given;
@@ -1399,6 +1511,7 @@ async fn service_is_running(world: &mut MyWorld) {
 ### Q: "No scenarios found" for AC tag
 
 **Symptom:**
+
 ```bash
 $ cargo xtask test-ac AC-PLT-001
 [WARN] No BDD scenarios found for AC-PLT-001
@@ -1407,6 +1520,7 @@ $ cargo xtask test-ac AC-PLT-001
 **Cause:** Feature file missing `@AC-PLT-001` tag
 
 **Diagnostic:**
+
 ```bash
 # Search for AC tag
 grep -r "@AC-PLT-001" specs/features/
@@ -1415,6 +1529,7 @@ grep -r "@AC-PLT-001" specs/features/
 ```
 
 **Fix:** Add scenario with tag
+
 ```gherkin
 # In specs/features/health.feature
 @AC-PLT-001
@@ -1429,6 +1544,7 @@ Scenario: Health endpoint returns 200
 ### Q: BDD scenario passes but AC coverage shows ❌
 
 **Symptom:**
+
 ```bash
 $ cargo xtask test-ac AC-PLT-001
 [PASS] All tests passed
@@ -1440,6 +1556,7 @@ $ cargo xtask ac-coverage | grep AC-PLT-001
 **Cause:** AC in spec_ledger.yaml doesn't list the test
 
 **Fix:** Add test metadata to AC
+
 ```yaml
 # In specs/spec_ledger.yaml
 acceptance_criteria:
@@ -1457,6 +1574,7 @@ acceptance_criteria:
 ### Q: "AC not found" but it exists in spec_ledger.yaml
 
 **Symptom:**
+
 ```bash
 $ cargo xtask test-ac AC-PLT-001
 Error: AC not found: AC-PLT-001
@@ -1465,6 +1583,7 @@ Error: AC not found: AC-PLT-001
 **Cause:** Typo in AC ID or spec_ledger.yaml not parsing correctly
 
 **Diagnostic:**
+
 ```bash
 # Check exact AC ID in spec
 grep -A 5 "AC-PLT-001" specs/spec_ledger.yaml
@@ -1474,6 +1593,7 @@ cargo run -p xtask -- ac-coverage
 ```
 
 **Fix:** Ensure AC ID matches exactly (case-sensitive)
+
 ```yaml
 # ❌ Wrong
 acceptance_criteria:
@@ -1489,6 +1609,7 @@ acceptance_criteria:
 ### Q: "task-create" fails with "requirement not found"
 
 **Symptom:**
+
 ```bash
 $ cargo xtask task-create --id TASK-001 --req REQ-MISSING
 Error: Requirement REQ-MISSING not found in spec_ledger.yaml
@@ -1497,12 +1618,14 @@ Error: Requirement REQ-MISSING not found in spec_ledger.yaml
 **Cause:** Requirement doesn't exist or is misspelled
 
 **Diagnostic:**
+
 ```bash
 # List all requirements
 grep "^  - id: REQ-" specs/spec_ledger.yaml
 ```
 
 **Fix:** Use existing requirement or create it
+
 ```yaml
 # In specs/spec_ledger.yaml
 requirements:
@@ -1515,12 +1638,14 @@ requirements:
 ### Q: "cargo xtask" itself fails to compile
 
 **Symptom:**
+
 ```bash
 $ cargo xtask check
 error: could not compile `xtask`
 ```
 
 **Diagnostic:**
+
 ```bash
 # Try building xtask directly
 cargo build -p xtask
@@ -1537,6 +1662,7 @@ cargo build -p xtask
 | Macro error | proc-macro issue | Update proc-macro crates |
 
 **Fix:** Build xtask manually
+
 ```bash
 # Clean build
 cargo clean -p xtask
@@ -1554,6 +1680,7 @@ git status
 ### Q: "Kernel AC coverage incomplete: N unknown (budget: M)"
 
 **Symptom:**
+
 ```bash
 $ cargo xtask selftest
 ...
@@ -1563,6 +1690,7 @@ error: Kernel AC coverage incomplete: 70 unknown (budget: 65)
 **Cause:** More kernel ACs (with `must_have_ac=true`) lack test evidence than the allowed budget.
 
 **Diagnostic:**
+
 ```bash
 # List all unknown kernel ACs
 cargo xtask ac-coverage --todo --must-have
@@ -1574,6 +1702,7 @@ grep KERNEL_UNKNOWN_BUDGET .github/workflows/tier1-selftest.yml
 **Solutions:**
 
 1. **Add BDD scenarios** (preferred):
+
    ```bash
    # Get suggestions for specific AC
    cargo xtask ac-suggest-scenarios AC-XXXX
@@ -1584,6 +1713,7 @@ grep KERNEL_UNKNOWN_BUDGET .github/workflows/tier1-selftest.yml
    ```
 
 2. **Add unit test mappings** in `specs/spec_ledger.yaml`:
+
    ```yaml
    acceptance_criteria:
      - id: AC-XXXX
@@ -1594,6 +1724,7 @@ grep KERNEL_UNKNOWN_BUDGET .github/workflows/tier1-selftest.yml
    ```
 
 3. **Demote to non-kernel** (if AC is aspirational):
+
    ```yaml
    acceptance_criteria:
      - id: AC-XXXX
@@ -1601,9 +1732,11 @@ grep KERNEL_UNKNOWN_BUDGET .github/workflows/tier1-selftest.yml
    ```
 
 4. **Temporarily raise budget** (emergency only):
+
    ```bash
    KERNEL_UNKNOWN_BUDGET=70 cargo xtask selftest
    ```
+
    Then update `.github/workflows/tier1-selftest.yml` to match.
 
 **See:** ADR-0024 for full AC evidence model and gate semantics.
@@ -1613,6 +1746,7 @@ grep KERNEL_UNKNOWN_BUDGET .github/workflows/tier1-selftest.yml
 ### Q: "Kernel AC coverage incomplete: N failing"
 
 **Symptom:**
+
 ```bash
 $ cargo xtask selftest
 ...
@@ -1622,6 +1756,7 @@ error: Kernel AC coverage incomplete: 2 failing
 **Cause:** BDD scenarios tagged with kernel AC IDs are failing.
 
 **Diagnostic:**
+
 ```bash
 # Run BDD tests to see failures
 cargo xtask bdd
@@ -1658,7 +1793,7 @@ cargo xtask ac-status --json | jq '.acs[] | select(.status == "fail")'
    wc -l target/ac/coverage.jsonl
    ```
 
-   * If `coverage.jsonl` does not exist, or has very few lines, BDD coverage has not been generated yet.
+   - If `coverage.jsonl` does not exist, or has very few lines, BDD coverage has not been generated yet.
 
 2. **Inspect AC coverage summary**
 
@@ -1668,8 +1803,8 @@ cargo xtask ac-status --json | jq '.acs[] | select(.status == "fail")'
    cargo xtask ac-status --summary
    ```
 
-   * Look at `covered_ac` / `total_ac` and the list of `[UNKNOWN]` ACs.
-   * If most service / platform ACs are `[UNKNOWN]`, coverage is stale or missing.
+   - Look at `covered_ac` / `total_ac` and the list of `[UNKNOWN]` ACs.
+   - If most service / platform ACs are `[UNKNOWN]`, coverage is stale or missing.
 
 3. **Check if BDD was skipped**
 
@@ -1677,8 +1812,8 @@ cargo xtask ac-status --json | jq '.acs[] | select(.status == "fail")'
    echo "${XTASK_SKIP_BDD:-unset}"
    ```
 
-   * If `XTASK_SKIP_BDD=1`, selftest intentionally skipped BDD and cannot validate AC status.
-   * In this mode, `feature_status.md` is not regenerated; existing contents remain as the last known good snapshot.
+   - If `XTASK_SKIP_BDD=1`, selftest intentionally skipped BDD and cannot validate AC status.
+   - In this mode, `feature_status.md` is not regenerated; existing contents remain as the last known good snapshot.
 
 **Resolution:**
 
@@ -1713,13 +1848,13 @@ cargo xtask ac-status --json | jq '.acs[] | select(.status == "fail")'
 
 3. **Regenerate `docs/feature_status.md` (when you're confident)**
 
-   * For local manual regeneration:
+   - For local manual regeneration:
 
      ```bash
      cargo xtask ac-status --require-coverage
      ```
 
-   * As part of selftest / CI, `ac-status` is run in `check` mode with `require_coverage=true`.
+   - As part of selftest / CI, `ac-status` is run in `check` mode with `require_coverage=true`.
      If BDD has not produced coverage, selftest will fail with a clear error message.
 
 4. **Commit the updated snapshot**
@@ -1735,14 +1870,14 @@ cargo xtask ac-status --json | jq '.acs[] | select(.status == "fail")'
 
 **Notes:**
 
-* `[UNKNOWN]` in `docs/feature_status.md` means **no local test ran for that AC**. Common causes:
+- `[UNKNOWN]` in `docs/feature_status.md` means **no local test ran for that AC**. Common causes:
 
-  * No BDD scenario is tagged with that AC ID (e.g. missing `@AC-TPL-001`).
-  * No unit tests are mapped to that AC in `spec_ledger.yaml`.
-  * `target/ac/coverage.jsonl` is missing or stale.
-  * The AC is intentionally meta / CI-only (see the "Meta / CI-only ACs" section in `feature_status.md`).
+  - No BDD scenario is tagged with that AC ID (e.g. missing `@AC-TPL-001`).
+  - No unit tests are mapped to that AC in `spec_ledger.yaml`.
+  - `target/ac/coverage.jsonl` is missing or stale.
+  - The AC is intentionally meta / CI-only (see the "Meta / CI-only ACs" section in `feature_status.md`).
 
-* To avoid churn, `precommit` will **not** regenerate `feature_status.md` if coverage is missing. It prints a warning instead and relies on `selftest` to validate AC status once coverage is available.
+- To avoid churn, `precommit` will **not** regenerate `feature_status.md` if coverage is missing. It prints a warning instead and relies on `selftest` to validate AC status once coverage is available.
 
 ---
 
@@ -1753,6 +1888,7 @@ cargo xtask ac-status --json | jq '.acs[] | select(.status == "fail")'
 **Step-by-step process:**
 
 1. **Add AC to `specs/spec_ledger.yaml`** with required fields:
+
    ```yaml
    - id: AC-MY-NEW-001
      text: "Description of what this acceptance criterion validates"
@@ -1765,6 +1901,7 @@ cargo xtask ac-status --json | jq '.acs[] | select(.status == "fail")'
    ```
 
 2. **If using BDD, add scenario** in the referenced feature file:
+
    ```gherkin
    @AC-MY-NEW-001
    Scenario: My new feature validates expected behavior
@@ -1772,15 +1909,18 @@ cargo xtask ac-status --json | jq '.acs[] | select(.status == "fail")'
      When I perform an action
      Then the expected outcome occurs
    ```
+
    - **Important:** Don't tag with `@wip` or `@ci-only` if you want local coverage
 
 3. **Verify the mapping passes:**
+
    ```bash
    cargo xtask ac-ensure-kernel-mapped --strict
    # Should pass with your new AC listed as "mapped"
    ```
 
 4. **Run BDD tests and check coverage:**
+
    ```bash
    cargo xtask bdd
    cargo xtask ac-coverage --todo --must-have | grep "MY-NEW-001"
@@ -1788,6 +1928,7 @@ cargo xtask ac-status --json | jq '.acs[] | select(.status == "fail")'
    ```
 
 5. **Run selftest** to verify the full gate:
+
    ```bash
    KERNEL_UNKNOWN_BUDGET=0 cargo xtask selftest
    # Your AC should contribute to "passing" count
@@ -1829,12 +1970,14 @@ Unit tests are "presumed to run" because `cargo xtask check` (which runs in self
 ### Q: "Docker daemon not running"
 
 **Symptom:**
+
 ```bash
 $ docker ps
 Cannot connect to the Docker daemon. Is the docker daemon running?
 ```
 
 **Fix (Linux/macOS):**
+
 ```bash
 # Start Docker service
 sudo systemctl start docker  # Linux systemd
@@ -1845,6 +1988,7 @@ docker ps
 ```
 
 **Fix (Windows):**
+
 ```powershell
 # Start Docker Desktop
 # Or via WSL2:
@@ -1856,11 +2000,13 @@ wsl -d docker-desktop
 ### Q: "Port already in use" when starting service
 
 **Symptom:**
+
 ```
 Error: Address already in use (os error 48)
 ```
 
 **Diagnostic:**
+
 ```bash
 # Find process using port
 lsof -i :8080  # macOS/Linux
@@ -1870,6 +2016,7 @@ netstat -ano | findstr :8080  # Windows
 ```
 
 **Fix:**
+
 ```bash
 # Kill the process
 kill <PID>  # Linux/macOS
@@ -1884,11 +2031,13 @@ SERVICE_PORT=8081 cargo run -p app-http
 ### Q: Container fails with "permission denied"
 
 **Symptom:**
+
 ```
 Error: permission denied while trying to connect to Docker daemon
 ```
 
 **Fix (Linux):**
+
 ```bash
 # Add user to docker group
 sudo usermod -aG docker $USER
@@ -1910,6 +2059,7 @@ docker ps
 **Symptom:** `cargo build` takes 10+ minutes
 
 **Diagnostic:**
+
 ```bash
 # Check if on slow filesystem (WSL2 + /mnt/c)
 pwd
@@ -1925,6 +2075,7 @@ Get-ComputerInfo | Select-Object CsTotalPhysicalMemory  # Windows
 ```
 
 **Fix (Parallel jobs):**
+
 ```bash
 # Reduce parallel jobs if out of memory
 export CARGO_BUILD_JOBS=2
@@ -1932,6 +2083,7 @@ cargo build
 ```
 
 **Fix (Cache):**
+
 ```bash
 # Enable sccache
 export RUSTC_WRAPPER=sccache
@@ -1950,6 +2102,7 @@ sccache -s
 **Symptom:** `cargo test` takes 20+ minutes
 
 **Fix:** Use selective testing
+
 ```bash
 # Test only changed files
 cargo xtask test-changed
@@ -1970,6 +2123,7 @@ cargo test --lib
 **Symptom:** Rust Analyzer takes minutes to respond
 
 **Fix:**
+
 ```bash
 # Limit rust-analyzer targets
 # In .vscode/settings.json
@@ -2043,6 +2197,7 @@ cargo xtask status
 - ❌ Nix not available on native Windows (use WSL2)
 
 **How to report:**
+
 ```markdown
 Title: [category] Brief description
 
@@ -2062,8 +2217,10 @@ Title: [category] Brief description
 
 **Diagnostic output:**
 ```
+
 cargo xtask doctor
 cargo xtask ac-coverage
+
 ```
 
 **Workaround attempted:**

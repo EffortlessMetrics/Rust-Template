@@ -284,26 +284,31 @@ Content-Type: application/json
 With this structure, you can easily query logs:
 
 ### Find all logs for a request
+
 ```
 request_id="550e8400-e29b-41d4-a716-446655440000"
 ```
 
 ### Find all validation errors
+
 ```
 error_code="INVALID_AMOUNT"
 ```
 
 ### Find errors for an AC
+
 ```
 ac_id="AC-PLT-TASKS-001"
 ```
 
 ### Find errors for a feature
+
 ```
 feature_id="FT-PLATFORM-TASKS"
 ```
 
 ### Find slow requests (with metrics)
+
 ```
 request_duration_seconds > 1.0
 ```
@@ -313,6 +318,7 @@ request_duration_seconds > 1.0
 ## Production Observability Configuration
 
 ### OTLP Tracing
+
 ```bash
 # Enable OTLP export (default: console fallback)
 export OTLP_ENDPOINT=http://otel-collector:4317
@@ -322,11 +328,13 @@ export RUST_LOG=info,app_http=debug
 ```
 
 ### Prometheus Metrics
+
 - **Endpoint**: `GET /metrics`
 - **Metrics**: `http_requests_total`, `http_requests_duration_seconds`, `http_errors_total`
 - **Dimensions**: `method`, `status`, `uri`
 
 ### Example Metrics Output
+
 ```bash
 curl http://localhost:8080/metrics | grep http_requests
 # http_requests_total{method="GET",outcome="success",status="200",uri="/health"} 5 1734251234567
@@ -334,6 +342,7 @@ curl http://localhost:8080/metrics | grep http_requests
 ```
 
 ### Complete Stack
+
 ```
 Client → app-http:8080 → OTLP(gRPC):4317 → Collector → Backend
                            ↓
@@ -343,12 +352,14 @@ Client → app-http:8080 → OTLP(gRPC):4317 → Collector → Backend
 To add actual metrics (currently stubbed):
 
 1. Add metrics crate to `Cargo.toml`:
+
    ```toml
    metrics = "0.21"
    metrics-exporter-prometheus = "0.13"
    ```
 
 2. Initialize metrics in `main.rs`:
+
    ```rust
    let metrics_handle = metrics_exporter_prometheus::PrometheusBuilder::new()
        .install()
@@ -361,6 +372,7 @@ To add actual metrics (currently stubbed):
    - Add middleware metrics as needed
 
 4. Expose metrics endpoint:
+
    ```rust
    .route("/metrics", get(|| async move {
        metrics_handle.render()
@@ -427,4 +439,3 @@ This observability implementation follows the template's hexagonal architecture:
 - **Cross-cutting**: Request ID flows through all layers automatically via span context
 
 The request ID and structured logging work across layer boundaries, providing full request lifecycle visibility.
-

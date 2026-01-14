@@ -604,4 +604,3 @@ Once v1.0.0 is tagged and protected, you can begin this pilot immediately. The p
 4. Document everything
 
 Good luck! 🚀
-

@@ -27,6 +27,7 @@ This document provides detailed implementation plans and specific code changes t
 - Comprehensive test coverage
 
 **Configuration Options:**
+
 ```yaml
 cors:
   enabled: true
@@ -38,6 +39,7 @@ cors:
 ```
 
 **Environment Variables:**
+
 ```bash
 CORS_ENABLED=true
 CORS_ALLOWED_ORIGINS="https://example.com,https://api.example.com"
@@ -69,6 +71,7 @@ CORS_MAX_AGE=86400
 - **Production**: Strict CSP, HSTS with 1-year max age
 
 **Configuration Options:**
+
 ```yaml
 security_headers:
   enabled: true
@@ -95,6 +98,7 @@ security_headers:
 - Provided environment variable examples
 
 **Before (Insecure):**
+
 ```yaml
 secrets:
   db.url: "postgres://postgres:postgres@localhost:5432/app"
@@ -104,6 +108,7 @@ secrets:
 ```
 
 **After (Secure):**
+
 ```yaml
 secrets:
   db.url: "postgres://CHANGE_ME:CHANGE_ME@localhost:5432/app"
@@ -126,6 +131,7 @@ secrets:
 - **Comprehensive test coverage** for edge cases
 
 **Before (Vulnerable):**
+
 ```rust
 fn validate_jwt_token(token: &str, secret: &str) -> bool {
     let mut validation = Validation::new(Algorithm::HS256);
@@ -137,6 +143,7 @@ fn validate_jwt_token(token: &str, secret: &str) -> bool {
 ```
 
 **After (Secure):**
+
 ```rust
 fn validate_jwt_token(token: &str, secret: &str) -> bool {
     let mut validation = Validation::new(Algorithm::HS256);
@@ -144,31 +151,31 @@ fn validate_jwt_token(token: &str, secret: &str) -> bool {
     validation.validate_exp = true;
     validation.leeway = 60; // 60-second leeway for clock skew
     validation.validate_nbf = true; // Validate Not Before claim
-    
+
     // Additional validation checks
     match decode::<Claims>(token, &decoding_key, &validation) {
         Ok(token_data) => {
             let claims = token_data.claims;
-            
+
             // Validate issuer is present and not empty
             if claims.iss.is_empty() {
                 tracing::debug!("JWT validation failed: missing issuer");
                 return false;
             }
-            
+
             // Validate subject is present and not empty
             if claims.sub.is_empty() {
                 tracing::debug!("JWT validation failed: missing subject");
                 return false;
             }
-            
+
             // Validate issued at time is not too far in the future
             let now = jsonwebtoken::get_current_timestamp();
             if claims.iat.saturating_add(300) < now { // Allow 5 minutes clock skew for iat
                 tracing::debug!("JWT validation failed: token issued too far in the future");
                 return false;
             }
-            
+
             true
         },
         Err(e) => {
@@ -275,6 +282,7 @@ cargo test --coverage jwt_validation
 ### Manual Testing Commands
 
 **CORS Testing:**
+
 ```bash
 # Test preflight request
 curl -X OPTIONS http://localhost:8080/api/echo \
@@ -292,6 +300,7 @@ curl -X POST http://localhost:8080/api/echo \
 ```
 
 **Security Headers Testing:**
+
 ```bash
 # Check all security headers
 curl -I http://localhost:8080/health
@@ -305,6 +314,7 @@ curl -I http://localhost:8080/health
 ```
 
 **JWT Testing with Clock Skew:**
+
 ```bash
 # Generate token with future timestamp (within leeway)
 export JWT_SECRET="test-secret"
@@ -326,17 +336,17 @@ env: production
 settings:
   http.port: 8080
   platform.auth_mode: "jwt"
-  
+
   # Production CORS - restrict to specific domains
   cors.enabled: true
-  cors.allowed_origins: 
+  cors.allowed_origins:
     - "https://yourdomain.com"
     - "https://app.yourdomain.com"
   cors.allowed_methods: ["GET", "POST", "PUT", "DELETE"]
   cors.allowed_headers: ["authorization", "content-type"]
   cors.allow_credentials: false
   cors.max_age: 86400
-  
+
   # Production security headers - strict policies
   security_headers.enabled: true
   security_headers.content_security_policy: "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none';"
@@ -368,7 +378,7 @@ settings:
     - "http://localhost:3000"
     - "http://localhost:8080"
   cors.allow_credentials: false
-  
+
   # Development security headers - more permissive
   security_headers.enabled: true
   # CSP will automatically include unsafe-inline and unsafe-eval for development
@@ -384,21 +394,25 @@ secrets:
 ## Security Best Practices Implemented
 
 ### 1. Defense in Depth
+
 - Multiple layers of security (CORS + headers + auth)
 - Fail-safe defaults (deny by default)
 - Environment-aware configurations
 
 ### 2. Principle of Least Privilege
+
 - Minimal CORS origins
 - Restricted permissions policy
 - Secure CSP defaults
 
 ### 3. Secure by Default
+
 - Security headers enabled by default
 - CORS with secure defaults
 - JWT validation with proper checks
 
 ### 4. Configurable Security
+
 - Environment variable support
 - Per-environment configurations
 - Override capabilities for specific needs
@@ -408,18 +422,20 @@ secrets:
 ### For Existing Applications
 
 1. **Update Dependencies:**
+
    ```bash
    cargo update
    ```
 
 2. **Update Configuration:**
+
    ```bash
    # Backup existing config
    cp config/local.yaml config/local.yaml.backup
-   
+
    # Apply new template
    cp config/local.yaml.template config/local.yaml
-   
+
    # Update with your values
    vim config/local.yaml
    ```
@@ -429,11 +445,12 @@ secrets:
    - Review existing CORS/security header configurations if any
 
 4. **Test Security Features:**
+
    ```bash
    # Run security tests
    cargo test security_middleware
    cargo test jwt_validation
-   
+
    # Manual testing
    ./scripts/test-security.sh
    ```
@@ -441,11 +458,13 @@ secrets:
 ### For New Applications
 
 1. **Use Configuration Template:**
+
    ```bash
    cp config/local.yaml.template config/local.yaml
    ```
 
 2. **Configure Environment Variables:**
+
    ```bash
    export PLATFORM_JWT_SECRET="$(openssl rand -base64 32)"
    export PLATFORM_AUTH_TOKEN="$(openssl rand -base64 64)"
@@ -466,6 +485,7 @@ secrets:
    - Security header application
 
 2. **Monitor Headers:**
+
    ```bash
    # Regular security header checks
    curl -I https://yourdomain.com/health | grep -E "(X-|Content-Security|Strict-Transport)"
@@ -479,10 +499,11 @@ secrets:
 ### Regular Maintenance
 
 1. **Secret Rotation:**
+
    ```bash
    # Rotate JWT secrets quarterly
    openssl rand -base64 32 > new_jwt_secret
-   
+
    # Update environment variables
    export PLATFORM_JWT_SECRET=$(cat new_jwt_secret)
    ```

@@ -150,6 +150,7 @@ Each issue includes:
 ## Phase 5: Validation Results
 
 ### cargo xtask check
+
 ✅ **PASSED** - All checks successful
 - Code formatting (cargo fmt)
 - Linter (clippy)
@@ -192,20 +193,23 @@ Selftest Summary:
 ## Outstanding Issues
 
 ### 1. AC-PLT-021 Test Isolation
+
 **Problem:** Service metadata persists between test scenarios causing failures
 **Root Cause:** BDD cleanup not properly restoring original state
 **Impact:** 2/5 scenarios failing due to state leakage
 **Next Step:** Fix test cleanup to properly restore service_metadata.yaml
 
 ### 2. Graph Invariants Failure
+
 **Problem:** service-init registered but not used in any flow
 **Root Cause:** Command registration without flow integration
 **Options:**
-  - Add service-init to an existing flow (e.g., onboarding)
-  - Mark as standalone command in flows spec
-  - Add to golden path in documentation
+- Add service-init to an existing flow (e.g., onboarding)
+- Mark as standalone command in flows spec
+- Add to golden path in documentation
 
 ### 3. JUnit Cache Issue
+
 **Problem:** AC status still showing failures despite tests passing
 **Root Cause:** Possible JUnit result caching or tag extraction issue
 **Next Step:** Investigate ac-status JUnit parsing logic
@@ -215,6 +219,7 @@ Selftest Summary:
 ## Files Created/Modified Summary
 
 ### New Files (4)
+
 - `ISSUE_AC-PLT-021.md` - Issue documentation
 - `ISSUE_AC-PLT-ENV-ABI-CHECK.md` - Issue documentation
 - `ISSUE_AC-TPL-AGENT-HINTS-SCHEMA.md` - Issue documentation
@@ -222,6 +227,7 @@ Selftest Summary:
 - `backstage/docs/index.md` - Backstage placeholder docs
 
 ### Modified Files (8)
+
 1. `crates/xtask/src/commands/service_init.rs` - Added update_claude() function
 2. `crates/acceptance/src/steps/xtask_devex.rs` - Extended backup/restore + 4 step definitions
 3. `crates/acceptance/src/world.rs` - Fixed app initialization
@@ -232,6 +238,7 @@ Selftest Summary:
 8. `.github/workflows/ci-template-selftest.yml` - Fixed artifact naming
 
 ### Lines of Code
+
 - **Added:** ~200 lines across all files
 - **Modified:** ~20 lines
 - **Documentation:** ~500 lines in issue documents
@@ -241,6 +248,7 @@ Selftest Summary:
 ## Metrics & Performance
 
 ### Parallelization
+
 - **10 agents** deployed simultaneously
 - **4 phases** executed sequentially (explore → plan → implement → validate)
 - **Estimated serial time:** 8+ hours
@@ -248,12 +256,14 @@ Selftest Summary:
 - **Speedup:** ~4x throughput
 
 ### Agent Distribution
+
 - Exploration: 6 agents (haiku)
 - Planning: 4 agents (haiku)
 - Implementation: 4 agents (1 sonnet, 3 haiku)
 - Validation: In-process commands
 
 ### Success Rate
+
 - Exploration: 100% (6/6 completed)
 - Planning: 100% (4/4 completed)
 - Implementation: 100% (4/4 completed)
@@ -304,17 +314,20 @@ Selftest Summary:
 ## Lessons Learned
 
 ### What Worked Well
+
 ✅ Parallel agent deployment maximized throughput
 ✅ Detailed exploration phase prevented mid-implementation surprises
 ✅ Implementation plans with exact code snippets enabled fast execution
 ✅ Issue documentation provides clear handover for future work
 
 ### Challenges Encountered
+
 ⚠️ Test isolation issues not discovered until validation
 ⚠️ BDD test cleanup logic more complex than anticipated
 ⚠️ JUnit caching behavior required investigation
 
 ### Process Improvements
+
 💡 Add test isolation validation to planning phase
 💡 Run targeted BDD tests immediately after implementation
 💡 Include cleanup verification in acceptance criteria
@@ -324,16 +337,19 @@ Selftest Summary:
 ## Next Steps
 
 ### Priority 1 (Required for PR)
+
 - [ ] Fix AC-PLT-021 test cleanup issue
 - [ ] Resolve graph invariants warning
 - [ ] Verify 3/4 kernel ACs passing
 
 ### Priority 2 (Before Merge)
+
 - [ ] Push CI Batch 1 and validate in pipeline
 - [ ] Update handover documentation
 - [ ] Create release notes
 
 ### Priority 3 (Follow-up PRs)
+
 - [ ] Implement CI Batch 2 (flake update)
 - [ ] Add platform API test coverage
 - [ ] Implement CI Batch 3 (Nix installer)

@@ -701,15 +701,15 @@ This track runs in parallel with feature work. It builds the "truth surface" tha
 
 **Pros:**
 
-* Documentation grounded in reality
-* Discovers actual problems
-* Template improvements earned, not assumed
+- Documentation grounded in reality
+- Discovers actual problems
+- Template improvements earned, not assumed
 
 **Cons:**
 
-* Friction during development
-* May need kernel changes mid-service
-* More churn before stability
+- Friction during development
+- May need kernel changes mid-service
+- More churn before stability
 
 ---
 
@@ -723,18 +723,18 @@ This track runs in parallel with feature work. It builds the "truth surface" tha
 
 **Activities:**
 
-* Fork template into new service using `v3.3.9-kernel` tag
-* Run `nix develop && cargo xtask doctor && cargo xtask selftest` to validate baseline
-* Wire in service identity via `specs/service_metadata.yaml`
-* Add domain stories/REQs/ACs to `specs/spec_ledger.yaml`
-* Capture friction in fork's `FRICTION_LOG.md` and surface via `/platform/friction` API
-* Use `docs/how-to/report-fork-feedback.md` to report kernel issues upstream
+- Fork template into new service using `v3.3.9-kernel` tag
+- Run `nix develop && cargo xtask doctor && cargo xtask selftest` to validate baseline
+- Wire in service identity via `specs/service_metadata.yaml`
+- Add domain stories/REQs/ACs to `specs/spec_ledger.yaml`
+- Capture friction in fork's `FRICTION_LOG.md` and surface via `/platform/friction` API
+- Use `docs/how-to/report-fork-feedback.md` to report kernel issues upstream
 
 **Success Criteria:**
 
-* Selftest green on every PR in fork repo
-* Friction systematically logged and categorized
-* Service builds and runs with template governance intact
+- Selftest green on every PR in fork repo
+- Friction systematically logged and categorized
+- Service builds and runs with template governance intact
 
 ### Phase 2: IDP Tile Integration
 
@@ -742,23 +742,23 @@ This track runs in parallel with feature work. It builds the "truth surface" tha
 
 **Activities:**
 
-* Build **Governance Health tile** using `/platform/status` endpoint
+- Build **Governance Health tile** using `/platform/status` endpoint
 
-  * Show AC pass/fail counts, policy status, selftest gate results
-* Build **Docs Health tile** using `/platform/docs/index` endpoint
+  - Show AC pass/fail counts, policy status, selftest gate results
+- Build **Docs Health tile** using `/platform/docs/index` endpoint
 
-  * Show doc types, coverage, staleness, missing entries
-* (Optional) Add **Task/Hints tile** using `/platform/agent/hints` endpoint
+  - Show doc types, coverage, staleness, missing entries
+- (Optional) Add **Task/Hints tile** using `/platform/agent/hints` endpoint
 
-  * Surface prioritized work items for teams and agents
-* Reference `docs/explanation/json-contracts.md` for JSON schema contracts
-* Validate tile data against fork services (Phase 1 outputs)
+  - Surface prioritized work items for teams and agents
+- Reference `docs/explanation/json-contracts.md` for JSON schema contracts
+- Validate tile data against fork services (Phase 1 outputs)
 
 **Success Criteria:**
 
-* Template-based services visible in IDP with health metrics
-* Teams can see governance drift in real-time
-* Documentation health surfaced without manual audits
+- Template-based services visible in IDP with health metrics
+- Teams can see governance drift in real-time
+- Documentation health surfaced without manual audits
 
 ### Phase 3: Governed Agent Pilot
 
@@ -766,23 +766,23 @@ This track runs in parallel with feature work. It builds the "truth surface" tha
 
 **Activities:**
 
-* Deploy Claude Code agents to 2-3 fork repos from Phase 1
-* Use Skills: `bootstrap-dev-env`, `governed-feature-dev`, `governed-maintenance`
-* Agent workflow loop:
+- Deploy Claude Code agents to 2-3 fork repos from Phase 1
+- Use Skills: `bootstrap-dev-env`, `governed-feature-dev`, `governed-maintenance`
+- Agent workflow loop:
 
   1. Query `/platform/agent/hints` for prioritized tasks
   2. Generate context bundle via `cargo xtask bundle <task_name>`
   3. Edit code/tests/docs within bundle scope
   4. Validate with `cargo xtask test-ac <AC_ID>`
   5. Gate on `cargo xtask selftest` before PR
-* Require AC/REQ/Doc invariants green (`docs-check` + `selftest`)
-* Capture agent friction separately from human developer friction
+- Require AC/REQ/Doc invariants green (`docs-check` + `selftest`)
+- Capture agent friction separately from human developer friction
 
 **Success Criteria:**
 
-* Agents productive in 2-3 real service repos without human intervention
-* Agent-generated PRs pass selftest on first attempt >80% of the time
-* Clear friction log distinguishing agent vs. human developer pain points
+- Agents productive in 2-3 real service repos without human intervention
+- Agent-generated PRs pass selftest on first attempt >80% of the time
+- Clear friction log distinguishing agent vs. human developer pain points
 
 ### Phase 4: Kernel vNext (Demand-Driven)
 
@@ -790,24 +790,24 @@ This track runs in parallel with feature work. It builds the "truth surface" tha
 
 **Activities:**
 
-* Review friction logs from Phases 1-3 (fork usage + IDP + agents)
-* Categorize feedback:
+- Review friction logs from Phases 1-3 (fork usage + IDP + agents)
+- Categorize feedback:
 
-  * **Kernel fixes:** gaps in `spec_ledger.yaml`, broken contracts, missing flows
-  * **Soft → hard promotions:** checks validated in real usage, ready to gate
-  * **JSON contract refinements:** IDP/agent usage reveals schema gaps
-  * **Out-of-scope:** fork-specific needs, not generalizable
-* Promote soft checks to hard gates after validation (e.g., `docs-check` strictness)
-* Refine JSON contracts based on IDP tile and agent integration patterns
-* Implement versioning engine refactor if `release-prepare` friction is systematic
-* Add new patterns discovered in forks (e.g., common service types, IAC extensions)
+  - **Kernel fixes:** gaps in `spec_ledger.yaml`, broken contracts, missing flows
+  - **Soft → hard promotions:** checks validated in real usage, ready to gate
+  - **JSON contract refinements:** IDP/agent usage reveals schema gaps
+  - **Out-of-scope:** fork-specific needs, not generalizable
+- Promote soft checks to hard gates after validation (e.g., `docs-check` strictness)
+- Refine JSON contracts based on IDP tile and agent integration patterns
+- Implement versioning engine refactor if `release-prepare` friction is systematic
+- Add new patterns discovered in forks (e.g., common service types, IAC extensions)
 
 **Success Criteria:**
 
-* v3.4.0 (or v4.0.0) released with changes **driven by friction**, not speculation
-* All promoted hard gates have evidence from ≥2 fork repos
-* JSON contracts validated by real IDP/agent consumers
-* Kernel changelog clearly attributes improvements to fork feedback
+- v3.4.0 (or v4.0.0) released with changes **driven by friction**, not speculation
+- All promoted hard gates have evidence from ≥2 fork repos
+- JSON contracts validated by real IDP/agent consumers
+- Kernel changelog clearly attributes improvements to fork feedback
 
 ---
 
@@ -951,8 +951,8 @@ The template kernel is "done" when:
 2. **`cargo xtask selftest` is green** on Tier-1 (Nix devshell) and enforced in CI
 3. **Docs-as-Code invariants hold:**
 
-   * Version alignment (`AC-PLT-009`, `AC-PLT-010`, extended with feature-status invariants)
-   * `doc_index.yaml` ↔ front-matter sync (`AC-PLT-DOC-INDEX-FRONTMATTER`)
+   - Version alignment (`AC-PLT-009`, `AC-PLT-010`, extended with feature-status invariants)
+   - `doc_index.yaml` ↔ front-matter sync (`AC-PLT-DOC-INDEX-FRONTMATTER`)
 4. **Example fork passes** (`examples/fork-customization/`) is validated and demonstrates fork extensibility in CI (`AC-TPL-EXAMPLE-FORK-BUILDS`)
 
 **Status:** v3.3.9-kernel is the current IDP-ready closure. All governance surface items wired into specs and CI.

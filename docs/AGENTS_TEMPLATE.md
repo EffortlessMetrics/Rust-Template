@@ -10,6 +10,7 @@ Use this file as a starting point when creating a new Claude Code agent. Copy th
 Before writing the agent, register it in governance:
 
 1. **Add REQ** to `specs/spec_ledger.yaml` under the appropriate Story
+
    ```yaml
    - id: REQ-YOUR-AGENTS-FEATURE
      title: "Your agent description"
@@ -21,6 +22,7 @@ Before writing the agent, register it in governance:
    ```
 
 2. **Add AC** to define requirements
+
    ```yaml
    - id: AC-YOUR-AGENTS-001
      text: "Agent correctly implements workflow X"
@@ -154,12 +156,14 @@ Example:
 Before committing, verify:
 
 ### Naming & Structure
+
 - [ ] File name is `kebab-case.md` (lowercase, digits, hyphens)
 - [ ] File name matches frontmatter `name` exactly
 - [ ] File is located in `.claude/agents/`
 - [ ] File does NOT contain tabs (YAML must use spaces)
 
 ### Frontmatter Quality
+
 - [ ] `name` is kebab-case, ≤64 chars, globally unique
 - [ ] `description` is non-empty, ≤1024 chars, includes both WHAT and WHEN
 - [ ] `tools` (if specified) is valid format and non-empty
@@ -168,12 +172,14 @@ Before committing, verify:
 - [ ] `skills` (if specified) all reference existing `.claude/skills/<name>/` directories
 
 ### Body Quality
-- [ ] At least one heading (`# `) in markdown body
+
+- [ ] At least one heading (`#`) in markdown body
 - [ ] Includes sections: Role, Workflow, Tool Usage, Safety & Constraints
 - [ ] Clear, concise language (avoid jargon, define domain terms)
 - [ ] No hardcoded secrets (API keys, tokens, credentials, passwords)
 
 ### Governance & Testing
+
 - [ ] Added REQ + AC to `specs/spec_ledger.yaml`
 - [ ] Linked workflow/trigger in REQ description
 - [ ] Ran `cargo xtask agents-lint` locally—no errors

@@ -58,6 +58,7 @@ Both surfaces emit JSON that agents and integrations depend on. This document se
 Returns AC (Acceptance Criteria) health status.
 
 **Top-level shape:**
+
 ```json
 {
   "template_version": "3.3.8",
@@ -112,6 +113,7 @@ Returns AC (Acceptance Criteria) health status.
 Returns version and build information.
 
 **Top-level shape:**
+
 ```json
 {
   "version": "3.3.8",
@@ -132,6 +134,7 @@ Returns version and build information.
 Returns DevEx friction log entries.
 
 **Top-level shape:**
+
 ```json
 {
   "entries": [
@@ -170,6 +173,7 @@ Returns DevEx friction log entries.
 Returns design questions and ambiguities.
 
 **Top-level shape:**
+
 ```json
 {
   "questions": [
@@ -200,6 +204,7 @@ Returns design questions and ambiguities.
 Returns overall platform health and governance state.
 
 **Top-level shape:**
+
 ```json
 {
   "service": {
@@ -275,6 +280,7 @@ Returns overall platform health and governance state.
 Returns the full governance graph (stories -> requirements -> ACs -> tests -> docs).
 
 **Top-level shape:**
+
 ```json
 {
   "nodes": [
@@ -312,6 +318,7 @@ Returns the full governance graph (stories -> requirements -> ACs -> tests -> do
 Returns documentation index with health information.
 
 **Top-level shape:**
+
 ```json
 {
   "schema_version": "1.0",
@@ -351,6 +358,7 @@ Returns documentation index with health information.
 Returns prioritized work suggestions for AI agents.
 
 **Top-level shape:**
+
 ```json
 {
   "hints": [
@@ -386,6 +394,7 @@ Returns tasks with optional filtering.
 - `req`: Filter by requirement ID
 
 **Top-level shape:**
+
 ```json
 {
   "tasks": [
@@ -413,6 +422,7 @@ Returns tasks with optional filtering.
 Returns developer experience flows and xtask commands.
 
 **Top-level shape:**
+
 ```json
 {
   "commands": [

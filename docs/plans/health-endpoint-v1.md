@@ -46,4 +46,3 @@ No migration needed - new endpoint, backward compatible.
 - Manual curl test: `curl http://localhost:8080/health`
 
 **Success**: Endpoint available, returns correct JSON, BDD green
-

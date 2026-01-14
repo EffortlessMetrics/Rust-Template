@@ -19,12 +19,12 @@ By default, CORS is enabled with secure defaults:
 
 ```yaml
 cors.enabled: true
-cors.allowed_origins: 
+cors.allowed_origins:
   - "http://localhost:3000"
   - "http://localhost:8080"
 cors.allowed_methods:
   - "GET"
-  - "POST" 
+  - "POST"
   - "PUT"
   - "DELETE"
   - "OPTIONS"
@@ -69,18 +69,21 @@ export CORS_MAX_AGE=86400
 For production environments:
 
 1. **Restrict origins to specific domains:**
+
    ```yaml
-   cors.allowed_origins: 
+   cors.allowed_origins:
      - "https://yourdomain.com"
      - "https://app.yourdomain.com"
    ```
 
 2. **Disable credentials unless absolutely needed:**
+
    ```yaml
    cors.allow_credentials: false
    ```
 
 3. **Use specific methods and headers:**
+
    ```yaml
    cors.allowed_methods: ["GET", "POST", "PUT", "DELETE"]
    cors.allowed_headers: ["authorization", "content-type"]
@@ -147,11 +150,13 @@ The CSP is automatically adjusted based on environment:
 #### Custom CSP Examples
 
 **Strict CSP for APIs:**
+
 ```yaml
 security_headers.content_security_policy: "default-src 'none'; script-src 'self'; connect-src 'self'"
 ```
 
 **CSP for Web Applications:**
+
 ```yaml
 security_headers.content_security_policy: "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.trusted.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https:; font-src 'self' https://fonts.gstatic.com"
 ```
@@ -251,6 +256,7 @@ vim config/local.yaml
 ### Environment-Specific Configuration
 
 **Development:**
+
 ```yaml
 env: dev
 secrets:
@@ -259,6 +265,7 @@ secrets:
 ```
 
 **Production:**
+
 ```yaml
 env: production
 secrets:
@@ -287,6 +294,7 @@ cargo test security_headers
 ### Manual Testing
 
 **CORS Testing:**
+
 ```bash
 # Test preflight request
 curl -X OPTIONS http://localhost:8080/api/echo \
@@ -302,6 +310,7 @@ curl -X POST http://localhost:8080/api/echo \
 ```
 
 **Security Headers Testing:**
+
 ```bash
 # Check security headers
 curl -I http://localhost:8080/health
@@ -314,6 +323,7 @@ curl -I http://localhost:8080/health
 ```
 
 **JWT Testing:**
+
 ```bash
 # Generate test token
 export JWT_SECRET="test-secret"

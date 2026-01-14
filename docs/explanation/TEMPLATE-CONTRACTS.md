@@ -128,6 +128,7 @@ acceptance_criteria:
 Test files MUST include AC attribution in their documentation comments:
 
 **For Rust unit tests:**
+
 ```rust
 /// AC-TPL-CONFIG-VALIDATION: Validates that the service rejects invalid
 /// configuration at startup and exits with a clear error message.
@@ -138,6 +139,7 @@ fn config_validation_rejects_invalid() {
 ```
 
 **For BDD feature files:**
+
 ```gherkin
 @AC-TPL-001
 Scenario: Health endpoint returns OK when service is healthy
@@ -150,11 +152,13 @@ Scenario: Health endpoint returns OK when service is healthy
 ### Discovery Commands
 
 **List all tests for an AC:**
+
 ```bash
 cargo xtask ac-tests AC-TPL-001
 ```
 
 Output:
+
 ```
 ================================================================================
 Acceptance Criterion: AC-TPL-001
@@ -179,6 +183,7 @@ Run Tests:
 ```
 
 **Check AC coverage:**
+
 ```bash
 cargo xtask ac-status --summary
 ```
@@ -192,6 +197,7 @@ The governance graph (`/platform/graph` API and `cargo xtask graph-export`) incl
 3. **tested_by edges**: AC → Test relationships (forward traceability)
 
 Example graph structure:
+
 ```json
 {
   "nodes": [
@@ -267,6 +273,7 @@ fn test_name() {
 ### 1. HTTP Service Core (REQ-TPL-HEALTH, REQ-TPL-VERSION, REQ-TPL-ERROR-HANDLING, REQ-TPL-METRICS)
 
 #### AC-TPL-001: Health Check Endpoint
+
 **Contract:**
 - `GET /health` returns 200 OK with `{"status": "ok"}` when service is healthy
 
@@ -284,6 +291,7 @@ fn test_name() {
 ---
 
 #### AC-TPL-002: Version Information Endpoint
+
 **Contract:**
 - `GET /version` returns 200 OK with build information including version and git SHA
 
@@ -302,9 +310,11 @@ fn test_name() {
 ---
 
 #### AC-TPL-003: Error Response Envelope
+
 **Contract:**
 - All 4xx/5xx responses include an error code, message, and request ID
 - Standard error format:
+
   ```json
   {
     "error": {
@@ -331,6 +341,7 @@ fn test_name() {
 ---
 
 #### AC-TPL-004: Request ID Propagation
+
 **Contract:**
 - Handlers propagate or generate `X-Request-ID` and expose it in responses
 - Every request has a unique request ID
@@ -351,6 +362,7 @@ fn test_name() {
 ---
 
 #### AC-TPL-007: Prometheus Metrics Endpoint
+
 **Contract:**
 - `GET /metrics` returns Prometheus-formatted metrics including `http_requests_total`
 
@@ -371,6 +383,7 @@ fn test_name() {
 ### 2. Platform Introspection APIs (REQ-TPL-PLATFORM-INTROSPECTION)
 
 #### AC-TPL-PLATFORM-GRAPH: Governance Graph API
+
 **Contract:**
 - `GET /platform/graph` returns the full governance graph in JSON format
 - Response includes `nodes` (array) and `edges` (array)
@@ -390,6 +403,7 @@ fn test_name() {
 ---
 
 #### AC-TPL-PLATFORM-DEVEX: DevEx Flows API
+
 **Contract:**
 - `GET /platform/devex/flows` returns canonical flows definition from `specs/devex_flows.yaml`
 - Response includes `commands` (object) and `flows` (object)
@@ -409,6 +423,7 @@ fn test_name() {
 ---
 
 #### AC-TPL-PLATFORM-DOCS: Documentation Index API
+
 **Contract:**
 - `GET /platform/docs/index` returns documentation index
 - Response includes `docs` (array) with available documentation
@@ -428,6 +443,7 @@ fn test_name() {
 ---
 
 #### AC-TPL-POLICY-STATUS-OVERVIEW: Policy Status in Platform Status
+
 **Contract:**
 - `GET /platform/status` includes `governance.policies.status` field
 - Status derived from last policy-test run (pass/fail/unknown)
@@ -450,6 +466,7 @@ fn test_name() {
 ### 3. Platform Schema and Metadata (REQ-TPL-PLATFORM-SCHEMA, REQ-TPL-METADATA-CONSISTENT)
 
 #### AC-TPL-PLATFORM-SCHEMA: Machine-Readable Schema
+
 **Contract:**
 - `GET /platform/schema` returns the schema index (JSON Schema + endpoint list)
 - `GET /platform/openapi` returns the OpenAPI document
@@ -470,6 +487,7 @@ fn test_name() {
 ---
 
 #### AC-TPL-METADATA-COMPLETE: Service Metadata Consistency
+
 **Contract:**
 - `specs/service_metadata.yaml` includes `service_id`, `template_version`, URLs, and tags
 - `/platform/status` returns the same identifiers
@@ -492,6 +510,7 @@ fn test_name() {
 ### 4. Platform UI (REQ-TPL-PLATFORM-UI)
 
 #### AC-TPL-PLATFORM-UI-DASHBOARD: Dashboard Homepage
+
 **Contract:**
 - `GET /` or `GET /ui` serves HTML dashboard
 - Shows platform status and governance health metrics from `/platform/status`
@@ -511,6 +530,7 @@ fn test_name() {
 ---
 
 #### AC-TPL-PLATFORM-UI-GRAPH: Graph Visualization
+
 **Contract:**
 - UI provides graph visualization rendering governance graph
 - Uses Mermaid.js to render stories, requirements, ACs, docs, commands
@@ -530,6 +550,7 @@ fn test_name() {
 ---
 
 #### AC-TPL-PLATFORM-UI-FLOWS: Flows and Tasks View
+
 **Contract:**
 - UI provides flows and tasks view
 - Displays DevEx flows and available tasks from platform APIs
@@ -551,6 +572,7 @@ fn test_name() {
 ### 5. Agent Interface (REQ-TPL-AGENT-INTERFACE, REQ-TPL-SKILLS-GUIDE, REQ-TPL-SKILLS-TOOLING)
 
 #### AC-TPL-AGENT-SKILLS: Skill Definitions
+
 **Contract:**
 - `.claude/skills/` contains executable skill definitions
 - Skills for feature development, release, maintenance workflows
@@ -571,6 +593,7 @@ fn test_name() {
 ---
 
 #### AC-TPL-AGENT-HINTS-SCHEMA: Hint Schema Definition
+
 **Contract:**
 - `GET /platform/agent/hints` returns hints with a well-defined schema
 - Each hint contains these canonical fields:
@@ -601,6 +624,7 @@ fn test_name() {
 ---
 
 #### AC-TPL-QUESTIONS-LOGGED: Question Artifacts
+
 **Contract:**
 - Ambiguity during automated flows or suggest-next emits a structured question
 - Questions logged as file/PR comment/status entry
@@ -621,6 +645,7 @@ fn test_name() {
 ---
 
 #### AC-TPL-FLOW-IDEMPOTENT: Flow Idempotency
+
 **Contract:**
 - Running `cargo xtask selftest` or `cargo xtask suggest-next` multiple times without changes produces stable outputs
 - No duplicate artifacts created on repeated runs
@@ -640,6 +665,7 @@ fn test_name() {
 ---
 
 #### AC-TPL-XTASK-SPEC-ROOT: Isolated Testing Support
+
 **Contract:**
 - xtask spec-reading commands respect `SPEC_ROOT` environment variable when set
 - BDD harness uses `SPEC_ROOT` to work on isolated temp workspaces
@@ -660,6 +686,7 @@ fn test_name() {
 ---
 
 #### AC-TPL-SKILLS-GUIDE-001: Skills Documentation
+
 **Contract:**
 - `docs/AGENT_SKILLS.md` exists and documents recommended skill set
 - Includes SKILL.md templates and best practices
@@ -679,6 +706,7 @@ fn test_name() {
 ---
 
 #### AC-TPL-SKILLS-ALIGN-001: Skills Alignment
+
 **Contract:**
 - Existing `.claude/skills/*` aligned with documented workflows
 - Skills: `bootstrap-dev-env`, `governed-feature-dev`, `governed-maintenance`, `governed-release`, `governed-governance-debug`
@@ -698,6 +726,7 @@ fn test_name() {
 ---
 
 #### AC-TPL-SKILLS-FMT: Skills Formatting
+
 **Contract:**
 - `cargo run -p xtask -- skills-fmt` normalizes SKILL.md files
 - Enforces frontmatter, headings, links conventions
@@ -717,6 +746,7 @@ fn test_name() {
 ---
 
 #### AC-TPL-SKILLS-LINT: Skills Validation
+
 **Contract:**
 - `cargo run -p xtask -- skills-lint` validates skills frontmatter and content
 - Checks name/description rules, references to flows and APIs
@@ -738,6 +768,7 @@ fn test_name() {
 ### 6. DevEx Platform Commands (REQ-PLT-ONBOARDING, REQ-PLT-DESIGN-SCAFFOLDING, REQ-PLT-SECURITY-GOVERNANCE, REQ-PLT-DOCS-CONSISTENCY, REQ-PLT-RELEASE-SAFETY, REQ-PLT-DEVEX-CONTRACT, REQ-PLT-STATUS-CLI)
 
 #### AC-PLT-001: Doctor Command
+
 **Contract:**
 - `cargo xtask doctor` validates Rust, Nix, conftest, git
 - Provides next-steps guidance
@@ -753,6 +784,7 @@ fn test_name() {
 ---
 
 #### AC-PLT-002: Help Flows Command
+
 **Contract:**
 - `cargo xtask help-flows` renders categorized command map
 - Reads from `specs/devex_flows.yaml`
@@ -767,6 +799,7 @@ fn test_name() {
 ---
 
 #### AC-PLT-003: Check Command
+
 **Contract:**
 - `cargo xtask check` runs fmt + clippy + tests as fast dev loop
 
@@ -780,6 +813,7 @@ fn test_name() {
 ---
 
 #### AC-PLT-018: Dev-Up Command
+
 **Contract:**
 - `cargo xtask dev-up` runs doctor + install-hooks + check
 - Displays next steps on success
@@ -794,6 +828,7 @@ fn test_name() {
 ---
 
 #### AC-PLT-004: ADR-New Command
+
 **Contract:**
 - `cargo xtask adr-new <title>` creates numbered ADR from template
 - Includes metadata (date, status, context, decision, consequences)
@@ -808,6 +843,7 @@ fn test_name() {
 ---
 
 #### AC-PLT-005: AC-New Command
+
 **Contract:**
 - `cargo xtask ac-new <ID> <desc>` rejects duplicate IDs
 - Generates YAML snippet for `spec_ledger.yaml`
@@ -822,6 +858,7 @@ fn test_name() {
 ---
 
 #### AC-PLT-006: Audit Command
+
 **Contract:**
 - `cargo xtask audit` runs cargo-audit + cargo-deny
 - Uses repo policy from `deny.toml`
@@ -836,6 +873,7 @@ fn test_name() {
 ---
 
 #### AC-PLT-007: Audit Recovery Guidance
+
 **Contract:**
 - `cargo xtask audit` provides 4-step recovery guidance on failure
 
@@ -849,6 +887,7 @@ fn test_name() {
 ---
 
 #### AC-PLT-008: SBOM Generation
+
 **Contract:**
 - `cargo xtask sbom-local` generates SPDX JSON to `target/sbom.spdx.json`
 
@@ -862,6 +901,7 @@ fn test_name() {
 ---
 
 #### AC-PLT-009: Docs-Check Version Alignment
+
 **Contract:**
 - `cargo xtask docs-check` validates version alignment across `spec_ledger.yaml` (canonical) and 8 consumer files
 
@@ -885,6 +925,7 @@ fn test_name() {
 ---
 
 #### AC-PLT-010: Docs-Check Feature Status
+
 **Contract:**
 - `cargo xtask docs-check` regenerates `feature_status.md`
 - Fails on dirty git tree (uncommitted changes to generated doc)
@@ -928,6 +969,7 @@ fn test_name() {
 ---
 
 #### AC-PLT-011: Release-Prepare Command
+
 **Contract:**
 - `cargo xtask release-prepare X.Y.Z` updates `spec_ledger.yaml`, `README.md`, `CLAUDE.md`, `CHANGELOG.md`
 
@@ -941,6 +983,7 @@ fn test_name() {
 ---
 
 #### AC-PLT-012: Release-Verify Command
+
 **Contract:**
 - `cargo xtask release-verify` runs selftest + audit + docs-check + clean tree check
 
@@ -954,6 +997,7 @@ fn test_name() {
 ---
 
 #### AC-PLT-013: Release-Verify Git Guidance
+
 **Contract:**
 - `cargo xtask release-verify` provides git command sequence on success
 - Example: tag, push, CI validation steps
@@ -968,6 +1012,7 @@ fn test_name() {
 ---
 
 #### AC-PLT-014: DevEx Flows Spec
+
 **Contract:**
 - Canonical flows and commands defined in `specs/devex_flows.yaml`
 
@@ -981,6 +1026,7 @@ fn test_name() {
 ---
 
 #### AC-PLT-015: Selftest DevEx Contract
+
 **Contract:**
 - `cargo xtask selftest` enforces devex contract (required commands exist)
 
@@ -994,6 +1040,7 @@ fn test_name() {
 ---
 
 #### AC-PLT-016: CI-Local Command
+
 **Contract:**
 - `cargo xtask ci-local` orchestrates doctor + selftest + audit + docs-check
 
@@ -1007,6 +1054,7 @@ fn test_name() {
 ---
 
 #### AC-PLT-019: Selftest Summary Display
+
 **Contract:**
 - `cargo xtask selftest` displays condensed summary with clear pass/fail indicators for all 8 steps
 
@@ -1020,6 +1068,7 @@ fn test_name() {
 ---
 
 #### AC-PLT-020: Low-Resource Mode
+
 **Contract:**
 - `XTASK_LOW_RESOURCES=1` environment variable skips resource-intensive steps in selftest
 - Suitable for CI/constrained environments
@@ -1034,6 +1083,7 @@ fn test_name() {
 ---
 
 #### AC-PLT-017: Status Command
+
 **Contract:**
 - `cargo xtask status` displays version, REQ/AC/task counts, selftest status, suggested next tasks
 
@@ -1048,11 +1098,13 @@ fn test_name() {
 ---
 
 #### Version Command (Canonical Version Source)
+
 **Contract:**
 - `cargo xtask version` displays human-readable kernel version information
 - `cargo xtask version --json` provides stable machine-readable JSON output for IDP/agent consumption
 
 **JSON Schema:**
+
 ```json
 {
   "kernel_version": "3.3.4",       // Required: From spec_ledger.yaml metadata.template_version
@@ -1080,6 +1132,7 @@ fn test_name() {
 ### 7. LLM Bundles (REQ-TPL-BUNDLE-CONTRACT)
 
 #### AC-TPL-BUNDLE-LAYOUT: Bundle Directory Structure
+
 **Contract:**
 - `cargo xtask bundle <TASK>` creates `bundle/<TASK>/` directory with:
   1. `bundle.yaml` – manifest with task_id, requirement_ids, ac_ids, spec sections, docs, and tests
@@ -1108,6 +1161,7 @@ fn test_name() {
 ---
 
 #### AC-TPL-BUNDLE-MANIFEST: Manifest Structure and Fields
+
 **Contract:**
 - `bundle.yaml` contains required fields:
   - `bundle_version`: Current version (e.g., `1`)
@@ -1119,6 +1173,7 @@ fn test_name() {
   - `tests`: Array of test handles with `type` (bdd/unit/integration), `tag`, and `file`
 
 **Example manifest structure:**
+
 ```yaml
 bundle_version: 1
 task_id: TASK-TPL-BUNDLE-001
@@ -1155,6 +1210,7 @@ tests:
 ---
 
 #### AC-TPL-BUNDLE-MINIMAL-SCOPE: Bundle Scope Guard
+
 **Contract:**
 - Bundle scope audit warns if a bundle exceeds soft thresholds:
   - `~64 files` (default, overridable via `BUNDLE_MAX_FILES`)
@@ -1183,6 +1239,7 @@ tests:
 ### 8. Release Evidence (REQ-TPL-REL-BUNDLE)
 
 #### AC-TPL-REL-EVIDENCE: Release Bundle Generation
+
 **Contract:**
 - `cargo xtask release-bundle X.Y.Z` writes `release_evidence/vX.Y.Z.md`
 - Contains: completed tasks, linked REQs/ACs/ADRs, git log since last tag, selftest summary, policy status, resolved friction entries
@@ -1199,6 +1256,7 @@ tests:
 ---
 
 #### AC-TPL-REL-CHANGELOG: Evidence Structure
+
 **Contract:**
 - Evidence file includes distinct sections (Tasks, Specs/ACs, ADRs, Git log, Governance signals)
 - Adequate for LLM formatting into Keep a Changelog format
@@ -1215,6 +1273,7 @@ tests:
 ### 9. Graph Invariants (REQ-TPL-GRAPH-INVARIANTS)
 
 #### AC-TPL-GRAPH-REQ-HAS-AC: Requirements Have ACs
+
 **Contract:**
 - Every requirement with `tags` including `platform`, `structural`, `security`, `devex`, `docs`, or `release` has at least one AC node in the graph
 
@@ -1228,6 +1287,7 @@ tests:
 ---
 
 #### AC-TPL-GRAPH-AC-HAS-TEST: ACs Have Tests
+
 **Contract:**
 - Every AC with a `tests` mapping in `spec_ledger.yaml` has at least one test node linked in the graph
 
@@ -1241,6 +1301,7 @@ tests:
 ---
 
 #### AC-TPL-GRAPH-COMMAND-REACHABLE: Commands Are Reachable
+
 **Contract:**
 - Every command declared in `specs/devex_flows.yaml` is either referenced by a flow or explicitly marked internal
 - No orphan commands exist
@@ -1255,6 +1316,7 @@ tests:
 ---
 
 #### AC-TPL-GRAPH-SELFTEST: Selftest Validates Graph
+
 **Contract:**
 - `cargo xtask selftest` validates graph invariants
 - Outputs "Graph invariants satisfied" when all checks pass
@@ -1269,6 +1331,7 @@ tests:
 ---
 
 #### AC-TPL-GRAPH-MERMAID: Graph Export
+
 **Contract:**
 - `cargo xtask graph-export --format mermaid` emits valid Mermaid graph (graph TD)
 - Includes nodes for stories, requirements, ACs, and edges showing relationships
@@ -1285,6 +1348,7 @@ tests:
 ### 10. Configuration and Validation (REQ-TPL-CONFIG-INTEGRITY)
 
 #### AC-TPL-CONFIG-VALIDATION: Startup Configuration Validation
+
 **Contract:**
 - On startup the service validates configuration against `specs/config_schema.yaml`
 - Exits non-zero with clear validation error when config is invalid
@@ -1301,6 +1365,7 @@ tests:
 ### 11. Infrastructure Alignment (REQ-TPL-IAC-ALIGNMENT)
 
 #### AC-TPL-IAC-K8S-ALIGN: Kubernetes Manifest Alignment
+
 **Contract:**
 - Kubernetes manifests under `infra/k8s` (Deployment/Service) use ports and env vars consistent with `specs/config_schema.yaml` and default environment
 - Sample IaC aligns with application configuration contract
@@ -1323,6 +1388,7 @@ tests:
 ### 12. Git Hooks (REQ-TPL-GOV-HOOKS)
 
 #### AC-TPL-HOOKS-INSTALL: Git Pre-Commit Hooks
+
 **Contract:**
 - `cargo xtask install-hooks` creates pre-commit hook
 - Hook runs `cargo run -p xtask -- precommit` inside Nix devshell when available
@@ -1341,6 +1407,7 @@ tests:
 ### 13. Governance Write Layer (REQ-TPL-GOV-WRITE-001, REQ-TPL-TASK-LIFECYCLE)
 
 #### AC-TPL-GOV-WRITE-TASK-STATUS-200: Task Status Persistence
+
 **Contract:**
 - `set_task_status` writes durable state reflected in governance graph
 
@@ -1354,6 +1421,7 @@ tests:
 ---
 
 #### AC-TPL-TASK-TRANSITIONS: Task Status Transitions
+
 **Contract:**
 - Task status transitions validated against domain model
 - Allowed transitions enforced (e.g., Todo → InProgress)
@@ -1442,6 +1510,7 @@ GitHub branch protection enforces this requirement:
 ### Developer Workflow
 
 **Before creating a PR:**
+
 ```bash
 # Enter Tier-1 environment
 nix develop
@@ -1622,33 +1691,39 @@ This output is designed for:
 ## Customization Surface (SAFE TO CHANGE)
 
 ### Domain Model and Business Logic
+
 - Add new domain types, services, use cases
 - Create domain-specific error codes
 - Implement domain-specific handlers
 - **Preserve:** ErrorResponse structure, Health/Version types
 
 ### HTTP Routes and Middleware
+
 - Add new domain API endpoints
 - Create custom middleware (auth, rate limiting, logging)
 - **Preserve:** `/health`, `/version`, `/metrics`, `/platform/*` endpoints, request ID middleware
 
 ### Acceptance Criteria and Features
+
 - Add new domain ACs to `spec_ledger.yaml`
 - Create new `.feature` files for domain scenarios
 - **Preserve:** Template-core ACs (AC-TPL-*, AC-PLT-*), AC structure from policies
 
 ### Configuration and Infrastructure
+
 - Add new config keys to `config_schema.yaml`
 - Customize K8s manifests (within policy bounds)
 - Add new environment variables
 - **Preserve:** Required config schema structure, multi-env K8s structure
 
 ### Dependencies
+
 - Add new crates for domain features
 - Update dependency versions
 - **Preserve:** Core dependencies (axum, tower, serde, tokio), testing dependencies (cucumber)
 
 ### Tasks and Workflows
+
 - Add domain-specific tasks to `specs/tasks.yaml`
 - Create custom workflows in `specs/devex_flows.yaml`
 - **Preserve:** Task schema structure, flow definitions
@@ -1711,15 +1786,18 @@ A: Run `cargo xtask selftest`. If it passes, you haven't broken kernel contracts
 **Priority Phases:**
 
 ### Phase 1: Critical Security & Release (v3.4.0)
+
 - AC-PLT-006, AC-PLT-007, AC-PLT-008 (security audit)
 - AC-PLT-011, AC-PLT-012, AC-PLT-013 (release management)
 - Target: Add 1 unit test per BDD scenario for validation logic
 
 ### Phase 2: DevEx Foundation (v3.5.0)
+
 - AC-PLT-001, AC-PLT-002, AC-PLT-003 (doctor, help-flows, check)
 - Target: Add error-case BDD scenarios
 
 ### Phase 3: Agent Interface (v3.6.0)
+
 - AC-TPL-SKILLS-FMT, AC-TPL-SKILLS-LINT, AC-TPL-SKILLS-ALIGN-001
 - Target: Add unit tests for validation logic
 

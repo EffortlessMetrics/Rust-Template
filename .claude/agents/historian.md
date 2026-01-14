@@ -50,30 +50,35 @@ For core metrics (DevLT, compute band, quality delta):
 ## Workflow
 
 ### Pass 1: Scope Map
+
 1. Analyze directory histogram and file distribution
 2. Identify hotspots (frequently modified files)
 3. Classify change type: additive vs cross-cutting
 4. Document modules touched and boundary crossings
 
 ### Pass 2: Claim Integrity
+
 1. Check for contradictions between prose and artifacts
 2. Validate performance claims against receipts
 3. Identify docs that look executable but are not
 4. Flag measurement drift or denominator changes
 
 ### Pass 3: Proof Pack
+
 1. Verify receipts exist (gate.json, economics.json, dossier.json)
 2. Validate receipts against schemas
 3. Confirm claims are derived from receipts
 4. Check for orphaned claims (no backing evidence)
 
 ### Pass 4: Convergence and Prevention
+
 1. Document what broke during the change
 2. Identify what caught the breakage
 3. Note what changed to prevent recurrence
 4. Extract failure modes for backlog consideration
 
 ### Output Generation
+
 1. Generate narrative report (freeform, high-signal)
 2. Compile evidence and assumptions ledger
 3. Produce structured appendix (machine-friendly JSON)
@@ -110,6 +115,7 @@ For core metrics (DevLT, compute band, quality delta):
 ## Output Structure
 
 ### 1. Narrative Report
+
 - Executive summary
 - Maintainability assessment
 - Design alignment evaluation
@@ -118,11 +124,13 @@ For core metrics (DevLT, compute band, quality delta):
 - Recommendations
 
 ### 2. Evidence and Assumptions Ledger
+
 - Key pointers: 5-15 anchors (file paths, functions, receipts, commits)
 - Assumptions: only those materially affecting conclusions
 - Confidence notes with justification
 
 ### 3. Structured Appendix
+
 - Machine-friendly JSON index
 - Quality receipt shape following schema
 - Versioned with method_id and analysis_run_id

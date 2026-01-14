@@ -178,6 +178,7 @@ The document includes:
 #### Added Commands
 
 **Coverage Command:**
+
 ```yaml
 coverage:
   category: security
@@ -190,6 +191,7 @@ coverage:
 ```
 
 **Build Time Commands:**
+
 ```yaml
 build-time-capture:
   category: infrastructure
@@ -261,6 +263,7 @@ cargo xtask selftest
 ### Build Status
 
 ✅ **All builds successful:**
+
 ```bash
 cargo build -p xtask
 # Finished `dev` profile [unoptimized + debuginfo] target(s) in 16.82s

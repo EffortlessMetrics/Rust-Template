@@ -130,7 +130,7 @@ export const MyCard: React.FC<MyCardProps> = ({
 };
 ```
 
-### Export in `src/index.ts`:
+### Export in `src/index.ts`
 
 ```typescript
 export { MyCard } from './components/MyCard';

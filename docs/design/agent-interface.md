@@ -34,6 +34,7 @@ Provide formal Skill definitions in `.claude/skills/` that map to high-level wor
 ## Implementation Approach
 
 **Skills Structure**:
+
 ```
 .claude/skills/
 +-- bootstrap-dev-env/SKILL.md
@@ -45,6 +46,7 @@ Provide formal Skill definitions in `.claude/skills/` that map to high-level wor
 Each `SKILL.md` contains frontmatter (name, description, trigger) and markdown sections (steps, validation, recovery).
 
 **Agent Hints API**: Add `GET /platform/agent/hints` endpoint returning prioritized task suggestions:
+
 ```json
 {
   "suggested_tasks": [

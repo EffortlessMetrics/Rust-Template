@@ -2,6 +2,7 @@
 <!-- Historical: This document describes a completed release and version references are intentionally preserved. -->
 
 # Implementation Summary: Template Leading Fixes
+
 **Date:** 2025-11-15
 **Branch:** claude/implement-core-template-gaps-011CV5QFmKktFZpbxaeQXS1D
 **Status:** ✅ Complete and Validated
@@ -33,6 +34,7 @@ This document summarizes the "proper/leading fixes" implementation that transfor
 ## 1. Policy Testing Infrastructure
 
 ### Implementation
+
 **New command:** `cargo run -p xtask -- policy-test`
 
 **Files created/modified:**
@@ -58,6 +60,7 @@ This document summarizes the "proper/leading fixes" implementation that transfor
 ## 2. Structured AC Reporting
 
 ### Implementation
+
 **New feature:** Cucumber JSON output with structured AC metadata
 
 **Files created/modified:**
@@ -74,6 +77,7 @@ This document summarizes the "proper/leading fixes" implementation that transfor
 - No more fragile regex parsing of Gherkin files
 
 **Data Flow:**
+
 ```
 Acceptance Tests → Cucumber JSON → xtask ac-status → Feature Status Report
 ```
@@ -88,6 +92,7 @@ Acceptance Tests → Cucumber JSON → xtask ac-status → Feature Status Report
 ## 3. .llmignore Gitignore Semantics
 
 ### Implementation
+
 **New approach:** Full gitignore pattern support using the `ignore` crate
 
 **Files created/modified:**
@@ -116,6 +121,7 @@ Acceptance Tests → Cucumber JSON → xtask ac-status → Feature Status Report
 ## 4. Request ID Correlation & Observability
 
 ### Implementation
+
 **New capability:** Production-ready observability patterns
 
 **Files created/modified:**
@@ -135,6 +141,7 @@ Acceptance Tests → Cucumber JSON → xtask ac-status → Feature Status Report
 - Includes in response header
 
 **Enhanced Error Handling:**
+
 ```rust
 AppError::validation_error(ErrorCode::InvalidRequest, "Task ID is required")
     .with_context("field", "task_id")
@@ -166,6 +173,7 @@ AppError::validation_error(ErrorCode::InvalidRequest, "Task ID is required")
 ## 5. Documentation Canonization
 
 ### Implementation
+
 **New structure:** xtask as the single source of truth
 
 **Files created/modified:**
@@ -227,22 +235,26 @@ Three comprehensive design documents for future reference:
 ## Code Statistics
 
 ### Lines of Code
+
 - **Added:** ~1,500 lines (new features + docs)
 - **Modified:** ~500 lines
 - **Removed:** ~120 lines (replaced with better implementations)
 - **Net:** +1,380 lines
 
 ### Files Changed
+
 - **New files:** 11
 - **Modified files:** 15
 - **Total:** 26 files
 
 ### Test Coverage
+
 - **New unit tests:** 14 (all passing)
 - **Coverage:** 100% of new code
 - **Integration tests:** All existing tests still passing
 
 ### Documentation
+
 - **New documentation:** 1,200+ lines
 - **Updated documentation:** 472 lines
 - **Design docs:** 3 comprehensive documents
@@ -250,6 +262,7 @@ Three comprehensive design documents for future reference:
 ## Validation Results
 
 ### Selftest Output
+
 ```
 ======================================
   Template Self-Test Suite
@@ -279,6 +292,7 @@ Three comprehensive design documents for future reference:
 ```
 
 ### Test Breakdown
+
 - **Format check:** ✅ All code properly formatted
 - **Clippy:** ✅ No warnings with `-D warnings`
 - **Unit tests:** ✅ 14/14 passed
@@ -291,6 +305,7 @@ Three comprehensive design documents for future reference:
 ## Migration Impact
 
 ### Breaking Changes
+
 **NONE** - All changes are backward compatible:
 - Old JUnit parsing still works (fallback)
 - Simple .llmignore patterns still work
@@ -298,6 +313,7 @@ Three comprehensive design documents for future reference:
 - All existing workflows continue to function
 
 ### Deprecations
+
 - `scripts/test-policies.sh` - Use `cargo run -p xtask -- policy-test`
 - Direct JUnit parsing in ac-status - JSON preferred but JUnit fallback maintained
 
@@ -329,6 +345,7 @@ Three comprehensive design documents for future reference:
 ## Next Steps (Optional Future Work)
 
 ### v1.1 Roadmap (If Desired)
+
 1. **Phase out JUnit fallback** - Once JSON adoption is confirmed
 2. **Add .llmignore-local support** - User-specific ignores
 3. **Bundle verbose mode** - Show which files were ignored and why
@@ -336,6 +353,7 @@ Three comprehensive design documents for future reference:
 5. **Distributed tracing** - Full OpenTelemetry integration
 
 ### Not Required for v1.0
+
 These improvements make the template structurally sound for teams you've never met:
 - ✅ Boring, composable primitives
 - ✅ Industry-standard patterns

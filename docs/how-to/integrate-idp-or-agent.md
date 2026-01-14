@@ -72,11 +72,13 @@ This ensures your schema, Rust handlers, and TypeScript types stay in sync.
 **Goal:** Show "governance health" in Backstage, Port.io, or custom portal.
 
 **Endpoint:**
+
 ```
 GET /platform/status
 ```
 
 **Response:**
+
 ```json
 {
   "service": {
@@ -143,11 +145,13 @@ Version: {status['service']['version']}
 **Goal:** Visualize the relationship between stories, requirements, ACs, docs, and commands.
 
 **Endpoint:**
+
 ```
 GET /platform/graph
 ```
 
 **Response:** (Simplified)
+
 ```json
 {
   "stories": [
@@ -201,11 +205,13 @@ GET /platform/graph
 **Goal:** Populate a kanban board or task manager with work items and agent suggestions.
 
 **Endpoint 1: Task List**
+
 ```
 GET /platform/tasks
 ```
 
 **Response:**
+
 ```json
 {
   "tasks": [
@@ -223,11 +229,13 @@ GET /platform/tasks
 ```
 
 **Endpoint 2: Agent Hints (What Should I Work On?)**
+
 ```
 GET /platform/agent/hints
 ```
 
 **Response:**
+
 ```json
 {
   "hints": [
@@ -287,11 +295,13 @@ for hint in hints:
 **Goal:** Auto-populate a docs portal or generate docs indexing.
 
 **Endpoint:**
+
 ```
 GET /platform/docs/index
 ```
 
 **Response:**
+
 ```json
 {
   "docs": [
@@ -344,11 +354,13 @@ GET /platform/docs/index
 **Goal:** Drive automation: discover available workflows and what commands to run.
 
 **Endpoint:**
+
 ```
 GET /platform/devex/flows
 ```
 
 **Response:**
+
 ```json
 {
   "flows": [

@@ -104,7 +104,7 @@ stories:
       The template MUST provide discoverable, documented, and tested developer
       workflows (onboarding, AC-first development, security auditing, releases)
       as first-class platform features, with flows defined as spec and enforced by CI.
-    adr: 
+    adr:
       - ADR-0002  # Nix-first
       - ADR-0005  # Single selftest gate
       - ADR-0006  # Supply chain
@@ -131,7 +131,7 @@ stories:
               - { type: integration, tag: "@AC-PLT-001", file: "specs/features/xtask_devex.feature" }
               - { type: unit, tag: "test_check_rust_version_accepts_valid_versions", module: "commands::doctor::tests", file: "crates/xtask/src/commands/doctor.rs" }
               - { type: unit, tag: "test_doctor_command_exists", module: "commands::doctor::tests", file: "crates/xtask/src/commands/doctor.rs" }
-          
+
           - id: AC-PLT-002
             text: "`cargo xtask help-flows` renders categorized command map from specs/devex_flows.yaml"
             tags: [kernel]

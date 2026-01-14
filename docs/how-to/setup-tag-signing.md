@@ -254,7 +254,7 @@ mQINBGXxAbcBEAC... (many lines of text)
 
 ### 4.2 Add to GitHub
 
-1. Go to GitHub: https://github.com/settings/keys
+1. Go to GitHub: <https://github.com/settings/keys>
 2. Click **New GPG key**
 3. Paste your public key into the text box
 4. Click **Add GPG key**
@@ -452,21 +452,25 @@ source ~/.bashrc
 **Solution:**
 
 1. Check configured key:
+
    ```bash
    git config --global user.signingkey
    ```
 
 2. List available keys:
+
    ```bash
    gpg --list-secret-keys --keyid-format LONG
    ```
 
 3. If key is missing, generate a new one (Step 2) or import existing key:
+
    ```bash
    gpg --import /path/to/private-key.asc
    ```
 
 4. Update Git config with correct key ID:
+
    ```bash
    git config --global user.signingkey CORRECT_KEY_ID
    ```
@@ -478,6 +482,7 @@ source ~/.bashrc
 **Solution:**
 
 1. Install GPG:
+
    ```bash
    # Ubuntu/Debian
    sudo apt-get install gnupg
@@ -490,6 +495,7 @@ source ~/.bashrc
    ```
 
 2. Tell Git where GPG is:
+
    ```bash
    git config --global gpg.program $(which gpg)
    ```
@@ -527,7 +533,7 @@ gpg --list-secret-keys --keyid-format LONG
 
 **Option 1: Add the email to GitHub**
 
-1. Go to https://github.com/settings/emails
+1. Go to <https://github.com/settings/emails>
 2. Add the email from your GPG key
 3. Verify the email
 
@@ -606,6 +612,7 @@ If you need to replace your key (compromise, lost passphrase, etc.):
 2. **Configure Git** with new key ID (Step 3.1)
 3. **Add new key to GitHub** (Step 4)
 4. **Revoke old key** (if compromised):
+
    ```bash
    gpg --edit-key OLD_KEY_ID
    gpg> revkey
@@ -668,6 +675,7 @@ jobs:
 **Setup:**
 
 1. Export private key:
+
    ```bash
    gpg --armor --export-secret-keys ABCD1234EFGH5678 > private-key.asc
    ```
@@ -695,10 +703,12 @@ jobs:
 1. **Use strong passphrases** - Protect private keys with long, random passphrases
 2. **Set key expiration** - 1-2 years is recommended (extendable before expiry)
 3. **Back up keys** - Export and store private keys in a secure location (password manager, encrypted USB)
+
    ```bash
    gpg --armor --export-secret-keys ABCD1234EFGH5678 > backup-private-key.asc
    # Store in password manager or encrypted storage
    ```
+
 4. **Revoke if compromised** - Immediately revoke and rotate keys if machine is compromised
 5. **Separate keys for CI** - Don't use personal keys in CI; use dedicated signing keys
 6. **Document authorized signers** - List authorized GPG keys in CONTRIBUTING.md
@@ -752,6 +762,7 @@ fn gate_verify_tag_signatures() -> Result<()> {
 Once tag signing is documented and tested:
 
 1. **Update ROADMAP.md** section 3.1:
+
    ```markdown
    | **Tag signing not enforced** | Release tags can be created without verification | Medium | See `docs/how-to/setup-tag-signing.md` |
    ```
@@ -829,9 +840,9 @@ By following this guide, you've established:
 
 ## References
 
-- **Git tag signing**: https://git-scm.com/book/en/v2/Git-Tools-Signing-Your-Work
-- **GitHub GPG verification**: https://docs.github.com/en/authentication/managing-commit-signature-verification
-- **GPG documentation**: https://gnupg.org/documentation/
+- **Git tag signing**: <https://git-scm.com/book/en/v2/Git-Tools-Signing-Your-Work>
+- **GitHub GPG verification**: <https://docs.github.com/en/authentication/managing-commit-signature-verification>
+- **GPG documentation**: <https://gnupg.org/documentation/>
 - **SLSA provenance** (upstream context): `docs/explanation/supply-chain-hardening.md`
 - **Release workflow**: `.claude/skills/governed-release/SKILL.md`
-- **SemVer versioning**: https://semver.org/
+- **SemVer versioning**: <https://semver.org/>

@@ -30,6 +30,7 @@ Batch 2 adds comprehensive JSON validation capabilities and environment variable
 **Location:** `../../crates/acceptance/src/steps/xtask_devex.rs` (lines 2850-2869)
 
 **Usage Example:**
+
 ```gherkin
 When I run "cargo xtask idp-snapshot"
 Then the output should be valid JSON
@@ -53,6 +54,7 @@ And the JSON should contain field "governance_health"
 **Location:** `../../crates/acceptance/src/steps/xtask_devex.rs` (lines 2871-2904)
 
 **Usage Example:**
+
 ```gherkin
 When I run "cargo xtask idp-snapshot"
 Then the output should be valid JSON
@@ -81,6 +83,7 @@ And the JSON field "governance_health" should have "ac_coverage"
 **Location:** `../../crates/acceptance/src/steps/xtask_devex.rs` (lines 2906-2940)
 
 **Usage Example:**
+
 ```gherkin
 When I run "cargo xtask idp-snapshot --output /tmp/idp-test.json"
 Then the command should succeed
@@ -116,6 +119,7 @@ And the file should contain valid JSON
 **Location:** `../../crates/acceptance/src/steps/xtask_devex.rs` (lines 209-212)
 
 **Usage Example:**
+
 ```gherkin
 Given the environment variable "CI" is set to "1"
 And the environment variable "XTASK_NONINTERACTIVE" is set to "1"
@@ -144,14 +148,18 @@ And the output should indicate CI mode
 ## Test Results
 
 ### Compilation
+
 ✅ **All code compiles successfully**
+
 ```
 cargo check --package acceptance
 Finished `dev` profile [unoptimized + debuginfo] target(s) in 47.18s
 ```
 
 ### BDD Test Suite
+
 ✅ **All acceptance tests pass**
+
 ```
 cargo xtask bdd
 ✓ Acceptance tests passed
@@ -209,6 +217,7 @@ Environment variables are:
 ## Related Work
 
 ### Batch 1 Steps (Already Implemented)
+
 - HTTP request/response steps
 - Basic command execution steps
 - File existence and content checks
@@ -216,6 +225,7 @@ Environment variables are:
 - **See:** `docs/receipts/BDD_IMPLEMENTATION_BATCH1.md`
 
 ### Future Batches (Potential)
+
 - Array field validation (check array contents, length constraints)
 - Numeric field validation (ranges, comparisons)
 - Date/timestamp validation
@@ -257,8 +267,8 @@ Before committing new steps:
 
 ## References
 
-- **Cucumber Documentation:** https://cucumber.io/docs/cucumber/
-- **Cucumber Rust:** https://github.com/cucumber-rs/cucumber
+- **Cucumber Documentation:** <https://cucumber.io/docs/cucumber/>
+- **Cucumber Rust:** <https://github.com/cucumber-rs/cucumber>
 - **Step Library Reference:** `../testing/BDD_STEP_LIBRARY.md`
 - **Batch 1 Implementation:** `BDD_IMPLEMENTATION_BATCH1.md`
 - **Acceptance Test Crate:** `../../crates/acceptance/`

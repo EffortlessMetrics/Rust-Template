@@ -42,6 +42,7 @@ nix develop
 ## Step 1: Check Environment Health
 
 **Command:**
+
 ```bash
 cargo xtask doctor
 ```
@@ -54,6 +55,7 @@ Validates your development environment, checking:
 - Repository structure
 
 **What to look for:**
+
 ```
 ✓ Rust toolchain... rustc 1.91.1
 ✓ glibc compatibility... glibc 2.39
@@ -80,6 +82,7 @@ Or ideally:
 ## Step 2: View Acceptance Criterion Coverage
 
 **Command:**
+
 ```bash
 cargo xtask ac-status
 ```
@@ -92,6 +95,7 @@ Analyzes the governance graph to show:
 - Unit test mappings to ACs
 
 **What to look for:**
+
 ```
 Parsing ledger: specs/spec_ledger.yaml
   Found 121 ACs
@@ -110,6 +114,7 @@ This command generates `docs/feature_status.md` – a living document showing wh
 ## Step 3: Validate the Governance Graph
 
 **Command:**
+
 ```bash
 cargo xtask graph-export --check
 ```
@@ -121,6 +126,7 @@ Validates the governance graph structure:
 - Checks for orphaned specs, broken links, and missing coverage
 
 **What to look for:**
+
 ```
 ✓ Graph structure valid
 ✓ No orphaned requirements
@@ -135,6 +141,7 @@ This ensures the spec ledger (`specs/spec_ledger.yaml`) is internally consistent
 ## Step 4: Run BDD Tests
 
 **Command:**
+
 ```bash
 cargo xtask bdd
 ```
@@ -143,6 +150,7 @@ cargo xtask bdd
 Runs all Gherkin feature files (`specs/features/*.feature`) using the BDD test harness. These are black-box acceptance tests written in plain English.
 
 **What to look for:**
+
 ```
 ✓ Acceptance tests passed
 JUnit output: target/junit/acceptance.xml
@@ -167,6 +175,7 @@ These scenarios are executable specifications – they define what "done" means 
 ## Step 5: Start the Service and Hit Platform APIs
 
 **Commands:**
+
 ```bash
 # Start the HTTP service
 cargo run -p app-http
@@ -194,6 +203,7 @@ curl http://localhost:8080/platform/agent/hints
 **What to look for:**
 
 `/platform/status` returns:
+
 ```json
 {
   "status": "ok",
@@ -223,6 +233,7 @@ curl http://localhost:8080/platform/agent/hints
 The template includes a simple "todos" service slice to demonstrate the full stack.
 
 **Check the feature file:**
+
 ```bash
 cat specs/features/myserv_todos.feature
 ```
@@ -230,11 +241,13 @@ cat specs/features/myserv_todos.feature
 You'll see scenarios tagged with `@AC-MYSERV-001`, `@AC-MYSERV-002`, etc.
 
 **Hit the endpoint:**
+
 ```bash
 curl http://localhost:8080/todos
 ```
 
 You should get:
+
 ```json
 []
 ```
@@ -260,11 +273,13 @@ You should get:
 You've completed the first-hour tour! Here's where to go deeper:
 
 ### Understand the Architecture
+
 - **[docs/AGENT_GUIDE.md](../AGENT_GUIDE.md)** – How LLM agents work within this repo (discovery → plan → execute → validate)
 - **[docs/explanation/TEMPLATE-CONTRACTS.md](../explanation/TEMPLATE-CONTRACTS.md)** – The kernel requirements, extension points, and governance contracts
 - **[docs/explanation/rust-as-spec-overview.md](../explanation/rust-as-spec-overview.md)** – The conceptual model behind specs-as-code
 
 ### Explore Available Workflows
+
 - **[.claude/skills/](.claude/skills/)** – Governed workflow recipes:
   - `bootstrap-dev-env` – One-command environment setup
   - `governed-feature-dev` – AC-first feature development
@@ -273,6 +288,7 @@ You've completed the first-hour tour! Here's where to go deeper:
   - `governed-governance-debug` – Debugging selftest failures
 
 ### Try a Workflow
+
 Pick one:
 - **Add a new AC:** `cargo xtask ac-new AC-MYSERV-005 "User can delete a todo" --story US-MYSERV-001 --requirement REQ-MYSERV-TODOS`
 - **Run the full governance check:** `cargo xtask selftest`
@@ -280,6 +296,7 @@ Pick one:
 - **Create an ADR:** `cargo xtask adr-new "Use PostgreSQL for persistence"`
 
 ### Get Help
+
 - **Flows reference:** `cargo xtask help-flows`
 - **Task list:** `cargo xtask tasks-list`
 - **Troubleshooting:** `docs/TROUBLESHOOTING.md`

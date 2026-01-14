@@ -159,6 +159,7 @@ This template is built around a few principles:
 
 3. **Nix-First, Not Nix-Only**
    The primary path is:
+
    ```bash
    nix develop
    cargo run -p xtask -- selftest
@@ -283,7 +284,7 @@ Agents do not get a single giant prompt. They move work through four flows that 
 
 1. **Signal -> Problem -> Requirements**
 
-   Entry: noisy issue, Slack thread, support ticket.  
+   Entry: noisy issue, Slack thread, support ticket.
    Exit: a clean problem statement, scoped requirements, and ACs in the ledger.
 
    Agents:
@@ -294,7 +295,7 @@ Agents do not get a single giant prompt. They move work through four flows that 
 
 2. **Requirements -> Design -> Plan**
 
-   Entry: problem statement and requirements.  
+   Entry: problem statement and requirements.
    Exit: ADRs, design docs, and an implementation plan.
 
    Agents:
@@ -305,7 +306,7 @@ Agents do not get a single giant prompt. They move work through four flows that 
 
 3. **Plan -> Branch -> Draft PR**
 
-   Entry: implementation plan and test inventory.  
+   Entry: implementation plan and test inventory.
    Exit: a branch with code and tests, plus a draft PR.
 
    Agents:
@@ -317,7 +318,7 @@ Agents do not get a single giant prompt. They move work through four flows that 
 
 4. **Draft PR -> Reviewed -> Merged -> Verified**
 
-   Entry: draft PR.  
+   Entry: draft PR.
    Exit: a merge recommendation and verification notes.
 
    Agents:
@@ -363,4 +364,3 @@ You can point people to this file as:
   - or client-facing primers.
 
 If you need to adapt it for a specific client or org, you can fork this into a `WHY_TEMPLATE_FITS_<CLIENT>.md` with concrete examples.
-

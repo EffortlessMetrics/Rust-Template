@@ -61,6 +61,7 @@ cargo run -p xtask -- selftest
 ```
 
 ### Resources
+
 - 📘 **[Pilot Feature Ideas](templates/PILOT_FEATURE_IDEAS.md)** - Curated features to test the template
   - Task Management API (starter)
   - E-commerce Order API (intermediate)
@@ -356,6 +357,7 @@ These documents capture implementation decisions, trade-offs, and rationale for 
 The template is now a **stable kernel baseline** with full governance validation.
 
 ### What's Complete
+
 - ✅ Complete observability stack (logs, metrics, OTLP traces)
 - ✅ Hexagonal architecture with production adapters
 - ✅ Governance infrastructure (policy-as-code, specs, BDD)
@@ -366,6 +368,7 @@ The template is now a **stable kernel baseline** with full governance validation
 - ✅ 86%+ AC coverage with full selftest validation
 
 ### Current Phase: IDP Integration & Fork Adoption
+
 1. **Fork Creation**: Teams create services from the **v3.3.9-kernel** baseline (using **template v3.3.14**).
 2. **Collect Friction**: Use friction log system to track real-world issues.
 3. **Iterate**: Release patches for blockers, or v3.4.0 for new features.
@@ -482,16 +485,19 @@ Update documentation when:
 ## External Resources
 
 ### Rust Ecosystem
+
 - [Rust Book](https://doc.rust-lang.org/book/) - Learn Rust
 - [Axum Docs](https://docs.rs/axum) - HTTP framework
 - [Tracing Docs](https://docs.rs/tracing) - Observability
 
 ### Governance & Testing
+
 - [Gherkin Reference](https://cucumber.io/docs/gherkin/reference/) - BDD syntax
 - [OPA Docs](https://www.openpolicyagent.org/docs/) - Policy language
 - [Diátaxis](https://diataxis.fr/) - Documentation framework
 
 ### Architecture
+
 - [Hexagonal Architecture](https://alistair.cockburn.us/hexagonal-architecture/) - Ports & Adapters
 - [Clean Architecture](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html) - Design principles
 

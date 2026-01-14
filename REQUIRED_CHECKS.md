@@ -33,7 +33,6 @@ These are the workflows this template expects to be **required** on the `main` b
 - `Maintenance – Pin Actions`
 - `Release` (SBOM & signing, tag‑only)
 
-
 ---
 
 ## Profiles (suggested)

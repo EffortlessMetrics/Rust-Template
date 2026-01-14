@@ -58,6 +58,7 @@ cargo xtask test-ac AC-PLT-001
 ```
 
 **Output example:**
+
 ```
 [INFO] Looking up AC: AC-PLT-001
 [INFO] Found AC: AC-PLT-001 (requirement: REQ-PLT-ONBOARDING)
@@ -95,6 +96,7 @@ cargo xtask test-changed --base main
 - `docs/**` only -> Runs `docs-check` (lightweight)
 
 **Output example:**
+
 ```
 Analyzing changed files...
 
@@ -123,6 +125,7 @@ Executing tests:
 - `XTASK_TEST_CHANGED_PLAN_ONLY=1 XTASK_CHANGED_BASE=HEAD cargo xtask test-changed` prints the change-aware plan and tag expression without executing tests (handy for acceptance tests or slow machines)
 
 **No changes detected:**
+
 ```
 Analyzing changed files...
 
@@ -139,6 +142,7 @@ No tests needed for these changes.
 ### Tier-1 (Nix + Linux/macOS/WSL2)
 
 **Fast iteration:**
+
 ```bash
 # Make changes
 cargo xtask test-changed
@@ -151,6 +155,7 @@ cargo xtask selftest
 ```
 
 **Pre-commit hook:**
+
 ```bash
 #!/usr/bin/env bash
 set -e
@@ -160,6 +165,7 @@ cargo xtask test-changed
 ### Tier-2 (Native Windows)
 
 **Fast iteration:**
+
 ```bash
 # Make changes
 cargo xtask check  # fmt, clippy, unit tests only
@@ -172,6 +178,7 @@ cargo xtask test-changed
 ```
 
 **Pre-commit hook:**
+
 ```bash
 #!/usr/bin/env bash
 set -e
@@ -179,6 +186,7 @@ cargo xtask test-changed
 ```
 
 **Full validation (use Tier-1):**
+
 ```bash
 # Switch to WSL2 or Linux VM
 nix develop
@@ -219,6 +227,7 @@ Reserve `cargo xtask selftest` for:
 ## Error Handling
 
 ### "No AC found"
+
 ```bash
 $ cargo xtask test-ac AC-MISSING-001
 Error: AC not found in specs/spec_ledger.yaml: AC-MISSING-001
@@ -230,11 +239,13 @@ Suggestions (first 10 ACs):
 ```
 
 **Fix:** Check `specs/spec_ledger.yaml` for correct AC-ID, or create it:
+
 ```bash
 cargo xtask ac-new AC-MYSERV-001 "Description" --requirement REQ-ID
 ```
 
 ### "No scenarios found for AC"
+
 ```bash
 $ cargo xtask test-ac AC-PLT-999
 [WARN] No BDD scenarios found for AC-PLT-999
@@ -242,11 +253,13 @@ $ cargo xtask test-ac AC-PLT-999
 ```
 
 **Fix:** Add scenarios to feature file or use:
+
 ```bash
 cargo xtask ac-suggest-scenarios AC-PLT-999
 ```
 
 ### "Git repository not found"
+
 ```bash
 $ cargo xtask test-changed
 Error: Not a git repository
@@ -255,12 +268,14 @@ Error: Not a git repository
 **Fix:** Ensure you're in the repository root with `.git/` directory.
 
 ### "Cannot determine base ref"
+
 ```bash
 $ cargo xtask test-changed --base nonexistent-branch
 Error: Git ref not found: nonexistent-branch
 ```
 
 **Fix:** Use valid git ref:
+
 ```bash
 git branch -a  # List all branches
 cargo xtask test-changed --base origin/main
@@ -285,6 +300,7 @@ echo "[OK] Pre-commit checks passed"
 ```
 
 Install/update hook:
+
 ```bash
 cargo xtask install-hooks
 ```
@@ -374,6 +390,7 @@ Caused by: Access is denied. (os error 5)
 - Multiple terminals running builds
 
 **Fixes:**
+
 ```powershell
 # Kill all cargo processes
 taskkill /F /IM cargo.exe /IM xtask.exe /T
@@ -387,6 +404,7 @@ taskkill /F /IM cargo.exe /IM xtask.exe /T
 **Likely cause:** Using Tier-2 (Windows) for local testing, CI uses Tier-1 (Linux).
 
 **Fix:** Validate in matching environment:
+
 ```bash
 # In WSL2 with Nix (matches CI)
 nix develop
@@ -399,6 +417,7 @@ cargo xtask selftest
 If `test-changed` is slow (>5 minutes):
 
 1. **Check what's running:**
+
    ```bash
    # Add --verbose flag (future enhancement)
    cargo xtask test-changed --verbose
@@ -409,6 +428,7 @@ If `test-changed` is slow (>5 minutes):
    - Changed core crate? Triggers many dependent tests
 
 3. **Use more targeted command:**
+
    ```bash
    # Instead of test-changed for ledger changes
    cargo xtask test-ac AC-SPECIFIC-ID

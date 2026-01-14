@@ -493,6 +493,7 @@ Recommended additional checks:
 ### Configuration Steps
 
 1. **Navigate to branch protection:**
+
    ```
    Repository → Settings → Branches → Add branch protection rule
    ```
@@ -559,11 +560,13 @@ Based on typical repository size and complexity:
 ### Optimization Tips
 
 1. **Use caching effectively:**
+
    ```yaml
    - uses: Swatinem/rust-cache@v2
    ```
 
 2. **Enable sccache for faster Rust compilation:**
+
    ```yaml
    - name: Enable sccache
      run: |
@@ -572,6 +575,7 @@ Based on typical repository size and complexity:
    ```
 
 3. **Use concurrency groups to cancel outdated runs:**
+
    ```yaml
    concurrency:
      group: ${{ github.workflow }}-${{ github.ref }}
@@ -579,6 +583,7 @@ Based on typical repository size and complexity:
    ```
 
 4. **Path filters to skip irrelevant runs:**
+
    ```yaml
    on:
      pull_request:
@@ -586,6 +591,7 @@ Based on typical repository size and complexity:
    ```
 
 5. **Split long workflows into parallel jobs:**
+
    ```yaml
    jobs:
      fmt:

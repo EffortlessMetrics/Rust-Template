@@ -9,6 +9,7 @@ This document outlines a detailed security testing strategy for the Rust templat
 ### 1. Authentication & Authorization Testing
 
 #### JWT Token Security Testing
+
 **Objective**: Validate JWT implementation security and robustness
 **Test Cases**:
 - **Token Expiration**: Test token rejection after expiration with various leeway settings
@@ -19,6 +20,7 @@ This document outlines a detailed security testing strategy for the Rust templat
 - **Zero Leeway Fix**: Validate new leeway configuration accepts valid tokens near expiration
 
 **Implementation Steps**:
+
 ```bash
 # Test JWT validation with various scenarios
 cargo test jwt_validation_tests -- --nocapture
@@ -26,6 +28,7 @@ cargo test auth_middleware_tests -- --nocapture
 ```
 
 #### Platform Authentication Testing
+
 **Objective**: Ensure platform authentication mechanisms are secure
 **Test Cases**:
 - **Multi-factor Authentication**: Test MFA flows if implemented
@@ -37,6 +40,7 @@ cargo test auth_middleware_tests -- --nocapture
 ### 2. Input Validation & Injection Testing
 
 #### API Input Validation Testing
+
 **Objective**: Prevent injection attacks through API endpoints
 **Test Cases**:
 - **SQL Injection**: Test all database interaction points
@@ -48,17 +52,18 @@ cargo test auth_middleware_tests -- --nocapture
 - **XXE Injection**: Test XML external entity attacks
 
 **Test Implementation**:
+
 ```rust
 // Example test structure
 #[cfg(test)]
 mod input_validation_tests {
     use super::*;
-    
+
     #[tokio::test]
     async fn test_sql_injection_prevention() {
         // Test various SQL injection payloads
     }
-    
+
     #[tokio::test]
     async fn test_xss_prevention() {
         // Test XSS payload sanitization
@@ -67,6 +72,7 @@ mod input_validation_tests {
 ```
 
 #### Configuration Input Testing
+
 **Objective**: Validate secure configuration handling
 **Test Cases**:
 - **Malicious Configuration**: Test with malicious config files
@@ -77,6 +83,7 @@ mod input_validation_tests {
 ### 3. CORS & Security Headers Testing
 
 #### CORS Configuration Testing
+
 **Objective**: Ensure CORS policies are properly configured
 **Test Cases**:
 - **Origin Validation**: Test cross-origin request handling
@@ -86,6 +93,7 @@ mod input_validation_tests {
 - **Wildcard Origins**: Test wildcard origin policy security
 
 **Testing Tools**:
+
 ```bash
 # Use curl to test CORS headers
 curl -H "Origin: https://malicious.com" -H "Access-Control-Request-Method: POST" \
@@ -94,6 +102,7 @@ curl -H "Origin: https://malicious.com" -H "Access-Control-Request-Method: POST"
 ```
 
 #### Security Headers Testing
+
 **Objective**: Validate security header implementation
 **Test Cases**:
 - **Content Security Policy (CSP)**: Test CSP header enforcement
@@ -106,6 +115,7 @@ curl -H "Origin: https://malicious.com" -H "Access-Control-Request-Method: POST"
 ### 4. Error Handling & Information Disclosure Testing
 
 #### Error Message Security Testing
+
 **Objective**: Prevent sensitive information disclosure through error messages
 **Test Cases**:
 - **Stack Trace Exposure**: Test for stack trace leaks in production
@@ -115,6 +125,7 @@ curl -H "Origin: https://malicious.com" -H "Access-Control-Request-Method: POST"
 - **Error Rate Limiting**: Test error-based rate limiting bypasses
 
 **Test Implementation**:
+
 ```rust
 #[tokio::test]
 async fn test_error_message_sanitization() {
@@ -127,6 +138,7 @@ async fn test_error_message_sanitization() {
 ### 5. Dependency Security Testing
 
 #### Vulnerability Scanning
+
 **Objective**: Identify and address dependency vulnerabilities
 **Test Cases**:
 - **Transitive Dependencies**: Scan all transitive dependencies
@@ -135,6 +147,7 @@ async fn test_error_message_sanitization() {
 - **Dev Dependencies**: Scan development dependencies for build-time vulnerabilities
 
 **Implementation Commands**:
+
 ```bash
 # Comprehensive dependency security scan
 cargo audit
@@ -149,6 +162,7 @@ cargo audit --fetch
 ```
 
 #### Tools Security Validation
+
 **Objective**: Ensure external tools are secure and untampered
 **Test Cases**:
 - **Checksum Validation**: Verify SHA256 checksums for all external tools
@@ -159,6 +173,7 @@ cargo audit --fetch
 ### 6. Runtime Security Testing
 
 #### Memory Safety Testing
+
 **Objective**: Leverage Rust's memory safety features
 **Test Cases**:
 - **Buffer Overflow**: Test for buffer overflow conditions
@@ -168,6 +183,7 @@ cargo audit --fetch
 - **Data Races**: Test for concurrent data access issues
 
 **Testing Tools**:
+
 ```bash
 # Run with sanitizers
 RUSTFLAGS="-Z sanitizer=address" cargo test
@@ -176,6 +192,7 @@ RUSTFLAGS="-Z sanitizer=memory" cargo test
 ```
 
 #### Concurrency Security Testing
+
 **Objective**: Test thread safety and concurrent access
 **Test Cases**:
 - **Race Conditions**: Test for race conditions in shared state
@@ -186,6 +203,7 @@ RUSTFLAGS="-Z sanitizer=memory" cargo test
 ### 7. Network Security Testing
 
 #### TLS/SSL Configuration Testing
+
 **Objective**: Ensure secure network communications
 **Test Cases**:
 - **Certificate Validation**: Test certificate chain validation
@@ -195,6 +213,7 @@ RUSTFLAGS="-Z sanitizer=memory" cargo test
 - **HSTS Implementation**: Test HTTP Strict Transport Security
 
 #### API Security Testing
+
 **Objective**: Test API endpoint security
 **Test Cases**:
 - **Rate Limiting**: Test API rate limiting effectiveness
@@ -206,6 +225,7 @@ RUSTFLAGS="-Z sanitizer=memory" cargo test
 ### 8. Database Security Testing
 
 #### SQL Injection Prevention Testing
+
 **Objective**: Comprehensive SQL injection testing
 **Test Cases**:
 - **Union-based Injection**: Test UNION-based SQL injection
@@ -215,6 +235,7 @@ RUSTFLAGS="-Z sanitizer=memory" cargo test
 - **Stored Procedure Injection**: Test stored procedure manipulation
 
 #### Database Access Control Testing
+
 **Objective**: Validate database access controls
 **Test Cases**:
 - **Privilege Escalation**: Test database privilege escalation
@@ -227,6 +248,7 @@ RUSTFLAGS="-Z sanitizer=memory" cargo test
 ### Automated Security Testing Pipeline
 
 #### CI/CD Integration
+
 ```yaml
 # Example GitHub Actions security testing workflow
 name: Security Testing
@@ -237,24 +259,25 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      
+
       - name: Run security audit
         run: cargo audit
-        
+
       - name: Run deny checks
         run: cargo deny check
-        
+
       - name: Run clippy with security lints
         run: cargo clippy --workspace -- -D warnings -W clippy::all
-        
+
       - name: Run security tests
         run: cargo test security_tests -- --nocapture
-        
+
       - name: Run dependency vulnerability scan
         run: cargo tree --duplicates
 ```
 
 #### Security Test Categories Integration
+
 ```toml
 # Cargo.toml security testing dependencies
 [dev-dependencies]
@@ -273,6 +296,7 @@ serde_test = "1.0"  # For serialization security testing
 ### Property-Based Security Testing
 
 #### Fuzzing Strategy
+
 ```rust
 use proptest::prelude::*;
 
@@ -287,11 +311,12 @@ proptest! {
 ```
 
 #### Security Property Tests
+
 ```rust
 #[cfg(test)]
 mod security_property_tests {
     use super::*;
-    
+
     #[test]
     fn test_authentication_properties() {
         // Property: Valid tokens should always authenticate
@@ -304,12 +329,14 @@ mod security_property_tests {
 ## Security Testing Metrics & Reporting
 
 ### Security Test Coverage
+
 - **Authentication Coverage**: 100% of authentication paths tested
 - **Input Validation Coverage**: 100% of API endpoints tested
 - **Error Handling Coverage**: 100% of error paths tested
 - **Dependency Coverage**: 100% of dependencies scanned
 
 ### Security Test Results Reporting
+
 ```bash
 # Generate security test report
 cargo test security_tests -- --format json | jq '.' > security-test-results.json
@@ -322,6 +349,7 @@ cargo clippy --workspace -- -D warnings -W clippy::all --message-format=json > c
 ```
 
 ### Security Test Automation
+
 - **Pre-commit Hooks**: Security tests run before commits
 - **PR Validation**: Security tests required for PR approval
 - **Nightly Scans**: Comprehensive security vulnerability scanning
@@ -330,6 +358,7 @@ cargo clippy --workspace -- -D warnings -W clippy::all --message-format=json > c
 ## Security Testing Environment Setup
 
 ### Test Environment Configuration
+
 ```yaml
 # docker-compose.test.yml for security testing
 version: '3.8'
@@ -350,6 +379,7 @@ services:
 ```
 
 ### Security Test Data
+
 - **Malicious Payloads**: Comprehensive set of attack payloads
 - **Boundary Values**: Edge cases for input validation
 - **Authentication Tokens**: Valid/invalid token test sets
@@ -358,12 +388,14 @@ services:
 ## Continuous Security Improvement
 
 ### Security Test Maintenance
+
 - **Regular Updates**: Update security test cases regularly
 - **New Threats**: Add tests for newly discovered vulnerabilities
 - **Tool Updates**: Keep security testing tools updated
 - **Pattern Library**: Maintain library of security test patterns
 
 ### Security Monitoring
+
 - **Runtime Security**: Monitor application security in production
 - **Incident Response**: Security incident response procedures
 - **Security Metrics**: Track security metrics over time

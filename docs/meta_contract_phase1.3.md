@@ -15,6 +15,7 @@ This document describes the implementation of Phase 1.3 of the meta-contract: ma
 A YAML specification defining all required xtask commands. This serves as the single source of truth for what commands must be implemented.
 
 **Structure**:
+
 ```yaml
 version: "1.0"
 description: "xtask command specification for Rust Template"
@@ -101,6 +102,7 @@ Provides automated validation of specifications against implementation.
 **File**: `../crates/xtask/Cargo.toml`
 
 Added to `[dev-dependencies]`:
+
 ```toml
 jsonschema = "0.29.0"
 ```
@@ -125,6 +127,7 @@ cargo test -p xtask
 ```
 
 **Integration into CI pipeline** (recommended):
+
 ```yaml
 # In .github/workflows/ci.yml or similar
 - name: Validate xtask specification
@@ -257,12 +260,14 @@ test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured
 ## Files Created/Modified
 
 ### Created
+
 - `../specs/xtask_commands.yaml` - xtask command specification
 - `../specs/ac_report.schema.json` - AC report JSON Schema
 - `../crates/xtask/src/validation.rs` - Validation module
 - `meta_contract_phase1.3.md` - This documentation
 
 ### Modified
+
 - `../crates/xtask/src/main.rs` - Added `mod validation;`
 - `../crates/xtask/Cargo.toml` - Added jsonschema dependency
 - `../crates/xtask/src/commands/ac_status.rs` - Fixed function signature (unrelated fix)

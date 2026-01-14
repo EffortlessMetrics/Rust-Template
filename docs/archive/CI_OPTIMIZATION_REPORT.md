@@ -70,6 +70,7 @@ Comprehensive analysis of 28 GitHub Actions workflows identified significant opt
 **Issue:** Setup steps duplicated across 15+ workflows.
 
 **Duplicated patterns:**
+
 ```yaml
 # Pattern 1: Nix + rust-cache + sccache (7 instances)
 - uses: Swatinem/rust-cache@v2
@@ -125,31 +126,37 @@ Comprehensive analysis of 28 GitHub Actions workflows identified significant opt
 ### 5. Workflow-Specific Issues
 
 #### ci-agents.yml
+
 - **Issue:** Using non-Nix Rust toolchain (inconsistent with other workflows)
 - **Issue:** Building xtask in release mode with aggressive optimization (slower, unnecessary)
 - **Issue:** Missing timeout
 - **Fixed:** Migrated to Nix, added caching, proper timeout
 
 #### tier1-selftest.yml
+
 - **Issue:** Missing artifact upload (selftest generates important artifacts)
 - **Issue:** Missing artifact verification step
 - **Issue:** No sccache stats
 - **Fixed:** Added all missing verification and artifact handling
 
 #### policy-test.yml
+
 - **Issue:** No caching (compiles xtask from scratch every time)
 - **Fixed:** Added rust-cache and sccache via composite action
 
 #### ci-coverage.yml
+
 - **Issue:** Artifact name collision (`cov-json` is not unique)
 - **Fixed:** Added SHA to artifact name: `coverage-report-${{ github.sha }}`
 
 #### ci-msrv.yml
+
 - **Issue:** No rust-cache (MSRV builds are slow)
 - **Issue:** No test execution (only builds, doesn't validate tests pass on MSRV)
 - **Fixed:** Added cache with MSRV-specific key, added test step
 
 #### ci-supply-chain.yml
+
 - **Issue:** Using Determinate Systems installer without leveraging composite action
 - **Fixed:** Migrated to composite action with determinate mode
 
@@ -172,6 +179,7 @@ Created 2 reusable composite actions to eliminate duplication:
 - Shows pre-build sccache stats for transparency
 
 **Usage:**
+
 ```yaml
 - name: Setup Rust + Nix environment
   uses: ./.github/actions/setup-rust-nix
@@ -188,6 +196,7 @@ Created 2 reusable composite actions to eliminate duplication:
 **Purpose:** Display sccache statistics in post-build step.
 
 **Usage:**
+
 ```yaml
 - name: Show sccache stats
   if: always()
@@ -204,6 +213,7 @@ Created 2 reusable composite actions to eliminate duplication:
 ### 2. Workflow-Specific Fixes
 
 #### ci-agents.yml
+
 - ✅ Added concurrency control
 - ✅ Added timeout (10 minutes)
 - ✅ Migrated to Nix + composite action
@@ -211,6 +221,7 @@ Created 2 reusable composite actions to eliminate duplication:
 - ✅ Kept PR comments (success/failure feedback)
 
 **Before:**
+
 ```yaml
 steps:
   - uses: actions/checkout@v4
@@ -224,6 +235,7 @@ steps:
 ```
 
 **After:**
+
 ```yaml
 steps:
   - uses: actions/checkout@v4
@@ -238,6 +250,7 @@ steps:
 ---
 
 #### tier1-selftest.yml
+
 - ✅ Added concurrency control
 - ✅ Added fetch-depth: 0 (needed for git-based checks)
 - ✅ Migrated to composite action
@@ -250,6 +263,7 @@ steps:
 ---
 
 #### policy-test.yml
+
 - ✅ Migrated to composite action (rust-cache + sccache)
 - ✅ Added sccache stats
 
@@ -258,6 +272,7 @@ steps:
 ---
 
 #### ci-coverage.yml
+
 - ✅ Migrated to composite action
 - ✅ Fixed artifact naming: `cov-json` → `coverage-report-${{ github.sha }}`
 - ✅ Added `if-no-files-found: error` (fail-fast if coverage not generated)
@@ -268,6 +283,7 @@ steps:
 ---
 
 #### ci-msrv.yml
+
 - ✅ Added rust-cache with MSRV-specific cache key
 - ✅ Added test execution (validates tests pass on MSRV, not just builds)
 
@@ -276,6 +292,7 @@ steps:
 ---
 
 #### ci-supply-chain.yml
+
 - ✅ Migrated to composite action with `nix-installer: determinate`
 - ✅ Added sccache stats
 
@@ -350,6 +367,7 @@ steps:
 **Opportunity:** Split large workflows into parallel jobs.
 
 **Example: selftest.yml**
+
 ```yaml
 jobs:
   fmt-check:
@@ -384,6 +402,7 @@ jobs:
 **Opportunity:** Use `paths-ignore` or job-level `if` conditions.
 
 **Example:**
+
 ```yaml
 jobs:
   coverage:
@@ -403,6 +422,7 @@ jobs:
 **Opportunity:** Reduce retention for ephemeral artifacts (logs, intermediate reports).
 
 **Example:**
+
 ```yaml
 - uses: actions/upload-artifact@v4
   with:
@@ -422,6 +442,7 @@ jobs:
 **Opportunity:** Add workflow-specific prefixes to avoid cache pollution.
 
 **Example:**
+
 ```yaml
 - uses: Swatinem/rust-cache@v2
   with:
@@ -439,6 +460,7 @@ jobs:
 **Opportunity:** Use cachix or GitHub Actions cache for Nix store.
 
 **Example:**
+
 ```yaml
 - uses: cachix/cachix-action@v14
   with:
@@ -494,6 +516,7 @@ jobs:
 ### Pre-Merge Validation
 
 1. **Test composite actions:**
+
    ```bash
    # Simulate workflow locally
    act -j selftest
@@ -502,6 +525,7 @@ jobs:
    ```
 
 2. **Check workflow syntax:**
+
    ```bash
    actionlint .github/workflows/*.yml
    ```
@@ -569,12 +593,14 @@ jobs:
 ## References
 
 ### Documentation
+
 - [GitHub Actions: Caching dependencies](https://docs.github.com/en/actions/using-workflows/caching-dependencies-to-speed-up-workflows)
 - [rust-cache action](https://github.com/Swatinem/rust-cache)
 - [sccache documentation](https://github.com/mozilla/sccache)
 - [Composite Actions](https://docs.github.com/en/actions/creating-actions/creating-a-composite-action)
 
 ### Related Files
+
 - `.github/workflows/README.md` - Workflow documentation
 - `.github/workflows/ci-*.yml` - Individual CI workflows
 - `.github/actions/setup-rust-nix/action.yml` - Composite action for Rust setup

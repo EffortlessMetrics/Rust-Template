@@ -27,6 +27,7 @@ Claude Code Agent Skills in this repo are **governed artifacts**, not ad-hoc doc
 ## 1. Why Governance?
 
 ### Without Governance
+
 - ❌ Teams create "one Skill per command" → 20+ unusable Skills
 - ❌ Claude can't discover right Skill (vague descriptions)
 - ❌ No audit trail (which Skill was used, why did it fail?)
@@ -34,6 +35,7 @@ Claude Code Agent Skills in this repo are **governed artifacts**, not ad-hoc doc
 - ❌ Unvetted security (no checks on `allowed-tools` or secrets)
 
 ### With Governance
+
 - ✅ Skills = workflows (from devex_flows.yaml) → manageable set
 - ✅ Clear discovery signals (specific descriptions + triggers)
 - ✅ Traceability (REQ/AC/Task link to changes)
@@ -213,6 +215,7 @@ Lint failed: 2 errors
 **Examples**:
 
 Good:
+
 ```yaml
 description: >
   AC-first feature development workflow for implementing Requirements
@@ -221,6 +224,7 @@ description: >
 ```
 
 Bad:
+
 ```yaml
 description: Helps with development
 description: Does feature stuff
@@ -242,16 +246,19 @@ description: For implementing things
 **Examples**:
 
 Read-only (governance debug):
+
 ```yaml
 allowed-tools: Read, Grep, Glob
 ```
 
 Feature development (needs file writing):
+
 ```yaml
 allowed-tools: Read, Grep, Glob, Edit, Write, Bash
 ```
 
 Git operations (scoped):
+
 ```yaml
 allowed-tools: Read, Bash(git status:*), Bash(git diff:*), Bash(git log:*)
 ```
@@ -268,6 +275,7 @@ allowed-tools: Read, Bash(git status:*), Bash(git diff:*), Bash(git log:*)
 **Examples**:
 
 Good:
+
 ```yaml
 description: >
   AC-first feature development workflow. Follows ac_first flow from
@@ -275,6 +283,7 @@ description: >
 ```
 
 Bad:
+
 ```yaml
 description: Runs checks and tests
 # ^ Doesn't mention which flow/workflow
@@ -394,6 +403,7 @@ git commit -m "feat: implement mycorp-workflow Skill (REQ-PLT-SKILLS-MYCORP)"
    - Normalize with `cargo xtask skills-fmt`
 
 3. **Validate**
+
    ```bash
    cargo xtask skills-lint
    cargo xtask skills-fmt
@@ -401,6 +411,7 @@ git commit -m "feat: implement mycorp-workflow Skill (REQ-PLT-SKILLS-MYCORP)"
    ```
 
 4. **If major change**: Update version in SKILL.md body
+
    ```markdown
    ## Version History
    - v2.0.0 (2025-11-27): Updated for release-v3.3.6 workflow changes
@@ -408,6 +419,7 @@ git commit -m "feat: implement mycorp-workflow Skill (REQ-PLT-SKILLS-MYCORP)"
    ```
 
 5. **Commit**
+
    ```bash
    git commit -m "fix: update governed-feature-dev Skill to match devex_flows changes"
    ```
@@ -419,6 +431,7 @@ git commit -m "feat: implement mycorp-workflow Skill (REQ-PLT-SKILLS-MYCORP)"
 **Process**:
 
 1. **Mark REQ as deprecated** in spec_ledger.yaml
+
    ```yaml
    - id: REQ-TPL-SKILLS-DEPRECATED
      title: "[DEPRECATED] Old workflow Skill"
@@ -427,6 +440,7 @@ git commit -m "feat: implement mycorp-workflow Skill (REQ-PLT-SKILLS-MYCORP)"
    ```
 
 2. **Archive SKILL.md** (optional, or remove)
+
    ```bash
    rm .claude/skills/old-skill/SKILL.md
    # OR move to archive/
@@ -437,11 +451,13 @@ git commit -m "feat: implement mycorp-workflow Skill (REQ-PLT-SKILLS-MYCORP)"
    - Update `docs/SKILLS_GOVERNANCE.md` if needed
 
 4. **Run selftest**
+
    ```bash
    cargo xtask selftest  # Should still pass (no dangling refs)
    ```
 
 5. **Commit**
+
    ```bash
    git commit -m "deprecate: retire old-skill Skill (use new-skill instead)"
    ```
@@ -480,6 +496,7 @@ Lint failed: 1 error, 1 warning
 - ✅ CI (blocks PR if Skills invalid)
 
 **How to run**:
+
 ```bash
 # Lint all
 cargo xtask skills-lint
@@ -511,6 +528,7 @@ Formatted 2 files
 ```
 
 **Run before committing**:
+
 ```bash
 cargo xtask skills-fmt
 git add .claude/skills/
@@ -555,6 +573,7 @@ Include concrete trigger words:
 - Task states: "Todo", "InProgress"
 
 **Test**:
+
 ```bash
 # Ask Claude directly
 "Can you help me implement AC-TPL-SKILLS-001?"
@@ -579,6 +598,7 @@ No. Skills are autonomous capabilities, not chaining mechanisms.
 3. ADR process to override (if team agrees)
 
 **Example**:
+
 ```markdown
 ## Tool Access Justification
 This Skill uses unscoped Bash because workflows in MyCorp require
@@ -592,6 +612,7 @@ direct shell access for secret injection. Risk accepted by team (ADR-XXX).
 ### ❌ One Skill Per Command
 
 **Bad**:
+
 ```
 .claude/skills/
 ├── skill-check/SKILL.md       # Wraps xtask check
@@ -603,6 +624,7 @@ direct shell access for secret injection. Risk accepted by team (ADR-XXX).
 **Problem**: 20+ Skills, Claude can't choose → all Skills ignored
 
 **Good**:
+
 ```
 .claude/skills/
 └── governed-feature-dev/SKILL.md  # Wraps entire ac_first flow
@@ -611,6 +633,7 @@ direct shell access for secret injection. Risk accepted by team (ADR-XXX).
 ### ❌ Vague Descriptions
 
 **Bad**:
+
 ```yaml
 description: Helps with features
 description: For development
@@ -618,6 +641,7 @@ description: Does stuff with files
 ```
 
 **Good**:
+
 ```yaml
 description: >
   AC-first feature development workflow. Use when implementing tasks
@@ -642,18 +666,21 @@ Create `.claude/skills/quick-fix/SKILL.md` without:
 ### ❌ Tools Without Justification
 
 **Bad**:
+
 ```yaml
 allowed-tools: Bash, Read, Write, Edit, WebSearch, Task, Agent
 # ^ Kitchen sink, no justification
 ```
 
 **Good**:
+
 ```yaml
 allowed-tools: Read, Grep, Glob
 # ^ Least privilege for read-only governance Skill
 ```
 
 **Or with justification**:
+
 ```yaml
 allowed-tools: Read, Grep, Glob, Edit, Write, Bash
 # Justified in SKILL.md: "Feature dev needs file writing + shell for tests"
@@ -662,12 +689,14 @@ allowed-tools: Read, Grep, Glob, Edit, Write, Bash
 ### ❌ No Reference to Flows
 
 **Bad**:
+
 ```yaml
 description: Workflow for stuff
 # ^ Doesn't mention which flow or commands
 ```
 
 **Good**:
+
 ```yaml
 description: >
   AC-first feature development workflow. Follows ac_first flow from
@@ -696,16 +725,21 @@ Use this before committing:
   - [ ] `reference.md` if reference material is long
   - [ ] Relative paths correct
 - [ ] **Format**:
+
   ```bash
   cargo xtask skills-fmt
   ```
+
 - [ ] **Validate**:
+
   ```bash
   cargo xtask skills-lint          # No errors/warnings
   cargo xtask check                # Fast checks
   cargo xtask selftest             # Full governance
   ```
+
 - [ ] **Commit**:
+
   ```bash
   git add .claude/skills/<name>/ specs/spec_ledger.yaml specs/tasks.yaml
   git commit -m "feat: implement <name> Skill (REQ-TPL-SKILLS-...)"
@@ -722,7 +756,7 @@ Use this before committing:
 - **SKILLS_TEMPLATE.md**: [Copy-paste template for new Skills](SKILLS_TEMPLATE.md)
 - **spec_ledger.yaml**: [REQ-TPL-SKILLS-* requirements](../specs/spec_ledger.yaml)
 - **devex_flows.yaml**: [Workflow definitions](../specs/devex_flows.yaml)
-- **Anthropic's Skills Docs**: https://docs.anthropic.com/claude/docs/agent-skills
+- **Anthropic's Skills Docs**: <https://docs.anthropic.com/claude/docs/agent-skills>
 
 ---
 

@@ -438,9 +438,11 @@ Feature: Task Management
 
 1. Read the error message carefully (which step failed, expected vs. actual)
 2. Run the BDD test directly to see detailed output:
+
    ```bash
    CUCUMBER_TAG_EXPRESSION='@AC-TASKS-001' cargo test -p acceptance -- --nocapture
    ```
+
 3. Debug the implementation (add `println!`, use a debugger)
 4. Fix the code, re-run `cargo xtask test-ac AC-TASKS-001`
 
@@ -651,6 +653,7 @@ git status --ignored
 - Add at least one test (BDD, unit, or integration) to the `tests:` array
 - Ensure test actually runs and passes
 - If AC is aspirational (not yet implemented), set `must_have_ac: false` and add a note:
+
   ```yaml
   must_have_ac: false
   note: "Planned for v2.0; not blocking current release"
@@ -681,11 +684,13 @@ git status --ignored
 **Fix:**
 
 - If your AC relates to a design decision (e.g., "use SQLite", "async-first"), create or link an ADR:
+
   ```yaml
   - id: AC-TASKS-001
     text: "Task storage uses SQLite with WAL mode for concurrency"
     adr: ADR-0042  # Link to docs/adr/ADR-0042-task-storage-sqlite.md
   ```
+
 - Run `cargo xtask adr-check` to validate all ADR links resolve
 
 ---
@@ -793,4 +798,3 @@ CUCUMBER_TAG_EXPRESSION='@AC-XXX' cargo test -p acceptance
 - File a GitHub issue with label `governance` or `documentation`
 - Check `FRICTION_LOG.md` for known DevEx pain points
 - Consult `docs/AGENT_GUIDE.md` for AI-assisted AC development
-

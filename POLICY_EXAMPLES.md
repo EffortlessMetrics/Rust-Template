@@ -5,6 +5,7 @@
 ### Example 1: Literal DATABASE_URL (DENIED)
 
 **Manifest:**
+
 ```yaml
 apiVersion: apps/v1
 kind: Deployment
@@ -21,6 +22,7 @@ spec:
 ```
 
 **Policy Result:**
+
 ```
 FAIL - SECURITY: Deployment my-app container app has literal value for sensitive env var 'DATABASE_URL'. Must use secretRef or secretKeyRef from a Secret resource.
 ```
@@ -32,6 +34,7 @@ FAIL - SECURITY: Deployment my-app container app has literal value for sensitive
 ### Example 2: ConfigMap for Password (DENIED)
 
 **Manifest:**
+
 ```yaml
 apiVersion: apps/v1
 kind: Deployment
@@ -51,6 +54,7 @@ spec:
 ```
 
 **Policy Result:**
+
 ```
 FAIL - SECURITY: Deployment my-app container app uses configMapKeyRef for sensitive env var 'REDIS_PASSWORD'. Must use secretKeyRef from a Secret resource instead.
 ```
@@ -62,6 +66,7 @@ FAIL - SECURITY: Deployment my-app container app uses configMapKeyRef for sensit
 ### Example 3: Literal API Keys (DENIED)
 
 **Manifest:**
+
 ```yaml
 apiVersion: apps/v1
 kind: Deployment
@@ -80,6 +85,7 @@ spec:
 ```
 
 **Policy Result:**
+
 ```
 FAIL - SECURITY: Deployment my-app container app has literal value for sensitive env var 'STRIPE_API_KEY'. Must use secretRef or secretKeyRef from a Secret resource.
 FAIL - SECURITY: Deployment my-app container app has literal value for sensitive env var 'JWT_SECRET'. Must use secretRef or secretKeyRef from a Secret resource.
@@ -92,6 +98,7 @@ FAIL - SECURITY: Deployment my-app container app has literal value for sensitive
 ### Example 4: Correct Pattern (PASSES)
 
 **Manifest:**
+
 ```yaml
 apiVersion: apps/v1
 kind: Deployment
@@ -125,6 +132,7 @@ spec:
 ```
 
 **ConfigMap (app-config):**
+
 ```yaml
 apiVersion: v1
 kind: ConfigMap
@@ -137,6 +145,7 @@ data:
 ```
 
 **Secret (app-secrets):**
+
 ```yaml
 apiVersion: v1
 kind: Secret
@@ -150,6 +159,7 @@ stringData:
 ```
 
 **Policy Result:**
+
 ```
 PASS - All checks passed
 ```
@@ -185,6 +195,7 @@ The policy recognizes these patterns as sensitive:
 ### ✅ DO
 
 1. **Use envFrom for all configuration:**
+
    ```yaml
    envFrom:
    - configMapRef:
@@ -198,6 +209,7 @@ The policy recognizes these patterns as sensitive:
    - Secret: `DATABASE_URL`, `API_KEY`, `PASSWORD`, tokens
 
 3. **Document secret injection:**
+
    ```yaml
    # secret.yaml
    stringData:
@@ -214,6 +226,7 @@ The policy recognizes these patterns as sensitive:
 ### ❌ DON'T
 
 1. **Don't use literal values for credentials:**
+
    ```yaml
    # WRONG
    env:
@@ -222,6 +235,7 @@ The policy recognizes these patterns as sensitive:
    ```
 
 2. **Don't store secrets in ConfigMaps:**
+
    ```yaml
    # WRONG
    env:
@@ -233,6 +247,7 @@ The policy recognizes these patterns as sensitive:
    ```
 
 3. **Don't commit real secrets to git:**
+
    ```yaml
    # WRONG - in git
    stringData:
@@ -244,6 +259,7 @@ The policy recognizes these patterns as sensitive:
 ## Testing Your Manifests
 
 ### Run Policy Tests
+
 ```bash
 # Test all policies
 cargo run -p xtask -- policy-test
@@ -253,6 +269,7 @@ conftest test -p policy/k8s.rego infra/k8s/dev/deployment.yaml
 ```
 
 ### Expected Output
+
 ```
 Kubernetes Policy:
   ✓ k8s_secrets_valid.json (correctly passed)
@@ -270,7 +287,9 @@ Kubernetes Policy:
 When an LLM generates or modifies Kubernetes manifests, this policy ensures safety:
 
 ### Scenario 1: LLM adds database configuration
+
 **LLM attempt:**
+
 ```yaml
 env:
 - name: DATABASE_URL
@@ -278,6 +297,7 @@ env:
 ```
 
 **Policy response:**
+
 ```
 DENIED: has literal value for sensitive env var 'DATABASE_URL'
 ```
@@ -285,9 +305,11 @@ DENIED: has literal value for sensitive env var 'DATABASE_URL'
 **LLM learns:** Use `envFrom.secretRef` instead
 
 ### Scenario 2: LLM migrates to K8s
+
 **LLM sees:** Environment variable `STRIPE_API_KEY=<secret>`
 
 **LLM might try:**
+
 ```yaml
 env:
 - name: STRIPE_API_KEY
@@ -295,11 +317,13 @@ env:
 ```
 
 **Policy response:**
+
 ```
 DENIED: has literal value for sensitive env var 'STRIPE_API_KEY'
 ```
 
 **LLM corrects to:**
+
 ```yaml
 envFrom:
 - secretRef:

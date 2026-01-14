@@ -268,6 +268,7 @@ If you can't resolve:
 ## Version History
 
 - v1.0.0 (2025-11-27): Initial release aligned with v3.3.6 template
+
 ```
 
 ---
@@ -314,12 +315,14 @@ Before you commit, verify:
   ```
 
 - [ ] Lint:
+
   ```bash
   cargo xtask skills-lint
   # Expected: No errors or warnings
   ```
 
 - [ ] Governance:
+
   ```bash
   cargo xtask selftest
   # Expected: All 7 steps pass
@@ -436,6 +439,7 @@ cargo xtask check
 ```
 
 Expected output: All checks pass
+
 ```
 
 ---
@@ -445,18 +449,22 @@ Expected output: All checks pass
 Use this formula to write descriptions that pass governance:
 
 ```
+
 [CAPABILITY]: [ACTION DESCRIPTION]
 Use when: [TRIGGER 1], [TRIGGER 2], [TRIGGER 3].
 Maps to: [FLOW/COMMAND].
+
 ```
 
 **Example**:
 
 ```
+
 AC-first feature development: Encapsulates the complete workflow for
 implementing Requirements and Acceptance Criteria using spec-driven development.
 Use when: implementing features, adding new ACs, or working on tasks with status=Todo.
 Maps to: ac_first flow from devex_flows.yaml (ac-new, bundle, bdd, selftest).
+
 ```
 
 ---
@@ -480,11 +488,12 @@ cargo xtask skills-lint -v  # Verbose output
 ```
 
 **YAML syntax issues?**
-- Use a YAML validator: https://www.yamllint.com
+- Use a YAML validator: <https://www.yamllint.com>
 - Check indentation (spaces only, no tabs)
 - Ensure closing `---` before Markdown body
 
 **Selftest failure?**
+
 ```bash
 cargo xtask selftest -v  # Verbose selftest
 # Check step 4 (Skills validation)

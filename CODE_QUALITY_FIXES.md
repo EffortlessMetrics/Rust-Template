@@ -41,6 +41,7 @@ This document provides comprehensive implementation plans for fixing critical co
 ### Specific Fixes Required
 
 #### Fix 1: CORS Middleware Borrow Checker Issue
+
 ```rust
 // CURRENT (crates/app-http/src/middleware/cors.rs:213-226):
 let origin = request
@@ -63,6 +64,7 @@ let mut response = next.run(request).await; // OK: request not moved
 ```
 
 #### Fix 2: Response Type Mismatch
+
 ```rust
 // CURRENT (crates/app-http/src/middleware/cors.rs:315):
 Ok(response) // Response<()>
@@ -72,6 +74,7 @@ Ok(response.map(|_| Body::empty())) // Response<Body>
 ```
 
 #### Fix 3: serde_yaml_ng::Value Method Issues
+
 ```rust
 // CURRENT: v.as_array() - method doesn't exist
 // FIXED: Use serde_yaml_ng::Value methods correctly
@@ -82,6 +85,7 @@ match value {
 ```
 
 #### Fix 4: Type Conversion in Security Module
+
 ```rust
 // CURRENT (crates/app-http/src/security.rs:165):
 if claims.iat.saturating_add(300) < now {
@@ -91,12 +95,14 @@ if claims.iat.saturating_add(300) < now as usize {
 ```
 
 #### Fix 5: Middleware Function Signatures
+
 ```rust
 // Update middleware functions to match axum 0.8 requirements
 // Need to adjust function signatures to match expected trait bounds
 ```
 
 #### Fix 6: Remove Unused Imports
+
 ```rust
 // Remove unused imports:
 // - IntoResponse from cors.rs
@@ -110,10 +116,11 @@ if claims.iat.saturating_add(300) < now as usize {
 ### Current State Analysis
 
 **AppError Structure Analysis:**
+
 ```rust
 pub struct AppError {
     status: StatusCode,           // 2 bytes
-    code: ErrorCode,             // 1 byte  
+    code: ErrorCode,             // 1 byte
     message: String,              // 24 bytes + heap
     context: HashMap<String, serde_json::Value>, // 24 bytes + heap
     ac_id: Option<String>,      // 24 bytes + heap
@@ -131,6 +138,7 @@ pub struct AppError {
 ### Optimization Strategy
 
 #### Option 1: Box Large Fields
+
 ```rust
 pub struct AppError {
     status: StatusCode,
@@ -145,6 +153,7 @@ pub struct AppError {
 ```
 
 #### Option 2: Error Type Consolidation
+
 ```rust
 #[derive(Clone)]
 pub struct AppError {
@@ -164,6 +173,7 @@ pub struct ErrorMetadata {
 ```
 
 #### Option 3: Enum-based Error Representation
+
 ```rust
 pub enum AppError {
     Simple {
@@ -197,7 +207,7 @@ pub enum AppError {
 
 **Panic Distribution by Crate:**
 - `crates/acceptance/src/steps/`: 45+ instances
-- `crates/rust_iac_config/`: 15+ instances  
+- `crates/rust_iac_config/`: 15+ instances
 - `crates/app-http/tests/`: 8+ instances
 - `crates/xtask/src/`: 12+ instances
 - Other crates: 18+ instances
@@ -205,6 +215,7 @@ pub enum AppError {
 **Problematic Patterns:**
 
 #### Pattern 1: Assertion-style Panics
+
 ```rust
 // CURRENT:
 .unwrap_or_else(|e| panic!("Failed to read file '{}': {}", file_path, e))
@@ -216,6 +227,7 @@ pub enum AppError {
 ```
 
 #### Pattern 2: Test Validation Panics
+
 ```rust
 // CURRENT:
 _ => panic!("Invalid expected status: {}", expected_status_str),
@@ -225,6 +237,7 @@ _ => anyhow::bail!("Invalid expected status: {}", expected_status_str),
 ```
 
 #### Pattern 3: Unwrap Panics
+
 ```rust
 // CURRENT:
 let status = status_str.parse().unwrap();
@@ -237,14 +250,15 @@ let status: TaskStatus = status_str.parse()
 ### Refactoring Strategy
 
 #### Step 1: Replace Panics with Result Types
+
 ```rust
 // Create test helper functions:
 pub fn parse_status<T: FromStr>(input: &str, context: &str) -> Result<T> {
     input.parse().with_context(|| format!("Failed to parse {}: '{}'", context, input))
 }
 
-pub fn expect_field<T>(json: &Value, field: &str) -> Result<T> 
-where 
+pub fn expect_field<T>(json: &Value, field: &str) -> Result<T>
+where
     T: for<'de> Deserialize<'de>,
 {
     json.get(field)
@@ -256,6 +270,7 @@ where
 ```
 
 #### Step 2: Use Test-Specific Error Types
+
 ```rust
 #[derive(Debug, thiserror::Error)]
 pub enum TestError {
@@ -270,8 +285,8 @@ pub enum TestError {
 }
 
 // Convert panics to Result<TestError>
-pub fn unwrap_or_test_error<T, E>(result: Result<T, E>, context: &str) -> Result<T, TestError> 
-where 
+pub fn unwrap_or_test_error<T, E>(result: Result<T, E>, context: &str) -> Result<T, TestError>
+where
     E: std::fmt::Display,
 {
     result.map_err(|e| TestError::Parse(format!("{}: {}", context, e)))
@@ -279,6 +294,7 @@ where
 ```
 
 #### Step 3: Implement Test Assertion Helpers
+
 ```rust
 pub fn assert_contains(actual: &str, expected: &str) -> Result<()> {
     if actual.contains(expected) {
@@ -289,8 +305,8 @@ pub fn assert_contains(actual: &str, expected: &str) -> Result<()> {
 }
 
 pub fn assert_eq_with_context<T: PartialEq + std::fmt::Debug>(
-    actual: T, 
-    expected: T, 
+    actual: T,
+    expected: T,
     context: &str
 ) -> Result<()> {
     if actual == expected {
@@ -314,7 +330,8 @@ pub fn assert_eq_with_context<T: PartialEq + std::fmt::Debug>(
 
 **Two Different TaskStatus Enums:**
 
-#### Model Crate (Simple 3-state):
+#### Model Crate (Simple 3-state)
+
 ```rust
 // crates/model/src/lib.rs:35-39
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -325,7 +342,8 @@ pub enum TaskStatus {
 }
 ```
 
-#### Gov-Model Crate (Rich 4-state):
+#### Gov-Model Crate (Rich 4-state)
+
 ```rust
 // crates/gov-model/src/lib.rs:49-58
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -346,6 +364,7 @@ pub enum TaskStatus {
 ### Consolidation Strategy
 
 #### Option 1: Unified Enum with Feature Flags
+
 ```rust
 // Create unified TaskStatus in model crate:
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -354,7 +373,7 @@ pub enum TaskStatus {
     Pending,
     InProgress,
     Completed,
-    
+
     // Governance states (for production)
     Todo,
     Review,
@@ -365,7 +384,7 @@ impl TaskStatus {
     pub fn is_governance_state(self) -> bool {
         matches!(self, TaskStatus::Todo | TaskStatus::Review | TaskStatus::Done)
     }
-    
+
     pub fn is_simple_state(self) -> bool {
         matches!(self, TaskStatus::Pending | TaskStatus::InProgress | TaskStatus::Completed)
     }
@@ -373,6 +392,7 @@ impl TaskStatus {
 ```
 
 #### Option 2: Separate Types with Conversion Traits
+
 ```rust
 // Keep both enums but add clear conversion:
 impl From<model::TaskStatus> for gov_model::TaskStatus {
@@ -398,11 +418,12 @@ impl From<gov_model::TaskStatus> for model::TaskStatus {
 ```
 
 #### Option 3: Domain-Specific Types (Recommended)
+
 ```rust
 // crates/model/src/lib.rs - Keep for examples
 pub enum SimpleTaskStatus {
     Pending,
-    InProgress, 
+    InProgress,
     Completed,
 }
 
@@ -416,12 +437,12 @@ pub enum TaskStatus {
 
 // Add clear module documentation:
 /// ## Task Status Types
-/// 
+///
 /// This workspace provides two task status types for different use cases:
-/// 
+///
 /// - `SimpleTaskStatus` (model crate): For basic CRUD examples and demos
 /// - `TaskStatus` (gov-model crate): For production governance workflows
-/// 
+///
 /// Use the appropriate type for your domain. Conversion functions are provided
 /// for interoperability when needed.
 ```
@@ -437,6 +458,7 @@ pub enum TaskStatus {
 ## Implementation Timeline
 
 ### Phase 1: Critical Compilation Fixes (Week 1)
+
 - [ ] Fix CORS middleware borrow checker issues
 - [ ] Resolve type mismatch errors in security.rs
 - [ ] Fix serde_yaml_ng method calls
@@ -444,24 +466,28 @@ pub enum TaskStatus {
 - [ ] Remove unused imports
 
 ### Phase 2: Error Type Optimization (Week 2-3)
+
 - [ ] Implement boxed fields in AppError
 - [ ] Add CompactString support
 - [ ] Create performance benchmarks
 - [ ] Validate memory usage reduction
 
 ### Phase 3: Test Refactoring (Week 3-4)
+
 - [ ] Replace acceptance test panics (45 instances)
 - [ ] Replace configuration test panics (15 instances)
 - [ ] Replace remaining test panics (38 instances)
 - [ ] Add test helper functions
 
 ### Phase 4: TaskStatus Consolidation (Week 4-5)
+
 - [ ] Rename model::TaskStatus to SimpleTaskStatus
 - [ ] Add conversion traits
 - [ ] Update all imports and usage
 - [ ] Add comprehensive documentation
 
 ### Phase 5: Validation and Testing (Week 5-6)
+
 - [ ] Run full clippy suite - expect 0 warnings
 - [ ] Performance testing for error handling
 - [ ] Integration testing for TaskStatus conversions
@@ -472,6 +498,7 @@ pub enum TaskStatus {
 ## Testing Strategies
 
 ### Clippy Validation
+
 ```bash
 # Run comprehensive clippy check
 cargo clippy --all-targets --all-features -- -D warnings
@@ -483,6 +510,7 @@ cargo clippy -- -W clippy::panic_in_result_fn
 ```
 
 ### Performance Benchmarks
+
 ```rust
 // benches/error_performance.rs
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
@@ -494,7 +522,7 @@ fn bench_error_creation(c: &mut Criterion) {
             black_box(error);
         })
     });
-    
+
     c.bench_function("create_complex_error", |b| {
         b.iter(|| {
             let error = AppError::bad_request("Test message")
@@ -508,6 +536,7 @@ fn bench_error_creation(c: &mut Criterion) {
 ```
 
 ### Test Reliability Validation
+
 ```bash
 # Run tests with panic detection
 RUST_BACKTRACE=1 cargo test -- --nocapture
@@ -520,6 +549,7 @@ cargo tarpaulin --out Html --output-dir target/tarpaulin
 ```
 
 ### Integration Testing
+
 ```rust
 // tests/task_status_integration.rs
 #[test]
@@ -527,10 +557,10 @@ fn test_task_status_conversions() {
     // Test all conversion paths
     let simple_states = [
         SimpleTaskStatus::Pending,
-        SimpleTaskStatus::InProgress, 
+        SimpleTaskStatus::InProgress,
         SimpleTaskStatus::Completed,
     ];
-    
+
     for simple in simple_states {
         let gov: TaskStatus = simple.into();
         let back: SimpleTaskStatus = gov.into();
@@ -543,19 +573,22 @@ fn test_task_status_conversions() {
 
 ## Success Metrics
 
-### Before Fixes:
+### Before Fixes
+
 - **8 clippy warnings** + multiple compilation errors
 - **152+ byte error types** with high memory overhead
 - **98+ panic!() instances** in test code
 - **Conflicting TaskStatus enums** causing confusion
 
-### After Fixes (Target):
+### After Fixes (Target)
+
 - **0 clippy warnings** with clean compilation
 - **<100 byte error types** with 30% memory reduction
 - **<10 panic!() instances** only in unrecoverable cases
 - **Clear TaskStatus separation** with documented usage
 
-### Validation Checklist:
+### Validation Checklist
+
 - [ ] `cargo clippy` returns 0 warnings
 - [ ] `cargo check` passes without errors
 - [ ] Error type benchmarks show 30%+ improvement
@@ -567,7 +600,8 @@ fn test_task_status_conversions() {
 
 ## Implementation Notes
 
-### Dependencies to Add:
+### Dependencies to Add
+
 ```toml
 # Cargo.toml additions
 compact_str = "0.7"           # For memory-efficient strings
@@ -576,14 +610,16 @@ thiserror = "1.0"             # For better error handling
 criterion = "0.5"             # For performance benchmarks
 ```
 
-### Code Review Checklist:
+### Code Review Checklist
+
 - [ ] All new error types implement `Clone` and `Send` + `Sync`
 - [ ] Test helpers return `Result` types, not panic
 - [ ] TaskStatus conversions are lossless where possible
 - [ ] Documentation includes usage examples
 - [ ] Benchmarks cover common error scenarios
 
-### Migration Strategy:
+### Migration Strategy
+
 1. **Feature flags** for gradual rollout
 2. **Backward compatibility** during transition
 3. **Comprehensive testing** before removal of old types

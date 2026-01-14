@@ -80,6 +80,7 @@ Run the validation ladder:
 **Expected:** All checks green. If any fail, troubleshoot before forking.
 
 **Tier-2 (Native Windows):** If using native Windows without WSL2/Nix:
+
 ```powershell
 - [ ] cargo xtask doctor
 - [ ] cargo xtask check
@@ -157,6 +158,7 @@ This enables programmatic branch protection setup.
 ### 3.1 Create Your Fork
 
 **Via GitHub UI:**
+
 ```bash
 - [ ] Navigate to template repo
 - [ ] Click "Use this template" → "Create a new repository"
@@ -166,6 +168,7 @@ This enables programmatic branch protection setup.
 ```
 
 **Or via CLI:**
+
 ```bash
 - [ ] gh repo create <your-service-name> --template your-org/Rust-Template --private
 - [ ] cd <your-service-name>
@@ -178,6 +181,7 @@ Enforce governance checks at the platform level.
 **Follow:** [Setup Branch Protection Guide](./setup-branch-protection.md)
 
 **Via GitHub UI:**
+
 ```bash
 - [ ] Repo Settings → Branches → Add rule
 - [ ] Branch name pattern: main
@@ -198,6 +202,7 @@ Enforce governance checks at the platform level.
 ```
 
 **Or via GitHub CLI:**
+
 ```bash
 - [ ] gh api repos/:owner/:repo/branches/main/protection -X PUT --input branch-protection.json
 ```

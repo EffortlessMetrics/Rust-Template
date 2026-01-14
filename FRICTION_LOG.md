@@ -29,6 +29,7 @@ See `specs/friction_schema.yaml` for complete guidance on when to use friction l
 ## View Friction Entries
 
 **CLI:**
+
 ```bash
 # List all friction entries
 cargo xtask friction-list
@@ -41,6 +42,7 @@ cargo xtask friction-list --severity high
 ```
 
 **HTTP API:**
+
 ```bash
 # Get friction counts and recent entries
 curl http://localhost:8080/platform/status
@@ -54,6 +56,7 @@ curl http://localhost:8080/platform/friction
 ## Create New Friction Entry
 
 **CLI:**
+
 ```bash
 cargo xtask friction-new \
   --id FRICTION-XYZ-001 \

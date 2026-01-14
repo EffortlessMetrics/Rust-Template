@@ -1,6 +1,6 @@
 # Rust-Template Architecture Assessment
 
-**Version:** v3.3.12 | **Kernel Baseline:** v3.3.9-kernel  
+**Version:** v3.3.12 | **Kernel Baseline:** v3.3.9-kernel
 **Date:** 2025-12-26 | **Assessment Type:** Release Readiness
 
 ---
@@ -169,6 +169,7 @@ graph TD
    - Dependency direction enforced by Cargo workspace
 
 2. **Layered Structure**
+
    ```
    Delivery Layer (app-http, adapters-grpc, gov-http)
          ↓
@@ -205,26 +206,31 @@ graph TD
 ### 3.2 Proper Layering
 
 #### Adapters Layer
+
 - [`app-http`](../crates/app-http/src/lib.rs): HTTP adapter with Axum, handles routing, middleware, serialization
 - [`adapters-grpc`](../crates/adapters-grpc/): gRPC adapter with Tonic (optional)
 - [`adapters-db-sqlx`](../crates/adapters-db-sqlx/): PostgreSQL adapter with SQLx
 - [`adapters-spec-fs`](../crates/adapters-spec-fs/): File system adapter for specs
 
 #### Domain Layer
+
 - [`business-core`](../crates/business-core/src/lib.rs): Pure business logic, defines ports
 - [`model`](../crates/model/): Shared domain types
 - [`gov-model`](../crates/gov-model/src/lib.rs): Governance domain types
 - [`gov-contracts`](../crates/gov-contracts/): Governance contracts and schemas
 
 #### Infrastructure Layer
+
 - [`telemetry`](../crates/telemetry/): Observability (tracing, metrics, OTLP)
 - [`spec-runtime`](../crates/spec-runtime/src/lib.rs): Spec loading, validation, graph building
 
 #### Governance Layer
+
 - [`ac-kernel`](../crates/ac-kernel/src/lib.rs): AC governance logic, coverage parsing
 - [`gov-policy`](../crates/gov-policy/): Rego policy bundle and runner
 
 #### Tooling Layer
+
 - [`xtask`](../crates/xtask/): Development CLI with 60+ commands
 - [`gov-xtask-core`](../crates/gov-xtask-core/): Governance utilities
 - [`rust_iac_xtask_core`](../crates/rust_iac_xtask_core/): IaC orchestration

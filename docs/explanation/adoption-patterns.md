@@ -18,17 +18,20 @@ This document explains three common patterns for adopting this Rust service temp
 ### How It Works
 
 1. **Clone the template:**
+
    ```bash
    git clone https://github.com/your-org/rust-template.git my-service
    cd my-service
    ```
 
 2. **Remove Git history:**
+
    ```bash
    rm -rf .git
    ```
 
 3. **Initialize as new repo:**
+
    ```bash
    git init
    git add .
@@ -67,7 +70,7 @@ This document explains three common patterns for adopting this Rust service temp
 
 **None.** You've forked the template. Updates are manual:
 
-1. Watch template releases: https://github.com/your-org/rust-template/releases
+1. Watch template releases: <https://github.com/your-org/rust-template/releases>
 2. Read changelog, identify useful changes
 3. Manually apply changes to your service
 4. Test and commit
@@ -95,6 +98,7 @@ git commit -m "Backport bundler improvements from template v1.1.0"
 ### How It Works
 
 1. **Clone with template as remote:**
+
    ```bash
    git clone https://github.com/your-org/rust-template.git my-service
    cd my-service
@@ -103,12 +107,14 @@ git commit -m "Backport bundler improvements from template v1.1.0"
    ```
 
 2. **Create your main branch:**
+
    ```bash
    git checkout -b main
    git push -u origin main
    ```
 
 3. **Customize on your branch:**
+
    ```bash
    # Update metadata
    vim Cargo.toml
@@ -123,6 +129,7 @@ git commit -m "Backport bundler improvements from template v1.1.0"
    ```
 
 4. **Pull template updates:**
+
    ```bash
    # When template releases v1.1.0
    git fetch template

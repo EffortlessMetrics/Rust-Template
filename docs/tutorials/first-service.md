@@ -9,4 +9,3 @@ Steps (sketch):
 3. Configure secrets required by CI (Schema Registry, Apollo, etc.).
 4. Run `nix develop`, `cargo run -p xtask -- check`, `cargo run -p xtask -- bdd`.
 5. Open a PR and verify that required checks pass.
-

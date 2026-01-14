@@ -52,6 +52,7 @@ The template supports two validation tiers with different guarantees:
 **Validation Guarantee:**
 
 All 7 selftest steps **always pass**:
+
 ```
 [1/7] Core checks (fmt, clippy, tests)      ✅
 [2/7] BDD acceptance tests                  ✅
@@ -82,6 +83,7 @@ All 7 selftest steps **always pass**:
 **Validation Guarantee:**
 
 Steps 1-6 **always pass**; steps 7-8 may intermittently fail with `os error 5`:
+
 ```
 [1/7] Core checks (fmt, clippy, tests)      ✅
 [2/7] BDD acceptance tests                  ✅
@@ -197,6 +199,7 @@ cargo xtask selftest
 **macOS-Specific Notes:**
 
 - **XCode Command Line Tools**: May be required. Install with:
+
   ```bash
   xcode-select --install
   ```
@@ -321,6 +324,7 @@ cargo xtask doctor
 **Expected behavior:**
 - Steps 1-6 of selftest pass reliably
 - Step 7-8 may fail intermittently with:
+
   ```
   error: failed to remove `target\debug\xtask.exe`: Access is denied. (os error 5)
   ```
@@ -348,6 +352,7 @@ Windows does not allow deleting/replacing an in-use executable. Unix systems all
 #### Option 1: Exclude `target/` from Antivirus (Recommended)
 
 **Windows Defender:**
+
 ```powershell
 # PowerShell as Administrator
 Add-MpPreference -ExclusionPath "C:\Code\Rust\Rust-Template\target"
@@ -376,6 +381,7 @@ Add-MpPreference -ExclusionPath "C:\Code\Rust\Rust-Template\target"
 - When selftest must pass cleanly
 
 **Workflow:**
+
 ```powershell
 # Daily dev: native Windows (fast iteration)
 cargo run -p app-http
@@ -395,6 +401,7 @@ cargo xtask selftest
 #### Option 3: Retry Strategy
 
 **Quick fix:**
+
 ```powershell
 # Close all running cargo/xtask processes
 taskkill /F /IM cargo.exe
@@ -486,6 +493,7 @@ head -1 .git/hooks/pre-commit
 ```
 
 **Fix:**
+
 ```bash
 # Reinstall
 cargo xtask install-hooks
@@ -496,6 +504,7 @@ cargo xtask install-hooks
 **Cause:** Line endings converted to CRLF (Windows Git auto-conversion).
 
 **Fix:**
+
 ```bash
 # In Git Bash or PowerShell
 dos2unix .git/hooks/pre-commit
@@ -509,6 +518,7 @@ cargo xtask install-hooks
 **Cause:** Cargo not in PATH when Git runs the hook.
 
 **Fix:**
+
 ```bash
 # Verify cargo in PATH
 where cargo
@@ -612,6 +622,7 @@ cargo xtask selftest
 ### CI Behavior
 
 **GitHub Actions:**
+
 ```yaml
 # Tier 1: Linux + Nix (canonical)
 - name: Selftest
@@ -727,11 +738,13 @@ source ~/.nix-profile/etc/profile.d/nix.sh
 **Cause:** File locking (see [Windows Workarounds](#windows-workarounds))
 
 **Fix (best):**
+
 ```powershell
 Add-MpPreference -ExclusionPath "C:\Code\Rust\Rust-Template\target"
 ```
 
 **Fix (alternative):**
+
 ```bash
 # Use WSL2 for final validation
 wsl
@@ -745,6 +758,7 @@ cargo xtask selftest
 **Cause:** Line endings (CRLF vs LF)
 
 **Fix:**
+
 ```bash
 # In Git Bash
 dos2unix .git/hooks/pre-commit
@@ -766,6 +780,7 @@ cargo binstall conftest
 **Cause:** Missing OpenSSL (Windows doesn't ship it)
 
 **Fix (manual, not recommended):**
+
 ```powershell
 # Download and install OpenSSL from:
 # https://slproweb.com/products/Win32OpenSSL.html
@@ -825,6 +840,7 @@ cargo xtask selftest
 - IDE integration requires WSL2 extension (VS Code, IntelliJ support this)
 
 **Recommended workflow after migration:**
+
 ```bash
 # Option 1: Work entirely in WSL2
 wsl
@@ -875,6 +891,7 @@ cargo xtask selftest
 ### Tier 2 → Tier 1 (Windows Team Migration)
 
 **Recommended path:**
+
 ```
 Current: Team using native Windows (Tier 2)
   ↓

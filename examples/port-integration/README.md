@@ -145,6 +145,7 @@ schedule:
 ### Authentication Errors
 
 Ensure your Port.io credentials are correct:
+
 ```bash
 python3 -c "import sync_to_port; print(sync_to_port.get_port_token())"
 ```
@@ -152,6 +153,7 @@ python3 -c "import sync_to_port; print(sync_to_port.get_port_token())"
 ### Entity Not Appearing
 
 Check the sync script output for errors:
+
 ```bash
 python3 sync_to_port.py --verbose
 ```
@@ -159,6 +161,7 @@ python3 sync_to_port.py --verbose
 ### Stale Data
 
 Force a full sync (ignores cache):
+
 ```bash
 python3 sync_to_port.py --force
 ```

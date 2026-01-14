@@ -56,6 +56,7 @@ yarn new --select plugin
 This creates a plugin in `plugins/rust-template-governance/`.
 
 **File structure:**
+
 ```
 plugins/rust-template-governance/
 ├── src/
@@ -106,11 +107,13 @@ proxy:
 **Verify proxy works:**
 
 Start Backstage dev server:
+
 ```bash
 yarn dev
 ```
 
 In another terminal, test the proxy:
+
 ```bash
 curl http://localhost:3000/api/proxy/rust-template-platform/status
 ```
@@ -542,6 +545,7 @@ Edit `packages/app/package.json`:
 ```
 
 Then run:
+
 ```bash
 yarn install
 ```
@@ -616,12 +620,14 @@ const serviceEntityPage = (
 **7.1: Start services**
 
 Terminal 1 (Rust platform):
+
 ```bash
 cd /path/to/rust-template
 cargo run -p app-http
 ```
 
 Terminal 2 (Backstage):
+
 ```bash
 cd my-backstage
 yarn dev
@@ -630,6 +636,7 @@ yarn dev
 **7.2: Verify proxy**
 
 In browser console or terminal:
+
 ```bash
 curl http://localhost:3000/api/proxy/rust-template-platform/status
 ```
@@ -651,6 +658,7 @@ Stop the Rust platform service and refresh Backstage:
 **7.5: Test with real data**
 
 In Rust platform, trigger governance failures:
+
 ```bash
 # Intentionally break a test to see red status
 cargo test -- --exact some_failing_test

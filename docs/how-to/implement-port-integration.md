@@ -43,6 +43,7 @@ Before starting, ensure you have:
 5. **Platform version**: Template v3.3.6 or later (for stable JSON contracts)
 
 **Verify prerequisites:**
+
 ```bash
 # Check platform is running
 curl http://localhost:8080/platform/status
@@ -469,6 +470,7 @@ python3 port-sync.py
 ```
 
 **Expected output:**
+
 ```
 Syncing platform http://localhost:8080 to Port.io...
 ✓ Authenticated with Port.io
@@ -684,7 +686,7 @@ For deployed services with public endpoints:
 
 ### 6.1 Verify Entity in Port.io
 
-1. Open Port.io UI: https://app.getport.io
+1. Open Port.io UI: <https://app.getport.io>
 2. Navigate to **Catalog** → **rust-template-service**
 3. Find your service entity (e.g., `rust-template`)
 4. Verify properties are populated:
@@ -756,6 +758,7 @@ Add monitoring to your workflow:
 **Cause:** Invalid Port.io credentials
 
 **Fix:**
+
 ```bash
 # Verify credentials
 echo $PORT_CLIENT_ID
@@ -772,6 +775,7 @@ curl -X POST https://api.getport.io/v1/auth/access_token \
 **Cause:** Blueprint doesn't exist or identifier mismatch
 
 **Fix:**
+
 ```bash
 # Check blueprint exists
 curl -H "Authorization: Bearer $PORT_TOKEN" \
@@ -786,6 +790,7 @@ curl http://localhost:8080/platform/status | jq '.service.service_id'
 **Cause:** Platform endpoints returning different schema
 
 **Fix:**
+
 ```bash
 # Inspect actual response
 curl http://localhost:8080/platform/status | jq '.'

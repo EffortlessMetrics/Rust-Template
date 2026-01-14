@@ -9,6 +9,7 @@
 ## AC Specification
 
 **Description:**
+
 ```
 For commands covered by the DevEx contract (doctor, check,
 selftest, ac-status, ac-coverage, bundle, version,
@@ -103,6 +104,7 @@ CUCUMBER_TAG_EXPRESSION="@AC-TPL-XTASK-NONINTERACTIVE" cargo test -p acceptance 
 ```
 
 All scenarios should pass with the summary:
+
 ```
 8 scenarios (7 passed, 1 skipped)
 42 steps (41 passed, 1 skipped)

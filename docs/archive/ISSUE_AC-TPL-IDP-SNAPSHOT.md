@@ -12,6 +12,7 @@
 **From `specs/spec_ledger.yaml` (lines 1637-1653):**
 
 ### Requirement: REQ-TPL-IDP-SNAPSHOT
+
 **Title:** IDP Snapshot Contract
 **Tags:** `[kernel, philosophy, ai, idp]`
 **Must Have AC:** `true`
@@ -24,6 +25,7 @@
 ### Acceptance Criteria
 
 #### AC-TPL-IDP-SNAPSHOT
+
 **Text:**
 > `cargo xtask idp-snapshot` emits JSON containing timestamp,
 > template_version, service_id, governance_health (status, ac_coverage),
@@ -36,6 +38,7 @@
 - BDD: `@AC-TPL-IDP-SNAPSHOT` in `specs/features/xtask_devex.feature`
 
 #### AC-TPL-IDP-SNAPSHOT-VALID-JSON
+
 **Text:**
 > The idp-snapshot output is valid JSON that can be parsed without errors
 > and contains all required top-level keys.

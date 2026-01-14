@@ -41,6 +41,7 @@ This document specifies the data contracts and integration patterns for surfacin
 **Primary Endpoint:** `GET /platform/docs/index`
 
 **Response Structure:**
+
 ```json
 {
   "schema_version": "string",
@@ -70,6 +71,7 @@ This document specifies the data contracts and integration patterns for surfacin
 **Primary Endpoint:** `GET /platform/coverage`
 
 **Response Structure:**
+
 ```json
 {
   "summary": {

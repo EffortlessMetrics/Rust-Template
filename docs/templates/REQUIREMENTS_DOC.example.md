@@ -22,12 +22,14 @@ owner: "product"
 ## 2. Requirements
 
 ### REQ-TPL-EXAMPLE-001: Core Requirement
+
 - **Priority**: High | Medium | Low
 - **Description**: Detailed requirement description
 - **Rationale**: Why this is needed
 - **Acceptance Criteria**: Links to AC-* IDs
 
 ### REQ-TPL-EXAMPLE-002: Secondary Requirement
+
 - **Priority**: Medium
 - **Description**: ...
 - **Rationale**: ...

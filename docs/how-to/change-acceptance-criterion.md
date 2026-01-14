@@ -376,18 +376,21 @@ Use this before committing:
 ### Example 1: Minor text clarification
 
 **AC before:**
+
 ```yaml
 - id: AC-MYSERV-001
   text: "Service responds to health check"
 ```
 
 **AC after:**
+
 ```yaml
 - id: AC-MYSERV-001
   text: "Service responds with 200 OK to GET /health"
 ```
 
 **BDD update:**
+
 ```gherkin
 @AC-MYSERV-001
 Scenario: Health check succeeds
@@ -397,6 +400,7 @@ Scenario: Health check succeeds
 ```
 
 **Run:**
+
 ```bash
 cargo xtask test-ac AC-MYSERV-001
 ```
@@ -404,6 +408,7 @@ cargo xtask test-ac AC-MYSERV-001
 ### Example 2: Demote optional feature
 
 **Before:**
+
 ```yaml
 - id: AC-TPL-METRICS-EXPORT
   text: "Platform metrics can be exported to Prometheus"
@@ -411,6 +416,7 @@ cargo xtask test-ac AC-MYSERV-001
 ```
 
 **After:**
+
 ```yaml
 - id: AC-TPL-METRICS-EXPORT
   text: "Platform metrics can be exported to Prometheus"
@@ -418,6 +424,7 @@ cargo xtask test-ac AC-MYSERV-001
 ```
 
 **ADR:**
+
 ```bash
 cargo xtask adr-new "Metrics export is nice-to-have, not core"
 
@@ -428,6 +435,7 @@ cargo xtask adr-new "Metrics export is nice-to-have, not core"
 ```
 
 **Run:**
+
 ```bash
 cargo xtask selftest  # Should still pass
 ```

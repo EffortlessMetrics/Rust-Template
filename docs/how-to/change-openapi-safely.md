@@ -6,4 +6,3 @@ Key points:
 - edit `specs/openapi/openapi.yaml`
 - run OpenAPI lint locally (via `nix develop -c` and Redocly)
 - understand and handle breaking-change reports from the `OpenAPI` workflow
-
