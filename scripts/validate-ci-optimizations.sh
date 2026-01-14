@@ -50,9 +50,9 @@ for action in .github/actions/*/action.yml; do
     if grep -q "^name:" "$action" && \
        grep -q "^description:" "$action" && \
        grep -q "^runs:" "$action"; then
-        pass "$(basename $(dirname "$action")) has valid structure"
+        pass "$(basename "$(dirname "$action")") has valid structure"
     else
-        fail "$(basename $(dirname "$action")) has invalid structure"
+        fail "$(basename "$(dirname "$action")") has invalid structure"
     fi
 done
 

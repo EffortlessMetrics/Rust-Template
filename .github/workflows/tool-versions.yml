@@ -1,0 +1,18 @@
+# Central configuration for tool versions used in CI workflows
+# Update versions here to propagate changes across all workflows
+
+# Gitleaks - Secret scanning tool
+# Used in: ci-security.yml
+gitleaks: "8.21.2"
+
+# Protocol Buffers compiler
+# Used in: ci-msrv.yml
+protoc: "27.x"
+
+# Redocly CLI - OpenAPI linting
+# Used in: ci-openapi.yml
+redocly: "1.21.0"
+
+# Gherkin-lint - Feature file linting
+# Used in: ci-gherkin.yml
+gherkin-lint: "4.2.4"

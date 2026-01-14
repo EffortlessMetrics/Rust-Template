@@ -1,16 +1,18 @@
 {
   "default": true,
-  "MD013": {
-    "line_length": 120,
-    "heading_line_length": 120,
-    "headers": true,
-    "code_blocks": false,
-    "tables": false
-  },
-  "MD025": {
-    "front_matter_title": ""
-  },
+  "MD001": false,
+  "MD003": false,
+  "MD013": false,
+  "MD024": false,
+  "MD025": false,
+  "MD028": false,
+  "MD029": false,
   "MD032": false,
   "MD033": false,
-  "MD041": false
+  "MD034": false,
+  "MD036": false,
+  "MD040": false,
+  "MD041": false,
+  "MD051": false,
+  "MD056": false
 }

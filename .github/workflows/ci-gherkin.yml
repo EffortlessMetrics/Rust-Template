@@ -15,12 +15,14 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions: { contents: read }
+    env:
+      # Tool version sourced from .github/workflows/tool-versions.yml
+      GHERKIN_LINT_VERSION: "4.2.4"
     steps:
       - uses: actions/checkout@v4
       - uses: cachix/install-nix-action@v31
       - name: Gherkin Lint (pinned)
         # Note: gherkin-lint 9.0.0 doesn't exist on npm; using 4.2.4 (latest stable)
-        env: { GHERKIN_LINT_VERSION: "4.2.4" }
         run: |
           nix develop -c npx -y "gherkin-lint@${GHERKIN_LINT_VERSION:-latest}" -c .gherkin-lintrc specs/features
       - name: Require exactly one @AC-... tag per Scenario

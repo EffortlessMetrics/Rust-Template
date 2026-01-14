@@ -17,6 +17,8 @@ jobs:
     permissions: { contents: read, pull-requests: write }
     env:
       ENFORCE_CHECKSUMS: "1"
+      # Tool version sourced from .github/workflows/tool-versions.yml
+      REDOCLY_VERSION: "1.21.0"
     steps:
       - uses: actions/checkout@v4
         with: { fetch-depth: 0 }
@@ -68,4 +70,4 @@ jobs:
           exit 1
 
       - name: Lint
-        run: nix develop -c npx -y @redocly/cli@1.21.0 lint --config redocly.yaml specs/openapi/openapi.yaml
+        run: nix develop -c npx -y @redocly/cli@${REDOCLY_VERSION} lint --config redocly.yaml specs/openapi/openapi.yaml

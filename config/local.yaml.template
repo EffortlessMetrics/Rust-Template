@@ -8,10 +8,10 @@ settings:
   platform.auth_mode: "open"
   platform.redact_secrets: true
   database.auto_migrate: false
-  
+
   # CORS configuration (optional - defaults to secure values)
   cors.enabled: true
-  cors.allowed_origins: 
+  cors.allowed_origins:
     - "http://localhost:3000"
     - "http://localhost:8080"
   cors.allowed_methods:
@@ -30,7 +30,7 @@ settings:
     - "origin"
   cors.allow_credentials: false
   cors.max_age: 86400
-  
+
   # Security headers configuration (optional - defaults to secure values)
   security_headers.enabled: true
   security_headers.content_security_policy: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self'; frame-ancestors 'none';"
@@ -49,16 +49,16 @@ secrets:
   # Database connection string
   # Format: postgres://username:password@host:port/database
   db.url: "postgres://CHANGE_ME:CHANGE_ME@localhost:5432/CHANGE_ME"
-  
+
   # JWT signing key for authentication
   # Use a strong, randomly generated secret in production
   # Generate with: openssl rand -base64 32
   auth.jwt_signing_key: "CHANGE_ME_GENERATE_STRONG_RANDOM_SECRET"
-  
+
   # Platform authentication token
   # Use a strong, randomly generated token in production
   platform.auth_token: "CHANGE_ME_GENERATE_STRONG_RANDOM_TOKEN"
-  
+
   # JWT secret for platform authentication
   # Use a strong, randomly generated secret in production
   # Generate with: openssl rand -base64 32

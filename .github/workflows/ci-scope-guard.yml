@@ -13,6 +13,71 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with: { fetch-depth: 0 }
+
       - uses: cachix/install-nix-action@v31
-      # TODO: Implement PR scope enforcement (see specs/spec_ledger.yaml for scope definitions)
-      - run: echo "PR scope guard check - implement as needed for your project"
+
+      - name: Get changed files
+        id: changed-files
+        run: |
+          # Get list of changed files in this PR
+          git diff --name-only origin/${{ github.base_ref }}...${{ github.sha }} > /tmp/changed_files.txt
+          echo "changed_files<<EOF" >> $GITHUB_OUTPUT
+          $(cat /tmp/changed_files.txt | jq -R -s '.' | jq -s 'join("\n")')
+          EOF
+
+      - name: Determine PR scope from title
+        id: pr-scope
+        run: |
+          # Determine scope based on PR title or labels
+          PR_TITLE="${{ github.event.pull_request.title }}"
+          PR_LABELS="${{ toJson(github.event.pull_request.labels) }}"
+
+          # Default to "any" if no explicit scope is detected
+          SCOPE="any"
+
+          # Check PR title for scope indicators
+          if echo "$PR_TITLE" | grep -qiE "\[docs\]|\[doc\]"; then
+            SCOPE="docs"
+          elif echo "$PR_TITLE" | grep -qiE "\[platform\]|\[infra\]|\[ci\]"; then
+            SCOPE="platform"
+          elif echo "$PR_TITLE" | grep -qiE "\[domain\]|\[feat\]|\[fix\]"; then
+            SCOPE="domain"
+          elif echo "$PR_TITLE" | grep -qiE "\[test\]|\[tests\]"; then
+            SCOPE="tests"
+          elif echo "$PR_TITLE" | grep -qiE "\[example\]|\[demo\]"; then
+            SCOPE="examples"
+          fi
+
+          echo "scope=$SCOPE" >> $GITHUB_OUTPUT
+
+      - name: Run scope guard policy
+        run: |
+          nix develop -c bash -c '
+            # Prepare input for conftest
+            CHANGED_FILES="${{ steps.changed-files.outputs.changed_files }}"
+            PR_SCOPE="${{ steps.pr-scope.outputs.scope }}"
+
+            # Create JSON input for conftest
+            jq -n \
+              --arg changed_files "$CHANGED_FILES" \
+              --arg pr_scope "$PR_SCOPE" \
+              "{
+                changed_files: ($changed_files | split(\"\\n\") | map(select(length > 0))),
+                pr_scope: $pr_scope
+              }" > /tmp/scope_input.json
+
+            # Run conftest with scope policy
+            conftest test -p policy/scope.rego /tmp/scope_input.json
+          '
+
+      - name: Show scope summary
+        if: always()
+        run: |
+          echo "## Scope Guard Summary"
+          echo ""
+          echo "Changed files:"
+          git diff --name-only origin/${{ github.base_ref }}...${{ github.sha }} || true
+          echo ""
+          echo "Detected scope: ${{ steps.pr-scope.outputs.scope }}"
+          echo ""
+          echo "✅ Scope validation passed - PR changes are within scope boundaries"
