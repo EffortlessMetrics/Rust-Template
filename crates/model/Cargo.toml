@@ -1,10 +1,13 @@
-[package]
-name = "model"
-version = "0.1.0"
-edition.workspace = true
-rust-version.workspace = true
-publish.workspace = true
-
 [dependencies]
 chrono.workspace = true
 serde.workspace = true
+
+[package]
+categories = ["data-structures"]
+description = "Shared domain models and data structures"
+keywords = ["data", "domain", "model", "structures"]
+name = "model"
+version = "0.1.0"
+edition.workspace = true
+publish.workspace = true
+rust-version.workspace = true

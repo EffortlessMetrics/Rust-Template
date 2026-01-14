@@ -1,19 +1,22 @@
-[package]
-name = "spec-runtime"
-version = "0.1.0"
-edition.workspace = true
-rust-version.workspace = true
-publish.workspace = true
-
 [dependencies]
+gov-model = {path = "../gov-model"}
 anyhow.workspace = true
-serde.workspace = true
-serde_yaml.workspace = true
-serde_json.workspace = true
-url.workspace = true
 chrono.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+serde_yaml.workspace = true
 tracing.workspace = true
-gov-model = { path = "../gov-model" }
+url.workspace = true
 
 [dev-dependencies]
 tempfile.workspace = true
+
+[package]
+categories = ["config", "development-tools"]
+description = "Runtime environment for spec-based development workflows and infrastructure"
+keywords = ["development", "infrastructure", "runtime", "spec"]
+name = "spec-runtime"
+version = "0.1.0"
+edition.workspace = true
+publish.workspace = true
+rust-version.workspace = true

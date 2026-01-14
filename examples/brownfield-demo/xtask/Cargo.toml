@@ -1,9 +1,9 @@
+[dependencies]
+clap = {features = ["derive"], version = "4.5.53"}
+rust_iac_xtask_core = {path = "../../../rust_iac_xtask_core"}
+anyhow.workspace = true
+
 [package]
 name = "xtask"
-version.workspace = true
 edition.workspace = true
-
-[dependencies]
-anyhow.workspace = true
-clap = { version = "4.5.53", features = ["derive"] }
-rust_iac_xtask_core = { path = "../../../rust_iac_xtask_core" }
+version.workspace = true

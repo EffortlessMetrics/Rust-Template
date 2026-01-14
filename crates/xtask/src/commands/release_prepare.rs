@@ -71,15 +71,15 @@ fn insert_changelog_skeleton(version: &str, date: &str) -> Result<bool> {
 
 ### Added
 
-- 
+-
 
 ### Changed
 
-- 
+-
 
 ### Fixed
 
-- 
+-
 "#,
         version, date
     );

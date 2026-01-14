@@ -1,19 +1,18 @@
-[term]
-verbose = false
-
 [alias]
 # Allow `cargo xtask <cmd>` to run the workspace xtask binary.
 xtask = "run -p xtask --"
 
 [build]
+# Use incremental compilation for dev builds
+# Already default but explicit for clarity
+incremental = true
 # Limit parallelism to avoid thread exhaustion with sccache
 # Adjust based on available CPU cores and system load
 jobs = 8
 
-# Use incremental compilation for dev builds
-# Already default but explicit for clarity
-incremental = true
-
 [net]
 # Increase git fetch parallelism
 git-fetch-with-cli = false
+
+[term]
+verbose = false

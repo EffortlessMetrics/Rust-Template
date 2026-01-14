@@ -1,38 +1,39 @@
+[dependencies]
+ac-kernel = {path = "../ac-kernel"}
+adapters-spec-fs = {path = "../adapters-spec-fs"}
+# Internal crates
+app-http = {path = "../app-http"}
+business-core = {path = "../business-core"}
+spec-runtime = {path = "../spec-runtime"}
+telemetry = {path = "../telemetry"}
+testing = {path = "../testing"}
+uuid = {features = ["v4"], workspace = true}
+axum.workspace = true
+cucumber.workspace = true
+gherkin.workspace = true
+http.workspace = true
+http-body-util.workspace = true
+md5.workspace = true
+regex.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+serde_yaml.workspace = true
+shell-words.workspace = true
+tempfile.workspace = true
+tokio.workspace = true
+tower.workspace = true
+tracing.workspace = true
+
+[dev-dependencies]
+
 [package]
 name = "acceptance"
 version = "0.1.0"
 edition.workspace = true
-rust-version.workspace = true
 publish.workspace = true
+rust-version.workspace = true
+
 [[test]]
-name="acceptance"
-path="tests/acceptance.rs"
-harness=false
-[dependencies]
-serde.workspace = true
-serde_json.workspace = true
-serde_yaml.workspace = true
-uuid = { workspace = true, features = ["v4"] }
-cucumber.workspace = true
-gherkin.workspace = true
-tokio.workspace = true
-axum.workspace = true
-tower.workspace = true
-http.workspace = true
-http-body-util.workspace = true
-regex.workspace = true
-shell-words.workspace = true
-md5.workspace = true
-
-# Internal crates
-app-http = { path = "../app-http" }
-business-core = { path = "../business-core" }
-telemetry = { path = "../telemetry" }
-adapters-spec-fs = { path = "../adapters-spec-fs" }
-spec-runtime = { path = "../spec-runtime" }
-ac-kernel = { path = "../ac-kernel" }
-testing = { path = "../testing" }
-tracing.workspace = true
-tempfile.workspace = true
-
-[dev-dependencies]
+harness = false
+name = "acceptance"
+path = "tests/acceptance.rs"

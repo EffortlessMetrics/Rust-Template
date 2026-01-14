@@ -1,12 +1,12 @@
+[dependencies]
+serde = {workspace = true}
+thiserror = {workspace = true}
+
 [package]
+description = "Governance domain model types for Rust-as-Spec platform"
 name = "gov-model"
 version = "0.1.0"
 edition.workspace = true
-rust-version.workspace = true
 license.workspace = true
 publish.workspace = true
-description = "Governance domain model types for Rust-as-Spec platform"
-
-[dependencies]
-serde = { workspace = true }
-thiserror = { workspace = true }
+rust-version.workspace = true

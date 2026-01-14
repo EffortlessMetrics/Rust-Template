@@ -1,27 +1,30 @@
-[package]
-name = "adapters-db-sqlx"
-version = "0.1.0"
-edition.workspace = true
-rust-version.workspace = true
-publish.workspace = true
-
 [dependencies]
+business-core = {path = "../business-core"}
+model = {path = "../model"}
+sqlx = {features = ["chrono", "migrate", "postgres", "runtime-tokio-rustls", "uuid"], version = "0.8.6"}
+tokio = {features = ["time"], workspace = true}
 anyhow.workspace = true
-tokio = { workspace = true, features = ["time"] }
-sqlx = { version = "0.8.6", features = ["runtime-tokio-rustls", "postgres", "migrate", "uuid", "chrono"] }
+async-trait.workspace = true
+chrono.workspace = true
 tracing.workspace = true
 uuid.workspace = true
-chrono.workspace = true
-async-trait.workspace = true
-model = { path = "../model" }
-business-core = { path = "../business-core" }
 
 [dev-dependencies]
 testcontainers = "0.26.0"
-tokio.workspace = true
+uuid = {features = ["v4"], workspace = true}
 async-trait.workspace = true
-uuid = { workspace = true, features = ["v4"] }
 chrono.workspace = true
+tokio.workspace = true
 
 [features]
 integration-db = []
+
+[package]
+categories = ["database", "database-implementations"]
+description = "SQLx-based PostgreSQL database adapter with migration support"
+keywords = ["database", "persistence", "postgresql", "sqlx"]
+name = "adapters-db-sqlx"
+version = "0.1.0"
+edition.workspace = true
+publish.workspace = true
+rust-version.workspace = true

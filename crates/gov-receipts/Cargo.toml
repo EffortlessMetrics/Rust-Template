@@ -1,16 +1,16 @@
+[dependencies]
+chrono = {workspace = true}
+serde = {workspace = true}
+serde_json = {workspace = true}
+
+[dev-dependencies]
+serde_json = {workspace = true}
+
 [package]
+description = "Receipt types for audit evidence in Rust-as-Spec platform"
 name = "gov-receipts"
 version = "0.1.0"
 edition.workspace = true
-rust-version.workspace = true
 license.workspace = true
 publish.workspace = true
-description = "Receipt types for audit evidence in Rust-as-Spec platform"
-
-[dependencies]
-serde = { workspace = true }
-chrono = { workspace = true }
-serde_json = { workspace = true }
-
-[dev-dependencies]
-serde_json = { workspace = true }
+rust-version.workspace = true

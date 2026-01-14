@@ -1,13 +1,13 @@
-[package]
-name = "testing"
-version.workspace = true
-edition.workspace = true
-rust-version.workspace = true
-publish = false
-description = "Shared testing utilities for safe environment and process state manipulation"
-
 [dependencies]
 parking_lot.workspace = true
 
 [lints]
 workspace = true
+
+[package]
+description = "Shared testing utilities for safe environment and process state manipulation"
+name = "testing"
+publish = false
+edition.workspace = true
+rust-version.workspace = true
+version.workspace = true

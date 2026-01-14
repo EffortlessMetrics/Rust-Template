@@ -1,15 +1,15 @@
-[project]
-name = "rust-iac-project"
-version = "0.1.0"
-mode = "brownfield"
-
-[specs]
-ledger = "specs/spec_ledger.yaml"
-features_dir = "specs/features"
+[llm]
+contextpack = ".llm/contextpack.yaml"
 
 [policy]
 dir = "policy"
 tests_dir = "policy/tests"
 
-[llm]
-contextpack = ".llm/contextpack.yaml"
+[project]
+mode = "brownfield"
+name = "rust-iac-project"
+version = "0.1.0"
+
+[specs]
+features_dir = "specs/features"
+ledger = "specs/spec_ledger.yaml"
