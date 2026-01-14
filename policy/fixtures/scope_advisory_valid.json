@@ -1,0 +1,8 @@
+{
+  "changed_files": [
+    "docs/README.md",
+    "docs/how-to/new-feature.md"
+  ],
+  "scope_declared": false,
+  "declared_type": "any"
+}

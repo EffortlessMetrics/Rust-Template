@@ -1,150 +1,229 @@
 package main
 
-# Scope Guard Policy
-# Validates that PR changes respect module boundaries and scope constraints
+# Scope Guard Policy - Advisory by default, hard-fail on danger zones
+#
+# Philosophy:
+#   - "Scope enforcement" means bounded intent + reviewability, not small PRs
+#   - Large PRs are fine; unclear intent is the risk
+#   - Classifications describe what changed, not how much
 
-# Scope definitions based on directory structure
-deny[msg] {
-    some file
-    file := input.changed_files[_]
+# =============================================================================
+# PR Types (classification, not size limit)
+# =============================================================================
+#
+# mechanical    - renames, formatting, refactors, dependency bumps, code motion
+# behavior      - anything that changes runtime outputs/contracts
+# governance    - specs/ACs/policy/doc contracts
+# release       - tagging, baseline changes
+# docs          - documentation-only changes
+# =============================================================================
 
-    # Check for cross-scope violations
-    # Example: Changing domain code in a platform-only PR
-    is_cross_scope_violation(file, input.pr_scope)
+# Danger zones - these require explicit scope declaration
+danger_zone_paths := [
+    "specs/spec_ledger.yaml",
+    "specs/devex_flows.yaml",
+    "specs/service_metadata.yaml",
+    "policy/",
+    ".github/workflows/",
+    "specs/openapi.yaml",
+    "docs/feature_status.md",
+    "CLAUDE.md",
+    "CHANGELOG.md"
+]
 
+# Check if file is in a danger zone (prefix match or exact match)
+is_danger_zone(f) {
+    danger_zone_paths[_] == f
+}
+
+is_danger_zone(f) {
+    startswith(f, danger_zone_paths[_])
+}
+
+# =============================================================================
+# Advisory warnings (never block, just inform)
+# =============================================================================
+
+# Warn when scope block is missing entirely
+warn[msg] {
+    not input.scope_declared
+    msg := "PR body missing ## Scope block. Consider adding for reviewer clarity."
+}
+
+# Warn when detected scope doesn't match declared type
+warn[msg] {
+    input.scope_declared
+    input.declared_type != "any"
+    detected := categorize_changes(input.changed_files)
+    input.declared_type != detected.primary
     msg := sprintf(
-        "File '%s' is outside scope '%s'. PR scope should be limited to relevant directories.",
-        [file, input.pr_scope]
+        "Declared type '%s' may not match changes (detected: %s). Review scope accuracy.",
+        [input.declared_type, detected.primary]
     )
 }
 
-# Detect cross-scope violations based on file path
-is_cross_scope_violation(file, pr_scope) {
-    # If PR scope is specified, validate files are within scope
-    pr_scope != "any"
-
-    # Map files to scope categories
-    file_scope := categorize_file(file)
-
-    # Check if file is outside declared PR scope
-    not file_in_scope(file_scope, pr_scope)
+# Warn on large PRs without scope block (advisory, not blocking)
+warn[msg] {
+    not input.scope_declared
+    count(input.changed_files) > 50
+    msg := sprintf(
+        "Large PR (%d files) without scope declaration. Consider adding ## Scope for reviewers.",
+        [count(input.changed_files)]
+    )
 }
 
-# Categorize a file path into a scope category
-categorize_file(file) = "platform" {
-    # Platform/infrastructure files
-    startswith(file, ".github/")
-    or
-    startswith(file, "infra/")
-    or
-    startswith(file, "scripts/")
-    or
-    file == "flake.nix"
-    or
-    file == "Cargo.toml"
-    or
-    file == "Cargo.lock"
-    or
-    file == "deny.toml"
-    or
-    file == "clippy.toml"
+# =============================================================================
+# Hard failures (danger zone + missing declaration)
+# =============================================================================
+
+# Fail when danger zone touched without scope declaration
+deny[msg] {
+    changed_file := input.changed_files[_]
+    is_danger_zone(changed_file)
+    not input.scope_declared
+    msg := sprintf(
+        "Danger zone file '%s' modified without ## Scope declaration. Add scope block to PR body.",
+        [changed_file]
+    )
 }
 
-categorize_file(file) = "platform" {
-    # Template configuration files
-    startswith(file, "specs/")
-    or
-    startswith(file, "policy/")
-    or
-    startswith(file, "flags/")
-    or
-    startswith(file, "config/")
-    or
-    startswith(file, ".devcontainer/")
-    or
-    startswith(file, ".vscode/")
-    or
-    startswith(file, ".claude/")
+# Fail when danger zone touched with mismatched type (governance files need governance type)
+deny[msg] {
+    input.scope_declared
+    gov_file := input.changed_files[_]
+    is_danger_zone(gov_file)
+    is_governance_file(gov_file)
+    not type_allows_governance(input.declared_type)
+    msg := sprintf(
+        "File '%s' is a governance artifact but PR type is '%s'. Use type: governance or mechanical.",
+        [gov_file, input.declared_type]
+    )
 }
 
-categorize_file(file) = "docs" {
-    # Documentation files
-    startswith(file, "docs/")
-    or
-    endswith(file, ".md")
-    or
-    endswith(file, ".txt")
+# =============================================================================
+# Helpers
+# =============================================================================
+
+is_governance_file(f) {
+    startswith(f, "specs/")
 }
 
-categorize_file(file) = "tests" {
-    # Test files
-    contains(file, "/tests/")
-    or
-    contains(file, "/test_")
-    or
-    endswith(file, "_test.rs")
-    or
-    endswith(file, "_tests.rs")
-    or
-    endswith(file, ".feature")
-    or
-    startswith(file, "benches/")
+is_governance_file(f) {
+    startswith(f, "policy/")
 }
 
-categorize_file(file) = "domain" {
-    # Domain/application code
-    startswith(file, "crates/")
-    or
-    startswith(file, "src/")
-    or
-    startswith(file, "lib/")
-    or
-    startswith(file, "apps/")
+is_governance_file(f) {
+    f == "CLAUDE.md"
 }
 
-categorize_file(file) = "examples" {
-    # Example code
-    startswith(file, "examples/")
+type_allows_governance(t) {
+    t == "governance"
 }
 
-categorize_file(file) = "other" {
-    # Other files
-    true
+type_allows_governance(t) {
+    t == "mechanical"
 }
 
-# Check if a file's scope is within the allowed PR scope
-file_in_scope(file_scope, pr_scope) {
-    # If PR scope is "any", all files are allowed
-    pr_scope == "any"
-
-    # Otherwise, check if file scope matches PR scope
-    or
-    file_scope == pr_scope
-
-    # Allow some cross-scope combinations
-    or
-    allowed_cross_scope(file_scope, pr_scope)
+type_allows_governance(t) {
+    t == "release"
 }
 
-# Define allowed cross-scope combinations
-# These are cases where it's acceptable to touch multiple scopes
-allowed_cross_scope(file_scope, pr_scope) {
-    # Platform changes can touch docs (e.g., updating docs for platform changes)
-    pr_scope == "platform"
-    file_scope == "docs"
+# Categorize a file into a bucket
+file_bucket(path) = "ci" {
+    startswith(path, ".github/workflows/")
+}
 
-    # Domain changes can touch tests (e.g., adding tests for domain code)
-    or
-    pr_scope == "domain"
-    file_scope == "tests"
+file_bucket(path) = "specs" {
+    startswith(path, "specs/")
+}
 
-    # Examples can touch tests
-    or
-    pr_scope == "examples"
-    file_scope == "tests"
+file_bucket(path) = "policy" {
+    startswith(path, "policy/")
+}
 
-    # Docs changes can touch specs (docs and specs are closely related)
-    or
-    pr_scope == "docs"
-    file_scope == "platform"
+file_bucket(path) = "docs" {
+    startswith(path, "docs/")
+}
+
+file_bucket(path) = "docs" {
+    endswith(path, ".md")
+    not startswith(path, "docs/")
+}
+
+file_bucket(path) = "runtime" {
+    startswith(path, "crates/")
+}
+
+file_bucket(path) = "runtime" {
+    endswith(path, ".rs")
+    not startswith(path, "crates/")
+}
+
+file_bucket(path) = "config" {
+    startswith(path, "config/")
+}
+
+file_bucket(path) = "config" {
+    startswith(path, "flags/")
+}
+
+file_bucket(path) = "examples" {
+    startswith(path, "examples/")
+}
+
+file_bucket(path) = "other" {
+    not startswith(path, ".github/workflows/")
+    not startswith(path, "specs/")
+    not startswith(path, "policy/")
+    not startswith(path, "docs/")
+    not endswith(path, ".md")
+    not startswith(path, "crates/")
+    not endswith(path, ".rs")
+    not startswith(path, "config/")
+    not startswith(path, "flags/")
+    not startswith(path, "examples/")
+}
+
+# Categorize all changes to determine primary type
+categorize_changes(files) = result {
+    buckets := {bucket | some idx; files[idx]; bucket := file_bucket(files[idx])}
+
+    result := {
+        "buckets": buckets,
+        "primary": determine_primary(buckets),
+        "touches_danger": touches_any_danger_zone(files)
+    }
+}
+
+determine_primary(buckets) = "governance" {
+    buckets["specs"]
+}
+
+determine_primary(buckets) = "governance" {
+    buckets["policy"]
+    not buckets["specs"]
+}
+
+determine_primary(buckets) = "behavior" {
+    buckets["runtime"]
+    not buckets["specs"]
+    not buckets["policy"]
+}
+
+determine_primary(buckets) = "docs" {
+    buckets["docs"]
+    not buckets["runtime"]
+    not buckets["specs"]
+    not buckets["policy"]
+}
+
+determine_primary(buckets) = "mechanical" {
+    not buckets["runtime"]
+    not buckets["specs"]
+    not buckets["policy"]
+    not buckets["docs"]
+}
+
+touches_any_danger_zone(files) {
+    is_danger_zone(files[_])
 }

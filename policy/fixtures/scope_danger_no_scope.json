@@ -1,0 +1,8 @@
+{
+  "changed_files": [
+    "specs/spec_ledger.yaml",
+    "crates/app-http/src/lib.rs"
+  ],
+  "scope_declared": false,
+  "declared_type": "any"
+}

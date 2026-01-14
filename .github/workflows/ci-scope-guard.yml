@@ -9,7 +9,9 @@ jobs:
   guard:
     runs-on: ubuntu-latest
     timeout-minutes: 5
-    permissions: { contents: read }
+    permissions:
+      contents: read
+      pull-requests: write
     steps:
       - uses: actions/checkout@v4
         with: { fetch-depth: 0 }
@@ -19,65 +21,208 @@ jobs:
       - name: Get changed files
         id: changed-files
         run: |
-          # Get list of changed files in this PR
           git diff --name-only origin/${{ github.base_ref }}...${{ github.sha }} > /tmp/changed_files.txt
-          echo "changed_files<<EOF" >> $GITHUB_OUTPUT
-          $(cat /tmp/changed_files.txt | jq -R -s '.' | jq -s 'join("\n")')
-          EOF
+          echo "count=$(wc -l < /tmp/changed_files.txt)" >> $GITHUB_OUTPUT
 
-      - name: Determine PR scope from title
-        id: pr-scope
+      - name: Parse scope from PR body
+        id: scope
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
         run: |
-          # Determine scope based on PR title or labels
-          PR_TITLE="${{ github.event.pull_request.title }}"
-          PR_LABELS="${{ toJson(github.event.pull_request.labels) }}"
+          # Check if ## Scope block exists
+          if echo "$PR_BODY" | grep -qE '^## Scope'; then
+            echo "declared=true" >> $GITHUB_OUTPUT
 
-          # Default to "any" if no explicit scope is detected
-          SCOPE="any"
+            # Extract Type field
+            TYPE=$(echo "$PR_BODY" | grep -oP '(?<=Type:\s*)(mechanical|behavior|governance|release|docs)' | head -1 || echo "any")
+            echo "type=${TYPE:-any}" >> $GITHUB_OUTPUT
 
-          # Check PR title for scope indicators
-          if echo "$PR_TITLE" | grep -qiE "\[docs\]|\[doc\]"; then
-            SCOPE="docs"
-          elif echo "$PR_TITLE" | grep -qiE "\[platform\]|\[infra\]|\[ci\]"; then
-            SCOPE="platform"
-          elif echo "$PR_TITLE" | grep -qiE "\[domain\]|\[feat\]|\[fix\]"; then
-            SCOPE="domain"
-          elif echo "$PR_TITLE" | grep -qiE "\[test\]|\[tests\]"; then
-            SCOPE="tests"
-          elif echo "$PR_TITLE" | grep -qiE "\[example\]|\[demo\]"; then
-            SCOPE="examples"
+            # Extract Intent field
+            INTENT=$(echo "$PR_BODY" | grep -oP '(?<=Intent:\s*).*' | head -1 || echo "")
+            echo "intent=$INTENT" >> $GITHUB_OUTPUT
+
+            # Check for waiver label
+            if echo '${{ toJson(github.event.pull_request.labels.*.name) }}' | grep -q 'scope/waived'; then
+              echo "waived=true" >> $GITHUB_OUTPUT
+            else
+              echo "waived=false" >> $GITHUB_OUTPUT
+            fi
+          else
+            echo "declared=false" >> $GITHUB_OUTPUT
+            echo "type=any" >> $GITHUB_OUTPUT
+            echo "intent=" >> $GITHUB_OUTPUT
+            echo "waived=false" >> $GITHUB_OUTPUT
           fi
 
-          echo "scope=$SCOPE" >> $GITHUB_OUTPUT
-
-      - name: Run scope guard policy
+      - name: Run scope policy
+        id: policy
+        continue-on-error: true
         run: |
           nix develop -c bash -c '
-            # Prepare input for conftest
-            CHANGED_FILES="${{ steps.changed-files.outputs.changed_files }}"
-            PR_SCOPE="${{ steps.pr-scope.outputs.scope }}"
-
-            # Create JSON input for conftest
+            # Build input JSON
             jq -n \
-              --arg changed_files "$CHANGED_FILES" \
-              --arg pr_scope "$PR_SCOPE" \
+              --slurpfile files <(cat /tmp/changed_files.txt | jq -R . | jq -s .) \
+              --argjson scope_declared ${{ steps.scope.outputs.declared }} \
+              --arg declared_type "${{ steps.scope.outputs.type }}" \
               "{
-                changed_files: ($changed_files | split(\"\\n\") | map(select(length > 0))),
-                pr_scope: $pr_scope
+                changed_files: \$files[0],
+                scope_declared: \$scope_declared,
+                declared_type: \$declared_type
               }" > /tmp/scope_input.json
 
-            # Run conftest with scope policy
-            conftest test -p policy/scope.rego /tmp/scope_input.json
+            echo "Input:"
+            cat /tmp/scope_input.json
+
+            # Run conftest - capture both deny and warn
+            echo ""
+            echo "=== Policy evaluation ==="
+
+            # Check for denies (hard failures)
+            if conftest test -p policy/scope.rego /tmp/scope_input.json --no-fail 2>&1 | tee /tmp/conftest_output.txt; then
+              echo "deny_count=0" >> $GITHUB_OUTPUT
+            else
+              DENY_COUNT=$(grep -c "FAIL" /tmp/conftest_output.txt || echo 0)
+              echo "deny_count=$DENY_COUNT" >> $GITHUB_OUTPUT
+            fi
+
+            # Count warnings
+            WARN_COUNT=$(grep -c "WARN" /tmp/conftest_output.txt || echo 0)
+            echo "warn_count=$WARN_COUNT" >> $GITHUB_OUTPUT
+
+            # Save output for comment
+            cat /tmp/conftest_output.txt > $GITHUB_WORKSPACE/conftest_output.txt
           '
 
-      - name: Show scope summary
-        if: always()
+      - name: Generate scope summary
+        id: summary
         run: |
-          echo "## Scope Guard Summary"
-          echo ""
-          echo "Changed files:"
-          git diff --name-only origin/${{ github.base_ref }}...${{ github.sha }} || true
-          echo ""
-          echo "Detected scope: ${{ steps.pr-scope.outputs.scope }}"
-          echo ""
-          echo "✅ Scope validation passed - PR changes are within scope boundaries"
+          FILE_COUNT=${{ steps.changed-files.outputs.count }}
+          SCOPE_DECLARED=${{ steps.scope.outputs.declared }}
+          DECLARED_TYPE=${{ steps.scope.outputs.type }}
+          WAIVED=${{ steps.scope.outputs.waived }}
+
+          # Categorize changed files
+          RUNTIME_COUNT=$(cat /tmp/changed_files.txt | grep -cE '^crates/|\.rs$' || echo 0)
+          DOCS_COUNT=$(cat /tmp/changed_files.txt | grep -cE '^docs/|\.md$' || echo 0)
+          SPECS_COUNT=$(cat /tmp/changed_files.txt | grep -cE '^specs/' || echo 0)
+          POLICY_COUNT=$(cat /tmp/changed_files.txt | grep -cE '^policy/' || echo 0)
+          CI_COUNT=$(cat /tmp/changed_files.txt | grep -cE '^\.github/workflows/' || echo 0)
+
+          # Check danger zones
+          DANGER_FILES=$(cat /tmp/changed_files.txt | grep -E '^specs/spec_ledger\.yaml|^specs/devex_flows\.yaml|^policy/|^\.github/workflows/|^CLAUDE\.md|^CHANGELOG\.md' || true)
+
+          cat << 'EOF' > /tmp/summary.md
+          ## Scope Guard Summary
+
+          | Metric | Value |
+          |--------|-------|
+          | Files changed | $FILE_COUNT |
+          | Scope declared | $SCOPE_DECLARED |
+          | Declared type | $DECLARED_TYPE |
+          | Waived | $WAIVED |
+
+          **Change distribution:**
+          - Runtime (crates/*.rs): $RUNTIME_COUNT
+          - Documentation: $DOCS_COUNT
+          - Specs: $SPECS_COUNT
+          - Policy: $POLICY_COUNT
+          - CI workflows: $CI_COUNT
+
+          EOF
+
+          if [ -n "$DANGER_FILES" ]; then
+            echo "**⚠️ Danger zone files touched:**" >> /tmp/summary.md
+            echo '```' >> /tmp/summary.md
+            echo "$DANGER_FILES" >> /tmp/summary.md
+            echo '```' >> /tmp/summary.md
+          fi
+
+          # Add policy output
+          if [ -f conftest_output.txt ]; then
+            echo "" >> /tmp/summary.md
+            echo "**Policy evaluation:**" >> /tmp/summary.md
+            echo '```' >> /tmp/summary.md
+            cat conftest_output.txt >> /tmp/summary.md
+            echo '```' >> /tmp/summary.md
+          fi
+
+          # Substitute variables
+          sed -i "s/\$FILE_COUNT/$FILE_COUNT/g" /tmp/summary.md
+          sed -i "s/\$SCOPE_DECLARED/$SCOPE_DECLARED/g" /tmp/summary.md
+          sed -i "s/\$DECLARED_TYPE/$DECLARED_TYPE/g" /tmp/summary.md
+          sed -i "s/\$WAIVED/$WAIVED/g" /tmp/summary.md
+          sed -i "s/\$RUNTIME_COUNT/$RUNTIME_COUNT/g" /tmp/summary.md
+          sed -i "s/\$DOCS_COUNT/$DOCS_COUNT/g" /tmp/summary.md
+          sed -i "s/\$SPECS_COUNT/$SPECS_COUNT/g" /tmp/summary.md
+          sed -i "s/\$POLICY_COUNT/$POLICY_COUNT/g" /tmp/summary.md
+          sed -i "s/\$CI_COUNT/$CI_COUNT/g" /tmp/summary.md
+
+          cat /tmp/summary.md >> $GITHUB_STEP_SUMMARY
+
+      - name: Post PR comment (advisory)
+        if: steps.scope.outputs.declared == 'false' && steps.changed-files.outputs.count > 20
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const summary = fs.readFileSync('/tmp/summary.md', 'utf8');
+
+            // Check for existing comment
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number
+            });
+
+            const botComment = comments.find(c =>
+              c.user.type === 'Bot' && c.body.includes('## Scope Guard Summary')
+            );
+
+            const body = `<!-- scope-guard-bot -->
+            ${summary}
+
+            ---
+            💡 *Add a \`## Scope\` block to your PR description to silence this advisory.*
+            `;
+
+            if (botComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body
+              });
+            }
+
+      - name: Check for hard failures
+        if: steps.scope.outputs.waived == 'false'
+        run: |
+          # Only fail if there were actual denies (hard failures)
+          if grep -q "FAIL" conftest_output.txt 2>/dev/null; then
+            echo "❌ Scope guard failed - danger zone touched without proper scope declaration"
+            echo ""
+            echo "To fix, add a ## Scope block to your PR body:"
+            echo ""
+            echo "## Scope"
+            echo "Type: mechanical | behavior | governance | release | docs"
+            echo "Intent: <brief description>"
+            echo "Touchpoints: <directories or files>"
+            echo "Evidence: selftest green, etc."
+            echo ""
+            cat conftest_output.txt
+            exit 1
+          else
+            echo "✅ Scope guard passed"
+            if grep -q "WARN" conftest_output.txt 2>/dev/null; then
+              echo ""
+              echo "⚠️ Warnings (advisory only):"
+              grep "WARN" conftest_output.txt || true
+            fi
+          fi
