@@ -43,35 +43,43 @@ This step library is organized into modules for maintainability:
 ### File Existence Checks
 
 #### `Then the file "{path}" should exist`
+
 Asserts that a file exists at the given path (relative to workspace root).
 
 **Example:**
+
 ```gherkin
 Then the file "README.md" should exist
 Then the file "docs/adr/ADR-001.md" should exist
 ```
 
 #### `Then the file "{path}" should not exist`
+
 Asserts that a file does NOT exist at the given path.
 
 **Example:**
+
 ```gherkin
 Then the file "temp/cache.tmp" should not exist
 ```
 
 #### `Then the directory "{path}" should exist`
+
 Asserts that a directory exists at the given path.
 
 **Example:**
+
 ```gherkin
 Then the directory ".git/hooks" should exist
 Then the directory "specs/features" should exist
 ```
 
 #### `Then the directory "{path}" should not exist`
+
 Asserts that a directory does NOT exist at the given path.
 
 **Example:**
+
 ```gherkin
 Then the directory "temp/cache" should not exist
 ```
@@ -81,43 +89,53 @@ Then the directory "temp/cache" should not exist
 ### File Content Checks
 
 #### `Then the file "{path}" should contain "{text}"`
+
 Asserts that a file contains the specified text (substring match).
 
 **Example:**
+
 ```gherkin
 Then the file "README.md" should contain "Rust-as-Spec"
 Then the file "Cargo.toml" should contain "[workspace]"
 ```
 
 #### `Then the file "{path}" should not contain "{text}"`
+
 Asserts that a file does NOT contain the specified text.
 
 **Example:**
+
 ```gherkin
 Then the file "CHANGELOG.md" should not contain "UNRELEASED"
 ```
 
 #### `Then the file "{path}" should match pattern "{regex}"`
+
 Asserts that file content matches the given regular expression pattern.
 
 **Example:**
+
 ```gherkin
 Then the file "version.txt" should match pattern "^\d+\.\d+\.\d+$"
 Then the file "log.txt" should match pattern "ERROR.*authentication"
 ```
 
 #### `Then the file "{path}" should be empty`
+
 Asserts that a file exists but has no content (or only whitespace).
 
 **Example:**
+
 ```gherkin
 Then the file "output.log" should be empty
 ```
 
 #### `Then the file "{path}" should not be empty`
+
 Asserts that a file has content.
 
 **Example:**
+
 ```gherkin
 Then the file "report.json" should not be empty
 ```
@@ -127,17 +145,21 @@ Then the file "report.json" should not be empty
 ### File Permissions (Unix only)
 
 #### `Then the file "{path}" should be executable`
+
 Asserts that a file has executable permissions (Unix-only).
 
 **Example:**
+
 ```gherkin
 Then the file ".git/hooks/pre-commit" should be executable
 ```
 
 #### `Then the file "{path}" should not be executable`
+
 Asserts that a file does NOT have executable permissions (Unix-only).
 
 **Example:**
+
 ```gherkin
 Then the file "README.md" should not be executable
 ```
@@ -147,9 +169,11 @@ Then the file "README.md" should not be executable
 ### File Creation and Manipulation
 
 #### `Given a file "{path}" with content:`
+
 Creates a file with the specified content (multiline supported via docstring).
 
 **Example:**
+
 ```gherkin
 Given a file "test.yaml" with content:
   """
@@ -159,41 +183,51 @@ Given a file "test.yaml" with content:
 ```
 
 #### `Given a file "{path}" exists`
+
 Ensures a file exists (creates empty file if it doesn't).
 
 **Example:**
+
 ```gherkin
 Given a file "temp/marker.txt" exists
 ```
 
 #### `Given a directory "{path}" exists`
+
 Ensures a directory exists (creates it if necessary).
 
 **Example:**
+
 ```gherkin
 Given a directory "temp/cache" exists
 ```
 
 #### `When I delete the file "{path}"`
+
 Deletes a file if it exists.
 
 **Example:**
+
 ```gherkin
 When I delete the file "temp/old-cache.json"
 ```
 
 #### `When I delete the directory "{path}"`
+
 Deletes a directory and all its contents.
 
 **Example:**
+
 ```gherkin
 When I delete the directory "temp/cache"
 ```
 
 #### `When I create a file "{path}" with content "{text}"`
+
 Creates a file with inline content (single line).
 
 **Example:**
+
 ```gherkin
 When I create a file "version.txt" with content "3.3.6"
 ```
@@ -205,18 +239,22 @@ When I create a file "version.txt" with content "3.3.6"
 ### Exit Code Assertions
 
 #### `Then the exit code should be {code}`
+
 Asserts that the last command exited with the specified code.
 
 **Example:**
+
 ```gherkin
 When I run "cargo xtask check"
 Then the exit code should be 0
 ```
 
 #### `Then the exit code should not be {code}`
+
 Asserts that the last command did NOT exit with the specified code.
 
 **Example:**
+
 ```gherkin
 When I run "cargo xtask invalid-command"
 Then the exit code should not be 0
@@ -229,9 +267,11 @@ Then the exit code should not be 0
 ### Field Presence (Batch 1)
 
 #### `Then the JSON output should have field "{field}"`
+
 Asserts that the parsed JSON output contains the specified top-level field.
 
 **Example:**
+
 ```gherkin
 When I run "cargo xtask status --format json"
 Then the JSON output should have field "governance"
@@ -239,9 +279,11 @@ Then the JSON output should have field "health"
 ```
 
 #### `Then the JSON output should not have field "{field}"`
+
 Asserts that the parsed JSON output does NOT contain the specified field.
 
 **Example:**
+
 ```gherkin
 Then the JSON output should not have field "internal_debug"
 ```
@@ -251,18 +293,22 @@ Then the JSON output should not have field "internal_debug"
 ### Field Value Assertions (Batch 1)
 
 #### `Then the JSON field "{field}" should equal "{value}"`
+
 Asserts that a JSON field equals the specified string value.
 
 **Example:**
+
 ```gherkin
 Then the JSON field "status" should equal "ok"
 Then the JSON field "version" should equal "3.3.6"
 ```
 
 #### `Then the JSON field "{field}" should contain "{substring}"`
+
 Asserts that a JSON field contains the specified substring.
 
 **Example:**
+
 ```gherkin
 Then the JSON field "message" should contain "Success"
 ```
@@ -272,11 +318,13 @@ Then the JSON field "message" should contain "Success"
 ### Advanced JSON Validation (Batch 2)
 
 #### `Then the JSON should contain field "{field_name}"`
+
 **Location:** `xtask_devex.rs` (lines 2850-2869)
 
 Verifies that JSON output from a CLI command contains a specific top-level field. Automatically extracts JSON from command output, skipping Nix/cargo messages.
 
 **Example:**
+
 ```gherkin
 When I run "cargo xtask idp-snapshot"
 Then the output should be valid JSON
@@ -286,11 +334,13 @@ And the JSON should contain field "governance_health"
 ```
 
 #### `Then the JSON field "{field_path}" should have "{sub_field}"`
+
 **Location:** `xtask_devex.rs` (lines 2871-2904)
 
 Verifies that a nested JSON field contains a specific sub-field. Enables validation of nested object structures.
 
 **Example:**
+
 ```gherkin
 When I run "cargo xtask idp-snapshot"
 Then the output should be valid JSON
@@ -299,11 +349,13 @@ And the JSON field "governance_health" should have "ac_coverage"
 ```
 
 #### `Then the file should contain valid JSON`
+
 **Location:** `xtask_devex.rs` (lines 2906-2940)
 
 Verifies that a file written by a command contains valid, parseable JSON.
 
 **Example:**
+
 ```gherkin
 When I run "cargo xtask idp-snapshot --output /tmp/idp-test.json"
 Then the command should succeed
@@ -318,43 +370,53 @@ And the file should contain valid JSON
 ### Output Content Checks
 
 #### `Then the output should contain "{text}"`
+
 Asserts that command output contains the specified text.
 
 **Example:**
+
 ```gherkin
 When I run "cargo xtask help"
 Then the output should contain "Available commands"
 ```
 
 #### `Then the output should not contain "{text}"`
+
 Asserts that command output does NOT contain the specified text.
 
 **Example:**
+
 ```gherkin
 Then the output should not contain "ERROR"
 Then the output should not contain "FAILED"
 ```
 
 #### `Then the output should match pattern "{regex}"`
+
 Asserts that output matches the given regular expression.
 
 **Example:**
+
 ```gherkin
 Then the output should match pattern "Version: \d+\.\d+\.\d+"
 ```
 
 #### `Then the output should be empty`
+
 Asserts that command output is empty (or only whitespace).
 
 **Example:**
+
 ```gherkin
 Then the output should be empty
 ```
 
 #### `Then the output should not be empty`
+
 Asserts that command produced some output.
 
 **Example:**
+
 ```gherkin
 When I run "cargo xtask ac-status"
 Then the output should not be empty
@@ -367,18 +429,22 @@ Then the output should not be empty
 ### HTTP Request Steps
 
 #### `When I GET {endpoint}`
+
 Sends a GET request to the specified endpoint.
 
 **Example:**
+
 ```gherkin
 When I GET /health
 When I GET /version
 ```
 
 #### `When I send a GET request to "{endpoint}"`
+
 Alternative syntax for GET requests (more explicit).
 
 **Example:**
+
 ```gherkin
 When I send a GET request to "/platform/status"
 ```
@@ -388,26 +454,32 @@ When I send a GET request to "/platform/status"
 ### HTTP Response Assertions
 
 #### `Then I receive {status_code} with status "{status_value}"`
+
 Asserts HTTP status code and JSON status field.
 
 **Example:**
+
 ```gherkin
 When I GET /health
 Then I receive 200 with status "ok"
 ```
 
 #### `Then the response status code should be {code}`
+
 Asserts HTTP status code.
 
 **Example:**
+
 ```gherkin
 Then the response status code should be 200
 ```
 
 #### `Then I receive a {digit}xx response`
+
 Asserts HTTP status code range (e.g., 2xx, 4xx, 5xx).
 
 **Example:**
+
 ```gherkin
 Then I receive a 2xx response
 Then I receive a 4xx response
@@ -418,18 +490,22 @@ Then I receive a 4xx response
 ### HTTP Header Assertions
 
 #### `Then the response includes "{header}" header`
+
 Asserts that a response header is present.
 
 **Example:**
+
 ```gherkin
 Then the response includes "X-Request-ID" header
 Then the response includes "Content-Type" header
 ```
 
 #### `Then the response includes "{header}" header with value "{value}"`
+
 Asserts a response header has a specific value.
 
 **Example:**
+
 ```gherkin
 Then the response includes "Content-Type" header with value "application/json"
 ```
@@ -439,18 +515,22 @@ Then the response includes "Content-Type" header with value "application/json"
 ### HTTP Body Assertions
 
 #### `Then the response body contains "{field}" field`
+
 Asserts that JSON response body has a field.
 
 **Example:**
+
 ```gherkin
 Then the response body contains "error" field
 Then the response body contains "requestId" field
 ```
 
 #### `Then the response body contains "{text}"`
+
 Asserts that response body (raw text) contains text.
 
 **Example:**
+
 ```gherkin
 Then the response body contains "Success"
 ```
@@ -462,11 +542,13 @@ Then the response body contains "Success"
 ### Setting Environment Variables (Batch 2)
 
 #### `Given the environment variable "{var_name}" is set to "{var_value}"`
+
 **Location:** `xtask_devex.rs` (lines 209-212)
 
 Sets an environment variable for subsequent command executions within the same scenario. Variables are scoped per test scenario and do not leak between tests.
 
 **Example:**
+
 ```gherkin
 Given the environment variable "CI" is set to "1"
 And the environment variable "XTASK_NONINTERACTIVE" is set to "1"
@@ -490,11 +572,13 @@ And the output should indicate CI mode
 Always use clear, descriptive file paths that indicate what the file is for:
 
 ✅ **Good:**
+
 ```gherkin
 Then the file "docs/adr/ADR-001-auth-strategy.md" should exist
 ```
 
 ❌ **Bad:**
+
 ```gherkin
 Then the file "file1.md" should exist
 ```
@@ -506,12 +590,14 @@ Then the file "file1.md" should exist
 Use the most specific assertion available:
 
 ✅ **Good:**
+
 ```gherkin
 Then the exit code should be 0
 Then the file "README.md" should contain "Quick Start"
 ```
 
 ❌ **Bad:**
+
 ```gherkin
 Then the command should succeed  # Less specific
 Then the output should contain "README"  # Could match unrelated text
@@ -524,6 +610,7 @@ Then the output should contain "README"  # Could match unrelated text
 Organize steps in a clear Given-When-Then structure:
 
 ✅ **Good:**
+
 ```gherkin
 Given a file "config.yaml" exists
 When I run "cargo xtask validate-config"
@@ -532,6 +619,7 @@ And the output should contain "Config valid"
 ```
 
 ❌ **Bad:**
+
 ```gherkin
 When I run "cargo xtask validate-config"
 Given a file "config.yaml" exists  # Given should come first
@@ -544,6 +632,7 @@ Given a file "config.yaml" exists  # Given should come first
 When exact matches are too brittle, use regex patterns:
 
 ✅ **Good:**
+
 ```gherkin
 Then the file "CHANGELOG.md" should match pattern "## \[\d+\.\d+\.\d+\]"
 ```
@@ -555,6 +644,7 @@ Then the file "CHANGELOG.md" should match pattern "## \[\d+\.\d+\.\d+\]"
 Always clean up files/directories created during tests:
 
 ✅ **Good:**
+
 ```gherkin
 Scenario: Generate report
   Given a directory "temp/reports" exists
@@ -570,11 +660,13 @@ Scenario: Generate report
 Use workspace-relative paths, not absolute paths:
 
 ✅ **Good:**
+
 ```gherkin
 Then the file "docs/README.md" should exist
 ```
 
 ❌ **Bad:**
+
 ```gherkin
 Then the file "/home/user/project/docs/README.md" should exist
 ```
@@ -611,6 +703,7 @@ When you need a new step definition:
 ## Implementation Summary
 
 ### Batch 1 (2025-12-02): File Operations & Basic Assertions
+
 - **24 new steps** implemented in `common.rs`
 - File existence, content checks, permissions
 - String and JSON assertions
@@ -618,6 +711,7 @@ When you need a new step definition:
 - Full documentation in `BDD_IMPLEMENTATION_SUMMARY.md`
 
 ### Batch 2 (2025-12-02): JSON Validation & Environment Variables
+
 - **4 new steps** implemented in `xtask_devex.rs`
 - Advanced JSON field validation (nested fields)
 - JSON file validation
@@ -726,8 +820,8 @@ Then the output should not be empty  # Shows current directory
 
 ## References
 
-- **Cucumber Documentation:** https://cucumber.io/docs/cucumber/
-- **Cucumber Rust:** https://github.com/cucumber-rs/cucumber
+- **Cucumber Documentation:** <https://cucumber.io/docs/cucumber/>
+- **Cucumber Rust:** <https://github.com/cucumber-rs/cucumber>
 - **Acceptance Test Crate:** `../../crates/acceptance/`
 - **Feature Files:** `../../specs/features/`
 - **World State:** `../../crates/acceptance/src/world.rs`

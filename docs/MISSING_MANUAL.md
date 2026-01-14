@@ -11,7 +11,7 @@ This document captures the **"things you'll wish someone told you"** before star
 
 ## 1. The Brownfield Adoption Path (Library Mode)
 
-**Myth:** "This is a template, so I have to start from scratch."  
+**Myth:** "This is a template, so I have to start from scratch."
 **Reality:** The governance engine is decoupled. You can add it to existing services.
 
 ### The Library Split
@@ -52,21 +52,25 @@ cargo xtask init --mode=brownfield
 These are **intentional non-goals**. If you clone this template, you still need to build:
 
 ### Database Provisioning
+
 - **We provide:** Adapter (`adapters-db-sqlx`), migration scripts
 - **We don't provide:** Terraform/OpenTofu to spin up RDS/CloudSQL
 - **Assumption:** DB URL injected via K8s Secret
 
 ### Ingress / Gateway
+
 - **We provide:** K8s `Service` (ClusterIP)
 - **We don't provide:** `Ingress` resource or gateway config
 - **Assumption:** Platform team has standard ingress controller
 
 ### Secrets Management
+
 - **We provide:** Pattern (`envFrom: secretRef`)
 - **We don't provide:** Vault, SOPS, SealedSecrets integration
 - **Assumption:** Secrets exist before pod starts
 
 ### CI/CD Deploy Pipelines
+
 - **We provide:** GitHub Actions for selftest
 - **We don't provide:** Deployment/rollback workflows
 - **Assumption:** Platform has deployment automation
@@ -105,7 +109,7 @@ This is the **cost of the living contract**. Without it:
 # Right
 cargo xtask ac-new AC-ID "Desc" --requirement REQ-ID
 
-# Wrong  
+# Wrong
 vim specs/spec_ledger.yaml  # ❌ Leads to errors
 ```
 
@@ -142,6 +146,7 @@ error while loading shared libraries: libz.so.1: cannot open shared object file
 **This is NOT a template failure.** It's a Nix environment composition issue.
 
 **Workarounds:**
+
 ```bash
 # Option 1: Run inside interactive shell (recommended)
 nix develop
@@ -186,15 +191,17 @@ This ensures rust-analyzer uses the same toolchain as your build.
 
 ## 5. What "Self-Healing" Actually Means
 
-**Marketing Claim:** "Self-healing platform cell"  
+**Marketing Claim:** "Self-healing platform cell"
 **Ground Truth:** The system **refuses to exist in an inconsistent state**
 
 ### What It Does
+
 - Detects drift (specs ↔ code ↔ docs)
 - Blocks merges when drift detected
 - Surfaces violations clearly
 
 ### What It Doesn't Do
+
 - ❌ Auto-fix broken code
 - ❌ Generate missing specs
 - ❌ Rewrite tests
@@ -206,6 +213,7 @@ This ensures rust-analyzer uses the same toolchain as your build.
 `cargo xtask selftest` will **reject valid work** if metadata is wrong.
 
 Example:
+
 ```
 code works ✓
 tests pass ✓
@@ -251,11 +259,13 @@ If you add features before piloting, you'll:
 - Build features no one needs
 
 **The Pilot Loop:**
+
 ```
 Use Template → Hit Friction → Log It → Fix → Repeat
 ```
 
 **Not:**
+
 ```
 Think of Cool Feature → Build It → Hope Someone Uses It
 ```
@@ -264,7 +274,7 @@ Think of Cool Feature → Build It → Hope Someone Uses It
 
 ## 8. The Agent Interface is JSON, Not CLAUDE.md
 
-**Common Misconception:** `CLAUDE.md` is the agent interface.  
+**Common Misconception:** `CLAUDE.md` is the agent interface.
 **Reality:** The **HTTP APIs are** the agent interface.
 
 ### What Agents Should Do
@@ -281,6 +291,7 @@ curl http://localhost:8080/platform/status | jq
 ```
 
 **Not:**
+
 ```bash
 # This is wrong
 tree . > context.txt  # ❌ Unbounded, stale
@@ -301,26 +312,26 @@ cat **/*.rs > context.txt  # ❌ Overwhelming
 
 ### Pitfall: Editing Specs Without Generators
 
-**Symptom:** `selftest` fails with schema errors  
-**Cause:** Manual YAML edits introduce typos, ID collisions  
+**Symptom:** `selftest` fails with schema errors
+**Cause:** Manual YAML edits introduce typos, ID collisions
 **Fix:** Delete changes, use `cargo xtask ac-new` instead
 
 ### Pitfall: Bypassing Selftest
 
-**Symptom:** Specs diverge from code in prod  
-**Cause:** Forced merge despite selftest failure  
+**Symptom:** Specs diverge from code in prod
+**Cause:** Forced merge despite selftest failure
 **Fix:** Make selftest a **branch protection rule** (cannot bypass)
 
 ### Pitfall: Over-Strict Invariants
 
-**Symptom:** Developers constantly fighting graph invariants  
-**Cause:** `must_have_ac` set on too many requirements  
+**Symptom:** Developers constantly fighting graph invariants
+**Cause:** `must_have_ac` set on too many requirements
 **Fix:** Use pilot friction log to calibrate strictness
 
 ### Pitfall: Assuming This Is "Just a Template"
 
-**Symptom:** Team clones, deletes governance, uses as Axum starter  
-**Cause:** Didn't read positioning docs  
+**Symptom:** Team clones, deletes governance, uses as Axum starter
+**Cause:** Didn't read positioning docs
 **Fix:** This is a **platform cell**, not a boilerplate. If you don't want governance, use a different template.
 
 ---
@@ -442,6 +453,7 @@ XTASK_LOW_RESOURCES=1 cargo run -p xtask -- selftest
 This template supports development across multiple platforms with different validation guarantees.
 
 ### Tier 1: Fully Validated (Recommended)
+
 - **Linux** with Nix devshell
 - **macOS** with Nix devshell
 - **WSL2 on Windows** with Nix devshell
@@ -451,6 +463,7 @@ This template supports development across multiple platforms with different vali
 **Why Tier 1 is canonical:** Nix devshells ensure environment reproducibility matching CI exactly. No local drift between dev and CI.
 
 **Getting started:**
+
 ```bash
 # Install Nix
 curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | \
@@ -464,6 +477,7 @@ cargo xtask selftest
 ```
 
 ### Tier 2: Native Windows (Known Caveats)
+
 - **Windows 10/11** with PowerShell or Git Bash
 - **Rust 1.91+** installed manually
 - **Conftest** installed manually
@@ -482,6 +496,7 @@ cargo xtask selftest
 #### Workarounds for Native Windows
 
 **Option 1: Exclude target/ from Antivirus Scanning (Recommended)**
+
 ```powershell
 # Windows Defender (run as Admin)
 Add-MpPreference -ExclusionPath "$env:USERPROFILE\...\target"
@@ -491,6 +506,7 @@ Add-MpPreference -ExclusionPath "$env:USERPROFILE\...\target"
 ```
 
 **Option 2: Use WSL2 for Canonical Validation**
+
 ```bash
 # If you hit file locking errors on native Windows:
 wsl
@@ -500,6 +516,7 @@ cargo xtask selftest
 ```
 
 **Option 3: Retry Strategy**
+
 ```bash
 # Close all running cargo and xtask processes
 # Wait 5 seconds
@@ -589,12 +606,14 @@ The `cargo xtask install-hooks` command generates a **POSIX shell pre-commit hoo
 **If you see `cannot spawn .git/hooks/pre-commit`:**
 
 1. **Check line endings**: Windows Git may have converted LF to CRLF.
+
    ```bash
    # Fix line endings (run in Git Bash or PowerShell)
    dos2unix .git/hooks/pre-commit   # or manually convert to LF
    ```
 
 2. **Reinstall the hook**:
+
    ```bash
    cargo xtask install-hooks
    ```
@@ -602,6 +621,7 @@ The `cargo xtask install-hooks` command generates a **POSIX shell pre-commit hoo
 3. **Verify you're using Git for Windows**: Custom Git builds without `sh.exe` won't work.
 
 **Workaround if hooks fail:** Use `--no-verify` to skip the hook temporarily:
+
 ```bash
 git commit --no-verify -m "your message"
 ```
@@ -638,6 +658,7 @@ The `cspell.json` file is a **governed artifact** (part of the kernel surface). 
 3. **Commit with the change**: Include dictionary updates in the same commit that introduces the term
 
 Example:
+
 ```json
 {
   "words": [

@@ -1306,4 +1306,3 @@ docs:
     requirements: [REQ-PLT-DOCS-CONSISTENCY]
     acs: [AC-PLT-009, AC-PLT-010]
     adrs: []
-

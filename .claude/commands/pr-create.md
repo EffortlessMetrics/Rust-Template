@@ -46,6 +46,7 @@ Optionally create a receipts directory if you want to save artifacts:
 ## How to work (agents in waves)
 
 ### Wave 1 — Explore (map the change)
+
 Invoke the **Explore** subagent to:
 - map where behavior changed (review map + semantic hotspots)
 - separate mechanical vs semantic changes
@@ -56,6 +57,7 @@ Invoke the **Explore** subagent to:
 Explore should use git + repo inspection directly and report back with anchors (paths, commits, commands).
 
 ### Wave 2 — Plan (compose the story + evidence plan)
+
 Invoke the **Plan** subagent to:
 - propose a coherent PR narrative arc (intent → design → review path → risk/evidence)
 - produce a crisp **Interface & compatibility verdict** (and how it is supported)
@@ -63,6 +65,7 @@ Invoke the **Plan** subagent to:
 - surface key decision points that affect maintainability (boundaries, invariants, compatibility intent)
 
 ### Wave 3 — Improve (tighten the PR content)
+
 Invoke specialist subagents (or general-purpose helpers) to refine:
 - Diff Scout / Maintainability: review map + future change-cost interpretation (hotspots, modularity, complexity proxies)
 - Evidence / Verification: what was actually validated, reproduction path, what remains unverified
@@ -71,6 +74,7 @@ Invoke specialist subagents (or general-purpose helpers) to refine:
 - Complexity Analyst: tool-backed if available; otherwise defensible proxies with interpretation
 
 ### Wave 4 — Create the PR (gh)
+
 Once you have the PR title and body ready, create the PR with `gh pr create`.
 
 Default: create as **draft**, unless `$ARGUMENTS` clearly indicates "ready".
@@ -80,6 +84,7 @@ Default: create as **draft**, unless `$ARGUMENTS` clearly indicates "ready".
 ### `gh pr edit` fails with Projects (classic)
 
 If you need to update a PR body after creation, `gh pr edit` may fail with:
+
 ```
 GraphQL: Cannot query field "projectCards" on type "PullRequest"
 ```
@@ -87,11 +92,13 @@ GraphQL: Cannot query field "projectCards" on type "PullRequest"
 This is a GitHub CLI bug affecting repos with Projects (classic) enabled.
 
 **Workaround:** Use REST API directly:
+
 ```bash
 gh api -X PATCH /repos/{owner}/{repo}/pulls/{pr_number} -f body='...'
 ```
 
 Or use a heredoc for complex bodies:
+
 ```bash
 gh api -X PATCH /repos/{owner}/{repo}/pulls/{pr_number} \
   -f body="$(cat <<'EOF'
@@ -115,38 +122,48 @@ Save outputs you cite into the receipts dir if you created one.
 Use these sections:
 
 ### Summary
+
 1–3 paragraphs: what changed + why, trade-offs, what should be true after merge.
 
 ### Interface & compatibility verdict
+
 Crisp top-line statements (supported by tools or concrete deltas):
 - Public API: unchanged | additive | breaking | not measured
 - Schemas/contracts: unchanged | updated | breaking | not measured
 - CLI/config surface: unchanged | changed | not measured
 
 ### Design & maintainability notes
+
 Boundaries, modularity, and what changed future change-cost.
 
 ### What changed (narrative)
+
 System-level explanation (not a file dump).
 
 ### How to review (fast path)
+
 A practical map: key dirs/files + semantic hotspots.
 
 ### Evidence & verification
+
 What you ran, what it proves, and how to reproduce.
 If something wasn't run, say so.
 
 ### Complexity (future change-cost)
+
 Tool-backed if available; otherwise proxies (hotspots/churn, module splits, API delta, unsafe delta, deps delta).
 Interpret implications rather than scoring.
 
 ### Risk & rollback
+
 Blast radius, failure modes, rollback/recovery.
 
 ### Known limits / follow-ups
+
 Explicit deferrals and next steps.
 
 ### Retrospective (earnest)
+
 Surprises, corrections, and what to mechanize next time (new gate/receipt/invariant).
 
 ## Checklist (use TodoWrite to track)

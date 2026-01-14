@@ -1,29 +1,28 @@
-[package]
-name = "telemetry"
-version = "0.1.0"
-edition.workspace = true
-rust-version.workspace = true
-publish.workspace = true
+[dependencies]
+# Optional OTLP dependencies (enabled via 'otlp' feature)
+opentelemetry = {optional = true, workspace = true}
+opentelemetry-otlp = {optional = true, workspace = true}
+opentelemetry_sdk = {optional = true, workspace = true}
+tracing-opentelemetry = {optional = true, workspace = true}
+tracing.workspace = true
+tracing-subscriber.workspace = true
+
+[dev-dependencies]
+testing = {path = "../testing"}
 
 [features]
 default = []
 otlp = [
-    "opentelemetry",
-    "opentelemetry_sdk",
-    "opentelemetry-otlp",
-    "opentelemetry-otlp/grpc-tonic",
-    "tracing-opentelemetry",
+  "opentelemetry",
+  "opentelemetry-otlp",
+  "opentelemetry-otlp/grpc-tonic",
+  "opentelemetry_sdk",
+  "tracing-opentelemetry"
 ]
 
-[dependencies]
-tracing.workspace = true
-tracing-subscriber.workspace = true
-
-# Optional OTLP dependencies (enabled via 'otlp' feature)
-opentelemetry = { workspace = true, optional = true }
-opentelemetry_sdk = { workspace = true, optional = true }
-opentelemetry-otlp = { workspace = true, optional = true }
-tracing-opentelemetry = { workspace = true, optional = true }
-
-[dev-dependencies]
-testing = { path = "../testing" }
+[package]
+name = "telemetry"
+version = "0.1.0"
+edition.workspace = true
+publish.workspace = true
+rust-version.workspace = true

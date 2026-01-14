@@ -13,6 +13,7 @@ This guide covers rollback strategies for security, build infrastructure, code q
 **Scenario**: CORS middleware causing issues with cross-origin requests
 
 **Rollback Commands**:
+
 ```bash
 # Revert CORS middleware to previous state
 git checkout HEAD~1 -- crates/app-http/src/middleware/cors.rs
@@ -28,6 +29,7 @@ git checkout HEAD~1 -- config/local.yaml.template
 ```
 
 **Verification Commands**:
+
 ```bash
 # Verify CORS is reverted to previous state
 curl -I http://localhost:8080/health | grep -v "Access-Control"
@@ -53,6 +55,7 @@ cargo test -p app-http jwt_validation
 **Scenario**: Security headers causing application failures
 
 **Rollback Commands**:
+
 ```bash
 # Revert security headers middleware
 git checkout HEAD~1 -- crates/app-http/src/middleware/security_headers.rs
@@ -65,6 +68,7 @@ git checkout HEAD~1 -- crates/app-http/src/middleware/cors.rs
 ```
 
 **Verification Commands**:
+
 ```bash
 # Verify security headers are reverted
 curl -I http://localhost:8080/health | grep -v -E "(X-Frame-Options|Content-Security-Policy|Strict-Transport-Security)"
@@ -78,6 +82,7 @@ cargo test -p app-http
 **Scenario**: JWT validation breaking authentication
 
 **Rollback Commands**:
+
 ```bash
 # Revert JWT validation changes
 git checkout HEAD~1 -- crates/app-http/src/security.rs
@@ -90,6 +95,7 @@ git checkout HEAD~1 -- config/local.yaml.template
 ```
 
 **Verification Commands**:
+
 ```bash
 # Verify JWT validation is restored
 cargo test -p app-http jwt_validation
@@ -106,6 +112,7 @@ curl -X POST http://localhost:8080/platform/auth/login \
 **Scenario**: Configuration template causing deployment issues
 
 **Rollback Commands**:
+
 ```bash
 # Revert to previous configuration template
 git checkout HEAD~1 -- config/local.yaml.template
@@ -123,6 +130,7 @@ export JWT_SECRET="old-secret" cargo run -p app-http
 **Scenario**: Tool checksum verification failing in CI/CD
 
 **Rollback Commands**:
+
 ```bash
 # Restore previous tool checksums
 git checkout HEAD~1 -- scripts/tools.sha256
@@ -139,6 +147,7 @@ ENFORCE_CHECKSUMS=1 ./bootstrap-tools.sh
 **Scenario**: Version misalignment breaking builds
 
 **Rollback Commands**:
+
 ```bash
 # Revert Rust version changes
 git checkout HEAD~1 -- rust-toolchain.toml Cargo.toml
@@ -155,6 +164,7 @@ cargo build --workspace
 **Scenario**: MSRV changes causing build failures
 
 **Rollback Commands**:
+
 ```bash
 # Revert MSRV compliance changes
 git checkout HEAD~1 -- $(find crates -name Cargo.toml -exec grep -l "rust-version" {} \;)
@@ -168,6 +178,7 @@ cargo check --workspace --all-targets --all-features
 **Scenario**: New deny.toml rules blocking deployment
 
 **Rollback Commands**:
+
 ```bash
 # Restore previous deny.toml
 git checkout HEAD~1 -- deny.toml
@@ -186,6 +197,7 @@ cargo audit --version-lock
 **Scenario**: Optimized error types causing serialization issues
 
 **Rollback Commands**:
+
 ```bash
 # Revert error type optimization
 git checkout HEAD~1 -- crates/app-http/src/errors.rs
@@ -202,6 +214,7 @@ cargo test -p app-http errors
 **Scenario**: Panic! reintroduction causing instability
 
 **Rollback Commands**:
+
 ```bash
 # Find files with panic! usage
 grep -rl "panic!" crates/ --include="*.rs" | cut -d: -f1
@@ -221,6 +234,7 @@ cargo test --workspace
 **Scenario**: TaskStatus changes breaking existing integrations
 
 **Rollback Commands**:
+
 ```bash
 # Revert TaskStatus enum changes
 git checkout HEAD~1 -- crates/gov-model/src/lib.rs
@@ -239,6 +253,7 @@ cargo test -p gov-model -- --ignored static
 **Scenario**: API contract changes breaking client integrations
 
 **Rollback Commands**:
+
 ```bash
 # Revert platform API contract changes
 git checkout HEAD~1 -- docs/reference/platform_api_contract.md
@@ -252,6 +267,7 @@ curl http://localhost:8080/platform/status | jq '.'
 **Scenario**: Skills documentation changes breaking agent workflows
 
 **Rollback Commands**:
+
 ```bash
 # Revert agent skills documentation
 git checkout HEAD~1 -- docs/AGENT_SKILLS.md
@@ -265,6 +281,7 @@ find .claude/skills -name SKILL.md | wc -l
 **Scenario**: Database integration guide causing deployment failures
 
 **Rollback Commands**:
+
 ```bash
 # Revert database integration changes
 git checkout HEAD~1 -- docs/how-to/add-database.md

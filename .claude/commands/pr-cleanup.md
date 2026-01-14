@@ -46,6 +46,7 @@ Optionally create a receipts directory if you want to save artifacts:
 ## How to work (agents in waves)
 
 ### Wave 1 — Explore (find what matters)
+
 Invoke **Explore** to:
 - map semantic hotspots and what's mechanical
 - flag interface/contract touchpoints
@@ -55,6 +56,7 @@ Invoke **Explore** to:
 Explore should report back with anchors (paths, commands, commit references), not raw diffs.
 
 ### Wave 2 — Plan (cleanup plan with maintainability intent)
+
 Invoke **Plan** to:
 - propose a cleanup plan that improves maintainability/PR quality without scope creep
 - separate "quick wins" vs "follow-ups"
@@ -62,6 +64,7 @@ Invoke **Plan** to:
 - suggest a commit plan if it will materially improve review (mechanical vs semantic)
 
 ### Wave 3 — Improve & fix (apply changes in the working tree)
+
 Invoke appropriate fixing agents (general-purpose or specialist) to:
 - run the repo's best available gate (just/make/scripts/xtask/nix) and address findings
 - apply safe mechanical fixes (format/lint/docs drift) and straightforward correctness fixes
@@ -69,6 +72,7 @@ Invoke appropriate fixing agents (general-purpose or specialist) to:
 - save tool outputs you will cite into the receipts dir (gate logs, audit outputs, link checks, etc.)
 
 ### Wave 4 — Verify & report (prove readiness)
+
 After fixes:
 - re-run the relevant gate/checks
 - save "after" snapshots + key logs into the receipts dir
@@ -89,24 +93,30 @@ Save outputs you cite into the receipts dir.
 At the end, provide a cleanup report (print it, and optionally save to receipts dir). Include:
 
 ### Cleanup summary (narrative)
+
 What you tightened and why (maintainability + reviewability), and what you deliberately didn't touch.
 
 ### Interface & compatibility verdict (crisp)
+
 - Public API: unchanged | additive | breaking | not measured
 - Schemas/contracts: unchanged | updated | breaking | not measured
 - CLI/config surface: unchanged | changed | not measured
 Back each with anchors (paths, commands, or saved tool outputs).
 
 ### Evidence & receipts
+
 What you ran and where you saved it (if applicable).
 
 ### What changed during cleanup
+
 Key files/dirs touched + "before → after" highlights (lint/test/docs/risk surface).
 
 ### Remaining concerns / follow-ups
+
 What's still worth doing and what you'd mechanize next time.
 
 ### PR readiness verdict
+
 Ready / not ready + blockers.
 If ready, recommend running `/pr-create` next (with suggested context).
 

@@ -1,22 +1,22 @@
+[dependencies]
+anyhow = {workspace = true}
+axum = {workspace = true}
+gov-contracts = {path = "../gov-contracts"}
+gov-model = {path = "../gov-model"}
+serde = {workspace = true}
+serde_json = {workspace = true}
+serde_yaml = {workspace = true}
+spec-runtime = {path = "../spec-runtime"}
+thiserror = {workspace = true}
+tokio = {workspace = true}
+tracing = {workspace = true}
+uuid = {workspace = true}
+
 [package]
+description = "Platform HTTP router for Rust-as-Spec governance endpoints"
 name = "gov-http"
 version = "0.1.0"
 edition.workspace = true
-rust-version.workspace = true
 license.workspace = true
 publish.workspace = true
-description = "Platform HTTP router for Rust-as-Spec governance endpoints"
-
-[dependencies]
-axum = { workspace = true }
-serde = { workspace = true }
-serde_json = { workspace = true }
-serde_yaml = { workspace = true }
-tracing = { workspace = true }
-anyhow = { workspace = true }
-thiserror = { workspace = true }
-uuid = { workspace = true }
-gov-model = { path = "../gov-model" }
-gov-contracts = { path = "../gov-contracts" }
-spec-runtime = { path = "../spec-runtime" }
-tokio = { workspace = true }
+rust-version.workspace = true

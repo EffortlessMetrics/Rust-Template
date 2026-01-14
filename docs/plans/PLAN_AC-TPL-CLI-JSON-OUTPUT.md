@@ -35,6 +35,7 @@
 1. **Define JSON output structs for each command**
 
    **ac-status:**
+
    ```rust
    #[derive(Serialize)]
    struct AcStatusJson {
@@ -45,6 +46,7 @@
    ```
 
    **version:**
+
    ```rust
    #[derive(Serialize)]
    struct VersionJson {
@@ -56,6 +58,7 @@
    ```
 
    **friction-list:**
+
    ```rust
    #[derive(Serialize)]
    struct FrictionListJson {
@@ -66,6 +69,7 @@
    ```
 
    **questions-list:**
+
    ```rust
    #[derive(Serialize)]
    struct QuestionsListJson {
@@ -75,6 +79,7 @@
    ```
 
    **fork-list:**
+
    ```rust
    #[derive(Serialize)]
    struct ForkListJson {
@@ -84,6 +89,7 @@
    ```
 
 2. **Add --json flag to each command's Args struct**
+
    ```rust
    #[derive(Parser)]
    pub struct AcStatusArgs {
@@ -98,6 +104,7 @@
    - If true: serialize to JSON, print to stdout, return
    - If false: use existing human-readable format
    - Example pattern:
+
      ```rust
      if args.json {
          let json_output = AcStatusJson { /* ... */ };

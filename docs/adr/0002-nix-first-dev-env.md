@@ -125,10 +125,12 @@ We adopt **Nix-first** development via a `flake.nix`:
 **Automated:**
 
 - CI job `.github/workflows/ci.yml` runs:
+
   ```yaml
   - uses: cachix/install-nix-action@v24
   - run: nix develop -c cargo run -p xtask -- selftest
   ```
+
 - `xtask selftest` checks for conftest and warns if missing (but only fails in CI)
 
 **Manual:**

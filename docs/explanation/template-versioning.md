@@ -12,6 +12,7 @@ The template includes explicit version metadata across all specification files t
 ## Where Version Metadata Appears
 
 ### 1. spec_ledger.yaml
+
 ```yaml
 metadata:
   schema_version: "1.0"
@@ -26,6 +27,7 @@ metadata:
 - Documents the feature set at this version
 
 ### 2. Feature Files (.feature)
+
 ```gherkin
 # Template Version: v2.4.0
 # Schema: spec_ledger.yaml v1.0
@@ -40,6 +42,7 @@ Feature: Template Core Endpoints
 - Helps track breaking changes in BDD scenarios
 
 ### 3. OpenAPI Specification
+
 ```yaml
 info:
   description: |
@@ -58,16 +61,19 @@ info:
 ## Benefits
 
 ### For Template Users
+
 1. **Know what you have** - Clear indication of template version in use
 2. **Track changes** - See when endpoints/ACs were added
 3. **Migration path** - Understand what changed between template versions
 
 ### For Template Maintainers
+
 1. **Breaking change detection** - Schema version bumps signal compatibility issues
 2. **Feature tracking** - Know which version introduced which capabilities
 3. **Documentation** - Self-documenting specs
 
 ### For LLMs
+
 1. **Context awareness** - LLM knows template version when generating code
 2. **Compatibility** - Can check if suggested changes match template version
 3. **Documentation** - Clear metadata about what exists
@@ -75,17 +81,20 @@ info:
 ## Version Semantics
 
 ### template_version
+
 - Follows template releases: v2.3.0, v2.4.0, etc.
 - Updated when template is upgraded
 - Indicates feature set available
 
 ### schema_version
+
 - Follows SemVer for spec file format changes
 - v1.0 = current format
 - Bump to v2.0 if spec_ledger.yaml structure changes (breaking)
 - Bump to v1.1 if new optional fields added (non-breaking)
 
 ### last_updated
+
 - ISO date: YYYY-MM-DD
 - Updated whenever spec content changes
 - Helps track freshness
@@ -123,11 +132,13 @@ metadata:
 ## Integration with Tools
 
 ### Current xtask Commands
+
 - `ac-status` - Reads spec_ledger.yaml metadata
 - `bundle` - Includes specs with version metadata
 - `selftest` - Validates all specs including metadata
 
 ### Future Enhancements
+
 ```bash
 # Possible future commands
 cargo xtask version              # Show template version from specs
@@ -138,13 +149,16 @@ cargo xtask validate-schema      # Check schema_version compatibility
 ## Examples
 
 ### Current Template (v2.3.0)
+
 All specs show:
 - template_version: "2.3.0"
 - schema_version: "1.0"
 - Includes: health, version, errors, metrics
 
 ### Hypothetical v2.4.0
+
 If v2.4.0 adds OTLP tracing to core:
+
 ```yaml
 metadata:
   template_version: "2.4.0"       # Bumped
@@ -154,7 +168,9 @@ metadata:
 ```
 
 ### Breaking Schema Change
+
 If spec_ledger.yaml format changes significantly:
+
 ```yaml
 metadata:
   schema_version: "2.0"           # Breaking change

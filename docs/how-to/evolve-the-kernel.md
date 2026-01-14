@@ -37,7 +37,7 @@ This playbook walks through each step.
 
 **Ask yourself:** Does this change affect something downstream consumers depend on?
 
-### Kernel changes (require this playbook):
+### Kernel changes (require this playbook)
 
 - Adding/removing/modifying `must_have_ac` ACs in `specs/spec_ledger.yaml`
 - Changing `/platform/*` endpoint response shapes
@@ -45,7 +45,7 @@ This playbook walks through each step.
 - Updating schema files (`specs/openapi/**`, `specs/platform_schema.yaml`)
 - Editing kernel documentation (`docs/KERNEL_SNAPSHOT.md`, `docs/IDP_CELL_CONTRACT.md`)
 
-### NOT kernel changes (skip this playbook):
+### NOT kernel changes (skip this playbook)
 
 - Adding new non-kernel ACs (`must_have_ac: false`)
 - Updating internal implementation without API changes

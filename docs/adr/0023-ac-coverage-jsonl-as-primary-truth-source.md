@@ -88,6 +88,7 @@ Automated enforcement:
    - Strict mode (`XTASK_STRICT_AC_COVERAGE=1`): Unknown `must_have_ac` ACs also fail the gate
 
 View the coverage backlog with:
+
 ```bash
 cargo xtask ac-coverage --todo              # All unknown ACs
 cargo xtask ac-coverage --todo --must-have  # Only kernel (must_have_ac) ACs

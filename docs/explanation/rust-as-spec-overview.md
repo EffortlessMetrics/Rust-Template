@@ -101,6 +101,7 @@ Each step enforces a different contract:
 The same specs loaded by `selftest` are exposed at runtime via [`app-http`](../../crates/app-http):
 
 **HTTP APIs** (`/platform/*`):
+
 ```bash
 GET /platform/status       # Governance health metrics
 GET /platform/graph        # Full dependency graph (JSON)
@@ -111,6 +112,7 @@ GET /platform/docs/index   # Documentation inventory
 ```
 
 **Web UI** (`/ui`):
+
 ```bash
 GET /ui                    # Dashboard (health + metrics)
 GET /ui/graph              # Interactive Mermaid visualization
@@ -133,7 +135,7 @@ GET /ui/flows              # Flows + tasks explorer
 | **Agent Interface** | Swagger UI | `/platform/*` + `suggest-next` + skills |
 | **Type Safety** | JSON Schema (runtime) | Rust `serde` (compile time) |
 
-**When to use SpecKit:** You only need API contract validation.  
+**When to use SpecKit:** You only need API contract validation.
 **When to use Rust-as-Spec:** You need full governance (AC ↔ code ↔ docs ↔ policies).
 
 ### vs. Backstage / Port / OpsLevel
@@ -146,7 +148,7 @@ GET /ui/flows              # Flows + tasks explorer
 | **Adoption** | Org-wide rollout | Per-service clone |
 | **Cost** | Heavy (infrastructure + maintenance) | Zero (compiles into binary) |
 
-**When to use Backstage:** You need a **fleet-wide** service catalog.  
+**When to use Backstage:** You need a **fleet-wide** service catalog.
 **When to use Rust-as-Spec:** You need a **per-service** governance cell that maintains itself.
 
 *Note:* These are complementary. You could build a Backstage plugin that reads `/platform/*` APIs from multiple Rust-as-Spec services.
@@ -161,7 +163,7 @@ GET /ui/flows              # Flows + tasks explorer
 | **Specs** | Informal (comments/docs) | Formal (YAML → structs) |
 | **Agent Interface** | None | `/platform/*` + skills |
 
-**When to use zero2prod:** You want production Rust patterns without governance overhead.  
+**When to use zero2prod:** You want production Rust patterns without governance overhead.
 **When to use Rust-as-Spec:** You're in a regulated/multi-team environment where governance is non-negotiable.
 
 ---

@@ -92,21 +92,26 @@ CMD ["app-http"]
 
 Depending on your Kubernetes setup, you may need to load the image:
 
-#### For minikube:
+#### For minikube
+
 ```bash
 minikube image load app-http:latest
 ```
 
-#### For kind:
+#### For kind
+
 ```bash
 kind load docker-image app-http:latest
 ```
 
-#### For Docker Desktop:
+#### For Docker Desktop
+
 No action needed - Docker Desktop uses your local Docker daemon.
 
-#### For remote clusters:
+#### For remote clusters
+
 Push to a container registry:
+
 ```bash
 # Tag for your registry
 docker tag app-http:latest <registry>/app-http:latest
@@ -138,17 +143,20 @@ kubectl get pods -l app=app-http
 ```
 
 Expected output:
+
 ```
 NAME                        READY   STATUS    RESTARTS   AGE
 app-http-xxxxxxxxxx-xxxxx   1/1     Running   0          30s
 ```
 
 View logs:
+
 ```bash
 kubectl logs -l app=app-http -f
 ```
 
 Check service:
+
 ```bash
 kubectl get service app-http
 ```
@@ -156,6 +164,7 @@ kubectl get service app-http
 ### 5. Access the Application
 
 #### Option A: Port Forward (Quick Test)
+
 ```bash
 kubectl port-forward service/app-http 8080:80
 ```
@@ -163,6 +172,7 @@ kubectl port-forward service/app-http 8080:80
 Then access at: `http://localhost:8080/health`
 
 #### Option B: Ingress (Cluster Access)
+
 For cluster-wide access, you'll need an Ingress controller and Ingress resource (not included in dev setup).
 
 ## Validation
@@ -206,6 +216,7 @@ kubectl delete -f infra/k8s/dev/
 ## Troubleshooting
 
 ### Pod not starting
+
 ```bash
 # Check pod events
 kubectl describe pod -l app=app-http
@@ -215,16 +226,19 @@ kubectl logs -l app=app-http
 ```
 
 ### Image pull errors
+
 - Verify image exists: `docker images | grep app-http`
 - For minikube/kind: Ensure image was loaded
 - Check `imagePullPolicy` in deployment.yaml
 
 ### Health check failures
+
 - Ensure your app has a `/health` endpoint
 - Check liveness/readiness probe settings
 - Verify port 8080 is correct for your app
 
 ### Permission errors
+
 - The deployment runs as user 1000 (non-root)
 - Ensure your app doesn't require root privileges
 - Check file permissions in the container
@@ -242,4 +256,3 @@ kubectl logs -l app=app-http
 - [Kubernetes Policies](../../policy/k8s.rego) - OPA policies enforced on deployments
 - [Template Overview](../../TEMPLATE_OVERVIEW.md) - Overall project structure
 - [Implementation Plan](../../IMPLEMENTATION_PLAN.md) - Roadmap and features
-

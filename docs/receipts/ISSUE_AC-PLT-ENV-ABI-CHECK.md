@@ -21,6 +21,7 @@ AC-PLT-ENV-ABI-CHECK:
 **Implementation: 90% complete, 0% passing tests**
 
 ### ✅ What Works (Implementation)
+
 - ✅ ABI mismatch detection (compares system vs Nix rustc)
 - ✅ proc-macro compatibility warnings
 - ✅ References TROUBLESHOOTING.md §rust-analyzer ABI
@@ -43,7 +44,8 @@ AC-PLT-ENV-ABI-CHECK:
 
 From `specs/features/xtask_devex.feature` (lines 67-128):
 
-### Test Execution Status:
+### Test Execution Status
+
 ```
 ✅ Scenario 1: doctor shows structured sections (passes)
 ❌ Scenario 2: doctor detects environment type (blocked by missing step)

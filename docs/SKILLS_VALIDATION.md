@@ -80,7 +80,7 @@ description: "Description"
 ```yaml
 ---
 name: my-skill
-	description: "Description"  ← TAB character
+ description: "Description"  ← TAB character
 ---
 ```
 
@@ -320,6 +320,7 @@ Each tool in `allowed-tools` must be necessary for the Skill.
 **Validation**:
 
 1. Read-only Skill should NOT include: `Write`, `Edit`, `Bash`, `Task`
+
    ```yaml
    # ❌ Bad: read-only Skill with write tools
    allowed-tools: Read, Grep, Write
@@ -328,6 +329,7 @@ Each tool in `allowed-tools` must be necessary for the Skill.
    ```
 
 2. File-writing Skill should NOT include unscoped `Bash`
+
    ```yaml
    # ❌ Bad: gives full shell access
    allowed-tools: Write, Bash
@@ -336,6 +338,7 @@ Each tool in `allowed-tools` must be necessary for the Skill.
    ```
 
 3. Network-capable tools (`WebSearch`, `WebFetch`) need justification
+
    ```yaml
    allowed-tools: WebSearch  # ⚠ Warning: document why network access needed
    ```
@@ -680,7 +683,7 @@ description: "Valid description"
 # test_skill_syntax_tabs.yaml
 ---
 name: my-skill
-	description: "Has tab" → ERROR
+ description: "Has tab" → ERROR
 ```
 
 ### Name Tests

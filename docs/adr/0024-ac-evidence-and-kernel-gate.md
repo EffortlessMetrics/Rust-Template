@@ -110,6 +110,7 @@ To prevent coverage regression:
 4. Eventually, `XTASK_STRICT_AC_COVERAGE=1` is enabled (budget = 0)
 
 Example progression:
+
 ```yaml
 # Week 1: 50 unknown kernel ACs
 KERNEL_UNKNOWN_BUDGET: "50"

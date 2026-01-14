@@ -53,7 +53,7 @@ curl http://localhost:3000/platform/tasks | jq
 - **If AC exists:** Note the AC ID and proceed to step 2
 - **If AC missing:** Ask user for details, then create AC (see substep below)
 
-#### Create AC if missing:
+#### Create AC if missing
 
 ```bash
 cargo xtask ac-new AC-ID "AC description text" \
@@ -80,6 +80,7 @@ curl -X POST "http://localhost:3000/platform/tasks/${TASK_ID}/status" \
 ```
 
 **Verify:**
+
 ```bash
 curl http://localhost:3000/platform/tasks/${TASK_ID} | jq '.status'
 # Should return: "InProgress"
@@ -115,6 +116,7 @@ Scenario: Description matching AC text
 ```
 
 **Example:**
+
 ```gherkin
 @AC-MYSERV-USERS-LIST
 Scenario: GET /users returns list of users
@@ -126,11 +128,13 @@ Scenario: GET /users returns list of users
 ```
 
 **Verify scenario is discovered:**
+
 ```bash
 cargo xtask bdd --dry-run | grep "@AC-YOUR-AC-ID"
 ```
 
 **Run BDD (should fail - not implemented yet):**
+
 ```bash
 cargo xtask bdd
 # Expected: Scenario fails (pending step definitions)
@@ -148,6 +152,7 @@ Write code in the appropriate crate:
 - Use patterns from bundle context
 
 **Example structure:**
+
 ```rust
 // crates/business-core/src/users.rs
 pub struct UserService {
@@ -170,6 +175,7 @@ pub async fn list_users_handler(
 ```
 
 **Register route:**
+
 ```rust
 // crates/app-http/src/app.rs
 .route("/users", get(users::list_users_handler))
@@ -230,6 +236,7 @@ curl -X POST "http://localhost:3000/platform/tasks/${TASK_ID}/status" \
 ```
 
 **Verify:**
+
 ```bash
 curl http://localhost:3000/platform/tasks/${TASK_ID} | jq '.status'
 # Should return: "Done"
@@ -250,11 +257,11 @@ Feature is complete when:
 
 ## Error Handling
 
-### If selftest fails:
+### If selftest fails
 
 **Use the `governed-governance-debug` Skill** to systematically diagnose which of the 7 steps failed and how to fix it.
 
-### If BDD fails:
+### If BDD fails
 
 ```bash
 # Run with verbose output
@@ -273,7 +280,7 @@ cargo xtask bdd -- --format pretty
 #    → Verify @AC-ID matches spec_ledger.yaml
 ```
 
-### If platform APIs not reachable:
+### If platform APIs not reachable
 
 ```bash
 # Check if platform is running
@@ -286,7 +293,7 @@ sleep 5
 # Retry API calls
 ```
 
-### If AC creation fails:
+### If AC creation fails
 
 ```bash
 # Ensure parent requirement exists
@@ -375,8 +382,8 @@ Feature implementation successful when:
 - **Flow definition:** `specs/devex_flows.yaml` (ac_first flow)
 - **Bundler docs:** `docs/explanation/llm-bundler.md`
 - **Architecture guide:** `docs/explanation/hexagonal-architecture.md`
-- **Platform APIs:** http://localhost:3000/platform/status
-- **Task board UI:** http://localhost:3000/ui/tasks
+- **Platform APIs:** <http://localhost:3000/platform/status>
+- **Task board UI:** <http://localhost:3000/ui/tasks>
 - **xtask reference:** `docs/reference/xtask-commands.md`
 
 ## Notes

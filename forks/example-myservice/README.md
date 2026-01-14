@@ -30,31 +30,37 @@ When you're building a new feature, **start by studying MYSERV**. It demonstrate
 MYSERV implements six acceptance criteria that demonstrate different aspects of HTTP API development:
 
 ### AC-MYSERV-001: List Todos (Happy Path)
+
 **Requirement:** REQ-MYSERV-LIST-TODOS
 **What it tests:** `GET /todos` returns a JSON array of todos
 **Why it matters:** Basic happy-path read operation
 
 ### AC-MYSERV-002: Empty List Handling
+
 **Requirement:** REQ-MYSERV-LIST-TODOS
 **What it tests:** `GET /todos` returns empty array `[]` when no todos exist
 **Why it matters:** Edge case handling - empty state is valid
 
 ### AC-MYSERV-003: Invalid Input Validation
+
 **Requirement:** REQ-MYSERV-ERROR-HANDLING
 **What it tests:** Invalid JSON or missing required fields return 400 with error message
 **Why it matters:** Demonstrates structured error responses using `AppError`
 
 ### AC-MYSERV-004: Delete Operation
+
 **Requirement:** REQ-MYSERV-DELETE-TODOS
 **What it tests:** `DELETE /todos/:id` removes todo from list, 404 if not found
 **Why it matters:** Demonstrates path parameters and idempotent operations
 
 ### AC-MYSERV-005: Duplicate Detection
+
 **Requirement:** REQ-MYSERV-ERROR-HANDLING
 **What it tests:** `POST /todos` with duplicate ID returns 409 Conflict
 **Why it matters:** Business rule validation (uniqueness constraint)
 
 ### AC-MYSERV-006: Input Validation Rules
+
 **Requirement:** REQ-MYSERV-ERROR-HANDLING
 **What it tests:** Title must be non-empty and ≤256 characters
 **Why it matters:** Field-level validation with meaningful error messages
@@ -528,21 +534,25 @@ curl -X DELETE http://localhost:8080/todos/test-1
 ## Related Documentation
 
 ### Getting Started
+
 - `docs/how-to/first-hour.md` - Template onboarding guide
 - `docs/tutorials/day-1-first-change.md` - Your first code change
 - `docs/tutorials/day-7-first-real-feature.md` - Building a full feature
 
 ### AC-Driven Development
+
 - `docs/tutorials/first-ac-change.md` - How to modify an AC
 - `CLAUDE.md` - Full governance workflow guide
 - `docs/AGENT_GUIDE.md` - Using platform APIs for development
 
 ### Architecture
+
 - `docs/explanation/TEMPLATE-CONTRACTS.md` - Design principles
 - `specs/spec_ledger.yaml` - All ACs and requirements
 - `specs/devex_flows.yaml` - Developer workflows
 
 ### Testing
+
 - BDD scenarios: `specs/features/`
 - Step definitions: `crates/acceptance/src/steps/`
 - Run: `cargo xtask bdd --help` for all BDD options

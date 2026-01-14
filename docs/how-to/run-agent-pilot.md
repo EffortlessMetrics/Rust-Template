@@ -190,6 +190,7 @@ grep -A 5 "AC-TPL-005" specs/spec_ledger.yaml
 ```
 
 **Good AC (ready for pilot):**
+
 ```yaml
 - id: AC-TPL-005
   text: "GET /api/echo returns the input message as JSON"
@@ -200,6 +201,7 @@ grep -A 5 "AC-TPL-005" specs/spec_ledger.yaml
 ```
 
 **Bad AC (not ready):**
+
 ```yaml
 - id: AC-TPL-099
   text: "System should be performant"  # Too vague
@@ -403,6 +405,7 @@ cargo xtask bundle implement_ac > /tmp/ac-context.md
    - "GET /api/echo returns the input message as JSON"
 
 2. **Write BDD scenario:**
+
    ```gherkin
    # specs/features/template_core.feature
    @AC-TPL-005
@@ -412,6 +415,7 @@ cargo xtask bundle implement_ac > /tmp/ac-context.md
    ```
 
 3. **Implement handler:**
+
    ```rust
    // crates/app-http/src/lib.rs
    #[tracing::instrument(name = "echo", skip(request_id))]
@@ -427,6 +431,7 @@ cargo xtask bundle implement_ac > /tmp/ac-context.md
    ```
 
 4. **Add step definitions:**
+
    ```rust
    // crates/acceptance/src/steps/template_core.rs
    #[when(expr = "I GET /api/echo?message={word}")]
@@ -886,17 +891,20 @@ cargo xtask selftest --verbose
 **Prevention:**
 
 1. Agent definition includes constraint:
+
    ```yaml
    system: |
      You MUST NOT invent AC IDs. They come from spec_ledger.yaml.
    ```
 
 2. Pre-commit hook runs `cargo xtask policy-test`:
+
    ```bash
    # Blocks commits with policy violations
    ```
 
 3. CI enforces selftest:
+
    ```yaml
    # .github/workflows/tier1-selftest.yml
    ```

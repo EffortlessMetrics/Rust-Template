@@ -28,12 +28,14 @@
 1. **Create shared environment detection helper**
    - Add `crates/xtask/src/util.rs` (or extend existing util module)
    - Create function:
+
      ```rust
      pub fn is_noninteractive() -> bool {
          std::env::var("CI").is_ok() ||
          std::env::var("XTASK_NONINTERACTIVE").is_ok()
      }
      ```
+
    - Expose from `lib.rs`: `pub mod util;`
 
 2. **Audit and fix all covered commands**
@@ -53,6 +55,7 @@
 3. **Document noninteractive mode behavior**
    - Add doc comments to each affected command's `run()` function
    - Example:
+
      ```rust
      /// In noninteractive mode (CI=1 or XTASK_NONINTERACTIVE=1),
      /// this command skips all prompts and uses default values.

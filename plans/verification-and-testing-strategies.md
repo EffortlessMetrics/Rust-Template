@@ -353,24 +353,28 @@ valgrind --tool=massif cargo test -p app-http
 ### Verification Checklists
 
 #### Security Verification
+
 - [ ] CORS middleware configured and working: `curl -I http://localhost:8080/health | grep -E "Access-Control"`
 - [ ] Security headers present in responses: `curl -I http://localhost:8080/health | grep -E "(X-Frame-Options|Content-Security-Policy)"`
 - [ ] JWT validation working correctly: `cargo test -p app-http jwt_validation`
 - [ ] Secrets management functional: `test -f config/local.yaml && cargo run -p app-http`
 
 #### Build Infrastructure Verification
+
 - [ ] Tool checksums verified: `sha256sum -c scripts/tools.sha256`
 - [ ] Rust versions aligned: `grep -r "rust-version" Cargo.toml rust-toolchain.toml | diff`
 - [ ] MSRV compliance achieved: `cargo check --workspace --all-targets --all-features`
 - [ ] Security advisories functional: `cargo deny check && cargo deny --workspace`
 
 #### Code Quality Verification
+
 - [ ] Clippy warnings eliminated: `cargo clippy --workspace --all-targets -- -D warnings`
 - [ ] Error types optimized: `cargo expand --dry-run | grep -A 20 "struct.*Error" | wc -c`
 - [ ] Panic! usage removed: `grep -r "panic!" crates/ --include="*.rs" | wc -l`
 - [ ] TaskStatus functionality working: `cargo test -p gov-model`
 
 #### Documentation Verification
+
 - [ ] Platform API contract functional: `curl http://localhost:8080/platform/status | jq '.'`
 - [ ] Agent skills reference complete: `cargo xtask skills-lint`
 - [ ] Database integration documented: `test -f docs/how-to/add-database.md`
@@ -378,6 +382,7 @@ valgrind --tool=massif cargo test -p app-http
 ## Rollback Verification Procedures
 
 ### Security Rollback Verification
+
 ```bash
 # Verify security rollback restores previous state
 git checkout HEAD~1 -- crates/app-http/src/middleware/cors.rs
@@ -389,6 +394,7 @@ cargo test -p app-http jwt_validation
 ```
 
 ### Build Infrastructure Rollback Verification
+
 ```bash
 # Verify build rollback restores functionality
 git checkout HEAD~1 -- scripts/tools.sha256
@@ -400,6 +406,7 @@ cargo check --workspace
 ```
 
 ### Code Quality Rollback Verification
+
 ```bash
 # Verify error type rollback
 git checkout HEAD~1 -- crates/app-http/src/errors.rs

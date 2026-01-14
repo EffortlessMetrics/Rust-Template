@@ -31,11 +31,13 @@ This document provides a comprehensive reference for all `/platform/*` API endpo
 **Response Format:** JSON object with service metadata, governance status, AC coverage, task counts, friction/question counts, and runtime config.
 
 **Example:**
+
 ```bash
 curl http://localhost:8080/platform/status
 ```
 
 **Response Structure:**
+
 ```json
 {
   "service": {
@@ -127,6 +129,7 @@ curl http://localhost:8080/platform/status
 **Response Format:** JSON object containing nodes and edges of the governance graph.
 
 **Example:**
+
 ```bash
 curl http://localhost:8080/platform/graph
 ```
@@ -140,6 +143,7 @@ curl http://localhost:8080/platform/graph
 **Response Format:** JSON object with schema definitions.
 
 **Example:**
+
 ```bash
 curl http://localhost:8080/platform/schema
 ```
@@ -153,6 +157,7 @@ curl http://localhost:8080/platform/schema
 **Response Format:** Raw OpenAPI YAML.
 
 **Example:**
+
 ```bash
 curl http://localhost:8080/platform/openapi
 ```
@@ -166,6 +171,7 @@ curl http://localhost:8080/platform/openapi
 **Response Format:** Raw OpenAPI YAML.
 
 **Example:**
+
 ```bash
 curl http://localhost:8080/platform/openapi.yaml
 ```
@@ -182,6 +188,7 @@ curl http://localhost:8080/platform/openapi.yaml
 **Response Format:** JSON object with the requested schema definition.
 
 **Example:**
+
 ```bash
 curl http://localhost:8080/platform/schema/task
 ```
@@ -195,6 +202,7 @@ curl http://localhost:8080/platform/schema/task
 **Response Format:** JSON object with flow definitions from `specs/devex_flows.yaml`.
 
 **Example:**
+
 ```bash
 curl http://localhost:8080/platform/devex/flows
 ```
@@ -208,11 +216,13 @@ curl http://localhost:8080/platform/devex/flows
 **Response Format:** JSON array of all documents with metadata, traceability links (stories, REQs, ACs, ADRs), and validation status.
 
 **Example:**
+
 ```bash
 curl http://localhost:8080/platform/docs/index
 ```
 
 **Response Structure:**
+
 ```json
 {
   "schema_version": "string",
@@ -247,11 +257,13 @@ curl http://localhost:8080/platform/docs/index
 **Response Format:** JSON object with summary counts and detailed AC-by-AC status.
 
 **Example:**
+
 ```bash
 curl http://localhost:8080/platform/coverage
 ```
 
 **Response Structure:**
+
 ```json
 {
   "summary": {
@@ -282,11 +294,13 @@ curl http://localhost:8080/platform/coverage
 **Response Format:** JSON object with version metadata.
 
 **Example:**
+
 ```bash
 curl http://localhost:8080/platform/debug/info
 ```
 
 **Response Structure:**
+
 ```json
 {
   "kernel_version": "string",
@@ -309,6 +323,7 @@ curl http://localhost:8080/platform/debug/info
 **Response Format:** JSON object with array of tasks.
 
 **Example:**
+
 ```bash
 # Get all tasks
 curl http://localhost:8080/platform/tasks
@@ -321,6 +336,7 @@ curl http://localhost:8080/platform/tasks?req=REQ-MYSERV-001
 ```
 
 **Response Structure:**
+
 ```json
 {
   "tasks": [
@@ -353,6 +369,7 @@ curl http://localhost:8080/platform/tasks?req=REQ-MYSERV-001
 **Response Format:** JSON object with suggested task sequence.
 
 **Example:**
+
 ```bash
 curl http://localhost:8080/platform/tasks/suggest-next?task=implement_ac
 ```
@@ -369,6 +386,7 @@ curl http://localhost:8080/platform/tasks/suggest-next?task=implement_ac
 **Response Format:** JSON object with task graph nodes and edges, or Mermaid diagram text.
 
 **Example:**
+
 ```bash
 # Get JSON graph
 curl http://localhost:8080/platform/tasks/graph
@@ -387,6 +405,7 @@ curl http://localhost:8080/platform/tasks/graph?format=mermaid
 - `id` (path): Task ID to update
 
 **Request Body:**
+
 ```json
 {
   "status": "Todo|InProgress|Review|Done"
@@ -396,6 +415,7 @@ curl http://localhost:8080/platform/tasks/graph?format=mermaid
 **Response:** 204 No Content on success.
 
 **Example:**
+
 ```bash
 curl -X POST http://localhost:8080/platform/tasks/implement_ac/status \
   -H "Content-Type: application/json" \
@@ -413,11 +433,13 @@ curl -X POST http://localhost:8080/platform/tasks/implement_ac/status \
 **Response Format:** JSON object with array of friction entries.
 
 **Example:**
+
 ```bash
 curl http://localhost:8080/platform/friction
 ```
 
 **Response Structure:**
+
 ```json
 {
   "entries": [
@@ -449,6 +471,7 @@ curl http://localhost:8080/platform/friction
 **Response Format:** JSON object with friction entry details.
 
 **Example:**
+
 ```bash
 curl http://localhost:8080/platform/friction/FRICTION-XXX-001
 ```
@@ -465,6 +488,7 @@ curl http://localhost:8080/platform/friction/FRICTION-XXX-001
 **Response Format:** JSON object with array of question summaries.
 
 **Example:**
+
 ```bash
 # Get all questions
 curl http://localhost:8080/platform/questions
@@ -474,6 +498,7 @@ curl http://localhost:8080/platform/questions?status=open
 ```
 
 **Response Structure:**
+
 ```json
 {
   "questions": [
@@ -502,6 +527,7 @@ curl http://localhost:8080/platform/questions?status=open
 **Response Format:** JSON object with complete question details.
 
 **Example:**
+
 ```bash
 curl http://localhost:8080/platform/questions/Q-XXX-001
 ```
@@ -515,11 +541,13 @@ curl http://localhost:8080/platform/questions/Q-XXX-001
 **Response Format:** JSON object with array of fork summaries.
 
 **Example:**
+
 ```bash
 curl http://localhost:8080/platform/forks
 ```
 
 **Response Structure:**
+
 ```json
 {
   "forks": [
@@ -547,6 +575,7 @@ curl http://localhost:8080/platform/forks
 **Response Format:** JSON object with complete fork details including features, pain points, and related items.
 
 **Example:**
+
 ```bash
 curl http://localhost:8080/platform/forks/FORK-XXX-001
 ```
@@ -571,6 +600,7 @@ curl http://localhost:8080/platform/forks/FORK-XXX-001
 **Response Format:** JSON object with array of normalized issues, pagination, and summary.
 
 **Example:**
+
 ```bash
 # Get all issues
 curl http://localhost:8080/platform/issues
@@ -586,6 +616,7 @@ curl "http://localhost:8080/platform/issues?q=devex"
 ```
 
 **Response Structure:**
+
 ```json
 {
   "issues": [
@@ -634,11 +665,13 @@ curl "http://localhost:8080/platform/issues?q=devex"
 **Response Format:** JSON object with snapshot metadata and hints.
 
 **Example:**
+
 ```bash
 curl http://localhost:8080/platform/idp/snapshot
 ```
 
 **Response Structure:**
+
 ```json
 {
   "timestamp": "ISO 8601 timestamp",
@@ -690,6 +723,7 @@ curl http://localhost:8080/platform/idp/snapshot
 **Response Format:** JSON object with array of agent hints and referential integrity warnings.
 
 **Example:**
+
 ```bash
 # Get all hints
 curl http://localhost:8080/platform/agent/hints
@@ -705,6 +739,7 @@ curl http://localhost:8080/platform/agent/hints?label=priority:high
 ```
 
 **Response Structure:**
+
 ```json
 {
   "hints": [
@@ -760,6 +795,7 @@ curl http://localhost:8080/platform/agent/hints?label=priority:high
 **Response Format:** JSON object with UI contract definition.
 
 **Example:**
+
 ```bash
 curl http://localhost:8080/platform/ui/contract
 ```
@@ -775,6 +811,7 @@ These endpoints return HTML pages for human interaction with the platform.
 **Description:** Platform dashboard showing health metrics, AC coverage, and quick links.
 
 **Example:**
+
 ```bash
 curl http://localhost:8080/
 ```
@@ -786,6 +823,7 @@ curl http://localhost:8080/
 **Description:** Visual governance graph showing relationships between stories, requirements, ACs, and docs (rendered with Mermaid).
 
 **Example:**
+
 ```bash
 curl http://localhost:8080/ui/graph
 ```
@@ -797,6 +835,7 @@ curl http://localhost:8080/ui/graph
 **Description:** Developer flows and tasks view with recommended sequences and task details.
 
 **Example:**
+
 ```bash
 curl http://localhost:8080/ui/flows
 ```
@@ -808,6 +847,7 @@ curl http://localhost:8080/ui/flows
 **Description:** Interactive AC coverage table with filtering and search capabilities.
 
 **Example:**
+
 ```bash
 curl http://localhost:8080/ui/coverage
 ```
@@ -819,6 +859,7 @@ curl http://localhost:8080/ui/coverage
 **Description:** Kanban-style task board (Todo, In Progress, Review, Done) with HTMX-powered drag-and-drop.
 
 **Example:**
+
 ```bash
 curl http://localhost:8080/ui/tasks
 ```
@@ -836,11 +877,13 @@ These are domain-specific endpoints for the example application logic.
 **Response Format:** JSON object with status.
 
 **Example:**
+
 ```bash
 curl http://localhost:8080/health
 ```
 
 **Response:**
+
 ```json
 {
   "status": "ok",
@@ -857,6 +900,7 @@ curl http://localhost:8080/health
 **Response Format:** JSON object with version and git SHA.
 
 **Example:**
+
 ```bash
 curl http://localhost:8080/version
 ```
@@ -879,6 +923,7 @@ curl http://localhost:8080/version
 **Response Format:** Plain text metrics in Prometheus exposition format.
 
 **Example:**
+
 ```bash
 curl http://localhost:8080/metrics
 ```
@@ -890,6 +935,7 @@ curl http://localhost:8080/metrics
 **Description:** Echo endpoint for testing error handling and request validation.
 
 **Request Body:**
+
 ```json
 {
   "message": "string"
@@ -899,6 +945,7 @@ curl http://localhost:8080/metrics
 **Response Format:** JSON object echoing the message.
 
 **Example:**
+
 ```bash
 curl -X POST http://localhost:8080/api/echo \
   -H "Content-Type: application/json" \
@@ -914,6 +961,7 @@ curl -X POST http://localhost:8080/api/echo \
 **Response Format:** JSON array of todos.
 
 **Example:**
+
 ```bash
 curl http://localhost:8080/todos
 ```
@@ -925,6 +973,7 @@ curl http://localhost:8080/todos
 **Description:** Create a new todo (implements AC-MYSERV-003, AC-MYSERV-005, AC-MYSERV-006).
 
 **Request Body:**
+
 ```json
 {
   "id": "string",
@@ -935,6 +984,7 @@ curl http://localhost:8080/todos
 **Response:** 201 Created with the created todo.
 
 **Example:**
+
 ```bash
 curl -X POST http://localhost:8080/todos \
   -H "Content-Type: application/json" \
@@ -953,6 +1003,7 @@ curl -X POST http://localhost:8080/todos \
 **Response:** 204 No Content on success, 404 if not found.
 
 **Example:**
+
 ```bash
 curl -X DELETE http://localhost:8080/todos/todo-1
 ```
@@ -966,6 +1017,7 @@ curl -X DELETE http://localhost:8080/todos/todo-1
 **Response:** 204 No Content.
 
 **Example:**
+
 ```bash
 curl -X DELETE http://localhost:8080/todos/clear
 ```
@@ -981,12 +1033,14 @@ Most `/platform/*` endpoints respect the platform authentication configuration d
 - `basic`: Requires Bearer token in Authorization header
 
 **Example with token:**
+
 ```bash
 curl http://localhost:8080/platform/status \
   -H "Authorization: Bearer your-token-here"
 ```
 
 **Configuration:**
+
 ```yaml
 # config/local.yaml
 platform:
@@ -1058,21 +1112,25 @@ secrets:
 ### For AI Agents
 
 1. **Get prioritized work hints:**
+
    ```bash
    curl http://localhost:8080/platform/agent/hints
    ```
 
 2. **Check governance health:**
+
    ```bash
    curl http://localhost:8080/platform/status
    ```
 
 3. **Find failing ACs:**
+
    ```bash
    curl http://localhost:8080/platform/coverage
    ```
 
 4. **Get tasks for a specific requirement:**
+
    ```bash
    curl http://localhost:8080/platform/tasks?req=REQ-MYSERV-001
    ```
@@ -1080,16 +1138,19 @@ secrets:
 ### For CI/CD Pipelines
 
 1. **Verify governance health:**
+
    ```bash
    curl http://localhost:8080/platform/status | jq '.governance.policies.status'
    ```
 
 2. **Check AC coverage:**
+
    ```bash
    curl http://localhost:8080/platform/coverage | jq '.summary'
    ```
 
 3. **Get IDP snapshot for deployment gates:**
+
    ```bash
    curl http://localhost:8080/platform/idp/snapshot
    ```
@@ -1097,16 +1158,19 @@ secrets:
 ### For Developers
 
 1. **Explore the governance graph:**
+
    ```bash
    curl http://localhost:8080/platform/graph | jq
    ```
 
 2. **Find open friction issues:**
+
    ```bash
    curl http://localhost:8080/platform/friction | jq '.entries[] | select(.status == "open")'
    ```
 
 3. **Get suggested next steps for a task:**
+
    ```bash
    curl http://localhost:8080/platform/tasks/suggest-next?task=implement_ac
    ```

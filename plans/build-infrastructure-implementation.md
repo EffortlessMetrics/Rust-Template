@@ -20,11 +20,12 @@ This guide covers the implementation of build infrastructure fixes that ensure r
 - Integration with CI/CD pipelines
 
 **Current Checksums**:
+
 ```bash
 # oasdiff v1.11.7 - Linux AMD64
 oasdiff 97f1052365f74e6fd6f4d8fa108606e09391aebb8ecbf3b5e7a4059d54327224
 
-# buf v1.45.0 - Linux AMD64  
+# buf v1.45.0 - Linux AMD64
 buf 79d530a1b9690f2e78a103bbfcaeaa129fe7b51887a10ee64d67e4837b
 
 # atlas latest - Linux AMD64
@@ -43,6 +44,7 @@ atlas 440474307d87fe5b05b1c9b4167e0383f4f9ffb9413dc377209a9f43d657ba69
 - Clear version documentation
 
 **Version Alignment Details**:
+
 ```toml
 # rust-toolchain.toml
 [toolchain]
@@ -69,6 +71,7 @@ rust-version = { workspace = true }
 - Clear MSRV documentation and upgrade paths
 
 **MSRV Compliance Details**:
+
 ```bash
 # All crates use workspace rust-version
 # This ensures consistent MSRV across the entire workspace
@@ -93,6 +96,7 @@ rust-version = { workspace = true }
 - CI integration for automated checks
 
 **Security Advisory Configuration**:
+
 ```toml
 [advisories]
 yanked = "deny"
@@ -104,7 +108,7 @@ ignore = [
     #   - Last reviewed: 2025-12-18
     #   - Next review: 2026-03-18
     #   - Action: Monitor upstream selectors crate for fix
-    
+
     # RUSTSEC-2025-0134 (rustls-pemfile unmaintained)
     #   - Path: bollard → testcontainers → adapters-db-sqlx (dev-only)
     #   - Risk: Unmaintained dependency, not directly exploitable

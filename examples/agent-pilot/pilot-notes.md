@@ -309,7 +309,7 @@ List any ADRs created during this pilot:
 
 ---
 
-## Example Filled-In Section (delete when using template):
+## Example Filled-In Section (delete when using template)
 
 ### Summary Example
 

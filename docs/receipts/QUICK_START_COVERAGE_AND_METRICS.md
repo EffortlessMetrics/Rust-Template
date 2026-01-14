@@ -12,6 +12,7 @@ cargo xtask coverage
 ```
 
 **Output:**
+
 ```
 Running test coverage analysis
 
@@ -80,6 +81,7 @@ cargo xtask build-time-compare --baseline baseline.json --current build_times.js
 ```
 
 **Output:**
+
 ```
 Comparing build time metrics
 

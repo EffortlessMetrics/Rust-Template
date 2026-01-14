@@ -7,6 +7,7 @@ This directory contains CI/CD workflows for automated testing, validation, and d
 ### Primary Validation
 
 #### `selftest.yml` - Complete Self-Test Suite
+
 **Purpose:** Comprehensive validation of the entire template
 **Triggers:** Push to `main`, pull requests
 **Runtime:** ~30 min (cold) / ~8 min (warm cache)
@@ -24,6 +25,7 @@ This directory contains CI/CD workflows for automated testing, validation, and d
 This is the primary validation workflow that ensures all template functionality works correctly.
 
 #### `policy-test.yml` - Fast Policy Validation
+
 **Purpose:** Quick validation of Rego policies
 **Triggers:** Changes to `policy/**` files
 **Runtime:** ~10 min (cold) / ~3 min (warm cache)
@@ -42,6 +44,7 @@ Fast feedback loop for policy development and validation.
 ### Code Quality
 
 #### `ci-lints.yml` - Rust Linting
+
 **Purpose:** Validate code quality and style
 **Triggers:** Pull requests (except docs)
 **Runtime:** ~15-20 min (cold) / ~3-5 min (warm)
@@ -53,6 +56,7 @@ Fast feedback loop for policy development and validation.
 **Status:** Required for merging PRs
 
 #### `ci-msrv.yml` - Minimum Supported Rust Version
+
 **Purpose:** Ensure compatibility with MSRV (1.89.0)
 **Triggers:** Pull requests
 **Runtime:** ~15 min
@@ -62,6 +66,7 @@ Validates that code compiles and tests pass on the minimum supported Rust versio
 ### Acceptance Testing
 
 #### `ci-gherkin.yml` - BDD Acceptance Tests
+
 **Purpose:** Run Gherkin/Cucumber acceptance tests
 **Triggers:** Pull requests
 **Runtime:** ~10-15 min (cold) / ~3-4 min (warm)
@@ -70,6 +75,7 @@ Validates that code compiles and tests pass on the minimum supported Rust versio
 Tests user-facing features against acceptance criteria using BDD scenarios.
 
 #### `ci-ac.yml` - Acceptance Criteria Status
+
 **Purpose:** Generate AC status mapping
 **Triggers:** Push to main, pull requests
 **Runtime:** ~8-12 min
@@ -80,6 +86,7 @@ Maps Gherkin scenarios to acceptance criteria and generates status documentation
 ### Feature & Flag Validation
 
 #### `ci-features.yml` - Feature Flag Validation
+
 **Purpose:** Ensure all feature combinations compile
 **Triggers:** Pull requests
 **Runtime:** ~15-20 min
@@ -87,11 +94,13 @@ Maps Gherkin scenarios to acceptance criteria and generates status documentation
 Tests various feature flag combinations to catch configuration issues.
 
 #### `ci-flags.yml` - Flag Policy Enforcement
+
 **Purpose:** Validate flag configurations against policies
 **Triggers:** Changes to flags
 **Runtime:** ~10 min
 
 #### `ci-flags-warn.yml` - Flag Warnings
+
 **Purpose:** Non-blocking warnings for flag best practices
 **Triggers:** Changes to flags
 **Runtime:** ~5 min
@@ -99,6 +108,7 @@ Tests various feature flag combinations to catch configuration issues.
 ### Security & Privacy
 
 #### `ci-security.yml` - Security Scanning
+
 **Purpose:** Security audit of dependencies and code
 **Triggers:** Pull requests, scheduled daily
 **Runtime:** ~5-8 min
@@ -110,6 +120,7 @@ Tests various feature flag combinations to catch configuration issues.
 **Status:** Required for merging PRs
 
 #### `ci-privacy.yml` - Privacy Policy Validation
+
 **Purpose:** Validate privacy annotations and policies
 **Triggers:** Changes to privacy configs
 **Runtime:** ~5 min
@@ -117,6 +128,7 @@ Tests various feature flag combinations to catch configuration issues.
 Ensures PII handling follows privacy policies.
 
 #### `ci-scope-guard.yml` - Scope Isolation Checks
+
 **Purpose:** Verify scope boundaries are maintained
 **Triggers:** Pull requests
 **Runtime:** ~5 min
@@ -124,6 +136,7 @@ Ensures PII handling follows privacy policies.
 ### Governance
 
 #### `ci-governance.yml` - Policy as Code
+
 **Purpose:** Validate governance policies
 **Triggers:** Pull requests, scheduled weekly
 **Runtime:** ~10-15 min
@@ -134,6 +147,7 @@ Ensures PII handling follows privacy policies.
 - Resource limits
 
 #### `ci-policy-verify.yml` - Policy Regression Tests
+
 **Purpose:** Ensure policy changes don't break existing validations
 **Triggers:** Changes to `policy/**`
 **Runtime:** ~10 min
@@ -141,6 +155,7 @@ Ensures PII handling follows privacy policies.
 ### Events & Monitoring
 
 #### `ci-events.yml` - Event Schema Validation
+
 **Purpose:** Validate event schemas and contracts
 **Triggers:** Changes to event definitions
 **Runtime:** ~10 min
@@ -150,6 +165,7 @@ Ensures event-driven architectures maintain schema compatibility.
 ### API & Protocol
 
 #### `ci-openapi.yml` - OpenAPI Validation
+
 **Purpose:** Validate OpenAPI specs and generate docs
 **Triggers:** Changes to API specs
 **Runtime:** ~15 min
@@ -158,6 +174,7 @@ Ensures event-driven architectures maintain schema compatibility.
 - Generated API documentation
 
 #### `ci-proto.yml` - Protobuf Validation
+
 **Purpose:** Validate .proto files and check compatibility
 **Triggers:** Changes to `*.proto` files
 **Runtime:** ~10 min
@@ -167,6 +184,7 @@ Ensures event-driven architectures maintain schema compatibility.
 ### Database
 
 #### `ci-db.yml` - Database Migration Tests
+
 **Purpose:** Test database migrations
 **Triggers:** Changes to migration files
 **Runtime:** ~10 min
@@ -177,6 +195,7 @@ Validates migrations are idempotent and don't lose data.
 ### Infrastructure
 
 #### `ci-nix.yml` - Nix Flake Check
+
 **Purpose:** Validate Nix development environment
 **Triggers:** Changes to `flake.nix`
 **Runtime:** ~5 min
@@ -186,6 +205,7 @@ Ensures the Nix development shell remains functional.
 ### Documentation
 
 #### `ci-docs.yml` - Documentation Build
+
 **Purpose:** Build and validate documentation
 **Triggers:** Changes to docs
 **Runtime:** ~5 min
@@ -195,6 +215,7 @@ Validates Markdown, builds API docs, checks links.
 ### Coverage & Quality
 
 #### `ci-coverage.yml` - Code Coverage
+
 **Purpose:** Generate test coverage reports
 **Triggers:** Push to main
 **Runtime:** ~20-25 min (cold) / ~8-10 min (warm)
@@ -205,6 +226,7 @@ Validates Markdown, builds API docs, checks links.
 ### Maintenance
 
 #### `maintenance-pin-actions.yml` - Pin GitHub Actions
+
 **Purpose:** Track updates to GitHub Actions
 **Triggers:** Scheduled monthly
 **Runtime:** ~2 min
@@ -214,6 +236,7 @@ Monitors for updates to GitHub Actions and creates PRs.
 ### Release
 
 #### `release-sbom-sign.yml` - SBOM & Signing
+
 **Purpose:** Generate SBOM and sign releases
 **Triggers:** Release tags (`v*`)
 **Runtime:** ~10 min
@@ -269,19 +292,23 @@ This ensures:
    - Significantly reduces build times
 
 2. **sccache:** Shared compilation cache
+
    ```yaml
    echo "RUSTC_WRAPPER=$(nix develop -c which sccache)" >> $GITHUB_ENV
    ```
+
    - Caches individual compilation artifacts
    - Works across branches
    - Persists in GitHub Actions cache
 
 3. **Path Filters:** Skip workflows for irrelevant changes
+
    ```yaml
    paths-ignore: ['**/*.md', 'docs/**']
    ```
 
 4. **Minimal Checkout:** Use shallow clones when possible
+
    ```yaml
    fetch-depth: 1  # Or 0 for full history when needed
    ```
@@ -314,7 +341,7 @@ Only specific workflows that need write access request it explicitly (e.g., rele
 
 Configure these in **Settings → Branches → Branch protection rules:**
 
-### For `main` branch:
+### For `main` branch
 
 **Minimum required:**
 - ✅ `selftest` (from selftest.yml)
@@ -331,7 +358,7 @@ Configure these in **Settings → Branches → Branch protection rules:**
 - `proto` (gRPC services)
 - `db` (database changes)
 
-### For feature branches:
+### For feature branches
 
 Same as `main`, but consider:
 - Allowing some checks to be skipped

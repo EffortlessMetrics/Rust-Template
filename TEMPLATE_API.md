@@ -12,6 +12,7 @@ The `xtask` binary is the single entrypoint for all development and CI operation
 Run all code quality checks: formatting, linting, and tests.
 
 **Usage:**
+
 ```bash
 cargo run -p xtask -- check
 # or in Nix shell:
@@ -38,6 +39,7 @@ nix develop -c cargo run -p xtask -- check
 Run BDD acceptance tests and generate JUnit XML output.
 
 **Usage:**
+
 ```bash
 cargo run -p xtask -- bdd
 ```
@@ -60,6 +62,7 @@ cargo run -p xtask -- bdd
 Generate an LLM context bundle for a specific task.
 
 **Usage:**
+
 ```bash
 cargo run -p xtask -- bundle implement_ac
 cargo run -p xtask -- bundle implement_feature
@@ -90,6 +93,7 @@ cargo run -p xtask -- bundle debug_tests
 Generate AC status report from acceptance test results.
 
 **Usage:**
+
 ```bash
 cargo run -p xtask -- ac-status
 # or in Nix shell:
@@ -119,7 +123,7 @@ See `docs/design/ac-coverage-format.md` for coverage.jsonl specification.
 - **Unknown (❓)**: AC has no mapped scenarios or testcases
 
 **Notes:**
-- Normalizes testcase names by removing ` (row N)` and ` (example N)` suffixes
+- Normalizes testcase names by removing `(row N)` and `(example N)` suffixes
 - Reports unmapped ACs (no scenarios) and unmapped scenarios (invalid AC refs)
 - Used by `xtask selftest` and `ci-ac.yml` workflow
 
@@ -130,6 +134,7 @@ See `docs/design/ac-coverage-format.md` for coverage.jsonl specification.
 Test Rego policies with conftest.
 
 **Usage:**
+
 ```bash
 cargo run -p xtask -- policy-test
 ```
@@ -161,7 +166,7 @@ Each policy area has test fixtures in `policy/testdata/`:
 **Prerequisites:**
 Requires `conftest` on PATH. Available in Nix shell or install separately:
 - macOS: `brew install conftest`
-- Linux: See https://www.conftest.dev/install/
+- Linux: See <https://www.conftest.dev/install/>
 - Nix: `nix develop` (automatically available)
 
 **Notes:**
@@ -176,6 +181,7 @@ Requires `conftest` on PATH. Available in Nix shell or install separately:
 Run the complete template self-test suite (used in CI).
 
 **Usage:**
+
 ```bash
 cargo run -p xtask -- selftest
 # or in Nix shell:
@@ -216,6 +222,7 @@ nix develop -c cargo run -p xtask -- selftest
 Quick validation of all template functionality.
 
 **Usage:**
+
 ```bash
 cargo run -p xtask -- quickstart
 ```
@@ -252,6 +259,7 @@ All policies are written in Rego and tested via `conftest`. Each policy expects 
 **Purpose:** Ensure every AC has at least one mapped test.
 
 **Input schema:**
+
 ```json
 {
   "stories": [
@@ -281,6 +289,7 @@ All policies are written in Rego and tested via `conftest`. Each policy expects 
 - Each AC must have at least one test reference
 
 **Usage in CI:**
+
 ```bash
 yq -o=json specs/spec_ledger.yaml | conftest test -p policy/ledger.rego -
 ```
@@ -292,6 +301,7 @@ yq -o=json specs/spec_ledger.yaml | conftest test -p policy/ledger.rego -
 **Purpose:** Ensure features only reference ACs that exist in the ledger.
 
 **Input schema:**
+
 ```json
 {
   "features": [
@@ -308,6 +318,7 @@ yq -o=json specs/spec_ledger.yaml | conftest test -p policy/ledger.rego -
 - Denies if a feature references an AC ID not in `ledger_ac_ids`
 
 **Usage in CI:**
+
 ```bash
 # Extract AC IDs from ledger
 yq -o=json specs/spec_ledger.yaml | \
@@ -330,6 +341,7 @@ jq -s '{features:.[0], ledger_ac_ids:.[1]}' \
 **Purpose:** Validate flag ownership, rollouts, and percentages.
 
 **Input schema:**
+
 ```json
 {
   "flags": [
@@ -354,6 +366,7 @@ jq -s '{features:.[0], ledger_ac_ids:.[1]}' \
 - Denies if rollout references non-existent flag
 
 **Usage in CI:**
+
 ```bash
 yq -o=json flags/registry.yaml > /tmp/flags.json
 yq -o=json flags/rollouts.yaml | jq '{rollouts: .environments}' > /tmp/rollouts.json
@@ -368,6 +381,7 @@ jq -s '.[0] * .[1]' /tmp/flags.json /tmp/rollouts.json | \
 **Purpose:** Ensure PII fields have owners and valid retention periods.
 
 **Input schema:**
+
 ```json
 {
   "fields": [
@@ -392,6 +406,7 @@ jq -s '.[0] * .[1]' /tmp/flags.json /tmp/rollouts.json | \
 - `pii` field is truthy
 
 **Usage in CI:**
+
 ```bash
 yq -o=json specs/privacy.yaml | conftest test -p policy/privacy.rego -
 ```
@@ -407,6 +422,7 @@ yq -o=json specs/privacy.yaml | conftest test -p policy/privacy.rego -
 **Configuration:** `.llm/contextpack.yaml`
 
 **Schema:**
+
 ```yaml
 tasks:
   task_name:
@@ -427,6 +443,7 @@ tasks:
 7. Writes to `.llm/bundle/<task>.md`
 
 **Output format:**
+
 ```markdown
 # LLM Context Bundle
 
@@ -441,6 +458,7 @@ tasks:
 # FILE: path/to/file
 
 ```
+
 <file contents>
 ```
 
@@ -449,6 +467,7 @@ tasks:
 ```
 <file contents>
 ```
+
 ```
 
 **Exit codes:**
@@ -485,6 +504,7 @@ cargo run -p xtask -- bundle <task>
 4. **Whitespace:** Leading/trailing whitespace is trimmed
 
 **Example `.llm/.llmignore`:**
+
 ```
 # Ignore build artifacts
 target/
@@ -530,6 +550,7 @@ Full gitignore semantics via the `ignore` crate. See `docs/design/llmignore-sema
 Legacy bash wrapper for testing Rego policies. Kept for backward compatibility.
 
 **Usage:**
+
 ```bash
 bash scripts/test-policies.sh
 ```
@@ -545,6 +566,7 @@ bash scripts/test-policies.sh
 Runs all test scripts in sequence.
 
 **Usage:**
+
 ```bash
 bash scripts/test-all.sh
 ```

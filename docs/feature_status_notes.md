@@ -176,6 +176,7 @@ Most ACs have good coverage:
 - CI-only scenarios for integration/recursive testing
 
 ### ACs with Multiple Test Types (Examples)
+
 - AC-TPL-CONFIG-VALIDATION: 2 tests (BDD + unit)
 - AC-TPL-GRAPH-MERMAID: 2 tests (BDD + unit)
 - AC-TPL-LOG-NO-SECRETS: 2 tests (BDD + unit)

@@ -688,6 +688,7 @@ Synchronize governed facts from code/specs to documentation.
 ```bash
 cargo xtask contracts-fmt
 ```
+
 ```
 
 ---

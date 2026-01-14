@@ -105,6 +105,7 @@ Each endpoint:
 ### JSON Schemas
 
 **`/platform/graph`:**
+
 ```json
 {
   "nodes": [
@@ -118,6 +119,7 @@ Each endpoint:
 ```
 
 **`/platform/devex/flows`:**
+
 ```json
 {
   "commands": {
@@ -130,6 +132,7 @@ Each endpoint:
 ```
 
 **`/platform/docs/index`:**
+
 ```json
 {
   "schema_version": "1.0",
@@ -164,12 +167,15 @@ Each endpoint:
 ## Alternatives Considered
 
 ### 1. Keep governance CLI-only
+
 **Rejected:** Limits usefulness to developers with repo access. Agents and operators can't introspect running services.
 
 ### 2. Separate runtime endpoints from xtask loaders
+
 **Rejected:** Creates drift risk between CLI and runtime representations.
 
 ### 3. GraphQL instead of REST
+
 **Rejected:** REST + JSON is simpler, widely supported by agents and dashboards. GraphQL adds complexity without clear benefit for this use case.
 
 ## Follow-up Work

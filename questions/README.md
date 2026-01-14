@@ -84,6 +84,7 @@ Questions can be emitted by:
 ## Example Workflows
 
 ### Flow encounters ambiguity
+
 ```bash
 # Flow detects ambiguity and emits question
 cargo xtask bundle implement_ac
@@ -97,6 +98,7 @@ cargo xtask question-resolve Q-BUNDLE-001 --option "Implement AC-001 first"
 ```
 
 ### Agent-driven resolution
+
 ```bash
 # Agent checks platform status
 curl http://localhost:8080/platform/questions | jq '.questions[] | select(.status == "open")'

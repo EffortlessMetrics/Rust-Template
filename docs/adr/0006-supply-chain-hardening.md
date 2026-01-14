@@ -52,6 +52,7 @@ For every tagged release (`v*.*.*`):
 **Workflow**: `.github/workflows/ci-supply-chain.yml`
 
 **Trigger**:
+
 ```yaml
 on:
   push:
@@ -103,6 +104,7 @@ on:
 3. Inspect SBOM, provenance metadata
 
 **GitHub CLI**:
+
 ```bash
 # Download artifact
 gh release download v2.4.0 --pattern 'rust-template-*.tar.gz'
@@ -117,6 +119,7 @@ gh attestation verify rust-template-v2.4.0.tar.gz --owner EffortlessMetrics
 ```
 
 **Manual verification (SLSA verifier)**:
+
 ```bash
 # Install SLSA verifier
 go install github.com/slsa-framework/slsa-verifier/v2/cli/slsa-verifier@latest
@@ -245,6 +248,7 @@ slsa-verifier verify-artifact \
 
 - Block PRs that modify `.github/workflows/ci-supply-chain.yml` without ADR update
 - Policy test (Rego) to validate workflow structure:
+
   ```rego
   # Ensure provenance step exists
   deny[msg] {
@@ -267,6 +271,7 @@ slsa-verifier verify-artifact \
 - **No drift**: CI can't diverge from dev environment over time
 
 **Build command**:
+
 ```bash
 nix develop -c cargo build --workspace --release
 ```
@@ -307,6 +312,7 @@ This uses the Nix devshell (not system Cargo), ensuring:
 - **Relationships**: Which package depends on which
 
 **Example snippet**:
+
 ```json
 {
   "spdxVersion": "SPDX-2.3",
@@ -331,6 +337,7 @@ This uses the Nix devshell (not system Cargo), ensuring:
 ### Provenance Format
 
 **In-toto statement** (SLSA v1.0):
+
 ```json
 {
   "_type": "https://in-toto.io/Statement/v1",
@@ -376,6 +383,7 @@ This uses the Nix devshell (not system Cargo), ensuring:
 ### Permissions Required
 
 **Workflow permissions**:
+
 ```yaml
 permissions:
   contents: read          # Read source code
@@ -395,6 +403,7 @@ permissions:
 **If you're using this template in a production service:**
 
 1. **Add binary attestation**: If you distribute binaries (e.g., via GitHub Releases):
+
    ```yaml
    - name: Attest binary
      uses: actions/attest-build-provenance@v1
@@ -403,6 +412,7 @@ permissions:
    ```
 
 2. **Add Docker image attestation**: If you build Docker images:
+
    ```yaml
    - name: Build image
      run: docker build -t my-service:$TAG .
@@ -415,12 +425,14 @@ permissions:
    ```
 
 3. **Require verification in CI**: Block deployment unless artifacts verify:
+
    ```yaml
    - name: Verify artifact
      run: gh attestation verify my-service --owner my-org
    ```
 
 4. **Integrate with policy engine**: Use Rego to enforce provenance checks:
+
    ```rego
    # Only allow artifacts with valid provenance
    deny[msg] {

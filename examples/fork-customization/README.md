@@ -203,6 +203,7 @@ Once you implement your first domain AC and tests, run `cargo xtask selftest` to
 ## Example Workflow
 
 1. **Fork the template:**
+
    ```bash
    gh repo create product-catalog --template your-org/Rust-Template
    cd product-catalog
@@ -219,6 +220,7 @@ Once you implement your first domain AC and tests, run `cargo xtask selftest` to
    - Edit `specs/tasks.yaml` to plan your first implementation
 
 5. **Validate baseline:**
+
    ```bash
    cargo xtask selftest
    ```
@@ -229,6 +231,7 @@ Once you implement your first domain AC and tests, run `cargo xtask selftest` to
    - Add tests to make the BDD scenarios pass
 
 7. **Verify completion:**
+
    ```bash
    cargo xtask test-ac AC-PROD-001
    cargo xtask selftest

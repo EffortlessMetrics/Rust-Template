@@ -20,6 +20,7 @@ This document describes the Cargo feature flags available in the Rust-as-Spec te
 | `integration-grpc` | Enable gRPC integration tests | ✗ | ✓ (manual, not in CI) |
 
 **Usage:**
+
 ```bash
 # Run with gRPC integration tests
 cargo test -p adapters-grpc --features integration-grpc
@@ -39,6 +40,7 @@ cargo test -p adapters-grpc --features integration-grpc
 | `integration-db` | Enable database integration tests | ✗ | ✓ (manual, not in CI) |
 
 **Usage:**
+
 ```bash
 # Run with database integration tests
 cargo test -p adapters-db-sqlx --features integration-db
@@ -65,6 +67,7 @@ cargo test -p adapters-db-sqlx --features integration-db
 - `tracing-opentelemetry`
 
 **Usage:**
+
 ```bash
 # Build with OTLP support
 cargo build -p telemetry --features otlp
@@ -149,7 +152,23 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: cachix/install-nix-action@v27
-      # TODO: Start gRPC test service
+      # Start gRPC test service
+      # NOTE: This step requires a mock gRPC service implementation.
+      # The adapters-grpc crate's integration tests expect a running gRPC server.
+      # To implement this, you would need to:
+      # 1. Create a mock gRPC server (e.g., using tonic-mock or a test harness)
+      # 2. Package it as a Docker image or run it as a background process
+      # 3. Configure the test environment to connect to this service
+      # Example implementation:
+      # - name: Start mock gRPC service
+      #   run: |
+      #     docker run -d --name grpc-test-server \
+      #       -p 50051:50051 \
+      #       ghcr.io/your-org/grpc-test-server:latest
+      #     sleep 5  # Wait for service to be ready
+      # - run: nix develop -c cargo test -p adapters-grpc --features integration-grpc
+      #     env:
+      #       GRPC_TEST_ENDPOINT: localhost:50051
       - run: nix develop -c cargo test -p adapters-grpc --features integration-grpc
 
   integration-db:

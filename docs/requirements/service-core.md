@@ -30,24 +30,28 @@ These are template-provided "batteries included" features that downstream servic
 ## 2. Requirements
 
 ### REQ-TPL-HEALTH: Health Check Endpoint
+
 - **Priority**: High
 - **Description**: Service MUST expose `GET /health` returning 200 OK when healthy
 - **Rationale**: Load balancers and orchestrators need a standard health check endpoint
 - **Acceptance Criteria**: AC-TPL-001
 
 ### REQ-TPL-VERSION: Version Information Endpoint
+
 - **Priority**: High
 - **Description**: Service MUST expose `GET /version` with build info (version, git SHA)
 - **Rationale**: Operations teams need clear version identification for deployments
 - **Acceptance Criteria**: AC-TPL-002
 
 ### REQ-TPL-ERROR-HANDLING: Error Response Envelope
+
 - **Priority**: High
 - **Description**: All HTTP errors MUST return consistent JSON envelope with error code, message, request ID
 - **Rationale**: Clients need predictable error format for debugging and logging
 - **Acceptance Criteria**: AC-TPL-003, AC-TPL-004
 
 ### REQ-TPL-METRICS: Prometheus Metrics Endpoint
+
 - **Priority**: High
 - **Description**: Service MUST expose `/metrics` in Prometheus format with at least `http_requests_total`
 - **Rationale**: Observability is non-negotiable for production services

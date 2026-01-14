@@ -72,6 +72,7 @@ cargo xtask release-prepare 2.5.0
 - Validates version format (SemVer)
 
 **Output:**
+
 ```
 ✅ Updated version to 2.5.0 in 12 files
 ✅ Updated CHANGELOG.md
@@ -110,6 +111,7 @@ cargo xtask sbom-local
 - Used in security audits
 
 **Verify SBOM:**
+
 ```bash
 # Check it was created
 ls -lh sbom.spdx.json
@@ -149,6 +151,7 @@ git tag -a v2.5.0 -m "Release 2.5.0: Agent-Ready Platform Cell"
 ```
 
 **Verify tag:**
+
 ```bash
 git tag -n1 | grep v2.5.0
 ```
@@ -201,7 +204,7 @@ Release is successful when:
 
 ## Error Handling
 
-### If release-prepare fails:
+### If release-prepare fails
 
 ```bash
 # Common issues:
@@ -216,7 +219,7 @@ git status
 git tag | grep v
 ```
 
-### If release-verify fails:
+### If release-verify fails
 
 ```bash
 # Get detailed output
@@ -234,13 +237,14 @@ cargo xtask release-verify -v
 ```
 
 **Fix and re-run:**
+
 ```bash
 # After fixes
 cargo xtask release-verify
 # ✅ All checks pass - proceed
 ```
 
-### If SBOM generation fails:
+### If SBOM generation fails
 
 ```bash
 # Common issues:
@@ -254,7 +258,7 @@ cargo install cargo-sbom
 cargo xtask sbom-local
 ```
 
-### If CI fails after tagging:
+### If CI fails after tagging
 
 **This is serious - release is partially published.**
 
@@ -381,8 +385,8 @@ Release successful when:
 
 - **Flow definition:** `specs/devex_flows.yaml` (release flow)
 - **Release commands:** `docs/reference/xtask-commands.md` (release-prepare, release-verify)
-- **SBOM format:** https://spdx.dev/
-- **SemVer:** https://semver.org/
+- **SBOM format:** <https://spdx.dev/>
+- **SemVer:** <https://semver.org/>
 - **Supply chain hardening:** ADR-0006
 
 ## Notes

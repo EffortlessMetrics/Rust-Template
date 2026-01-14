@@ -28,6 +28,7 @@ This playbook documents the systematic approach for shipping governed releases. 
 **Steps:**
 
 1. **Create Release Plan Document**
+
    ```bash
    # Create plan from template
    cp docs/templates/RELEASE_PLAN.md docs/vX.Y.Z-plan.md
@@ -49,6 +50,7 @@ This playbook documents the systematic approach for shipping governed releases. 
    - Update as new decisions emerge during implementation
 
 **Example** (from v2.3.0):
+
 ```markdown
 ## Scope
 **Theme**: OTLP Tracing + Telemetry Production Readiness
@@ -91,6 +93,7 @@ This playbook documents the systematic approach for shipping governed releases. 
    - Flag high-risk/complex items early
 
 **Example** (from v2.3.0):
+
 ```
 1. Research OpenTelemetry 0.31.x API patterns
 2. Implement try_init_otlp() in telemetry crate
@@ -110,6 +113,7 @@ This playbook documents the systematic approach for shipping governed releases. 
 **Steps:**
 
 1. **Create Feature Branch** (optional for solo work)
+
    ```bash
    git checkout -b feat/vX.Y.Z-epic-name
    ```
@@ -129,6 +133,7 @@ This playbook documents the systematic approach for shipping governed releases. 
    - Add new tasks if discovered during implementation
 
 **Example Code Pattern** (feature-gated):
+
 ```rust
 #[cfg(feature = "otlp")]
 fn try_init_otlp(service_name: &str, endpoint: &str) -> Result<(), Box<dyn Error>> {
@@ -160,27 +165,35 @@ pub fn init_tracing(service_name: &str) {
 **All gates must pass before release.**
 
 #### Gate 1: Format Check
+
 ```bash
 cargo fmt --all -- --check
 ```
+
 **Fix**: `cargo fmt --all`
 
 #### Gate 2: Clippy (Linter)
+
 ```bash
 cargo clippy --all-targets --all-features -- -D warnings
 ```
+
 **Fix**: Address clippy warnings (prefer fixing over `#[allow(...)]`)
 
 #### Gate 3: Unit Tests
+
 ```bash
 cargo test --workspace
 ```
+
 **Fix**: Debug failing tests, add missing test cases
 
 #### Gate 4: Selftest (Comprehensive)
+
 ```bash
 cargo run -p xtask -- selftest
 ```
+
 **Includes**:
 - Format, clippy, tests (as above)
 - BDD scenarios (`cargo run -p xtask -- bdd`)
@@ -191,6 +204,7 @@ cargo run -p xtask -- selftest
 **Fix**: Address any failures systematically
 
 #### Gate 5: Feature Flag Matrix (if applicable)
+
 ```bash
 # Default build (no features)
 cargo build -p <crate>
@@ -203,6 +217,7 @@ cargo build --all-features
 ```
 
 **Example** (from v2.3.0):
+
 ```bash
 cargo build -p telemetry                    # Console-only
 cargo build -p telemetry --features otlp    # With OTLP
@@ -238,6 +253,7 @@ cargo build -p telemetry --features otlp    # With OTLP
      - **Validation**: What tests passed
 
 **CHANGELOG Template**:
+
 ```markdown
 ## [X.Y.Z] - YYYY-MM-DD
 
@@ -293,18 +309,21 @@ cargo build -p telemetry --features otlp    # With OTLP
 **Steps:**
 
 1. **Final Git Status Check**
+
    ```bash
    git status
    # Should be clean or only show intended changes
    ```
 
 2. **Stage All Changes**
+
    ```bash
    git add <files>
    git status  # Verify staged files
    ```
 
 3. **Create Commit**
+
    ```bash
    git commit -m "$(cat <<'EOF'
    feat(<scope>): <brief summary>
@@ -324,6 +343,7 @@ cargo build -p telemetry --features otlp    # With OTLP
    ```
 
 4. **Create Annotated Tag**
+
    ```bash
    git tag -a vX.Y.Z -m "$(cat <<'EOF'
    Project Name vX.Y.Z: <Release Theme>
@@ -336,17 +356,20 @@ cargo build -p telemetry --features otlp    # With OTLP
    ```
 
 5. **Verify Tag**
+
    ```bash
    git tag -l | tail -5  # Should show new tag
    git show vX.Y.Z       # Should show tag message + commit
    ```
 
 6. **Push to Origin**
+
    ```bash
    git push origin main --tags
    ```
 
 **Example** (from v2.3.0):
+
 ```bash
 git commit -m "feat(telemetry): add OTLP tracing support via feature flag
 
@@ -400,6 +423,7 @@ git push origin main --tags
    - Update this playbook if process improved
 
 **Example Post-Release Actions**:
+
 ```markdown
 ## v2.3.0 Retrospective
 
@@ -489,17 +513,20 @@ This playbook enforces:
 This playbook is designed for the Rust IaC Template but adapts to:
 
 ### Smaller Projects
+
 - **Simplify**: Skip plan docs for trivial releases
 - **Keep**: Validation gates (fmt, clippy, test, CHANGELOG)
 - **Keep**: Git tagging for traceability
 
 ### Larger Teams
+
 - **Add**: PR reviews before merge
 - **Add**: Release manager role
 - **Add**: Staging environment validation
 - **Keep**: All validation gates
 
 ### Non-Rust Projects
+
 - **Replace**: `cargo` commands with language-specific tooling (e.g., `pytest`, `npm test`)
 - **Keep**: Phase structure (Plan → Code → Validate → Document → Tag)
 - **Keep**: CHANGELOG discipline

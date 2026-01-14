@@ -42,6 +42,7 @@ The resources in this directory depend on:
 - Your cluster doesn't have metrics-server
 
 **Example**:
+
 ```yaml
 # Basic CPU-based scaling
 apiVersion: autoscaling/v2
@@ -83,6 +84,7 @@ spec:
 - You haven't mapped service dependencies yet (you'll break things)
 
 **Example**:
+
 ```yaml
 # Deny-all baseline + allow specific traffic
 apiVersion: networking.k8s.io/v1
@@ -136,6 +138,7 @@ spec:
 - Your cluster doesn't have an Ingress controller
 
 **Example**:
+
 ```yaml
 # Basic HTTPS Ingress with cert-manager
 apiVersion: networking.k8s.io/v1
@@ -182,6 +185,7 @@ spec:
 - You're in dev/staging (no availability requirements)
 
 **Example**:
+
 ```yaml
 # Keep at least 2 pods running during disruptions
 apiVersion: policy/v1
@@ -206,6 +210,7 @@ spec:
 Each optional module has different requirements:
 
 **For HPA**:
+
 ```bash
 # Check if metrics-server is installed
 kubectl get deployment metrics-server -n kube-system
@@ -215,6 +220,7 @@ kubectl top pods -n default
 ```
 
 **For NetworkPolicy**:
+
 ```bash
 # Check if your CNI supports NetworkPolicy
 kubectl get pods -n kube-system | grep -E 'calico|cilium|weave'
@@ -224,6 +230,7 @@ kubectl get pods -n kube-system | grep -E 'calico|cilium|weave'
 ```
 
 **For Ingress**:
+
 ```bash
 # Check if Ingress controller is installed
 kubectl get ingressclass
@@ -233,6 +240,7 @@ kubectl get pods -n ingress-nginx  # Or your controller's namespace
 ```
 
 **For PDB**:
+
 ```bash
 # No prerequisites - works on any cluster
 # But verify you have 2+ replicas

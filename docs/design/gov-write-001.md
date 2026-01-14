@@ -25,6 +25,7 @@ Provide a write-layer API that persists task status changes to machine-managed s
 ## Implementation Approach
 
 **Storage**: Create `state/tasks.json` for machine-managed task status:
+
 ```json
 {
   "TASK-001": {"status": "InProgress", "updated_at": "2025-11-22T10:00:00Z"},

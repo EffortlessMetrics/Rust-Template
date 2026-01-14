@@ -8,14 +8,14 @@ settings:
 secrets:
   # Database connection string - replace with actual credentials in production
   db.url: "postgres://CHANGE_ME:CHANGE_ME@localhost:5432/app"
-  
+
   # JWT signing key - replace with strong random secret in production
   # Generate with: openssl rand -base64 32
   auth.jwt_signing_key: "CHANGE_ME_GENERATE_STRONG_SECRET"
-  
+
   # Platform authentication token - replace with strong random token in production
   platform.auth_token: "CHANGE_ME_GENERATE_STRONG_TOKEN"
-  
+
   # JWT secret for platform auth - replace with strong random secret in production
   # Generate with: openssl rand -base64 32
   platform.jwt_secret: "CHANGE_ME_GENERATE_STRONG_JWT_SECRET"

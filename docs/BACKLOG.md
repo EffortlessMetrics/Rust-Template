@@ -16,12 +16,14 @@
 ## Bundle System Enhancements
 
 ### New Bundle Types
+
 - `troubleshoot_ac` – Focus on a failing AC, include related tests/specs/docs
 - `implement_task` – Gather task dependencies, related ACs, and implementation hints
 - `explain_decision` – Reconstruct reasoning behind an AC or design choice from ADRs and commits
 - `measure_coverage` – Show test/doc gaps for a given AC or REQ
 
 ### Bundle Quality Features
+
 - Bundle caching and incremental updates (only regenerate changed files)
 - Priority-based file inclusion (exclude low-signal artifacts if bundle exceeds size limits)
 - AC coverage signals in bundles (explicit "tests this AC", "documents this AC" flags)
@@ -31,6 +33,7 @@
 ## Graph and Visualization
 
 ### Advanced Graph Rendering
+
 - Mermaid graph with filtering (by REQ, AC status, owner, label)
 - Interactive graph explorer in `/ui` (click nodes to expand/collapse)
 - Dependency visualization for tasks (task → related ACs → tests → docs)
@@ -41,6 +44,7 @@
 ## Release Evidence and Notes
 
 ### Automated Release Artifacts
+
 - Changelog generation from evidence bundles (group changes by category)
 - Automatic Keep a Changelog formatting (ADDED, CHANGED, DEPRECATED, REMOVED, FIXED, SECURITY)
 - Release delta reports (diffs between version bundles, what changed and why)
@@ -51,6 +55,7 @@
 ## Agent Hints and Suggestions
 
 ### Intelligence for Task Selection
+
 - Effort estimates for tasks (based on AC complexity, test count, breadth of changes)
 - Dependency-aware prioritization (suggest blocking tasks first)
 - Context-aware bundle recommendations (suggest bundle type based on task type)
@@ -61,6 +66,7 @@
 ## DevEx Tooling
 
 ### Interactive Developer Experience
+
 - `cargo xtask repl` – REPL for exploring spec_ledger, running queries (e.g., "show ACs for REQ-X")
 - `cargo xtask watch` – Auto-run tests when spec changes, show live feedback
 - IDE integrations (LSP for spec_ledger.yaml with completions, linting, validation)
@@ -71,6 +77,7 @@
 ## Testing and Validation
 
 ### Advanced Test Insights
+
 - Mutation testing for AC coverage (ensure tests would fail if AC code mutates)
 - Property-based testing scaffolds (generate test data from AC assertions)
 - Test gap analysis (identify ACs with low test diversity or missing edge cases)
@@ -81,6 +88,7 @@
 ## Documentation
 
 ### Automated and Intelligent Docs
+
 - Auto-generated API docs from spec_ledger (keep docs fresh with spec changes)
 - ADR dependency graphs (show how design decisions relate and evolve)
 - "Why does this exist?" explanations for each AC (rationale, history, alternatives)

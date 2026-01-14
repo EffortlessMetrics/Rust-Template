@@ -125,6 +125,7 @@ Next steps:
 ### Common Issues
 
 **Platform not running:**
+
 ```bash
 # Start the platform first
 cargo run -p app-http &
@@ -134,6 +135,7 @@ cargo xtask dev-up
 ```
 
 **Missing dependencies:**
+
 ```bash
 # Enter Nix shell (recommended)
 nix develop
@@ -273,18 +275,21 @@ Running tests...
 ### Common Issues
 
 **Format check fails:**
+
 ```bash
 # Fix by running
 cargo fmt --all
 ```
 
 **Clippy warnings:**
+
 ```bash
 # See specific warnings
 cargo clippy --all-targets --all-features
 ```
 
 **Tests fail:**
+
 ```bash
 # Run tests with output
 cargo test --workspace --exclude acceptance -- --nocapture
@@ -519,6 +524,7 @@ Generating status: docs/feature_status.md
 ```
 
 **Legacy fallback output** (if JSON not available):
+
 ```
 Parsing ledger: specs/spec_ledger.yaml
   Found 3 ACs
@@ -553,7 +559,7 @@ Falling back to JUnit + feature parsing (legacy)
 
 ### Notes
 
-- Normalizes testcase names by removing ` (row N)` and ` (example N)` suffixes
+- Normalizes testcase names by removing `(row N)` and `(example N)` suffixes
 - Reports unmapped ACs (no scenarios) and unmapped scenarios (invalid AC refs)
 - Used by `xtask selftest` and CI workflows
 
@@ -1068,6 +1074,7 @@ cargo run -p xtask -- ac-slo --dir ./artifacts/ac-status --format json
 ### Example Output (Text)
 
 **SLO Passed:**
+
 ```
 [SLO OK] AC SLO OK: coverage 95.0% (>=80%), 0 kernel blockers (<=0)
 
@@ -1078,6 +1085,7 @@ cargo run -p xtask -- ac-slo --dir ./artifacts/ac-status --format json
 ```
 
 **SLO Violated:**
+
 ```
 [SLO VIOLATED] AC SLO VIOLATED: coverage 53.3% (<80%), 2 kernel blockers (>0): AC-KERN-002, AC-KERN-003
 
@@ -1409,7 +1417,7 @@ Requires `conftest` to be available on PATH:
 **Install options:**
 - **Nix:** `nix develop` (recommended - automatically available)
 - **macOS:** `brew install conftest`
-- **Linux:** See https://www.conftest.dev/install/
+- **Linux:** See <https://www.conftest.dev/install/>
 - **Container:** `docker run --rm openpolicyagent/conftest`
 
 ### Common Issues
@@ -1634,12 +1642,14 @@ The generated markdown file includes:
 **Status:** ✅ PASSED
 
 ```
+
 [7/7] Validating graph invariants...
   ✓ Graph invariants validated
 
 ======================================
-✓ All 7 steps passed!
+✓ All 7 steps passed
 ======================================
+
 ```
 
 ### Policy Status
@@ -1653,7 +1663,9 @@ The generated markdown file includes:
 **Total resolved entries:** 2
 
 ### FE-001: Port confusion between 8080 and 3000
+
 ...
+
 ```
 
 ### Integration with Release Workflow
@@ -2708,12 +2720,14 @@ Clean builds now take 3+ minutes instead of ~90 seconds after updating dependenc
 ### Common Issues
 
 **GitHub CLI not installed:**
+
 ```
 GitHub CLI (gh) not found. Install it from: https://cli.github.com/
 Then run: gh auth login
 ```
 
 **Not authenticated:**
+
 ```
 GitHub CLI not authenticated.
 Run: gh auth login

@@ -8,8 +8,7 @@ echo
 # Function to check if a dependency is dev-only
 is_dev_only() {
     local crate="$1"
-    local workspace_toml="Cargo.toml"
-    
+
     # Check if the crate appears only in [dev-dependencies] across workspace
     if grep -r "^\s*$crate\s*=" crates/*/Cargo.toml | grep -v "dev-dependencies" >/dev/null 2>&1; then
         echo "false"

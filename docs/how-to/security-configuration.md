@@ -172,6 +172,7 @@ export STRICT_TRANSPORT_SECURITY="max-age=31536000; includeSubDomains"
 1. **UI Embedding:** Default `X-Frame-Options: DENY` blocks iframes. Use `SAMEORIGIN` or remove if embedding is needed.
 
 2. **CSP + CDN:** If using external CDNs, add them to CSP:
+
    ```bash
    export CSP_HEADER="default-src 'self'; script-src 'self' https://cdn.example.com"
    ```

@@ -57,6 +57,7 @@ cargo xtask kernel-smoke     # Quick smoke test (~2 min)
 - Create
 
 **Or via CLI:**
+
 ```bash
 gh repo create <your-service-name> --template EffortlessMetrics/Rust-Template --private
 ```
@@ -154,7 +155,7 @@ From this moment on, your fork has:
 ✅ **Governance as code** – specs, BDD, AC traceability, policy tests
 ✅ **Enforcement gate** – CI blocks merges unless selftest passes
 ✅ **Introspection APIs** – `/platform/status`, `/platform/graph`, etc.
-✅ **Web dashboard** – http://localhost:8080/ui shows governance state
+✅ **Web dashboard** – <http://localhost:8080/ui> shows governance state
 ✅ **LLM context** – `cargo xtask bundle` for AI-native development
 ✅ **Validated baseline** – All 8 governance checks certified
 
@@ -162,13 +163,13 @@ From this moment on, your fork has:
 
 ## What's Next?
 
-### For the team:
+### For the team
 
 1. **Onboarding:** Share [QUICKSTART.md](../QUICKSTART.md) with developers
 2. **First feature:** Follow [`docs/how-to/add-acceptance-criterion.md`](./add-acceptance-criterion.md)
 3. **Reference:** Bookmark [`docs/AGENT_GUIDE.md`](../AGENT_GUIDE.md) for workflows
 
-### For you:
+### For you
 
 1. **Architecture review:** Read [`docs/explanation/template-architecture.md`](../explanation/template-architecture.md)
 2. **Governance deep-dive:** Read [`docs/CONSTITUTION.md`](../CONSTITUTION.md)

@@ -1,57 +1,53 @@
-[package]
-name = "app-http"
-version = "0.1.0"
-edition.workspace = true
-rust-version.workspace = true
-publish.workspace = true
-
 [dependencies]
+adapters-db-sqlx = {path = "../adapters-db-sqlx"}
+adapters-spec-fs = {path = "../adapters-spec-fs"}
+# Internal crates
+business-core = {path = "../business-core"}
+gov-http = {path = "../gov-http"}
+gov-model = {path = "../gov-model"}
+# JWT authentication
+jsonwebtoken = {features = ["rust_crypto"], version = "10.2.0"}
+# HTML templates
+maud = "0.27.0"
+model = {path = "../model"}
+once_cell = "1.21.3"
+serde_urlencoded = "0.7.1"
+spec-runtime = {path = "../spec-runtime"}
+telemetry = {path = "../telemetry"}
+tokio = {features = ["net", "signal"], workspace = true}
+tower-http = {features = ["metrics", "trace"], version = "0.6.8"}
+uuid = {features = ["v4"], workspace = true}
 # Workspace dependencies
 anyhow.workspace = true
+# Web framework
+axum.workspace = true
+chrono.workspace = true
+# HTTP body utilities
+http-body-util.workspace = true
+# Metrics
+prometheus.workspace = true
 serde.workspace = true
+# JSON and UUID
+serde_json.workspace = true
+serde_yaml.workspace = true
+tower.workspace = true
 tracing.workspace = true
 tracing-subscriber.workspace = true
 
-# Internal crates
-business-core = { path = "../business-core" }
-model = { path = "../model" }
-telemetry = { path = "../telemetry" }
-spec-runtime = { path = "../spec-runtime" }
-adapters-spec-fs = { path = "../adapters-spec-fs" }
-adapters-db-sqlx = { path = "../adapters-db-sqlx" }
-gov-http = { path = "../gov-http" }
-gov-model = { path = "../gov-model" }
-
-# Web framework
-axum.workspace = true
-tokio = { workspace = true, features = ["net", "signal"] }
-tower.workspace = true
-tower-http = { version = "0.6.8", features = ["metrics", "trace"] }
-
-# JSON and UUID
-serde_json.workspace = true
-serde_urlencoded = "0.7.1"
-serde_yaml.workspace = true
-uuid = { workspace = true, features = ["v4"] }
-chrono.workspace = true
-
-# Metrics
-prometheus.workspace = true
-once_cell = "1.21.3"
-
-# HTML templates
-maud = "0.27.0"
-
-# HTTP body utilities
-http-body-util.workspace = true
-
-# JWT authentication
-jsonwebtoken = { version = "10.2.0", features = ["rust_crypto"] }
-
 [dev-dependencies]
-tokio.workspace = true
-tower.workspace = true
-tempfile.workspace = true
 scraper = "0.25.0"
 serial_test = "3.3.1"
-testing = { path = "../testing" }
+testing = {path = "../testing"}
+tempfile.workspace = true
+tokio.workspace = true
+tower.workspace = true
+
+[package]
+categories = ["api-bindings", "web-programming", "web-programming::http-server"]
+description = "HTTP router and API handlers for application endpoints including todos, questions, and forks"
+keywords = ["api", "axum", "http", "router", "web"]
+name = "app-http"
+version = "0.1.0"
+edition.workspace = true
+publish.workspace = true
+rust-version.workspace = true

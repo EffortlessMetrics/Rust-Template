@@ -875,4 +875,3 @@ Feature: Developer Experience Commands
     When I run "cargo xtask docs-check"
     Then the output should contain "Service policies"
     And service policy issues should reference service_metadata.yaml
-

@@ -25,24 +25,28 @@ Version 1.1.0 builds on the v1.0.0 foundation by adding **self-protecting contra
 The template now enforces its own stability through machine-readable contracts:
 
 #### 1.1 Error Envelope Specification
+
 - ✅ **Formalized error contract** in OpenAPI with `ErrorResponse` schema
 - ✅ **New ACs**: `AC-TPL-003` (error envelope) and `AC-TPL-004` (request ID propagation)
 - ✅ **5 new BDD scenarios** testing error responses and request ID behavior
 - 📖 Impact: Error handling is now part of the formal contract, not just implementation
 
 #### 1.2 Template-Core Protection
+
 - ✅ **Enhanced Rego policies** validate test presence and AC completeness
 - ✅ **Policy enforcement** prevents accidental removal of core ACs (`AC-TPL-001`, `AC-TPL-002`)
 - ✅ **5 test fixtures** covering valid/invalid configurations
 - 📖 Impact: Foundational features protected against silent degradation
 
 #### 1.3 Meta-Contract Specifications
+
 - ✅ **`specs/xtask_commands.yaml`** - Machine-readable spec of all 7 xtask commands
 - ✅ **`specs/ac_report.schema.json`** - JSON Schema for AC report format
 - ✅ **Automated validation** ensures `Commands` enum matches specification
 - 📖 Impact: Control plane interface under contract, preventing breaking changes
 
 #### 1.4 LLM Bundler Protection
+
 - ✅ **`policy/llm.rego`** validates contextpack.yaml structure
 - ✅ **6 test fixtures** covering validation rules
 - ✅ **Integration** with `xtask policy-test` including YAML→JSON conversion
@@ -55,6 +59,7 @@ The template now enforces its own stability through machine-readable contracts:
 Production-ready Kubernetes deployment with security-first defaults:
 
 #### 2.1 Kubernetes Manifests
+
 - ✅ **Security-hardened Deployment** (`infra/k8s/dev/deployment.yaml`)
   - Non-root user execution (`runAsNonRoot: true`)
   - Dropped capabilities (`drop: ["ALL"]`)
@@ -64,11 +69,13 @@ Production-ready Kubernetes deployment with security-first defaults:
 - ✅ **ClusterIP Service** (`infra/k8s/dev/service.yaml`)
 
 #### 2.2 Kubernetes Policies
+
 - ✅ **`policy/k8s.rego`** - OPA policies for security, labels, resources
 - ✅ **3 test fixtures** (valid, security violations, missing labels)
 - ✅ **Integration** with `xtask policy-test`
 
 #### 2.3 Deploy Command
+
 - ✅ **`cargo xtask deploy`** - Full deployment orchestration
 - ✅ **Environment support** (dev/staging/prod) with validation
 - ✅ **Prerequisite checking** (Docker, kubectl, namespace)
@@ -82,16 +89,19 @@ Production-ready Kubernetes deployment with security-first defaults:
 Enhanced tooling and multi-platform support:
 
 #### 3.1 Multi-Platform Nix Support
+
 - ✅ **4 platforms**: x86_64-linux, aarch64-linux, x86_64-darwin, aarch64-darwin
 - ✅ **rust-analyzer** added to devShell for better IDE integration
 - ✅ **Updated dependencies** via `nix flake update`
 
 #### 3.2 Verbosity Controls
+
 - ✅ **Global flags**: `--verbose` and `--quiet` on all xtask commands
 - ✅ **Implementation** in `ac-status` and `selftest`
 - ✅ **Better CI integration** and debugging capabilities
 
 #### 3.3 Performance Optimizations
+
 - ✅ **Elapsed time tracking** in selftest (shown with `--verbose`)
 - ✅ **Regex optimization**: 6 frequently-used patterns converted to `Lazy`
 - ✅ **10-20% speedup** in AC status generation for large projects
@@ -130,11 +140,13 @@ Enhanced tooling and multi-platform support:
 ## 📚 Documentation Updates
 
 ### New Guides
+
 - 📗 **[Deploy to Development](docs/how-to/deploy-dev.md)** - Complete deployment workflow
 - 📐 **[Meta-Contract Design](docs/meta_contract_phase1.3.md)** - Implementation details
 - 📋 **[Policy Organization](policy/README.md)** - Policy structure and testing
 
 ### Updated Guides
+
 - **[CHANGELOG.md](CHANGELOG.md)** - Detailed v1.1.0 changelog
 - **[docs/README.md](docs/README.md)** - Updated index with new documentation
 
@@ -206,11 +218,13 @@ cargo xtask check --quiet
 ## 🐛 Known Issues
 
 ### Expected AC Failures
+
 - `AC-TPL-003` and `AC-TPL-004` **will fail** until ErrorResponse implementation
 - These are **expected** and documented for v1.2.0 implementation
 - Reason: Contract and tests added in v1.1.0, implementation deferred to v1.2.0
 
 ### Nix Environment
+
 - sccache may hit resource limits under heavy parallel builds
 - Workaround: Run outside Nix if encountering `EAGAIN` errors
 - No impact on functionality, only build cache performance

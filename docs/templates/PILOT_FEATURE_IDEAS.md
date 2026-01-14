@@ -27,10 +27,12 @@ A simple CRUD API for managing tasks. Good for first-time pilot projects.
 ### Simple Features
 
 #### 1. Create Task
+
 **AC**: `AC-TSK-001`
 **Story**: As a user, I can create a new task with a title and description.
 
 **BDD Scenario**:
+
 ```gherkin
 Feature: Task Management
   Scenario: User creates a task
@@ -61,10 +63,12 @@ Feature: Task Management
 ---
 
 #### 2. List All Tasks
+
 **AC**: `AC-TSK-002`
 **Story**: As a user, I can list all tasks.
 
 **BDD Scenario**:
+
 ```gherkin
   Scenario: User lists all tasks
     Given the following tasks exist:
@@ -90,10 +94,12 @@ Feature: Task Management
 ### Medium Features
 
 #### 3. Update Task Status
+
 **AC**: `AC-TSK-003`
 **Story**: As a user, I can update a task's status to "in_progress" or "completed".
 
 **BDD Scenario**:
+
 ```gherkin
   Scenario: User completes a task
     Given a task "Buy groceries" exists with status "pending"
@@ -119,10 +125,12 @@ Feature: Task Management
 ---
 
 #### 4. Search Tasks by Status
+
 **AC**: `AC-TSK-004`
 **Story**: As a user, I can filter tasks by status.
 
 **BDD Scenario**:
+
 ```gherkin
   Scenario: User filters tasks by status
     Given the following tasks exist:
@@ -150,6 +158,7 @@ Feature: Task Management
 ### Complex Features
 
 #### 5. Task Metrics with Tracing
+
 **AC**: `AC-TSK-005`
 **Story**: As an operator, I can see task completion metrics with distributed tracing.
 
@@ -159,6 +168,7 @@ Feature: Task Management
 - Export via OTLP (if `telemetry/otlp` feature enabled)
 
 **BDD Scenario**:
+
 ```gherkin
   Scenario: Task completion emits metrics
     When I complete a task
@@ -180,10 +190,12 @@ Feature: Task Management
 ---
 
 #### 6. Task Dependencies
+
 **AC**: `AC-TSK-006`
 **Story**: As a user, I can mark that Task A must complete before Task B can start.
 
 **BDD Scenario**:
+
 ```gherkin
   Scenario: User creates dependent task
     Given task "Setup environment" exists
@@ -223,6 +235,7 @@ For pilots that need more complex business logic and state machines.
 ### Simple Features
 
 #### 1. Create Order
+
 **AC**: `AC-ORD-001`
 **Story**: As a customer, I can create an order with line items.
 
@@ -234,6 +247,7 @@ For pilots that need more complex business logic and state machines.
 ---
 
 #### 2. Calculate Order Total
+
 **AC**: `AC-ORD-002`
 **Story**: As a customer, I can see the total price of my order.
 
@@ -247,6 +261,7 @@ For pilots that need more complex business logic and state machines.
 ### Medium Features
 
 #### 3. Apply Discount Code
+
 **AC**: `AC-ORD-003`
 **Story**: As a customer, I can apply a discount code to my order.
 
@@ -262,6 +277,7 @@ For pilots that need more complex business logic and state machines.
 ---
 
 #### 4. Transition Order Status
+
 **AC**: `AC-ORD-004`
 **Story**: As a system, orders transition through states: pending → paid → shipped → delivered.
 
@@ -275,6 +291,7 @@ For pilots that need more complex business logic and state machines.
 ### Complex Features
 
 #### 5. Order Fulfillment with Tracing
+
 **AC**: `AC-ORD-005`
 **Story**: As an operator, I can trace order fulfillment across services.
 
@@ -286,6 +303,7 @@ For pilots that need more complex business logic and state machines.
 ---
 
 #### 6. Idempotent Payment Processing
+
 **AC**: `AC-ORD-006`
 **Story**: As a system, duplicate payment requests for the same order are idempotent.
 
@@ -309,6 +327,7 @@ For pilots testing security, secrets management, and policy enforcement.
 ### Simple Features
 
 #### 1. Register User
+
 **AC**: `AC-AUTH-001`
 **Story**: As a new user, I can register with email and password.
 
@@ -320,6 +339,7 @@ For pilots testing security, secrets management, and policy enforcement.
 ---
 
 #### 2. Login User
+
 **AC**: `AC-AUTH-002`
 **Story**: As a registered user, I can log in and receive a session token.
 
@@ -333,6 +353,7 @@ For pilots testing security, secrets management, and policy enforcement.
 ### Medium Features
 
 #### 3. Password Reset Flow
+
 **AC**: `AC-AUTH-003`
 **Story**: As a user, I can reset my password via email.
 
@@ -344,6 +365,7 @@ For pilots testing security, secrets management, and policy enforcement.
 ---
 
 #### 4. Privacy Policy Check
+
 **AC**: `AC-AUTH-004`
 **Story**: As a policy enforcer, I ensure user emails are never logged or traced.
 
@@ -362,6 +384,7 @@ For pilots testing security, secrets management, and policy enforcement.
 ### Complex Features
 
 #### 5. OAuth Integration
+
 **AC**: `AC-AUTH-005`
 **Story**: As a user, I can log in with GitHub OAuth.
 
@@ -379,6 +402,7 @@ For pilots testing security, secrets management, and policy enforcement.
 ---
 
 #### 6. Audit Trail with OTLP
+
 **AC**: `AC-AUTH-006`
 **Story**: As a security operator, I can trace all login attempts with OTLP.
 

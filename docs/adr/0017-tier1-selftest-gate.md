@@ -72,6 +72,7 @@ All PRs targeting `main` MUST pass the `tier1-selftest` GitHub Actions job befor
 - Exact versions pinned in `flake.nix` (Rust, conftest, cargo-binstall, etc.)
 
 **Validation:**
+
 ```bash
 nix develop --command cargo xtask selftest
 ```
@@ -206,6 +207,7 @@ Why:
 ### Automated
 
 **Branch protection:**
+
 ```yaml
 # Required status checks (GitHub repo settings)
 - tier1-selftest / selftest  # Must pass
@@ -226,6 +228,7 @@ Why:
 **Developer workflow:**
 
 1. **Before creating PR:**
+
    ```bash
    # Enter Tier-1 environment
    nix develop
@@ -397,6 +400,7 @@ wsl -e bash -c "cd ~/Rust-Template && nix develop -c cargo xtask selftest"
 **Automated checks:**
 
 1. **Branch protection enabled:**
+
    ```bash
    # Check via GitHub API
    curl -H "Authorization: token $GITHUB_TOKEN" \
@@ -406,6 +410,7 @@ wsl -e bash -c "cd ~/Rust-Template && nix develop -c cargo xtask selftest"
    ```
 
 2. **CI job exists and runs:**
+
    ```bash
    # Check workflow file
    cat .github/workflows/tier1-selftest.yml
@@ -414,6 +419,7 @@ wsl -e bash -c "cd ~/Rust-Template && nix develop -c cargo xtask selftest"
    ```
 
 3. **Selftest phases documented:**
+
    ```bash
    # Run locally
    cargo xtask selftest --help

@@ -1,6 +1,1 @@
 flags:
-  - key: platform_v2
-    description: "Enable v2 platform introspection with enhanced metrics and governance visibility"
-    owner: team-platform
-    default: false
-    expires_at: 2026-06-30

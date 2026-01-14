@@ -61,6 +61,7 @@ This runs:
 4. `ac-status --summary` - Current AC coverage
 
 **If dev-up fails:**
+
 ```bash
 # Run doctor alone to see what's missing
 cargo xtask doctor
@@ -84,6 +85,7 @@ curl -s http://localhost:8080/platform/docs/index | jq '.docs | length'
 ```
 
 **CLI equivalents:**
+
 ```bash
 cargo xtask ac-status --summary      # AC coverage summary
 cargo xtask tasks-list               # List all tasks
@@ -105,6 +107,7 @@ curl -s "http://localhost:8080/platform/tasks/suggest-next?task_id=TASK-001" | j
 ```
 
 **CLI equivalent:**
+
 ```bash
 cargo xtask suggest-next TASK-001
 ```
@@ -174,12 +177,14 @@ cargo xtask selftest
 When you encounter ambiguity or make non-trivial decisions:
 
 **For architectural decisions:**
+
 ```bash
 cargo xtask adr-new "Title of Decision"
 # Edit docs/adr/ADR-NNNN-title-of-decision.md
 ```
 
 **For DevEx friction:**
+
 ```bash
 # Add to friction log
 cargo xtask friction-list --status open  # View current issues

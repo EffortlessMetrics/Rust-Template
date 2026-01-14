@@ -21,6 +21,7 @@ AC-PLT-021:
 **Implementation: 80% complete**
 
 ### ✅ What Works
+
 - Command exists: `cargo xtask service-init`
 - Updates `service_metadata.yaml` with service_id, display_name, description
 - Updates `README.md` with new service name and description
@@ -64,6 +65,7 @@ From `specs/features/xtask_devex.feature` (lines 567-612):
 2. **`specs/devex_flows.yaml`**
    - Add `service-init:` entry under `commands:` section
    - Example:
+
      ```yaml
      service-init:
        category: service_setup
@@ -81,6 +83,7 @@ From `specs/features/xtask_devex.feature` (lines 567-612):
 
 4. **`specs/features/xtask_devex.feature`**
    - Add CLAUDE.md assertion to scenarios (around line 575-577):
+
      ```gherkin
      And "CLAUDE.md" should contain "My New Service"
      ```
@@ -146,11 +149,13 @@ cargo xtask selftest
 **Location:** `specs/features/xtask_devex.feature:568-579`
 
 **Failed Step:**
+
 ```gherkin
 And "specs/service_metadata.yaml" should contain "service_id: test-service"
 ```
 
 **Error Message:**
+
 ```
 Step panicked. Captured output: Expected 'specs/service_metadata.yaml' to contain 'service_id: test-service'
 Actual content:
@@ -170,11 +175,13 @@ description: A new test service
 **Location:** `specs/features/xtask_devex.feature:596-606`
 
 **Failed Step:**
+
 ```gherkin
 And "specs/service_metadata.yaml" should contain "display_name: My New Service"
 ```
 
 **Error Message:**
+
 ```
 Step panicked. Captured output: Expected 'specs/service_metadata.yaml' to contain 'display_name: My New Service'
 Actual content:
@@ -248,6 +255,7 @@ cat specs/service_metadata.yaml
 **File:** `crates/acceptance/src/steps/xtask_devex.rs`
 
 1. **Add backup mechanism in Given steps:**
+
    ```rust
    // Before each @AC-PLT-021 scenario starts:
    - Backup specs/service_metadata.yaml
@@ -256,6 +264,7 @@ cat specs/service_metadata.yaml
    ```
 
 2. **Add restore mechanism in After hooks:**
+
    ```rust
    // After each @AC-PLT-021 scenario completes:
    - Restore specs/service_metadata.yaml from backup
@@ -264,6 +273,7 @@ cat specs/service_metadata.yaml
    ```
 
 3. **Ensure proper Given step ordering:**
+
    ```gherkin
    Given a clean development environment  # Must include file backup
    Given a clean git working directory    # Ensures no uncommitted changes

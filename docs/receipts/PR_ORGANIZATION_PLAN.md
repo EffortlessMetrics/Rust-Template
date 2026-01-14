@@ -19,6 +19,7 @@ This document organizes the staged changes (47 files, 4848 insertions, 853 delet
 - **Impact**: Enables all downstream work to build and test locally; unblocks CI
 
 **Validation**:
+
 ```bash
 nix flake update
 cargo xtask check      # Now passes
@@ -53,6 +54,7 @@ cargo xtask selftest   # Kernel AC gates proceed (some ACs expected to fail due 
 - **Impact**: Agents now have the same governance rigor as Skills; prevents governance drift
 
 **Validation**:
+
 ```bash
 cargo xtask agents-lint              # Pass on all agents
 cargo xtask agents-fmt --check       # No formatting changes needed
@@ -61,6 +63,7 @@ cargo xtask precommit                # Agents gate passes
 ```
 
 **Test Commands**:
+
 ```bash
 # Test agent validation
 cargo test -p rust_iac_xtask_core agents_lint  # 11 unit tests
@@ -93,6 +96,7 @@ cargo xtask bdd --tags "@AC-TPL-AGENTS"  # 8 acceptance scenarios
 - **Impact**: Reduces adoption friction; users understand customization freedom; enables governance tailoring
 
 **Validation**:
+
 ```bash
 cargo xtask docs-check          # All docs lint checks pass
 cargo xtask spellcheck          # No spelling errors
@@ -128,6 +132,7 @@ cargo xtask spellcheck          # No spelling errors
 - **Impact**: Faster CI (11.5% BDD speedup); better code maintainability; clearer intent for future contributors
 
 **Validation**:
+
 ```bash
 cargo xtask check                           # fmt, clippy, tests pass
 cargo xtask test-changed                    # Only changed code
@@ -164,6 +169,7 @@ cargo clippy --all -- -D warnings           # Zero clippy warnings
 - **Impact**: Better troubleshooting (users can self-diagnose environment issues); performance trend visibility; CI coverage clarity
 
 **Validation**:
+
 ```bash
 cargo xtask doctor                          # Shows structured environment + ABI info
 cargo xtask coverage                        # Reports coverage baseline
@@ -233,4 +239,3 @@ For each PR:
 3. Run final selftest in CI
 4. Get team feedback on fork guides
 5. Test with actual fork experiment before v3.4.0 release
-

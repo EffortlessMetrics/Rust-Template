@@ -8,7 +8,7 @@ echo
 # List of crates that need MSRV declaration (from diagnostic)
 crates_needing_fix=(
     "acceptance"
-    "ac-kernel" 
+    "ac-kernel"
     "adapters-db-sqlx"
     "adapters-grpc"
     "app-http"
@@ -25,10 +25,10 @@ total_count=${#crates_needing_fix[@]}
 
 for crate in "${crates_needing_fix[@]}"; do
     cargo_toml="crates/$crate/Cargo.toml"
-    
+
     if [ -f "$cargo_toml" ]; then
         echo "Processing: $crate"
-        
+
         # Check if rust-version already exists
         if grep -q 'rust-version' "$cargo_toml"; then
             echo "  ✅ Already has rust-version declaration"

@@ -28,7 +28,7 @@ Configure these checks as **required** before merging to `main`:
 
 ### 1. Navigate to Branch Protection Settings
 
-1. Go to https://github.com/EffortlessMetrics/Rust-Template
+1. Go to <https://github.com/EffortlessMetrics/Rust-Template>
 2. Click **Settings** → **Branches**
 3. Click **Add branch protection rule**
 
@@ -117,4 +117,4 @@ A: Disable the check in branch protection immediately, fix the flakiness, then r
 ## References
 
 - Full profile documentation: `docs/reference/branch-protection-profiles.md`
-- GitHub docs: https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches
+- GitHub docs: <https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches>

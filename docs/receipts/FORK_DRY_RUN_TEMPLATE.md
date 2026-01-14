@@ -99,7 +99,7 @@ curl http://localhost:8080/platform/docs/index
 curl http://localhost:8080/platform/tasks
 ```
 
-**Visited UI:** http://localhost:8080/ui
+**Visited UI:** <http://localhost:8080/ui>
 
 **Outcome:** [OK | ISSUES]
 

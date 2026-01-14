@@ -57,29 +57,34 @@ Explicitly list what will NOT be included in this release:
 ## Implementation Roadmap
 
 ### Phase 1: Research & Planning
+
 - [ ] Research library X version Y compatibility
 - [ ] Review upstream documentation for Z
 - [ ] Identify breaking changes in dependencies
 - [ ] Document decision log (see below)
 
 ### Phase 2: Implementation
+
 - [ ] Task 1: [Brief description]
 - [ ] Task 2: [Brief description]
 - [ ] Task 3: [Brief description]
 
 ### Phase 3: Testing
+
 - [ ] Unit tests for new functionality
 - [ ] Integration tests for adapters (if applicable)
 - [ ] BDD scenarios for user-facing behavior
 - [ ] Manual testing with [tool/environment]
 
 ### Phase 4: Documentation
+
 - [ ] Create `docs/how-to/[feature].md` guide
 - [ ] Update `crates/[crate]/README.md`
 - [ ] Update CHANGELOG.md
 - [ ] Update `specs/spec_ledger.yaml` with new ACs
 
 ### Phase 5: Release
+
 - [ ] Run `cargo fmt --all -- --check`
 - [ ] Run `cargo clippy --all-targets --all-features -- -D warnings`
 - [ ] Run `cargo test --workspace`
@@ -148,11 +153,13 @@ Release is complete when:
 ## Risks & Mitigations
 
 ### Risk 1: [Risk Description]
+
 - **Likelihood**: [Low / Medium / High]
 - **Impact**: [Low / Medium / High]
 - **Mitigation**: [How to reduce or handle]
 
 ### Risk 2: [Next Risk]
+
 - **Likelihood**: [Low / Medium / High]
 - **Impact**: [Low / Medium / High]
 - **Mitigation**: [How to reduce or handle]
@@ -162,10 +169,12 @@ Release is complete when:
 ## Dependencies
 
 ### External Dependencies
+
 - [ ] Library X version Y (research status: [Not Started / In Progress / Complete])
 - [ ] Tool Z availability (e.g., `conftest` for policy tests)
 
 ### Internal Dependencies
+
 - [ ] Crate A must be updated before Crate B
 - [ ] Feature flag X must be implemented before Y
 
@@ -188,16 +197,19 @@ Release is complete when:
 ## Post-Release
 
 ### Immediate Actions
+
 - [ ] Verify tag on GitHub
 - [ ] Close `v[X.Y.Z]` milestone (if using)
 - [ ] Announce release (if applicable)
 
 ### Deferred to Next Release
+
 - [ ] Task X (too large for this release)
 - [ ] Feature Y (awaiting upstream dependency)
 - [ ] Refactoring Z (lower priority)
 
 ### Pilot Projects (Before Next Release)
+
 - [ ] Run greenfield pilot with v[X.Y.Z]
 - [ ] Maintain friction log (see `docs/templates/FRICTION_LOG.md`)
 - [ ] Gather feedback before planning v[X.Y+1.Z]

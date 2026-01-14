@@ -83,16 +83,20 @@ These rules are enforced by `cargo xtask agents-lint` today.
 **Error: Invalid format**
 - Rule: `tools` MUST be a YAML list or comma-separated string
 - Valid:
+
   ```yaml
   tools: Read, Grep, Glob
   ```
+
   or
+
   ```yaml
   tools:
     - Read
     - Grep
     - Glob
   ```
+
 - Invalid: ❌ `tools: {Read: true}` ❌ `tools: 123`
 
 **Error: Empty if specified**
@@ -144,15 +148,19 @@ These rules are enforced by `cargo xtask agents-lint` today.
 **Error: Invalid format**
 - Rule: `skills` MUST be a YAML list or comma-separated string
 - Valid:
+
   ```yaml
   skills: governed-feature-dev, governed-maintenance
   ```
+
   or
+
   ```yaml
   skills:
     - governed-feature-dev
     - governed-maintenance
   ```
+
 - Invalid: ❌ `skills: {name: governed-feature-dev}`
 
 **Error: Skill does not exist**
@@ -165,7 +173,7 @@ These rules are enforced by `cargo xtask agents-lint` today.
 ### 8. Markdown Body (AC-TPL-AGENTS-LIFECYCLE-DOCS)
 
 **Warning: No headings**
-- Rule: Markdown body SHOULD contain at least one heading (`# `)
+- Rule: Markdown body SHOULD contain at least one heading (`#`)
 - Reason: Headings improve readability and structure
 - Example:
   - ✅ Body starts with `# Agent Title`
@@ -284,12 +292,14 @@ cargo run -p xtask -- precommit
 ## Interpreting Output
 
 ### Successful Run
+
 ```
 [AGENT LINT] .claude/agents/code-reviewer.md ✓
 [AGENT LINT] .claude/agents/test-runner.md ✓
 ```
 
 ### With Errors (Blocks Commit)
+
 ```
 [AGENT LINT] .claude/agents/my-agent.md - ERRORS:
   ✗ frontmatter 'name' must match ^[a-z0-9-]{1,64}$ (got 'My-Agent').
@@ -300,6 +310,7 @@ error: agents governance check failed
 ```
 
 ### With Warnings (Allows Commit)
+
 ```
 [AGENT LINT] .claude/agents/debugger.md - WARNINGS:
   ⚠ description could be more specific: try including 'when to use' or trigger context.

@@ -8,7 +8,7 @@ The Rust Template has made significant progress toward production readiness sinc
 
 **Issue:** While the template provides SQLx migration infrastructure (embedded migrations, `run_migrations()` function, and a `cargo xtask migrate` command), these components are not automatically integrated into the application startup sequence. This creates a significant operational risk where deployments might start with an uninitialized or incorrectly migrated database.
 
-**Impact:** 
+**Impact:**
 - Production deployments may fail silently if migrations aren't manually run before application startup
 - Rolling updates could cause data corruption if migrations aren't applied in the correct order
 - Database schema drift between environments becomes likely without explicit migration management
@@ -114,17 +114,20 @@ The Rust Template has made significant progress toward production readiness sinc
 ## Recommendations
 
 ### Immediate (Critical)
+
 1. **Implement automatic database migration integration** in application startup
 2. **Add migration hooks to K8s deployment manifests** for proper sequencing
 3. **Create migration rollback procedures** and operational runbooks
 
 ### Short-term (High Priority)
+
 1. **Implement enterprise authentication integration** (SSO/OIDC)
 2. **Add automated deployment pipeline** with environment promotion
 3. **Create performance baselines** and load testing suite
 4. **Develop disaster recovery runbooks** and procedures
 
 ### Medium-term (Enhancement)
+
 1. **Enhance secret management** beyond environment variables
 2. **Add runtime security policies** (CORS, rate limiting)
 3. **Improve new contributor onboarding** with simplified workflows

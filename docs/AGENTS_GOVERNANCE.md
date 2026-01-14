@@ -46,16 +46,19 @@ This ensures agents are:
 ## 3. File Layout
 
 ### Project Agents (Governed)
+
 - Location: `.claude/agents/*.md`
 - Scope: Repo agents, enforced by selftest, CI, precommit
 - Naming: `kebab-case.md`, max 64 chars
 - REQ/AC: Each must have an entry in `specs/spec_ledger.yaml`
 
 ### User Agents (Out-of-Scope)
+
 - Location: `~/.claude/agents/*.md`
 - Scope: Local only, not governed by repo
 
 ### Plugin Agents (External)
+
 - Shipped via Claude Code plugin ecosystem
 - Documented but not validated by this repo's governance
 
@@ -155,11 +158,13 @@ agents-lint will:
    - Markdown body: role, workflow, tools usage, safety constraints
 
 4. **Validate locally**:
+
    ```bash
    cargo run -p xtask -- agents-lint
    ```
 
 5. **Run precommit & selftest**:
+
    ```bash
    cargo run -p xtask -- precommit
    cargo run -p xtask -- selftest
@@ -187,23 +192,27 @@ agents-lint will:
 ## 7. Integration Points
 
 ### `cargo xtask agents-lint`
+
 - Validates all agents in `.claude/agents/`
 - Errors block agent use; warnings improve quality
 - Exit code: 0 (pass), 1 (errors found)
 - Run manually: `cargo run -p xtask -- agents-lint`
 
 ### Selftest (Step 3/10)
+
 - Runs agents-lint as part of full governance check
 - Skips if `.claude/agents/` directory does not exist
 - Failures in agents-lint will fail selftest
 
 ### Precommit
+
 - Runs automatically when `.claude/agents/**` changes
 - Also triggers on spec_ledger.yaml or agents.rs changes
 - Skipped if no changes detected (fast-path)
 - Errors fail the commit; warnings are informational
 
 ### CI Workflow (`.github/workflows/ci-agents.yml`)
+
 - Path-filtered job: only runs when agents or spec changes
 - Runs `cargo xtask agents-lint`
 - Blocks PR if errors found
@@ -285,19 +294,23 @@ Agents often *use* Skills to accomplish their workflows. Both are governed.
 ## 10. Troubleshooting
 
 ### agents-lint says "name must equal file name"
+
 - Your frontmatter `name` doesn't match the filename
 - Example: File is `my-agent.md`, but frontmatter says `name: myagent`
 - **Fix**: Make them match: `name: my-agent`
 
 ### agents-lint says "Skill 'X' not found"
+
 - Agent references `skills: my-skill` but `.claude/skills/my-skill/` doesn't exist
 - **Fix**: Either create the Skill or remove the reference
 
 ### agents-lint says "invalid permissionMode"
+
 - You used an undefined mode like `permissionMode: sudo`
 - **Fix**: Use one of: `default`, `acceptEdits`, `bypassPermissions`, `plan`, `ignore`
 
 ### agents-lint says "Tabs found in YAML"
+
 - YAML must use spaces, not tabs
 - **Fix**: Replace tabs with spaces (2 or 4)
 

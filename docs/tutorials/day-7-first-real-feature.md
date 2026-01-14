@@ -817,6 +817,7 @@ cargo run -p xtask -- bdd
 ```
 
 **Expected output:**
+
 ```
 Feature: Task Management
 
@@ -849,6 +850,7 @@ Feature: Template Core Endpoints
 ```
 
 **If tests fail**, debug with:
+
 ```bash
 cargo run -p xtask -- bdd --verbose
 ```
@@ -1056,6 +1058,7 @@ Document your API:
 ### Use LLM for Next AC
 
 Try this workflow:
+
 ```bash
 # Generate bundle
 cargo run -p xtask -- bundle implement_ac

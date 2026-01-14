@@ -52,6 +52,7 @@ AC-TPL-AGENT-HINTS-SCHEMA:
 From `specs/features/agent_hints.feature` (lines 282-297):
 
 **Scenario: "HTTP hints include all required schema fields"**
+
 ```gherkin
 @AC-TPL-AGENT-HINTS-SCHEMA
 Scenario: HTTP hints include all required schema fields
@@ -82,11 +83,13 @@ Scenario: HTTP hints include all required schema fields
    **Problem:** App is created with workspace root, not temp directory
 
    **Current code:**
+
    ```rust
    app: app_http::app(governance_repo),
    ```
 
    **Fix:**
+
    ```rust
    app: app_http::app_with_workspace_root(
        governance_repo,
@@ -99,6 +102,7 @@ Scenario: HTTP hints include all required schema fields
    **Problem:** App doesn't reload after tasks are created
 
    **Fix:** Add after line 145:
+
    ```rust
    // Reload the app to reflect task changes
    world.reload_app();

@@ -464,6 +464,7 @@ If you need to bypass branch protection in an emergency:
 **Cause:** GitHub token lacks permissions.
 
 **Solution:**
+
 ```bash
 gh auth refresh -s repo
 ```

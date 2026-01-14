@@ -53,15 +53,18 @@ Documents that contain version numbers (README, CLAUDE.md, ROADMAP, KERNEL_SNAPS
 ### Steps
 
 1. **Update the canonical version first:**
+
    ```bash
    # Edit specs/spec_ledger.yaml -> metadata.template_version
    ```
 
 2. **Run release-prepare to bump all files:**
+
    ```bash
    nix develop
    cargo xtask release-prepare X.Y.Z
    ```
+
    This automatically updates version strings in:
    - README.md
    - CLAUDE.md
@@ -73,12 +76,15 @@ Documents that contain version numbers (README, CLAUDE.md, ROADMAP, KERNEL_SNAPS
    - CHANGELOG.md
 
 3. **Verify alignment:**
+
    ```bash
    cargo xtask docs-check
    ```
+
    All versioned files should show `✓` next to their version.
 
 4. **Commit together:**
+
    ```bash
    git add -A
    git commit -m "chore: bump version to X.Y.Z"
@@ -98,6 +104,7 @@ Documents in `specs/doc_index.yaml` must have synchronized frontmatter. The doc_
 ### Adding a New Document
 
 1. **Create the markdown file with frontmatter:**
+
    ```markdown
    ---
    id: GUIDE-TPL-MY-DOC-001
@@ -118,6 +125,7 @@ Documents in `specs/doc_index.yaml` must have synchronized frontmatter. The doc_
    ```
 
 2. **Add entry to doc_index.yaml:**
+
    ```yaml
    - id: GUIDE-TPL-MY-DOC-001
      file: docs/how-to/my-doc.md
@@ -130,9 +138,11 @@ Documents in `specs/doc_index.yaml` must have synchronized frontmatter. The doc_
    ```
 
 3. **Verify synchronization:**
+
    ```bash
    cargo xtask docs-check
    ```
+
    Should show: `Doc index & front-matter... ✓ Consistent`
 
 4. **Check doc_type contract:**
@@ -145,6 +155,7 @@ Documents in `specs/doc_index.yaml` must have synchronized frontmatter. The doc_
 ### Moving or Renaming a Document
 
 1. **Move the file:**
+
    ```bash
    git mv docs/old/path.md docs/new/path.md
    ```
@@ -153,6 +164,7 @@ Documents in `specs/doc_index.yaml` must have synchronized frontmatter. The doc_
    Change the `file:` field to the new path.
 
 3. **Verify:**
+
    ```bash
    cargo xtask docs-check
    ```
@@ -173,6 +185,7 @@ AC (Acceptance Criteria) status is tracked in `specs/spec_ledger.yaml` and visua
 
 1. **Edit spec_ledger.yaml:**
    Find the AC under its requirement and modify:
+
    ```yaml
    acceptance_criteria:
      - id: AC-PLT-XXX
@@ -182,6 +195,7 @@ AC (Acceptance Criteria) status is tracked in `specs/spec_ledger.yaml` and visua
 
 2. **Update reasoning in feature_status_notes.md:**
    If changing `must_have_ac` or AC classification, document why:
+
    ```markdown
    ### AC-PLT-XXX: Title
 
@@ -190,11 +204,13 @@ AC (Acceptance Criteria) status is tracked in `specs/spec_ledger.yaml` and visua
    ```
 
 3. **Regenerate feature_status.md:**
+
    ```bash
    cargo xtask ac-status
    ```
 
 4. **Verify governance:**
+
    ```bash
    cargo xtask docs-check
    cargo xtask selftest
@@ -217,20 +233,24 @@ Skills (`.claude/skills/*/SKILL.md`) and Agents (`.claude/agents/*.md`) are gove
 1. **Edit the SKILL.md or agent file**
 
 2. **Format (for Skills):**
+
    ```bash
    cargo xtask skills-fmt
    ```
 
 3. **Lint to verify:**
+
    ```bash
    cargo xtask skills-lint  # for Skills
    cargo xtask agents-lint  # for Agents
    ```
 
 4. **Run docs-check:**
+
    ```bash
    cargo xtask docs-check
    ```
+
    Skills validation is included in docs-check.
 
 ### What Can Go Wrong
@@ -253,6 +273,7 @@ The repository has a git pre-commit hook that automatically:
 6. Runs docs-check and spellcheck (soft by default)
 
 **To commit safely:**
+
 ```bash
 git add <your-changes>
 git commit -m "Your message"
@@ -260,6 +281,7 @@ git commit -m "Your message"
 ```
 
 **If pre-commit fails:**
+
 ```bash
 # See what failed
 cargo xtask precommit

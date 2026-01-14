@@ -174,9 +174,15 @@ mod tests {
             panic!("Expected environment variable '{}' to be defined", key);
         };
 
+        // Accept either:
+        // 1. Literal value containing expected (e.g., "CHANGE_ME")
+        // 2. Env var substitution pattern (e.g., "${POSTGRES_USER}")
+        let is_env_var_substitution = value.starts_with("${") && value.ends_with('}');
+        let contains_expected = value.contains(expected);
+
         assert!(
-            value.contains(expected),
-            "Expected env {} to include '{}', got '{}'",
+            contains_expected || is_env_var_substitution,
+            "Expected env {} to include '{}' or use env var substitution, got '{}'",
             key,
             expected,
             value

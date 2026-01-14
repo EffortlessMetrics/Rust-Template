@@ -33,11 +33,13 @@
 ### 1. Audit existing documentation
 
 **Discover all docs:**
+
 ```bash
 find docs/ -name "*.md" | sort > docs_inventory.txt
 ```
 
 **Check which are registered:**
+
 ```bash
 grep -E "^  - id:" specs/doc_index.yaml | sed 's/.*id: //' | sort > registered_docs.txt
 comm -23 docs_inventory.txt registered_docs.txt > unregistered_docs.txt
@@ -79,6 +81,7 @@ comm -23 docs_inventory.txt registered_docs.txt > unregistered_docs.txt
 ### 3. Update doc_index.yaml with all documents
 
 **Add entries for each document:**
+
 ```yaml
   - id: API-PLATFORM-ENDPOINTS
     path: docs/api/platform-endpoints.md
@@ -103,6 +106,7 @@ comm -23 docs_inventory.txt registered_docs.txt > unregistered_docs.txt
 ### 4. Add/update frontmatter in all documentation files
 
 **Example frontmatter pattern:**
+
 ```markdown
 ---
 title: "Platform API Endpoints Reference"
@@ -123,6 +127,7 @@ last_updated: 2025-12-02
 ### 5. Validate bidirectional alignment
 
 **Run docs-check:**
+
 ```bash
 cargo xtask docs-check
 ```

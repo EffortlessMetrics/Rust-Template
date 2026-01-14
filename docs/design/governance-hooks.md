@@ -33,6 +33,7 @@ Provide `cargo xtask install-hooks` command that installs a Git pre-commit hook 
 4. If check passes, allow commit to proceed
 
 **Hook script**:
+
 ```bash
 #!/bin/sh
 if command -v nix &> /dev/null && [ -f flake.nix ]; then

@@ -1,0 +1,9 @@
+{
+  "changed_files": [
+    "specs/spec_ledger.yaml",
+    "crates/app-http/src/lib.rs",
+    "docs/feature_status.md"
+  ],
+  "scope_declared": true,
+  "declared_type": "governance"
+}

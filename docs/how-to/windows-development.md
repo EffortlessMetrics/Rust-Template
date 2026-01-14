@@ -73,6 +73,7 @@ wsl --set-default-version 2
 ```
 
 **If WSL is already installed:**
+
 ```powershell
 # Check WSL version
 wsl --list --verbose
@@ -118,6 +119,7 @@ wsl
 ```
 
 **Verify Nix installation:**
+
 ```bash
 nix --version
 # Expected: nix (Nix) 2.18.x or later
@@ -163,6 +165,7 @@ cargo xtask selftest
 ```
 
 **Expected output:**
+
 ```
 ✅ [1/7] Core checks (fmt, clippy, tests)
 ✅ [2/7] BDD acceptance tests
@@ -178,6 +181,7 @@ cargo xtask selftest
 #### 6. IDE Setup (VS Code with WSL Extension)
 
 **Install VS Code on Windows:**
+
 ```powershell
 # Download from https://code.visualstudio.com/
 # Or via winget
@@ -190,6 +194,7 @@ winget install Microsoft.VisualStudioCode
 3. Restart VS Code
 
 **Open project in WSL:**
+
 ```bash
 # Inside WSL2
 cd ~/Rust-Template
@@ -211,6 +216,7 @@ This opens VS Code with:
 ### WSL2 Workflow
 
 **Daily development:**
+
 ```bash
 # Start WSL2
 wsl
@@ -232,6 +238,7 @@ cargo xtask selftest
 ```
 
 **Hybrid workflow (Windows + WSL2):**
+
 ```powershell
 # Edit files in Windows IDE (files stored in WSL2)
 # VS Code with Remote-WSL handles this transparently
@@ -247,6 +254,7 @@ wsl -e bash -c "cd ~/Rust-Template && nix develop -c cargo xtask selftest"
 **Cause:** Repository cloned in `/mnt/c/` (Windows filesystem)
 
 **Fix:**
+
 ```bash
 # Move to WSL2 native filesystem
 cd ~
@@ -266,6 +274,7 @@ cd Rust-Template
 5. Restart Docker Desktop
 
 **Verify:**
+
 ```bash
 # Inside WSL2
 docker --version
@@ -277,6 +286,7 @@ docker ps
 **Cause:** Shell profile not reloaded
 
 **Fix:**
+
 ```bash
 # Source Nix profile
 source ~/.nix-profile/etc/profile.d/nix.sh
@@ -291,12 +301,14 @@ wsl
 **Cause:** WSL2 default memory limit (50% of total RAM)
 
 **Fix:** Create `.wslconfig` to limit memory:
+
 ```powershell
 # In Windows PowerShell
 notepad $env:USERPROFILE\.wslconfig
 ```
 
 Add:
+
 ```ini
 [wsl2]
 memory=4GB
@@ -304,6 +316,7 @@ processors=4
 ```
 
 Restart WSL:
+
 ```powershell
 wsl --shutdown
 wsl
@@ -312,6 +325,7 @@ wsl
 #### Issue: Can't access Windows files from WSL2
 
 **Windows files are mounted at `/mnt/c/`:**
+
 ```bash
 # Access Windows C:\Users\YourName\Documents
 cd /mnt/c/Users/YourName/Documents
@@ -349,6 +363,7 @@ cp /mnt/c/Users/YourName/file.txt ~/
 #### 1. Install Rust
 
 **Option A: rustup-init.exe (Recommended)**
+
 ```powershell
 # Download from https://rustup.rs/
 # Or via winget
@@ -363,13 +378,14 @@ cargo --version
 ```
 
 **Expected output:**
+
 ```
 rustc 1.91.x or later
 cargo 1.91.x or later
 ```
 
 **Option B: Manual installation**
-1. Download rustup-init.exe from https://rustup.rs/
+1. Download rustup-init.exe from <https://rustup.rs/>
 2. Run as Administrator
 3. Follow prompts (default options)
 4. Restart PowerShell/terminal
@@ -386,6 +402,7 @@ winget install Git.Git
 **Important:** Git for Windows includes `sh.exe`, which is required for Git hooks to work.
 
 **Verify:**
+
 ```powershell
 git --version
 # Expected: git version 2.x.x or later
@@ -402,13 +419,14 @@ cargo binstall conftest
 ```
 
 **Verify:**
+
 ```powershell
 conftest --version
 # Expected: Conftest: 0.x.x
 ```
 
 **If conftest installation fails:**
-- Download from https://github.com/open-policy-agent/conftest/releases
+- Download from <https://github.com/open-policy-agent/conftest/releases>
 - Extract to `C:\Program Files\conftest\conftest.exe`
 - Add to PATH: System Properties → Environment Variables → Path
 
@@ -469,12 +487,14 @@ Windows does not allow deleting or replacing an executable that is currently in 
 #### Workaround 1: Exclude target/ from Antivirus (Recommended)
 
 **Windows Defender (built-in):**
+
 ```powershell
 # PowerShell as Administrator
 Add-MpPreference -ExclusionPath "C:\Code\Rust-Template\target"
 ```
 
 **Verify exclusion:**
+
 ```powershell
 Get-MpPreference | Select-Object -ExpandProperty ExclusionPath
 ```
@@ -503,6 +523,7 @@ Get-MpPreference | Select-Object -ExpandProperty ExclusionPath
 - When selftest MUST pass cleanly
 
 **Workflow:**
+
 ```powershell
 # Daily dev: native Windows (fast iteration)
 cargo run -p app-http
@@ -520,6 +541,7 @@ wsl -e bash -c "cd ~/Rust-Template && nix develop -c cargo xtask selftest"
 #### Workaround 3: Retry Strategy
 
 **Quick fix for one-off validation:**
+
 ```powershell
 # Close all running cargo and xtask processes
 taskkill /F /IM cargo.exe
@@ -545,6 +567,7 @@ cargo run -p xtask -- selftest
 #### Workaround 4: Skip Problematic Steps
 
 **For fast iteration (not for final validation):**
+
 ```powershell
 # Run only specific checks (bypasses selftest rebuild)
 cargo run -p xtask -- check
@@ -596,11 +619,13 @@ cargo run -p xtask -- selftest
 **Cause:** Line endings converted to CRLF
 
 **Symptom:**
+
 ```
 error: cannot spawn .git/hooks/pre-commit: No such file or directory
 ```
 
 **Fix:**
+
 ```bash
 # In Git Bash
 dos2unix .git/hooks/pre-commit
@@ -610,6 +635,7 @@ cargo run -p xtask -- install-hooks
 ```
 
 **Prevention:**
+
 ```powershell
 # Configure Git to use LF for shell scripts
 git config --global core.autocrlf input
@@ -618,11 +644,13 @@ git config --global core.autocrlf input
 #### Issue: conftest not found
 
 **Symptom:**
+
 ```
 [5/7] Policy tests ⚠️ skipped (conftest not found)
 ```
 
 **Fix:**
+
 ```powershell
 # Install conftest
 cargo install cargo-binstall
@@ -635,6 +663,7 @@ conftest --version
 #### Issue: OpenSSL linking errors
 
 **Symptom:**
+
 ```
 error: failed to run custom build command for `openssl-sys`
 ```
@@ -642,6 +671,7 @@ error: failed to run custom build command for `openssl-sys`
 **Cause:** Windows doesn't ship OpenSSL
 
 **Fix (Option A): Use prebuilt OpenSSL (recommended)**
+
 ```powershell
 # Install vcpkg (C++ package manager)
 git clone https://github.com/microsoft/vcpkg.git C:\vcpkg
@@ -668,6 +698,7 @@ $env:OPENSSL_DIR = "C:\vcpkg\installed\x64-windows-static"
 **Cause:** Visual Studio Build Tools not installed
 
 **Fix:**
+
 ```powershell
 # Download and install Visual Studio Build Tools
 # https://visualstudio.microsoft.com/downloads/
@@ -684,6 +715,7 @@ winget install Microsoft.VisualStudio.2022.BuildTools
 #### Issue: Path with spaces causes issues
 
 **Symptom:**
+
 ```
 error: could not execute process `cargo build`
 The system cannot find the path specified.
@@ -692,6 +724,7 @@ The system cannot find the path specified.
 **Cause:** Repository cloned to path with spaces (e.g., `C:\Users\Your Name\Code\`)
 
 **Fix:**
+
 ```powershell
 # Move repository to path without spaces
 cd C:\
@@ -712,6 +745,7 @@ Git hooks work identically on Windows, but there are platform-specific considera
 **Key Insight:** Git for Windows includes a POSIX compatibility layer (`sh.exe`, `bash.exe`).
 
 When you run `cargo xtask install-hooks`, it generates a POSIX shell script:
+
 ```bash
 #!/usr/bin/env bash
 cargo xtask check
@@ -730,6 +764,7 @@ cargo run -p xtask -- install-hooks
 ```
 
 **Verify:**
+
 ```powershell
 # Check hook exists
 ls .git/hooks/pre-commit
@@ -754,12 +789,14 @@ gc .git/hooks/pre-commit -Head 1
 #### Issue: Hook not running at all
 
 **Diagnosis:**
+
 ```powershell
 # Try manual execution
 .\.git\hooks\pre-commit
 ```
 
 **If error: "command not found" or "No such file or directory":**
+
 ```powershell
 # Check if Git for Windows is installed (includes sh.exe)
 where sh.exe
@@ -770,6 +807,7 @@ winget install Git.Git
 ```
 
 **If hook file doesn't exist:**
+
 ```powershell
 # Reinstall hooks
 cargo run -p xtask -- install-hooks
@@ -780,6 +818,7 @@ cargo run -p xtask -- install-hooks
 **Cause:** Cargo not in PATH when Git runs the hook
 
 **Fix:**
+
 ```powershell
 # Check cargo PATH
 where cargo
@@ -795,6 +834,7 @@ where cargo
 #### Issue: Hook fails with CRLF line ending error
 
 **Symptom:**
+
 ```
 error: cannot spawn .git/hooks/pre-commit
 ```
@@ -802,6 +842,7 @@ error: cannot spawn .git/hooks/pre-commit
 **Cause:** Git converted LF to CRLF (Windows default)
 
 **Fix:**
+
 ```bash
 # In Git Bash
 dos2unix .git/hooks/pre-commit
@@ -811,6 +852,7 @@ cargo run -p xtask -- install-hooks
 ```
 
 **Prevention:**
+
 ```powershell
 # Configure Git to preserve LF for shell scripts
 git config --global core.autocrlf input
@@ -819,6 +861,7 @@ git config --global core.autocrlf input
 #### Issue: Hook blocks commit but I need to commit anyway
 
 **Temporary bypass:**
+
 ```powershell
 # Skip hook for one commit
 git commit --no-verify -m "fix: emergency hotfix"
@@ -856,15 +899,18 @@ matrix:
 ### What Runs Where
 
 **Linux/macOS CI (Tier 1):**
+
 ```yaml
 - name: Run selftest
   run: nix develop -c cargo xtask selftest
 ```
+
 - All 7 selftest steps must pass
 - Blocks PR merge if failing
 - Matches local Tier 1 environment exactly
 
 **Windows CI (Tier 2):**
+
 ```yaml
 - name: Build xtask
   run: cargo build -p xtask
@@ -875,6 +921,7 @@ matrix:
 - name: Run tests
   run: cargo test --workspace --exclude acceptance --exclude xtask
 ```
+
 - Does NOT run full selftest (avoids file locking)
 - Does NOT block PR merge
 - Informational only (catches obvious Windows-specific breakage)
@@ -1022,6 +1069,7 @@ Error: path not found ...
 ### Solo Developer (Tier 2 acceptable)
 
 **Daily iteration:**
+
 ```powershell
 # Fast feedback loop
 cargo run -p app-http
@@ -1030,6 +1078,7 @@ cargo run -p xtask -- check
 ```
 
 **Before commit:**
+
 ```powershell
 # Option A: Native Windows (may hit file locking)
 cargo run -p xtask -- selftest
@@ -1048,6 +1097,7 @@ wsl -e bash -c "cd ~/Rust-Template && nix develop -c cargo xtask selftest"
 - Matches CI exactly
 
 **Workflow:**
+
 ```bash
 # All work in WSL2
 wsl
@@ -1075,6 +1125,7 @@ git push
 - Use WSL2 for canonical validation
 
 **Workflow:**
+
 ```powershell
 # Daily dev (native Windows)
 cd C:\Code\Rust-Template

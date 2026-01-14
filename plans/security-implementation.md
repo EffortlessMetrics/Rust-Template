@@ -22,6 +22,7 @@ This guide covers the implementation of security fixes that have already been co
 - Comprehensive unit tests (5 test cases)
 
 **Configuration Options**:
+
 ```bash
 # Environment Variables
 CORS_ENABLED=true
@@ -74,6 +75,7 @@ cors:
 - Comprehensive unit tests (6 test cases)
 
 **Configuration Options**:
+
 ```bash
 # Environment Variables
 SECURITY_HEADERS_ENABLED=true
@@ -104,6 +106,7 @@ CROSS_ORIGIN_RESOURCE_POLICY="same-origin"
 - Unit tests covering all edge cases (10 test scenarios)
 
 **Configuration Options**:
+
 ```bash
 # JWT secret management
 JWT_SECRET="your-secret-key-here"
@@ -134,6 +137,7 @@ security:
 - Example configurations for different environments
 
 **Configuration Template**:
+
 ```yaml
 # Security Configuration
 security:
@@ -142,7 +146,7 @@ security:
   jwt_algorithm: "HS256"
   jwt_expiration_seconds: 3600
   jwt_leeway_seconds: 60
-  
+
   # Platform Authentication
   platform_auth_mode: "jwt"  # Options: jwt, basic, disabled
   platform_auth_users:

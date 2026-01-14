@@ -35,6 +35,7 @@
 **Fix:** Add `pkgs.protobuf` to buildInputs
 
 **Before:**
+
 ```nix
 buildInputs = [
   pkgs.rust
@@ -47,6 +48,7 @@ buildInputs = [
 ```
 
 **After:**
+
 ```nix
 buildInputs = [
   pkgs.rust
@@ -68,6 +70,7 @@ buildInputs = [
 **Fix:** Add `pkgs.cargo-llvm-cov` to buildInputs
 
 **Add after protobuf:**
+
 ```nix
   pkgs.cargo-llvm-cov    # Issue #1: coverage tool for ci-coverage.yml
 ```
@@ -81,22 +84,102 @@ buildInputs = [
 **Fix:** Create placeholder documentation file
 
 **Content:**
+
 ```markdown
 # Backstage Documentation
 
-This is a placeholder for Backstage-specific documentation.
+This section documents the Backstage plugin integration for the Rust-as-Spec template.
+
+## Overview
+
+The Backstage plugin provides a developer portal interface for interacting with the template's acceptance criteria, specifications, and governance features.
 
 ## Architecture
 
-(To be documented)
+The Backstage plugin consists of:
+- **Frontend Plugin**: React-based UI components for browsing ACs and specs
+- **Backend Plugin**: Node.js service that interfaces with the Rust template's HTTP API
+- **Entity Provider**: Synchronizes template entities with the Backstage catalog
+
+### Component Interactions
+
+```
+
+┌─────────────┐     HTTP API     ┌──────────────────┐
+│   Backstage │◄────────────────►│  app-http (Rust) │
+│   Frontend  │                  │  (Platform API)  │
+└─────────────┘                  └──────────────────┘
+       │                                 │
+       │                                 │
+       └─────────────────────────────────┘
+                    Catalog Sync
+
+```
 
 ## Integration
 
-(To be documented)
+### API Contracts
+
+The plugin integrates with the following HTTP endpoints:
+
+| Endpoint | Purpose | Method |
+|----------|---------|--------|
+| `/platform/tasks` | Task status management | GET, POST |
+| `/platform/ui-contract` | UI contract validation | GET |
+| `/platform/questions` | Question/answer API | GET, POST |
+
+### Configuration
+
+Required environment variables:
+
+```yaml
+# app-config.yaml
+backend:
+  baseUrl: http://localhost:7007
+  cors:
+    origin: http://localhost:3000
+
+integrations:
+  rustTemplate:
+    baseUrl: http://localhost:8080
+    apiVersion: v1
+```
 
 ## Development
 
-(To be documented)
+### Prerequisites
+
+- Node.js 18+
+- Rust toolchain (via Nix)
+- Backstage development environment
+
+### Local Development
+
+```bash
+# Start the Rust HTTP API
+cd crates/app-http
+cargo run
+
+# Start Backstage in development mode
+cd backstage
+yarn install
+yarn dev
+```
+
+### Building for Production
+
+```bash
+cd backstage
+yarn build
+yarn export
+```
+
+## Related Documentation
+
+- `backstage/docs/architecture.md` - Detailed architecture documentation
+- `crates/app-http/README.md` - HTTP API reference
+- `docs/gov-contracts/` - Platform API contracts
+
 ```
 
 ### 4. Fix Issue #8: Artifact name conflicts (LOW-MEDIUM PRIORITY)
@@ -117,6 +200,7 @@ This is a placeholder for Backstage-specific documentation.
 ```
 
 **After:**
+
 ```yaml
 - name: Upload artifacts
   uses: actions/upload-artifact@v4
@@ -129,7 +213,7 @@ This is a placeholder for Backstage-specific documentation.
 
 ## Verification Commands
 
-### After flake.nix changes:
+### After flake.nix changes
 
 ```bash
 # Update Nix environment
@@ -150,7 +234,7 @@ cargo build --workspace
 cargo llvm-cov --workspace
 ```
 
-### After backstage docs:
+### After backstage docs
 
 ```bash
 # Verify file exists
@@ -160,7 +244,7 @@ ls -la backstage/docs/index.md
 cd backstage && mkdocs build
 ```
 
-### After artifact fix:
+### After artifact fix
 
 ```bash
 # Push to PR and watch ci-template-selftest.yml job

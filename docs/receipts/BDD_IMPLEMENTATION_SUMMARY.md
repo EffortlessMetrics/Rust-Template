@@ -20,6 +20,7 @@ This document summarizes the implementation of the first batch of reusable Cucum
 A comprehensive new module containing reusable step definitions organized into the following categories:
 
 #### File Operations
+
 - **File existence checks:**
   - `the file "{path}" should not exist`
   - `the directory "{path}" should exist`
@@ -47,17 +48,20 @@ A comprehensive new module containing reusable step definitions organized into t
   - `I create a file "{path}" with content "{text}"`
 
 #### String Assertions
+
 - `the output should not contain "{text}"`
 - `the output should match pattern "{regex}"`
 - `the output should be empty`
 - `the output should not be empty`
 
 #### JSON Assertions
+
 - `the JSON output should not have field "{field}"`
 - `the JSON field "{field}" should equal "{value}"`
 - `the JSON field "{field}" should contain "{substring}"`
 
 #### Helper Functions
+
 - `workspace_root()` - Get the workspace root for the current test
 - `resolve_path()` - Resolve paths relative to workspace root
 - `read_file_content()` - Read file contents as string
@@ -97,13 +101,17 @@ A comprehensive new module containing reusable step definitions organized into t
 ## Testing Results
 
 ### Build Status
+
 ✅ **All builds successful**
+
 ```
 cargo build -p acceptance
 ```
 
 ### Test Status
+
 ✅ **All BDD tests passing**
+
 ```
 cargo xtask bdd
 ✓ Acceptance tests passed
@@ -111,6 +119,7 @@ JUnit output: target/junit/acceptance.xml
 ```
 
 ### Demo Scenarios
+
 Created and tested demo scenarios covering:
 - ✅ File operations (create, check existence, check content, delete)
 - ✅ Pattern matching in file content
@@ -164,12 +173,14 @@ All demo scenarios passed successfully and were removed after validation.
 ## List of Implemented Steps
 
 ### File Existence (4 steps)
+
 1. `the file "{path}" should not exist`
 2. `the directory "{path}" should exist`
 3. `the directory "{path}" should not exist`
 4. NOTE: `the file "{path}" should exist` - already exists in `xtask_devex.rs`
 
 ### File Content (5 steps)
+
 5. `the file "{path}" should contain "{text}"`
 6. `the file "{path}" should not contain "{text}"`
 7. `the file "{path}" should match pattern "{regex}"`
@@ -177,26 +188,31 @@ All demo scenarios passed successfully and were removed after validation.
 9. `the file "{path}" should not be empty`
 
 ### File Permissions - Unix Only (2 steps)
+
 10. `the file "{path}" should be executable`
 11. `the file "{path}" should not be executable`
 
 ### File Setup - Given Steps (3 steps)
+
 12. `a file "{path}" with content:` (multiline)
 13. `a file "{path}" exists`
 14. `a directory "{path}" exists`
 
 ### File Manipulation - When Steps (3 steps)
+
 15. `I delete the file "{path}"`
 16. `I delete the directory "{path}"`
 17. `I create a file "{path}" with content "{text}"`
 
 ### String Assertions (4 steps)
+
 18. `the output should not contain "{text}"`
 19. `the output should match pattern "{regex}"`
 20. `the output should be empty`
 21. `the output should not be empty`
 
 ### JSON Assertions (3 steps)
+
 22. `the JSON output should not have field "{field}"`
 23. `the JSON field "{field}" should equal "{value}"`
 24. `the JSON field "{field}" should contain "{substring}"`
@@ -261,14 +277,18 @@ Scenario: Command output validation
 ## Best Practices
 
 ### 1. Use Descriptive Paths
+
 Always use clear, descriptive file paths:
+
 ```gherkin
 ✅ Good: Then the file "docs/adr/ADR-001-auth.md" should exist
 ❌ Bad:  Then the file "file1.md" should exist
 ```
 
 ### 2. Clean Up Test Artifacts
+
 Always clean up files/directories created during tests:
+
 ```gherkin
 Given a directory "temp/test" exists
 When I create a file "temp/test/data.json" with content "{}"
@@ -277,13 +297,17 @@ When I delete the directory "temp/test"  # Cleanup
 ```
 
 ### 3. Use Pattern Matching for Flexibility
+
 When exact matches are too brittle:
+
 ```gherkin
 Then the file "CHANGELOG.md" should match pattern "## \[\d+\.\d+\.\d+\]"
 ```
 
 ### 4. Prefer Specific Assertions
+
 Use the most specific assertion available:
+
 ```gherkin
 ✅ Good: Then the file "README.md" should contain "Quick Start"
 ❌ Bad:  Then the output should contain "README"

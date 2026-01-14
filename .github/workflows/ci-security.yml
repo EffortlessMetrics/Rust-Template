@@ -29,13 +29,16 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions: { contents: read }
+    env:
+      # Tool version sourced from .github/workflows/tool-versions.yml
+      GITLEAKS_VERSION: "8.21.2"
     steps:
       - uses: actions/checkout@v4
         with: { fetch-depth: 0 }
       # Use gitleaks directly (free) instead of gitleaks-action (requires license)
       - name: Install gitleaks
         run: |
-          curl -sSfL https://github.com/gitleaks/gitleaks/releases/download/v8.21.2/gitleaks_8.21.2_linux_x64.tar.gz | tar xz
+          curl -sSfL https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz | tar xz
           chmod +x gitleaks
       - name: Run gitleaks
         run: ./gitleaks detect --source . --verbose --redact --config .gitleaks.toml
@@ -68,24 +71,24 @@ jobs:
             echo "   Action required: Run 'cargo xtask tools-checksum-update' to create it"
             exit 1
           fi
-          
+
           if [ ! -s "scripts/tools.sha256" ]; then
             echo "🚨 SECURITY ERROR: scripts/tools.sha256 is empty"
             echo "   Action required: Run 'cargo xtask tools-checksum-update' to populate it"
             exit 1
           fi
-          
+
           # Count actual checksum entries (non-comment, non-empty)
           checksum_entries=$(grep -c '^[a-zA-Z0-9-]*-[0-9a-zA-Z.-]* [a-f0-9]\{64\}$' scripts/tools.sha256 || echo "0")
           echo "Found $checksum_entries checksum entries"
-          
+
           if [ "$checksum_entries" -lt 12 ]; then
             echo "🚨 SECURITY ERROR: scripts/tools.sha256 has insufficient checksum entries"
             echo "   Expected at least 12 entries (3 tools × 4 platforms minimum)"
             echo "   Action required: Run 'cargo xtask tools-checksum-update' to update it"
             exit 1
           fi
-          
+
           echo "✓ Checksum file validation passed"
       - name: Validate checksum format
         run: |
@@ -98,7 +101,7 @@ jobs:
               exit 1
             fi
           done
-          
+
           echo "✓ Checksum format validation passed"
       - name: Test checksum enforcement
         run: |
@@ -108,5 +111,5 @@ jobs:
             echo "   bootstrap-tools.sh should fail when ENFORCE_CHECKSUMS=1 and checksums are missing"
             exit 1
           fi
-          
+
           echo "✓ Checksum enforcement validation passed"

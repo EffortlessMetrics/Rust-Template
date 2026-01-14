@@ -1,8 +1,8 @@
 <!-- doclint:disable orphan-version -->
 # ADR-0007: Dependency & Security Health
 
-**Status:** Accepted  
-**Date:** 2025-11-19  
+**Status:** Accepted
+**Date:** 2025-11-19
 **Authors:** System Architecture Team
 
 ## Context
@@ -52,7 +52,7 @@ multiple-versions = "warn"  # Prefer single version per crate
 
 ## Consequences
 
-###  Benefits
+### Benefits
 
 1. **Early Detection**: Catch vulnerabilities before merge/deploy
 2. **Policy as Code**: License policy is explicit, versioned, auditable

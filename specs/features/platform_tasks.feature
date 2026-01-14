@@ -70,7 +70,6 @@ Feature: Platform Tasks Management
     And the JSON should contain a task with id "TASK-API-004"
     And the JSON should not contain a task with id "TASK-API-003"
 
-  # FIXME: "closed" status not normalizing to "Done" - see task status normalization code
   @AC-TPL-TASKS-HTTP @wip
   Scenario: Task statuses are normalized to the canonical set
     Given the following tasks exist in "specs/tasks.yaml":

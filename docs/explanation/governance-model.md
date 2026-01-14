@@ -54,6 +54,7 @@ Stories (US-*)
 **What:** High-level user goals or platform capabilities
 
 **Example:**
+
 ```yaml
 - id: US-TPL-001
   title: "Service Core Capabilities"
@@ -70,6 +71,7 @@ Stories (US-*)
 **What:** Concrete system properties or behaviors that satisfy a story
 
 **Example:**
+
 ```yaml
 - id: REQ-TPL-HEALTH
   title: "Health Check Endpoint"
@@ -93,6 +95,7 @@ Stories (US-*)
 **What:** Precise, testable statements about system behavior
 
 **Example:**
+
 ```yaml
 acceptance_criteria:
   - id: AC-TPL-001
@@ -122,6 +125,7 @@ acceptance_criteria:
 **What:** Executable code that proves an AC is satisfied
 
 **BDD Example:**
+
 ```gherkin
 @AC-TPL-001
 Scenario: Health endpoint returns OK when service is healthy
@@ -132,6 +136,7 @@ Scenario: Health endpoint returns OK when service is healthy
 ```
 
 **Unit Test Example:**
+
 ```rust
 /// AC-TPL-CONFIG-VALIDATION: Validates that the service rejects invalid
 /// configuration at startup and exits with a clear error message.
@@ -157,6 +162,7 @@ fn config_validation_rejects_invalid() {
 **What:** Human-readable explanations linking back to specs
 
 **Design Doc Example:**
+
 ```yaml
 ---
 id: DESIGN-PLT-GRAPH-001
@@ -171,6 +177,7 @@ This document explains the structural integrity rules...
 ```
 
 **ADR Example:**
+
 ```yaml
 ---
 id: ADR-0005
@@ -190,6 +197,7 @@ requirements: [REQ-PLT-SELFTEST]
 **What:** `cargo xtask` commands that execute workflows
 
 **Defined in `specs/devex_flows.yaml`:**
+
 ```yaml
 commands:
   - id: selftest
@@ -231,6 +239,7 @@ The governance graph is the **runtime representation** of the specs hierarchy. I
 - `mentioned_in` — Command → Flow
 
 **Example:**
+
 ```json
 {
   "nodes": [
@@ -258,6 +267,7 @@ The governance graph is the **runtime representation** of the specs hierarchy. I
 5. **ADR_EXISTS** — Every ADR reference in specs exists as a file
 
 **Enforcement:**
+
 ```bash
 # Validate graph invariants
 cargo xtask graph-export --check-invariants
@@ -274,6 +284,7 @@ cargo xtask selftest
 ### 3.3 Querying the Graph
 
 **CLI:**
+
 ```bash
 # Export graph as JSON
 cargo xtask graph-export --format json > graph.json
@@ -283,6 +294,7 @@ cargo xtask graph-export --format mermaid > graph.mmd
 ```
 
 **HTTP API:**
+
 ```bash
 # Get full graph
 curl http://localhost:8080/platform/graph
@@ -429,6 +441,7 @@ The enforcement level is configurable via environment variables:
 **Enforcement Levels:**
 
 1. **Default (no env vars)** — Unknown kernel ACs are advisory (warning only)
+
    ```bash
    cargo xtask selftest
    # ⚠ 58 kernel ACs have unknown coverage (advisory)
@@ -436,6 +449,7 @@ The enforcement level is configurable via environment variables:
    ```
 
 2. **Budget mode** — Fail if unknown count exceeds budget
+
    ```bash
    KERNEL_UNKNOWN_BUDGET=50 cargo xtask selftest
    # ❌ Kernel AC coverage gate failed (budget: 50, actual: 58)
@@ -443,6 +457,7 @@ The enforcement level is configurable via environment variables:
    ```
 
 3. **Strict mode** — Zero tolerance for unknowns
+
    ```bash
    XTASK_STRICT_AC_COVERAGE=1 cargo xtask selftest
    # ❌ Kernel AC coverage gate failed (strict mode)
@@ -454,16 +469,19 @@ The enforcement level is configurable via environment variables:
 To progressively improve kernel AC coverage:
 
 1. Start with current count as budget:
+
    ```bash
    KERNEL_UNKNOWN_BUDGET=58 cargo xtask selftest
    ```
 
 2. As you add tests, lower the budget:
+
    ```bash
    KERNEL_UNKNOWN_BUDGET=50 cargo xtask selftest
    ```
 
 3. Eventually reach strict mode:
+
    ```bash
    XTASK_STRICT_AC_COVERAGE=1 cargo xtask selftest
    ```
@@ -471,6 +489,7 @@ To progressively improve kernel AC coverage:
 **CI Configuration:**
 
 In `.github/workflows/tier1-selftest.yml`:
+
 ```yaml
 # Enable strict mode on main branch
 env:
@@ -507,6 +526,7 @@ Skills and Agents are **first-class governance artifacts** — they're not just 
 - **No Secrets:** Never hardcode API keys, tokens, or credentials
 
 **Example:**
+
 ```yaml
 ---
 name: governed-feature-dev
@@ -525,6 +545,7 @@ linked-flows:
 ```
 
 **Validation:**
+
 ```bash
 # Lint Skills
 cargo xtask skills-lint
@@ -561,6 +582,7 @@ See [SKILLS_GOVERNANCE.md](../SKILLS_GOVERNANCE.md) for details.
 - **No Secrets:** Never hardcode API keys, tokens, or credentials
 
 **Example:**
+
 ```yaml
 ---
 name: feature-dev-agent
@@ -581,6 +603,7 @@ skills:
 ```
 
 **Validation:**
+
 ```bash
 # Lint Agents
 cargo xtask agents-lint
@@ -619,6 +642,7 @@ Beyond specs and tests, the governance model includes artifacts for decisions, f
 - Trade-offs between alternatives
 
 **Structure:**
+
 ```yaml
 ---
 id: ADR-0005
@@ -639,6 +663,7 @@ requirements: [REQ-PLT-SELFTEST]
 ```
 
 **Commands:**
+
 ```bash
 # Create new ADR
 cargo xtask adr-new "Title of decision"
@@ -667,6 +692,7 @@ cargo xtask adr-check
 - Missing or unclear documentation
 
 **Structure:**
+
 ```yaml
 id: FRICTION-AGENT-001
 date: 2025-11-20
@@ -685,6 +711,7 @@ resolution:
 ```
 
 **Commands:**
+
 ```bash
 # List friction entries
 cargo xtask friction-list
@@ -695,6 +722,7 @@ cargo xtask friction-new --category devex --severity medium --summary "Issue"
 ```
 
 **API:**
+
 ```bash
 # Get friction summary
 curl http://localhost:8080/platform/status | jq '.governance.friction'
@@ -715,6 +743,7 @@ curl http://localhost:8080/platform/friction
 **Location:** `specs/tasks.yaml`
 
 **Structure:**
+
 ```yaml
 - id: TASK-TPL-STATUS-CLI-001
   title: "Implement CLI governance status dashboard"
@@ -726,6 +755,7 @@ curl http://localhost:8080/platform/friction
 ```
 
 **Commands:**
+
 ```bash
 # List tasks
 cargo xtask tasks-list
@@ -738,6 +768,7 @@ cargo xtask task-update --id TASK-001 --status InProgress
 ```
 
 **API:**
+
 ```bash
 # Get tasks
 curl http://localhost:8080/platform/tasks
@@ -760,6 +791,7 @@ curl http://localhost:8080/platform/tasks/graph
 - Enable task-focused development (`cargo xtask bundle <task>`)
 
 **State Machine:**
+
 ```
 Todo → InProgress → Review → Done
 ```

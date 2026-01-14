@@ -41,16 +41,19 @@ Choose based on your current situation and governance goals:
 | **Full governance suite** | Strict | Weeks 1-5 |
 
 ### Minimal Profile
+
 - **Just want:** fmt, clippy, test gates
 - **Skip:** AC ledger, BDD, policy tests
 - **Best for:** Small teams, low-risk services
 
 ### Standard Profile (Recommended)
+
 - **Adds:** AC ledger, spec tracking, basic policies
 - **Coverage:** 60-80% of production features
 - **Best for:** Most production services
 
 ### Strict Profile
+
 - **Adds:** All contract gates, privacy policies, full traceability
 - **Coverage:** 90%+ of features
 - **Best for:** Regulated industries, compliance-heavy systems
@@ -78,12 +81,14 @@ See [ADOPTION.md](../../ADOPTION.md#3-brownfield-adoption-existing-services) for
 ## Two Integration Patterns
 
 ### Pattern A: Clone and Detach (Full Control)
+
 - **Use when:** Building 1-2 services, want full ownership
 - **Pros:** No merge conflicts, full customization freedom
 - **Cons:** No automatic template updates
 - **See:** [adoption-patterns.md](../explanation/adoption-patterns.md#pattern-a-clone-and-detach-single-service)
 
 ### Pattern B: Template as Upstream (Stay Current)
+
 - **Use when:** Building 3-10 services, want ongoing improvements
 - **Pros:** Get template updates automatically
 - **Cons:** Merge conflicts, requires discipline
@@ -102,6 +107,7 @@ See the [brownfield-demo](../../examples/brownfield-demo/) for a complete workin
 - Policy and spec scaffolding
 
 Run the demo:
+
 ```bash
 cd examples/brownfield-demo
 cargo run -p xtask -- init --mode=brownfield
@@ -115,6 +121,7 @@ cargo run -p xtask -- selftest
 If your project is **highly customized** or you only want selective governance features:
 
 Use the core library without the full template structure:
+
 ```toml
 [dependencies]
 rust_iac_xtask_core = { git = "https://github.com/yourorg/rust-template" }
@@ -129,15 +136,19 @@ See [MISSING_MANUAL.md](../MISSING_MANUAL.md#1-the-brownfield-adoption-path-libr
 ## Troubleshooting
 
 ### Existing tests don't map to ACs
+
 **Solution:** Start with `AC-LEGACY-*` prefixes. Incrementally refactor as you add new features.
 
 ### Too many lint warnings blocking progress
+
 **Solution:** Use `#[allow(...)]` temporarily. Set clippy to warn-only until you clean up legacy code.
 
 ### Coverage too low to meet gates
+
 **Solution:** Start with Minimal profile (no coverage gate). Ratchet up to Standard once baseline improves.
 
 ### Team resists AC-first workflow
+
 **Solution:** Adopt incrementally. Start with just `xtask check` in CI. Add AC ledger only for new features.
 
 See [add-governance-to-existing-repo.md](../how-to/add-governance-to-existing-repo.md#troubleshooting) for detailed troubleshooting.

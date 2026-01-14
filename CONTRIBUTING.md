@@ -45,9 +45,9 @@ cargo run -p xtask -- selftest
 
 See [`docs/dev-environment.md`](docs/dev-environment.md). In this mode:
 
-* Core checks and BDD work as usual.
-* Policy tests are *skipped* locally unless you install `conftest` yourself.
-* CI always enforces policies.
+- Core checks and BDD work as usual.
+- Policy tests are *skipped* locally unless you install `conftest` yourself.
+- CI always enforces policies.
 
 ---
 
@@ -62,12 +62,13 @@ The `xtask` command provides a complete developer experience for this template.
 2. `cargo xtask doctor`
 3. `cargo xtask check`
 
-* `doctor` validates Rust, Cargo, Nix, and supporting tools
-* `check` is the fast dev loop (fmt + clippy + tests)
+- `doctor` validates Rust, Cargo, Nix, and supporting tools
+- `check` is the fast dev loop (fmt + clippy + tests)
 
 ### Adding new behavior (AC-first)
 
 1. Scaffold the AC:
+
    ```bash
    cargo xtask ac-new AC-TPL-010 "User can cancel account" \
      --story US-TPL-002 --requirement REQ-TPL-CANCEL
@@ -78,6 +79,7 @@ The `xtask` command provides a complete developer experience for this template.
 3. Add a `@AC-TPL-010` scenario to the appropriate file in `specs/features/`
 
 4. Regenerate the LLM bundle:
+
    ```bash
    cargo xtask bundle implement_ac
    ```
@@ -85,6 +87,7 @@ The `xtask` command provides a complete developer experience for this template.
 5. Implement code + tests with LLM assistance
 
 6. Run BDD and full gate:
+
    ```bash
    cargo xtask bdd
    cargo xtask selftest
@@ -98,8 +101,8 @@ cargo xtask adr-new "Introduce order cancellation"
 cargo xtask adr-check
 ```
 
-* Record the decision in the ADR
-* Link it from `specs/spec_ledger.yaml` where appropriate
+- Record the decision in the ADR
+- Link it from `specs/spec_ledger.yaml` where appropriate
 
 ### Changing dependencies
 
@@ -109,8 +112,8 @@ Whenever you touch `Cargo.toml` or `Cargo.lock`:
 cargo xtask audit
 ```
 
-* Fix any vulnerabilities or license violations
-* If you must accept a risk, document it in ADR-0007 before merging
+- Fix any vulnerabilities or license violations
+- If you must accept a risk, document it in ADR-0007 before merging
 
 ### Preparing a release
 
@@ -148,6 +151,7 @@ Version numbers are centrally tracked in `specs/spec_ledger.yaml`. All other fil
 **Bump workflow:**
 
 1. Update the canonical version:
+
    ```bash
    # In specs/spec_ledger.yaml
    metadata:
@@ -164,6 +168,7 @@ Version numbers are centrally tracked in `specs/spec_ledger.yaml`. All other fil
 5. Run `cargo xtask selftest` to validate
 
 6. Tag as `vX.Y.Z-kernel`:
+
    ```bash
    git tag -s vX.Y.Z-kernel -m "Kernel release vX.Y.Z"
    ```
@@ -210,19 +215,19 @@ then `git commit` will run:
 
 **Behaviour:**
 
-* The hook runs inside the Nix devshell when available.
-* It **automatically fixes and stages**:
-  * Rust formatting (`cargo fmt --all`)
-  * Skills format (`SKILL.md` tidiness)
-  * AC status report (`docs/feature_status.md`)
-* It **blocks the commit** (hard gates) on:
-  * Clippy warnings
-  * Test failures
-  * Skills/Agents governance violations (policy errors)
-* It **warns but doesn't block** (soft gates) on:
-  * Documentation consistency issues
-  * Spelling errors (unless `XTASK_STRICT_PRECOMMIT=1`)
-* It runs the full 8-step selftest, **excluding** `@ci-only` BDD scenarios.
+- The hook runs inside the Nix devshell when available.
+- It **automatically fixes and stages**:
+  - Rust formatting (`cargo fmt --all`)
+  - Skills format (`SKILL.md` tidiness)
+  - AC status report (`docs/feature_status.md`)
+- It **blocks the commit** (hard gates) on:
+  - Clippy warnings
+  - Test failures
+  - Skills/Agents governance violations (policy errors)
+- It **warns but doesn't block** (soft gates) on:
+  - Documentation consistency issues
+  - Spelling errors (unless `XTASK_STRICT_PRECOMMIT=1`)
+- It runs the full 8-step selftest, **excluding** `@ci-only` BDD scenarios.
 
 **TL;DR:** Just run `git commit`. Mechanical fixes are silent. Real failures show up clearly. If precommit fails, run `nix develop -c cargo xtask precommit` to see details, fix the issue, and commit again.
 
@@ -232,13 +237,13 @@ You should treat a red pre-commit as "something is actually wrong", not "test ha
 
 The CI configuration mirrors and extends the local gates:
 
-* **Tier 1:** `cargo xtask selftest` (required on main)
-* **Policy checks:** OPA/Rego tests under `policy/*.rego`
-* **Coverage/graph:** AC coverage and graph invariants
-* **Meta tests (CI-only):**
+- **Tier 1:** `cargo xtask selftest` (required on main)
+- **Policy checks:** OPA/Rego tests under `policy/*.rego`
+- **Coverage/graph:** AC coverage and graph invariants
+- **Meta tests (CI-only):**
 
-  * `AC-TPL-BDD-EXIT-CODES` – harness exit semantics
-  * `AC-TPL-EXAMPLE-FORK-BUILDS` – example fork builds and passes its own selftest
+  - `AC-TPL-BDD-EXIT-CODES` – harness exit semantics
+  - `AC-TPL-EXAMPLE-FORK-BUILDS` – example fork builds and passes its own selftest
 
 CI runs **all** BDD scenarios, including those tagged `@ci-only`:
 
@@ -292,15 +297,15 @@ If docs-check or selftest fail, fix the misalignment before tagging.
 
 Use topic branches:
 
-* `feat/<area>-<short-description>`
-* `fix/<area>-<short-description>`
-* `docs/<area>-<short-description>`
+- `feat/<area>-<short-description>`
+- `fix/<area>-<short-description>`
+- `docs/<area>-<short-description>`
 
 Example:
 
-* `feat/app-http-tasks-api`
-* `fix/policy-k8s-envfrom`
-* `docs/llm-workflow-clarifications`
+- `feat/app-http-tasks-api`
+- `fix/policy-k8s-envfrom`
+- `docs/llm-workflow-clarifications`
 
 ### 4.2 Making documentation changes
 
@@ -313,9 +318,9 @@ See [`docs/how-to/change-docs-safely.md`](docs/how-to/change-docs-safely.md) for
 
 Short, imperative subject:
 
-* `feat(app-http): add tasks endpoint`
-* `fix(policy): avoid var shadowing in envFrom rule`
-* `docs: clarify Nix-first dev workflow`
+- `feat(app-http): add tasks endpoint`
+- `fix(policy): avoid var shadowing in envFrom rule`
+- `docs: clarify Nix-first dev workflow`
 
 If a commit addresses a specific AC or issue, reference it in the body:
 
@@ -358,9 +363,9 @@ CI includes supply-chain hardening workflows (SBOM and provenance generation):
 
 ### 5.3 Keep the hexagonal architecture intact
 
-* Domain logic stays in `business-core` and `model`.
-* Adapters (HTTP, gRPC, DB) live in their crates and depend inward.
-* Don't pull adapters into `business-core`.
+- Domain logic stays in `business-core` and `model`.
+- Adapters (HTTP, gRPC, DB) live in their crates and depend inward.
+- Don't pull adapters into `business-core`.
 
 If you're unsure: check `docs/explanation/hexagonal-architecture.md`.
 
@@ -432,8 +437,8 @@ cargo run -p xtask -- policy-test
 
 Some tests are marked `#[ignore]` when they:
 
-* manipulate global state (e.g., `set_current_dir`),
-* or require external dependencies (e.g., Docker).
+- manipulate global state (e.g., `set_current_dir`),
+- or require external dependencies (e.g., Docker).
 
 Those tests include comments explaining how to run them explicitly.
 
@@ -441,10 +446,10 @@ Those tests include comments explaining how to run them explicitly.
 
 ## 8. Style and tooling
 
-* Rust code: `rustfmt` + `clippy -D warnings`
-* Rego: keep rules small and name things for intent, not implementation.
-* YAML: prefer explicit structure over "clever" anchors for template users.
-* Docs: short sections, headings, and examples. Avoid walls of text where possible.
+- Rust code: `rustfmt` + `clippy -D warnings`
+- Rego: keep rules small and name things for intent, not implementation.
+- YAML: prefer explicit structure over "clever" anchors for template users.
+- Docs: short sections, headings, and examples. Avoid walls of text where possible.
 
 ---
 
@@ -542,11 +547,11 @@ See [`CODEOWNERS`](./CODEOWNERS) for the full list.
 
 If you're unsure whether a change fits:
 
-* Open a draft PR and describe:
+- Open a draft PR and describe:
 
-  * the problem,
-  * the AC or use case,
-  * your proposed approach.
-* Or open an issue referencing relevant ACs / features / policies.
+  - the problem,
+  - the AC or use case,
+  - your proposed approach.
+- Or open an issue referencing relevant ACs / features / policies.
 
 Thanks again for contributing. This template is expressly meant to be **used** and **evolved** by people who care about governed, AI-assisted Rust services.

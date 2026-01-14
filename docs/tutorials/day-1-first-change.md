@@ -43,6 +43,7 @@ nix develop
 **Expected:** You'll see a new shell prompt with all tools available (Rust, conftest, etc.)
 
 If you don't have Nix:
+
 ```bash
 # Install Nix first
 curl -L https://nixos.org/nix/install | sh
@@ -55,6 +56,7 @@ cargo run -p xtask -- quickstart
 ```
 
 **Expected output:**
+
 ```
 Running quickstart validation...
 ✓ Checking Rust toolchain...
@@ -106,6 +108,7 @@ cargo run -p xtask -- policy-test
 ```
 
 **Expected:**
+
 ```
 Testing policy: policy/ledger.rego
 ✓ All ACs have tests
@@ -149,6 +152,7 @@ cargo run -p xtask -- bdd
 ```
 
 **Expected output:**
+
 ```
 Feature: Demo Echo Endpoint
 
@@ -222,6 +226,7 @@ cargo run -p xtask -- bdd
 ```
 
 **Expected output:**
+
 ```
 Feature: Demo Echo Endpoint
 
@@ -255,6 +260,7 @@ cargo run -p xtask -- ac-status
 ```
 
 **Expected output:**
+
 ```
 ✓ Generated docs/feature_status.md
 ✓ All ACs passed
@@ -291,6 +297,7 @@ cargo run -p xtask -- selftest
 ```
 
 **Expected output:**
+
 ```
 Running comprehensive template validation...
 

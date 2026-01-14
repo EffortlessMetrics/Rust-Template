@@ -18,6 +18,7 @@
 **Timestamp**: 2025-12-02 23:01 UTC
 
 ### Summary Statistics
+
 - **Total ACs**: 112
 - **Scenarios Found**: 203 (from feature files)
 - **BDD Tests Executed**: 0 (JUnit file empty - results not captured)

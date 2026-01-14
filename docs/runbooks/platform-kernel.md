@@ -34,6 +34,7 @@ Returns the complete governance graph including:
 **Use case:** Agents and dashboards query this to understand service structure and traceability.
 
 **Example:**
+
 ```bash
 curl http://localhost:8080/platform/graph
 ```
@@ -45,6 +46,7 @@ Returns DevEx flows and commands from `specs/devex_flows.yaml`.
 **Use case:** Tools discover how to operate on the repository (e.g., "what commands are available?", "what's the release flow?").
 
 **Example:**
+
 ```bash
 curl http://localhost:8080/platform/devex/flows
 ```
@@ -56,6 +58,7 @@ Returns the document index from `specs/doc_index.yaml`, mapping docs to the stor
 **Use case:** Find design docs, ADRs, and requirements documentation.
 
 **Example:**
+
 ```bash
 curl http://localhost:8080/platform/docs/index
 ```
@@ -65,6 +68,7 @@ curl http://localhost:8080/platform/docs/index
 Returns high-level governance health status.
 
 **Example:**
+
 ```bash
 curl http://localhost:8080/platform/status
 ```
@@ -105,6 +109,7 @@ curl http://localhost:8080/platform/status
 **Cause:** Spec files are invalid or missing
 
 **Resolution:**
+
 ```bash
 cargo xtask docs-check
 cargo xtask selftest
@@ -118,6 +123,7 @@ cargo xtask selftest
 
 **Resolution:**
 Verify specs are complete:
+
 ```bash
 cargo xtask graph-export
 cargo run -p xtask -- ac-status
@@ -130,6 +136,7 @@ cargo run -p xtask -- ac-status
 **Cause:** Port conflict or missing environment variables
 
 **Resolution:**
+
 ```bash
 # Check if port is in use
 lsof -i :8080

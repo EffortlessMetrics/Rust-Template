@@ -60,8 +60,8 @@ These are written by humans but **anchored in the spec** via REQs/ACs:
 
 These files should be updated whenever:
 
-* The underlying REQs/ACs in `specs/spec_ledger.yaml` change, or
-* The associated `cargo xtask` workflows change in behaviour.
+- The underlying REQs/ACs in `specs/spec_ledger.yaml` change, or
+- The associated `cargo xtask` workflows change in behaviour.
 
 If they drift from generated views (e.g. `docs/feature_status.md`), treat that as a bug in the docs.
 
@@ -69,14 +69,14 @@ If they drift from generated views (e.g. `docs/feature_status.md`), treat that a
 
 These help humans reason about the system but are **not enforced** by ACs:
 
-* `docs/explanation/*.md`
-* Some `docs/reference/*.md` (environment, supply chain hardening, etc.)
-* `docs/how-to/*` that aren't yet tied to explicit REQs/ACs
+- `docs/explanation/*.md`
+- Some `docs/reference/*.md` (environment, supply chain hardening, etc.)
+- `docs/how-to/*` that aren't yet tied to explicit REQs/ACs
 
 They can evolve more freely, but should not contradict:
 
-* Generated docs
-* Governed hand-authored docs
+- Generated docs
+- Governed hand-authored docs
 
 ## 5. When docs disagree
 
@@ -86,13 +86,13 @@ If you see conflicting information:
 2. If a governed hand-authored doc disagrees, update that doc and reference the relevant ACs.
 3. Only if the generated output is wrong should you change specs or tests so that:
 
-   * `specs/spec_ledger.yaml` matches reality, and
-   * `cargo xtask ac-status` and related generators reflect the new truth.
+   - `specs/spec_ledger.yaml` matches reality, and
+   - `cargo xtask ac-status` and related generators reflect the new truth.
 
 Agents should prefer:
 
-* `cargo xtask ac-status --json` as the machine contract view.
-* `docs/feature_status.md` and `docs/KERNEL_SNAPSHOT.md` as human-oriented summaries.
+- `cargo xtask ac-status --json` as the machine contract view.
+- `docs/feature_status.md` and `docs/KERNEL_SNAPSHOT.md` as human-oriented summaries.
 
 ---
 
@@ -124,10 +124,10 @@ This section documents the **code-enforced invariants** that keep docs in sync w
 
 Selftest runs docs-check as one of its gates. It also validates:
 
-* Graph invariants (REQ → AC → test → doc)
-* Policy tests via conftest
-* BDD scenario execution
-* Unit test execution
+- Graph invariants (REQ → AC → test → doc)
+- Policy tests via conftest
+- BDD scenario execution
+- Unit test execution
 
 ### 6.4. Doc maintenance runbook
 
@@ -230,6 +230,7 @@ The repository uses markdownlint with the following configuration:
 | **Default rules** | Enabled | Standard markdownlint rules apply unless explicitly overridden |
 
 Configuration is in `.markdownlint.json`:
+
 ```json
 {
   "extends": "default",

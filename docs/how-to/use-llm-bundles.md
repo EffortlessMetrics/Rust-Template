@@ -74,6 +74,7 @@ Each task defines:
 ### ✅ **Good Use Cases**
 
 **1. Implementing or changing an AC**
+
 ```bash
 # Generate context
 cargo run -p xtask -- bundle implement_ac
@@ -89,6 +90,7 @@ Show me the diffs you'd make to:
 ```
 
 **2. Investigating test failures**
+
 ```bash
 # Generate debugging context
 cargo run -p xtask -- bundle debug_tests
@@ -99,6 +101,7 @@ What's the likely cause and how should I fix it?"
 ```
 
 **3. Understanding feature-AC relationships**
+
 ```bash
 cargo run -p xtask -- bundle implement_feature
 
@@ -175,6 +178,7 @@ grep "AC-TPL-005" specs/spec_ledger.yaml
 ```
 
 Output:
+
 ```yaml
 - id: AC-TPL-005
   text: "GET /api/echo returns the input message"
@@ -196,6 +200,7 @@ This bundles:
 **Step 3: Craft precise prompt with bundle**
 
 **Prompt to LLM:**
+
 ```markdown
 I've added AC-TPL-005 to the ledger: "GET /api/echo returns the input message"
 
@@ -236,6 +241,7 @@ Show me the exact diffs for each file.
 **Step 4: Review LLM output**
 
 **Expected LLM response structure:**
+
 ```rust
 // File: specs/features/template_core.feature
 // Add after existing scenarios:
@@ -334,6 +340,7 @@ cargo run -p xtask -- ac-status
 **Scenario:** You committed a feature but `cargo run -p xtask -- policy-test` fails in CI.
 
 **Error:**
+
 ```
 Policy violation in policy/ledger.rego:
 AC 'AC-NOTIF-001' must have a non-empty 'tests' array.
@@ -349,6 +356,7 @@ cargo run -p xtask -- policy-test
 ```
 
 Output:
+
 ```
 ❌ FAIL: policy/ledger.rego
   AC 'AC-NOTIF-001' must have a non-empty 'tests' array.
@@ -389,11 +397,14 @@ cargo run -p xtask -- bundle implement_ac > /tmp/policy-context.md
 **Step 4: Ask LLM to explain Rego error**
 
 **Prompt to LLM:**
+
 ```markdown
 I'm getting this policy error:
 
 ```
+
 AC 'AC-NOTIF-001' must have a non-empty 'tests' array.
+
 ```
 
 Here's the Rego policy:
@@ -416,6 +427,7 @@ Questions:
 
 Context from bundle:
 [PASTE /tmp/policy-context.md showing examples of correct AC entries]
+
 ```
 
 **Expected LLM response:**
@@ -455,6 +467,7 @@ vim specs/spec_ledger.yaml
 ```
 
 Update to:
+
 ```yaml
 - id: AC-NOTIF-001
   text: "User receives notification when task is assigned"
@@ -497,6 +510,7 @@ vim specs/spec_ledger.yaml
 ```
 
 Add new requirement:
+
 ```yaml
 - id: REQ-TPL-METRICS
   title: "Basic Service Metrics"
@@ -520,6 +534,7 @@ Includes:
 **Step 3: Use prompt template**
 
 **Prompt to LLM:**
+
 ```markdown
 Implement AC-TPL-006: "GET /api/metrics returns JSON with requestCount and uptimeSeconds"
 
@@ -540,6 +555,7 @@ Response:
 **Tasks:**
 
 1. **Model** (crates/model/src/lib.rs or new metrics.rs):
+
    ```rust
    #[derive(Serialize)]
    pub struct MetricsResponse {
@@ -549,6 +565,7 @@ Response:
    ```
 
 2. **Core logic** (crates/core/src/metrics.rs - create if needed):
+
    ```rust
    pub fn get_metrics() -> MetricsResponse {
        // Use lazy_static for counters or read from state
@@ -556,6 +573,7 @@ Response:
    ```
 
 3. **HTTP Handler** (crates/app-http/src/lib.rs):
+
    ```rust
    #[tracing::instrument(name = "metrics", skip(request_id))]
    async fn metrics_handler(
@@ -566,9 +584,11 @@ Response:
        Ok(Json(metrics))
    }
    ```
+
    Add route: `.route("/api/metrics", get(metrics_handler))`
 
 4. **BDD Scenario** (specs/features/template_core.feature):
+
    ```gherkin
    @AC-TPL-006
    Scenario: Metrics endpoint returns service statistics
@@ -587,6 +607,7 @@ Response:
 - Do NOT invent new AC IDs
 
 Show exact file paths and diffs.
+
 ```
 
 **Expected LLM Output:**
@@ -663,6 +684,7 @@ cargo run -p xtask -- bundle implement_feature > /tmp/refactor-context.md
 **Step 3: Ask LLM for refactoring**
 
 **Prompt to LLM:**
+
 ```markdown
 I see repeated validation error handling in crates/app-http/src/lib.rs.
 
@@ -695,6 +717,7 @@ Show me:
 1. The new helper function
 2. Before/after for each call site
 3. Any import changes needed
+
 ```
 
 **Expected LLM Response:**
@@ -798,6 +821,7 @@ cargo run -p xtask -- bdd 2>&1 | tee /tmp/bdd-failure.txt
 ```
 
 **Output:**
+
 ```
 Feature: Template Core Endpoints
 
@@ -832,12 +856,15 @@ Includes:
 **Step 3: Ask LLM with specific error context**
 
 **Prompt to LLM:**
+
 ```markdown
 BDD scenario @AC-TPL-002 is failing with this error:
 
 ```
+
 Expected field "gitSha" in response
 Got: {"version": "0.1.0", "git_sha": "abc123"}
+
 ```
 
 Here's the debug bundle with all relevant code:
@@ -859,12 +886,15 @@ Here's the debug bundle with all relevant code:
 > **Root Cause Analysis:**
 >
 > **1. Gherkin Expectation** (specs/features/template_core.feature:14):
+>
 > ```gherkin
 > Then I receive 200 with JSON containing "version" and "gitSha"
 > ```
+>
 > Expects: `gitSha` (camelCase)
 >
 > **2. Current Handler** (crates/app-http/src/lib.rs:78):
+>
 > ```rust
 > #[derive(Serialize)]
 > struct VersionResponse {
@@ -872,6 +902,7 @@ Here's the debug bundle with all relevant code:
 >     git_sha: String,  // ← Serializes as "git_sha" (snake_case)
 > }
 > ```
+>
 > Returns: `git_sha` (snake_case)
 >
 > **3. Why Mismatch:**
@@ -881,6 +912,7 @@ Here's the debug bundle with all relevant code:
 > **4. Fix:**
 >
 > **Option A: Rename field to match Rust conventions (use serde rename)**
+>
 > ```rust
 > #[derive(Serialize)]
 > struct VersionResponse {
@@ -891,6 +923,7 @@ Here's the debug bundle with all relevant code:
 > ```
 >
 > **Option B: Change Gherkin to match snake_case**
+>
 > ```gherkin
 > Then I receive 200 with JSON containing "version" and "git_sha"
 > ```
@@ -904,6 +937,7 @@ vim crates/app-http/src/lib.rs
 ```
 
 Update:
+
 ```rust
 #[derive(Serialize)]
 struct VersionResponse {
@@ -960,12 +994,14 @@ Human Governance → LLM Assistance → Policy Enforcement → Test Verification
 **Example: LLM Tries to Invent an AC ID**
 
 **Bad Prompt (no governance):**
+
 ```
 Add a feature that deletes tasks.
 ```
 
 **LLM Might Respond:**
 > I'll add AC-TASK-999 for task deletion:
+>
 > ```yaml
 > - id: AC-TASK-999
 >   text: "User can delete a task by ID"
@@ -981,6 +1017,7 @@ vim specs/spec_ledger.yaml
 ```
 
 Add:
+
 ```yaml
 - id: AC-TASK-008  # ← Sequential ID following convention
   text: "User can delete a task by ID"
@@ -999,6 +1036,7 @@ cargo run -p xtask -- bundle implement_ac > /tmp/context.md
 ```
 
 **Corrected Prompt:**
+
 ```markdown
 I've added AC-TASK-008 to the ledger: "User can delete a task by ID"
 
@@ -1083,6 +1121,7 @@ tasks:
 ```
 
 Then use it:
+
 ```bash
 cargo run -p xtask -- bundle my_custom_task
 ```
@@ -1106,6 +1145,7 @@ For complete syntax reference, see [gitignore documentation](https://git-scm.com
 ### Common Patterns
 
 **1. Wildcard patterns:**
+
 ```
 # Ignore all log files
 *.log
@@ -1116,6 +1156,7 @@ test_*.rs
 ```
 
 **2. Directory patterns:**
+
 ```
 # Ignore build directories
 target/
@@ -1124,6 +1165,7 @@ node_modules/
 ```
 
 **3. Path anchoring:**
+
 ```
 # Only at root
 /ROOT_FILE.txt
@@ -1133,6 +1175,7 @@ Cargo.lock
 ```
 
 **4. Recursive wildcards:**
+
 ```
 # All .draft files in docs subdirectories
 docs/**/*.draft
@@ -1142,6 +1185,7 @@ docs/**/*.draft
 ```
 
 **5. Negation (whitelist):**
+
 ```
 # Ignore all logs except error.log
 *.log
@@ -1149,6 +1193,7 @@ docs/**/*.draft
 ```
 
 **6. Character classes:**
+
 ```
 # Ignore test0.rs through test9.rs
 test[0-9].rs

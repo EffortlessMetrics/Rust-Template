@@ -70,6 +70,7 @@ We adopt an **IDP Tile + JSON Contract** architecture with explicit stability gu
 We define 4 primary IDP tiles as first-class integration points:
 
 #### Tile 1: Governance Health
+
 - **Purpose**: High-level governance status for dashboard cards
 - **Endpoint**: `/platform/status`
 - **Schema**: `GovernanceStatus` (documented in docs/explanation/json-contracts.md)
@@ -77,6 +78,7 @@ We define 4 primary IDP tiles as first-class integration points:
 - **Key fields**: `governance.all_passing`, `ac_coverage.{passing,total}`, `policy_health`
 
 #### Tile 2: Documentation Health
+
 - **Purpose**: Documentation inventory and health metrics
 - **Endpoint**: `/platform/docs/index`
 - **Schema**: `DocsIndex` (documented in docs/explanation/json-contracts.md)
@@ -84,6 +86,7 @@ We define 4 primary IDP tiles as first-class integration points:
 - **Key fields**: `docs[].{id, title, doc_type, health}`, `summary.{total, by_type, health_dist}`
 
 #### Tile 3: AC Coverage
+
 - **Purpose**: Acceptance criteria test mapping and coverage
 - **Endpoint**: `/platform/coverage`
 - **Schema**: `ACCoverage` (documented in docs/explanation/json-contracts.md)
@@ -91,6 +94,7 @@ We define 4 primary IDP tiles as first-class integration points:
 - **Key fields**: `acceptance_criteria[].{id, status, test_count}`, `summary.{total, passing, failing}`
 
 #### Tile 4: Task Hints (Agent Guidance)
+
 - **Purpose**: Prioritized work recommendations for agents and developers
 - **Endpoint**: `/platform/agent/hints`
 - **Schema**: `AgentHints` (documented in docs/explanation/json-contracts.md)
@@ -165,6 +169,7 @@ All contracts documented in `docs/explanation/json-contracts.md` with:
 - **Deprecations**: Any sunset fields?
 
 **Format:**
+
 ```markdown
 ## `/platform/status` (Governance Health)
 
@@ -189,6 +194,7 @@ All contracts documented in `docs/explanation/json-contracts.md` with:
 **Introduced**: v3.3.0
 **Last breaking change**: v3.0.0
 **Stability**: Stable (no planned breaking changes)
+
 ```
 
 ### 4. Integration Guidance
@@ -211,6 +217,7 @@ spec:
 ```
 
 **Example: Port.io integration**
+
 ```json
 {
   "identifier": "governance-health",
@@ -226,6 +233,7 @@ spec:
 ```
 
 **Example: Agent automation**
+
 ```python
 # Agent script: Fetch prioritized work
 response = requests.get("http://localhost:8080/platform/agent/hints")

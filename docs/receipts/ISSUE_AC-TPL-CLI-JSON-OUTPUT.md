@@ -13,15 +13,18 @@
 > For core reporting commands (`ac-status`, `version`, `friction-list`, `questions-list`, `fork-list`), passing `--json` produces a single valid JSON document on stdout with a stable top-level shape, and exit codes follow the success/failure of the operation.
 
 ### Tags
+
 - `kernel`
 - `devex`
 - `ai`
 - `idp`
 
 ### Classification
+
 - **must_have_ac**: `true` (kernel contract)
 
 ### Linked Tests
+
 - **Type**: integration
 - **Tag**: `@AC-TPL-CLI-JSON-OUTPUT`
 - **File**: `specs/features/xtask_devex.feature`
@@ -31,6 +34,7 @@
 The AC is validated by **5 scenarios** in `specs/features/xtask_devex.feature`:
 
 ### 1. Scenario: version command supports JSON output (lines 633-640)
+
 ```gherkin
 @AC-TPL-CLI-JSON-OUTPUT
 Scenario: version command supports JSON output
@@ -44,6 +48,7 @@ Scenario: version command supports JSON output
 **Status**: ✅ **PASS**
 
 ### 2. Scenario: ac-status supports JSON output format (lines 641-650)
+
 ```gherkin
 @AC-TPL-CLI-JSON-OUTPUT
 Scenario: ac-status supports JSON output format
@@ -59,6 +64,7 @@ Scenario: ac-status supports JSON output format
 **Status**: ✅ **PASS**
 
 ### 3. Scenario: friction-list supports JSON output (lines 651-657)
+
 ```gherkin
 @AC-TPL-CLI-JSON-OUTPUT
 Scenario: friction-list supports JSON output
@@ -71,6 +77,7 @@ Scenario: friction-list supports JSON output
 **Status**: ✅ **PASS**
 
 ### 4. Scenario: questions-list supports JSON output (lines 658-664)
+
 ```gherkin
 @AC-TPL-CLI-JSON-OUTPUT
 Scenario: questions-list supports JSON output
@@ -83,6 +90,7 @@ Scenario: questions-list supports JSON output
 **Status**: ✅ **PASS**
 
 ### 5. Scenario: fork-list supports JSON output (lines 665-671)
+
 ```gherkin
 @AC-TPL-CLI-JSON-OUTPUT
 Scenario: fork-list supports JSON output
@@ -97,11 +105,13 @@ Scenario: fork-list supports JSON output
 ## Test Execution Results
 
 ### Command to Reproduce
+
 ```bash
 CUCUMBER_TAG_EXPRESSION="@AC-TPL-CLI-JSON-OUTPUT" cargo test -p acceptance --test acceptance
 ```
 
 ### Output Summary
+
 ```
 [Summary]
 1 feature
@@ -112,6 +122,7 @@ CUCUMBER_TAG_EXPRESSION="@AC-TPL-CLI-JSON-OUTPUT" cargo test -p acceptance --tes
 ```
 
 ### Detailed Results (2025-12-02 22:57 UTC)
+
 - **Total Scenarios**: 5
 - **Passed**: 5
 - **Failed**: 0
@@ -127,6 +138,7 @@ All steps executed successfully:
 ## Implementation History
 
 ### Key Commits
+
 - **51e1dae** (2025-12-02): "feat: Finalize three core ACs (CLI JSON + metadata)"
   - Implemented JSON output support for core CLI commands
   - Added `--json` flag handling to version, ac-status, friction-list, questions-list, fork-list
@@ -139,6 +151,7 @@ All steps executed successfully:
 ## Current Status: PASSING ✅
 
 ### What Works
+
 1. **version --json**: Returns valid JSON with kernel_version, template_version, git_sha fields
 2. **ac-status --json**: Returns valid JSON with timestamp, acs array, summary statistics
 3. **friction-list --json**: Returns valid JSON array of friction entries
@@ -146,6 +159,7 @@ All steps executed successfully:
 5. **fork-list --json**: Returns valid JSON array of registered forks
 
 ### Contract Fulfillment
+
 - ✅ Single valid JSON document on stdout
 - ✅ Stable top-level shape (each command has consistent schema)
 - ✅ Exit codes follow operation success/failure

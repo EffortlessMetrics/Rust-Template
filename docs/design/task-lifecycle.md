@@ -29,6 +29,7 @@ Define a finite state machine for task status with explicit allowed transitions.
 - `Done`: Completed and validated
 
 **Allowed Transitions**:
+
 ```
 Todo -> InProgress
 InProgress -> Review
@@ -40,6 +41,7 @@ InProgress -> Todo (backward for re-planning)
 ## Implementation Approach
 
 **Domain Model**: `crates/business-core/src/lib.rs` (governance module):
+
 ```rust
 pub enum TaskStatus {
     Todo,

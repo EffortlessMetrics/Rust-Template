@@ -94,9 +94,11 @@ Step-by-step process, referencing `devex_flows.yaml`:
    ```bash
    curl http://localhost:8080/platform/agent/hints | jq
    ```
+
    Pick a task from `tasks` array.
 
 2. **Claim task:**
+
    ```bash
    curl -X POST http://localhost:8080/platform/tasks/{id}/status \
      -H "Content-Type: application/json" \
@@ -111,6 +113,7 @@ Step-by-step process, referencing `devex_flows.yaml`:
    - Run `XTASK_LOW_RESOURCES=1 cargo xtask selftest`
 
 4. **Mark done:**
+
    ```bash
    curl -X POST http://localhost:8080/platform/tasks/{id}/status \
      -H "Content-Type: application/json" \
@@ -141,6 +144,7 @@ Concrete scenarios showing this Skill in action.
 - `specs/devex_flows.yaml` - Canonical flow definition
 - `docs/AGENT_GUIDE.md` - Operational guide
 - `docs/reference/xtask-commands.md` - Command reference
+
 ```
 
 ### Key Elements
@@ -350,6 +354,7 @@ Concrete scenarios showing this Skill in action.
    ```
 
 2. **Create a Task** in `tasks.yaml`:
+
    ```yaml
    - id: TASK-TPL-SKILLS-EX-001
      title: "Implement example workflow Skill"
@@ -497,11 +502,13 @@ This ensures Skills stay consistent with other governed docs.
 ### ❌ Vague Descriptions
 
 **Wrong:**
+
 ```yaml
 description: Helps with development
 ```
 
 **Right:**
+
 ```yaml
 description: >
   AC-first feature workflow for implementing Requirements and Acceptance Criteria.
@@ -556,6 +563,7 @@ allowed-tools: Read, Grep, Glob, Edit, Write, Bash
    ```
 
 2. **Claim task:**
+
    ```bash
    TASK_ID="TASK-TPL-XXX-001"
    curl -X POST "http://localhost:8080/platform/tasks/${TASK_ID}/status" \
@@ -570,11 +578,13 @@ allowed-tools: Read, Grep, Glob, Edit, Write, Bash
    - Run BDD: `cargo xtask bdd`
 
 4. **Governance validation:**
+
    ```bash
    XTASK_LOW_RESOURCES=1 cargo xtask selftest
    ```
 
 5. **Mark done:**
+
    ```bash
    curl -X POST "http://localhost:8080/platform/tasks/${TASK_ID}/status" \
      -H "Content-Type: application/json" \
@@ -593,6 +603,7 @@ allowed-tools: Read, Grep, Glob, Edit, Write, Bash
 - **Selftest fails:** Invoke `governed-governance-debug` Skill
 - **BDD fails:** Check `crates/acceptance/src/steps/` for step definitions
 - **Platform not running:** Start with `cargo run -p app-http`
+
 ```
 
 ---
@@ -648,4 +659,3 @@ In v3.2+, we may add:
 ---
 
 **Remember:** Skills are **governed workflows**, not wrappers around commands. If you're tempted to create `skill-xtask-foo`, stop and ask: "What workflow uses this command?"
-

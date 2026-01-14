@@ -267,17 +267,20 @@ tree docs/ -d
 ## Maintenance Success Criteria
 
 ### Daily Success Metrics
+
 - [ ] Security checks passing: `cargo xtask security-check`
 - [ ] Build validation successful: `cargo xtask build-health`
 - [ ] Code quality stable: `cargo check --workspace && cargo clippy --workspace`
 - [ ] Documentation current: `cargo xtask docs-check`
 
 ### Weekly Success Metrics
+
 - [ ] Security advisories reviewed and updated: `cargo deny check && cargo audit --version-lock`
 - [ ] Dependencies updated securely: `cargo update --dry-run && cargo update`
 - [ ] Performance benchmarks within targets: Build time and memory usage acceptable
 
 ### Monthly Success Metrics
+
 - [ ] Comprehensive security audit completed: No critical vulnerabilities
 - [ ] Rust toolchain evaluated and updated if needed
 - [ ] Code quality assessment completed: Technical debt documented and addressed
@@ -315,13 +318,13 @@ maintenance:
     build_health: true
     code_quality: true
     documentation_check: true
-  
+
   weekly:
     security_audit: true
     dependency_update: true
     performance_review: true
     documentation_review: true
-  
+
   monthly:
     comprehensive_audit: true
     toolchain_review: true

@@ -1,20 +1,19 @@
-[package]
-name = "ac-kernel"
-version = "0.1.0"
-edition.workspace = true
-rust-version.workspace = true
-publish.workspace = true
-description = "Core AC governance logic for the Rust-as-Spec platform"
-
 [dependencies]
+# Re-export TestMapping from spec-runtime
+spec-runtime = {path = "../spec-runtime"}
+anyhow.workspace = true
+chrono.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 serde_yaml.workspace = true
-anyhow.workspace = true
-chrono.workspace = true
-
-# Re-export TestMapping from spec-runtime
-spec-runtime = { path = "../spec-runtime" }
 
 [dev-dependencies]
 tempfile.workspace = true
+
+[package]
+description = "Core AC governance logic for the Rust-as-Spec platform"
+name = "ac-kernel"
+version = "0.1.0"
+edition.workspace = true
+publish.workspace = true
+rust-version.workspace = true

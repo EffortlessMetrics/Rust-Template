@@ -17,6 +17,7 @@ Create a working proof-of-concept of `rust_iac_xtask_core` in a separate reposit
 **Purpose**: Core library providing reusable commands for Rust IaC automation.
 
 **Structure**:
+
 ```
 rust_iac_xtask_core/
 ├── Cargo.toml
@@ -35,12 +36,14 @@ rust_iac_xtask_core/
 - Idempotent operations (safe to run multiple times)
 
 **Tests**:
+
 ```bash
 cd rust_iac_xtask_core
 cargo test
 ```
 
 **Results**:
+
 ```
 running 2 tests
 test tests::test_init_brownfield_creates_structure ... ok
@@ -56,6 +59,7 @@ test result: ok. 2 passed; 0 failed; 0 ignored
 **Purpose**: Demonstrates integrating Rust IaC tooling into an existing project.
 
 **Structure**:
+
 ```
 brownfield-demo/
 ├── Cargo.toml              # Workspace manifest
@@ -96,6 +100,7 @@ brownfield-demo/
 - 2 existing tests (trivial but demonstrate brownfield has tests)
 
 **Test Results**:
+
 ```bash
 cargo test -p server
 ```
@@ -186,12 +191,14 @@ fn main() -> Result<()> {
 ### Test 1: Init Command Creates Expected Structure ✅
 
 **Command**:
+
 ```bash
 cd examples/brownfield-demo
 cargo run -p xtask -- init --mode=brownfield
 ```
 
 **Output**:
+
 ```
 => Initializing Rust IaC structure in brownfield mode...
   Setting up brownfield project structure...
@@ -211,6 +218,7 @@ Next steps:
 ```
 
 **Verification**:
+
 ```bash
 find . -name "RUST_IAC.toml" -o -name "spec_ledger.yaml" -o -name "example.rego"
 ```
@@ -226,12 +234,14 @@ find . -name "RUST_IAC.toml" -o -name "spec_ledger.yaml" -o -name "example.rego"
 ### Test 2: Selftest Runs Without Errors ✅
 
 **Command**:
+
 ```bash
 cd examples/brownfield-demo
 cargo run -p xtask -- selftest
 ```
 
 **Output**:
+
 ```
 => Running Rust IaC self-test...
   ✓ Configuration file exists
@@ -257,6 +267,7 @@ cargo run -p xtask -- selftest
 **File**: `examples/brownfield-demo/RUST_IAC.toml`
 
 **Content**:
+
 ```toml
 [project]
 name = "rust-iac-project"
@@ -280,12 +291,14 @@ contextpack = ".llm/contextpack.yaml"
 ### Test 4: Server Still Works After Integration ✅
 
 **Command**:
+
 ```bash
 cd examples/brownfield-demo
 cargo run -p server
 ```
 
 **Output**:
+
 ```
 Server running on http://127.0.0.1:3000
 Endpoints:
@@ -296,6 +309,7 @@ Endpoints:
 ```
 
 **Manual Testing**:
+
 ```bash
 # Health check
 curl http://127.0.0.1:3000/health
@@ -317,12 +331,14 @@ curl -X POST http://127.0.0.1:3000/items \
 ### Test 5: Library Unit Tests ✅
 
 **Command**:
+
 ```bash
 cd rust_iac_xtask_core
 cargo test
 ```
 
 **Output**:
+
 ```
 running 2 tests
 test tests::test_init_brownfield_creates_structure ... ok
@@ -345,6 +361,7 @@ test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out
 **Issue**: Need to exclude examples from parent workspace
 
 **Solution**: Added to root `Cargo.toml`:
+
 ```toml
 [workspace]
 exclude = [
@@ -362,6 +379,7 @@ exclude = [
 **Issue**: Relative path dependencies can be brittle
 
 **Current**:
+
 ```toml
 rust_iac_xtask_core = { path = "../../../rust_iac_xtask_core" }
 ```

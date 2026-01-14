@@ -70,6 +70,7 @@
 
 **Proposed Fix:**
 - Make graph invariant errors include actionable hints:
+
   ```
   [COMMAND_UNREACHABLE] Command 'my-new-cmd' used in flow 'my-flow' but not defined
   → Fix: Add to devex_flows.yaml under 'commands:' section

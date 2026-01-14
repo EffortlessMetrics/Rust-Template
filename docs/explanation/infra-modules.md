@@ -93,6 +93,7 @@ Use HPA when:
 See `infra/k8s/examples/hpa-example.yaml` for a complete, annotated example.
 
 **Quick start**:
+
 ```yaml
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
@@ -167,11 +168,13 @@ deny[msg] {
 ### How to Add to Your Deployment
 
 1. **Verify metrics-server is installed**:
+
    ```bash
    kubectl get deployment metrics-server -n kube-system
    ```
 
 2. **Copy the example**:
+
    ```bash
    cp infra/k8s/examples/hpa-example.yaml infra/k8s/prod/hpa.yaml
    ```
@@ -182,6 +185,7 @@ deny[msg] {
    - Add custom metrics if needed (e.g., HTTP request rate)
 
 4. **Reference in Kustomization**:
+
    ```yaml
    # infra/k8s/prod/kustomization.yaml
    resources:
@@ -190,15 +194,18 @@ deny[msg] {
    ```
 
 5. **Remove `replicas` from Deployment**:
+
    ```yaml
    # infra/k8s/prod/deployment-patch.yaml
    # Remove or comment out:
    # spec:
    #   replicas: 3
    ```
+
    HPA manages replicas; Deployment should not have `replicas` set when HPA is active.
 
 6. **Test scaling**:
+
    ```bash
    # Deploy
    kubectl apply -k infra/k8s/prod
@@ -254,6 +261,7 @@ If `kubectl get networkpolicies` shows your policy, your cluster supports it. If
 See `infra/k8s/examples/networkpolicy-example.yaml` for complete examples.
 
 **Deny-all baseline** (start locked down, then open ports):
+
 ```yaml
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
@@ -267,6 +275,7 @@ spec:
 ```
 
 **Allow ingress from Ingress controller only**:
+
 ```yaml
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
@@ -300,6 +309,7 @@ spec:
 | **kubenet** | ❌ No support | Default on some managed K8s |
 
 **Check your cluster's CNI**:
+
 ```bash
 kubectl get pods -n kube-system | grep -E 'calico|cilium|weave|flannel'
 ```
@@ -312,6 +322,7 @@ kubectl get pods -n kube-system | grep -E 'calico|cilium|weave|flannel'
 4. **Allow health checks** (from Kubernetes API server, Prometheus, etc.)
 
 **Common mistake**: Blocking kubelet health probes
+
 ```yaml
 # Wrong: No ingress rules = health probes fail
 ingress: []
@@ -372,6 +383,7 @@ deny[msg] {
 1. **Verify CNI support** (see "Cluster Requirements" above)
 
 2. **Map your service dependencies**:
+
    ```
    app-http needs:
    - Ingress: From ingress-nginx namespace (port 8080)
@@ -382,11 +394,13 @@ deny[msg] {
    ```
 
 3. **Start with deny-all baseline**:
+
    ```bash
    cp infra/k8s/examples/networkpolicy-example.yaml infra/k8s/prod/networkpolicy.yaml
    ```
 
 4. **Add allow rules incrementally**:
+
    ```yaml
    # Allow ingress from Ingress controller
    # Allow egress to database
@@ -395,6 +409,7 @@ deny[msg] {
    ```
 
 5. **Test in staging first**:
+
    ```bash
    kubectl apply -k infra/k8s/staging
 
@@ -406,6 +421,7 @@ deny[msg] {
    ```
 
 6. **Monitor for blocked connections**:
+
    ```bash
    # Cilium example
    kubectl -n kube-system exec -it cilium-xxxxx -- cilium monitor --type drop
@@ -442,6 +458,7 @@ Kubernetes has **two competing standards** for external traffic routing:
 See `infra/k8s/examples/ingress-example.yaml` for complete examples.
 
 **Basic HTTP Ingress**:
+
 ```yaml
 apiVersion: networking.k8s.io/v1
 kind: Ingress
@@ -465,6 +482,7 @@ spec:
 ```
 
 **HTTPS with TLS**:
+
 ```yaml
 apiVersion: networking.k8s.io/v1
 kind: Ingress
@@ -493,6 +511,7 @@ spec:
 ### TLS Considerations
 
 **Option 1: Bring your own certificate**:
+
 ```bash
 kubectl create secret tls app-http-tls \
   --cert=path/to/tls.crt \
@@ -501,6 +520,7 @@ kubectl create secret tls app-http-tls \
 ```
 
 **Option 2: Use cert-manager** (recommended):
+
 ```yaml
 # Install cert-manager first:
 # kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.13.0/cert-manager.yaml
@@ -529,6 +549,7 @@ Then annotate your Ingress with `cert-manager.io/cluster-issuer: "letsencrypt-pr
 Each Ingress controller uses **different annotations**:
 
 **nginx**:
+
 ```yaml
 annotations:
   nginx.ingress.kubernetes.io/rewrite-target: /
@@ -538,6 +559,7 @@ annotations:
 ```
 
 **Traefik**:
+
 ```yaml
 annotations:
   traefik.ingress.kubernetes.io/router.entrypoints: websecure
@@ -546,6 +568,7 @@ annotations:
 ```
 
 **AWS ALB** (via AWS Load Balancer Controller):
+
 ```yaml
 annotations:
   kubernetes.io/ingress.class: alb
@@ -555,6 +578,7 @@ annotations:
 ```
 
 **GCP GCE**:
+
 ```yaml
 annotations:
   kubernetes.io/ingress.class: gce
@@ -563,6 +587,7 @@ annotations:
 ```
 
 **Check your Ingress controller**:
+
 ```bash
 kubectl get ingressclass
 # Shows available IngressClass resources and which is default
@@ -578,17 +603,20 @@ kubectl get ingressclass
 ### How to Add to Your Deployment
 
 1. **Verify Ingress controller is installed**:
+
    ```bash
    kubectl get ingressclass
    kubectl get pods -n ingress-nginx  # Or your controller's namespace
    ```
 
 2. **Choose your Ingress provider and copy example**:
+
    ```bash
    cp infra/k8s/examples/ingress-example.yaml infra/k8s/prod/ingress.yaml
    ```
 
 3. **Customize for your domain and provider**:
+
    ```yaml
    # Update host
    spec:
@@ -602,6 +630,7 @@ kubectl get ingressclass
    ```
 
 4. **Configure DNS**:
+
    ```bash
    # Get Ingress controller's external IP
    kubectl get svc -n ingress-nginx ingress-nginx-controller
@@ -611,6 +640,7 @@ kubectl get ingressclass
    ```
 
 5. **Set up TLS** (if using HTTPS):
+
    ```bash
    # Option A: Manual certificate
    kubectl create secret tls app-http-tls \
@@ -620,6 +650,7 @@ kubectl get ingressclass
    ```
 
 6. **Reference in Kustomization**:
+
    ```yaml
    # infra/k8s/prod/kustomization.yaml
    resources:
@@ -628,6 +659,7 @@ kubectl get ingressclass
    ```
 
 7. **Deploy and test**:
+
    ```bash
    kubectl apply -k infra/k8s/prod
 
@@ -881,6 +913,7 @@ spec:
 ```
 
 Run policy tests:
+
 ```bash
 cargo run -p xtask -- policy-test
 ```
@@ -951,5 +984,5 @@ k8s/
 
 - Core infrastructure: `infra/k8s/README.md`
 - Policy validation: `policy/k8s.rego`
-- Kustomize docs: https://kustomize.io/
-- Kubernetes API reference: https://kubernetes.io/docs/reference/kubernetes-api/
+- Kustomize docs: <https://kustomize.io/>
+- Kubernetes API reference: <https://kubernetes.io/docs/reference/kubernetes-api/>

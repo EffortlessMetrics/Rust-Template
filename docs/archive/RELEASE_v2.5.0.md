@@ -4,9 +4,10 @@
 # v2.5.0 Release Tag Instructions
 
 ## Status
-✅ Kernel Complete  
-✅ Pilot Validated (Platform bootstrapped itself)  
-✅ Documentation Updated  
+
+✅ Kernel Complete
+✅ Pilot Validated (Platform bootstrapped itself)
+✅ Documentation Updated
 ✅ CHANGELOG.md Published
 
 ## Tag the Release
@@ -45,6 +46,7 @@ After pushing:
    - Release artifacts should generate
 
 2. **Verify Tag**
+
    ```bash
    git tag -l -n9 v2.5.0
    ```
@@ -71,6 +73,7 @@ After pushing:
 - Enhance documentation clarity
 
 **Pilot Template:**
+
 ```bash
 # Option A: Clone as new service
 git clone https://github.com/EffortlessMetrics/Rust-Template.git task-api

@@ -47,12 +47,25 @@ curl http://localhost:8080/platform/status   # Governance health
 | `/platform/openapi`   | OpenAPI specification                 |
 | `/platform/tasks`     | Task list with filters                |
 | `/platform/agent/hints` | Prioritized task suggestions        |
+| `/platform/idp/snapshot` | IDP snapshot for agents            |
 | `/platform/friction`  | Friction log entries                  |
 | `/platform/questions` | Question artifacts                    |
 | `/platform/forks`     | Fork registry                         |
+| `/platform/issues`    | Unified issues (friction+questions+tasks) |
+| `/platform/ui/contract` | UI contract specification            |
 
 ## Related Documentation
 
+- [Platform API Overview](./overview/index.md) - API overview and quick reference
+- [Platform Tasks API](./tasks.md) - Task management endpoints
+- [Platform Questions API](./questions.md) - Question artifacts endpoints
+- [Platform Forks API](./forks.md) - Fork registry endpoints
+- [Platform Friction API](./friction.md) - Friction log endpoints
+- [Platform Issues API](./issues.md) - Unified issues aggregation
+- [Platform UI Contract API](./ui-contract.md) - UI contract specification
+- [Platform Status API](./status.md) - Platform health and metrics
+- [Platform Agent Hints API](./agent-hints.md) - Prioritized work suggestions
+- [Platform IDP Snapshot API](./idp-snapshot.md) - IDP snapshot for agents
 - [`docs/reference/platform_api_contract.md`](../reference/platform_api_contract.md) - Full API reference
 - [`docs/IDP_CELL_CONTRACT.md`](../IDP_CELL_CONTRACT.md) - IDP integration datasheet
 - [`specs/openapi/openapi.yaml`](../../specs/openapi/openapi.yaml) - OpenAPI spec

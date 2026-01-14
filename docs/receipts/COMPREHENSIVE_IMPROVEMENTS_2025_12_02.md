@@ -1,5 +1,6 @@
 <!-- doclint:disable orphan-version -->
 # Comprehensive Rust-as-Spec Platform Cell Improvements (v3.3.6 → v3.4.0 Prep)
+
 **Date**: December 1-2, 2025
 **Scope**: 18 major improvements across governance, code quality, performance, and documentation
 **Status**: ✅ COMPLETE - Ready for review and merge
@@ -43,6 +44,7 @@ This work represents a **parallel, multi-agent improvement sprint** addressing c
 - Permissions: restricted or permissive with justification
 
 **Integration Points**:
+
 ```
 git commit → precommit hook → agents-fmt (auto-fix) → agents-lint (hard gate)
                                           ↓ pass ↓
@@ -87,6 +89,7 @@ git commit → precommit hook → agents-fmt (auto-fix) → agents-lint (hard ga
 **Three New Guides Created**:
 
 #### **docs/how-to/FIRST_FORK.md** (800 words)
+
 - What "forking" means in this context (template customization)
 - Step-by-step fork process
 - Validation checklist
@@ -99,6 +102,7 @@ git commit → precommit hook → agents-fmt (auto-fix) → agents-lint (hard ga
 - **Extend**: Add domain-specific ACs
 
 #### **docs/how-to/change-template-opinion.md** (3,052 words)
+
 - Deep walkthrough of AC customization workflow
 - 2 fully worked examples (turn off JSON CLI, harden friction logging)
 - 6 practical examples (relax Nix requirement, remove artifacts, etc.)
@@ -112,6 +116,7 @@ git commit → precommit hook → agents-fmt (auto-fix) → agents-lint (hard ga
 4. Re-validate with selftest
 
 #### **docs/how-to/reconcile-kernel-updates.md** (3,045 words)
+
 - 8-step process for pulling upstream improvements into fork
 - Detailed conflict resolution strategies
 - Handling new ACs from upstream
@@ -139,6 +144,7 @@ git commit → precommit hook → agents-fmt (auto-fix) → agents-lint (hard ga
 - ✅ No truly unused code found (excellent code discipline)
 
 **Pattern Applied**:
+
 ```rust
 /// Future: Used when implementing X feature (see TASK-DX-SPEC-QUERY).
 /// Currently infrastructure for parsing strategy flexibility.
@@ -209,6 +215,7 @@ pub struct ProposedFeatureStruct { ... }
 - Increased `max_concurrent_scenarios` from 1 → 4
 
 **Performance Results**:
+
 ```
 Before: 29.27 seconds (sequential)
 After:  25.92 seconds (4 parallel scenarios)
@@ -242,6 +249,7 @@ Speedup: 11.5% improvement (save ~3.3 seconds)
 - Outputs clean pass/fail report
 
 **Example Output**:
+
 ```
 Coverage Report:
   Coverage: 68.00%
@@ -263,6 +271,7 @@ Coverage Report:
 - `cargo xtask build-time-compare` - Compare two builds
 
 **Metrics Captured**:
+
 ```json
 {
   "timestamp": "2025-12-02T...",
@@ -339,6 +348,7 @@ Coverage Report:
 ## Part 5: Files Changed (Complete Inventory)
 
 ### New Files Created
+
 ```
 docs/how-to/FIRST_FORK.md                          (800 words)
 docs/how-to/change-template-opinion.md              (3,052 words)
@@ -351,6 +361,7 @@ COMPREHENSIVE_IMPROVEMENTS_2025_12_02.md            (This document)
 ```
 
 ### Files Modified (Code)
+
 ```
 crates/xtask/src/commands/agents.rs                 (+agents_fmt function)
 crates/xtask/src/commands/doctor.rs                 (+7 diagnostic checks)
@@ -367,6 +378,7 @@ specs/devex_flows.yaml                              (added new commands)
 ```
 
 ### Files Modified (Cleanup)
+
 ```
 Cargo.toml (workspace)                              (dependency refs)
 crates/app-http/Cargo.toml                          (tokio features)
@@ -390,6 +402,7 @@ crates/xtask/src/commands/*.rs (9 files)            (+dead code documentation, 1
 ## Part 6: Impact & Benefits
 
 ### For Platform Users
+
 - ✅ **Fork customization now documented** – Removes adoption friction
 - ✅ **Faster CI/CD** – 11.5% BDD speedup (saves ~3.3s per test run)
 - ✅ **Better documentation** – 90%+ rustdoc coverage improves IDE experience
@@ -397,6 +410,7 @@ crates/xtask/src/commands/*.rs (9 files)            (+dead code documentation, 1
 - ✅ **Performance baselines** – Can track build time trends over releases
 
 ### For Platform Team
+
 - ✅ **Agents fully governed** – agents-lint/fmt tooling complete
 - ✅ **Technical debt reduced** – Dead code documented, dependencies normalized
 - ✅ **Code quality improved** – Better documentation, fewer surprises
@@ -404,6 +418,7 @@ crates/xtask/src/commands/*.rs (9 files)            (+dead code documentation, 1
 - ✅ **Metrics established** – Coverage and build time tracking ready
 
 ### For v3.4.0 Release
+
 - ✅ All governance gaps closed
 - ✅ Fork adoption documented and validated
 - ✅ CI/performance optimized
@@ -415,6 +430,7 @@ crates/xtask/src/commands/*.rs (9 files)            (+dead code documentation, 1
 ## Part 7: How to Review This Work
 
 ### Quick Review Path (30 minutes)
+
 1. Read this summary
 2. Review WORK_PLAN_2025_12_02.md for detailed breakdown
 3. Check 3 fork guides (10 min read each)
@@ -423,6 +439,7 @@ crates/xtask/src/commands/*.rs (9 files)            (+dead code documentation, 1
 6. Verify coverage: `cargo xtask coverage`
 
 ### Deep Review Path (2-3 hours)
+
 1. Review each agent's output above
 2. Check specific files in "Files Changed" section
 3. Run full validation suite (if environment supports it)
@@ -430,6 +447,7 @@ crates/xtask/src/commands/*.rs (9 files)            (+dead code documentation, 1
 5. Measure BDD performance improvement
 
 ### Testing Checklist
+
 - [ ] `cargo fmt --all` passes
 - [ ] `cargo clippy --all` has no new warnings
 - [ ] All 69 unit tests pass
@@ -446,12 +464,14 @@ crates/xtask/src/commands/*.rs (9 files)            (+dead code documentation, 1
 ## Part 8: Known Issues & Limitations
 
 ### WSL2 Environment Limitation (Not a Code Issue)
+
 - **Issue**: libz.so.1 missing in WSL2 affects rustc
 - **Impact**: `cargo xtask check` may fail (system limitation, not code problem)
 - **Solution**: Use native cargo commands or upgrade WSL2
 - **Documentation**: Added to TROUBLESHOOTING.md + doctor output
 
 ### Pre-Existing AC Failures (Scope Out)
+
 - 4 kernel ACs were already failing before this work:
   - AC-PLT-021 (onboarding)
   - AC-TPL-TASKS-CLI (task management)
@@ -460,6 +480,7 @@ crates/xtask/src/commands/*.rs (9 files)            (+dead code documentation, 1
 - These are unchanged by this work, left for future PRs
 
 ### CI Enhancement Recommendations (Future Work)
+
 - Feature flag test matrix can be automated in CI (documented in new guide)
 - Build time tracking can be automated in CI artifacts
 - Coverage baseline can be made stricter over time
@@ -469,6 +490,7 @@ crates/xtask/src/commands/*.rs (9 files)            (+dead code documentation, 1
 ## Part 9: Next Steps for Merge
 
 ### Prerequisites for Merge
+
 - [x] All code reviewed and approved
 - [x] All new features tested locally
 - [x] Documentation complete and cross-linked
@@ -476,12 +498,14 @@ crates/xtask/src/commands/*.rs (9 files)            (+dead code documentation, 1
 - [x] Commit messages clear and traceable
 
 ### Before Merging
+
 1. Ensure CI can handle environment (Nix preferred)
 2. Verify all 69 unit tests pass
 3. Run BDD suite and confirm parallelization works
 4. Test agents-lint and agents-fmt with real agents
 
 ### After Merge (Pre-Release)
+
 1. Tag v3.4.0-beta
 2. Update CHANGELOG with all improvements
 3. Run comprehensive selftest in CI
@@ -493,6 +517,7 @@ crates/xtask/src/commands/*.rs (9 files)            (+dead code documentation, 1
 ## Part 10: Metrics & Statistics
 
 ### Effort Distribution
+
 ```
 Agents Governance:      4-5 hours   (critical)
 Fork Guides:            4-5 hours   (critical)
@@ -510,6 +535,7 @@ Validation/Testing:     3-4 hours   (parallel with others)
 **Total**: 27-38 hours of focused development work
 
 ### Code Metrics
+
 ```
 Lines of documentation added:   ~8,000+
 New feature files:              8
@@ -544,4 +570,3 @@ This comprehensive improvement sprint successfully addressed **all identified go
 - **Fork Guides**: docs/how-to/{FIRST_FORK,change-opinion,reconcile}.md
 - **Feature Matrix**: docs/FEATURE_FLAG_TEST_MATRIX.md
 - **Exploration Reports**: Available in task agent outputs (above)
-

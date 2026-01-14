@@ -15,18 +15,22 @@ This guide shows you how to add the Rust Template's governance infrastructure to
 ## Prerequisites
 
 ### Required
+
 - **Existing Rust project** - Either a workspace or single crate
 - **Git repository** - Project is version controlled
 - **Basic Rust knowledge** - Familiar with Cargo and workspaces
 - **Command-line comfort** - Can run shell commands
 
 ### Recommended (but optional)
+
 - **Existing test suite** - Makes AC mapping easier
 - **CI/CD setup** - To integrate new checks
 - **Team buy-in** - Governance works best with team adoption
 
 ### Tools
+
 All tools are available in the Nix shell (optional but recommended):
+
 ```bash
 # Option 1: Use Nix (recommended - all tools included)
 nix develop
@@ -300,6 +304,7 @@ cargo run -p xtask -- check
 ```
 
 **Expected output:**
+
 ```
 Running format check...
 Running clippy...
@@ -594,6 +599,7 @@ cargo run -p xtask -- selftest
 ### 3.2: Interpret Results
 
 **✓ All checks passed:**
+
 ```
 Running basic selftest...
 Running format check...
@@ -608,26 +614,31 @@ Your governance foundation is installed correctly!
 **Common issues:**
 
 #### Format check fails
+
 ```
 ✗ Format check failed
 ```
 
 **Fix:**
+
 ```bash
 cargo fmt --all
 ```
 
 #### Clippy warnings
+
 ```
 ✗ Clippy failed: warnings found
 ```
 
 **Fix:**
+
 ```bash
 cargo clippy --all-targets --all-features --fix
 ```
 
 #### Tests fail
+
 ```
 ✗ Tests failed
 ```
@@ -750,6 +761,7 @@ echo "✅ Pre-commit checks passed!"
 ```
 
 Make it executable:
+
 ```bash
 chmod +x .git/hooks/pre-commit
 ```
@@ -844,6 +856,7 @@ cargo run -p xtask -- policy-test
 ```
 
 **Expected output:**
+
 ```
 Testing Rego policies...
 
@@ -997,6 +1010,7 @@ fn truncate(s: &str, max_len: usize) -> String {
 ```
 
 Run it:
+
 ```bash
 cargo run -p xtask -- ac-status
 cat docs/feature_status.md
@@ -1009,6 +1023,7 @@ cat docs/feature_status.md
 ### Issue: "cargo run -p xtask" fails
 
 **Symptom:**
+
 ```
 error: package `xtask` is not a member of the workspace
 ```
@@ -1021,12 +1036,14 @@ error: package `xtask` is not a member of the workspace
 ### Issue: Format check fails with "file not formatted"
 
 **Symptom:**
+
 ```
 ✗ Format check failed
 Diff in /path/to/file.rs
 ```
 
 **Fix:**
+
 ```bash
 # Auto-format all code
 cargo fmt --all
@@ -1038,17 +1055,20 @@ cargo run -p xtask -- check
 ### Issue: Policy tests fail "conftest not found"
 
 **Symptom:**
+
 ```
 ⚠ conftest not found on PATH
 ```
 
 **Fix Option 1 (Nix):**
+
 ```bash
 nix develop  # Provides conftest automatically
 cargo run -p xtask -- policy-test
 ```
 
 **Fix Option 2 (Manual install):**
+
 ```bash
 # macOS
 brew install conftest
@@ -1062,6 +1082,7 @@ sudo mv conftest /usr/local/bin/
 ### Issue: AC status shows all "Unknown"
 
 **Symptom:**
+
 ```
 All ACs show ❓ Unknown status
 ```
@@ -1074,12 +1095,14 @@ All ACs show ❓ Unknown status
 ### Issue: Clippy warnings block commit
 
 **Symptom:**
+
 ```
 error: this could be written with `if let`
   --> crates/core/src/lib.rs:10:5
 ```
 
 **Fix Option 1 (Auto-fix):**
+
 ```bash
 cargo clippy --all-targets --fix
 ```
@@ -1087,11 +1110,13 @@ cargo clippy --all-targets --fix
 **Fix Option 2 (Adjust warning level):**
 
 In `crates/xtask/src/commands/check.rs`, change:
+
 ```rust
 .args(["clippy", "--all-targets", "--all-features", "--", "-D", "warnings"])
 ```
 
 To:
+
 ```rust
 .args(["clippy", "--all-targets", "--all-features", "--", "-W", "clippy::all"])
 ```
@@ -1099,6 +1124,7 @@ To:
 ### Issue: BDD tests don't run
 
 **Symptom:**
+
 ```
 BDD tests not yet configured
 ```
@@ -1113,7 +1139,9 @@ BDD tests not yet configured
 ## Next Steps
 
 ### Immediate (Do Today)
+
 1. ✅ **Commit your changes:**
+
    ```bash
    git add .
    git commit -m "feat: add governance infrastructure (xtask + policies)"
@@ -1126,18 +1154,21 @@ BDD tests not yet configured
    - Get buy-in for AC-first development
 
 ### Short Term (This Week)
+
 1. **Add 5-10 core ACs** to `specs/spec_ledger.yaml`
 2. **Map existing tests** to ACs
 3. **Add CI integration** (Step 4)
 4. **Write first BDD scenario** (if using acceptance tests)
 
 ### Medium Term (This Month)
+
 1. **Expand AC coverage** to 80% of features
 2. **Add custom policies** for your domain (flags, privacy, etc.)
 3. **Train team** on AC-first workflow
 4. **Integrate LLM bundler** for AI-assisted development
 
 ### Recommended Reading
+
 - **[AC-First Development](../tutorials/first-ac-change.md)** - Learn the AC workflow
 - **[xtask Commands Reference](../reference/xtask-commands.md)** - All commands explained
 - **[Use LLM Bundles](use-llm-bundles.md)** - AI-assisted development with safety
@@ -1150,6 +1181,7 @@ BDD tests not yet configured
 After completing this guide, your brownfield project now has:
 
 ### ✅ Single Command Interface
+
 ```bash
 cargo run -p xtask -- check      # Before every commit
 cargo run -p xtask -- selftest   # Before every push
@@ -1157,17 +1189,20 @@ cargo run -p xtask -- ac-status  # Check AC coverage
 ```
 
 ### ✅ Policy Enforcement
+
 - Every AC must have tests (enforced by Rego)
 - Feature flags require ownership
 - PII fields have retention policies
 - Validated in CI on every PR
 
 ### ✅ Traceability
+
 - User stories → Requirements → ACs → Tests
 - Generate coverage reports automatically
 - Track which features are tested
 
 ### ✅ LLM-Safe Development
+
 - Bounded context bundles (prevents leaking entire codebase)
 - Policy validation before AI suggestions applied
 - Governance-first, move fast second
@@ -1217,7 +1252,7 @@ Minimal adoption:
 
 **A:** Since this is brownfield, you don't track upstream. Instead:
 
-1. Watch template releases: https://github.com/your-org/rust-template/releases
+1. Watch template releases: <https://github.com/your-org/rust-template/releases>
 2. Read changelogs for improvements
 3. Manually copy changes you want (new policies, commands, etc.)
 

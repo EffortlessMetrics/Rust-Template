@@ -6,6 +6,26 @@
 #
 # See forks/fork_schema.yaml for the complete schema definition.
 
+# Seed fork entry representing the template itself
+forks:
+  - id: FORK-EXAMPLE-001
+    name: "Example MyService Fork"
+    domain: "example"
+    status: experimental
+    kernel_version: v3.3.5
+    file: forks/FORK-EXAMPLE-001.yaml
+  - id: FORK-TPL-SELF-001
+    name: "Rust-as-Spec Template"
+    domain: "platform-template"
+    status: active
+    kernel_version: v3.3.3
+    file: forks/FORK-TPL-SELF-001.yaml
+
+notes: >
+  This registry tracks known forks of the Rust-as-Spec template kernel.
+  Forks are registered using 'cargo xtask fork-register' and stored as
+  individual YAML files for machine-readable processing.
+
 schema_version: "1.0"
 template_version: "v3.3.8"
 
@@ -14,26 +34,3 @@ summary:
   active_forks: 1
   archived_forks: 0
   experimental_forks: 1
-
-# Seed fork entry representing the template itself
-forks:
-  - id: FORK-TPL-SELF-001
-    name: "Rust-as-Spec Template"
-    domain: "platform-template"
-    status: active
-    kernel_version: v3.3.3
-    file: forks/FORK-TPL-SELF-001.yaml
-
-  - id: FORK-EXAMPLE-001
-    name: "Example MyService Fork"
-    domain: "example"
-    status: experimental
-    kernel_version: v3.3.5
-    file: forks/FORK-EXAMPLE-001.yaml
-
-notes: >
-  This registry tracks known forks of the Rust-as-Spec template kernel.
-  Forks are registered using 'cargo xtask fork-register' and stored as
-  individual YAML files for machine-readable processing.
-
-  See KERNEL_MAINTENANCE.md for how fork feedback influences kernel development.

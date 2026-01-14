@@ -43,6 +43,7 @@ For every tagged release (`v*.*.*`), the template generates:
 - Enables independent verification by rebuilding
 
 **Example**:
+
 ```bash
 # Download from GitHub Releases
 gh release download v3.3.6 --pattern 'rust-template-*.tar.gz'
@@ -69,6 +70,7 @@ sha256sum rust-template-v3.3.6.tar.gz
 - **Relationships**: Dependency graph edges (which package depends on which)
 
 **Example snippet**:
+
 ```json
 {
   "spdxVersion": "SPDX-2.3",
@@ -128,6 +130,7 @@ sha256sum rust-template-v3.3.6.tar.gz
 **Contents**:
 
 **Subject** (what was built):
+
 ```json
 {
   "subject": [
@@ -142,6 +145,7 @@ sha256sum rust-template-v3.3.6.tar.gz
 ```
 
 **Predicate** (how it was built):
+
 ```json
 {
   "predicateType": "https://slsa.dev/provenance/v1",
@@ -278,6 +282,7 @@ jobs:
 - **No drift**: CI can't diverge from developer environment
 
 **Build command**:
+
 ```bash
 nix develop -c cargo build --workspace --release
 ```
@@ -294,6 +299,7 @@ This runs Cargo inside the Nix devshell, ensuring:
 ### Option 1: GitHub UI (Easiest)
 
 **Navigate to**:
+
 ```
 https://github.com/EffortlessMetrics/Rust-Template/security
 → "Provenance" tab
@@ -312,6 +318,7 @@ https://github.com/EffortlessMetrics/Rust-Template/security
 ### Option 2: GitHub CLI (Automated)
 
 **Install GitHub CLI**:
+
 ```bash
 # Ubuntu/Debian
 sudo apt install gh
@@ -324,16 +331,19 @@ gh auth login
 ```
 
 **Download artifact**:
+
 ```bash
 gh release download v3.3.6 --pattern 'rust-template-*.tar.gz'
 ```
 
 **Verify provenance**:
+
 ```bash
 gh attestation verify rust-template-v3.3.6.tar.gz --owner EffortlessMetrics
 ```
 
 **Output**:
+
 ```
 ✓ Verification succeeded!
 
@@ -357,11 +367,13 @@ Build workflow: .github/workflows/ci-supply-chain.yml@refs/tags/v3.3.6
 ### Option 3: SLSA Verifier (Manual, Portable)
 
 **Install SLSA verifier**:
+
 ```bash
 go install github.com/slsa-framework/slsa-verifier/v2/cli/slsa-verifier@latest
 ```
 
 **Download provenance**:
+
 ```bash
 # GitHub Attestations API
 gh attestation download \
@@ -371,6 +383,7 @@ gh attestation download \
 ```
 
 **Verify**:
+
 ```bash
 slsa-verifier verify-artifact \
   rust-template-v3.3.6.tar.gz \
@@ -380,6 +393,7 @@ slsa-verifier verify-artifact \
 ```
 
 **Output**:
+
 ```
 Verified signature against tlog entry index 12345 at URL: https://rekor.sigstore.dev/...
 Verified build using builder "https://github.com/slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@refs/tags/v1.0.0" at commit bca756c
@@ -426,6 +440,7 @@ warn[msg] {
 ```
 
 **Usage**:
+
 ```bash
 # Before deploying artifact, validate provenance + SBOM
 conftest test -p policies/supply_chain.rego <(gh attestation verify rust-template-v3.3.6.tar.gz --format json)
@@ -442,6 +457,7 @@ conftest test -p policies/supply_chain.rego <(gh attestation verify rust-templat
 If you distribute compiled binaries (e.g., via GitHub Releases):
 
 **Workflow change**:
+
 ```yaml
 - name: Build release binary
   run: nix develop -c cargo build --release --bin my-service
@@ -458,6 +474,7 @@ If you distribute compiled binaries (e.g., via GitHub Releases):
 ```
 
 **Verification**:
+
 ```bash
 gh release download v3.3.6 --pattern my-service
 gh attestation verify my-service --owner my-org
@@ -470,6 +487,7 @@ gh attestation verify my-service --owner my-org
 If you build Docker images:
 
 **Workflow change**:
+
 ```yaml
 - name: Build Docker image
   run: docker build -t my-service:${{ github.ref_name }} .
@@ -491,6 +509,7 @@ If you build Docker images:
 ```
 
 **Verification**:
+
 ```bash
 gh attestation verify \
   ghcr.io/my-org/my-service@sha256:abc123... \
@@ -504,6 +523,7 @@ gh attestation verify \
 Block deployment unless artifact provenance verifies:
 
 **Kubernetes admission controller** (OPA Gatekeeper):
+
 ```rego
 package kubernetes.admission
 
@@ -521,6 +541,7 @@ verified_provenance(image) {
 ```
 
 **CI/CD pipeline** (GitHub Actions):
+
 ```yaml
 - name: Download artifact
   run: gh release download $TAG --pattern my-service
@@ -546,6 +567,7 @@ verified_provenance(image) {
 - Alerts appear in Security tab → Dependabot alerts
 
 **Third-party scanners** (Grype, Snyk, etc.):
+
 ```bash
 # Download SBOM
 gh release download v3.3.6 --pattern '*-sbom.spdx.json'
@@ -559,6 +581,7 @@ grype sbom:rust-template-v3.3.6-sbom.spdx.json
 ```
 
 **Policy enforcement**:
+
 ```rego
 # policies/sbom_vulnerability.rego
 package sbom_vulnerability
@@ -641,6 +664,7 @@ Level 4 is the gold standard (Debian, Tor) but overkill for most services.
 ### vs. Manual GPG Signing
 
 **GPG signing**:
+
 ```bash
 # Developer signs release locally
 gpg --detach-sign rust-template-v2.4.0.tar.gz
@@ -648,6 +672,7 @@ gpg --detach-sign rust-template-v2.4.0.tar.gz
 ```
 
 **Provenance attestation**:
+
 ```yaml
 # Automated in CI
 - uses: actions/attest-build-provenance@v1
@@ -783,6 +808,7 @@ If you're using the template to create a new service (via "Use this template"), 
 **A**: Provenance still works, but builds are less reproducible.
 
 **Without Nix**:
+
 ```yaml
 - name: Build release
   run: cargo build --workspace --release
@@ -791,6 +817,7 @@ If you're using the template to create a new service (via "Use this template"), 
 This uses whatever Rust toolchain is on the runner (changes over time). Provenance will show "built on ubuntu-latest with Cargo 1.85.0", but future rebuilds might use Cargo 1.86.0 → different binary.
 
 **With Nix**:
+
 ```yaml
 - name: Build release
   run: nix develop -c cargo build --workspace --release
@@ -807,6 +834,7 @@ This pins Rust version via `flake.lock`. Same inputs → same outputs (modulo ti
 **A**: Yes. GitHub Attestations work for private repos.
 
 **Verification**:
+
 ```bash
 # Requires gh CLI authentication with repo access
 gh attestation verify artifact.tar.gz --owner my-org
@@ -867,6 +895,7 @@ If GitHub stops offering Attestations API, you can still:
 **Modifications for internal use**:
 
 1. **Private registry**: If using GitHub Container Registry (GHCR) or Artifactory:
+
    ```yaml
    - uses: actions/attest-build-provenance@v1
      with:
@@ -874,6 +903,7 @@ If GitHub stops offering Attestations API, you can still:
    ```
 
 2. **Custom SBOM fields**: Add proprietary metadata:
+
    ```yaml
    - uses: anchore/sbom-action@v0
      with:
@@ -883,6 +913,7 @@ If GitHub stops offering Attestations API, you can still:
    ```
 
 3. **Compliance reporting**: Export attestations for audits:
+
    ```bash
    gh attestation list --owner my-org --format json > attestations.json
    ```

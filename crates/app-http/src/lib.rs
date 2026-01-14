@@ -195,7 +195,7 @@ impl AppState {
         workspace_root: PathBuf,
         config: Option<spec_runtime::ValidatedConfig>,
     ) -> Result<Self, String> {
-        let config = config.or_else(|| load_validated_config(&workspace_root));
+        let config = config.or_else(|| load_valid_config(&workspace_root));
         let platform_auth = security::PlatformAuthConfig::try_from_sources(config.as_ref())?;
         platform_auth.warn_if_misconfigured();
 
@@ -226,7 +226,7 @@ impl AppState {
 /// Returns an error if platform auth configuration is invalid (e.g., invalid PLATFORM_AUTH_MODE).
 pub fn app(governance_repo: Arc<dyn GovernanceRepository>) -> Result<Router, String> {
     let workspace_root = resolve_workspace_root();
-    let config = load_validated_config(&workspace_root);
+    let config = load_valid_config(&workspace_root);
     let app_state = AppState::with_config(governance_repo, workspace_root, config)?;
     Ok(build_router(app_state))
 }
@@ -241,7 +241,7 @@ pub fn app_with_workspace_root(
     governance_repo: Arc<dyn GovernanceRepository>,
     workspace_root: PathBuf,
 ) -> Result<Router, String> {
-    let config = load_validated_config(&workspace_root);
+    let config = load_valid_config(&workspace_root);
     let app_state = AppState::with_config(governance_repo, workspace_root, config)?;
     Ok(build_router(app_state))
 }
@@ -480,7 +480,7 @@ pub fn resolve_workspace_root() -> PathBuf {
         })
 }
 
-fn load_validated_config(workspace_root: &Path) -> Option<spec_runtime::ValidatedConfig> {
+fn load_valid_config(workspace_root: &Path) -> Option<spec_runtime::ValidatedConfig> {
     let config_path = workspace_root.join("config/local.yaml");
     let schema_path = workspace_root.join("specs/config_schema.yaml");
 

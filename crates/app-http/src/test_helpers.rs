@@ -12,8 +12,8 @@ use std::collections::HashMap;
 pub fn parse_with_context<T: std::str::FromStr>(
     input: &str,
     context: &str,
-) -> Result<T> 
-where 
+) -> Result<T>
+where
     T::Err: std::fmt::Display,
 {
     input.parse::<T>()
@@ -128,7 +128,7 @@ mod tests {
             "name": "test",
             "value": 42
         });
-        
+
         let name = get_string_field(&json, "name").unwrap();
         assert_eq!(name, "test");
     }
@@ -138,7 +138,7 @@ mod tests {
         let json = serde_json::json!({
             "name": "test"
         });
-        
+
         let result = get_string_field(&json, "missing");
         assert!(result.is_err());
         assert!(result.unwrap_err().to_string().contains("Missing field: missing"));

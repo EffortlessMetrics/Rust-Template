@@ -11,6 +11,7 @@ This batch addresses 4 critical CI failures that can be fixed quickly with low r
 ## Issues Included
 
 ### Issue #9: protoc missing (HIGH PRIORITY)
+
 - **Blocker:** Full workspace builds fail when compiling `adapters-grpc` crate
 - **Root Cause:** `protoc` not in Nix devshell; `adapters-grpc/build.rs` uses `tonic-build`
 - **Impact:** Any CI job building workspace fails
@@ -18,6 +19,7 @@ This batch addresses 4 critical CI failures that can be fixed quickly with low r
 - **Time:** 2 minutes
 
 ### Issue #1: cargo-llvm-cov missing (HIGH PRIORITY)
+
 - **Blocker:** `ci-coverage.yml` coverage job fails
 - **Root Cause:** `cargo-llvm-cov` not in Nix devshell
 - **Impact:** All PR coverage reports fail
@@ -25,6 +27,7 @@ This batch addresses 4 critical CI failures that can be fixed quickly with low r
 - **Time:** 2 minutes
 
 ### Issue #2: Backstage docs missing (MEDIUM PRIORITY)
+
 - **Blocker:** `ci-docs.yml` docs job fails when PR touches backstage/
 - **Root Cause:** `backstage/docs/` directory exists but is empty; mkdocs.yml references missing files
 - **Impact:** Doc building fails on backstage changes
@@ -32,6 +35,7 @@ This batch addresses 4 critical CI failures that can be fixed quickly with low r
 - **Time:** 2 minutes
 
 ### Issue #8: Artifact name conflicts (LOW-MEDIUM PRIORITY)
+
 - **Blocker:** ci-template-selftest.yml artifact uploads fail with HTTP 409
 - **Root Cause:** Matrix jobs don't differentiate artifact names by OS
 - **Impact:** Artifact uploads fail intermittently when multiple runners complete
@@ -43,6 +47,7 @@ This batch addresses 4 critical CI failures that can be fixed quickly with low r
 ### 1. `flake.nix` (lines ~30-40)
 
 **Current packages list:**
+
 ```nix
 buildInputs = [
   pkgs.rust
@@ -65,6 +70,7 @@ buildInputs = [
 ```
 
 **Add these two lines:**
+
 ```nix
   pkgs.protobuf          # Issue #9: protoc for tonic-build (adapters-grpc)
   pkgs.cargo-llvm-cov    # Issue #1: coverage tool for ci-coverage.yml
@@ -95,6 +101,7 @@ This is a placeholder for Backstage-specific documentation.
 ### 3. `.github/workflows/ci-template-selftest.yml` (line ~80)
 
 **Current artifact upload:**
+
 ```yaml
 - name: Upload artifacts
   uses: actions/upload-artifact@v4
@@ -106,6 +113,7 @@ This is a placeholder for Backstage-specific documentation.
 ```
 
 **Fix:** Add matrix variable to name:
+
 ```yaml
 - name: Upload artifacts
   uses: actions/upload-artifact@v4
@@ -118,7 +126,7 @@ This is a placeholder for Backstage-specific documentation.
 
 ## Verification Steps
 
-### After flake.nix changes:
+### After flake.nix changes
 
 ```bash
 # Update Nix environment
@@ -139,7 +147,7 @@ cargo build --workspace
 cargo llvm-cov --workspace
 ```
 
-### After backstage docs:
+### After backstage docs
 
 ```bash
 # Verify file exists
@@ -149,7 +157,7 @@ ls -la backstage/docs/index.md
 cd backstage && mkdocs build
 ```
 
-### After artifact fix:
+### After artifact fix
 
 - Push to PR
 - Watch ci-template-selftest.yml job
@@ -181,6 +189,7 @@ cd backstage && mkdocs build
 **Target branch:** `chore/ci-batch1-quick-wins` (new branch from `chore/env-and-handover-2025-12-02`)
 
 **Commit message:**
+
 ```
 fix(ci): Add protoc, cargo-llvm-cov, backstage docs, and fix artifact naming
 

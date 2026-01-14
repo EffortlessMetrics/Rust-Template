@@ -63,9 +63,11 @@ workspace/
    - Can be swapped/mocked
 
 4. **Dependency flow**:
+
    ```
    HTTP/gRPC → business-core ← adapters-db
    ```
+
    Business-core never imports app-http or adapters-*.
 
 **Enforcement:**

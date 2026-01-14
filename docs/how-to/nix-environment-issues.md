@@ -46,6 +46,7 @@ The Nix devshell does not include `pkgs.zlib` in its package list and does not s
 Update `flake.nix` to include `pkgs.zlib` in both the package list and buildInputs, and export `LD_LIBRARY_PATH`:
 
 **Before:**
+
 ```nix
 devShells = forAllSystems ({ pkgs, rust, ... }: {
   default = pkgs.mkShell {
@@ -63,6 +64,7 @@ devShells = forAllSystems ({ pkgs, rust, ... }: {
 ```
 
 **After:**
+
 ```nix
 devShells = forAllSystems ({ pkgs, rust, ... }: {
   default = pkgs.mkShell {
@@ -227,4 +229,3 @@ If you encounter issues not covered here:
 1. Run `cargo xtask doctor` and share the output
 2. Check `docs/TROUBLESHOOTING.md` for common issues
 3. File a GitHub issue linking the error message and your environment details
-

@@ -34,6 +34,7 @@ k8s/
 - No readiness/liveness probes (faster iteration)
 
 **Deploy**:
+
 ```bash
 cargo run -p xtask -- deploy --env dev
 # Or directly:
@@ -54,6 +55,7 @@ kubectl apply -k infra/k8s/dev
 - ConfigMap for environment-specific settings
 
 **Deploy**:
+
 ```bash
 cargo run -p xtask -- deploy --env staging
 # Or directly:
@@ -84,6 +86,7 @@ kubectl apply -k infra/k8s/staging
 - Production labels (team, cost-center)
 
 **Deploy**:
+
 ```bash
 cargo run -p xtask -- deploy --env prod
 # Or directly:
@@ -226,7 +229,7 @@ If pods are OOMKilled or CPU-throttled:
 
 ## References
 
-- Kustomize docs: https://kustomize.io/
-- K8s deployment docs: https://kubernetes.io/docs/concepts/workloads/controllers/deployment/
+- Kustomize docs: <https://kustomize.io/>
+- K8s deployment docs: <https://kubernetes.io/docs/concepts/workloads/controllers/deployment/>
 - Template policy docs: `../../policy/README.md`
 - Deploy command: `../../docs/how-to/deploy-dev.md`

@@ -15,9 +15,11 @@ adrs:
 # Prometheus Metrics Strategy
 
 ## Context
+
 Observability requires standard metrics for all services.
 
 ## Design
+
 Expose `/metrics` endpoint compatible with Prometheus.
 Standard metrics:
 - `http_requests_total`
@@ -25,4 +27,5 @@ Standard metrics:
 - `process_cpu_seconds_total`
 
 ## Implementation
+
 Use `prometheus` crate and `axum` middleware.

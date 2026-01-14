@@ -41,6 +41,7 @@ cargo xtask selftest -v
 ```
 
 **Example output:**
+
 ```
 [1/7] Running core checks (fmt + clippy + tests)... ✅
 [2/7] Running BDD acceptance tests... ✅
@@ -69,6 +70,7 @@ Run the isolated command for the failing step:
 | 7 | `curl http://localhost:3000/platform/graph` | Graph invariants |
 
 **Example:**
+
 ```bash
 # Step 3 failed, run AC status check
 cargo xtask ac-status
@@ -125,6 +127,7 @@ cargo xtask ac-status
 
 **Fix:**
 Edit `specs/spec_ledger.yaml` and add test reference:
+
 ```yaml
 acceptance_criteria:
   - id: AC-TPL-123
@@ -134,6 +137,7 @@ acceptance_criteria:
 ```
 
 Then create matching scenario in `specs/features/`:
+
 ```gherkin
 @AC-TPL-123
 Scenario: Feature X returns Y
@@ -183,6 +187,7 @@ cargo xtask help-flows
 
 **Fix:**
 Edit `specs/devex_flows.yaml`:
+
 ```yaml
 commands:
   missing-command:  # Add missing command definition
@@ -244,7 +249,7 @@ Debugging complete when:
 
 ## Error Recovery
 
-### If you can't identify the failure:
+### If you can't identify the failure
 
 ```bash
 # Get maximum verbosity
@@ -253,7 +258,7 @@ RUST_LOG=debug cargo xtask selftest -v 2>&1 | tee selftest-debug.log
 # Share log with team or review carefully
 ```
 
-### If fix causes new failures:
+### If fix causes new failures
 
 ```bash
 # Revert changes
@@ -265,7 +270,7 @@ cargo xtask selftest
 # Try a more targeted fix
 ```
 
-### If platform won't start (Step 7):
+### If platform won't start (Step 7)
 
 ```bash
 # Check port availability
@@ -359,7 +364,7 @@ Governance debug complete when:
 - **Policy definitions:** `policies/*.rego`
 - **Graph invariants:** `docs/explanation/governance-graph.md`
 - **Operational guide:** `docs/AGENT_GUIDE.md`
-- **Platform API:** http://localhost:3000/platform/graph
+- **Platform API:** <http://localhost:3000/platform/graph>
 
 ## Notes
 

@@ -134,6 +134,7 @@ This is the environment CI uses. If selftest passes here, it will pass in CI.
 **How to install conftest (matching CI version):**
 
 On Linux/WSL:
+
 ```bash
 CONFTEST_VERSION="0.52.0"
 wget "https://github.com/open-policy-agent/conftest/releases/download/v${CONFTEST_VERSION}/conftest_${CONFTEST_VERSION}_Linux_x86_64.tar.gz"
@@ -144,6 +145,7 @@ conftest --version  # Should show: Conftest: 0.52.0
 ```
 
 On macOS:
+
 ```bash
 brew install conftest
 # Note: may not be 0.52.0 - check `conftest --version`
@@ -186,13 +188,15 @@ If policy tests pass locally in `nix develop` but fail in CI, that's a bug - ple
 
 ## Choosing Your Path
 
-### Use Nix if:
+### Use Nix if
+
 - You're new to the repo (fastest onboarding)
 - You're working on policies, K8s manifests, or LLM bundles
 - You want "it just works" without managing tool versions
 - You care about exact CI parity
 
-### Use Native Toolchain if:
+### Use Native Toolchain if
+
 - Your org doesn't allow Nix
 - You're already managing Rust via mise/asdf/rustup and are comfortable with it
 - You're only doing business logic / HTTP handlers (not policy work)
@@ -212,6 +216,7 @@ nix develop -c conftest --version
 ```
 
 If not, try:
+
 ```bash
 nix flake update
 nix develop

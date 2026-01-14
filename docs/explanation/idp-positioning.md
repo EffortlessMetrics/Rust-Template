@@ -38,6 +38,7 @@ This document explains how Internal Developer Portals (IDPs) like Backstage, Por
 **Evidence Files:** `service_metadata.yaml` (team/tier/links), `feature_status.md` (AC status), `release_evidence/v*.md` (governance bundles)
 
 **Example Widgets:**
+
 ```yaml
 # Governance Health Card
 Service: rust-template | Selftest: ✅ PASS | AC Coverage: 93% (56/60) | Tasks: 2 todo, 1 in_progress
@@ -810,7 +811,9 @@ def suggest_task_for_service(service_url):
 
 **Recommended commands:**
 ```
+
 {chr(10).join(task['suggested_commands'])}
+
 ```
     """
 ```
