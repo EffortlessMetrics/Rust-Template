@@ -4,61 +4,45 @@
 
 -
 
-## Linked ACs / Issues
+## Scope
 
-<!-- Reference any ACs or issues this addresses. Use "Closes #X" to auto-close issues. -->
+<!-- Required for danger-zone changes (specs, policy, CI, CLAUDE.md) -->
+<!-- Advisory for other PRs - helps reviewers understand intent -->
 
-- AC:
-- Closes #
+Type: <!-- mechanical | behavior | governance | release | docs -->
+Intent: <!-- 1-2 sentences: what is this change trying to accomplish? -->
+Touchpoints: <!-- directories or key files this PR modifies -->
+Evidence: <!-- selftest green, specific test coverage, etc. -->
+Non-goals: <!-- what this PR intentionally does NOT change (optional) -->
 
-## Changes
+## Test plan
 
-<!-- Brief description of what changed. Group by area if multiple concerns. -->
+<!-- How was this tested? What should reviewers verify? -->
 
-### Code Changes
-
--
-
-### Documentation Changes
-
--
-
-## Test Plan
-
-<!-- How was this tested? Include commands to reproduce. -->
-
-- [ ] `cargo xtask check` passes
-- [ ] `cargo xtask selftest` passes (if touching governance)
-- [ ] New tests added for changed behavior
-- [ ] Manual testing performed (describe below)
-
-**Manual testing steps:**
-
-```bash
-# Commands to reproduce / verify
-```
+- [ ] `cargo xtask selftest` passes
+- [ ] <!-- Additional verification steps -->
 
 ## Evidence & Verification
 
-<!-- For significant changes, include verification evidence -->
+<!-- For CI-active repos: CI workflow ran successfully -->
+<!-- For CI-disabled repos: local gate is canonical -->
 
-**CI Status:** <!-- CI active / CI disabled; local gate canonical -->
-
-**Reproduce locally:**
-
-```bash
-cargo xtask selftest
 ```
-
-## Checklist
-
-- [ ] Code follows project conventions (`cargo fmt`, `cargo clippy`)
-- [ ] Documentation updated if behavior changed
-- [ ] No secrets or sensitive data included
-- [ ] Commit messages follow conventional format (`feat:`, `fix:`, `docs:`)
+cargo xtask selftest
+# paste summary or link to gate receipt
+```
 
 ---
 
-<!-- For kernel changes (see CONTRIBUTING.md §9): -->
-<!-- - [ ] ADR created for architectural decisions -->
-<!-- - [ ] Version bump if changing kernel contracts -->
+<!-- Optional sections below -->
+
+<details>
+<summary>Checklist (click to expand)</summary>
+
+- [ ] Code follows project patterns
+- [ ] Tests added/updated for behavior changes
+- [ ] Documentation updated if needed
+- [ ] No secrets or credentials committed
+- [ ] Commit messages are clear and descriptive
+
+</details>
