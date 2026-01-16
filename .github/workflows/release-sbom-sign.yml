@@ -13,6 +13,8 @@ jobs:
     permissions: { contents: read }
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
         with:
@@ -61,7 +63,15 @@ jobs:
 
           test -s ./sbom.json
           echo "✓ Generated sbom.json ($(wc -c < ./sbom.json) bytes)"
-      # TODO: Implement release notes generation from git tags/commits
-      # Consider using: git-cliff, conventional commits, or GitHub release notes API
-      - name: Generate release notes (placeholder)
-        run: echo "Release notes generation - implement based on your changelog workflow"
+      - name: Install git-cliff
+        run: cargo install git-cliff --locked
+      - name: Generate release notes
+        run: |
+          # Generate release notes for the latest tag
+          git cliff --latest --strip header --output RELEASE_NOTES.md
+
+          echo "Generated RELEASE_NOTES.md:"
+          cat RELEASE_NOTES.md
+
+          echo "## Release Notes" >> $GITHUB_STEP_SUMMARY
+          cat RELEASE_NOTES.md >> $GITHUB_STEP_SUMMARY
