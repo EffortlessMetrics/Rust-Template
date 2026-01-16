@@ -25,11 +25,7 @@ jobs:
       - uses: cachix/install-nix-action@v31
       - run: nix develop -c ./bootstrap-tools.sh
 
-      # TODO: Implement schema compatibility checking with Schema Registry
-      # Example: curl -X POST $SR_URL/compatibility/subjects/orders-value/versions/latest \
-      #   -H "Content-Type: application/vnd.schemaregistry.v1+json" \
-      #   -d @specs/events/json-schema/orders.json
-      - run: echo "Schema compatibility check - implement based on your Schema Registry setup"
+      - run: nix develop -c ./scripts/check-schema-compat.sh
         env:
           SCHEMA_REGISTRY_URL: ${{ secrets.SR_URL }}
           SCHEMA_REGISTRY_AUTH: ${{ secrets.SR_AUTH }}
