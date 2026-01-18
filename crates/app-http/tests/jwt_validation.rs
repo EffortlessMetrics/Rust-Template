@@ -3,9 +3,38 @@
 //! These tests verify that JWT validation properly handles clock skew
 //! and includes appropriate leeway to prevent rejection of valid tokens.
 
-use app_http::security::{PlatformAuthConfig, PlatformAuthMode, create_jwt_token};
-use jsonwebtoken::{EncodingKey, Header};
+use app_http::security::{PlatformAuthConfig, PlatformAuthMode};
+use jsonwebtoken::{EncodingKey, Header, encode};
+use serde::Serialize;
 use std::time::{SystemTime, UNIX_EPOCH};
+
+#[derive(Serialize)]
+struct TestClaims {
+    sub: String,
+    exp: usize,
+    iat: usize,
+    iss: String,
+}
+
+/// Helper to create JWT tokens for testing
+fn create_jwt_token(
+    secret: &str,
+    subject: &str,
+    issuer: &str,
+    expires_in_seconds: u64,
+) -> Result<String, jsonwebtoken::errors::Error> {
+    let now = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs();
+
+    let claims = TestClaims {
+        sub: subject.to_string(),
+        exp: (now + expires_in_seconds) as usize,
+        iat: now as usize,
+        iss: issuer.to_string(),
+    };
+
+    let encoding_key = EncodingKey::from_secret(secret.as_ref());
+    encode(&Header::default(), &claims, &encoding_key)
+}
 
 #[test]
 fn test_jwt_validation_with_clock_skew_future() {
@@ -15,7 +44,7 @@ fn test_jwt_validation_with_clock_skew_future() {
     let now = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs();
     let future_time = now + 30; // 30 seconds in future
 
-    let claims = app_http::security::Claims {
+    let claims = TestClaims {
         sub: "user123".to_string(),
         exp: future_time as usize,
         iat: now as usize,
@@ -43,7 +72,7 @@ fn test_jwt_validation_with_clock_skew_past() {
     let now = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs();
     let past_time = now - 30; // 30 seconds in past
 
-    let claims = app_http::security::Claims {
+    let claims = TestClaims {
         sub: "user123".to_string(),
         exp: past_time as usize,
         iat: (now - 3600) as usize, // Issued 1 hour ago
@@ -71,7 +100,7 @@ fn test_jwt_validation_rejects_far_future() {
     let now = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs();
     let future_time = now + 300; // 5 minutes in future
 
-    let claims = app_http::security::Claims {
+    let claims = TestClaims {
         sub: "user123".to_string(),
         exp: future_time as usize,
         iat: now as usize,
@@ -99,7 +128,7 @@ fn test_jwt_validation_rejects_far_past() {
     let now = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs();
     let past_time = now - 300; // 5 minutes in past
 
-    let claims = app_http::security::Claims {
+    let claims = TestClaims {
         sub: "user123".to_string(),
         exp: past_time as usize,
         iat: (past_time - 3600) as usize, // Issued 1 hour before expiration
@@ -126,7 +155,7 @@ fn test_jwt_validation_rejects_missing_issuer() {
     let now = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs();
 
     // Create token with empty issuer
-    let claims = app_http::security::Claims {
+    let claims = TestClaims {
         sub: "user123".to_string(),
         exp: (now + 3600) as usize,
         iat: now as usize,
@@ -153,7 +182,7 @@ fn test_jwt_validation_rejects_missing_subject() {
     let now = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs();
 
     // Create token with empty subject
-    let claims = app_http::security::Claims {
+    let claims = TestClaims {
         sub: "".to_string(), // Empty subject
         exp: (now + 3600) as usize,
         iat: now as usize,
@@ -180,7 +209,7 @@ fn test_jwt_validation_rejects_issued_too_far_in_future() {
     let now = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs();
     let future_issued = now + 400; // Issued 400 seconds in future (beyond 300s tolerance)
 
-    let claims = app_http::security::Claims {
+    let claims = TestClaims {
         sub: "user123".to_string(),
         exp: (future_issued + 3600) as usize, // Valid for 1 hour after issue
         iat: future_issued as usize,
@@ -225,7 +254,7 @@ fn test_jwt_validation_with_nbf_claim() {
     let future_time = now + 30; // Not valid until 30 seconds in future
 
     // Create custom claims with nbf (not before)
-    let claims = app_http::security::Claims {
+    let claims = TestClaims {
         sub: "user123".to_string(),
         exp: (now + 3600) as usize,
         iat: now as usize,
@@ -298,7 +327,7 @@ fn test_jwt_validation_with_different_algorithms() {
     // Test that only HS256 is accepted (as configured)
     let now = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs();
 
-    let claims = app_http::security::Claims {
+    let claims = TestClaims {
         sub: "user123".to_string(),
         exp: (now + 3600) as usize,
         iat: now as usize,
