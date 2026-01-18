@@ -10,6 +10,7 @@ use axum::{
 use business_core::governance::{TaskId, TaskService, TaskStatus};
 use serde::Deserialize;
 use tracing::instrument;
+use std::fmt::Write;
 
 use crate::AppState;
 
@@ -105,80 +106,62 @@ pub async fn tasks_ui(State(state): State<AppState>) -> Result<impl IntoResponse
     })
     .await?;
 
-    let mut todo = Vec::new();
-    let mut in_progress = Vec::new();
-    let mut review = Vec::new();
-    let mut done = Vec::new();
+    let mut html = String::with_capacity(tasks.len() * 250 + 1000);
 
-    for task in tasks {
-        match task.status {
-            TaskStatus::Todo => todo.push(task),
-            TaskStatus::InProgress => in_progress.push(task),
-            TaskStatus::Review => review.push(task),
-            TaskStatus::Done => done.push(task),
-        }
-    }
-
-    let render_column = |title: &str, tasks: Vec<business_core::governance::Task>| -> String {
-        let tasks_html = tasks.into_iter().map(|t| {
-            let buttons = match t.status {
-                TaskStatus::Todo => format!(r#"<button hx-post="/platform/tasks/{}/status" hx-vals='{{"status": "InProgress"}}' hx-target="body">Start</button>"#, t.id.0),
-                TaskStatus::InProgress => format!(r#"<button hx-post="/platform/tasks/{}/status" hx-vals='{{"status": "Review"}}' hx-target="body">Review</button>"#, t.id.0),
-                TaskStatus::Review => format!(r#"<button hx-post="/platform/tasks/{}/status" hx-vals='{{"status": "Done"}}' hx-target="body">Done</button>"#, t.id.0),
-                TaskStatus::Done => String::new(),
-            };
-
-            format!(
-                r#"<div class="task-card">
-                    <h3>{}</h3>
-                    <p>{}</p>
-                    <div class="actions">{}</div>
-                </div>"#,
-                t.id.0, t.title, buttons
-            )
-        }).collect::<Vec<_>>().join("\n");
-
-        format!(
-            r#"<div class="column">
-                <h2>{}</h2>
-                <div class="task-list">
-                    {}
-                </div>
-            </div>"#,
-            title, tasks_html
-        )
-    };
-
-    let html = format!(
-        r#"<!DOCTYPE html>
+    html.push_str(r#"<!DOCTYPE html>
 <html>
 <head>
     <title>Task Board</title>
     <script src="https://unpkg.com/htmx.org@1.9.10"></script>
     <style>
-        body {{ font-family: sans-serif; padding: 20px; }}
-        .board {{ display: flex; gap: 20px; }}
-        .column {{ flex: 1; background: #f0f0f0; padding: 10px; border-radius: 5px; }}
-        .task-card {{ background: white; padding: 10px; margin-bottom: 10px; border-radius: 3px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }}
-        .actions {{ margin-top: 10px; }}
-        button {{ cursor: pointer; padding: 5px 10px; }}
+        body { font-family: sans-serif; padding: 20px; }
+        .board { display: flex; gap: 20px; }
+        .column { flex: 1; background: #f0f0f0; padding: 10px; border-radius: 5px; }
+        .task-card { background: white; padding: 10px; margin-bottom: 10px; border-radius: 3px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .actions { margin-top: 10px; }
+        button { cursor: pointer; padding: 5px 10px; }
     </style>
 </head>
 <body>
     <h1>Task Board</h1>
-    <div class="board">
-        {}
-        {}
-        {}
-        {}
-    </div>
-</body>
-</html>"#,
-        render_column("Todo", todo),
-        render_column("In Progress", in_progress),
-        render_column("Review", review),
-        render_column("Done", done)
-    );
+    <div class="board">"#);
+
+    let render_column = |title: &str, filter: TaskStatus, buffer: &mut String| {
+        let _ = write!(buffer, r#"<div class="column">
+                <h2>{}</h2>
+                <div class="task-list">"#, title);
+
+        for task in &tasks {
+            if task.status == filter {
+                let _ = write!(buffer, r#"<div class="task-card">
+                    <h3>{}</h3>
+                    <p>{}</p>
+                    <div class="actions">"#, task.id.0, task.title);
+
+                match task.status {
+                    TaskStatus::Todo => {
+                        let _ = write!(buffer, r#"<button hx-post="/platform/tasks/{}/status" hx-vals='{{"status": "InProgress"}}' hx-target="body">Start</button>"#, task.id.0);
+                    },
+                    TaskStatus::InProgress => {
+                        let _ = write!(buffer, r#"<button hx-post="/platform/tasks/{}/status" hx-vals='{{"status": "Review"}}' hx-target="body">Review</button>"#, task.id.0);
+                    },
+                    TaskStatus::Review => {
+                        let _ = write!(buffer, r#"<button hx-post="/platform/tasks/{}/status" hx-vals='{{"status": "Done"}}' hx-target="body">Done</button>"#, task.id.0);
+                    },
+                    TaskStatus::Done => {},
+                }
+                buffer.push_str("</div></div>");
+            }
+        }
+        buffer.push_str("</div></div>");
+    };
+
+    render_column("Todo", TaskStatus::Todo, &mut html);
+    render_column("In Progress", TaskStatus::InProgress, &mut html);
+    render_column("Review", TaskStatus::Review, &mut html);
+    render_column("Done", TaskStatus::Done, &mut html);
+
+    html.push_str(r#"</div></body></html>"#);
 
     Ok(Html(html))
 }
