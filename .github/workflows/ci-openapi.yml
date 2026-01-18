@@ -16,6 +16,7 @@ jobs:
     timeout-minutes: 25
     permissions: { contents: read, pull-requests: write }
     env:
+      # Checksums are enforced for all tools in bootstrap-tools.sh
       ENFORCE_CHECKSUMS: "1"
       # Tool version sourced from .github/workflows/tool-versions.yml
       REDOCLY_VERSION: "1.21.0"
