@@ -5,6 +5,8 @@ adapters-spec-fs = {path = "../adapters-spec-fs"}
 business-core = {path = "../business-core"}
 gov-http = {path = "../gov-http"}
 gov-model = {path = "../gov-model"}
+# Base64 for Basic Auth
+base64 = "0.22"
 # JWT authentication
 jsonwebtoken = {features = ["rust_crypto"], version = "10.2.0"}
 # HTML templates

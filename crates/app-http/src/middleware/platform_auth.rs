@@ -1,5 +1,9 @@
 use axum::http::{Method, Request};
-use axum::{body::Body, extract::State, http::StatusCode, middleware::Next, response::Response};
+use axum::{
+    body::Body, extract::State, http::StatusCode, middleware::Next, response::IntoResponse,
+    response::Response,
+};
+use base64::{Engine as _, engine::general_purpose::STANDARD};
 
 use crate::{AppError, AppState, ErrorCode};
 
@@ -16,33 +20,70 @@ pub async fn platform_auth_guard(
         return Ok(next.run(request).await);
     }
 
-    if matches!(request.method(), &Method::GET | &Method::HEAD | &Method::OPTIONS) {
+    // Only bypass OPTIONS for CORS preflight
+    if request.method() == Method::OPTIONS {
         return Ok(next.run(request).await);
     }
 
     let provided = extract_auth_token(&request);
 
-    if state.platform_auth.is_authorized(provided) {
+    if state.platform_auth.is_authorized(provided.as_deref()) {
         return Ok(next.run(request).await);
     }
 
-    Err(AppError::new(
+    let error = AppError::new(
         StatusCode::UNAUTHORIZED,
         ErrorCode::Unauthorized,
         "Unauthorized: missing or invalid platform token",
-    ))
+    );
+
+    // If in Basic mode, return WWW-Authenticate header to trigger browser prompt
+    if state.platform_auth.mode == crate::security::PlatformAuthMode::Basic {
+        let mut response = error.into_response();
+        response.headers_mut().insert(
+            axum::http::header::WWW_AUTHENTICATE,
+            axum::http::HeaderValue::from_static("Basic realm=\"Platform\""),
+        );
+        return Ok(response);
+    }
+
+    Err(error)
 }
 
 /// Extract authentication token, preferring Authorization over the legacy header.
-fn extract_auth_token(request: &Request<Body>) -> Option<&str> {
+fn extract_auth_token(request: &Request<Body>) -> Option<String> {
+    if let Some(auth_val) = request.headers().get(AUTHORIZATION_HEADER) {
+        if let Ok(auth_str) = auth_val.to_str() {
+            if let Some(token) =
+                auth_str.strip_prefix("Bearer ").or_else(|| auth_str.strip_prefix("bearer "))
+            {
+                return Some(token.to_string());
+            }
+
+            if let Some(basic) =
+                auth_str.strip_prefix("Basic ").or_else(|| auth_str.strip_prefix("basic "))
+            {
+                if let Ok(decoded) = STANDARD.decode(basic) {
+                    if let Ok(credentials) = String::from_utf8(decoded) {
+                        // Standard Basic Auth is "username:password"
+                        // We extract the password part as the token
+                        if let Some((_user, pass)) = credentials.split_once(':') {
+                            return Some(pass.to_string());
+                        } else {
+                            // If no colon, treat the whole string as the password/token
+                            return Some(credentials);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     request
         .headers()
-        .get(AUTHORIZATION_HEADER)
+        .get(PLATFORM_AUTH_HEADER)
         .and_then(|v| v.to_str().ok())
-        .and_then(|auth_str| {
-            auth_str.strip_prefix("Bearer ").or_else(|| auth_str.strip_prefix("bearer "))
-        })
-        .or_else(|| request.headers().get(PLATFORM_AUTH_HEADER).and_then(|v| v.to_str().ok()))
+        .map(|s| s.to_string())
 }
 
 #[cfg(test)]
@@ -131,6 +172,8 @@ mod tests {
 
         let response = app.oneshot(request).await.expect("handler should respond");
         assert_eq!(response.status(), StatusCode::UNAUTHORIZED);
+        // Verify WWW-Authenticate header
+        assert!(response.headers().contains_key(axum::http::header::WWW_AUTHENTICATE));
     }
 
     #[tokio::test]
@@ -150,7 +193,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn allows_get_without_auth_even_in_basic_mode() {
+    async fn rejects_get_without_auth_in_basic_mode() {
         let state = app_state(crate::security::PlatformAuthMode::Basic, Some("secret"), None);
         let app = guarded_router(state);
 
@@ -161,7 +204,8 @@ mod tests {
             .unwrap();
 
         let response = app.oneshot(request).await.expect("handler should respond");
-        assert_eq!(response.status(), StatusCode::OK);
+        assert_eq!(response.status(), StatusCode::UNAUTHORIZED);
+        assert!(response.headers().contains_key(axum::http::header::WWW_AUTHENTICATE));
     }
 
     #[tokio::test]
@@ -197,6 +241,8 @@ mod tests {
 
         let response = app.oneshot(request).await.expect("handler should respond");
         assert_eq!(response.status(), StatusCode::UNAUTHORIZED);
+        // JWT mode does not necessarily imply Basic prompt
+        assert!(!response.headers().contains_key(axum::http::header::WWW_AUTHENTICATE));
     }
 
     #[tokio::test]
@@ -325,13 +371,55 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn allows_get_without_auth_even_in_jwt_mode() {
+    async fn rejects_get_without_auth_in_jwt_mode() {
         let state = app_state(crate::security::PlatformAuthMode::Jwt, None, Some("secret"));
         let app = guarded_router(state);
 
         let request = Request::builder()
             .method(Method::GET)
             .uri("/platform/protected")
+            .body(Body::empty())
+            .unwrap();
+
+        let response = app.oneshot(request).await.expect("handler should respond");
+        assert_eq!(response.status(), StatusCode::UNAUTHORIZED);
+    }
+
+    #[tokio::test]
+    async fn accepts_basic_header_auth() {
+        // Test standard Basic Auth header: "Basic base64(user:pass)"
+        let state = app_state(crate::security::PlatformAuthMode::Basic, Some("secret"), None);
+        let app = guarded_router(state);
+
+        // user:secret -> base64
+        let token = "user:secret";
+        let encoded = base64::engine::general_purpose::STANDARD.encode(token);
+
+        let request = Request::builder()
+            .method(Method::GET)
+            .uri("/platform/protected")
+            .header(AUTHORIZATION_HEADER, format!("Basic {}", encoded))
+            .body(Body::empty())
+            .unwrap();
+
+        let response = app.oneshot(request).await.expect("handler should respond");
+        assert_eq!(response.status(), StatusCode::OK);
+    }
+
+    #[tokio::test]
+    async fn accepts_basic_header_auth_no_user() {
+        // Test Basic Auth header with no username: "Basic base64(:secret)"
+        let state = app_state(crate::security::PlatformAuthMode::Basic, Some("secret"), None);
+        let app = guarded_router(state);
+
+        // :secret -> base64
+        let token = ":secret";
+        let encoded = base64::engine::general_purpose::STANDARD.encode(token);
+
+        let request = Request::builder()
+            .method(Method::GET)
+            .uri("/platform/protected")
+            .header(AUTHORIZATION_HEADER, format!("Basic {}", encoded))
             .body(Body::empty())
             .unwrap();
 

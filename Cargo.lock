@@ -201,6 +201,7 @@ dependencies = [
  "adapters-spec-fs",
  "anyhow",
  "axum",
+ "base64 0.22.1",
  "business-core",
  "chrono",
  "gov-http",
