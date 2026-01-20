@@ -184,237 +184,269 @@ fn layout(
 
 /// Dashboard page
 pub async fn dashboard(State(state): State<AppState>) -> Html<String> {
-    let root = &state.workspace_root;
-    let status_result = load_all_specs(root);
-    let tasks_result = spec_runtime::load_tasks(&root.join("specs/tasks.yaml"));
-    let metadata = load_service_metadata(&root.join("specs/service_metadata.yaml")).ok();
-    let config = config_summary(&state);
+    // ⚡ Bolt Optimization: Offload blocking I/O to a separate thread
+    // This prevents the main async executor from stalling while reading multiple files
+    // (specs, tasks, metadata, policy status, feature status) synchronously.
+    let state_clone = state.clone();
 
-    let content = match (status_result, tasks_result) {
-        (Ok(specs), Ok(tasks_spec)) => {
-            let req_count: usize = specs.ledger.stories.iter().map(|s| s.requirements.len()).sum();
-            let ac_count: usize = specs
-                .ledger
-                .stories
-                .iter()
-                .flat_map(|s| s.requirements.iter())
-                .map(|r| r.acceptance_criteria.len())
-                .sum();
+    let result = tokio::task::spawn_blocking(move || {
+        let root = &state_clone.workspace_root;
+        let status_result = load_all_specs(root);
+        let tasks_result = spec_runtime::load_tasks(&root.join("specs/tasks.yaml"));
+        let metadata = load_service_metadata(&root.join("specs/service_metadata.yaml")).ok();
+        let config = config_summary(&state_clone);
 
-            // Read policy status
-            let policy_path = root.join("target/policy_status.json");
-            let policy_status = std::fs::read_to_string(policy_path)
-                .ok()
-                .and_then(|content| serde_json::from_str::<serde_json::Value>(&content).ok())
-                .and_then(|v| v.get("summary").and_then(|s| s.as_str()).map(String::from))
-                .unwrap_or_else(|| "unknown".to_string());
+        let content = match (status_result, tasks_result) {
+            (Ok(specs), Ok(tasks_spec)) => {
+                let req_count: usize =
+                    specs.ledger.stories.iter().map(|s| s.requirements.len()).sum();
+                let ac_count: usize = specs
+                    .ledger
+                    .stories
+                    .iter()
+                    .flat_map(|s| s.requirements.iter())
+                    .map(|r| r.acceptance_criteria.len())
+                    .sum();
 
-            let status_class = match policy_status.as_str() {
-                "pass" => "status-pass",
-                "fail" => "status-fail",
-                _ => "status-unknown",
-            };
+                // Read policy status
+                let policy_path = root.join("target/policy_status.json");
+                let policy_status = std::fs::read_to_string(policy_path)
+                    .ok()
+                    .and_then(|content| serde_json::from_str::<serde_json::Value>(&content).ok())
+                    .and_then(|v| v.get("summary").and_then(|s| s.as_str()).map(String::from))
+                    .unwrap_or_else(|| "unknown".to_string());
 
-            // Read AC coverage from feature_status.md
-            let feature_status_path = root.join("docs/feature_status.md");
-            let mut passing = 0;
-            let mut failing = 0;
-            let mut unknown = 0;
-            let mut coverage_rows = 0;
+                let status_class = match policy_status.as_str() {
+                    "pass" => "status-pass",
+                    "fail" => "status-fail",
+                    _ => "status-unknown",
+                };
 
-            if feature_status_path.exists()
-                && let Ok(content) = std::fs::read_to_string(&feature_status_path)
-            {
-                for line in content.lines() {
-                    if !line.starts_with("| AC-") {
-                        continue;
-                    }
+                // Read AC coverage from feature_status.md
+                let feature_status_path = root.join("docs/feature_status.md");
+                let mut passing = 0;
+                let mut failing = 0;
+                let mut unknown = 0;
+                let mut coverage_rows = 0;
 
-                    coverage_rows += 1;
-
-                    if line.contains("[PASS]") {
-                        passing += 1;
-                    } else if line.contains("[FAIL]") {
-                        failing += 1;
-                    } else if line.contains("[UNKNOWN]") {
-                        unknown += 1;
-                    }
-                }
-            }
-
-            // If no coverage data, count all ACs as unknown
-            if coverage_rows == 0 {
-                unknown = ac_count;
-            } else {
-                let accounted_for = passing + failing + unknown;
-                if accounted_for < ac_count {
-                    unknown += ac_count - accounted_for;
-                }
-            }
-
-            html! {
-                .card data-uiid="dashboard.health" {
-                    h2 { "Platform Health" }
-                    .metrics {
-                        .metric {
-                            .metric-label { "Stories" }
-                            .metric-value { (specs.ledger.stories.len()) }
+                if feature_status_path.exists()
+                    && let Ok(content) = std::fs::read_to_string(&feature_status_path)
+                {
+                    for line in content.lines() {
+                        if !line.starts_with("| AC-") {
+                            continue;
                         }
-                        .metric {
-                            .metric-label { "Requirements" }
-                            .metric-value { (req_count) }
-                        }
-                        .metric {
-                            .metric-label { "Acceptance Criteria" }
-                            .metric-value { (ac_count) }
-                        }
-                        .metric {
-                            .metric-label { "DevEx Commands" }
-                            .metric-value { (specs.devex.commands.len()) }
-                        }
-                        .metric {
-                            .metric-label { "Flows" }
-                            .metric-value { (specs.devex.flows.len()) }
-                        }
-                        .metric {
-                            .metric-label { "Tasks" }
-                            .metric-value { (tasks_spec.tasks.len()) }
-                        }
-                        .metric {
-                            .metric-label { "Documents" }
-                            .metric-value { (specs.docs.docs.len()) }
-                        }
-                        .metric {
-                            .metric-label { "Policies" }
-                            .metric-value {
-                                span class=(status_class) { (policy_status) }
-                            }
+
+                        coverage_rows += 1;
+
+                        if line.contains("[PASS]") {
+                            passing += 1;
+                        } else if line.contains("[FAIL]") {
+                            failing += 1;
+                        } else if line.contains("[UNKNOWN]") {
+                            unknown += 1;
                         }
                     }
                 }
 
-                .card data-uiid="dashboard.ac_coverage" {
-                    h2 { "AC Coverage" }
-                    .stats style="display: flex; gap: 1.5rem; margin: 1rem 0; flex-wrap: wrap;" {
-                        span style="color: #155724; font-size: 1.1rem; font-weight: 500;" {
-                            "✅ " (passing) " passing"
-                        }
-                        span style="color: #721c24; font-size: 1.1rem; font-weight: 500;" {
-                            "❌ " (failing) " failing"
-                        }
-                        span style="color: #856404; font-size: 1.1rem; font-weight: 500;" {
-                            "❓ " (unknown) " unknown"
-                        }
-                    }
-                    p style="margin-top: 1rem;" {
-                        a href="/ui/coverage" style="color: #667eea; text-decoration: none; font-weight: 500;" {
-                            "View details →"
-                        }
+                // If no coverage data, count all ACs as unknown
+                if coverage_rows == 0 {
+                    unknown = ac_count;
+                } else {
+                    let accounted_for = passing + failing + unknown;
+                    if accounted_for < ac_count {
+                        unknown += ac_count - accounted_for;
                     }
                 }
 
-                @if let Some(cfg) = config.clone() {
-                    .card data-uiid="dashboard.config" {
-                        h2 { "Runtime Config (redacted)" }
-                        p style="margin-bottom: 0.75rem; color: #555;" {
-                            "Config values are rendered for visibility without leaking secrets; tokens are never shown."
-                        }
-                        ul style="margin-left: 1.25rem; line-height: 1.6;" {
-                            li {
-                                strong { "Env: " }
-                                (cfg.env.clone().unwrap_or_else(|| "unknown".to_string()))
+                html! {
+                    .card data-uiid="dashboard.health" {
+                        h2 { "Platform Health" }
+                        .metrics {
+                            .metric {
+                                .metric-label { "Stories" }
+                                .metric-value { (specs.ledger.stories.len()) }
                             }
-                            li { strong { "HTTP port: " } (cfg.http_port) }
-                            li {
-                                strong { "Auth mode: " }
-                                (cfg.auth.mode.clone())
-                                " ("
-                                @if cfg.auth.token_present { "token configured" } @else { "no token" }
-                                ")"
+                            .metric {
+                                .metric-label { "Requirements" }
+                                .metric-value { (req_count) }
                             }
-                        }
-
-                        @if !cfg.settings.is_empty() {
-                            details style="margin-top: 0.75rem;" {
-                                summary style="cursor: pointer; color: #667eea;" { "Settings" }
-                                ul style="margin: 0.5rem 0 0 1.25rem;" {
-                                    @for (k, v) in cfg.settings.iter() {
-                                        li { code { (k) } ": " (v) }
-                                    }
-                                }
+                            .metric {
+                                .metric-label { "Acceptance Criteria" }
+                                .metric-value { (ac_count) }
                             }
-                        }
-
-                        @if !cfg.secrets_redacted.is_empty() {
-                            details style="margin-top: 0.75rem;" {
-                                summary style="cursor: pointer; color: #667eea;" { "Secrets (redacted)" }
-                                ul style="margin: 0.5rem 0 0 1.25rem;" {
-                                    @for (k, _) in cfg.secrets_redacted.iter() {
-                                        li { code { (k) } ": " "[REDACTED]" }
-                                    }
+                            .metric {
+                                .metric-label { "DevEx Commands" }
+                                .metric-value { (specs.devex.commands.len()) }
+                            }
+                            .metric {
+                                .metric-label { "Flows" }
+                                .metric-value { (specs.devex.flows.len()) }
+                            }
+                            .metric {
+                                .metric-label { "Tasks" }
+                                .metric-value { (tasks_spec.tasks.len()) }
+                            }
+                            .metric {
+                                .metric-label { "Documents" }
+                                .metric-value { (specs.docs.docs.len()) }
+                            }
+                            .metric {
+                                .metric-label { "Policies" }
+                                .metric-value {
+                                    span class=(status_class) { (policy_status) }
                                 }
                             }
                         }
                     }
-                }
 
-                .card data-uiid="dashboard.contracts" {
-                    h2 { "Governance Contracts" }
-                    p { "All governance checks are enforced via " code { "cargo xtask selftest" } ":" }
-                    ul style="margin: 1rem 0 0 2rem;" {
-                        li { "✅ Core checks (fmt, clippy, tests)" }
-                        li { "✅ BDD acceptance tests" }
-                        li { "✅ AC status mapping & ADR references" }
-                        li { "✅ LLM context bundler" }
-                        li { "✅ Policy tests " span class=(status_class) { "(" (policy_status) ")" } }
-                        li { "✅ DevEx contract satisfaction" }
-                        li { "✅ Graph invariants" }
+                    .card data-uiid="dashboard.ac_coverage" {
+                        h2 { "AC Coverage" }
+                        .stats style="display: flex; gap: 1.5rem; margin: 1rem 0; flex-wrap: wrap;" {
+                            span style="color: #155724; font-size: 1.1rem; font-weight: 500;" {
+                                "✅ " (passing) " passing"
+                            }
+                            span style="color: #721c24; font-size: 1.1rem; font-weight: 500;" {
+                                "❌ " (failing) " failing"
+                            }
+                            span style="color: #856404; font-size: 1.1rem; font-weight: 500;" {
+                                "❓ " (unknown) " unknown"
+                            }
+                        }
+                        p style="margin-top: 1rem;" {
+                            a href="/ui/coverage" style="color: #667eea; text-decoration: none; font-weight: 500;" {
+                                "View details →"
+                            }
+                        }
                     }
-                }
 
-                .card data-uiid="dashboard.links" {
-                    h2 { "Quick Links" }
-                    ul style="margin: 1rem 0 0 2rem;" {
-                        li { a href="/ui/graph" { "View Governance Graph" } " - Visual map of stories, requirements, and ACs" }
-                        li { a href="/ui/flows" { "View Flows & Tasks" } " - Developer workflows and task guidance" }
-                        li { a href="/platform/status" target="_blank" { "Platform Status API" } " - JSON metrics for agents" }
-                        li { a href="/platform/graph" target="_blank" { "Graph API" } " - Full governance graph as JSON" }
+                    @if let Some(cfg) = config.clone() {
+                        .card data-uiid="dashboard.config" {
+                            h2 { "Runtime Config (redacted)" }
+                            p style="margin-bottom: 0.75rem; color: #555;" {
+                                "Config values are rendered for visibility without leaking secrets; tokens are never shown."
+                            }
+                            ul style="margin-left: 1.25rem; line-height: 1.6;" {
+                                li {
+                                    strong { "Env: " }
+                                    (cfg.env.clone().unwrap_or_else(|| "unknown".to_string()))
+                                }
+                                li { strong { "HTTP port: " } (cfg.http_port) }
+                                li {
+                                    strong { "Auth mode: " }
+                                    (cfg.auth.mode.clone())
+                                    " ("
+                                    @if cfg.auth.token_present { "token configured" } @else { "no token" }
+                                    ")"
+                                }
+                            }
+
+                            @if !cfg.settings.is_empty() {
+                                details style="margin-top: 0.75rem;" {
+                                    summary style="cursor: pointer; color: #667eea;" { "Settings" }
+                                    ul style="margin: 0.5rem 0 0 1.25rem;" {
+                                        @for (k, v) in cfg.settings.iter() {
+                                            li { code { (k) } ": " (v) }
+                                        }
+                                    }
+                                }
+                            }
+
+                            @if !cfg.secrets_redacted.is_empty() {
+                                details style="margin-top: 0.75rem;" {
+                                    summary style="cursor: pointer; color: #667eea;" { "Secrets (redacted)" }
+                                    ul style="margin: 0.5rem 0 0 1.25rem;" {
+                                        @for (k, _) in cfg.secrets_redacted.iter() {
+                                            li { code { (k) } ": " "[REDACTED]" }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    .card data-uiid="dashboard.contracts" {
+                        h2 { "Governance Contracts" }
+                        p { "All governance checks are enforced via " code { "cargo xtask selftest" } ":" }
+                        ul style="margin: 1rem 0 0 2rem;" {
+                            li { "✅ Core checks (fmt, clippy, tests)" }
+                            li { "✅ BDD acceptance tests" }
+                            li { "✅ AC status mapping & ADR references" }
+                            li { "✅ LLM context bundler" }
+                            li { "✅ Policy tests " span class=(status_class) { "(" (policy_status) ")" } }
+                            li { "✅ DevEx contract satisfaction" }
+                            li { "✅ Graph invariants" }
+                        }
+                    }
+
+                    .card data-uiid="dashboard.links" {
+                        h2 { "Quick Links" }
+                        ul style="margin: 1rem 0 0 2rem;" {
+                            li { a href="/ui/graph" { "View Governance Graph" } " - Visual map of stories, requirements, and ACs" }
+                            li { a href="/ui/flows" { "View Flows & Tasks" } " - Developer workflows and task guidance" }
+                            li { a href="/platform/status" target="_blank" { "Platform Status API" } " - JSON metrics for agents" }
+                            li { a href="/platform/graph" target="_blank" { "Graph API" } " - Full governance graph as JSON" }
+                        }
                     }
                 }
             }
-        }
-        _ => {
-            html! {
-                .card {
-                    h2 { "Error" }
-                    p { "Failed to load platform specifications. Ensure specs are valid and available." }
+            _ => {
+                html! {
+                    .card {
+                        h2 { "Error" }
+                        p { "Failed to load platform specifications. Ensure specs are valid and available." }
+                    }
                 }
             }
-        }
-    };
+        };
 
-    Html(layout("Dashboard", "dashboard", &metadata, content).into_string())
+        layout("Dashboard", "dashboard", &metadata, content).into_string()
+    })
+    .await;
+
+    match result {
+        Ok(html_string) => Html(html_string),
+        Err(e) => {
+            tracing::error!("Blocking task failed: {}", e);
+            Html(format!("<h1>Internal Server Error</h1><p>{}</p>", e))
+        }
+    }
 }
 
 /// Graph visualization page
 pub async fn graph_view(State(state): State<AppState>) -> Html<String> {
-    let root = &state.workspace_root;
-    let metadata = load_service_metadata(&root.join("specs/service_metadata.yaml")).ok();
+    // ⚡ Bolt Optimization: Offload blocking I/O (loading all specs) to thread
+    let state_clone = state.clone();
 
-    let content = match load_all_specs(root) {
-        Ok(specs) => match spec_runtime::build_graph(&specs.ledger, &specs.devex, &specs.docs) {
-            Ok(graph) => {
-                let mermaid_diagram = graph.to_mermaid();
+    let result = tokio::task::spawn_blocking(move || {
+        let root = &state_clone.workspace_root;
+        let metadata = load_service_metadata(&root.join("specs/service_metadata.yaml")).ok();
 
-                html! {
-                    .card data-uiid="graph.diagram" {
-                        h2 { "Governance Graph" }
-                        p style="margin-bottom: 1rem;" {
-                            "This graph shows the relationships between stories, requirements, acceptance criteria, "
-                            "documentation, DevEx commands, and flows."
+        let content = match load_all_specs(root) {
+            Ok(specs) => {
+                match spec_runtime::build_graph(&specs.ledger, &specs.devex, &specs.docs) {
+                    Ok(graph) => {
+                        let mermaid_diagram = graph.to_mermaid();
+
+                        html! {
+                            .card data-uiid="graph.diagram" {
+                                h2 { "Governance Graph" }
+                                p style="margin-bottom: 1rem;" {
+                                    "This graph shows the relationships between stories, requirements, acceptance criteria, "
+                                    "documentation, DevEx commands, and flows."
+                                }
+                                .mermaid {
+                                    (mermaid_diagram)
+                                }
+                            }
                         }
-                        .mermaid {
-                            (mermaid_diagram)
+                    }
+                    Err(e) => {
+                        html! {
+                            .card {
+                                h2 { "Error Building Graph" }
+                                pre { (format!("{:?}", e)) }
+                            }
                         }
                     }
                 }
@@ -422,105 +454,125 @@ pub async fn graph_view(State(state): State<AppState>) -> Html<String> {
             Err(e) => {
                 html! {
                     .card {
-                        h2 { "Error Building Graph" }
+                        h2 { "Error Loading Specs" }
                         pre { (format!("{:?}", e)) }
                     }
                 }
             }
-        },
-        Err(e) => {
-            html! {
-                .card {
-                    h2 { "Error Loading Specs" }
-                    pre { (format!("{:?}", e)) }
-                }
-            }
-        }
-    };
+        };
 
-    Html(layout("Graph", "graph", &metadata, content).into_string())
+        layout("Graph", "graph", &metadata, content).into_string()
+    })
+    .await;
+
+    match result {
+        Ok(html_string) => Html(html_string),
+        Err(e) => {
+            tracing::error!("Blocking task failed: {}", e);
+            Html(format!("<h1>Internal Server Error</h1><p>{}</p>", e))
+        }
+    }
 }
 
 /// Flows and tasks page
 pub async fn flows_view(State(state): State<AppState>) -> Html<String> {
-    let root = &state.workspace_root;
-    let metadata = load_service_metadata(&root.join("specs/service_metadata.yaml")).ok();
+    // ⚡ Bolt Optimization: Offload blocking I/O (loading flows/tasks) to thread
+    let state_clone = state.clone();
 
-    let flows_result = spec_runtime::load_devex_flows(&root.join("specs/devex_flows.yaml"));
-    let tasks_result = spec_runtime::load_tasks(&root.join("specs/tasks.yaml"));
+    let result = tokio::task::spawn_blocking(move || {
+        let root = &state_clone.workspace_root;
+        let metadata = load_service_metadata(&root.join("specs/service_metadata.yaml")).ok();
 
-    let content = match (flows_result, tasks_result) {
-        (Ok(devex), Ok(tasks_spec)) => {
-            html! {
-                .card data-uiid="flows.devex" {
-                    h2 { "DevEx Flows" }
-                    p style="margin-bottom: 1rem;" {
-                        "Developer experience flows define common workflows for working with this repository."
+        let flows_result = spec_runtime::load_devex_flows(&root.join("specs/devex_flows.yaml"));
+        let tasks_result = spec_runtime::load_tasks(&root.join("specs/tasks.yaml"));
+
+        let content = match (flows_result, tasks_result) {
+            (Ok(devex), Ok(tasks_spec)) => {
+                html! {
+                    .card data-uiid="flows.devex" {
+                        h2 { "DevEx Flows" }
+                        p style="margin-bottom: 1rem;" {
+                            "Developer experience flows define common workflows for working with this repository."
+                        }
+                        @for flow in devex.flows.values() {
+                            .metric style="margin-bottom: 1rem;" {
+                                h3 style="color: #667eea; font-size: 1.1rem;" { (flow.name) }
+                                p style="color: #666; margin: 0.5rem 0;" { (flow.description) }
+                                details {
+                                    summary style="cursor: pointer; color: #667eea;" { "Steps (" (flow.steps.len()) ")" }
+                                    ol style="margin: 0.5rem 0 0 2rem;" {
+                                        @for step in &flow.steps {
+                                            li { code { "cargo xtask " (step) } }
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
-                    @for flow in devex.flows.values() {
-                        .metric style="margin-bottom: 1rem;" {
-                            h3 style="color: #667eea; font-size: 1.1rem;" { (flow.name) }
-                            p style="color: #666; margin: 0.5rem 0;" { (flow.description) }
-                            details {
-                                summary style="cursor: pointer; color: #667eea;" { "Steps (" (flow.steps.len()) ")" }
-                                ol style="margin: 0.5rem 0 0 2rem;" {
-                                    @for step in &flow.steps {
-                                        li { code { "cargo xtask " (step) } }
+
+                    .card data-uiid="flows.tasks" {
+                        h2 { "Tasks" }
+                        p style="margin-bottom: 1rem;" {
+                            "Tasks represent concrete work items with recommended flows and suggested sequences."
+                        }
+                        @for task in &tasks_spec.tasks {
+                            .metric style="margin-bottom: 1rem;" {
+                                h3 style="color: #667eea; font-size: 1.1rem;" { (task.title) }
+                                p style="color: #666; margin: 0.5rem 0;" { (task.summary) }
+                                p style="font-size: 0.875rem; margin: 0.5rem 0;" {
+                                    strong { "Status: " } (task.status)
+                                    " | "
+                                    strong { "Requirement: " } (task.requirement)
+                                }
+                                details {
+                                    summary style="cursor: pointer; color: #667eea;" {
+                                        "View suggested sequence"
+                                    }
+                                    p style="margin: 0.5rem 0; font-size: 0.875rem;" {
+                                        "Run: " code { "cargo xtask suggest-next --task " (task.id) }
                                     }
                                 }
                             }
                         }
                     }
                 }
-
-                .card data-uiid="flows.tasks" {
-                    h2 { "Tasks" }
-                    p style="margin-bottom: 1rem;" {
-                        "Tasks represent concrete work items with recommended flows and suggested sequences."
-                    }
-                    @for task in &tasks_spec.tasks {
-                        .metric style="margin-bottom: 1rem;" {
-                            h3 style="color: #667eea; font-size: 1.1rem;" { (task.title) }
-                            p style="color: #666; margin: 0.5rem 0;" { (task.summary) }
-                            p style="font-size: 0.875rem; margin: 0.5rem 0;" {
-                                strong { "Status: " } (task.status)
-                                " | "
-                                strong { "Requirement: " } (task.requirement)
-                            }
-                            details {
-                                summary style="cursor: pointer; color: #667eea;" {
-                                    "View suggested sequence"
-                                }
-                                p style="margin: 0.5rem 0; font-size: 0.875rem;" {
-                                    "Run: " code { "cargo xtask suggest-next --task " (task.id) }
-                                }
-                            }
-                        }
+            }
+            _ => {
+                html! {
+                    .card {
+                        h2 { "Error" }
+                        p { "Failed to load flows or tasks." }
                     }
                 }
             }
-        }
-        _ => {
-            html! {
-                .card {
-                    h2 { "Error" }
-                    p { "Failed to load flows or tasks." }
-                }
-            }
-        }
-    };
+        };
 
-    Html(layout("Flows & Tasks", "flows", &metadata, content).into_string())
+        layout("Flows & Tasks", "flows", &metadata, content).into_string()
+    })
+    .await;
+
+    match result {
+        Ok(html_string) => Html(html_string),
+        Err(e) => {
+            tracing::error!("Blocking task failed: {}", e);
+            Html(format!("<h1>Internal Server Error</h1><p>{}</p>", e))
+        }
+    }
 }
 
 /// Coverage details page
 pub async fn coverage_view(State(state): State<AppState>) -> Html<String> {
-    let metadata =
-        load_service_metadata(&state.workspace_root.join("specs/service_metadata.yaml")).ok();
-    let content = html! {
-        style {
-            r#"
-            .filter-controls {
+    // ⚡ Bolt Optimization: Offload blocking I/O (metadata load) to thread
+    let state_clone = state.clone();
+
+    let result = tokio::task::spawn_blocking(move || {
+        let metadata =
+            load_service_metadata(&state_clone.workspace_root.join("specs/service_metadata.yaml"))
+                .ok();
+        let content = html! {
+            style {
+                r#"
+                .filter-controls {
                 margin-bottom: 1.5rem;
                 display: flex;
                 gap: 1rem;
@@ -756,5 +808,15 @@ pub async fn coverage_view(State(state): State<AppState>) -> Html<String> {
         }
     };
 
-    Html(layout("AC Coverage", "coverage", &metadata, content).into_string())
+        layout("AC Coverage", "coverage", &metadata, content).into_string()
+    })
+    .await;
+
+    match result {
+        Ok(html_string) => Html(html_string),
+        Err(e) => {
+            tracing::error!("Blocking task failed: {}", e);
+            Html(format!("<h1>Internal Server Error</h1><p>{}</p>", e))
+        }
+    }
 }
