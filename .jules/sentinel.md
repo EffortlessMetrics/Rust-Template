@@ -1,0 +1,4 @@
+## 2024-05-22 - [Auth Bypass for GET Requests]
+**Vulnerability:** The `platform_auth` middleware explicitly bypassed authentication for all `GET`, `HEAD`, and `OPTIONS` requests, exposing sensitive governance data (graph, specs, status) to unauthenticated users even when `PLATFORM_AUTH_MODE` was configured.
+**Learning:** The bypass was likely intended to support the server-side rendered UI which performs client-side fetches (`fetch('/platform/coverage')`) without authentication credentials. Securing the API breaks this specific UI functionality, highlighting a tight coupling between the unauthenticated UI and the API.
+**Prevention:** Authentication middleware should default to `deny` and only allow specific, safe methods (like `OPTIONS` for CORS) or paths. UI components should fetch data server-side or handle authentication tokens for client-side requests.
