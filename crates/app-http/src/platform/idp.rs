@@ -41,6 +41,16 @@ pub struct AcCoverage {
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize)]
+pub struct AcCoverageDetail {
+    pub id: String,
+    pub title: String,
+    pub status: String,
+    pub story: String,
+    pub requirement: String,
+    pub scenarios: Vec<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct SpecCounts {
     pub stories: usize,
     pub requirements: usize,
@@ -90,22 +100,24 @@ struct LedgerMetadata {
 
 #[derive(Debug, Deserialize)]
 struct Story {
+    #[serde(default)]
+    id: String,
     requirements: Vec<Requirement>,
 }
 
 #[derive(Debug, Deserialize)]
 struct Requirement {
+    #[serde(default)]
+    id: String,
     acceptance_criteria: Vec<AcceptanceCriteria>,
 }
 
 #[derive(Debug, Deserialize)]
 struct AcceptanceCriteria {
     /// AC ID (e.g., "AC-PLT-001"). Deserialized for counting purposes.
-    #[expect(
-        dead_code,
-        reason = "deserialized for schema completeness; count derived from Vec length"
-    )]
     id: String,
+    #[serde(default)]
+    text: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -348,6 +360,116 @@ pub fn load_ac_coverage(root: &std::path::Path) -> AcCoverage {
 
     // No coverage data available
     AcCoverage { total: 0, passing: 0, failing: 0, unknown: 0 }
+}
+
+pub fn load_ac_coverage_details(root: &std::path::Path) -> Vec<AcCoverageDetail> {
+    let mut details = Vec::new();
+    let mut ac_status_map = std::collections::HashMap::new();
+    let mut ac_scenarios_map: std::collections::HashMap<String, Vec<String>> =
+        std::collections::HashMap::new();
+
+    // 1. Load status from target/ac_report.json (preferred)
+    let report_path = root.join("target/ac_report.json");
+    if report_path.exists()
+        && let Ok(content) = fs::read_to_string(&report_path)
+        && let Ok(results) = serde_json::from_str::<Vec<serde_json::Value>>(&content)
+    {
+        for result in results {
+            if let Some(elements) = result.get("elements").and_then(|v| v.as_array()) {
+                for element in elements {
+                    if let Some(tags) = element.get("tags").and_then(|v| v.as_array()) {
+                        let ac_tag = tags.iter().find_map(|tag| {
+                            tag.get("name")
+                                .and_then(|n| n.as_str())
+                                .filter(|name| name.starts_with("@AC-"))
+                                .map(|name| name.trim_start_matches('@').to_string())
+                        });
+
+                        if let Some(ac_id) = ac_tag {
+                            let status =
+                                if let Some(steps) = element.get("steps").and_then(|v| v.as_array())
+                                {
+                                    if steps.iter().all(|step| {
+                                        step.get("result")
+                                            .and_then(|r| r.get("status"))
+                                            .and_then(|s| s.as_str())
+                                            == Some("passed")
+                                    }) {
+                                        "passing"
+                                    } else {
+                                        "failing"
+                                    }
+                                } else {
+                                    "unknown"
+                                };
+
+                            ac_status_map
+                                .entry(ac_id.clone())
+                                .and_modify(|s| {
+                                    if *s == "passing" && status == "failing" {
+                                        *s = "failing"
+                                    }
+                                })
+                                .or_insert(status);
+
+                            if let Some(name) = element.get("name").and_then(|n| n.as_str()) {
+                                ac_scenarios_map.entry(ac_id).or_default().push(name.to_string());
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    } else {
+        // Fallback: load from docs/feature_status.md
+        let feature_status_path = root.join("docs/feature_status.md");
+        if feature_status_path.exists()
+            && let Ok(content) = fs::read_to_string(&feature_status_path)
+        {
+            for line in content.lines() {
+                if line.contains("| AC-") {
+                    let parts: Vec<&str> = line.split('|').collect();
+                    if parts.len() >= 5 {
+                        let id = parts[1].trim().to_string();
+                        let status_cell = parts[4].trim().to_lowercase();
+                        let status = if status_cell.contains("pass") {
+                            "passing"
+                        } else if status_cell.contains("fail") {
+                            "failing"
+                        } else {
+                            "unknown"
+                        };
+                        ac_status_map.insert(id, status);
+                    }
+                }
+            }
+        }
+    }
+
+    // 2. Load Ledger to get AC metadata
+    if let Ok(ledger) = load_ledger(root) {
+        for story in ledger.stories {
+            for req in story.requirements {
+                for ac in req.acceptance_criteria {
+                    let id = ac.id.clone();
+                    let text = ac.text.unwrap_or_else(|| "No description".to_string());
+                    let status = ac_status_map.get(&id).copied().unwrap_or("unknown");
+                    let scenarios = ac_scenarios_map.get(&id).cloned().unwrap_or_default();
+
+                    details.push(AcCoverageDetail {
+                        id,
+                        title: text,
+                        status: status.to_string(),
+                        story: story.id.clone(),
+                        requirement: req.id.clone(),
+                        scenarios,
+                    });
+                }
+            }
+        }
+    }
+
+    details
 }
 
 fn load_doc_metrics(root: &std::path::Path) -> DocumentationMetrics {

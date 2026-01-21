@@ -3,6 +3,7 @@ use maud::{DOCTYPE, Markup, html};
 use spec_runtime::{ServiceMetadata, load_all_specs, load_service_metadata};
 
 use super::config_summary;
+use super::idp;
 use crate::AppState;
 
 /// Shared layout for all UI pages
@@ -517,6 +518,14 @@ pub async fn flows_view(State(state): State<AppState>) -> Html<String> {
 pub async fn coverage_view(State(state): State<AppState>) -> Html<String> {
     let metadata =
         load_service_metadata(&state.workspace_root.join("specs/service_metadata.yaml")).ok();
+
+    // Server-side data loading
+    let details = idp::load_ac_coverage_details(&state.workspace_root);
+    let total = details.len();
+    let passing = details.iter().filter(|ac| ac.status == "passing").count();
+    let failing = details.iter().filter(|ac| ac.status == "failing").count();
+    let unknown = details.iter().filter(|ac| ac.status == "unknown").count();
+
     let content = html! {
         style {
             r#"
@@ -598,28 +607,6 @@ pub async fn coverage_view(State(state): State<AppState>) -> Html<String> {
         script {
             r#"
             let currentFilter = 'all';
-            let allData = [];
-
-            // Fetch coverage data on page load
-            fetch('/platform/coverage')
-                .then(res => res.json())
-                .then(data => {
-                    allData = data.details;
-                    updateSummary(data.summary);
-                    renderTable(allData);
-                })
-                .catch(err => {
-                    console.error('Failed to load coverage data:', err);
-                    document.getElementById('table-container').innerHTML =
-                        '<p style="color: red;">Failed to load coverage data. Please try again.</p>';
-                });
-
-            function updateSummary(summary) {
-                document.getElementById('passing-count').textContent = summary.passing;
-                document.getElementById('failing-count').textContent = summary.failing;
-                document.getElementById('unknown-count').textContent = summary.unknown;
-                document.getElementById('total-count').textContent = summary.total;
-            }
 
             function filterData(status) {
                 currentFilter = status;
@@ -657,41 +644,6 @@ pub async fn coverage_view(State(state): State<AppState>) -> Html<String> {
                 });
             }
 
-            function renderTable(data) {
-                const tbody = document.getElementById('coverage-tbody');
-                tbody.innerHTML = '';
-
-                data.forEach(ac => {
-                    const row = document.createElement('tr');
-                    row.className = 'ac-row';
-                    row.dataset.status = ac.status;
-
-                    const statusBadge = ac.status === 'passing' ? '✅ pass' :
-                                       ac.status === 'failing' ? '❌ fail' :
-                                       '❓ unknown';
-                    const badgeClass = ac.status === 'passing' ? 'status-pass' :
-                                      ac.status === 'failing' ? 'status-fail' :
-                                      'status-unknown';
-
-                    const scenarios = ac.scenarios.length > 0
-                        ? '<ul class="scenario-list">' +
-                          ac.scenarios.map(s => '<li>' + s + '</li>').join('') +
-                          '</ul>'
-                        : '<em style="color: #999;">No scenarios</em>';
-
-                    row.innerHTML = `
-                        <td><code>${ac.id}</code></td>
-                        <td>${ac.title}</td>
-                        <td><span class="status-badge ${badgeClass}">${statusBadge}</span></td>
-                        <td><code>${ac.story}</code></td>
-                        <td><code>${ac.requirement}</code></td>
-                        <td>${scenarios}</td>
-                    `;
-
-                    tbody.appendChild(row);
-                });
-            }
-
             // Initialize with 'all' filter active
             window.addEventListener('DOMContentLoaded', () => {
                 document.getElementById('filter-all').classList.add('active');
@@ -704,19 +656,19 @@ pub async fn coverage_view(State(state): State<AppState>) -> Html<String> {
             .metrics {
                 .metric style="border-left-color: #155724;" {
                     .metric-label { "Passing" }
-                    .metric-value style="color: #155724;" id="passing-count" { "..." }
+                    .metric-value style="color: #155724;" id="passing-count" { (passing) }
                 }
                 .metric style="border-left-color: #721c24;" {
                     .metric-label { "Failing" }
-                    .metric-value style="color: #721c24;" id="failing-count" { "..." }
+                    .metric-value style="color: #721c24;" id="failing-count" { (failing) }
                 }
                 .metric style="border-left-color: #856404;" {
                     .metric-label { "Unknown" }
-                    .metric-value style="color: #856404;" id="unknown-count" { "..." }
+                    .metric-value style="color: #856404;" id="unknown-count" { (unknown) }
                 }
                 .metric {
                     .metric-label { "Total" }
-                    .metric-value id="total-count" { "..." }
+                    .metric-value id="total-count" { (total) }
                 }
             }
         }
@@ -745,9 +697,39 @@ pub async fn coverage_view(State(state): State<AppState>) -> Html<String> {
                         }
                     }
                     tbody #coverage-tbody {
-                        tr {
-                            td colspan="6" style="text-align: center; padding: 2rem; color: #999;" {
-                                "Loading coverage data..."
+                        @for ac in &details {
+                            tr .ac-row data-status=(ac.status) {
+                                td { code { (ac.id) } }
+                                td { (ac.title) }
+                                td {
+                                    span .status-badge class=(format!("status-{}", ac.status)) {
+                                        @match ac.status.as_str() {
+                                            "passing" => "✅ pass",
+                                            "failing" => "❌ fail",
+                                            _ => "❓ unknown",
+                                        }
+                                    }
+                                }
+                                td { code { (ac.story) } }
+                                td { code { (ac.requirement) } }
+                                td {
+                                    @if ac.scenarios.is_empty() {
+                                        em style="color: #999;" { "No scenarios" }
+                                    } @else {
+                                        ul .scenario-list {
+                                            @for s in &ac.scenarios {
+                                                li { (s) }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        @if details.is_empty() {
+                            tr {
+                                td colspan="6" style="text-align: center; padding: 2rem; color: #999;" {
+                                    "No coverage data available"
+                                }
                             }
                         }
                     }
