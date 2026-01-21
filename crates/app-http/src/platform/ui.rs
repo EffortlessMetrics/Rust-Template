@@ -5,6 +5,18 @@ use spec_runtime::{ServiceMetadata, load_all_specs, load_service_metadata};
 use super::config_summary;
 use crate::AppState;
 
+/// Helper to generate a navigation link with active state
+fn nav_link(href: &str, title: &str, current_page: &str, target_page: &str) -> Markup {
+    let is_active = current_page == target_page;
+    html! {
+        @if is_active {
+            a href=(href) class="active" aria-current="page" { (title) }
+        } @else {
+            a href=(href) { (title) }
+        }
+    }
+}
+
 /// Shared layout for all UI pages
 /// - `page_id`: prefix for data-uiid attributes (e.g., "dashboard", "graph", "flows", "coverage")
 fn layout(
@@ -74,6 +86,11 @@ fn layout(
                     }
                     nav a:hover {
                         text-decoration: underline;
+                    }
+                    nav a.active {
+                        font-weight: 700;
+                        text-decoration: underline;
+                        text-decoration-thickness: 2px;
                     }
                     .card {
                         background: white;
@@ -152,10 +169,10 @@ fn layout(
                     }
                 }
                 nav .container data-uiid=(format!("{}.nav", page_id)) {
-                    a href="/" { "Dashboard" }
-                    a href="/ui/graph" { "Graph" }
-                    a href="/ui/flows" { "Flows & Tasks" }
-                    a href="/ui/coverage" { "AC Coverage" }
+                    (nav_link("/", "Dashboard", page_id, "dashboard"))
+                    (nav_link("/ui/graph", "Graph", page_id, "graph"))
+                    (nav_link("/ui/flows", "Flows & Tasks", page_id, "flows"))
+                    (nav_link("/ui/coverage", "AC Coverage", page_id, "coverage"))
                     a href="/platform/status" target="_blank" { "API: Status" }
                     a href="/platform/graph" target="_blank" { "API: Graph" }
                     @if let Some(runbook) = links.get("kernel_contract") {
