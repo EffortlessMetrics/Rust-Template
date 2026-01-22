@@ -5,6 +5,18 @@ use spec_runtime::{ServiceMetadata, load_all_specs, load_service_metadata};
 use super::config_summary;
 use crate::AppState;
 
+/// Helper for rendering navigation links with active state
+fn nav_link(href: &str, text: &str, target_id: &str, current_id: &str) -> Markup {
+    let is_active = target_id == current_id;
+    html! {
+        @if is_active {
+            a href=(href) class="active" aria-current="page" { (text) }
+        } @else {
+            a href=(href) { (text) }
+        }
+    }
+}
+
 /// Shared layout for all UI pages
 /// - `page_id`: prefix for data-uiid attributes (e.g., "dashboard", "graph", "flows", "coverage")
 fn layout(
@@ -74,6 +86,24 @@ fn layout(
                     }
                     nav a:hover {
                         text-decoration: underline;
+                    }
+                    nav a.active {
+                        color: #4c51bf;
+                        font-weight: 700;
+                        border-bottom: 2px solid #4c51bf;
+                        text-decoration: none;
+                    }
+                    .skip-link {
+                        position: absolute;
+                        top: -40px;
+                        left: 0;
+                        background: #000;
+                        color: white;
+                        padding: 8px;
+                        z-index: 100;
+                    }
+                    .skip-link:focus {
+                        top: 0;
                     }
                     .card {
                         background: white;
@@ -145,6 +175,7 @@ fn layout(
                 }
             }
             body {
+                a href="#main-content" class="skip-link" { "Skip to main content" }
                 header data-uiid=(format!("{}.header", page_id)) {
                     .container {
                         h1 { (service_name) }
@@ -152,10 +183,10 @@ fn layout(
                     }
                 }
                 nav .container data-uiid=(format!("{}.nav", page_id)) {
-                    a href="/" { "Dashboard" }
-                    a href="/ui/graph" { "Graph" }
-                    a href="/ui/flows" { "Flows & Tasks" }
-                    a href="/ui/coverage" { "AC Coverage" }
+                    (nav_link("/", "Dashboard", "dashboard", page_id))
+                    (nav_link("/ui/graph", "Graph", "graph", page_id))
+                    (nav_link("/ui/flows", "Flows & Tasks", "flows", page_id))
+                    (nav_link("/ui/coverage", "AC Coverage", "coverage", page_id))
                     a href="/platform/status" target="_blank" { "API: Status" }
                     a href="/platform/graph" target="_blank" { "API: Graph" }
                     @if let Some(runbook) = links.get("kernel_contract") {
@@ -174,7 +205,7 @@ fn layout(
                         a href=(support) target="_blank" { "Platform Support" }
                     }
                 }
-                main .container {
+                main #main-content .container {
                     (content)
                 }
             }
