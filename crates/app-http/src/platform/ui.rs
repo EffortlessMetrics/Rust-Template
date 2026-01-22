@@ -614,6 +614,16 @@ pub async fn coverage_view(State(state): State<AppState>) -> Html<String> {
                         '<p style="color: red;">Failed to load coverage data. Please try again.</p>';
                 });
 
+            function escapeHtml(text) {
+                if (!text) return "";
+                return text
+                    .replace(/&/g, "&amp;")
+                    .replace(/</g, "&lt;")
+                    .replace(/>/g, "&gt;")
+                    .replace(/"/g, "&quot;")
+                    .replace(/'/g, "&#039;");
+            }
+
             function updateSummary(summary) {
                 document.getElementById('passing-count').textContent = summary.passing;
                 document.getElementById('failing-count').textContent = summary.failing;
@@ -675,16 +685,16 @@ pub async fn coverage_view(State(state): State<AppState>) -> Html<String> {
 
                     const scenarios = ac.scenarios.length > 0
                         ? '<ul class="scenario-list">' +
-                          ac.scenarios.map(s => '<li>' + s + '</li>').join('') +
+                          ac.scenarios.map(s => '<li>' + escapeHtml(s) + '</li>').join('') +
                           '</ul>'
                         : '<em style="color: #999;">No scenarios</em>';
 
                     row.innerHTML = `
-                        <td><code>${ac.id}</code></td>
-                        <td>${ac.title}</td>
+                        <td><code>${escapeHtml(ac.id)}</code></td>
+                        <td>${escapeHtml(ac.title)}</td>
                         <td><span class="status-badge ${badgeClass}">${statusBadge}</span></td>
-                        <td><code>${ac.story}</code></td>
-                        <td><code>${ac.requirement}</code></td>
+                        <td><code>${escapeHtml(ac.story)}</code></td>
+                        <td><code>${escapeHtml(ac.requirement)}</code></td>
                         <td>${scenarios}</td>
                     `;
 
