@@ -5,6 +5,15 @@ use spec_runtime::{ServiceMetadata, load_all_specs, load_service_metadata};
 use super::config_summary;
 use crate::AppState;
 
+fn nav_link(href: &str, text: &str, active: bool) -> Markup {
+    html! {
+        a href=(href)
+            class=(if active { "active" } else { "" })
+            aria-current=[active.then(|| "page")]
+        { (text) }
+    }
+}
+
 /// Shared layout for all UI pages
 /// - `page_id`: prefix for data-uiid attributes (e.g., "dashboard", "graph", "flows", "coverage")
 fn layout(
@@ -71,9 +80,17 @@ fn layout(
                         text-decoration: none;
                         margin-right: 2rem;
                         font-weight: 500;
+                        padding-bottom: 0.25rem;
+                        border-bottom: 2px solid transparent;
+                        transition: all 0.2s;
                     }
                     nav a:hover {
                         text-decoration: underline;
+                    }
+                    nav a.active {
+                        color: #4a5568;
+                        border-bottom-color: #667eea;
+                        text-decoration: none;
                     }
                     .card {
                         background: white;
@@ -152,10 +169,10 @@ fn layout(
                     }
                 }
                 nav .container data-uiid=(format!("{}.nav", page_id)) {
-                    a href="/" { "Dashboard" }
-                    a href="/ui/graph" { "Graph" }
-                    a href="/ui/flows" { "Flows & Tasks" }
-                    a href="/ui/coverage" { "AC Coverage" }
+                    (nav_link("/", "Dashboard", page_id == "dashboard"))
+                    (nav_link("/ui/graph", "Graph", page_id == "graph"))
+                    (nav_link("/ui/flows", "Flows & Tasks", page_id == "flows"))
+                    (nav_link("/ui/coverage", "AC Coverage", page_id == "coverage"))
                     a href="/platform/status" target="_blank" { "API: Status" }
                     a href="/platform/graph" target="_blank" { "API: Graph" }
                     @if let Some(runbook) = links.get("kernel_contract") {
