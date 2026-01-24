@@ -1,5 +1,5 @@
 use axum::{extract::State, response::Html};
-use maud::{DOCTYPE, Markup, html};
+use maud::{DOCTYPE, Markup, html, PreEscaped};
 use spec_runtime::{ServiceMetadata, load_all_specs, load_service_metadata};
 
 use super::config_summary;
@@ -596,9 +596,19 @@ pub async fn coverage_view(State(state): State<AppState>) -> Html<String> {
             "#
         }
         script {
-            r#"
+            (PreEscaped(r#"
             let currentFilter = 'all';
             let allData = [];
+
+            function escapeHtml(unsafe) {
+                if (unsafe == null) return "";
+                return String(unsafe)
+                     .replace(/&/g, "&amp;")
+                     .replace(/</g, "&lt;")
+                     .replace(/>/g, "&gt;")
+                     .replace(/"/g, "&quot;")
+                     .replace(/'/g, "&#039;");
+            }
 
             // Fetch coverage data on page load
             fetch('/platform/coverage')
@@ -675,16 +685,16 @@ pub async fn coverage_view(State(state): State<AppState>) -> Html<String> {
 
                     const scenarios = ac.scenarios.length > 0
                         ? '<ul class="scenario-list">' +
-                          ac.scenarios.map(s => '<li>' + s + '</li>').join('') +
+                          ac.scenarios.map(s => '<li>' + escapeHtml(s) + '</li>').join('') +
                           '</ul>'
                         : '<em style="color: #999;">No scenarios</em>';
 
                     row.innerHTML = `
-                        <td><code>${ac.id}</code></td>
-                        <td>${ac.title}</td>
+                        <td><code>${escapeHtml(ac.id)}</code></td>
+                        <td>${escapeHtml(ac.title)}</td>
                         <td><span class="status-badge ${badgeClass}">${statusBadge}</span></td>
-                        <td><code>${ac.story}</code></td>
-                        <td><code>${ac.requirement}</code></td>
+                        <td><code>${escapeHtml(ac.story)}</code></td>
+                        <td><code>${escapeHtml(ac.requirement)}</code></td>
                         <td>${scenarios}</td>
                     `;
 
@@ -696,7 +706,7 @@ pub async fn coverage_view(State(state): State<AppState>) -> Html<String> {
             window.addEventListener('DOMContentLoaded', () => {
                 document.getElementById('filter-all').classList.add('active');
             });
-            "#
+            "#))
         }
 
         .card data-uiid="coverage.summary" {
