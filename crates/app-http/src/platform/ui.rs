@@ -5,6 +5,17 @@ use spec_runtime::{ServiceMetadata, load_all_specs, load_service_metadata};
 use super::config_summary;
 use crate::AppState;
 
+/// Helper to render a navigation link with active state
+fn nav_link(current_page: &str, target_page: &str, href: &str, text: &str) -> Markup {
+    let is_active = current_page == target_page;
+    html! {
+        a href=(href)
+          class=[is_active.then(|| "active")]
+          aria-current=[is_active.then(|| "page")]
+        { (text) }
+    }
+}
+
 /// Shared layout for all UI pages
 /// - `page_id`: prefix for data-uiid attributes (e.g., "dashboard", "graph", "flows", "coverage")
 fn layout(
@@ -74,6 +85,12 @@ fn layout(
                     }
                     nav a:hover {
                         text-decoration: underline;
+                    }
+                    nav a.active {
+                        color: #4a5568;
+                        border-bottom: 2px solid #667eea;
+                        padding-bottom: 0.25rem;
+                        text-decoration: none;
                     }
                     .card {
                         background: white;
@@ -152,10 +169,10 @@ fn layout(
                     }
                 }
                 nav .container data-uiid=(format!("{}.nav", page_id)) {
-                    a href="/" { "Dashboard" }
-                    a href="/ui/graph" { "Graph" }
-                    a href="/ui/flows" { "Flows & Tasks" }
-                    a href="/ui/coverage" { "AC Coverage" }
+                    (nav_link(page_id, "dashboard", "/", "Dashboard"))
+                    (nav_link(page_id, "graph", "/ui/graph", "Graph"))
+                    (nav_link(page_id, "flows", "/ui/flows", "Flows & Tasks"))
+                    (nav_link(page_id, "coverage", "/ui/coverage", "AC Coverage"))
                     a href="/platform/status" target="_blank" { "API: Status" }
                     a href="/platform/graph" target="_blank" { "API: Graph" }
                     @if let Some(runbook) = links.get("kernel_contract") {
