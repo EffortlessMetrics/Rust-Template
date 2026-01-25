@@ -16,7 +16,8 @@ pub async fn platform_auth_guard(
         return Ok(next.run(request).await);
     }
 
-    if matches!(request.method(), &Method::GET | &Method::HEAD | &Method::OPTIONS) {
+    // Only OPTIONS (preflight) is public; all other methods require auth
+    if matches!(request.method(), &Method::OPTIONS) {
         return Ok(next.run(request).await);
     }
 
@@ -113,7 +114,10 @@ mod tests {
 
     fn guarded_router(state: AppState) -> Router {
         Router::new()
-            .route("/platform/protected", get(protected_handler).post(protected_handler))
+            .route(
+                "/platform/protected",
+                get(protected_handler).post(protected_handler).options(protected_handler),
+            )
             .layer(axum::middleware::from_fn_with_state(state.clone(), platform_auth_guard))
             .with_state(state)
     }
@@ -150,7 +154,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn allows_get_without_auth_even_in_basic_mode() {
+    async fn rejects_get_without_auth_in_basic_mode() {
         let state = app_state(crate::security::PlatformAuthMode::Basic, Some("secret"), None);
         let app = guarded_router(state);
 
@@ -161,7 +165,7 @@ mod tests {
             .unwrap();
 
         let response = app.oneshot(request).await.expect("handler should respond");
-        assert_eq!(response.status(), StatusCode::OK);
+        assert_eq!(response.status(), StatusCode::UNAUTHORIZED);
     }
 
     #[tokio::test]
@@ -325,12 +329,27 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn allows_get_without_auth_even_in_jwt_mode() {
+    async fn rejects_get_without_auth_in_jwt_mode() {
         let state = app_state(crate::security::PlatformAuthMode::Jwt, None, Some("secret"));
         let app = guarded_router(state);
 
         let request = Request::builder()
             .method(Method::GET)
+            .uri("/platform/protected")
+            .body(Body::empty())
+            .unwrap();
+
+        let response = app.oneshot(request).await.expect("handler should respond");
+        assert_eq!(response.status(), StatusCode::UNAUTHORIZED);
+    }
+
+    #[tokio::test]
+    async fn allows_options_without_auth() {
+        let state = app_state(crate::security::PlatformAuthMode::Basic, Some("secret"), None);
+        let app = guarded_router(state);
+
+        let request = Request::builder()
+            .method(Method::OPTIONS)
             .uri("/platform/protected")
             .body(Body::empty())
             .unwrap();
