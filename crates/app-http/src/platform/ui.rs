@@ -22,6 +22,13 @@ fn layout(
 
     let links = metadata.as_ref().map(|m| m.links.clone()).unwrap_or_default();
 
+    let nav_link = |target_id: &str, href: &str, text: &str| {
+        let is_active = page_id == target_id;
+        html! {
+            a href=(href) class=[is_active.then(|| "active")] aria-current=[is_active.then(|| "page")] { (text) }
+        }
+    };
+
     html! {
         (DOCTYPE)
         html lang="en" {
@@ -71,9 +78,16 @@ fn layout(
                         text-decoration: none;
                         margin-right: 2rem;
                         font-weight: 500;
+                        padding-bottom: 2px;
+                        border-bottom: 2px solid transparent;
                     }
                     nav a:hover {
                         text-decoration: underline;
+                    }
+                    nav a.active {
+                        color: #4a5568;
+                        border-bottom-color: #667eea;
+                        text-decoration: none;
                     }
                     .card {
                         background: white;
@@ -152,10 +166,10 @@ fn layout(
                     }
                 }
                 nav .container data-uiid=(format!("{}.nav", page_id)) {
-                    a href="/" { "Dashboard" }
-                    a href="/ui/graph" { "Graph" }
-                    a href="/ui/flows" { "Flows & Tasks" }
-                    a href="/ui/coverage" { "AC Coverage" }
+                    (nav_link("dashboard", "/", "Dashboard"))
+                    (nav_link("graph", "/ui/graph", "Graph"))
+                    (nav_link("flows", "/ui/flows", "Flows & Tasks"))
+                    (nav_link("coverage", "/ui/coverage", "AC Coverage"))
                     a href="/platform/status" target="_blank" { "API: Status" }
                     a href="/platform/graph" target="_blank" { "API: Graph" }
                     @if let Some(runbook) = links.get("kernel_contract") {
