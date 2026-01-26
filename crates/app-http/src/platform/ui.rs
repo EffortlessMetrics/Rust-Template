@@ -1,6 +1,7 @@
 use axum::{extract::State, response::Html};
 use maud::{DOCTYPE, Markup, html};
 use spec_runtime::{ServiceMetadata, load_all_specs, load_service_metadata};
+use tokio::task::spawn_blocking;
 
 use super::config_summary;
 use crate::AppState;
@@ -184,47 +185,30 @@ fn layout(
 
 /// Dashboard page
 pub async fn dashboard(State(state): State<AppState>) -> Html<String> {
-    let root = &state.workspace_root;
-    let status_result = load_all_specs(root);
-    let tasks_result = spec_runtime::load_tasks(&root.join("specs/tasks.yaml"));
-    let metadata = load_service_metadata(&root.join("specs/service_metadata.yaml")).ok();
-    let config = config_summary(&state);
+    let state_clone = state.clone();
+    let (specs_res, tasks_res, metadata, policy_status, coverage_stats) = spawn_blocking(move || {
+        let root = &state_clone.workspace_root;
+        let specs_res = load_all_specs(root);
+        let tasks_res = spec_runtime::load_tasks(&root.join("specs/tasks.yaml"));
+        let metadata = load_service_metadata(&root.join("specs/service_metadata.yaml")).ok();
 
-    let content = match (status_result, tasks_result) {
-        (Ok(specs), Ok(tasks_spec)) => {
-            let req_count: usize = specs.ledger.stories.iter().map(|s| s.requirements.len()).sum();
-            let ac_count: usize = specs
-                .ledger
-                .stories
-                .iter()
-                .flat_map(|s| s.requirements.iter())
-                .map(|r| r.acceptance_criteria.len())
-                .sum();
+        // Read policy status
+        let policy_path = root.join("target/policy_status.json");
+        let policy_status = std::fs::read_to_string(policy_path)
+            .ok()
+            .and_then(|content| serde_json::from_str::<serde_json::Value>(&content).ok())
+            .and_then(|v| v.get("summary").and_then(|s| s.as_str()).map(String::from))
+            .unwrap_or_else(|| "unknown".to_string());
 
-            // Read policy status
-            let policy_path = root.join("target/policy_status.json");
-            let policy_status = std::fs::read_to_string(policy_path)
-                .ok()
-                .and_then(|content| serde_json::from_str::<serde_json::Value>(&content).ok())
-                .and_then(|v| v.get("summary").and_then(|s| s.as_str()).map(String::from))
-                .unwrap_or_else(|| "unknown".to_string());
+        // Read AC coverage from feature_status.md
+        let feature_status_path = root.join("docs/feature_status.md");
+        let mut passing = 0;
+        let mut failing = 0;
+        let mut unknown = 0;
+        let mut coverage_rows = 0;
 
-            let status_class = match policy_status.as_str() {
-                "pass" => "status-pass",
-                "fail" => "status-fail",
-                _ => "status-unknown",
-            };
-
-            // Read AC coverage from feature_status.md
-            let feature_status_path = root.join("docs/feature_status.md");
-            let mut passing = 0;
-            let mut failing = 0;
-            let mut unknown = 0;
-            let mut coverage_rows = 0;
-
-            if feature_status_path.exists()
-                && let Ok(content) = std::fs::read_to_string(&feature_status_path)
-            {
+        if feature_status_path.exists() {
+            if let Ok(content) = std::fs::read_to_string(&feature_status_path) {
                 for line in content.lines() {
                     if !line.starts_with("| AC-") {
                         continue;
@@ -241,6 +225,48 @@ pub async fn dashboard(State(state): State<AppState>) -> Html<String> {
                     }
                 }
             }
+        }
+
+        (
+            specs_res,
+            tasks_res,
+            metadata,
+            policy_status,
+            (passing, failing, unknown, coverage_rows),
+        )
+    })
+    .await
+    .unwrap_or_else(|e| {
+        tracing::error!("Blocking task failed: {}", e);
+        (
+            Err(anyhow::anyhow!("Task failed")),
+            Err(anyhow::anyhow!("Task failed")),
+            None,
+            "unknown".into(),
+            (0, 0, 0, 0),
+        )
+    });
+
+    let config = config_summary(&state);
+
+    let content = match (specs_res, tasks_res) {
+        (Ok(specs), Ok(tasks_spec)) => {
+            let req_count: usize = specs.ledger.stories.iter().map(|s| s.requirements.len()).sum();
+            let ac_count: usize = specs
+                .ledger
+                .stories
+                .iter()
+                .flat_map(|s| s.requirements.iter())
+                .map(|r| r.acceptance_criteria.len())
+                .sum();
+
+            let status_class = match policy_status.as_str() {
+                "pass" => "status-pass",
+                "fail" => "status-fail",
+                _ => "status-unknown",
+            };
+
+            let (passing, failing, mut unknown, coverage_rows) = coverage_stats;
 
             // If no coverage data, count all ACs as unknown
             if coverage_rows == 0 {
@@ -398,41 +424,46 @@ pub async fn dashboard(State(state): State<AppState>) -> Html<String> {
 
 /// Graph visualization page
 pub async fn graph_view(State(state): State<AppState>) -> Html<String> {
-    let root = &state.workspace_root;
-    let metadata = load_service_metadata(&root.join("specs/service_metadata.yaml")).ok();
+    let state_clone = state.clone();
+    let (metadata, graph_result) = spawn_blocking(move || {
+        let root = &state_clone.workspace_root;
+        let metadata = load_service_metadata(&root.join("specs/service_metadata.yaml")).ok();
 
-    let content = match load_all_specs(root) {
-        Ok(specs) => match spec_runtime::build_graph(&specs.ledger, &specs.devex, &specs.docs) {
-            Ok(graph) => {
-                let mermaid_diagram = graph.to_mermaid();
+        let result = match load_all_specs(root) {
+            Ok(specs) => match spec_runtime::build_graph(&specs.ledger, &specs.devex, &specs.docs) {
+                Ok(graph) => Ok(graph.to_mermaid()),
+                Err(e) => Err(("Error Building Graph", format!("{:?}", e))),
+            },
+            Err(e) => Err(("Error Loading Specs", format!("{:?}", e))),
+        };
+        (metadata, result)
+    })
+    .await
+    .unwrap_or((
+        None,
+        Err(("System Error", "Blocking task failed".to_string())),
+    ));
 
-                html! {
-                    .card data-uiid="graph.diagram" {
-                        h2 { "Governance Graph" }
-                        p style="margin-bottom: 1rem;" {
-                            "This graph shows the relationships between stories, requirements, acceptance criteria, "
-                            "documentation, DevEx commands, and flows."
-                        }
-                        .mermaid {
-                            (mermaid_diagram)
-                        }
+    let content = match graph_result {
+        Ok(mermaid_diagram) => {
+            html! {
+                .card data-uiid="graph.diagram" {
+                    h2 { "Governance Graph" }
+                    p style="margin-bottom: 1rem;" {
+                        "This graph shows the relationships between stories, requirements, acceptance criteria, "
+                        "documentation, DevEx commands, and flows."
+                    }
+                    .mermaid {
+                        (mermaid_diagram)
                     }
                 }
             }
-            Err(e) => {
-                html! {
-                    .card {
-                        h2 { "Error Building Graph" }
-                        pre { (format!("{:?}", e)) }
-                    }
-                }
-            }
-        },
-        Err(e) => {
+        }
+        Err((title, details)) => {
             html! {
                 .card {
-                    h2 { "Error Loading Specs" }
-                    pre { (format!("{:?}", e)) }
+                    h2 { (title) }
+                    pre { (details) }
                 }
             }
         }
@@ -443,11 +474,20 @@ pub async fn graph_view(State(state): State<AppState>) -> Html<String> {
 
 /// Flows and tasks page
 pub async fn flows_view(State(state): State<AppState>) -> Html<String> {
-    let root = &state.workspace_root;
-    let metadata = load_service_metadata(&root.join("specs/service_metadata.yaml")).ok();
-
-    let flows_result = spec_runtime::load_devex_flows(&root.join("specs/devex_flows.yaml"));
-    let tasks_result = spec_runtime::load_tasks(&root.join("specs/tasks.yaml"));
+    let state_clone = state.clone();
+    let (metadata, flows_result, tasks_result) = spawn_blocking(move || {
+        let root = &state_clone.workspace_root;
+        let metadata = load_service_metadata(&root.join("specs/service_metadata.yaml")).ok();
+        let flows_result = spec_runtime::load_devex_flows(&root.join("specs/devex_flows.yaml"));
+        let tasks_result = spec_runtime::load_tasks(&root.join("specs/tasks.yaml"));
+        (metadata, flows_result, tasks_result)
+    })
+    .await
+    .unwrap_or((
+        None,
+        Err(anyhow::anyhow!("Task failed")),
+        Err(anyhow::anyhow!("Task failed")),
+    ));
 
     let content = match (flows_result, tasks_result) {
         (Ok(devex), Ok(tasks_spec)) => {
@@ -515,8 +555,13 @@ pub async fn flows_view(State(state): State<AppState>) -> Html<String> {
 
 /// Coverage details page
 pub async fn coverage_view(State(state): State<AppState>) -> Html<String> {
-    let metadata =
-        load_service_metadata(&state.workspace_root.join("specs/service_metadata.yaml")).ok();
+    let state_clone = state.clone();
+    let metadata = spawn_blocking(move || {
+        load_service_metadata(&state_clone.workspace_root.join("specs/service_metadata.yaml")).ok()
+    })
+    .await
+    .unwrap_or(None);
+
     let content = html! {
         style {
             r#"
