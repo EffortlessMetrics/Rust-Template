@@ -22,6 +22,13 @@ fn layout(
 
     let links = metadata.as_ref().map(|m| m.links.clone()).unwrap_or_default();
 
+    let nav_link = |target: &str, label: &str, id: &str| {
+        let is_active = page_id == id;
+        html! {
+            a href=(target) aria-current=[is_active.then(|| "page")] { (label) }
+        }
+    };
+
     html! {
         (DOCTYPE)
         html lang="en" {
@@ -71,9 +78,19 @@ fn layout(
                         text-decoration: none;
                         margin-right: 2rem;
                         font-weight: 500;
+                        border-bottom: 2px solid transparent;
+                        padding-bottom: 0.25rem;
+                        transition: all 0.2s;
                     }
                     nav a:hover {
-                        text-decoration: underline;
+                        text-decoration: none;
+                        color: #553c9a;
+                        border-bottom-color: #e2e8f0;
+                    }
+                    nav a[aria-current="page"] {
+                        color: #553c9a;
+                        font-weight: 700;
+                        border-bottom-color: #553c9a;
                     }
                     .card {
                         background: white;
@@ -152,10 +169,10 @@ fn layout(
                     }
                 }
                 nav .container data-uiid=(format!("{}.nav", page_id)) {
-                    a href="/" { "Dashboard" }
-                    a href="/ui/graph" { "Graph" }
-                    a href="/ui/flows" { "Flows & Tasks" }
-                    a href="/ui/coverage" { "AC Coverage" }
+                    (nav_link("/", "Dashboard", "dashboard"))
+                    (nav_link("/ui/graph", "Graph", "graph"))
+                    (nav_link("/ui/flows", "Flows & Tasks", "flows"))
+                    (nav_link("/ui/coverage", "AC Coverage", "coverage"))
                     a href="/platform/status" target="_blank" { "API: Status" }
                     a href="/platform/graph" target="_blank" { "API: Graph" }
                     @if let Some(runbook) = links.get("kernel_contract") {
@@ -728,7 +745,7 @@ pub async fn coverage_view(State(state): State<AppState>) -> Html<String> {
                 button #filter-passing.filter-btn onclick="filterData('passing')" { "Passing" }
                 button #filter-failing.filter-btn onclick="filterData('failing')" { "Failing" }
                 button #filter-unknown.filter-btn onclick="filterData('unknown')" { "Unknown" }
-                input #search-box.search-box type="text" placeholder="Search by AC ID or title..."
+                input #search-box.search-box type="text" aria-label="Filter coverage" placeholder="Search by AC ID or title..."
                     oninput="searchData()";
             }
 
