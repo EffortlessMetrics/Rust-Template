@@ -1,0 +1,47 @@
+   Compiling ring v0.17.14
+   Compiling futures-executor v0.3.31
+   Compiling rand v0.9.2
+   Compiling spec-runtime v0.1.0 (/home/steven/code/Rust/Rust-Template/crates/spec-runtime)
+   Compiling opentelemetry v0.31.0
+   Compiling adapters-grpc v0.1.0 (/home/steven/code/Rust/Rust-Template/crates/adapters-grpc)
+   Compiling referencing v0.38.1
+   Compiling fancy-regex v0.17.0
+   Compiling adapters-spec-fs v0.1.0 (/home/steven/code/Rust/Rust-Template/crates/adapters-spec-fs)
+   Compiling gov-http v0.1.0 (/home/steven/code/Rust/Rust-Template/crates/gov-http)
+   Compiling serial_test v3.3.1
+   Compiling futures v0.3.31
+   Compiling ac-kernel v0.1.0 (/home/steven/code/Rust/Rust-Template/crates/ac-kernel)
+   Compiling ferroid v0.8.7
+   Compiling cucumber v0.22.0
+   Compiling rust_iac_xtask_core v0.1.0 (/home/steven/code/Rust/Rust-Template/crates/rust_iac_xtask_core)
+   Compiling jsonschema v0.38.1
+   Compiling opentelemetry_sdk v0.31.0
+   Compiling opentelemetry-http v0.31.0
+   Compiling gov-policy v0.1.0 (/home/steven/code/Rust/Rust-Template/crates/gov-policy)
+   Compiling rustls v0.23.35
+   Compiling rust_iac_config v0.1.0 (/home/steven/code/Rust/Rust-Template/crates/rust_iac_config)
+   Compiling rustls-webpki v0.103.8
+   Compiling sqlx-core v0.8.6
+   Compiling ureq v3.1.4
+   Compiling bollard-buildkit-proto v0.7.0
+   Compiling sqlx-postgres v0.8.6
+   Compiling tokio-rustls v0.26.4
+   Compiling hyper-rustls v0.27.7
+   Compiling bollard-stubs v1.49.1-rc.28.4.0
+   Compiling sqlx-macros-core v0.8.6
+   Compiling xtask v0.1.0 (/home/steven/code/Rust/Rust-Template/crates/xtask)
+   Compiling sqlx-macros v0.8.6
+   Compiling bollard v0.19.4
+   Compiling opentelemetry-proto v0.31.0
+   Compiling tracing-opentelemetry v0.32.0
+   Compiling sqlx v0.8.6
+   Compiling adapters-db-sqlx v0.1.0 (/home/steven/code/Rust/Rust-Template/crates/adapters-db-sqlx)
+   Compiling opentelemetry-otlp v0.31.0
+   Compiling telemetry v0.1.0 (/home/steven/code/Rust/Rust-Template/crates/telemetry)
+   Compiling app-http v0.1.0 (/home/steven/code/Rust/Rust-Template/crates/app-http)
+   Compiling testcontainers v0.26.0
+   Compiling acceptance v0.1.0 (/home/steven/code/Rust/Rust-Template/crates/acceptance)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 34.04s
+     Running unittests src/lib.rs (target/debug/deps/ac_kernel-9608016adc912bca)
+error: the option `Z` is only accepted on the nightly compiler
+error: test failed, to rerun pass `-p ac-kernel --lib`
