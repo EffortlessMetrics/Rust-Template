@@ -21,6 +21,7 @@ node_modules/
 tarpaulin-report.*
 ac_coverage_*.json
 ac_coverage_*.md
+test_output*.json
 
 # Ephemeral run artifacts (receipts, dossiers)
 .runs/
