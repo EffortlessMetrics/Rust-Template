@@ -538,4 +538,4 @@ fn run_fmt_with_autostage() -> Result<()> {
 
     Ok(())
 }
-// test comment
+// Baseline measurement: incremental build test for xtask command

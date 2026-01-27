@@ -1,4 +1,4 @@
-use app_http::{AppState, app_with_state, resolve_workspace_root};
+use app_http::{AppState, app_with_state};
 use std::net::SocketAddr;
 use tracing::{error, info};
 
@@ -9,7 +9,7 @@ async fn main() -> anyhow::Result<()> {
 
     info!("Starting HTTP service");
 
-    let workspace_root = resolve_workspace_root();
+    let workspace_root = app_http::resolve_workspace_root();
 
     let config_path = workspace_root.join("config/local.yaml");
     let schema_path = workspace_root.join("specs/config_schema.yaml");

@@ -10,338 +10,38 @@
 //! - IDP integrations
 //! - Audit trails
 //! - Agent workflows
+//!
+//! NOTE: Many utility functions and types in this module are re-exported from
+//! the `xtask-receipts` library. See that library for the canonical
+//! implementations of friction zone analysis, oscillation detection, and
+//! historian appendix parsing.
 
 use anyhow::{Context, Result};
 use chrono::Utc;
 use colored::Colorize;
 use gov_receipts::{
-    Boundaries, ChangeSurface, ComputeSpend, Confidence, Contracts, Convergence, DevLtMinutes,
-    EconomicsReceipt, Environment, FrictionZone, GateReceipt, GateResult, GateStatus,
-    GeigerSummary, Iterations, LlmBoundaryAssessment, LlmTestDepthAssessment, MetaConfidence,
-    Oscillation, OscillationAction, OscillationType, ProbeProfile, ProbeResult, ProbeStatus,
-    Quality, QualityReceipt, ReceiptMeta, Risks, Safety, Session, SessionClassification,
-    SkippedProbe, Structure, TelemetryReceipt, TelemetryVerification, TimelineConfidence,
-    TimelineReceipt, Topology, UnsafeDelta, ValueDelivered, Verification, WallClock,
+    Boundaries, ChangeSurface, Contracts, Convergence, FrictionZone, GeigerSummary,
+    LlmBoundaryAssessment, LlmTestDepthAssessment, MetaConfidence, Oscillation, OscillationAction,
+    OscillationType, ProbeProfile, ProbeResult, ProbeStatus, Quality, QualityReceipt, ReceiptMeta,
+    Risks, Safety, Session, SessionClassification, SkippedProbe, Structure, TelemetryReceipt,
+    TelemetryVerification, TimelineConfidence, TimelineReceipt, Topology, UnsafeDelta,
+    Verification, WallClock,
 };
-use jsonschema::Validator;
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::process::Command;
 use std::time::Instant;
+use xtask_receipts::{
+    HistorianQualityAppendix, categorize_friction_zones, extract_historian_appendix_json,
+    generate_run_id, get_current_commit_full, get_current_commit_short, get_ref_sha,
+    parse_historian_appendix, should_exclude_path,
+};
 
-// ============================================================================
-// Default Exclude Patterns for Timeline Analysis
-// ============================================================================
-
-/// Paths to exclude from friction zone and oscillation analysis.
-/// These are typically generated/ephemeral directories that pollute timeline signals.
-const FRICTION_EXCLUDE_PATTERNS: &[&str] =
-    &[".runs/", "target/", ".git/", "node_modules/", "vendor/", "dist/", "build/", ".cache/"];
-
-/// Normalize Windows path separators to forward slashes.
-/// This ensures path matching works consistently across platforms.
-fn normalize_path_separators(path: &str) -> String {
-    path.replace('\\', "/")
-}
-
-/// Check if a path should be excluded from friction/oscillation analysis.
-/// Normalizes path separators first for cross-platform compatibility.
-///
-/// # Arguments
-/// * `path` - The file path to check
-/// * `extra_excludes` - Additional prefix patterns to exclude
-/// * `include_ephemeral` - If true, skip default exclusions (for debugging)
-fn should_exclude_path(path: &str, extra_excludes: &[String], include_ephemeral: bool) -> bool {
-    let normalized = normalize_path_separators(path);
-
-    // Check default exclusions unless include_ephemeral is set
-    if !include_ephemeral
-        && FRICTION_EXCLUDE_PATTERNS.iter().any(|pattern| normalized.starts_with(pattern))
-    {
-        return true;
-    }
-
-    // Check additional exclusions
-    extra_excludes.iter().any(|prefix| {
-        let normalized_prefix = normalize_path_separators(prefix);
-        normalized.starts_with(&normalized_prefix)
-    })
-}
-
-/// Friction zone category for rollup reporting
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum FrictionCategory {
-    /// Core source code (src/, crates/, lib/)
-    CoreCode,
-    /// Test code and fixtures
-    Tests,
-    /// Documentation (docs/, *.md)
-    Docs,
-    /// CI/CD and infrastructure (.github/, .gitlab-ci.yml, etc.)
-    CiInfra,
-    /// Specifications and schemas
-    Specs,
-    /// Other/unclassified
-    Other,
-}
-
-impl FrictionCategory {
-    /// Categorize a file path
-    pub fn from_path(path: &str) -> Self {
-        // Test paths
-        if path.contains("/tests/")
-            || path.contains("/test_fixtures/")
-            || path.contains("_test.rs")
-            || path.ends_with("_tests.rs")
-            || path.contains("/benches/")
-        {
-            return Self::Tests;
-        }
-
-        // Core code paths
-        if path.starts_with("src/")
-            || path.starts_with("crates/")
-            || path.starts_with("lib/")
-            || path.starts_with("core/")
-            || path.starts_with("packages/")
-            || path.starts_with("apps/")
-        {
-            return Self::CoreCode;
-        }
-
-        // Documentation
-        if path.starts_with("docs/") || path.ends_with(".md") {
-            return Self::Docs;
-        }
-
-        // CI/Infrastructure
-        if path.starts_with(".github/")
-            || path.starts_with(".gitlab-ci")
-            || path.starts_with(".circleci/")
-            || path.starts_with("ci/")
-            || path == "Dockerfile"
-            || path.ends_with(".Dockerfile")
-            || path == "docker-compose.yml"
-            || path.starts_with("scripts/")
-        {
-            return Self::CiInfra;
-        }
-
-        // Specs and schemas
-        if path.starts_with("specs/") || path.ends_with(".schema.json") {
-            return Self::Specs;
-        }
-
-        Self::Other
-    }
-
-    /// Display name for the category
-    pub fn as_str(&self) -> &'static str {
-        match self {
-            Self::CoreCode => "core_code",
-            Self::Tests => "tests",
-            Self::Docs => "docs",
-            Self::CiInfra => "ci_infra",
-            Self::Specs => "specs",
-            Self::Other => "other",
-        }
-    }
-}
-
-/// Rollup friction zones by category
-pub fn categorize_friction_zones(
-    zones: &[FrictionZone],
-) -> HashMap<&'static str, Vec<&FrictionZone>> {
-    let mut by_category: HashMap<&'static str, Vec<&FrictionZone>> = HashMap::new();
-
-    for zone in zones {
-        let category = FrictionCategory::from_path(&zone.path);
-        by_category.entry(category.as_str()).or_default().push(zone);
-    }
-
-    by_category
-}
-
-/// Generate a consistent run_id for receipts.
-/// Format: `{timestamp}-pr{pr_number}` or `{timestamp}-pr0` if no PR.
-pub fn generate_run_id(pr: Option<u32>) -> String {
-    format!(
-        "{}-pr{}",
-        Utc::now().format("%Y-%m-%dT%H-%M-%SZ"),
-        pr.map(|n| n.to_string()).unwrap_or_else(|| "0".to_string())
-    )
-}
-
-/// Arguments for the receipts gate command
-#[derive(Debug, Clone)]
-pub struct ReceiptsGateArgs {
-    /// Pull request number (optional)
-    pub pr: Option<u32>,
-    /// Output directory for receipts
-    pub output_dir: PathBuf,
-    /// Shared run_id (for forensic orchestration); generated if None
-    pub run_id: Option<String>,
-}
-
-impl Default for ReceiptsGateArgs {
-    fn default() -> Self {
-        Self { pr: None, output_dir: PathBuf::from(".runs/current"), run_id: None }
-    }
-}
-
-/// Run gates and emit gate.json receipt using gov-receipts types
-pub fn run_gate(args: ReceiptsGateArgs) -> Result<()> {
-    println!("{}", "Generating gate receipt...".blue().bold());
-
-    // Create output directory
-    std::fs::create_dir_all(&args.output_dir)
-        .with_context(|| format!("Failed to create {}", args.output_dir.display()))?;
-
-    let receipts_dir = args.output_dir.join("receipts");
-    std::fs::create_dir_all(&receipts_dir)?;
-
-    let started_at = Utc::now();
-    // Use provided run_id (for forensic orchestration) or generate new one
-    let run_id = args.run_id.clone().unwrap_or_else(|| generate_run_id(args.pr));
-
-    // Get git commit
-    let commit = Command::new("git")
-        .args(["rev-parse", "HEAD"])
-        .output()
-        .map(|o| String::from_utf8_lossy(&o.stdout).trim().to_string())
-        .unwrap_or_else(|_| "unknown".to_string());
-
-    // Get rust version
-    let rust_version = Command::new("rustc")
-        .args(["--version"])
-        .output()
-        .map(|o| {
-            let s = String::from_utf8_lossy(&o.stdout);
-            s.split_whitespace().nth(1).unwrap_or("unknown").to_string()
-        })
-        .unwrap_or_else(|_| "unknown".to_string());
-
-    // Check if in nix shell
-    let nix_shell = std::env::var("IN_NIX_SHELL").is_ok();
-
-    // Run gates and collect results
-    let mut gates = Vec::new();
-    let mut all_pass = true;
-
-    // Gate 1: fmt check
-    let start = Instant::now();
-    let fmt_status = Command::new("cargo").args(["fmt", "--all", "--check"]).status();
-    let fmt_pass = fmt_status.map(|s| s.success()).unwrap_or(false);
-    gates.push(GateResult {
-        name: "fmt".to_string(),
-        command: "cargo fmt --all --check".to_string(),
-        status: if fmt_pass { GateStatus::Pass } else { GateStatus::Fail },
-        duration_ms: start.elapsed().as_millis() as u64,
-        details: None,
-    });
-    if !fmt_pass {
-        all_pass = false;
-    }
-    println!(
-        "  {} fmt: {}ms",
-        if fmt_pass { "PASS".green() } else { "FAIL".red() },
-        gates.last().unwrap().duration_ms
-    );
-
-    // Gate 2: clippy
-    let start = Instant::now();
-    let clippy_status =
-        Command::new("cargo").args(["clippy", "--all-targets", "--", "-D", "warnings"]).status();
-    let clippy_pass = clippy_status.map(|s| s.success()).unwrap_or(false);
-    gates.push(GateResult {
-        name: "clippy".to_string(),
-        command: "cargo clippy --all-targets -- -D warnings".to_string(),
-        status: if clippy_pass { GateStatus::Pass } else { GateStatus::Fail },
-        duration_ms: start.elapsed().as_millis() as u64,
-        details: None,
-    });
-    if !clippy_pass {
-        all_pass = false;
-    }
-    println!(
-        "  {} clippy: {}ms",
-        if clippy_pass { "PASS".green() } else { "FAIL".red() },
-        gates.last().unwrap().duration_ms
-    );
-
-    // Gate 3: tests
-    let start = Instant::now();
-    let test_status = Command::new("cargo").args(["test", "--all"]).status();
-    let test_pass = test_status.map(|s| s.success()).unwrap_or(false);
-    gates.push(GateResult {
-        name: "tests".to_string(),
-        command: "cargo test --all".to_string(),
-        status: if test_pass { GateStatus::Pass } else { GateStatus::Fail },
-        duration_ms: start.elapsed().as_millis() as u64,
-        details: None,
-    });
-    if !test_pass {
-        all_pass = false;
-    }
-    println!(
-        "  {} tests: {}ms",
-        if test_pass { "PASS".green() } else { "FAIL".red() },
-        gates.last().unwrap().duration_ms
-    );
-
-    let finished_at = Utc::now();
-
-    // Get repo version from spec_ledger
-    let repo_version = get_repo_version().unwrap_or_else(|| "unknown".to_string());
-
-    // Build receipt using gov-receipts types
-    let mut builder = GateReceipt::builder()
-        .run_id(run_id)
-        .commit(commit)
-        .started_at(started_at)
-        .finished_at(finished_at)
-        .gates(gates)
-        .overall_status(if all_pass { GateStatus::Pass } else { GateStatus::Fail })
-        .repo_version(repo_version)
-        .environment(Environment { os: std::env::consts::OS.to_string(), rust_version, nix_shell });
-
-    if let Some(pr_num) = args.pr {
-        builder = builder.pr(pr_num as u64);
-    }
-
-    let receipt = builder.build();
-
-    // Write receipt
-    let gate_path = receipts_dir.join("gate.json");
-    let json = serde_json::to_string_pretty(&receipt)?;
-    std::fs::write(&gate_path, &json)?;
-
-    println!();
-    println!("{} Receipt written to {}", "OK".green(), gate_path.display());
-    println!("  Overall: {}", if all_pass { "PASS".green().bold() } else { "FAIL".red().bold() });
-
-    if all_pass { Ok(()) } else { anyhow::bail!("One or more gates failed") }
-}
-
-/// Get repository version from spec_ledger.yaml
-fn get_repo_version() -> Option<String> {
-    use serde::Deserialize;
-    use std::fs;
-
-    #[derive(Deserialize)]
-    struct SpecLedger {
-        metadata: Metadata,
-    }
-
-    #[derive(Deserialize)]
-    struct Metadata {
-        template_version: String,
-    }
-
-    let content = fs::read_to_string("specs/spec_ledger.yaml").ok()?;
-    let ledger: SpecLedger = serde_yaml::from_str(&content).ok()?;
-    Some(ledger.metadata.template_version)
-}
+// Re-export types from xtask_receipts for use in main.rs
+pub use xtask_receipts::{
+    ReceiptsEconomicsArgs, ReceiptsGateArgs, ReceiptsValidateArgs, run_economics, run_gate,
+    run_validate,
+};
 
 /// Convert probe profile to meta confidence level
 fn profile_to_meta_confidence(profile: ProbeProfile) -> MetaConfidence {
@@ -350,42 +50,6 @@ fn profile_to_meta_confidence(profile: ProbeProfile) -> MetaConfidence {
         ProbeProfile::Full => MetaConfidence::Medium,
         ProbeProfile::Exhibit => MetaConfidence::High,
     }
-}
-
-/// Get current git commit SHA (short form)
-fn get_current_commit_short() -> Option<String> {
-    Command::new("git")
-        .args(["rev-parse", "--short", "HEAD"])
-        .output()
-        .ok()
-        .map(|o| String::from_utf8_lossy(&o.stdout).trim().to_string())
-        .filter(|s| !s.is_empty())
-}
-
-/// Get current git commit SHA (full form)
-fn get_current_commit_full() -> Option<String> {
-    Command::new("git")
-        .args(["rev-parse", "HEAD"])
-        .output()
-        .ok()
-        .map(|o| String::from_utf8_lossy(&o.stdout).trim().to_string())
-        .filter(|s| !s.is_empty())
-}
-
-/// Get the SHA of a branch or ref
-fn get_ref_sha(ref_name: &str) -> Option<String> {
-    Command::new("git")
-        .args(["rev-parse", ref_name])
-        .output()
-        .ok()
-        .and_then(|o| {
-            if o.status.success() {
-                Some(String::from_utf8_lossy(&o.stdout).trim().to_string())
-            } else {
-                None
-            }
-        })
-        .filter(|s| !s.is_empty())
 }
 
 /// Get top N changed files by numstat
@@ -429,346 +93,6 @@ fn get_numstat_top_n(base_branch: &str, n: usize) -> Vec<serde_json::Value> {
     }
 }
 
-/// Arguments for the receipts economics command
-#[derive(Debug, Clone)]
-pub struct ReceiptsEconomicsArgs {
-    /// PR number
-    pub pr: u32,
-    /// Output directory for receipts
-    pub output_dir: PathBuf,
-    /// Author time in minutes (optional)
-    pub author_minutes: Option<u32>,
-    /// Author time confidence: measured, estimated, or unknown
-    pub author_confidence: String,
-    /// Review time in minutes (optional)
-    pub review_minutes: Option<u32>,
-    /// Review time confidence: measured, estimated, or unknown
-    pub review_confidence: String,
-    /// Number of human interventions
-    pub interventions: u32,
-    /// Compute cost in USD (optional)
-    pub compute_usd: Option<f64>,
-    /// Compute confidence: measured, estimated, or unknown
-    pub compute_confidence: String,
-    /// Number of CI/gate runs
-    pub runs: u32,
-    /// Number of failed gates before success
-    pub failed_gates: u32,
-    /// Number of fix-and-retry loops
-    pub fix_loops: u32,
-    /// Description of uncertainty reduced (optional)
-    pub uncertainty_reduced: Option<String>,
-    /// Description of rework prevented (optional)
-    pub rework_prevented: Option<String>,
-    /// DevLT notes (optional)
-    pub devlt_notes: Option<String>,
-    /// Compute notes (optional)
-    pub compute_notes: Option<String>,
-    /// Iteration notes (optional)
-    pub iteration_notes: Option<String>,
-    /// Shared run_id (for forensic orchestration); generated if None
-    pub run_id: Option<String>,
-}
-
-impl Default for ReceiptsEconomicsArgs {
-    fn default() -> Self {
-        Self {
-            pr: 0,
-            output_dir: PathBuf::from(".runs/current"),
-            author_minutes: None,
-            author_confidence: "unknown".to_string(),
-            review_minutes: None,
-            review_confidence: "unknown".to_string(),
-            interventions: 0,
-            compute_usd: None,
-            compute_confidence: "unknown".to_string(),
-            runs: 0,
-            failed_gates: 0,
-            fix_loops: 0,
-            uncertainty_reduced: None,
-            rework_prevented: None,
-            devlt_notes: None,
-            compute_notes: None,
-            iteration_notes: None,
-            run_id: None,
-        }
-    }
-}
-
-/// Parse confidence string to Confidence enum
-fn parse_confidence(s: &str) -> Confidence {
-    match s.to_lowercase().as_str() {
-        "measured" => Confidence::Measured,
-        "estimated" => Confidence::Estimated,
-        _ => Confidence::Unknown,
-    }
-}
-
-/// Generate economics.json receipt from provided values
-pub fn run_economics(args: ReceiptsEconomicsArgs) -> Result<()> {
-    println!("{}", "Generating economics receipt...".blue().bold());
-
-    // Create output directory and receipts subdirectory
-    std::fs::create_dir_all(&args.output_dir)
-        .with_context(|| format!("Failed to create {}", args.output_dir.display()))?;
-
-    let receipts_dir = args.output_dir.join("receipts");
-    std::fs::create_dir_all(&receipts_dir)?;
-
-    // Use provided run_id (for forensic orchestration) or generate new one
-    let run_id = args.run_id.clone().unwrap_or_else(|| generate_run_id(Some(args.pr)));
-
-    let receipt = EconomicsReceipt::builder()
-        .schema_version("1.0")
-        .pr(args.pr as u64)
-        .run_id(&run_id)
-        .devlt_minutes(DevLtMinutes {
-            author: args.author_minutes,
-            author_confidence: parse_confidence(&args.author_confidence),
-            review: args.review_minutes,
-            review_confidence: parse_confidence(&args.review_confidence),
-            interventions: args.interventions,
-            notes: args.devlt_notes,
-        })
-        .compute(ComputeSpend {
-            tokens_usd: args.compute_usd,
-            confidence: parse_confidence(&args.compute_confidence),
-            runs: args.runs,
-            notes: args.compute_notes,
-        })
-        .iterations(Iterations {
-            failed_gates: args.failed_gates,
-            fix_loops: args.fix_loops,
-            notes: args.iteration_notes,
-        })
-        .value_delivered(ValueDelivered {
-            uncertainty_reduced: args.uncertainty_reduced,
-            rework_prevented: args.rework_prevented,
-        })
-        .build();
-
-    // Write receipt to receipts/ subdirectory (consistent with gate.json)
-    let economics_path = receipts_dir.join("economics.json");
-    let json = serde_json::to_string_pretty(&receipt)?;
-    std::fs::write(&economics_path, &json)?;
-
-    println!();
-    println!("{} Receipt written to {}", "OK".green(), economics_path.display());
-    println!("  PR: #{}", args.pr);
-    println!(
-        "  DevLT: {} min (author: {}, review: {})",
-        args.author_minutes.unwrap_or(0) + args.review_minutes.unwrap_or(0),
-        args.author_confidence,
-        args.review_confidence
-    );
-    if let Some(usd) = args.compute_usd {
-        println!("  Compute: ${:.2} ({}, {} runs)", usd, args.compute_confidence, args.runs);
-    } else {
-        println!("  Compute: {} ({} runs)", args.compute_confidence, args.runs);
-    }
-    if args.failed_gates > 0 || args.fix_loops > 0 {
-        println!("  Iterations: {} failed gates, {} fix loops", args.failed_gates, args.fix_loops);
-    }
-
-    Ok(())
-}
-
-/// Arguments for the receipts-validate command
-#[derive(Debug, Clone)]
-pub struct ReceiptsValidateArgs {
-    /// Run directory containing receipts/ subdirectory
-    pub run_dir: PathBuf,
-    /// Schema directory (default: specs/schemas/)
-    pub schema_dir: PathBuf,
-}
-
-impl Default for ReceiptsValidateArgs {
-    fn default() -> Self {
-        Self { run_dir: PathBuf::from(".runs/current"), schema_dir: PathBuf::from("specs/schemas") }
-    }
-}
-
-/// Result of validating a single receipt
-#[derive(Debug)]
-struct ValidationResult {
-    receipt_name: String,
-    schema_name: String,
-    passed: bool,
-    errors: Vec<String>,
-}
-
-/// Validate receipt JSON files against their schemas
-///
-/// Finds all `receipts/*.json` files in the run directory, matches each
-/// to its corresponding schema (gate.json -> gate.schema.json), and validates.
-pub fn run_validate(args: ReceiptsValidateArgs) -> Result<()> {
-    println!("{}", "Validating receipts against schemas...".blue().bold());
-    println!();
-
-    // Check that run_dir exists
-    if !args.run_dir.exists() {
-        anyhow::bail!("Run directory does not exist: {}", args.run_dir.display());
-    }
-
-    // Check that schema_dir exists
-    if !args.schema_dir.exists() {
-        anyhow::bail!("Schema directory does not exist: {}", args.schema_dir.display());
-    }
-
-    let receipts_dir = args.run_dir.join("receipts");
-    if !receipts_dir.exists() {
-        anyhow::bail!(
-            "Receipts directory does not exist: {}\n\
-             Expected to find receipts/*.json files here.",
-            receipts_dir.display()
-        );
-    }
-
-    // Load all available schemas into a map: base_name -> (schema_path, compiled_validator)
-    let mut schemas: HashMap<String, (PathBuf, Validator)> = HashMap::new();
-    for entry in std::fs::read_dir(&args.schema_dir).with_context(|| {
-        format!("Failed to read schema directory: {}", args.schema_dir.display())
-    })? {
-        let entry = entry?;
-        let path = entry.path();
-        if path.extension().and_then(|s| s.to_str()) == Some("json") {
-            let file_name = path.file_name().unwrap().to_string_lossy().to_string();
-            // Extract base name: "gate.schema.json" -> "gate"
-            if let Some(base_name) = file_name.strip_suffix(".schema.json") {
-                let schema_content = std::fs::read_to_string(&path)
-                    .with_context(|| format!("Failed to read schema: {}", path.display()))?;
-                let schema_json: serde_json::Value = serde_json::from_str(&schema_content)
-                    .with_context(|| format!("Failed to parse schema JSON: {}", path.display()))?;
-                let validator = Validator::new(&schema_json).map_err(|e| {
-                    anyhow::anyhow!("Failed to compile schema {}: {}", path.display(), e)
-                })?;
-                schemas.insert(base_name.to_string(), (path.clone(), validator));
-            }
-        }
-    }
-
-    if schemas.is_empty() {
-        anyhow::bail!(
-            "No schemas found in {}. Expected files like gate.schema.json, economics.schema.json",
-            args.schema_dir.display()
-        );
-    }
-
-    println!(
-        "  Loaded {} schema(s): {}",
-        schemas.len(),
-        schemas.keys().cloned().collect::<Vec<_>>().join(", ")
-    );
-    println!();
-
-    // Find all receipt JSON files
-    let mut results: Vec<ValidationResult> = Vec::new();
-    let mut receipt_count = 0;
-
-    for entry in std::fs::read_dir(&receipts_dir)
-        .with_context(|| format!("Failed to read receipts directory: {}", receipts_dir.display()))?
-    {
-        let entry = entry?;
-        let path = entry.path();
-        if path.extension().and_then(|s| s.to_str()) != Some("json") {
-            continue;
-        }
-
-        receipt_count += 1;
-        let file_name = path.file_name().unwrap().to_string_lossy().to_string();
-        // Extract base name: "gate.json" -> "gate"
-        let base_name = file_name.strip_suffix(".json").unwrap_or(&file_name);
-
-        // Find matching schema
-        let Some((schema_path, validator)) = schemas.get(base_name) else {
-            results.push(ValidationResult {
-                receipt_name: file_name.clone(),
-                schema_name: format!("{}.schema.json", base_name),
-                passed: false,
-                errors: vec![format!(
-                    "No matching schema found. Expected {} in {}",
-                    format!("{}.schema.json", base_name),
-                    args.schema_dir.display()
-                )],
-            });
-            continue;
-        };
-
-        // Read and parse receipt
-        let receipt_content = std::fs::read_to_string(&path)
-            .with_context(|| format!("Failed to read receipt: {}", path.display()))?;
-        let receipt_json: serde_json::Value = match serde_json::from_str(&receipt_content) {
-            Ok(v) => v,
-            Err(e) => {
-                results.push(ValidationResult {
-                    receipt_name: file_name.clone(),
-                    schema_name: schema_path.file_name().unwrap().to_string_lossy().to_string(),
-                    passed: false,
-                    errors: vec![format!("Invalid JSON: {}", e)],
-                });
-                continue;
-            }
-        };
-
-        // Validate against schema
-        let errors: Vec<String> =
-            validator.iter_errors(&receipt_json).map(|e| format!("{}", e)).collect();
-
-        results.push(ValidationResult {
-            receipt_name: file_name,
-            schema_name: schema_path.file_name().unwrap().to_string_lossy().to_string(),
-            passed: errors.is_empty(),
-            errors,
-        });
-    }
-
-    if receipt_count == 0 {
-        anyhow::bail!(
-            "No receipt JSON files found in {}\n\
-             Run `cargo xtask receipts-gate` or `cargo xtask receipts-economics` to generate receipts.",
-            receipts_dir.display()
-        );
-    }
-
-    // Print results
-    let mut passed = 0;
-    let mut failed = 0;
-
-    for result in &results {
-        if result.passed {
-            passed += 1;
-            println!(
-                "  {} {} (validated against {})",
-                "PASS".green(),
-                result.receipt_name,
-                result.schema_name
-            );
-        } else {
-            failed += 1;
-            println!("  {} {} (schema: {})", "FAIL".red(), result.receipt_name, result.schema_name);
-            for error in &result.errors {
-                println!("       {} {}", "-".dimmed(), error);
-            }
-        }
-    }
-
-    println!();
-    println!(
-        "Summary: {} passed, {} failed out of {} receipt(s)",
-        passed.to_string().green(),
-        if failed > 0 { failed.to_string().red() } else { failed.to_string().normal() },
-        receipt_count
-    );
-
-    if failed > 0 {
-        anyhow::bail!("{} receipt(s) failed schema validation", failed);
-    }
-
-    println!();
-    println!("{} All receipts valid", "OK".green());
-    Ok(())
-}
-
 // ============================================================================
 // QUALITY RECEIPT
 // ============================================================================
@@ -786,7 +110,7 @@ pub struct ReceiptsQualityArgs {
     pub boundary_rating: Option<String>,
     /// LLM-provided test depth rating (hardened/mixed/shallow)
     pub test_depth_rating: Option<String>,
-    /// LLM-provided notes
+    /// LLM-provided notes (repeatable)
     pub notes: Vec<String>,
     /// Shared run_id (for forensic orchestration); generated if None
     pub run_id: Option<String>,
@@ -815,88 +139,12 @@ impl Default for ReceiptsQualityArgs {
     }
 }
 
-// ============================================================================
-// HISTORIAN APPENDIX TYPES AND PARSING
-// ============================================================================
-
-/// Markers for historian appendix extraction
-const HISTORIAN_APPENDIX_START: &str = "<!-- historian:appendix:start -->";
-const HISTORIAN_APPENDIX_END: &str = "<!-- historian:appendix:end -->";
-
-/// Structured appendix from Historian LLM analysis.
-/// All fields are optional - partial appendices are valid.
-#[derive(Debug, Clone, Default, serde::Deserialize)]
-#[serde(rename_all = "snake_case")]
-pub struct HistorianQualityAppendix {
-    /// Boundary integrity rating (improved/neutral/degraded)
-    pub boundary_rating: Option<String>,
-    /// Notes about boundary integrity
-    #[serde(default)]
-    pub boundary_notes: Vec<String>,
-
-    /// Test depth rating (hardened/mixed/shallow)
-    pub test_depth_rating: Option<String>,
-    /// Notes about test depth
-    #[serde(default)]
-    pub test_depth_notes: Vec<String>,
-
-    /// Risk notes from LLM analysis
-    #[serde(default)]
-    pub risk_notes: Vec<String>,
-
-    /// Assumptions that materially affected the analysis
-    #[serde(default)]
-    pub assumptions: Vec<String>,
-    /// Evidence pointers (paths, commits, receipts)
-    #[serde(default)]
-    pub evidence_pointers: Vec<String>,
-
-    /// Confidence level (high/medium/low)
-    pub confidence: Option<String>,
-}
-
-/// Extract the JSON appendix from historian markdown output.
-/// Returns the raw JSON string between the markers.
-///
-/// # Errors
-/// - Returns error if start marker not found
-/// - Returns error if end marker not found
-/// - Returns error if JSON is wrapped in code fences
-pub fn extract_historian_appendix_json(markdown: &str) -> Result<&str> {
-    let start = markdown
-        .find(HISTORIAN_APPENDIX_START)
-        .ok_or_else(|| anyhow::anyhow!("Historian appendix start marker not found"))?;
-    let after_start = start + HISTORIAN_APPENDIX_START.len();
-
-    let end = markdown[after_start..]
-        .find(HISTORIAN_APPENDIX_END)
-        .ok_or_else(|| anyhow::anyhow!("Historian appendix end marker not found"))?
-        + after_start;
-
-    let json = markdown[after_start..end].trim();
-
-    // Guardrail: refuse fenced blocks
-    if json.starts_with("```") {
-        return Err(anyhow::anyhow!("Historian appendix must be raw JSON (not in a code fence)"));
-    }
-
-    Ok(json)
-}
-
-/// Parse the historian appendix JSON into a structured type.
-pub fn parse_historian_appendix(json: &str) -> Result<HistorianQualityAppendix> {
-    serde_json::from_str(json).context("Failed to parse historian appendix JSON")
-}
-
-/// Result of obtaining historian analysis
-pub enum HistorianResult {
-    /// Successfully obtained and parsed appendix
+/// Result of historian analysis retrieval
+#[derive(Debug)]
+enum HistorianResult {
     Success(HistorianQualityAppendix, PathBuf),
-    /// Historian output file provided but extraction/parse failed
     ParseFailed(String),
-    /// No historian runner configured
     RunnerNotConfigured,
-    /// Historian command execution failed
     CommandFailed(String),
 }
 
@@ -907,7 +155,7 @@ fn obtain_historian_analysis(
 ) -> HistorianResult {
     // Priority 1: Read from provided file
     if let Some(ref output_path) = args.historian_output {
-        match std::fs::read_to_string(output_path) {
+        match std::fs::read_to_string::<&PathBuf>(output_path) {
             Ok(content) => {
                 // Copy historian output into run directory for durable evidence
                 // This keeps the receipt self-contained and portable
@@ -1410,7 +658,7 @@ pub struct ReceiptsTelemetryArgs {
     pub pr: Option<u32>,
     /// Output directory for receipts
     pub output_dir: PathBuf,
-    /// Probe profile (fast/full/exhibit)
+    /// Probe profile: fast/full/exhibit
     pub profile: String,
     /// Base branch for comparison (default: origin/main)
     pub base_branch: String,
@@ -3341,7 +2589,8 @@ fn detect_file_oscillations(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use gov_receipts::GateStatus;
+    use gov_receipts::{Environment, GateReceipt, GateResult, GateStatus};
+    use xtask_receipts::normalize_path_separators;
 
     #[test]
     fn gate_receipt_uses_gov_receipts_types() {

@@ -1,0 +1,29 @@
+[package]
+name = "gov-http-issues"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+documentation.workspace = true
+publish = false
+
+[dependencies]
+anyhow.workspace = true
+axum.workspace = true
+http.workspace = true
+http-errors = { path = "../http-errors", features = ["axum"] }
+platform-contract = { path = "../platform-contract" }
+gov-model = { path = "../gov-model" }
+gov-http-core = { path = "../gov-http-core" }
+gov-http-friction = { path = "../gov-http-friction" }
+gov-http-questions = { path = "../gov-http-questions" }
+serde.workspace = true
+serde_json.workspace = true
+serde_yaml.workspace = true
+spec-runtime = { path = "../spec-runtime" }
+thiserror.workspace = true
+tokio.workspace = true
+tracing.workspace = true

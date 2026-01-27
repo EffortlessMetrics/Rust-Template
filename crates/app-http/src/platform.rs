@@ -279,6 +279,8 @@ struct DebugInfo {
     template_version: String,
 }
 
+// Baseline measurement: incremental build test
+
 /// Platform debug info endpoint
 ///
 /// Returns basic kernel and template version information.

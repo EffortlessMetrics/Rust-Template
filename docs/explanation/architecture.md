@@ -60,16 +60,150 @@ The template is built around three core principles:
 
 ## Crate Structure
 
-The template uses a workspace with clear separation of concerns:
+The template uses a workspace organized into microcrates with clear separation of concerns:
+
+### Crate Taxonomy
+
+The workspace follows a layered microcrate architecture with five primary crate categories:
 
 ```
 crates/
-- app-http/      - HTTP adapter (ports)
-- core/          - Domain logic (hexagon center)
-- model/         - Domain entities
-- telemetry/     - Cross-cutting: observability
-- acceptance/    - BDD tests (outside-in)
-- xtask/         - Kernel CLI for dev/CI flows
+├── Contract Crates (Stable APIs)
+│   ├── platform-contract/    - HTTP API types and contracts
+│   ├── xtask-contract/      - CLI output types and contracts
+│   ├── receipts-core/       - Receipt schemas
+│   └── spec-types/          - Spec file types
+├── Core Logic Crates (Business Domain)
+│   ├── gov-model/           - Governance domain models
+│   └── spec-ledger/         - Spec ledger types
+├── Foundation Crates (Shared Infrastructure)
+│   ├── http-errors/         - HTTP error types
+│   ├── http-platform/        - Platform integration types (IDP, UI)
+│   ├── http-core/           - Core HTTP utilities
+│   └── telemetry/           - Observability/telemetry
+├── Adapter Crates (External Interfaces)
+│   ├── adapters-db-sqlx/    - PostgreSQL adapter
+│   ├── gov-http/             - Governance HTTP handlers
+│   ├── gov-http-forks/       - Forks HTTP handlers
+│   ├── gov-http-friction/     - Friction HTTP handlers
+│   └── gov-http-issues/      - Issues HTTP handlers
+├── HTTP/Router Crates (Application Entry Points)
+│   ├── app-http/             - Main HTTP application
+│   └── http-middleware/       - HTTP middleware (CORS, etc.)
+└── Facade Crates (Developer Experience)
+    ├── rust_iac_config/      - IaC configuration
+    └── rust_iac_xtask_core/ - IaC xtask core
+```
+
+### Layering Rules
+
+The architecture enforces strict layering rules to maintain dependency isolation:
+
+1. **Contract Crates** (`platform-contract`, `xtask-contract`, `receipts-core`, `spec-types`)
+   - **Purpose:** Define stable APIs that external consumers depend on
+   - **Allowed Dependencies:** Foundation crates only
+   - **Forbidden Dependencies:** HTTP frameworks (axum), async runtimes (tokio), CLI parsers (clap), databases (sqlx)
+   - **Stability:** Versioned and tracked in `specs/contracts_manifest.yaml`
+
+2. **Core Logic Crates** (`gov-model`, `spec-ledger`)
+   - **Purpose:** Encode business rules and domain concepts
+   - **Allowed Dependencies:** Foundation crates, contract crates
+   - **Forbidden Dependencies:** Adapters, HTTP frameworks
+
+3. **Foundation Crates** (`http-errors`, `http-platform`, `http-core`, `telemetry`)
+   - **Purpose:** Provide shared infrastructure and utilities
+   - **Allowed Dependencies:** Minimal external dependencies (serde, thiserror, etc.)
+   - **Constraint:** Maximum 10 dependencies to stay lightweight
+
+4. **Adapter Crates** (`adapters-db-sqlx`, `gov-http-*`)
+   - **Purpose:** Implement external interfaces (databases, HTTP handlers)
+   - **Allowed Dependencies:** Core logic, foundation crates
+   - **Constraint:** Must not expose implementation details to contract crates
+
+5. **HTTP/Router Crates** (`app-http`, `http-middleware`)
+   - **Purpose:** Application entry points and routing
+   - **Allowed Dependencies:** All lower layers
+   - **Constraint:** Must not pull in business logic directly
+
+6. **Facade Crates** (`rust_iac_config`, `rust_iac_xtask_core`)
+   - **Purpose:** Developer experience and tooling
+   - **Allowed Dependencies:** Foundation crates, contract crates
+   - **Constraint:** Must not create tight coupling to implementation details
+
+### Dependency Graph
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  HTTP/Router (app-http, http-middleware)        │
+│     ↓ depends on                                   │
+│  ┌───────────────────────────────────────────────────┐   │
+│  │  Adapters (gov-http-*, adapters-db-sqlx)  │   │
+│  │     ↓ depends on                               │   │
+│  │  ┌───────────────────────────────────────────┐  │   │
+│  │  │  Core Logic (gov-model, spec-ledger) │  │   │
+│  │  │     ↓ depends on                     │  │   │
+│  │  │  ┌───────────────────────────────────┐ │  │  │
+│  │  │  │  Foundation (http-*, telemetry) │ │  │  │
+│  │  │  └───────────────────────────────────┘ │  │  │
+│  │  └───────────────────────────────────────────┘  │  │
+│  └───────────────────────────────────────────────────┘  │
+│                                                      │
+│  ┌───────────────────────────────────────────────────┐  │
+│  │  Contracts (platform-contract, xtask-contract,│  │
+│  │              receipts-core, spec-types)        │  │
+│  │     ↓ depends on Foundation only              │  │
+│  └───────────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Contract Inventory
+
+Contract crates define the stable API surface of the platform:
+
+| Contract Crate | Purpose | Versioned | Stability |
+|----------------|---------|------------|-----------|
+| `platform-contract` | HTTP API types and contracts | Yes | Stable (tracked in contracts_manifest.yaml) |
+| `xtask-contract` | CLI output types and contracts | Yes | Stable (tracked in contracts_manifest.yaml) |
+| `receipts-core` | Receipt schemas | Yes | Stable (tracked in contracts_manifest.yaml) |
+| `spec-types` | Spec file types | Yes | Stable (tracked in contracts_manifest.yaml) |
+
+**Stability Guarantees:**
+
+1. **Breaking Changes Require ADR:** Any breaking change to contract crates must be documented in an ADR
+2. **Version Tracking:** Contract versions are tracked in `specs/contracts_manifest.yaml`
+3. **CI Gates:** `cargo xtask check-api-diff` and `cargo xtask check-openapi-diff` enforce stability
+4. **Layering Enforcement:** Contract crates cannot depend on adapters or HTTP frameworks
+
+### Adding New Crates
+
+When adding a new crate to the workspace:
+
+1. **Determine the crate's role:** Which of the five categories (contract, core, foundation, adapter, router, facade)?
+2. **Follow layering rules:** Ensure dependencies point inward (higher layers depend on lower layers)
+3. **Update `Cargo.toml`:** Add the crate to `workspace.members`
+4. **Add contract checks:** If the crate is a contract crate, add it to contract check commands
+5. **Run layering validation:** `cargo xtask check-layering` to verify compliance
+6. **Update documentation:** Document the crate's purpose and dependencies in this file
+
+**Example: Adding a new adapter crate**
+
+```bash
+# 1. Create the crate
+mkdir crates/adapters-my-new-adapter
+cd crates/adapters-my-new-adapter
+cargo init --lib
+
+# 2. Add dependencies (foundation and core logic only)
+cargo add http-errors http-core
+
+# 3. Update workspace Cargo.toml
+# Add "adapters-my-new-adapter" to workspace.members
+
+# 4. Run layering check
+cargo xtask check-layering
+
+# 5. Document the crate
+# Update docs/explanation/architecture.md with crate purpose
 ```
 
 ### app-http: HTTP Adapter

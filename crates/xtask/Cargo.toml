@@ -20,6 +20,11 @@ regex.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 serde_yaml.workspace = true
+# New xtask library dependencies
+xtask-lib = {path = "../xtask-lib"}
+xtask-versioning = {path = "../xtask-versioning"}
+xtask-receipts = {path = "../xtask-receipts"}
+xtask-contracts = {path = "../xtask-contracts"}
 
 [dev-dependencies]
 tempfile.workspace = true

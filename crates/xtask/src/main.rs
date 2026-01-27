@@ -166,6 +166,30 @@ enum Commands {
         plan_only: bool,
     },
 
+    /// Check for breaking changes in contract crate public APIs
+    #[command(next_help_heading = "✅ Validation Gates")]
+    CheckApiDiff {
+        /// Path to ADR approving the change (optional)
+        #[arg(long)]
+        adr: Option<String>,
+    },
+
+    /// Check for breaking changes in OpenAPI spec (/platform/* endpoints)
+    #[command(next_help_heading = "✅ Validation Gates")]
+    CheckOpenapiDiff,
+
+    /// Check for breaking changes in CLI JSON output schemas
+    #[command(next_help_heading = "✅ Validation Gates")]
+    CheckJsonSchemas {
+        /// Generate golden snapshots instead of checking
+        #[arg(long)]
+        generate: bool,
+    },
+
+    /// Check dependency layering rules for contract and foundation crates
+    #[command(next_help_heading = "✅ Validation Gates")]
+    CheckLayering,
+
     // ============================================================================
     // ACCEPTANCE CRITERIA (AC management & testing)
     // ============================================================================
@@ -1578,6 +1602,16 @@ fn main() -> Result<()> {
         Commands::TestChanged { base, plan_only } => {
             commands::test_changed::run(commands::test_changed::TestChangedArgs { base, plan_only })
         }
+        Commands::CheckApiDiff { adr } => {
+            commands::check_api_diff::run(commands::check_api_diff::CheckApiDiffArgs { adr })
+        }
+        Commands::CheckOpenapiDiff => commands::check_openapi_diff::run(),
+        Commands::CheckJsonSchemas { generate } => {
+            commands::check_json_schemas::run(commands::check_json_schemas::CheckJsonSchemasArgs {
+                generate,
+            })
+        }
+        Commands::CheckLayering => commands::check_layering::run(),
         Commands::Version { json } => {
             commands::version::run(commands::version::VersionArgs { json })
         }
@@ -1698,6 +1732,10 @@ pub fn all_command_names() -> Vec<&'static str> {
         "adr-check",
         "adr-new",
         "check",
+        "check-api-diff",
+        "check-json-schemas",
+        "check-layering",
+        "check-openapi-diff",
         "precommit",
         "bdd",
         "build-time-capture",
