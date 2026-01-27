@@ -7,13 +7,235 @@
 //! - Classifying development topology
 //! - Identifying convergence points
 
-use crate::should_exclude_path;
+use anyhow::{Context, Result};
 use chrono::{DateTime, Utc};
+use colored::Colorize;
 use gov_receipts::{
-    Convergence, FrictionZone, Oscillation, OscillationAction, OscillationType, Session,
-    SessionClassification, TimelineConfidence, Topology,
+    Convergence, FrictionZone, MetaConfidence, Oscillation, OscillationAction, OscillationType,
+    ReceiptMeta, Session, SessionClassification, TimelineConfidence, TimelineReceipt, Topology,
+    WallClock,
 };
 use std::collections::HashMap;
+use std::path::PathBuf;
+
+use crate::{categorize_friction_zones, generate_run_id, get_current_commit_short};
+
+// ============================================================================
+// Default Exclude Patterns for Timeline Analysis
+// ============================================================================
+
+/// Paths to exclude from friction zone and oscillation analysis.
+/// These are typically generated/ephemeral directories that pollute timeline signals.
+pub const FRICTION_EXCLUDE_PATTERNS: &[&str] =
+    &[".runs/", "target/", ".git/", "node_modules/", "vendor/", "dist/", "build/", ".cache/"];
+
+/// Normalize Windows path separators to forward slashes.
+/// This ensures path matching works consistently across platforms.
+pub fn normalize_path_separators(path: &str) -> String {
+    path.replace('\\', "/")
+}
+
+/// Check if a path should be excluded from friction/oscillation analysis.
+/// Normalizes path separators first for cross-platform compatibility.
+///
+/// # Arguments
+/// * `path` - The file path to check
+/// * `extra_excludes` - Additional prefix patterns to exclude
+/// * `include_ephemeral` - If true, skip default exclusions (for debugging)
+pub fn should_exclude_path(path: &str, extra_excludes: &[String], include_ephemeral: bool) -> bool {
+    let normalized = normalize_path_separators(path);
+
+    // Check default exclusions unless include_ephemeral is set
+    if !include_ephemeral
+        && FRICTION_EXCLUDE_PATTERNS.iter().any(|pattern| normalized.starts_with(pattern))
+    {
+        return true;
+    }
+
+    // Check additional exclusions
+    extra_excludes.iter().any(|prefix| {
+        let normalized_prefix = normalize_path_separators(prefix);
+        normalized.starts_with(&normalized_prefix)
+    })
+}
+
+// ============================================================================
+// TIMELINE RECEIPT
+// ============================================================================
+
+/// Arguments for the receipts-timeline command
+#[derive(Debug, Clone)]
+pub struct ReceiptsTimelineArgs {
+    /// Pull request number (optional)
+    pub pr: Option<u32>,
+    /// Output directory for receipts
+    pub output_dir: PathBuf,
+    /// Base branch for comparison (default: origin/main)
+    pub base_branch: String,
+    /// Session gap threshold in minutes (default: 30)
+    pub session_gap_minutes: u32,
+    /// Shared run_id (for forensic orchestration); generated if None
+    pub run_id: Option<String>,
+    /// Additional path prefixes to exclude from friction/oscillation analysis
+    pub exclude_prefixes: Vec<String>,
+    /// Include ephemeral directories in analysis (for debugging)
+    pub include_ephemeral: bool,
+}
+
+impl Default for ReceiptsTimelineArgs {
+    fn default() -> Self {
+        Self {
+            pr: None,
+            output_dir: PathBuf::from(".runs/current"),
+            base_branch: "origin/main".to_string(),
+            session_gap_minutes: 30,
+            run_id: None,
+            exclude_prefixes: Vec::new(),
+            include_ephemeral: false,
+        }
+    }
+}
+
+/// Generate timeline.json receipt from commit history
+pub fn run_timeline(args: ReceiptsTimelineArgs) -> Result<()> {
+    println!("{}", "Generating timeline receipt...".blue().bold());
+
+    // Create output directory
+    std::fs::create_dir_all(&args.output_dir)
+        .with_context(|| format!("Failed to create {}", args.output_dir.display()))?;
+
+    let receipts_dir = args.output_dir.join("receipts");
+    std::fs::create_dir_all(&receipts_dir)?;
+
+    // Use provided run_id (for forensic orchestration) or generate new one
+    let run_id = args.run_id.clone().unwrap_or_else(|| generate_run_id(args.pr));
+
+    // Get commit history
+    let commits = get_commit_history(&args.base_branch);
+
+    if commits.is_empty() {
+        anyhow::bail!("No commits found between HEAD and {}", args.base_branch);
+    }
+
+    // Build wall clock from commits
+    let first_commit = commits.last().unwrap(); // oldest
+    let last_commit = commits.first().unwrap(); // newest
+
+    let wall_clock = WallClock {
+        first_commit: first_commit.timestamp,
+        last_commit: last_commit.timestamp,
+        pr_created: None,
+        pr_merged: None,
+        total_duration_minutes: Some(
+            ((last_commit.timestamp - first_commit.timestamp).num_minutes().max(0)) as u64,
+        ),
+    };
+
+    // Identify sessions (clusters of commits within gap threshold)
+    let sessions = identify_sessions(&commits, args.session_gap_minutes);
+
+    // Find friction zones (files touched multiple times)
+    let friction_zones =
+        find_friction_zones(&args.base_branch, &args.exclude_prefixes, args.include_ephemeral);
+
+    // Detect oscillations (add/remove/add patterns indicating uncertainty)
+    let oscillations =
+        detect_oscillations(&args.base_branch, &args.exclude_prefixes, args.include_ephemeral);
+
+    // Detect convergence (how the PR stabilized toward completion)
+    let convergence = detect_convergence(&args.base_branch, &commits);
+
+    // Classify topology
+    let (topology, confidence, reasons) = classify_topology(&commits, &friction_zones, &sessions);
+
+    let mut builder = TimelineReceipt::builder()
+        .run_id(&run_id)
+        .wall_clock(wall_clock)
+        .topology(topology)
+        .topology_confidence(confidence)
+        .sessions(sessions);
+
+    for zone in friction_zones {
+        builder = builder.friction_zone(zone);
+    }
+
+    for osc in oscillations.iter().cloned() {
+        builder = builder.oscillation(osc);
+    }
+
+    for reason in reasons {
+        builder = builder.topology_reason(reason);
+    }
+
+    if let Some(pr_num) = args.pr {
+        builder = builder.pr(pr_num as u64);
+    }
+
+    if let Some(conv) = convergence {
+        builder = builder.convergence(conv);
+    }
+
+    // Build meta provenance - timeline uses medium confidence by default
+    // as it relies on git history analysis
+    let mut meta_builder = ReceiptMeta::builder()
+        .method_id("timeline-v1")
+        .method_version(1)
+        .analysis_run_id(&run_id)
+        .input("git_log")
+        .input("commit_history")
+        .assumption(format!("session gap threshold: {} minutes", args.session_gap_minutes))
+        .confidence(MetaConfidence::Medium);
+
+    if let Some(commit) = get_current_commit_short() {
+        meta_builder = meta_builder.evidence(commit);
+    }
+
+    // Add evidence pointers for commits analyzed
+    for commit in commits.iter().take(5) {
+        meta_builder = meta_builder.evidence(&commit.sha[..7.min(commit.sha.len())]);
+    }
+
+    builder = builder.meta(meta_builder.build());
+
+    let receipt = builder.build();
+
+    // Write receipt
+    let timeline_path = receipts_dir.join("timeline.json");
+    let json = serde_json::to_string_pretty(&receipt)?;
+    std::fs::write(&timeline_path, &json)?;
+
+    println!();
+    println!("{} Receipt written to {}", "OK".green(), timeline_path.display());
+    println!("  Commits: {}", commits.len());
+    println!("  Sessions: {}", receipt.sessions.len());
+    println!("  Friction zones: {}", receipt.friction_zones.len());
+
+    // Show category rollup for friction zones
+    if !receipt.friction_zones.is_empty() {
+        let by_category = categorize_friction_zones(&receipt.friction_zones);
+        let mut categories: Vec<_> = by_category.iter().collect();
+        categories.sort_by_key(|(_, zones)| std::cmp::Reverse(zones.len()));
+        print!("    Categories: ");
+        for (i, (cat, zones)) in categories.iter().enumerate() {
+            if i > 0 {
+                print!(", ");
+            }
+            print!("{}={}", cat, zones.len());
+        }
+        println!();
+    }
+
+    println!("  Oscillations: {}", receipt.oscillations.len());
+    println!("  Topology: {:?} ({:?} confidence)", receipt.topology, receipt.topology_confidence);
+    if let Some(ref conv) = receipt.convergence {
+        println!(
+            "  Convergence: stable={}, categories={:?}",
+            conv.last_n_commits_stable, conv.stable_categories
+        );
+    }
+
+    Ok(())
+}
 
 /// Diff statistics.
 pub struct DiffStat {
@@ -1149,5 +1371,72 @@ diff --git a/Cargo.toml b/Cargo.toml
         assert_eq!(FileCategory::Receipts.as_str(), "receipts");
         assert_eq!(FileCategory::Config.as_str(), "config");
         assert_eq!(FileCategory::Impl.as_str(), "impl");
+    }
+
+    // ========================================================================
+    // Path Normalization Tests
+    // ========================================================================
+
+    #[test]
+    fn normalize_path_separators_converts_backslashes() {
+        // Windows-style paths
+        assert_eq!(normalize_path_separators(r"crates\xtask\src"), "crates/xtask/src");
+        assert_eq!(normalize_path_separators(r".runs\pr\123"), ".runs/pr/123");
+        assert_eq!(normalize_path_separators(r"target\debug\foo"), "target/debug/foo");
+    }
+
+    #[test]
+    fn normalize_path_separators_preserves_forward_slashes() {
+        // Unix-style paths remain unchanged
+        assert_eq!(normalize_path_separators("crates/xtask/src"), "crates/xtask/src");
+        assert_eq!(normalize_path_separators(".runs/pr/123"), ".runs/pr/123");
+    }
+
+    #[test]
+    fn should_exclude_path_with_defaults() {
+        // Default exclusions with empty extra excludes
+        let empty_excludes: Vec<String> = vec![];
+
+        assert!(should_exclude_path(".runs/current/foo.json", &empty_excludes, false));
+        assert!(should_exclude_path("target/debug/foo", &empty_excludes, false));
+        assert!(should_exclude_path(".git/objects/abc", &empty_excludes, false));
+
+        // Non-excluded paths
+        assert!(!should_exclude_path("src/main.rs", &empty_excludes, false));
+        assert!(!should_exclude_path("crates/foo/src/lib.rs", &empty_excludes, false));
+    }
+
+    #[test]
+    fn should_exclude_path_with_windows_separators() {
+        let empty_excludes: Vec<String> = vec![];
+
+        // Windows-style .runs path should be excluded
+        assert!(should_exclude_path(r".runs\current\foo.json", &empty_excludes, false));
+        assert!(should_exclude_path(r"target\debug\foo", &empty_excludes, false));
+    }
+
+    #[test]
+    fn should_exclude_path_with_extra_excludes() {
+        let extra_excludes = vec!["vendor/".to_string(), "custom_dir/".to_string()];
+
+        // Extra exclusions
+        assert!(should_exclude_path("vendor/crate/src", &extra_excludes, false));
+        assert!(should_exclude_path("custom_dir/file.txt", &extra_excludes, false));
+
+        // Non-excluded
+        assert!(!should_exclude_path("src/main.rs", &extra_excludes, false));
+    }
+
+    #[test]
+    fn should_exclude_path_include_ephemeral_flag() {
+        let empty_excludes: Vec<String> = vec![];
+
+        // With include_ephemeral=true, default exclusions are skipped
+        assert!(!should_exclude_path(".runs/current/foo.json", &empty_excludes, true));
+        assert!(!should_exclude_path("target/debug/foo", &empty_excludes, true));
+
+        // But extra exclusions still apply
+        let extra = vec!["always_exclude/".to_string()];
+        assert!(should_exclude_path("always_exclude/file.txt", &extra, true));
     }
 }
