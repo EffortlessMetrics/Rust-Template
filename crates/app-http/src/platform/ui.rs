@@ -22,6 +22,16 @@ fn layout(
 
     let links = metadata.as_ref().map(|m| m.links.clone()).unwrap_or_default();
 
+    let nav_link = |text: &str, href: &str, target_id: &str| {
+        let is_active = page_id == target_id;
+        html! {
+            a href=(href)
+              class=[is_active.then(|| "active")]
+              aria-current=[is_active.then(|| "page")]
+            { (text) }
+        }
+    };
+
     html! {
         (DOCTYPE)
         html lang="en" {
@@ -71,9 +81,30 @@ fn layout(
                         text-decoration: none;
                         margin-right: 2rem;
                         font-weight: 500;
+                        display: inline-block;
                     }
                     nav a:hover {
                         text-decoration: underline;
+                    }
+                    /* Active link style */
+                    nav a.active {
+                        color: #4c51bf;
+                        font-weight: 700;
+                        border-bottom: 2px solid #4c51bf;
+                    }
+                    /* Skip link */
+                    .skip-link {
+                        position: absolute;
+                        top: -40px;
+                        left: 0;
+                        background: #333;
+                        color: white;
+                        padding: 8px;
+                        z-index: 100;
+                        transition: top 0.2s;
+                    }
+                    .skip-link:focus {
+                        top: 0;
                     }
                     .card {
                         background: white;
@@ -145,6 +176,7 @@ fn layout(
                 }
             }
             body {
+                a href="#main-content" class="skip-link" { "Skip to main content" }
                 header data-uiid=(format!("{}.header", page_id)) {
                     .container {
                         h1 { (service_name) }
@@ -152,10 +184,10 @@ fn layout(
                     }
                 }
                 nav .container data-uiid=(format!("{}.nav", page_id)) {
-                    a href="/" { "Dashboard" }
-                    a href="/ui/graph" { "Graph" }
-                    a href="/ui/flows" { "Flows & Tasks" }
-                    a href="/ui/coverage" { "AC Coverage" }
+                    (nav_link("Dashboard", "/", "dashboard"))
+                    (nav_link("Graph", "/ui/graph", "graph"))
+                    (nav_link("Flows & Tasks", "/ui/flows", "flows"))
+                    (nav_link("AC Coverage", "/ui/coverage", "coverage"))
                     a href="/platform/status" target="_blank" { "API: Status" }
                     a href="/platform/graph" target="_blank" { "API: Graph" }
                     @if let Some(runbook) = links.get("kernel_contract") {
@@ -174,7 +206,7 @@ fn layout(
                         a href=(support) target="_blank" { "Platform Support" }
                     }
                 }
-                main .container {
+                main id="main-content" .container {
                     (content)
                 }
             }
