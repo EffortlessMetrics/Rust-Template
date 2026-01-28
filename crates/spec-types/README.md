@@ -52,7 +52,7 @@ All ID types implement:
 ### Error Types
 
 - [`SpecError`] - Error enum for spec operations (Io, YamlParse, Validation, NotFound, InvalidFormat)
-- [`SpecResult<T>`` - Result type alias for spec operations
+- [`SpecResult<T>`] - Result type alias for spec operations
 
 ## Stability Guarantees
 
