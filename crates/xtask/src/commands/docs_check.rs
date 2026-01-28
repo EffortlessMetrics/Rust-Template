@@ -1015,23 +1015,15 @@ fn validate_service_policies() -> Result<()> {
         .with_context(|| format!("Failed to read {}", metadata_path.display()))?;
     let metadata: serde_yaml::Value = serde_yaml::from_str(&content)?;
 
-    // Check runbook requirement
+    // Check runbook requirement (advisory - detect and report, never auto-create)
     if let Some(true) = metadata.get("runbook_required").and_then(|v| v.as_bool()) {
         let runbooks_dir = root.join("docs/runbooks");
-        if !runbooks_dir.exists() || runbooks_dir.read_dir()?.next().is_none() {
-            // For the template repo itself, we might not want to fail if this dir is empty,
-            // but for the sake of the "self-healing" demo, we should probably ensure it exists or is skipped.
-            // Let's just warn for now if it's missing in the template.
-            // actually, let's create a dummy runbook if missing to satisfy the check for the demo.
-            if !runbooks_dir.exists() {
-                std::fs::create_dir_all(&runbooks_dir)?;
-            }
-            if runbooks_dir.read_dir()?.next().is_none() {
-                std::fs::write(
-                    runbooks_dir.join("placeholder.md"),
-                    "# Placeholder Runbook\n\nRequired by service policy.",
-                )?;
-            }
+        if !runbooks_dir.exists() {
+            eprintln!("  ⚠ Advisory: runbook_required=true but docs/runbooks/ does not exist");
+            eprintln!("    Remediation: mkdir -p docs/runbooks && create runbook files");
+        } else if runbooks_dir.read_dir()?.next().is_none() {
+            eprintln!("  ⚠ Advisory: runbook_required=true but docs/runbooks/ is empty");
+            eprintln!("    Remediation: add runbook files to docs/runbooks/");
         }
     }
 

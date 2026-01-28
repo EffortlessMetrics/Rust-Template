@@ -739,13 +739,13 @@ enum Commands {
         /// PR number
         #[arg(long)]
         pr: u32,
-        /// Directory containing receipts (default: .runs/pr/{pr}/latest/)
+        /// Run directory (must contain 'receipts/' subdirectory). Default: .runs/pr/{pr}/latest/
         #[arg(long)]
         run_dir: Option<std::path::PathBuf>,
         /// Output file (default: stdout)
         #[arg(long, short)]
         output: Option<std::path::PathBuf>,
-        /// Description of what changed (optional)
+        /// Description of what changed (defaults to TODO placeholder)
         #[arg(long, short)]
         description: Option<String>,
     },
