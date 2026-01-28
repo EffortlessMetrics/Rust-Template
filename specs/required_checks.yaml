@@ -20,7 +20,7 @@ schema_version: "1.0"
 required_checks:
   - name: selftest
     workflow: tier1-selftest.yml
-    description: "Full governance validation (11 steps)"
+    description: "Full governance validation (12 steps)"
 
   - name: rust-lints
     workflow: ci-lints.yml

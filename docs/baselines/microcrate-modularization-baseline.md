@@ -1,3 +1,6 @@
+<!-- doclint:disable orphan-version -->
+<!-- Note: This is a historical baseline with dependency versions captured at measurement time -->
+
 # Microcrate Modularization - Baseline Measurements
 
 **Date:** 2026-01-26
@@ -72,7 +75,7 @@ This document captures baseline measurements for the Rust-Template workspace pri
 
 ### Workspace Dependencies
 
-From [`Cargo.toml`](../../Cargo.toml):
+From [`Cargo.toml`](../../Cargo.toml) (versions captured at baseline date):
 
 | Dependency | Version | Purpose |
 |------------|----------|---------|

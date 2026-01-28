@@ -163,7 +163,7 @@ The Platform API follows semantic versioning principles:
 
 ## Related Documentation
 
-- [Platform API Reference](../reference/platform-api-endpoints.md) - Complete endpoint reference
-- [Platform API Contract](../reference/platform_api_contract.md) - Contract specification
-- [OpenAPI Specification](../../specs/openapi/openapi.yaml) - Machine-readable API contract
-- [IDP Cell Contract](../IDP_CELL_CONTRACT.md) - IDP integration datasheet
+- [Platform API Reference](../../reference/platform-api-endpoints.md) - Complete endpoint reference
+- [Platform API Contract](../../reference/platform_api_contract.md) - Contract specification
+- [OpenAPI Specification](../../../specs/openapi/openapi.yaml) - Machine-readable API contract
+- [IDP Cell Contract](../../IDP_CELL_CONTRACT.md) - IDP integration datasheet

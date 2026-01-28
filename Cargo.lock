@@ -21,6 +21,7 @@ version = "0.1.0"
 dependencies = [
  "ac-kernel",
  "adapters-spec-fs",
+ "anyhow",
  "app-http",
  "axum",
  "business-core",
@@ -1581,6 +1582,7 @@ dependencies = [
  "serde",
  "serde_json",
  "serde_yaml_ng",
+ "tokio",
  "tracing",
 ]
 
@@ -1619,6 +1621,7 @@ dependencies = [
  "serde",
  "serde_json",
  "serde_yaml_ng",
+ "tokio",
  "tracing",
 ]
 

@@ -90,7 +90,7 @@ The platform uses a tiered validation approach based on the environment:
 ### Tier 1: Linux/macOS + Nix (Canonical)
 
 **Environment:** Ubuntu/macOS with Nix development shell
-**Status:** Full `cargo xtask selftest` runs (all 11 steps)
+**Status:** Full `cargo xtask selftest` runs (all 12 steps)
 **Runtime:** 10-20 minutes with warm cache
 **Use Case:** Required gate for merging to `main`
 
@@ -147,7 +147,7 @@ The platform uses a tiered validation approach based on the environment:
 
 A cell built on this template is considered **valid** when:
 
-1. **`tier1-selftest` passes on main** - The authoritative CI gate (11 steps)
+1. **`tier1-selftest` passes on main** - The authoritative CI gate (12 steps)
 2. **`idp-snapshot` returns valid JSON** - Machine-readable governance health
 3. **Kernel tag exists** - `vX.Y.Z-kernel` with `kernel_contract.vX.Y.Z.json`
 

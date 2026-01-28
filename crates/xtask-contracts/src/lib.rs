@@ -6,7 +6,7 @@
 //!
 //! ## Design
 //!
-//! In a Rust-as-Spec repo, certain numbers like "11-step selftest gate" and "61 kernel ACs"
+//! In a Rust-as-Spec repo, certain numbers like "12-step selftest gate" and "61 kernel ACs"
 //! are **governed facts** that appear in documentation. When the source changes (e.g., adding
 //! a new selftest step), all documentation references must be updated.
 //!

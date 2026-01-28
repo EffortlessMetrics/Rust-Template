@@ -738,10 +738,10 @@ test_antipattern_workflow_skill: name suggests workflow ✓
 ```
 test_file_exists: .claude/skills/my-skill/SKILL.md ✓
 test_file_wrong_path: .claude/skills/my-skill/skill.md ✗
-test_file_referenced_exists: SKILL.md → examples.md ✓
-test_file_referenced_missing: SKILL.md → examples.md (missing) ✗
-test_link_relative_valid: [examples](examples.md) ✓
-test_link_relative_invalid: [examples](examples.md) (file missing) ✗
+test_file_referenced_exists: SKILL.md → referenced-file.md ✓
+test_file_referenced_missing: SKILL.md → missing-file.md (missing) ✗
+test_link_relative_valid: relative link to existing file ✓
+test_link_relative_invalid: relative link to missing file ✗
 ```
 
 ---
@@ -750,5 +750,5 @@ test_link_relative_invalid: [examples](examples.md) (file missing) ✗
 
 - **Governance**: [SKILLS_GOVERNANCE.md](SKILLS_GOVERNANCE.md)
 - **Template**: [SKILLS_TEMPLATE.md](SKILLS_TEMPLATE.md)
-- **ADR**: [ADR-0020](adr/0020-claude-code-skills-governance.md)
+- **ADR**: [ADR-0020](./adr/0020-claude-code-skills-governance.md)
 - **Spec**: `specs/spec_ledger.yaml` (REQ-TPL-SKILLS-GOVERNANCE)

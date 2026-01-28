@@ -32,7 +32,7 @@ nix develop
 # Fast governance check
 cargo xtask check
 
-# Full governance gate (all 11 selftest steps)
+# Full governance gate (all 12 selftest steps)
 KERNEL_UNKNOWN_BUDGET=0 cargo xtask selftest
 
 # Documentation governance
@@ -52,7 +52,7 @@ Verify the following CI checks are green on `main`:
 | `Tier 2 (Windows native)` | `ci-template-selftest.yml` | **Yes** |
 
 **How to verify:**
-- Go to the [Actions tab](../../actions) on GitHub
+- Go to the Actions tab on GitHub
 - Check the most recent `main` branch run for each workflow
 - All must show green checkmarks
 
@@ -152,7 +152,7 @@ After pushing the tag, verify these workflows run and pass:
 | `ci-example-fork.yml` | `v*` tags | Full selftest (release gate) |
 
 **How to verify:**
-- Go to the [Actions tab](../../actions) on GitHub
+- Go to the Actions tab on GitHub
 - Filter by the new tag
 - All tag-triggered workflows should be green
 

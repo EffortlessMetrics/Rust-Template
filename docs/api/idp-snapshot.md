@@ -12,6 +12,9 @@ adrs: [ADR-0005]
 last_updated: 2025-12-27
 ---
 
+<!-- doclint:disable orphan-version -->
+<!-- Note: JSON examples contain version strings that are intentionally not tied to template version -->
+
 # Platform IDP Snapshot API
 
 The IDP Snapshot API provides a machine-readable contract for Internal Developer Platforms (IDPs) with governance health, AC coverage, and prioritized task hints for agents.
@@ -30,6 +33,7 @@ curl http://localhost:8080/platform/idp/snapshot
 
 #### Response
 
+<!-- doclint:disable orphan-version -->
 ```json
 {
   "timestamp": "2025-12-27T14:30:00Z",
@@ -80,6 +84,7 @@ curl http://localhost:8080/platform/idp/snapshot
   }
 }
 ```
+<!-- doclint:enable orphan-version -->
 
 #### Response Schema
 

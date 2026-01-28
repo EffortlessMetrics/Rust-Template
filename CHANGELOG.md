@@ -32,7 +32,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Crate dependency cleanup**
   - `gov-http-friction` and `gov-http-questions` now use shared types from `gov-http-types`
   - Reduced duplication of `FrictionEntry` and `Question` type definitions
+  - `xtask` now depends on `gov-model` instead of `business-core` for `TaskStatus`
   - Updated architecture documentation to reflect complete crate taxonomy
+
+- **Feature flag modernization**
+  - `adapters-db-sqlx`: Added explicit `default = []` feature section
+  - `telemetry`: Modernized `otlp` feature to use `dep:` syntax for optional dependencies
+
+- **Test infrastructure improvements**
+  - DB integration test now uses `WaitFor::message_on_stderr` instead of `sleep(3s)`
+  - Added missing `tokio` dependency to `gov-http-friction` and `gov-http-questions`
+  - Property-based tests (proptest) added to workspace dependencies
 
 ## [3.3.14] - 2025-12-29
 

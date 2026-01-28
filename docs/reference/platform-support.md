@@ -962,8 +962,8 @@ Are you on Linux/macOS?
 ### Further Reading
 
 - **Setup Guides:**
-  - [Setup Without Nix](../how-to/setup-without-nix.md) (deprecated, Tier 2)
-  - [Development Environment](../how-to/dev-environment.md) (general guidance)
+  - [Windows Development](../how-to/windows-development.md) (Tier 2 platform)
+  - [Nix Environment Issues](../how-to/nix-environment-issues.md) (troubleshooting)
 
 - **Troubleshooting:**
   - [MISSING_MANUAL.md](../MISSING_MANUAL.md) (operational realities)

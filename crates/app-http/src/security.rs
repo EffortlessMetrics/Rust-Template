@@ -20,8 +20,8 @@ pub struct PlatformAuthConfig {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Claims {
     pub sub: String,
-    pub exp: usize,
-    pub iat: usize,
+    pub exp: u64,
+    pub iat: u64,
     pub iss: String,
 }
 
@@ -193,7 +193,7 @@ fn validate_jwt_token(token: &str, secret: &str) -> bool {
 
             // Validate issued at time is not too far in the future (beyond 5 minutes)
             let now = jsonwebtoken::get_current_timestamp();
-            if claims.iat as u64 > now + 300 {
+            if claims.iat > now + 300 {
                 tracing::debug!("JWT validation failed: token issued too far in the future");
                 return false;
             }
@@ -218,8 +218,8 @@ pub fn create_jwt_token(
 
     let claims = Claims {
         sub: subject.to_string(),
-        exp: (now + expires_in_seconds) as usize,
-        iat: now as usize,
+        exp: now + expires_in_seconds,
+        iat: now,
         iss: issuer.to_string(),
     };
 
@@ -349,8 +349,8 @@ mod tests {
 
         let claims = Claims {
             sub: "user123".to_string(),
-            exp: (now - 3600) as usize, // Expired 1 hour ago
-            iat: (now - 7200) as usize, // Issued 2 hours ago
+            exp: now - 3600, // Expired 1 hour ago
+            iat: now - 7200, // Issued 2 hours ago
             iss: "rust-template".to_string(),
         };
 

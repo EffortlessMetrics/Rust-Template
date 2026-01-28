@@ -15,7 +15,7 @@ use axum::{
 };
 use gov_http_core::{PlatformError, PlatformState};
 use serde::Serialize;
-use std::fs;
+use std::path::PathBuf;
 
 // Re-export types from gov-http-types for backwards compatibility
 pub use gov_http_types::{FrictionContext, FrictionEntry, RelatedItems, Resolution};
@@ -40,7 +40,10 @@ where
         .route("/friction/{id}", get(get_friction_by_id::<S>))
 }
 
-/// Load all friction entries from friction/ directory
+/// Load all friction entries from friction/ directory.
+///
+/// This function performs blocking filesystem I/O and should be called from
+/// within `spawn_blocking` to avoid starving the Tokio async runtime.
 fn load_all_friction_entries(root: &std::path::Path) -> Result<Vec<FrictionEntry>, PlatformError> {
     let friction_dir = root.join("friction");
 
@@ -50,7 +53,7 @@ fn load_all_friction_entries(root: &std::path::Path) -> Result<Vec<FrictionEntry
 
     let mut entries = Vec::new();
 
-    let dir_entries = fs::read_dir(&friction_dir).map_err(|e| {
+    let dir_entries = std::fs::read_dir(&friction_dir).map_err(|e| {
         PlatformError::internal(format!("Failed to read friction directory: {}", e))
     })?;
 
@@ -87,9 +90,12 @@ fn load_all_friction_entries(root: &std::path::Path) -> Result<Vec<FrictionEntry
     Ok(entries)
 }
 
-/// Load a single friction entry from a YAML file
+/// Load a single friction entry from a YAML file.
+///
+/// This function performs blocking filesystem I/O and should be called from
+/// within `spawn_blocking` to avoid starving the Tokio async runtime.
 fn load_friction_entry(path: &std::path::Path) -> Result<FrictionEntry, PlatformError> {
-    let content = fs::read_to_string(path).map_err(|e| {
+    let content = std::fs::read_to_string(path).map_err(|e| {
         PlatformError::internal(format!("Failed to read friction file {}: {}", path.display(), e))
     })?;
 
@@ -107,24 +113,27 @@ async fn get_all_friction<S>(
 where
     S: PlatformState,
 {
-    let root = state.context().root();
-    let entries = load_all_friction_entries(root)?;
+    let root = state.context().root().to_path_buf();
+
+    // Offload blocking filesystem I/O to spawn_blocking to avoid starving
+    // the Tokio async runtime under concurrent load.
+    let entries = tokio::task::spawn_blocking(move || load_all_friction_entries(&root))
+        .await
+        .map_err(|e| PlatformError::internal(format!("spawn_blocking failed: {}", e)))??;
+
     let total = entries.len();
 
     Ok(Json(FrictionListResponse { entries, total }))
 }
 
-/// GET /friction/{id} - Get a specific friction entry by ID
-async fn get_friction_by_id<S>(
-    State(state): State<S>,
-    Path(id): Path<String>,
-) -> Result<Json<FrictionEntry>, PlatformError>
-where
-    S: PlatformState,
-{
-    let root = state.context().root();
-    let friction_dir = root.join("friction");
-
+/// Load a friction entry by ID.
+///
+/// This function performs blocking filesystem I/O and should be called from
+/// within `spawn_blocking` to avoid starving the Tokio async runtime.
+fn load_friction_by_id(
+    friction_dir: &std::path::Path,
+    id: &str,
+) -> Result<FrictionEntry, PlatformError> {
     // Construct the expected file path
     let file_path = friction_dir.join(format!("{}.yaml", id));
 
@@ -143,6 +152,25 @@ where
             id, entry.id
         )));
     }
+
+    Ok(entry)
+}
+
+/// GET /friction/{id} - Get a specific friction entry by ID
+async fn get_friction_by_id<S>(
+    State(state): State<S>,
+    Path(id): Path<String>,
+) -> Result<Json<FrictionEntry>, PlatformError>
+where
+    S: PlatformState,
+{
+    let friction_dir: PathBuf = state.context().root().join("friction");
+
+    // Offload blocking filesystem I/O to spawn_blocking to avoid starving
+    // the Tokio async runtime under concurrent load.
+    let entry = tokio::task::spawn_blocking(move || load_friction_by_id(&friction_dir, &id))
+        .await
+        .map_err(|e| PlatformError::internal(format!("spawn_blocking failed: {}", e)))??;
 
     Ok(Json(entry))
 }

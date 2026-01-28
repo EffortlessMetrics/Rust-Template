@@ -280,7 +280,7 @@ You've completed the first-hour tour! Here's where to go deeper:
 
 ### Explore Available Workflows
 
-- **[.claude/skills/](.claude/skills/)** – Governed workflow recipes:
+- **`.claude/skills/`** – Governed workflow recipes:
   - `bootstrap-dev-env` – One-command environment setup
   - `governed-feature-dev` – AC-first feature development
   - `governed-maintenance` – Fixing drift and health checks

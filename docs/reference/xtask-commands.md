@@ -30,7 +30,7 @@ Complete reference for all `xtask` CLI commands.
 - [skills-fmt](#xtask-skills-fmt) - Normalize SKILL.md files
 - [skills-lint](#xtask-skills-lint) - Validate Skills definitions
 - [quickstart](#xtask-quickstart) - First-run validation
-- [selftest](#xtask-selftest) - Comprehensive 11-step validation suite
+- [selftest](#xtask-selftest) - Comprehensive 12-step validation suite
 - [idp-check](#xtask-idp-check) - Validate IDP/portal integration surface
 - [contracts-check](#xtask-contracts-check) - Validate governed facts match docs
 - [contracts-fmt](#xtask-contracts-fmt) - Sync governed facts to docs
@@ -2003,7 +2003,7 @@ XTASK_STRICT_AC_COVERAGE=1 cargo run -p xtask -- selftest
 
 ### What It Does
 
-Comprehensive validation in **11 steps**:
+Comprehensive validation in **12 steps**:
 
 1. **Core checks:** format, clippy, tests
 2. **BDD tests:** acceptance scenarios + JUnit XML
@@ -2244,7 +2244,7 @@ Contract drift detected:
 README.md:42
   Contract: selftest_step_count
   - An 10-step selftest gate
-  + An 11-step selftest gate
+  + An 12-step selftest gate
 
 Error: contracts-check found 1 edit(s) across 1 file(s). Run `cargo xtask contracts-fmt` to fix.
 ```

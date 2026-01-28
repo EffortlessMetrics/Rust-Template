@@ -174,7 +174,7 @@ The `tier1-selftest.yml` workflow is the **only** workflow that enforces kernel 
 
 - Sets `XTASK_STRICT_AC_COVERAGE=1` on main branch
 - Sets `XTASK_STRICT_PRECOMMIT=1` for strict mode
-- Runs all 11 selftest steps (fmt, clippy, tests, BDD, policies, graph invariants)
+- Runs all 12 selftest steps (fmt, clippy, tests, BDD, policies, graph invariants)
 
 Other workflows (`selftest.yml`, `ci-template-selftest.yml`) are convenience checks and do not enforce the full kernel contract.
 

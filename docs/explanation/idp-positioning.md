@@ -700,9 +700,9 @@ spec:
 
 | Service | Compliance Req | AC | Status | Evidence |
 |---------|---------------|-----|--------|----------|
-| rust-template | SOC2: Access Control | AC-PLT-006 | ✅ PASS | [BDD scenario](specs/features/platform_security.feature) |
-| rust-template | SOC2: Audit Logging | AC-PLT-007 | ✅ PASS | [BDD scenario](specs/features/platform_security.feature) |
-| rust-template | SOC2: Data Retention | AC-PLT-008 | ✅ PASS | [BDD scenario](specs/features/platform_security.feature) |
+| rust-template | SOC2: Access Control | AC-PLT-006 | ✅ PASS | [BDD scenario](../../specs/features/platform_security.feature) |
+| rust-template | SOC2: Audit Logging | AC-PLT-007 | ✅ PASS | [BDD scenario](../../specs/features/platform_security.feature) |
+| rust-template | SOC2: Data Retention | AC-PLT-008 | ✅ PASS | [BDD scenario](../../specs/features/platform_security.feature) |
 
 ---
 
@@ -728,9 +728,9 @@ spec:
 - [ ] Run `cargo xtask test` (unit tests)
 
 ## Key Documentation
-- [Agent Guide](docs/AGENT_GUIDE.md)
-- [Roadmap](docs/ROADMAP.md)
-- [Platform Kernel](docs/runbooks/platform-kernel.md)
+- [Agent Guide](../AGENT_GUIDE.md)
+- [Roadmap](../ROADMAP.md)
+- [Platform Kernel](../runbooks/platform-kernel.md)
 
 ## Get Help
 - Team: plat-governance

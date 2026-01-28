@@ -18,7 +18,7 @@ last_updated: 2025-12-29
 **Kernel Baseline:** v3.3.9-kernel
 
 > This snapshot describes the kernel at tag **v3.3.9-kernel**.
-> For machine-readable details, see [`release_evidence/kernel_contract.v3.3.9.json`](../release_evidence/kernel_contract.v3.3.9.json).
+> For machine-readable details, see [`release_evidence/kernel_contract.v3.3.14.json`](../release_evidence/kernel_contract.v3.3.14.json).
 > For AC-level status, see [`docs/feature_status.md`](./feature_status.md).
 > For adoption instructions, see [`docs/how-to/adopt-kernel.md`](./how-to/adopt-kernel.md).
 
@@ -430,7 +430,7 @@ Any change that:
 4. Cut a new `v3.3.X-kernel` tag
 
 This keeps kernel changes traceable through ADRs and explicit version bumps.
-See [ADR-0005](./adr/0005-version-alignment.md) for the rationale behind governed version management.
+See [ADR-0005](./adr/0005-xtask-selftest-single-gate.md) for the rationale behind governed version management.
 
 <!-- doclint:enable orphan-version -->
 

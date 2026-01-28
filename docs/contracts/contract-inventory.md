@@ -1,3 +1,6 @@
+<!-- doclint:disable orphan-version -->
+<!-- Note: Contains references to historical kernel versions and contract baselines -->
+
 # Contract Inventory
 
 This document catalogs the stable interfaces that must remain versioned and governed across the template. Breaking changes to these interfaces require explicit approval via ADR and version bump.
@@ -152,13 +155,15 @@ This document catalogs the stable interfaces that must remain versioned and gove
 - Update `specs/spec_ledger.yaml` metadata
 - Update `specs/version_manifest.yaml`
 
+<!-- doclint:disable orphan-version -->
 **Closure Statement**:
 > "A fork pinned to `v3.3.9-kernel` can trust the following contracts to remain stable:
-> - Selftest gate structure (11 steps)
+> - Selftest gate structure (12 steps)
 > - Kernel AC count and classification rules
 > - Platform endpoint schema
 > - DevEx flow definitions
 > - Receipt schemas"
+<!-- doclint:enable orphan-version -->
 
 **Escalation Path**:
 1. Create ADR documenting the breaking change
@@ -348,7 +353,7 @@ When retiring contract surfaces:
 
 - [ADR-0001: Hexagonal Architecture](../adr/0001-hexagonal-architecture.md)
 - [ADR-0003: Spec and BDD as Source of Truth](../adr/0003-spec-and-bdd-as-source-of-truth.md)
-- [ADR-0005: Selftest as Single Gate](../adr/0005-selftest-as-single-gate.md)
+- [ADR-0005: Selftest as Single Gate](../adr/0005-xtask-selftest-single-gate.md)
 - [specs/contracts_manifest.yaml](../../specs/contracts_manifest.yaml)
 - [specs/spec_ledger.yaml](../../specs/spec_ledger.yaml)
 - [specs/devex_flows.yaml](../../specs/devex_flows.yaml)

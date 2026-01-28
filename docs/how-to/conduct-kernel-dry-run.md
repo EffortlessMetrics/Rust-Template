@@ -103,7 +103,7 @@ cargo xtask selftest
 **Record in receipt:**
 - Total time for bootstrap
 - Any warnings or issues
-- Selftest gate results (all 11 steps)
+- Selftest gate results (all 12 steps)
 
 ---
 
@@ -214,8 +214,8 @@ The kernel is **fork-ready** when:
 
 | Criterion | Threshold |
 |-----------|-----------|
-| Selftest green on checkout | 11/11 steps pass |
-| Selftest green after service-init | 11/11 steps pass |
+| Selftest green on checkout | 12/12 steps pass |
+| Selftest green after service-init | 12/12 steps pass |
 | Manual edits required | ≤ 3 files |
 | Platform APIs working | All return valid JSON |
 | UI reflects identity | New service name shown |

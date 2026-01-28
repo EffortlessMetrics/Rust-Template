@@ -33,7 +33,7 @@ The template enforces these opinions through contracts in `specs/spec_ledger.yam
    - **Why:** Eliminates "works on my machine" by making the environment reproducible
 
 2. **CI Gate: `cargo xtask selftest` Required**
-   - All PRs must pass an 11-step governance validation
+   - All PRs must pass an 12-step governance validation
    - Includes: code quality, BDD scenarios, policy tests, graph integrity
    - Selftest passing means "governed and ready to review"
    - **Why:** Prevents drift between specs, tests, docs, and code
@@ -169,7 +169,7 @@ cargo xtask test-ac AC-PLT-001  # Test specific AC
 **Before PR** (full validation):
 
 ```bash
-cargo xtask selftest        # 11-step governance validation (10-20 min)
+cargo xtask selftest        # 12-step governance validation (10-20 min)
 ```
 
 **Validation ladder:** `check` → `test-changed` → `test-ac` → `selftest`
@@ -292,7 +292,7 @@ cargo xtask help-flows                # Available flows
 
 **Spec Ledger:** `specs/spec_ledger.yaml` - Stories → Requirements → ACs → Tests → Docs. Single source of truth.
 
-**Selftest:** `cargo xtask selftest` - 11-step validation (code quality + BDD + policies + graph integrity). Must be green before merge.
+**Selftest:** `cargo xtask selftest` - 12-step validation (code quality + BDD + policies + graph integrity). Must be green before merge.
 
 **Platform APIs:** `http://localhost:8080/platform/*` - `/status` (health), `/graph` (REQ/AC/Doc graph), `/tasks` (work items), `/agent/hints` (prioritized suggestions).
 

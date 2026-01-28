@@ -11,7 +11,7 @@ use gov_http_core::PlatformState;
 use gov_model::TaskStatus;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::fs;
+use std::path::PathBuf;
 
 /// Health check response.
 #[derive(Serialize)]
@@ -58,10 +58,16 @@ pub async fn get_openapi<S>(State(state): State<S>) -> Result<impl IntoResponse,
 where
     S: PlatformState,
 {
-    let ctx = state.context();
-    let openapi_path = ctx.specs_dir().join("openapi/openapi.yaml");
-    let content = fs::read_to_string(&openapi_path)
-        .map_err(|e| PlatformError::spec_load("OpenAPI spec", e))?;
+    let openapi_path: PathBuf = state.context().specs_dir().join("openapi/openapi.yaml");
+
+    // Offload blocking filesystem I/O to spawn_blocking to avoid starving
+    // the Tokio async runtime under concurrent load.
+    let content = tokio::task::spawn_blocking(move || {
+        std::fs::read_to_string(&openapi_path)
+            .map_err(|e| PlatformError::spec_load("OpenAPI spec", e))
+    })
+    .await
+    .map_err(|e| PlatformError::internal(format!("spawn_blocking failed: {}", e)))??;
 
     Ok(([(header::CONTENT_TYPE, "application/yaml")], content))
 }
@@ -378,6 +384,18 @@ struct CucumberStepResult {
     status: String,
 }
 
+/// Load BDD report from JSON file.
+///
+/// This function performs blocking filesystem I/O and should be called from
+/// within `spawn_blocking` to avoid starving the Tokio async runtime.
+fn load_bdd_report(bdd_json_path: &std::path::Path) -> Option<CucumberReport> {
+    if !bdd_json_path.exists() {
+        return None;
+    }
+    let content = std::fs::read_to_string(bdd_json_path).ok()?;
+    serde_json::from_str(&content).ok()
+}
+
 /// Get AC coverage from BDD test results.
 ///
 /// Returns a summary and details of acceptance criteria coverage
@@ -387,7 +405,7 @@ where
     S: PlatformState,
 {
     let ctx = state.context();
-    let root = ctx.root();
+    let root = ctx.root().to_path_buf();
 
     // Load spec ledger to get all ACs
     let specs = match spec_runtime::load_all_specs_with_context(ctx) {
@@ -412,14 +430,16 @@ where
     }
 
     // Try to parse BDD results from JSON report
+    // Offload blocking filesystem I/O to spawn_blocking to avoid starving
+    // the Tokio async runtime under concurrent load.
     let bdd_json_path = root.join("target/ac_report.json");
+    let report =
+        tokio::task::spawn_blocking(move || load_bdd_report(&bdd_json_path)).await.ok().flatten();
+
     let mut ac_status: HashMap<String, String> = HashMap::new();
     let mut ac_scenarios: HashMap<String, Vec<String>> = HashMap::new();
 
-    if bdd_json_path.exists()
-        && let Ok(content) = std::fs::read_to_string(&bdd_json_path)
-        && let Ok(report) = serde_json::from_str::<CucumberReport>(&content)
-    {
+    if let Some(report) = report {
         for feature in report.0 {
             for element in feature.elements {
                 // Only process scenarios

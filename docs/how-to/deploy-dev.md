@@ -253,6 +253,5 @@ kubectl logs -l app=app-http
 
 ## Related Documentation
 
-- [Kubernetes Policies](../../policy/k8s.rego) - OPA policies enforced on deployments
-- [Template Overview](../../TEMPLATE_OVERVIEW.md) - Overall project structure
-- [Implementation Plan](../../IMPLEMENTATION_PLAN.md) - Roadmap and features
+- [Template Overview](../../README.md) - Overall project structure
+- [Roadmap](../ROADMAP.md) - Strategic direction and features

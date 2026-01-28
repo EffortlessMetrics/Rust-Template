@@ -353,7 +353,7 @@ cargo xtask selftest
 ## Success Criteria
 
 Governance debug complete when:
-- ✅ Selftest passes (11/11 steps)
+- ✅ Selftest passes (12/12 steps)
 - ✅ Root cause documented
 - ✅ Fix is minimal and targeted
 - ✅ No new policy violations introduced

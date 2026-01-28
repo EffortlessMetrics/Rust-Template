@@ -392,8 +392,8 @@ kubectl logs -l app=example-api --tail=50
 
 ## References
 
-- [Service README](../README.md)
-- [OpenAPI Spec](../specs/openapi/openapi.yaml)
-- [ADRs](../docs/adr/)
-- [Spec Ledger](../specs/spec_ledger.yaml)
-- [Monitoring Dashboard](https://grafana.example.com/d/example-api) (if applicable)
+- [Service README](../../README.md)
+- [OpenAPI Spec](../../specs/openapi/openapi.yaml)
+- [ADRs](../adr/)
+- [Spec Ledger](../../specs/spec_ledger.yaml)
+- Monitoring Dashboard (configure for your environment)

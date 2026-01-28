@@ -508,5 +508,5 @@ Potential additions (not yet implemented):
 
 - [AGENT_GUIDE.md](./AGENT_GUIDE.md) - Full agent workflow
 - [MISSING_MANUAL.md](./MISSING_MANUAL.md) - Platform support tiers
-- [Platform support docs](./explanation/platform-support.md)
+- [Platform support docs](./reference/platform-support.md)
 - [BDD workflow](./how-to/write-bdd-tests.md)

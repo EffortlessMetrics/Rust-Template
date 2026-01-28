@@ -194,7 +194,7 @@ cargo xtask docs-check
 cargo xtask selftest
 ```
 
-**Expected:** All 11 steps pass
+**Expected:** All 12 steps pass
 
 ### 6.3 Check AC coverage
 

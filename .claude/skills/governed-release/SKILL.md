@@ -29,7 +29,7 @@ Use this Skill when:
 ## Prerequisites
 
 - All features are complete
-- `cargo xtask selftest` passes (11/11 steps)
+- `cargo xtask selftest` passes (12/12 steps)
 - CHANGELOG.md is up to date
 - No outstanding policy violations
 - Working on clean main branch
@@ -129,7 +129,7 @@ jq '.packages | length' sbom.spdx.json
 User, I've prepared release v2.5.0:
 - Version bumped in all Cargo.toml files
 - CHANGELOG.md updated
-- Selftest passes (11/11 steps)
+- Selftest passes (12/12 steps)
 - Audit clean
 - SBOM generated
 

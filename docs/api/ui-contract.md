@@ -12,6 +12,9 @@ adrs: [ADR-0005]
 last_updated: 2025-12-27
 ---
 
+<!-- doclint:disable orphan-version -->
+<!-- Note: JSON examples contain version strings that are intentionally not tied to template version -->
+
 # Platform UI Contract API
 
 The UI Contract API provides the governed UI surface definitions with screens, regions, and stable `data-uiid` identifiers for tests and automation.
@@ -30,6 +33,7 @@ curl http://localhost:8080/platform/ui/contract
 
 #### Response
 
+<!-- doclint:disable orphan-version -->
 ```json
 {
   "schema_version": "1.0",
@@ -158,6 +162,7 @@ curl http://localhost:8080/platform/ui/contract
   ]
 }
 ```
+<!-- doclint:enable orphan-version -->
 
 #### Response Schema
 

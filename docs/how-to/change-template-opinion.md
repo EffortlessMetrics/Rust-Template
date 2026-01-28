@@ -807,5 +807,5 @@ Read `docs/adr/ADR-0002.md` to understand the original reasoning. Your fork may 
 - [docs/how-to/new-service-from-template.md](./new-service-from-template.md) - Forking basics
 - [docs/how-to/pre-fork-checklist.md](./pre-fork-checklist.md) - Before forking
 - [docs/how-to/report-fork-feedback.md](./report-fork-feedback.md) - Sending feedback upstream
-- [TEMPLATE-CONTRACTS.md](../../TEMPLATE-CONTRACTS.md) - What the kernel guarantees
+- [TEMPLATE-CONTRACTS.md](../explanation/TEMPLATE-CONTRACTS.md) - What the kernel guarantees
 - [docs/explanation/governance-model.md](../explanation/governance-model.md) - How governance works

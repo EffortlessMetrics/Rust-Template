@@ -12,6 +12,9 @@ adrs: [ADR-0005]
 last_updated: 2025-12-27
 ---
 
+<!-- doclint:disable orphan-version -->
+<!-- Note: JSON examples contain version strings that are intentionally not tied to template version -->
+
 # Platform Forks API
 
 The Forks API provides endpoints for tracking template forks and customizations. Forks represent known deployments/customizations of the template, tracking their kernel versions, status, and relationships.
@@ -30,6 +33,7 @@ curl http://localhost:8080/platform/forks
 
 #### Response
 
+<!-- doclint:disable orphan-version -->
 ```json
 {
   "forks": [
@@ -44,6 +48,7 @@ curl http://localhost:8080/platform/forks
   "total": 1
 }
 ```
+<!-- doclint:enable orphan-version -->
 
 #### Response Schema
 
@@ -84,6 +89,7 @@ curl http://localhost:8080/platform/forks/Example%20Service%20Fork
 
 #### Response
 
+<!-- doclint:disable orphan-version -->
 ```json
 {
   "id": "FORK-EXAMPLE-001",
@@ -114,6 +120,7 @@ curl http://localhost:8080/platform/forks/Example%20Service%20Fork
   }
 }
 ```
+<!-- doclint:enable orphan-version -->
 
 #### Response Schema
 

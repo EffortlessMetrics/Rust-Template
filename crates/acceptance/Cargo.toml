@@ -3,6 +3,7 @@ ac-kernel = {path = "../ac-kernel"}
 adapters-spec-fs = {path = "../adapters-spec-fs"}
 # Internal crates
 app-http = {path = "../app-http"}
+anyhow.workspace = true
 business-core = {path = "../business-core"}
 spec-runtime = {path = "../spec-runtime"}
 telemetry = {path = "../telemetry"}

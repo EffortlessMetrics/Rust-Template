@@ -92,10 +92,31 @@ pub fn run() -> Result<()> {
     }
     println!();
 
-    // Step 5: Test helper commands (when available)
+    // Step 5: Test helper commands
     println!("{}", "[5/5] Testing helper commands...".blue());
-    // For now, this is a placeholder
-    println!("  {} Core commands validated", "✓".green());
+
+    let commands_to_test = ["version", "help-flows"];
+
+    for cmd in commands_to_test {
+        let output = std::process::Command::new("cargo")
+            .args(["run", "-q", "-p", "xtask", "--", cmd])
+            .output();
+
+        match output {
+            Ok(out) if out.status.success() => {
+                println!("  {} {} command validated", "✓".green(), cmd);
+            }
+            Ok(out) => {
+                let stderr = String::from_utf8_lossy(&out.stderr);
+                eprintln!("  {} {} command failed: {}", "✗".red(), cmd, stderr.trim());
+                failed += 1;
+            }
+            Err(e) => {
+                eprintln!("  {} Failed to execute {}: {}", "✗".red(), cmd, e);
+                failed += 1;
+            }
+        }
+    }
     println!();
 
     // Summary

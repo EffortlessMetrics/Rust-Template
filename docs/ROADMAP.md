@@ -111,7 +111,7 @@ This closure is enforced:
 
 - Git tag: `v3.3.9-kernel` marks the frozen baseline
 - `ROADMAP.md` updated to reflect closure
-- Selftest gates expanded to 11 steps
+- Selftest gates expanded to 12 steps
 
 To fork from v3.3.9, start with `docs/how-to/FIRST_FORK.md`.
 
@@ -122,7 +122,7 @@ To fork from v3.3.9, start with `docs/how-to/FIRST_FORK.md`.
 The template is at v3.3.14, building on the frozen v3.3.9-kernel baseline.
 
 - **Kernel ACs** (`must_have_ac: true`): All passing
-- **Selftest**: Green (11/11 gates)
+- **Selftest**: Green (12/12 gates)
 - **Non-kernel ACs**: Soft gates, may be UNKNOWN depending on test capture
 
 **Template Version (v3.3.14):**
@@ -145,7 +145,7 @@ The v3.3.9-kernel tag marks the stable, frozen baseline that includes:
 | **Kernel ACs** | All passing (`must_have_ac: true`) — see `feature_status.md` for current count |
 | **Template ACs** | Soft gates, not enforced — see `feature_status.md` |
 | **Meta/CI-only ACs** | CI tests, harness, example tags — see `feature_status.md` |
-| **Selftest Gates** | 11/11 passing |
+| **Selftest Gates** | 12/12 passing |
 | **Policy Tests** | All passing — run `cargo xtask selftest` for current count |
 | **BDD Scenarios** | See `specs/features/` — count tracked in `feature_status.md` |
 
@@ -197,7 +197,7 @@ The v3.3.9-kernel tag marks the stable, frozen baseline that includes:
 ```bash
 nix develop
 cargo xtask doctor         # Environment validated
-cargo xtask selftest       # 11/11 gates pass
+cargo xtask selftest       # 12/12 gates pass
 cargo xtask ac-status      # All kernel ACs PASS
 cargo run -p app-http      # Listening on :8080
 ```
@@ -347,7 +347,7 @@ Only a few items remain - all now have documentation or are external dependencie
 | ---------------------------- | --------------------------------------------- | ------------------- |
 | **Docs version alignment** | All docs updated to v3.3.13 references | ✅ Merged (PR #40) |
 | **Security configuration doc** | Auth modes, CORS, JWT, headers, fail-closed | ✅ Merged (PR #38) |
-| **Selftest green** | 11/11 gates passing | ✅ Verified |
+| **Selftest green** | 12/12 gates passing | ✅ Verified |
 
 #### Already Complete (From v3.3.12)
 

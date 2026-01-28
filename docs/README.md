@@ -336,11 +336,9 @@ These documents capture implementation decisions, trade-offs, and rationale for 
 - Metrics integration guidance
 - Testing and debugging patterns
 
-📊 **[Implementation Summary 2025-11-15](implementation-summary-2025-11-15.md)**
-- Complete changelog of v1.0.0 improvements
+📊 **[CHANGELOG](../CHANGELOG.md)**
+- Complete changelog of version improvements
 - Technical decisions and validation results
-- Code statistics and test coverage
-- Future roadmap
 
 📋 **[Policy Organization](../policy/README.md)** (in policy/ directory)
 - Policy structure and testing guide
