@@ -1316,3 +1316,13 @@ docs:
     requirements: [REQ-PLT-DEVEX-CONTRACT]
     acs: []
     adrs: []
+
+  # Handover Documentation
+  - id: HANDOVER-TPL-PLATFORM-CELL-001
+    file: docs/handover/HANDOVER_MICROCRATE_REFACTOR.md
+    title: "Rust-as-Spec IDP Platform Cell - Handover"
+    doc_type: guide
+    stories: [US-TPL-PLT-001]
+    requirements: [REQ-PLT-ONBOARDING, REQ-PLT-DEVEX-CONTRACT, REQ-PLT-DOCS-CONSISTENCY]
+    acs: []
+    adrs: [ADR-0030]

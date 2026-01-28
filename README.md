@@ -32,7 +32,7 @@ A **governed Rust template** with:
 - **A running platform app** — HTTP service with `/platform/*` introspection APIs
 - **A heavy `xtask` CLI** — commands for every workflow, from onboarding to release
 - **Specs as source of truth** — `spec_ledger.yaml`, BDD features, and policies all describe the same behavior
-- **An 11-step selftest gate** — one command validates everything: `cargo xtask selftest`
+- **An 12-step selftest gate** — one command validates everything: `cargo xtask selftest`
 - **LLM/agent-first design** — bundles, Skills, Agents, and `/platform/agent/hints` for autonomous workflows
 
 **Architecture at a glance:**
