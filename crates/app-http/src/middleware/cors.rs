@@ -267,10 +267,10 @@ pub async fn cors_middleware(
         request.headers().get(header::ORIGIN).and_then(|v| v.to_str().ok()).map(|s| s.to_string());
 
     let method = request.method().clone();
-    let request_headers = request.headers().keys().map(|h| h.as_str()).collect::<Vec<_>>();
 
     // Handle preflight requests
     if method == Method::OPTIONS {
+        let request_headers = request.headers().keys().map(|h| h.as_str()).collect::<Vec<_>>();
         return handle_preflight(&state.cors_config, origin, &request_headers);
     }
 

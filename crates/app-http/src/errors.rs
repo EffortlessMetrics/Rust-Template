@@ -28,7 +28,7 @@
 //! // Error with code and context
 //! return Err(AppError::validation_error(
 //!     ErrorCode::InvalidFormat,
-//!     "Task ID must match pattern TASK-\\d+"
+//!     "Task ID must match pattern TASK-\d+"
 //! ).with_context("task_id", payload.task_id));
 //!
 //! // Error with AC/Feature tracking
@@ -220,6 +220,14 @@ impl std::fmt::Display for ErrorCode {
     }
 }
 
+#[derive(Debug, Default)]
+struct ErrorDetails {
+    context: HashMap<String, serde_json::Value>,
+    ac_id: Option<String>,
+    feature_id: Option<String>,
+    request_id: Option<String>,
+}
+
 /// Application error with full observability support
 ///
 /// This error type includes:
@@ -237,29 +245,14 @@ pub struct AppError {
     code: ErrorCode,
     /// User-facing error message (safe to expose)
     message: String,
-    /// Internal context for debugging (logged but not exposed to clients)
-    context: HashMap<String, serde_json::Value>,
-    /// AC (Acceptance Criteria) ID for tracking features
-    ac_id: Option<String>,
-    /// Feature ID for tracking which feature this relates to
-    feature_id: Option<String>,
-    /// Request ID for correlation (AC-TPL-004)
-    /// If None, a new UUID will be generated when converting to response
-    request_id: Option<String>,
+    /// Details (boxed to reduce stack size)
+    details: Box<ErrorDetails>,
 }
 
 impl AppError {
     /// Create a new error with status, code, and message
     pub fn new(status: StatusCode, code: ErrorCode, message: impl Into<String>) -> Self {
-        Self {
-            status,
-            code,
-            message: message.into(),
-            context: HashMap::new(),
-            ac_id: None,
-            feature_id: None,
-            request_id: None,
-        }
+        Self { status, code, message: message.into(), details: Box::default() }
     }
 
     /// Create a bad request error (400)
@@ -292,7 +285,7 @@ impl AppError {
     /// Context is logged but not exposed to clients
     pub fn with_context(mut self, key: impl Into<String>, value: impl Serialize) -> Self {
         if let Ok(json_value) = serde_json::to_value(value) {
-            self.context.insert(key.into(), json_value);
+            self.details.context.insert(key.into(), json_value);
         }
         self
     }
@@ -301,7 +294,7 @@ impl AppError {
     ///
     /// Used to track which acceptance criteria this error relates to
     pub fn with_ac_id(mut self, ac_id: impl Into<String>) -> Self {
-        self.ac_id = Some(ac_id.into());
+        self.details.ac_id = Some(ac_id.into());
         self
     }
 
@@ -309,7 +302,7 @@ impl AppError {
     ///
     /// Used to track which feature this error relates to
     pub fn with_feature_id(mut self, feature_id: impl Into<String>) -> Self {
-        self.feature_id = Some(feature_id.into());
+        self.details.feature_id = Some(feature_id.into());
         self
     }
 
@@ -318,7 +311,7 @@ impl AppError {
     /// Used for distributed tracing and correlation.
     /// If not set, a UUID will be generated automatically.
     pub fn with_request_id(mut self, request_id: impl Into<String>) -> Self {
-        self.request_id = Some(request_id.into());
+        self.details.request_id = Some(request_id.into());
         self
     }
 
@@ -362,7 +355,7 @@ impl AppError {
         let is_server_error = self.status.is_server_error();
 
         // Record error in global tracker for /platform/status
-        record_error(&self.code, self.status, &self.message, self.request_id.as_deref());
+        record_error(&self.code, self.status, &self.message, self.details.request_id.as_deref());
 
         // Create structured log event
         if is_server_error {
@@ -371,9 +364,9 @@ impl AppError {
                 error_code = %self.code,
                 status_code = %self.status.as_u16(),
                 message = %self.message,
-                context = ?self.context,
-                ac_id = ?self.ac_id,
-                feature_id = ?self.feature_id,
+                context = ?self.details.context,
+                ac_id = ?self.details.ac_id,
+                feature_id = ?self.details.feature_id,
                 "Internal server error occurred"
             );
         } else {
@@ -382,9 +375,9 @@ impl AppError {
                 error_code = %self.code,
                 status_code = %self.status.as_u16(),
                 message = %self.message,
-                context = ?self.context,
-                ac_id = ?self.ac_id,
-                feature_id = ?self.feature_id,
+                context = ?self.details.context,
+                ac_id = ?self.details.ac_id,
+                feature_id = ?self.details.feature_id,
                 "Client error occurred"
             );
         }
@@ -420,15 +413,15 @@ impl IntoResponse for AppError {
 
         // Get or generate request ID (AC-TPL-004)
         let request_id =
-            self.request_id.clone().unwrap_or_else(|| RequestId::generate().to_string());
+            self.details.request_id.clone().unwrap_or_else(|| RequestId::generate().to_string());
 
         // Create client-safe response matching ErrorResponse schema (AC-TPL-003)
         let body = Json(ErrorResponse {
             error: self.code.to_string(),
             message: self.message.clone(),
             request_id: request_id.clone(),
-            ac_id: self.ac_id.clone(),
-            feature_id: self.feature_id.clone(),
+            ac_id: self.details.ac_id.clone(),
+            feature_id: self.details.feature_id.clone(),
         });
 
         // Create response with status code
@@ -513,8 +506,8 @@ mod tests {
             .with_context("amount", -100)
             .with_context("field", "amount_cents");
 
-        assert!(error.context.contains_key("amount"));
-        assert!(error.context.contains_key("field"));
+        assert!(error.details.context.contains_key("amount"));
+        assert!(error.details.context.contains_key("field"));
     }
 
     #[test]
@@ -524,8 +517,8 @@ mod tests {
                 .with_ac_id("AC-TPL-001")
                 .with_feature_id("FT-TASKS");
 
-        assert_eq!(error.ac_id, Some("AC-TPL-001".to_string()));
-        assert_eq!(error.feature_id, Some("FT-TASKS".to_string()));
+        assert_eq!(error.details.ac_id, Some("AC-TPL-001".to_string()));
+        assert_eq!(error.details.feature_id, Some("FT-TASKS".to_string()));
     }
 
     #[test]
@@ -538,9 +531,9 @@ mod tests {
         let response = ErrorResponse {
             error: error.code.to_string(),
             message: error.message.clone(),
-            request_id: error.request_id.clone().unwrap_or_default(),
-            ac_id: error.ac_id.clone(),
-            feature_id: error.feature_id.clone(),
+            request_id: error.details.request_id.clone().unwrap_or_default(),
+            ac_id: error.details.ac_id.clone(),
+            feature_id: error.details.feature_id.clone(),
         };
 
         let json = serde_json::to_string(&response).unwrap();
@@ -550,9 +543,9 @@ mod tests {
         assert!(json.contains("AC-123"));
         assert!(json.contains("FT-456"));
         // Verify it uses "error" not "code" (AC-TPL-003)
-        assert!(json.contains(r#""error":"INVALID_AMOUNT""#));
+        assert!(json.contains(r#"error":"INVALID_AMOUNT"#));
         // Verify it uses "requestId" not "request_id" (AC-TPL-003)
-        assert!(json.contains(r#""requestId":"req-test-123""#));
+        assert!(json.contains(r#"requestId":"req-test-123"#));
     }
 
     #[test]

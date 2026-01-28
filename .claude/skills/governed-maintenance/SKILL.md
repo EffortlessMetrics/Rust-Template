@@ -283,7 +283,7 @@ Maintenance complete when:
 - ✅ `cargo xtask audit` clean (no vulnerabilities)
 - ✅ `cargo xtask docs-check` passes
 - ✅ `cargo xtask policy-test` passes
-- ✅ `cargo xtask selftest` passes (11/11 steps)
+- ✅ `cargo xtask selftest` passes (12/12 steps)
 - ✅ Specific issue resolved
 - ✅ Friction log updated (if applicable)
 

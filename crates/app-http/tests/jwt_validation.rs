@@ -17,8 +17,8 @@ fn test_jwt_validation_with_clock_skew_future() {
 
     let claims = app_http::security::Claims {
         sub: "user123".to_string(),
-        exp: future_time as usize,
-        iat: now as usize,
+        exp: future_time,
+        iat: now,
         iss: "rust-template".to_string(),
     };
 
@@ -45,8 +45,8 @@ fn test_jwt_validation_with_clock_skew_past() {
 
     let claims = app_http::security::Claims {
         sub: "user123".to_string(),
-        exp: past_time as usize,
-        iat: (now - 3600) as usize, // Issued 1 hour ago
+        exp: past_time,
+        iat: (now - 3600), // Issued 1 hour ago
         iss: "rust-template".to_string(),
     };
 
@@ -73,8 +73,8 @@ fn test_jwt_validation_rejects_far_future() {
 
     let claims = app_http::security::Claims {
         sub: "user123".to_string(),
-        exp: future_time as usize,
-        iat: now as usize,
+        exp: future_time,
+        iat: now,
         iss: "rust-template".to_string(),
     };
 
@@ -101,8 +101,8 @@ fn test_jwt_validation_rejects_far_past() {
 
     let claims = app_http::security::Claims {
         sub: "user123".to_string(),
-        exp: past_time as usize,
-        iat: (past_time - 3600) as usize, // Issued 1 hour before expiration
+        exp: past_time,
+        iat: (past_time - 3600), // Issued 1 hour before expiration
         iss: "rust-template".to_string(),
     };
 
@@ -128,8 +128,8 @@ fn test_jwt_validation_rejects_missing_issuer() {
     // Create token with empty issuer
     let claims = app_http::security::Claims {
         sub: "user123".to_string(),
-        exp: (now + 3600) as usize,
-        iat: now as usize,
+        exp: (now + 3600),
+        iat: now,
         iss: "".to_string(), // Empty issuer
     };
 
@@ -155,8 +155,8 @@ fn test_jwt_validation_rejects_missing_subject() {
     // Create token with empty subject
     let claims = app_http::security::Claims {
         sub: "".to_string(), // Empty subject
-        exp: (now + 3600) as usize,
-        iat: now as usize,
+        exp: (now + 3600),
+        iat: now,
         iss: "rust-template".to_string(),
     };
 
@@ -182,8 +182,8 @@ fn test_jwt_validation_rejects_issued_too_far_in_future() {
 
     let claims = app_http::security::Claims {
         sub: "user123".to_string(),
-        exp: (future_issued + 3600) as usize, // Valid for 1 hour after issue
-        iat: future_issued as usize,
+        exp: (future_issued + 3600), // Valid for 1 hour after issue
+        iat: future_issued,
         iss: "rust-template".to_string(),
     };
 
@@ -227,8 +227,8 @@ fn test_jwt_validation_with_nbf_claim() {
     // Create custom claims with nbf (not before)
     let claims = app_http::security::Claims {
         sub: "user123".to_string(),
-        exp: (now + 3600) as usize,
-        iat: now as usize,
+        exp: (now + 3600),
+        iat: now,
         iss: "rust-template".to_string(),
     };
 
@@ -241,7 +241,7 @@ fn test_jwt_validation_with_nbf_claim() {
             "exp": claims.exp,
             "iat": claims.iat,
             "iss": claims.iss,
-            "nbf": future_time as usize // Not valid until future
+            "nbf": future_time // Not valid until future
         }),
         &encoding_key,
     )
@@ -300,8 +300,8 @@ fn test_jwt_validation_with_different_algorithms() {
 
     let claims = app_http::security::Claims {
         sub: "user123".to_string(),
-        exp: (now + 3600) as usize,
-        iat: now as usize,
+        exp: (now + 3600),
+        iat: now,
         iss: "rust-template".to_string(),
     };
 

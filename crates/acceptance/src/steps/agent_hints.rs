@@ -1,4 +1,5 @@
 use crate::world::World;
+use anyhow::{Context, Result, bail, ensure};
 use cucumber::{then, when};
 use shell_words;
 use std::path::Path;
@@ -14,12 +15,12 @@ fn actual_workspace_root() -> std::path::PathBuf {
 }
 
 #[when(regex = r#"^I run the command "([^"]+)"$"#)]
-async fn when_run_command(world: &mut World, command: String) {
+async fn when_run_command(world: &mut World, command: String) -> Result<()> {
     // Parse the command string (e.g., "cargo xtask suggest-next --format json")
     let parts: Vec<String> = shell_words::split(&command)
         .unwrap_or_else(|_| command.split_whitespace().map(|s| s.to_string()).collect());
 
-    assert!(!parts.is_empty(), "Command string is empty");
+    ensure!(!parts.is_empty(), "Command string is empty");
 
     let subcommand = if parts.len() >= 3 && parts[0] == "cargo" && parts[1] == "xtask" {
         Some(parts[2].as_str())
@@ -68,7 +69,7 @@ async fn when_run_command(world: &mut World, command: String) {
     cmd.env_remove("CUCUMBER_FILTER_TAGS");
 
     // Execute the command
-    let output = cmd.output().expect("Failed to execute command");
+    let output = cmd.output().context("Failed to execute command")?;
 
     // Store the output in world - both in new CLI fields and xtask_context for compatibility
     let exit_code = output.status.code().unwrap_or(-1);
@@ -91,111 +92,125 @@ async fn when_run_command(world: &mut World, command: String) {
     {
         world.cli_json_output = Some(json);
     }
+
+    Ok(())
 }
 
 #[then(regex = r#"^the exit code should be (\d+)$"#)]
-async fn then_exit_code(world: &mut World, expected_code: i32) {
-    let actual_code = world.cli_exit_code.expect("No CLI command has been run");
-    assert_eq!(
-        actual_code, expected_code,
+async fn then_exit_code(world: &mut World, expected_code: i32) -> Result<()> {
+    let actual_code = world.cli_exit_code.context("No CLI command has been run")?;
+    ensure!(
+        actual_code == expected_code,
         "Expected exit code {}, but got {}. stderr: {}",
-        expected_code, actual_code, world.cli_stderr
+        expected_code,
+        actual_code,
+        world.cli_stderr
     );
+    Ok(())
 }
 
 #[then(regex = r#"^the JSON output should have field "([^"]+)"$"#)]
-async fn then_json_output_has_field(world: &mut World, field: String) {
-    let json = world.cli_json_output.as_ref().expect("No JSON output available from CLI command");
-    assert!(
+async fn then_json_output_has_field(world: &mut World, field: String) -> Result<()> {
+    let json =
+        world.cli_json_output.as_ref().context("No JSON output available from CLI command")?;
+    ensure!(
         json.get(&field).is_some(),
         "Expected JSON output to have field '{}', but it didn't. Response: {:?}",
         field,
         json
     );
+    Ok(())
 }
 
 #[then(regex = r#"^the "([^"]+)" array should have (\d+) items?$"#)]
-async fn then_json_array_has_count(world: &mut World, field: String, expected_count: usize) {
+async fn then_json_array_has_count(
+    world: &mut World,
+    field: String,
+    expected_count: usize,
+) -> Result<()> {
     let json = if let Some(json) = &world.cli_json_output {
         json
     } else if let Some(response) = &world.last_response {
         &response.body
     } else {
-        panic!("No JSON output available from either CLI command or HTTP response")
+        bail!("No JSON output available from either CLI command or HTTP response")
     };
 
     let array = json.get(&field).and_then(|v| v.as_array());
-    assert!(array.is_some(), "field '{}' should be an array", field);
+    ensure!(array.is_some(), "field '{}' should be an array", field);
     let array = array.unwrap();
 
-    assert_eq!(
-        array.len(),
-        expected_count,
+    ensure!(
+        array.len() == expected_count,
         "Expected '{}' array to have {} items, but got {}. Array: {:?}",
         field,
         expected_count,
         array.len(),
         array
     );
+    Ok(())
 }
 
 #[then(regex = r#"^the first hint in JSON should have field "([^"]+)"$"#)]
-async fn then_first_hint_in_json_has_field(world: &mut World, field: String) {
-    let json = world.cli_json_output.as_ref().expect("No JSON output available from CLI command");
+async fn then_first_hint_in_json_has_field(world: &mut World, field: String) -> Result<()> {
+    let json =
+        world.cli_json_output.as_ref().context("No JSON output available from CLI command")?;
     let hints = json.get("hints").and_then(|v| v.as_array());
-    assert!(hints.is_some(), "JSON should have 'hints' array");
+    ensure!(hints.is_some(), "JSON should have 'hints' array");
     let hints = hints.unwrap();
 
-    assert!(!hints.is_empty(), "Expected at least one hint, but hints array is empty");
+    ensure!(!hints.is_empty(), "Expected at least one hint, but hints array is empty");
 
     let first_hint = &hints[0];
-    assert!(
+    ensure!(
         first_hint.get(&field).is_some(),
         "Expected first hint to have field '{}', but it didn't. Hint: {:?}",
         field,
         first_hint
     );
+    Ok(())
 }
 
 #[then(regex = r#"^the first hint "([^"]+)" should not be empty$"#)]
-async fn then_first_hint_field_not_empty(world: &mut World, field: String) {
+async fn then_first_hint_field_not_empty(world: &mut World, field: String) -> Result<()> {
     // Try CLI JSON first, then fall back to HTTP API response
     let hints = if let Some(json) = &world.cli_json_output {
         json.get("hints").and_then(|v| v.as_array())
     } else if let Some(response) = &world.last_response {
         response.body.get("hints").and_then(|v| v.as_array())
     } else {
-        panic!("No JSON output available from either CLI command or HTTP response")
+        bail!("No JSON output available from either CLI command or HTTP response")
     };
 
-    assert!(hints.is_some(), "JSON should have 'hints' array");
+    ensure!(hints.is_some(), "JSON should have 'hints' array");
     let hints = hints.unwrap();
-    assert!(!hints.is_empty(), "Expected at least one hint, but hints array is empty");
+    ensure!(!hints.is_empty(), "Expected at least one hint, but hints array is empty");
 
     let first_hint = &hints[0];
     let value = first_hint.get(&field);
-    assert!(value.is_some(), "Expected first hint to have field '{}', but it didn't", field);
+    ensure!(value.is_some(), "Expected first hint to have field '{}', but it didn't", field);
     let value = value.unwrap();
 
     // Check that the value is not empty (works for strings and arrays)
     match value {
         serde_json::Value::String(s) => {
-            assert!(
+            ensure!(
                 !s.is_empty(),
                 "Expected first hint field '{}' to not be empty, but it was",
                 field
             );
         }
         serde_json::Value::Array(arr) => {
-            assert!(
+            ensure!(
                 !arr.is_empty(),
                 "Expected first hint field '{}' array to not be empty, but it was",
                 field
             );
         }
         serde_json::Value::Null => {
-            panic!("Expected first hint field '{}' to not be null", field);
+            bail!("Expected first hint field '{}' to not be null", field);
         }
         _ => {} // Other types are considered non-empty
     }
+    Ok(())
 }

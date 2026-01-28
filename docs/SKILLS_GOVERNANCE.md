@@ -749,9 +749,9 @@ Use this before committing:
 
 ## 10. References
 
-- **ADR-0020**: [Claude Code Skills Governance](../adr/0020-claude-code-skills-governance.md)
-- **ADR-0003**: [Spec and BDD as Source of Truth](../adr/0003-spec-and-bdd-as-source-of-truth.md)
-- **ADR-0005**: [xtask + selftest as Single Gate](../adr/0005-xtask-selftest-single-gate.md)
+- **ADR-0020**: [Claude Code Skills Governance](./adr/0020-claude-code-skills-governance.md)
+- **ADR-0003**: [Spec and BDD as Source of Truth](./adr/0003-spec-and-bdd-as-source-of-truth.md)
+- **ADR-0005**: [xtask + selftest as Single Gate](./adr/0005-xtask-selftest-single-gate.md)
 - **AGENT_SKILLS.md**: [Best practices and anti-patterns](AGENT_SKILLS.md)
 - **SKILLS_TEMPLATE.md**: [Copy-paste template for new Skills](SKILLS_TEMPLATE.md)
 - **spec_ledger.yaml**: [REQ-TPL-SKILLS-* requirements](../specs/spec_ledger.yaml)

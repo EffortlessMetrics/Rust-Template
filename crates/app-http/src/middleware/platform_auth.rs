@@ -298,8 +298,8 @@ mod tests {
         let now = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs();
         let claims = crate::security::Claims {
             sub: "user123".to_string(),
-            exp: (now - 3600) as usize, // Expired 1 hour ago (beyond leeway)
-            iat: (now - 7200) as usize,
+            exp: now - 3600, // Expired 1 hour ago (beyond leeway)
+            iat: now - 7200,
             iss: "rust-template".to_string(),
         };
         let token = jsonwebtoken::encode(

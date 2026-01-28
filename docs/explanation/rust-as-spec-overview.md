@@ -529,7 +529,7 @@ The four-phase pipeline (Spec → Loader → Enforce → Introspect) provides a 
 ## References
 
 - [ROADMAP.md](../ROADMAP.md) - Strategic direction and pilot plan
-- [ADR-0004](../adr/0004-platform-introspection-contract.md) - Platform introspection API design
-- [ADR-0006](../adr/0006-graph-first-governance.md) - Graph-based governance rationale
+- [ADR-0004](../adr/0004-policy-and-llm-governance.md) - Policy and LLM governance
+- [ADR-0006](../adr/0006-supply-chain-hardening.md) - Supply chain hardening
 - [Selftest Command](../../crates/xtask/src/commands/selftest.rs) - Implementation of the selftest governance gate
 - [Spec Runtime](../../crates/spec-runtime) - Core loaders and graph logic

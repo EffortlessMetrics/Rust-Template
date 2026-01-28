@@ -38,7 +38,7 @@ A governed agent pilot is a controlled experiment where an autonomous AI agent w
 **What makes it "governed"?**
 
 - The agent cannot break out of AC-defined contracts
-- All changes must pass `cargo xtask selftest` (11-step governance gate)
+- All changes must pass `cargo xtask selftest` (12-step governance gate)
 - Platform APIs (`/platform/agent/hints`, `/platform/graph`) provide structured context
 - BDD tests and AC-to-test mappings enforce traceability
 - ADRs, issues, and friction logs capture ambiguity and decisions
@@ -107,7 +107,7 @@ This guide uses **Claude Code** as the reference agent, but the patterns work wi
 
 - **AC-first development:** Everything flows from acceptance criteria in `specs/spec_ledger.yaml`
 - **BDD as contract:** Gherkin scenarios tagged with `@AC-XXX` define expected behavior
-- **Selftest as gate:** 11-step validation that checks specs, tests, docs, policies
+- **Selftest as gate:** 12-step validation that checks specs, tests, docs, policies
 - **Platform APIs as telemetry:** JSON endpoints providing governance state
 - **Bundles as context:** Curated file sets for focused work
 
@@ -1051,7 +1051,7 @@ Track:
 - [AGENT_GUIDE.md](../AGENT_GUIDE.md) - Platform API reference
 - [docs/how-to/use-llm-bundles.md](./use-llm-bundles.md) - Context bundling guide
 - [docs/explanation/TEMPLATE-CONTRACTS.md](../explanation/TEMPLATE-CONTRACTS.md) - Governance contracts
-- [ADR-0004](../adr/0004-platform-introspection-apis.md) - Platform API design
+- [ADR-0004](../adr/0004-policy-and-llm-governance.md) - Policy and LLM governance
 - [docs/design/agent-interface.md](../design/agent-interface.md) - Agent-native interface design
 - [docs/design/skills-guide.md](../design/skills-guide.md) - Skills governance
 - [docs/design/agents-governance.md](../design/agents-governance.md) - Agents governance

@@ -1,8 +1,10 @@
 use anyhow::{Context, Result};
 use colored::Colorize;
+use regex::Regex;
 use serde::Deserialize;
 use std::fs;
 use std::path::{Path, PathBuf};
+use walkdir::WalkDir;
 
 /// Consumer files that must stay in sync with spec_ledger.yaml version.
 /// @AC-PLT-009: docs-check validates version alignment across 8 consumer files
@@ -225,6 +227,44 @@ pub fn run() -> Result<()> {
             eprintln!("  1. Run {} to synchronize", "cargo xtask contracts-fmt".cyan());
             eprintln!("  2. Commit the updated documentation");
             issues += 1;
+        }
+    }
+
+    // Check markdown links (advisory - doesn't block docs-check)
+    // TODO: Promote to hard gate once existing broken links are fixed
+    print!("Markdown links... ");
+    match validate_markdown_links() {
+        Ok(_) => println!("{}", "✓ Valid".green()),
+        Err(e) => {
+            println!("{}", "⚠ Broken links (advisory)".yellow());
+            eprintln!("  {}", e);
+            // Advisory only - don't increment issues count
+            // issues += 1;
+        }
+    }
+
+    // Check BDD feature file tags (advisory - validates @AC-* tags exist in spec_ledger)
+    // Issue #95: BDD feature file tag validation
+    print!("BDD feature tags... ");
+    match validate_bdd_tags() {
+        Ok(_) => println!("{}", "✓ Valid".green()),
+        Err(e) => {
+            println!("{}", "⚠ Issues found (advisory)".yellow());
+            eprintln!("  {}", e);
+            // Advisory only - don't increment issues count
+            // This allows special tags like @ci-only, @smoke, @wip
+        }
+    }
+
+    // Check Skills/Agents spec_ledger alignment (AC-TPL-SKILLS-GOVERNANCE-002, AC-TPL-AGENTS-GOVERNANCE-002)
+    print!("Skills/Agents alignment... ");
+    match validate_skills_agents_alignment() {
+        Ok(_) => println!("{}", "✓ Aligned".green()),
+        Err(e) => {
+            println!("{}", "⚠ Alignment warnings (advisory)".yellow());
+            eprintln!("  {}", e);
+            // Advisory only - don't increment issues count
+            // This is advisory since spec_ledger might not have explicit declarations
         }
     }
 
@@ -975,23 +1015,15 @@ fn validate_service_policies() -> Result<()> {
         .with_context(|| format!("Failed to read {}", metadata_path.display()))?;
     let metadata: serde_yaml::Value = serde_yaml::from_str(&content)?;
 
-    // Check runbook requirement
+    // Check runbook requirement (advisory - detect and report, never auto-create)
     if let Some(true) = metadata.get("runbook_required").and_then(|v| v.as_bool()) {
         let runbooks_dir = root.join("docs/runbooks");
-        if !runbooks_dir.exists() || runbooks_dir.read_dir()?.next().is_none() {
-            // For the template repo itself, we might not want to fail if this dir is empty,
-            // but for the sake of the "self-healing" demo, we should probably ensure it exists or is skipped.
-            // Let's just warn for now if it's missing in the template.
-            // actually, let's create a dummy runbook if missing to satisfy the check for the demo.
-            if !runbooks_dir.exists() {
-                std::fs::create_dir_all(&runbooks_dir)?;
-            }
-            if runbooks_dir.read_dir()?.next().is_none() {
-                std::fs::write(
-                    runbooks_dir.join("placeholder.md"),
-                    "# Placeholder Runbook\n\nRequired by service policy.",
-                )?;
-            }
+        if !runbooks_dir.exists() {
+            eprintln!("  ⚠ Advisory: runbook_required=true but docs/runbooks/ does not exist");
+            eprintln!("    Remediation: mkdir -p docs/runbooks && create runbook files");
+        } else if runbooks_dir.read_dir()?.next().is_none() {
+            eprintln!("  ⚠ Advisory: runbook_required=true but docs/runbooks/ is empty");
+            eprintln!("    Remediation: add runbook files to docs/runbooks/");
         }
     }
 
@@ -1444,6 +1476,742 @@ fn check_orphaned_versions() -> Result<()> {
     Ok(())
 }
 
+/// Broken link information for reporting
+#[derive(Debug)]
+struct BrokenLink {
+    /// Path to the file containing the broken link
+    file: String,
+    /// Line number where the link was found
+    line: usize,
+    /// The link text (what appears in brackets)
+    #[allow(dead_code)]
+    text: String,
+    /// The target URL/path that is broken
+    target: String,
+    /// Reason the link is broken
+    reason: String,
+}
+
+/// Validate markdown links in documentation files.
+///
+/// Scans markdown files in:
+/// - docs/
+/// - specs/features/ (only .md files)
+/// - README.md, CHANGELOG.md, CLAUDE.md (root)
+///
+/// Checks that local file links (not http/https) resolve to existing files.
+/// Anchor links (#section) are advisory warnings only.
+fn validate_markdown_links() -> Result<()> {
+    let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    let root = manifest_dir.parent().expect("workspace root").parent().expect("repo root");
+
+    // Regex to match markdown links: [text](url)
+    // Captures: group 1 = link text, group 2 = url/path
+    let link_re =
+        Regex::new(r"\[([^\]]*)\]\(([^)]+)\)").context("Failed to compile markdown link regex")?;
+
+    let mut broken_links: Vec<BrokenLink> = Vec::new();
+    let mut anchor_warnings: Vec<BrokenLink> = Vec::new();
+
+    // Collect markdown files to scan
+    let mut files_to_scan: Vec<PathBuf> = Vec::new();
+
+    // Root-level markdown files
+    for name in ["README.md", "CHANGELOG.md", "CLAUDE.md"] {
+        let path = root.join(name);
+        if path.exists() {
+            files_to_scan.push(path);
+        }
+    }
+
+    // docs/ directory (recursive)
+    let docs_dir = root.join("docs");
+    if docs_dir.exists() {
+        for entry in WalkDir::new(&docs_dir).into_iter().filter_map(|e| e.ok()).filter(|e| {
+            e.path().is_file() && e.path().extension().map(|s| s == "md").unwrap_or(false)
+        }) {
+            files_to_scan.push(entry.path().to_path_buf());
+        }
+    }
+
+    // specs/features/ directory (only .md files)
+    let specs_features_dir = root.join("specs/features");
+    if specs_features_dir.exists() {
+        for entry in
+            WalkDir::new(&specs_features_dir).into_iter().filter_map(|e| e.ok()).filter(|e| {
+                e.path().is_file() && e.path().extension().map(|s| s == "md").unwrap_or(false)
+            })
+        {
+            files_to_scan.push(entry.path().to_path_buf());
+        }
+    }
+
+    // Process each file
+    for file_path in &files_to_scan {
+        let content = match fs::read_to_string(file_path) {
+            Ok(c) => c,
+            Err(_) => continue, // Skip files we can't read
+        };
+
+        let file_dir = file_path.parent().unwrap_or(root);
+        let relative_file = file_path.strip_prefix(root).unwrap_or(file_path).display().to_string();
+
+        for (line_num, line) in content.lines().enumerate() {
+            // Skip code blocks (simple heuristic: lines starting with ``` or indented by 4 spaces)
+            if line.trim_start().starts_with("```") || line.starts_with("    ") {
+                continue;
+            }
+
+            for cap in link_re.captures_iter(line) {
+                let link_text = cap.get(1).map(|m| m.as_str()).unwrap_or("");
+                let target = cap.get(2).map(|m| m.as_str()).unwrap_or("");
+
+                // Skip external URLs
+                if target.starts_with("http://") || target.starts_with("https://") {
+                    continue;
+                }
+
+                // Skip mailto links
+                if target.starts_with("mailto:") {
+                    continue;
+                }
+
+                // Skip pure anchor links (links to sections in the same document)
+                if target.starts_with('#') {
+                    // These are self-referential anchors, we could validate them
+                    // but for now we skip as they're lower priority
+                    continue;
+                }
+
+                // Handle links with anchors (e.g., "file.md#section")
+                let (path_part, anchor_part) = if let Some(hash_pos) = target.find('#') {
+                    (&target[..hash_pos], Some(&target[hash_pos + 1..]))
+                } else {
+                    (target, None)
+                };
+
+                // Skip empty paths (just anchor was handled above)
+                if path_part.is_empty() {
+                    continue;
+                }
+
+                // Resolve the target path relative to the file's directory
+                let resolved_path = if let Some(stripped) = path_part.strip_prefix('/') {
+                    // Absolute path from repo root
+                    root.join(stripped)
+                } else {
+                    // Relative path from file's directory
+                    file_dir.join(path_part)
+                };
+
+                // Normalize the path (resolve .. and .)
+                let normalized_path = normalize_path(&resolved_path);
+
+                // Check if the file/directory exists
+                if !normalized_path.exists() {
+                    broken_links.push(BrokenLink {
+                        file: relative_file.clone(),
+                        line: line_num + 1,
+                        text: link_text.to_string(),
+                        target: target.to_string(),
+                        reason: "File not found".to_string(),
+                    });
+                    continue;
+                }
+
+                // If it's a directory link without trailing slash, that's OK
+                // (some markdown renderers handle this)
+
+                // If there's an anchor, try to validate it (advisory only)
+                // Note: Nested ifs kept for clarity - each level has distinct semantics
+                #[allow(clippy::collapsible_if)]
+                if let Some(anchor) = anchor_part {
+                    if !anchor.is_empty() && normalized_path.is_file() {
+                        if let Ok(target_content) = fs::read_to_string(&normalized_path) {
+                            if !anchor_exists_in_markdown(&target_content, anchor) {
+                                anchor_warnings.push(BrokenLink {
+                                    file: relative_file.clone(),
+                                    line: line_num + 1,
+                                    text: link_text.to_string(),
+                                    target: target.to_string(),
+                                    reason: format!("Anchor '{}' not found in target file", anchor),
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Report results
+    if !broken_links.is_empty() {
+        eprintln!();
+        eprintln!("{}", "Broken markdown links:".red().bold());
+        for link in &broken_links {
+            eprintln!(
+                "  {}:{} - {} ({})",
+                link.file.cyan(),
+                link.line,
+                link.target.red(),
+                link.reason
+            );
+        }
+    }
+
+    if !anchor_warnings.is_empty() {
+        eprintln!();
+        eprintln!("{}", "Anchor warnings (advisory):".yellow().bold());
+        for link in &anchor_warnings {
+            eprintln!(
+                "  {}:{} - {} ({})",
+                link.file.cyan(),
+                link.line,
+                link.target.yellow(),
+                link.reason
+            );
+        }
+    }
+
+    if !broken_links.is_empty() {
+        eprintln!();
+        eprintln!("{}", "To fix:".bold());
+        eprintln!("  • Update broken links to point to existing files");
+        eprintln!("  • Or remove references to deleted documents");
+        eprintln!("  • Check relative paths are correct from the file's location");
+        anyhow::bail!("{} broken link(s) found", broken_links.len());
+    }
+
+    Ok(())
+}
+
+/// Normalize a path by resolving . and .. components.
+fn normalize_path(path: &Path) -> PathBuf {
+    let mut normalized = PathBuf::new();
+    for component in path.components() {
+        match component {
+            std::path::Component::ParentDir => {
+                normalized.pop();
+            }
+            std::path::Component::CurDir => {
+                // Skip current directory markers
+            }
+            _ => {
+                normalized.push(component);
+            }
+        }
+    }
+    normalized
+}
+
+/// Check if an anchor (heading ID) exists in a markdown file.
+///
+/// Markdown heading anchors are typically generated by:
+/// 1. Converting to lowercase
+/// 2. Replacing spaces with hyphens
+/// 3. Removing special characters
+fn anchor_exists_in_markdown(content: &str, anchor: &str) -> bool {
+    let anchor_lower = anchor.to_lowercase();
+
+    for line in content.lines() {
+        // Check for markdown headings (# Heading)
+        if let Some(heading_text) = line.strip_prefix('#') {
+            // Remove leading # and whitespace
+            let heading_text = heading_text.trim_start_matches('#').trim();
+
+            // Generate anchor from heading
+            let generated_anchor: String = heading_text
+                .to_lowercase()
+                .chars()
+                .map(|c| {
+                    if c.is_alphanumeric() || c == '-' || c == '_' {
+                        c
+                    } else if c.is_whitespace() {
+                        '-'
+                    } else {
+                        // Skip other characters
+                        '\0'
+                    }
+                })
+                .filter(|&c| c != '\0')
+                .collect();
+
+            // Remove consecutive hyphens
+            let normalized: String =
+                generated_anchor.split('-').filter(|s| !s.is_empty()).collect::<Vec<_>>().join("-");
+
+            if normalized == anchor_lower {
+                return true;
+            }
+        }
+
+        // Also check for explicit anchor tags: {#anchor-id}
+        if line.contains(&format!("{{#{}}}", anchor)) {
+            return true;
+        }
+
+        // Check for HTML anchor tags: <a name="anchor-id">
+        if line.contains(&format!("name=\"{}\"", anchor))
+            || line.contains(&format!("id=\"{}\"", anchor))
+        {
+            return true;
+        }
+    }
+
+    false
+}
+
+/// BDD tag issue information for reporting
+#[derive(Debug)]
+struct BddTagIssue {
+    /// Path to the feature file
+    file: String,
+    /// Line number where the tag was found
+    line: usize,
+    /// The tag that has an issue
+    tag: String,
+    /// Description of the issue
+    issue: String,
+}
+
+/// Validate BDD feature file tags against spec_ledger.yaml.
+///
+/// This check validates:
+/// 1. `@AC-*` tags in feature files exist as AC IDs in spec_ledger.yaml
+/// 2. Reports orphaned tags (tags referencing non-existent ACs)
+/// 3. Reports scenarios without AC tags (advisory only)
+///
+/// Special tags like `@ci-only`, `@smoke`, `@wip` are allowed and not validated.
+///
+/// Issue #95: BDD feature file tag validation
+fn validate_bdd_tags() -> Result<()> {
+    let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    let root = manifest_dir.parent().expect("workspace root").parent().expect("repo root");
+
+    let ledger_path = root.join("specs/spec_ledger.yaml");
+    let features_dir = root.join("specs/features");
+
+    if !ledger_path.exists() || !features_dir.exists() {
+        // Can't validate without spec_ledger or feature files
+        return Ok(());
+    }
+
+    // Load AC IDs from spec_ledger.yaml
+    let ac_ids = extract_ac_ids_from_ledger(&ledger_path)?;
+
+    // Regex to match @AC-* tags: @AC-XXX-NNN or @AC-XXX-NNN-SUFFIX
+    let ac_tag_re = Regex::new(r"@(AC-[A-Z]+-[A-Z0-9]+(?:-[A-Z0-9]+)*)")
+        .context("Failed to compile AC tag regex")?;
+
+    // Special tags that are allowed and not validated
+    let special_tags = [
+        "@ci-only",
+        "@smoke",
+        "@wip",
+        "@platform",
+        "@issues",
+        "@schema",
+        "@ordering",
+        "@filtering",
+        "@pagination",
+        "@cursor",
+        "@offset",
+        "@summary",
+        "@error",
+        "@devup",
+        "@selective_testing",
+        "@release_bundle_generation",
+        "@release_bundle_structure",
+        "@example_fork_ci",
+    ];
+
+    let mut orphaned_tags: Vec<BddTagIssue> = Vec::new();
+    let mut untagged_scenarios: Vec<BddTagIssue> = Vec::new();
+
+    // Scan all .feature files
+    for entry in WalkDir::new(&features_dir).into_iter().filter_map(|e| e.ok()).filter(|e| {
+        e.path().is_file() && e.path().extension().map(|s| s == "feature").unwrap_or(false)
+    }) {
+        let file_path = entry.path();
+        let content = fs::read_to_string(file_path)
+            .with_context(|| format!("Failed to read {}", file_path.display()))?;
+
+        let relative_file = file_path.strip_prefix(root).unwrap_or(file_path).display().to_string();
+
+        let mut in_scenario = false;
+        let mut scenario_has_ac_tag = false;
+        let mut scenario_line = 0;
+        let mut scenario_tags: Vec<String> = Vec::new();
+
+        for (line_num, line) in content.lines().enumerate() {
+            let trimmed = line.trim();
+
+            // Check for tag lines (start with @)
+            if trimmed.starts_with('@') {
+                // Extract all AC tags from this line
+                for cap in ac_tag_re.captures_iter(trimmed) {
+                    let tag = cap.get(1).map(|m| m.as_str()).unwrap_or("");
+                    scenario_tags.push(format!("@{}", tag));
+
+                    // Check if this AC ID exists in spec_ledger
+                    if !ac_ids.contains(tag) {
+                        orphaned_tags.push(BddTagIssue {
+                            file: relative_file.clone(),
+                            line: line_num + 1,
+                            tag: format!("@{}", tag),
+                            issue: "AC not found in spec_ledger".to_string(),
+                        });
+                    } else {
+                        scenario_has_ac_tag = true;
+                    }
+                }
+            }
+
+            // Check for Scenario or Scenario Outline
+            if trimmed.starts_with("Scenario:") || trimmed.starts_with("Scenario Outline:") {
+                // If we were in a previous scenario, check if it had an AC tag
+                if in_scenario && !scenario_has_ac_tag {
+                    // Only report if there were no special tags either
+                    let has_special_tag = scenario_tags.iter().any(|t| {
+                        special_tags.iter().any(|st| t.to_lowercase() == st.to_lowercase())
+                    });
+                    if !has_special_tag {
+                        // Extract scenario name
+                        let scenario_name = trimmed
+                            .trim_start_matches("Scenario:")
+                            .trim_start_matches("Scenario Outline:")
+                            .trim();
+                        untagged_scenarios.push(BddTagIssue {
+                            file: relative_file.clone(),
+                            line: scenario_line,
+                            tag: String::new(),
+                            issue: format!("Scenario '{}' has no @AC-* tag", scenario_name),
+                        });
+                    }
+                }
+
+                // Start tracking new scenario
+                in_scenario = true;
+                scenario_has_ac_tag = false;
+                scenario_line = line_num + 1;
+                scenario_tags.clear();
+            }
+
+            // Feature-level tags apply to all scenarios (reset tracking)
+            if trimmed.starts_with("Feature:") {
+                in_scenario = false;
+                scenario_has_ac_tag = false;
+                scenario_tags.clear();
+            }
+        }
+
+        // Check final scenario
+        if in_scenario && !scenario_has_ac_tag {
+            let has_special_tag = scenario_tags
+                .iter()
+                .any(|t| special_tags.iter().any(|st| t.to_lowercase() == st.to_lowercase()));
+            if !has_special_tag && !untagged_scenarios.iter().any(|s| s.line == scenario_line) {
+                untagged_scenarios.push(BddTagIssue {
+                    file: relative_file.clone(),
+                    line: scenario_line,
+                    tag: String::new(),
+                    issue: "Scenario has no @AC-* tag".to_string(),
+                });
+            }
+        }
+    }
+
+    // Report results
+    if !orphaned_tags.is_empty() {
+        eprintln!();
+        eprintln!("{}", "BDD tag validation issues:".yellow().bold());
+        for issue in &orphaned_tags {
+            eprintln!(
+                "  {}:{} - {} ({})",
+                issue.file.cyan(),
+                issue.line,
+                issue.tag.red(),
+                issue.issue
+            );
+        }
+    }
+
+    if !untagged_scenarios.is_empty() && orphaned_tags.is_empty() {
+        eprintln!();
+        eprintln!("{}", "Untagged scenarios (advisory):".yellow().bold());
+        // Only show first 5 to avoid noise
+        for issue in untagged_scenarios.iter().take(5) {
+            eprintln!("  {}:{} - {}", issue.file.cyan(), issue.line, issue.issue.yellow());
+        }
+        if untagged_scenarios.len() > 5 {
+            eprintln!("  ... and {} more", untagged_scenarios.len() - 5);
+        }
+    }
+
+    if !orphaned_tags.is_empty() {
+        eprintln!();
+        eprintln!("{}", "To fix:".bold());
+        eprintln!("  • Add missing AC IDs to specs/spec_ledger.yaml");
+        eprintln!("  • Or update the @AC-* tag to reference an existing AC");
+        eprintln!("  • Use 'cargo xtask ac-new' to create new ACs");
+        anyhow::bail!("{} orphaned @AC-* tag(s) found", orphaned_tags.len());
+    }
+
+    Ok(())
+}
+
+/// Extract AC IDs from spec_ledger.yaml.
+/// Returns a set of all AC IDs (e.g., "AC-TPL-001", "AC-PLT-018").
+fn extract_ac_ids_from_ledger(ledger_path: &Path) -> Result<std::collections::HashSet<String>> {
+    let content = fs::read_to_string(ledger_path)
+        .with_context(|| format!("Failed to read {}", ledger_path.display()))?;
+
+    let mut ac_ids = std::collections::HashSet::new();
+
+    // Look for lines like "- id: AC-XXX-NNN"
+    let ac_id_re =
+        Regex::new(r"^\s*-\s*id:\s*(AC-[A-Z]+-[A-Z0-9]+(?:-[A-Z0-9]+)*)").expect("valid regex");
+
+    for line in content.lines() {
+        if let Some(cap) = ac_id_re.captures(line)
+            && let Some(id) = cap.get(1)
+        {
+            ac_ids.insert(id.as_str().to_string());
+        }
+    }
+
+    Ok(ac_ids)
+}
+
+/// Validate that Skills and Agents on disk are aligned with spec_ledger.yaml declarations.
+///
+/// This check validates:
+/// 1. Skills in `.claude/skills/*/SKILL.md` have corresponding entries in spec_ledger
+/// 2. Agents in `.claude/agents/*.md` have corresponding entries in spec_ledger
+/// 3. Declared skills/agents in spec_ledger exist on disk
+///
+/// Tagged with: AC-TPL-SKILLS-GOVERNANCE-002, AC-TPL-AGENTS-GOVERNANCE-002
+fn validate_skills_agents_alignment() -> Result<()> {
+    let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    let root = manifest_dir.parent().expect("workspace root").parent().expect("repo root");
+
+    let ledger_path = root.join("specs/spec_ledger.yaml");
+    if !ledger_path.exists() {
+        // Can't validate without spec_ledger
+        return Ok(());
+    }
+
+    let ledger_content = fs::read_to_string(&ledger_path)
+        .with_context(|| format!("Failed to read {}", ledger_path.display()))?;
+
+    // Extract declared skills from spec_ledger
+    // Look for AC-TPL-SKILLS-ALIGN-001 which lists expected skills
+    let declared_skills = extract_declared_skills(&ledger_content);
+
+    // Extract declared agents from spec_ledger
+    // Agents are referenced in REQ-TPL-AGENTS-GOVERNANCE section
+    let declared_agents = extract_declared_agents(&ledger_content);
+
+    // Scan filesystem for actual skills
+    let skills_dir = root.join(".claude/skills");
+    let mut actual_skills: Vec<String> = Vec::new();
+    if skills_dir.exists() {
+        for entry in WalkDir::new(&skills_dir).min_depth(1).max_depth(1) {
+            let entry = entry?;
+            if entry.file_type().is_dir() {
+                let skill_file = entry.path().join("SKILL.md");
+                if skill_file.exists()
+                    && let Some(name) = entry.file_name().to_str()
+                {
+                    actual_skills.push(name.to_string());
+                }
+            }
+        }
+    }
+
+    // Scan filesystem for actual agents
+    let agents_dir = root.join(".claude/agents");
+    let mut actual_agents: Vec<String> = Vec::new();
+    if agents_dir.exists() {
+        for entry in WalkDir::new(&agents_dir).min_depth(1).max_depth(1) {
+            let entry = entry?;
+            if entry.file_type().is_file() {
+                let path = entry.path();
+                if path.extension().map(|e| e == "md").unwrap_or(false)
+                    && let Some(name) = path.file_stem().and_then(|s| s.to_str())
+                {
+                    actual_agents.push(name.to_string());
+                }
+            }
+        }
+    }
+
+    let mut issues = Vec::new();
+
+    // Check for orphaned skills (exist in directory but not declared)
+    if !declared_skills.is_empty() {
+        for skill in &actual_skills {
+            if !declared_skills.contains(skill) {
+                issues.push(format!(
+                    "Skill '{}' exists in .claude/skills/ but is not declared in spec_ledger.yaml (AC-TPL-SKILLS-ALIGN-001)",
+                    skill
+                ));
+            }
+        }
+
+        // Check for missing skills (declared but directory missing)
+        for skill in &declared_skills {
+            if !actual_skills.contains(skill) {
+                issues.push(format!(
+                    "Skill '{}' declared in spec_ledger.yaml but missing from .claude/skills/",
+                    skill
+                ));
+            }
+        }
+    }
+
+    // Check for orphaned agents (exist in directory but not declared)
+    // Note: Agents governance is softer - we mainly check that agents exist
+    // and are governed by REQ-TPL-AGENTS-GOVERNANCE requirements
+    if !declared_agents.is_empty() {
+        for agent in &actual_agents {
+            if !declared_agents.contains(agent) {
+                issues.push(format!(
+                    "Agent '{}' exists in .claude/agents/ but may need spec_ledger coverage (REQ-TPL-AGENTS-GOVERNANCE)",
+                    agent
+                ));
+            }
+        }
+
+        // Check for missing agents (declared but file missing)
+        for agent in &declared_agents {
+            if !actual_agents.contains(agent) {
+                issues.push(format!(
+                    "Agent '{}' referenced in spec_ledger.yaml but missing from .claude/agents/",
+                    agent
+                ));
+            }
+        }
+    }
+
+    // Also validate that basic governance docs exist
+    let skills_governance = root.join("docs/SKILLS_GOVERNANCE.md");
+    let agents_governance = root.join("docs/AGENTS_GOVERNANCE.md");
+
+    if !actual_skills.is_empty() && !skills_governance.exists() {
+        issues.push(
+            "Skills exist but docs/SKILLS_GOVERNANCE.md is missing (AC-TPL-SKILLS-GOVERNANCE-001)"
+                .to_string(),
+        );
+    }
+
+    if !actual_agents.is_empty() && !agents_governance.exists() {
+        issues.push(
+            "Agents exist but docs/AGENTS_GOVERNANCE.md is missing (AC-TPL-AGENTS-GOVERNANCE-001)"
+                .to_string(),
+        );
+    }
+
+    if !issues.is_empty() {
+        eprintln!();
+        eprintln!("{}", "Skills/Agents alignment issues:".yellow().bold());
+        for issue in &issues {
+            eprintln!("  ⚠ {}", issue);
+        }
+        eprintln!();
+        eprintln!("{}", "To fix:".bold());
+        eprintln!("  • Ensure each Skill in .claude/skills/* is listed in AC-TPL-SKILLS-ALIGN-001");
+        eprintln!("  • Ensure each Agent in .claude/agents/* has REQ/AC coverage");
+        eprintln!("  • See: {}", "docs/SKILLS_GOVERNANCE.md".cyan());
+        eprintln!("  • See: {}", "docs/AGENTS_GOVERNANCE.md".cyan());
+        anyhow::bail!("{} alignment issue(s)", issues.len());
+    }
+
+    Ok(())
+}
+
+/// Extract declared skill names from spec_ledger.yaml content.
+/// Looks for AC-TPL-SKILLS-ALIGN-001 which lists expected skills.
+fn extract_declared_skills(content: &str) -> Vec<String> {
+    let mut skills = Vec::new();
+
+    // Look for the AC-TPL-SKILLS-ALIGN-001 section which contains:
+    // (bootstrap-dev-env, governed-feature-dev, governed-maintenance,
+    // governed-release, governed-governance-debug)
+    let skill_pattern = Regex::new(
+        r"(?:bootstrap-dev-env|governed-feature-dev|governed-maintenance|governed-release|governed-governance-debug)"
+    ).expect("valid regex");
+
+    // Find the AC-TPL-SKILLS-ALIGN-001 section
+    let mut in_align_section = false;
+    for line in content.lines() {
+        if line.contains("AC-TPL-SKILLS-ALIGN-001") {
+            in_align_section = true;
+            continue;
+        }
+        // Look for the next AC or requirement to mark end of section
+        if in_align_section
+            && (line.trim().starts_with("- id: AC-")
+                || line.trim().starts_with("- id: REQ-")
+                || line.trim().starts_with("- id: US-"))
+        {
+            break;
+        }
+
+        if in_align_section {
+            // Extract skill names from this section
+            for cap in skill_pattern.find_iter(line) {
+                let skill_name = cap.as_str().to_string();
+                if !skills.contains(&skill_name) {
+                    skills.push(skill_name);
+                }
+            }
+        }
+    }
+
+    // Also look for any explicit skills: list in the ledger
+    // Pattern: skills: [skill1, skill2] or skills:\n  - skill1\n  - skill2
+    let skills_list_re = Regex::new(r#"\.claude/skills/([a-z0-9-]+)"#).expect("valid regex");
+    for cap in skills_list_re.captures_iter(content) {
+        if let Some(skill_name) = cap.get(1) {
+            let name = skill_name.as_str().to_string();
+            if !skills.contains(&name) {
+                skills.push(name);
+            }
+        }
+    }
+
+    skills
+}
+
+/// Extract declared agent names from spec_ledger.yaml content.
+/// Looks for REQ-TPL-AGENTS-GOVERNANCE and related sections.
+fn extract_declared_agents(content: &str) -> Vec<String> {
+    let mut agents = Vec::new();
+
+    // Look for agent references in the form .claude/agents/agent-name.md
+    let agents_re = Regex::new(r#"\.claude/agents/([a-z0-9-]+)\.md"#).expect("valid regex");
+    for cap in agents_re.captures_iter(content) {
+        if let Some(agent_name) = cap.get(1) {
+            let name = agent_name.as_str().to_string();
+            if !agents.contains(&name) {
+                agents.push(name);
+            }
+        }
+    }
+
+    // Also look for agent mentions in the agents/* pattern
+    let agents_pattern_re = Regex::new(r#"agents/\*"#).expect("valid regex");
+    if agents_pattern_re.is_match(content) {
+        // The pattern .claude/agents/* is mentioned, which means agents are governed
+        // but specific names are not enumerated in spec_ledger
+        // In this case, we return empty to avoid false positives
+        // The governance is established by REQ-TPL-AGENTS-GOVERNANCE
+    }
+
+    agents
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1525,5 +2293,214 @@ doc_type: guide
                 "Consumer file should be .md or .yaml"
             );
         }
+    }
+
+    #[test]
+    fn test_anchor_exists_in_markdown_heading() {
+        let content = r#"
+# My Heading
+
+Some content here.
+
+## Another Section
+
+More content.
+"#;
+        assert!(anchor_exists_in_markdown(content, "my-heading"));
+        assert!(anchor_exists_in_markdown(content, "another-section"));
+        assert!(!anchor_exists_in_markdown(content, "nonexistent"));
+    }
+
+    #[test]
+    fn test_anchor_exists_in_markdown_special_chars() {
+        let content = r#"
+# What's New in v2.0?
+
+Some content.
+
+## API Reference (v1)
+
+More content.
+"#;
+        assert!(anchor_exists_in_markdown(content, "whats-new-in-v20"));
+        assert!(anchor_exists_in_markdown(content, "api-reference-v1"));
+    }
+
+    #[test]
+    fn test_anchor_exists_explicit_anchor() {
+        let content = r#"
+# My Heading {#custom-anchor}
+
+Some content.
+"#;
+        assert!(anchor_exists_in_markdown(content, "custom-anchor"));
+    }
+
+    #[test]
+    fn test_anchor_exists_html_anchor() {
+        let content = r#"
+<a name="html-anchor"></a>
+# My Heading
+
+<div id="div-anchor">Content</div>
+"#;
+        assert!(anchor_exists_in_markdown(content, "html-anchor"));
+        assert!(anchor_exists_in_markdown(content, "div-anchor"));
+    }
+
+    #[test]
+    fn test_normalize_path() {
+        // Test with parent directory references
+        let path = PathBuf::from("/a/b/../c/./d");
+        let normalized = normalize_path(&path);
+        assert_eq!(normalized, PathBuf::from("/a/c/d"));
+
+        // Test with multiple parent references
+        let path2 = PathBuf::from("/a/b/c/../../d");
+        let normalized2 = normalize_path(&path2);
+        assert_eq!(normalized2, PathBuf::from("/a/d"));
+    }
+
+    /// @AC-TPL-SKILLS-GOVERNANCE-002: Tests extraction of declared skills from spec_ledger
+    #[test]
+    fn test_extract_declared_skills() {
+        let content = r#"
+      - id: AC-TPL-SKILLS-ALIGN-001
+        text: >
+          Existing .claude/skills/* are aligned with documented workflows
+          (bootstrap-dev-env, governed-feature-dev, governed-maintenance,
+          governed-release, governed-governance-debug).
+        tags: [kernel]
+        must_have_ac: true
+      - id: AC-NEXT
+"#;
+        let skills = extract_declared_skills(content);
+        assert!(skills.contains(&"bootstrap-dev-env".to_string()));
+        assert!(skills.contains(&"governed-feature-dev".to_string()));
+        assert!(skills.contains(&"governed-maintenance".to_string()));
+        assert!(skills.contains(&"governed-release".to_string()));
+        assert!(skills.contains(&"governed-governance-debug".to_string()));
+    }
+
+    /// @AC-TPL-SKILLS-GOVERNANCE-002: Tests extraction from path references
+    #[test]
+    fn test_extract_declared_skills_from_paths() {
+        let content = r#"
+        The skill at .claude/skills/my-custom-skill should be governed.
+        Also see .claude/skills/another-skill for reference.
+"#;
+        let skills = extract_declared_skills(content);
+        assert!(skills.contains(&"my-custom-skill".to_string()));
+        assert!(skills.contains(&"another-skill".to_string()));
+    }
+
+    /// @AC-TPL-AGENTS-GOVERNANCE-002: Tests extraction of declared agents from spec_ledger
+    #[test]
+    fn test_extract_declared_agents() {
+        let content = r#"
+        See .claude/agents/historian.md for the historian agent.
+        Also .claude/agents/example-agent.md is provided as a template.
+"#;
+        let agents = extract_declared_agents(content);
+        assert!(agents.contains(&"historian".to_string()));
+        assert!(agents.contains(&"example-agent".to_string()));
+    }
+
+    /// @AC-TPL-SKILLS-ALIGN-001: Tests that all 5 governed skills exist
+    #[test]
+    fn test_skills_agents_alignment_integration() {
+        // This test validates the integration by checking that the extraction
+        // functions work correctly with realistic spec_ledger content
+        let expected_skills = [
+            "bootstrap-dev-env",
+            "governed-feature-dev",
+            "governed-maintenance",
+            "governed-release",
+            "governed-governance-debug",
+        ];
+
+        let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        let root = manifest_dir.parent().unwrap().parent().unwrap();
+        let skills_dir = root.join(".claude/skills");
+
+        // Verify each expected skill exists
+        for skill in &expected_skills {
+            let skill_path = skills_dir.join(skill).join("SKILL.md");
+            assert!(
+                skill_path.exists(),
+                "Governed skill '{}' should exist at {}",
+                skill,
+                skill_path.display()
+            );
+        }
+    }
+
+    /// Issue #95: Tests extraction of AC IDs from spec_ledger content
+    #[test]
+    fn test_extract_ac_ids_from_ledger_content() {
+        use std::io::Write;
+        use tempfile::NamedTempFile;
+
+        let content = r#"
+stories:
+  - id: US-TEST-001
+    title: Test Story
+    requirements:
+      - id: REQ-TEST-001
+        title: Test Requirement
+        acceptance_criteria:
+          - id: AC-TEST-001
+            text: First acceptance criterion
+          - id: AC-TEST-002
+            text: Second acceptance criterion
+      - id: REQ-TEST-002
+        title: Another Requirement
+        acceptance_criteria:
+          - id: AC-TEST-003-SUFFIX
+            text: AC with suffix
+  - id: US-PLATFORM-001
+    title: Platform Story
+    requirements:
+      - id: REQ-PLT-001
+        title: Platform Requirement
+        acceptance_criteria:
+          - id: AC-PLT-001
+            text: Platform AC
+"#;
+
+        // Write content to a temp file
+        let mut temp_file = NamedTempFile::new().expect("create temp file");
+        temp_file.write_all(content.as_bytes()).expect("write content");
+
+        let ac_ids = extract_ac_ids_from_ledger(temp_file.path()).expect("extract AC IDs");
+
+        assert!(ac_ids.contains("AC-TEST-001"), "Should contain AC-TEST-001");
+        assert!(ac_ids.contains("AC-TEST-002"), "Should contain AC-TEST-002");
+        assert!(ac_ids.contains("AC-TEST-003-SUFFIX"), "Should contain AC-TEST-003-SUFFIX");
+        assert!(ac_ids.contains("AC-PLT-001"), "Should contain AC-PLT-001");
+        assert_eq!(ac_ids.len(), 4, "Should have exactly 4 AC IDs");
+    }
+
+    /// Issue #95: Tests that BDD tag validation integrates with real spec_ledger
+    #[test]
+    fn test_bdd_tag_validation_with_real_ledger() {
+        let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        let root = manifest_dir.parent().unwrap().parent().unwrap();
+        let ledger_path = root.join("specs/spec_ledger.yaml");
+
+        if !ledger_path.exists() {
+            return; // Skip if no ledger
+        }
+
+        let ac_ids = extract_ac_ids_from_ledger(&ledger_path).expect("extract AC IDs");
+
+        // Verify some known ACs exist
+        assert!(ac_ids.len() > 50, "Should have many AC IDs in spec_ledger");
+
+        // Check for some known AC patterns
+        let has_plt = ac_ids.iter().any(|id| id.starts_with("AC-PLT-"));
+        let has_tpl = ac_ids.iter().any(|id| id.starts_with("AC-TPL-"));
+
+        assert!(has_plt || has_tpl, "Should have AC-PLT-* or AC-TPL-* IDs");
     }
 }

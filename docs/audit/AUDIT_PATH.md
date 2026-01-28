@@ -117,7 +117,7 @@ cargo xtask kernel-smoke
 # AC coverage (what's tested)
 cargo xtask ac-status
 
-# Full governance (11 steps)
+# Full governance (12 steps)
 cargo xtask selftest
 ```
 

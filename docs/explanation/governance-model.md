@@ -202,7 +202,7 @@ requirements: [REQ-PLT-SELFTEST]
 commands:
   - id: selftest
     name: selftest
-    description: "Full governance check (11 steps)"
+    description: "Full governance check (12 steps)"
     required: true  # Must exist in xtask
 ```
 
@@ -386,7 +386,7 @@ cargo xtask ac-coverage
 # Enter hermetic environment
 nix develop
 
-# Run all 11 steps
+# Run all 12 steps
 cargo xtask selftest
 ```
 
@@ -875,7 +875,7 @@ cargo xtask ac-status              # Check coverage
 
 # 7. Full validation before PR
 nix develop
-cargo xtask selftest  # All 11 steps must pass
+cargo xtask selftest  # All 12 steps must pass
 
 # 8. Update task status
 curl -X POST http://localhost:8080/platform/tasks/TASK-001/status \
@@ -1023,7 +1023,7 @@ cargo xtask kernel-status
 - `specs/config_schema.yaml` — Configuration contract
 
 **Architecture Decision Records:**
-- [ADR-0003: Spec and BDD as Source of Truth](../adr/0003-spec-bdd-source-of-truth.md)
+- [ADR-0003: Spec and BDD as Source of Truth](../adr/0003-spec-and-bdd-as-source-of-truth.md)
 - [ADR-0005: Selftest as the Single Quality Gate](../adr/0005-xtask-selftest-single-gate.md)
 - [ADR-0017: Tier-1 Selftest as Required Gate on Main Branch](../adr/0017-tier1-selftest-gate.md)
 - [ADR-0020: Claude Code Skills Governance](../adr/0020-claude-code-skills-governance.md)

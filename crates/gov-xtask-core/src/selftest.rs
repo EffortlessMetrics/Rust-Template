@@ -1,6 +1,6 @@
 //! Selftest pipeline for governance validation.
 //!
-//! Defines the standard 11-step selftest pipeline that service repos execute.
+//! Defines the standard 12-step selftest pipeline that service repos execute.
 
 use crate::env::Verbosity;
 use anyhow::Result;
@@ -62,7 +62,7 @@ impl SelftestResult {
 
 /// Standard selftest step definitions.
 ///
-/// These 11 steps define the governance validation pipeline.
+/// These 12 steps define the governance validation pipeline.
 /// Order and naming must match the actual xtask selftest implementation.
 pub const SELFTEST_STEPS: &[(&str, &str)] = &[
     ("Core checks", "fmt, clippy, unit tests"),

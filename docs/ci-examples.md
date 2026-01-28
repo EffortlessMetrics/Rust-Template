@@ -160,7 +160,7 @@ If you're integrating `rust_iac_xtask_core` into an existing project, you'll nee
 
 ### Prerequisites
 
-1. Add `rust_iac_xtask_core` to your dependencies (see [integration guide](./how-to/integrate-into-existing-project.md))
+1. Add `rust_iac_xtask_core` to your dependencies (see [add governance to existing repo](./how-to/add-governance-to-existing-repo.md))
 2. Create an `xtask` crate in your workspace
 3. Set up your `Cargo.toml` workspace
 
@@ -648,7 +648,7 @@ Based on typical repository size and complexity:
 
 ### Getting Help
 
-- Check [troubleshooting guide](./how-to/troubleshooting.md)
+- Check [Nix environment issues](./how-to/nix-environment-issues.md)
 - Review workflow logs in GitHub Actions tab
 - See [xtask documentation](./reference/xtask-commands.md)
 - File an issue with workflow logs attached
@@ -658,6 +658,5 @@ Based on typical repository size and complexity:
 ## Next Steps
 
 - [Set up branch protection](./BRANCH-PROTECTION-SETUP.md)
-- [Configure deployment workflows](./how-to/deploy-to-production.md)
-- [Add custom xtask commands](./how-to/extend-xtask.md)
-- [Integrate with other CI systems](./how-to/integrate-other-ci.md)
+- [Run in CI](./how-to/run-in-ci.md)
+- [Deploy to dev environment](./how-to/deploy-dev.md)

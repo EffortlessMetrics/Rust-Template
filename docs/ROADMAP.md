@@ -111,7 +111,7 @@ This closure is enforced:
 
 - Git tag: `v3.3.9-kernel` marks the frozen baseline
 - `ROADMAP.md` updated to reflect closure
-- Selftest gates expanded to 11 steps
+- Selftest gates expanded to 12 steps
 
 To fork from v3.3.9, start with `docs/how-to/FIRST_FORK.md`.
 
@@ -122,7 +122,7 @@ To fork from v3.3.9, start with `docs/how-to/FIRST_FORK.md`.
 The template is at v3.3.14, building on the frozen v3.3.9-kernel baseline.
 
 - **Kernel ACs** (`must_have_ac: true`): All passing
-- **Selftest**: Green (11/11 gates)
+- **Selftest**: Green (12/12 gates)
 - **Non-kernel ACs**: Soft gates, may be UNKNOWN depending on test capture
 
 **Template Version (v3.3.14):**
@@ -145,7 +145,7 @@ The v3.3.9-kernel tag marks the stable, frozen baseline that includes:
 | **Kernel ACs** | All passing (`must_have_ac: true`) — see `feature_status.md` for current count |
 | **Template ACs** | Soft gates, not enforced — see `feature_status.md` |
 | **Meta/CI-only ACs** | CI tests, harness, example tags — see `feature_status.md` |
-| **Selftest Gates** | 11/11 passing |
+| **Selftest Gates** | 12/12 passing |
 | **Policy Tests** | All passing — run `cargo xtask selftest` for current count |
 | **BDD Scenarios** | See `specs/features/` — count tracked in `feature_status.md` |
 
@@ -197,7 +197,7 @@ The v3.3.9-kernel tag marks the stable, frozen baseline that includes:
 ```bash
 nix develop
 cargo xtask doctor         # Environment validated
-cargo xtask selftest       # 11/11 gates pass
+cargo xtask selftest       # 12/12 gates pass
 cargo xtask ac-status      # All kernel ACs PASS
 cargo run -p app-http      # Listening on :8080
 ```
@@ -347,7 +347,7 @@ Only a few items remain - all now have documentation or are external dependencie
 | ---------------------------- | --------------------------------------------- | ------------------- |
 | **Docs version alignment** | All docs updated to v3.3.13 references | ✅ Merged (PR #40) |
 | **Security configuration doc** | Auth modes, CORS, JWT, headers, fail-closed | ✅ Merged (PR #38) |
-| **Selftest green** | 11/11 gates passing | ✅ Verified |
+| **Selftest green** | 12/12 gates passing | ✅ Verified |
 
 #### Already Complete (From v3.3.12)
 
@@ -460,6 +460,38 @@ To customize hook strictness:
 | **pre-push hook option** | Install hooks could optionally add a pre-push hook for full validation | Keeps commits fast, pushes safe |
 | **Untracked file detection** | Include `git ls-files --others` in non-staged mode | Catches new files that aren't staged |
 | **Spellcheck specs YAML** | Extend spellcheck targets to include `specs/*.yaml` | Currently markdown-only |
+
+---
+
+### 4.4.2 Post-v3.3.14 – Microcrate Architecture Polish
+
+> **Scope:** Architecture refinements and documentation improvements merged after v3.3.14 tag.
+> Focused on cleaner crate separation and reduced type duplication.
+
+**Status:** In Progress (uncommitted)
+
+#### Merged/In Progress (Post-v3.3.14)
+
+| Item | Description | Status |
+| ---- | ----------- | ------ |
+| **New `gov-http-types` crate** | Shared HTTP API types (`FrictionEntry`, `Question`) extracted to reduce duplication across `gov-http-*` crates | ✅ Complete |
+| **Enhanced `gov-model`** | `TaskStatus` parsing with aliases ("in_progress", "open", etc.) and property-based tests | ✅ Complete |
+| **Ignored tests documentation** | New `docs/reference/ignored-tests.md` catalogs all `#[ignore]` tests with rationale and run instructions | ✅ Complete |
+| **Architecture doc update** | `docs/explanation/architecture.md` updated with complete crate taxonomy (21+ crates across 6 layers) | ✅ Complete |
+| **Crate dependency cleanup** | `gov-http-friction` and `gov-http-questions` now use shared types from `gov-http-types` | ✅ Complete |
+
+#### Architecture Highlights
+
+The microcrate architecture now clearly separates crates into 6 layers:
+
+1. **Contract** — Stable APIs (`platform-contract`, `gov-contracts`, `receipts-core`)
+2. **Core Logic** — Business rules (`gov-model`, `gov-policy`, `spec-ledger`)
+3. **Foundation** — Shared utilities (`http-core`, `gov-http-types`, `telemetry`)
+4. **Adapter** — External interfaces (`gov-http-*`, `adapters-db-sqlx`)
+5. **HTTP/Router** — Application entry (`app-http`, `http-middleware`)
+6. **Facade** — Developer tooling (`gov-xtask-core`, `rust_iac_config`)
+
+This layering enables future crate extraction (v3.5.0+ vision) by establishing clear dependency boundaries now.
 
 ---
 

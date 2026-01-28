@@ -95,7 +95,7 @@ This repo is designed for **AI-native** workflows:
 |----------|----------|-----------|
 | Spec ledger schema | `specs/spec_ledger.yaml` | Kernel-frozen |
 | Platform API | `/platform/*` endpoints | Kernel-frozen |
-| Selftest gates | 11 steps in `xtask selftest` | Kernel-frozen |
+| Selftest gates | 12 steps in `xtask selftest` | Kernel-frozen |
 | Config schema | `specs/config_schema.yaml` | Kernel-frozen |
 | DevEx flows | `specs/devex_flows.yaml` | Kernel-frozen |
 

@@ -1,4 +1,4 @@
-//! Selftest command - full 11-step governance validation.
+//! Selftest command - full 12-step governance validation.
 //!
 //! This module implements the selftest pipeline using environment detection
 //! from gov-xtask-core for consistent CI/resource-aware behavior.
@@ -79,7 +79,7 @@ pub fn run_with_verbosity(verbosity: crate::Verbosity) -> Result<()> {
     let mut results = SelftestResults::new();
 
     // Step 1: Core checks
-    println!("{}", "[1/11] Running core checks (fmt, clippy, tests)...".blue());
+    println!("{}", "[1/12] Running core checks (fmt, clippy, tests)...".blue());
     let step_start = Instant::now();
     let core_ok = match crate::commands::check::run_with_options(
         crate::commands::check::CheckOptions::from_env(),
@@ -101,8 +101,33 @@ pub fn run_with_verbosity(verbosity: crate::Verbosity) -> Result<()> {
     results.push("Core checks", core_ok, Some("Run `cargo run -p xtask -- check`"));
     println!();
 
-    // Step 2: Skills governance lint
-    println!("{}", "[2/11] Checking Skills governance...".blue());
+    // Step 2: Docs-as-Code check
+    println!("{}", "[2/12] Running Docs-as-Code check...".blue());
+    let step_start = Instant::now();
+    let docs_ok = match crate::commands::docs_check::run() {
+        Ok(_) => {
+            let elapsed = step_start.elapsed();
+            if verbosity.is_verbose() {
+                println!(
+                    "  {} Docs-as-Code check passed ({:.2}s)",
+                    "✓".green(),
+                    elapsed.as_secs_f64()
+                );
+            } else {
+                println!("  {} Docs-as-Code check passed", "✓".green());
+            }
+            true
+        }
+        Err(e) => {
+            eprintln!("  {} Docs-as-Code check failed: {}", "✗".red(), e);
+            false
+        }
+    };
+    results.push("Docs-as-Code", docs_ok, Some("Run `cargo run -p xtask -- docs-check`"));
+    println!();
+
+    // Step 3: Skills governance lint
+    println!("{}", "[3/12] Checking Skills governance...".blue());
     let step_start = Instant::now();
     let skills_ok = if Path::new(".claude/skills").exists() {
         match crate::commands::skills::run_lint() {
@@ -131,8 +156,8 @@ pub fn run_with_verbosity(verbosity: crate::Verbosity) -> Result<()> {
     results.push("Skills governance", skills_ok, Some("Run `cargo run -p xtask -- skills-lint`"));
     println!();
 
-    // Step 3: Agents governance lint
-    println!("{}", "[3/11] Checking Agents governance...".blue());
+    // Step 4: Agents governance lint
+    println!("{}", "[4/12] Checking Agents governance...".blue());
     let step_start = Instant::now();
     let agents_ok = if Path::new(".claude/agents").exists() {
         match crate::commands::agents::run_lint() {
@@ -161,8 +186,8 @@ pub fn run_with_verbosity(verbosity: crate::Verbosity) -> Result<()> {
     results.push("Agents governance", agents_ok, Some("Run `cargo run -p xtask -- agents-lint`"));
     println!();
 
-    // Step 4: BDD acceptance tests
-    println!("{}", "[4/11] Running BDD acceptance tests...".blue());
+    // Step 5: BDD acceptance tests
+    println!("{}", "[5/12] Running BDD acceptance tests...".blue());
     let bdd_ok = if skip_bdd {
         println!(
             "  {} Skipping BDD tests because XTASK_SKIP_BDD=1 (avoid recursion in harness)",
@@ -203,8 +228,8 @@ pub fn run_with_verbosity(verbosity: crate::Verbosity) -> Result<()> {
     results.push("BDD acceptance tests", bdd_ok, Some("Run `cargo run -p xtask -- bdd`"));
     println!();
 
-    // Step 5: AC status mapping & ADR references
-    println!("{}", "[5/11] Running AC status mapping & ADR references...".blue());
+    // Step 6: AC status mapping & ADR references
+    println!("{}", "[6/12] Running AC status mapping & ADR references...".blue());
     let step_start = Instant::now();
 
     let mut mapping_ok = true;
@@ -240,7 +265,7 @@ pub fn run_with_verbosity(verbosity: crate::Verbosity) -> Result<()> {
 
     let elapsed = step_start.elapsed();
     if verbosity.is_verbose() {
-        println!("  {} Step 5 completed ({:.2}s)", "✓".green(), elapsed.as_secs_f64());
+        println!("  {} Step 6 completed ({:.2}s)", "✓".green(), elapsed.as_secs_f64());
     }
     results.push(
         "AC/ADR mapping",
@@ -249,8 +274,8 @@ pub fn run_with_verbosity(verbosity: crate::Verbosity) -> Result<()> {
     );
     println!();
 
-    // Step 6: LLM context bundler
-    println!("{}", "[6/11] Testing LLM context bundler...".blue());
+    // Step 7: LLM context bundler
+    println!("{}", "[7/12] Testing LLM context bundler...".blue());
     let step_start = Instant::now();
     let bundler_ok = match crate::commands::bundle::run("implement_ac") {
         Ok(_) => {
@@ -277,8 +302,8 @@ pub fn run_with_verbosity(verbosity: crate::Verbosity) -> Result<()> {
     );
     println!();
 
-    // Step 7: Policy tests (if conftest available)
-    println!("{}", "[7/11] Running policy tests...".blue());
+    // Step 8: Policy tests (if conftest available)
+    println!("{}", "[8/12] Running policy tests...".blue());
     let step_start = Instant::now();
     let policy_ok = if low_resource_mode {
         // Skip policy tests in low-resource mode as they can be resource-intensive
@@ -350,8 +375,8 @@ pub fn run_with_verbosity(verbosity: crate::Verbosity) -> Result<()> {
         Some("Run `cargo run -p xtask -- policy-test` or use `nix develop`"),
     );
     println!();
-    // Step 8: DevEx contract
-    println!("{}", "[8/11] Checking DevEx contract...".blue());
+    // Step 9: DevEx contract
+    println!("{}", "[9/12] Checking DevEx contract...".blue());
     let step_start = Instant::now();
     let devex_ok = match run_devex_contract(verbosity) {
         Ok(_) => {
@@ -379,8 +404,8 @@ pub fn run_with_verbosity(verbosity: crate::Verbosity) -> Result<()> {
     );
     println!();
 
-    // Step 9: Graph invariants + UI contract
-    println!("{}", "[9/11] Checking governance graph & UI contract...".blue());
+    // Step 10: Graph invariants + UI contract
+    println!("{}", "[10/12] Checking governance graph & UI contract...".blue());
     let step_start = Instant::now();
     let mut governance_ok = true;
 
@@ -409,7 +434,7 @@ pub fn run_with_verbosity(verbosity: crate::Verbosity) -> Result<()> {
 
     let elapsed = step_start.elapsed();
     if verbosity.is_verbose() && governance_ok {
-        println!("  {} Step 9 completed ({:.2}s)", "✓".green(), elapsed.as_secs_f64());
+        println!("  {} Step 10 completed ({:.2}s)", "✓".green(), elapsed.as_secs_f64());
     }
 
     results.push(
@@ -419,8 +444,8 @@ pub fn run_with_verbosity(verbosity: crate::Verbosity) -> Result<()> {
     );
     println!();
 
-    // Step 10: AC coverage (including kernel mapping validation per ADR-0024)
-    println!("{}", "[10/11] Checking AC coverage for v3.0 kernel...".blue());
+    // Step 11: AC coverage (including kernel mapping validation per ADR-0024)
+    println!("{}", "[11/12] Checking AC coverage for v3.0 kernel...".blue());
     let step_start = Instant::now();
 
     // 10a: Spec ledger structural lint (ac-lint)
@@ -468,17 +493,17 @@ pub fn run_with_verbosity(verbosity: crate::Verbosity) -> Result<()> {
             false
         }
     };
-    // Step 10 passes only if lint, mapping check, AND coverage check pass
-    let step10_ok = lint_ok && mapping_check_ok && coverage_ok;
+    // Step 11 passes only if lint, mapping check, AND coverage check pass
+    let step11_ok = lint_ok && mapping_check_ok && coverage_ok;
     results.push(
         "AC coverage",
-        step10_ok,
+        step11_ok,
         Some("Run `cargo xtask ac-lint --strict` or `cargo xtask ac-coverage`"),
     );
     println!();
 
-    // Step 11: Test coverage (soft gate - advisory only)
-    println!("{}", "[11/11] Checking test coverage (advisory)...".blue());
+    // Step 12: Test coverage (soft gate - advisory only)
+    println!("{}", "[12/12] Checking test coverage (advisory)...".blue());
     let step_start = Instant::now();
     let test_coverage_ok = if low_resource_mode {
         println!("  {} Test coverage skipped (low-resource mode)", "⚠".yellow());
@@ -1194,13 +1219,14 @@ mod tests {
         assert!(result.required_count > 0, "Should have at least some required commands");
     }
 
-    /// AC-PLT-019: selftest displays condensed summary with 11 steps
+    /// AC-PLT-019: selftest displays condensed summary with 12 steps
     /// This test verifies the step structure and naming.
     #[test]
-    fn selftest_summary_has_eleven_steps() {
-        // The selftest runs 11 steps - verify the structure
+    fn selftest_summary_has_twelve_steps() {
+        // The selftest runs 12 steps - verify the structure
         let expected_steps = [
             "Core checks",
+            "Docs-as-Code",
             "Skills governance",
             "Agents governance",
             "BDD scenarios",
@@ -1213,8 +1239,8 @@ mod tests {
             "Test coverage",
         ];
 
-        // Verify we have exactly 11 steps
-        assert_eq!(expected_steps.len(), 11, "Selftest should have exactly 11 steps");
+        // Verify we have exactly 12 steps
+        assert_eq!(expected_steps.len(), 12, "Selftest should have exactly 12 steps");
 
         // Verify key governance steps are present
         assert!(

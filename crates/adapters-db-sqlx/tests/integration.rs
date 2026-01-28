@@ -2,6 +2,7 @@ use adapters_db_sqlx::PostgresTaskRepository;
 use business_core::ports::ExampleTaskRepository;
 use model::{ExampleTask, ExampleTaskStatus};
 use sqlx::PgPool;
+use testcontainers::core::WaitFor;
 use testcontainers::runners::AsyncRunner;
 use testcontainers::{GenericImage, ImageExt};
 
@@ -14,17 +15,15 @@ use testcontainers::{GenericImage, ImageExt};
 #[tokio::test]
 #[ignore = "Requires Docker for testcontainers; run with cargo test -- --ignored"]
 async fn test_postgres_repository_roundtrip() {
-    // Start PostgreSQL container using testcontainers 0.25 API
+    // Start PostgreSQL container with proper wait strategy (wait for ready message instead of sleep)
     let postgres_image = GenericImage::new("postgres", "16-alpine")
+        .with_wait_for(WaitFor::message_on_stderr("database system is ready to accept connections"))
         .with_env_var("POSTGRES_DB", "test_db")
         .with_env_var("POSTGRES_USER", "test_user")
         .with_env_var("POSTGRES_PASSWORD", "test_pass");
 
     let container = postgres_image.start().await.expect("Failed to start container");
     let port = container.get_host_port_ipv4(5432).await.expect("Failed to get port");
-
-    // Wait a moment for PostgreSQL to be ready
-    tokio::time::sleep(tokio::time::Duration::from_secs(3)).await;
 
     // Build connection string
     let database_url = format!("postgres://test_user:test_pass@localhost:{}/test_db", port);

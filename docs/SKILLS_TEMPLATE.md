@@ -261,7 +261,7 @@ If you can't resolve:
 - **Related ACs**: AC-TPL-SKILLS-YOURNAME-001, etc.
 - **Commands**: `cargo xtask help-flows`
 - **Platform APIs**: `GET http://localhost:8080/platform/status`
-- **Governance**: [SKILLS_GOVERNANCE.md](../../docs/SKILLS_GOVERNANCE.md)
+- **Governance**: [SKILLS_GOVERNANCE.md](./SKILLS_GOVERNANCE.md)
 
 ---
 

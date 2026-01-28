@@ -67,6 +67,8 @@ tracing-opentelemetry = "0.32.0"
 tracing-subscriber = {features = ["env-filter", "fmt"], version = "0.3.22"}
 url = "2.5.7"
 uuid = {features = ["serde", "v4"], version = "1.19.0"}
+# Property-based testing
+proptest = "1.6"
 
 [workspace.lints.rust]
 missing_docs = "warn"

@@ -17,6 +17,8 @@ http-errors = { path = "../http-errors", features = ["axum"] }
 platform-contract = { path = "../platform-contract" }
 gov-model = { path = "../gov-model" }
 gov-http-core = { path = "../gov-http-core" }
+gov-http-types = { path = "../gov-http-types" }
+tokio.workspace = true
 serde.workspace = true
 serde_yaml.workspace = true
 tracing.workspace = true

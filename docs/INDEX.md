@@ -437,9 +437,11 @@ related_requirements: [REQ-ID-1, REQ-ID-2]
 
 ### Cross-Linking
 
-- Use relative paths: `[Text](../how-to/file.md)`
-- Use file:// URIs for code: `[spec_ledger.yaml](file:///path/to/spec_ledger.yaml)`
-- Link to specific lines: `[graph.rs:L123](file:///path/to/graph.rs#L123)`
+Use relative paths for documentation links:
+
+- Relative paths work best for internal docs (e.g., `../how-to/some-file.md`)
+- File URIs can reference code files (e.g., `file:///path/to/file.rs`)
+- Anchor syntax links to specific lines (e.g., `#L123`)
 
 ---
 

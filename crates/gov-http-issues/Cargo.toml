@@ -18,8 +18,7 @@ http-errors = { path = "../http-errors", features = ["axum"] }
 platform-contract = { path = "../platform-contract" }
 gov-model = { path = "../gov-model" }
 gov-http-core = { path = "../gov-http-core" }
-gov-http-friction = { path = "../gov-http-friction" }
-gov-http-questions = { path = "../gov-http-questions" }
+gov-http-types = { path = "../gov-http-types" }
 serde.workspace = true
 serde_json.workspace = true
 serde_yaml.workspace = true

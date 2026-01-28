@@ -1,7 +1,15 @@
+<!-- doclint:disable orphan-version -->
+<!-- Note: This is a historical baseline with dependency versions captured at measurement time -->
+
 # Microcrate Modularization - Baseline Measurements
 
 **Date:** 2026-01-26
 **Purpose:** Establish baseline measurements before splitting the Rust workspace into microcrates to track the impact of changes on build times and dependency coupling.
+
+> **Note:** This is a **historical baseline** document. The workspace has since been modularized
+> with additional crates (`gov-http-types`, `gov-http-friction`, `gov-http-questions`, `gov-http-issues`,
+> `http-core`, `http-errors`, `http-middleware`, etc.). See `docs/explanation/architecture.md` for
+> the current crate taxonomy (21+ crates across 6 layers).
 
 ---
 
@@ -67,7 +75,7 @@ This document captures baseline measurements for the Rust-Template workspace pri
 
 ### Workspace Dependencies
 
-From [`Cargo.toml`](../../Cargo.toml):
+From [`Cargo.toml`](../../Cargo.toml) (versions captured at baseline date):
 
 | Dependency | Version | Purpose |
 |------------|----------|---------|

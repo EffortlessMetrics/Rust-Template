@@ -536,8 +536,7 @@ This playbook is designed for the Rust IaC Template but adapts to:
 ## References
 
 - **Template Releases**: [CHANGELOG.md](../CHANGELOG.md)
-- **Example Plan**: [docs/v2.3.0-plan.md](v2.3.0-plan.md)
-- **Selftest Docs**: [docs/SELFTEST.md](SELFTEST.md)
+- **Selftest Documentation**: [reference/xtask-commands.md](./reference/xtask-commands.md#xtask-selftest)
 - **AC Ledger**: [specs/spec_ledger.yaml](../specs/spec_ledger.yaml)
 
 ---

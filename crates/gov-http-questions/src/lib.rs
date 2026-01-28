@@ -15,92 +15,36 @@ use axum::{
 };
 use gov_http_core::{PlatformError, PlatformState};
 use serde::{Deserialize, Serialize};
-use std::fs;
+use std::path::PathBuf;
 
-/// Question artifact representing flow decision points
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Question {
-    pub id: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub task_id: Option<String>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub req_ids: Vec<String>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub ac_ids: Vec<String>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub refs: Vec<String>,
-    pub summary: String,
-    pub context: QuestionContext,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub options: Vec<QuestionOption>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub recommendation: Option<Recommendation>,
-    pub created_by: String,
-    pub created_at: String,
-    #[serde(default = "default_status")]
-    pub status: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub resolution: Option<QuestionResolution>,
-}
+// Re-export types from gov-http-types for backwards compatibility
+pub use gov_http_types::{
+    Question, QuestionContext, QuestionOption, QuestionResolution, Recommendation,
+};
 
-fn default_status() -> String {
-    "open".to_string()
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct QuestionContext {
-    pub flow: String,
-    pub phase: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub description: Option<String>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub files_involved: Vec<String>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct QuestionOption {
-    pub label: String,
-    pub description: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub risk: Option<String>,
-    #[serde(default = "default_reversible")]
-    pub reversible: bool,
-}
-
-fn default_reversible() -> bool {
-    true
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Recommendation {
-    pub option_label: String,
-    pub rationale: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub confidence: Option<String>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct QuestionResolution {
-    pub resolved_by: String,
-    pub resolved_at: String,
-    pub chosen_option: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub notes: Option<String>,
-}
-
+/// Response for listing questions.
 #[derive(Debug, Serialize)]
 pub struct QuestionsListResponse {
+    /// List of question summaries.
     pub questions: Vec<QuestionSummary>,
+    /// Total number of questions.
     pub total: usize,
 }
 
+/// Summary of a question for list views.
 #[derive(Debug, Serialize)]
 pub struct QuestionSummary {
+    /// Unique identifier (e.g., "Q-FLOW-001").
     pub id: String,
+    /// Brief summary of the question.
     pub summary: String,
+    /// Current status (e.g., "open", "resolved").
     pub status: String,
+    /// Associated flow (e.g., "bundle").
     pub flow: String,
+    /// Phase within the flow (e.g., "selection").
     pub phase: String,
+    /// Creation timestamp (ISO 8601).
     pub created_at: String,
 }
 
@@ -123,7 +67,10 @@ where
         .route("/questions/{id}", get(get_question_by_id::<S>))
 }
 
-/// Load all question entries from questions/ directory
+/// Load all question entries from questions/ directory.
+///
+/// This function performs blocking filesystem I/O and should be called from
+/// within `spawn_blocking` to avoid starving the Tokio async runtime.
 fn load_all_questions(
     root: &std::path::Path,
     status_filter: Option<&str>,
@@ -136,7 +83,7 @@ fn load_all_questions(
 
     let mut questions = Vec::new();
 
-    let dir_entries = fs::read_dir(&questions_dir).map_err(|e| {
+    let dir_entries = std::fs::read_dir(&questions_dir).map_err(|e| {
         PlatformError::internal(format!("Failed to read questions directory: {}", e))
     })?;
 
@@ -182,9 +129,12 @@ fn load_all_questions(
     Ok(questions)
 }
 
-/// Load a single question entry from a YAML file
+/// Load a single question entry from a YAML file.
+///
+/// This function performs blocking filesystem I/O and should be called from
+/// within `spawn_blocking` to avoid starving the Tokio async runtime.
 fn load_question_entry(path: &std::path::Path) -> Result<Question, PlatformError> {
-    let content = fs::read_to_string(path).map_err(|e| {
+    let content = std::fs::read_to_string(path).map_err(|e| {
         PlatformError::internal(format!("Failed to read question file {}: {}", path.display(), e))
     })?;
 
@@ -203,8 +153,15 @@ async fn get_all_questions<S>(
 where
     S: PlatformState,
 {
-    let root = state.context().root();
-    let questions = load_all_questions(root, filters.status.as_deref())?;
+    let root = state.context().root().to_path_buf();
+    let status_filter = filters.status.clone();
+
+    // Offload blocking filesystem I/O to spawn_blocking to avoid starving
+    // the Tokio async runtime under concurrent load.
+    let questions =
+        tokio::task::spawn_blocking(move || load_all_questions(&root, status_filter.as_deref()))
+            .await
+            .map_err(|e| PlatformError::internal(format!("spawn_blocking failed: {}", e)))??;
 
     let summaries: Vec<QuestionSummary> = questions
         .iter()
@@ -223,17 +180,14 @@ where
     Ok(Json(QuestionsListResponse { questions: summaries, total }))
 }
 
-/// GET /questions/{id} - Get a specific question entry by ID
-async fn get_question_by_id<S>(
-    State(state): State<S>,
-    Path(id): Path<String>,
-) -> Result<Json<Question>, PlatformError>
-where
-    S: PlatformState,
-{
-    let root = state.context().root();
-    let questions_dir = root.join("questions");
-
+/// Load a question entry by ID.
+///
+/// This function performs blocking filesystem I/O and should be called from
+/// within `spawn_blocking` to avoid starving the Tokio async runtime.
+fn load_question_by_id(
+    questions_dir: &std::path::Path,
+    id: &str,
+) -> Result<Question, PlatformError> {
     // Try to find the question file
     // It could be named with or without a prefix (e.g., Q-EXAMPLE-001.yaml or QUESTION-001.yaml)
     let possible_filenames = vec![
@@ -257,11 +211,30 @@ where
                 );
             }
 
-            return Ok(Json(question));
+            return Ok(question);
         }
     }
 
     Err(PlatformError::not_found(format!("Question '{}' not found", id)))
+}
+
+/// GET /questions/{id} - Get a specific question entry by ID
+async fn get_question_by_id<S>(
+    State(state): State<S>,
+    Path(id): Path<String>,
+) -> Result<Json<Question>, PlatformError>
+where
+    S: PlatformState,
+{
+    let questions_dir: PathBuf = state.context().root().join("questions");
+
+    // Offload blocking filesystem I/O to spawn_blocking to avoid starving
+    // the Tokio async runtime under concurrent load.
+    let question = tokio::task::spawn_blocking(move || load_question_by_id(&questions_dir, &id))
+        .await
+        .map_err(|e| PlatformError::internal(format!("spawn_blocking failed: {}", e)))??;
+
+    Ok(Json(question))
 }
 
 #[cfg(test)]

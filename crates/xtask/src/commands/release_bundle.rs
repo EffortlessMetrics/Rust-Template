@@ -1,6 +1,6 @@
 use anyhow::{Context, Result};
-use business_core::governance::TaskStatus;
 use colored::Colorize;
+use gov_model::TaskStatus;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 use std::fs;

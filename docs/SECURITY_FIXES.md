@@ -190,7 +190,7 @@ fn validate_jwt_token(token: &str, secret: &str) -> bool {
 
 ### Middleware Stack Order
 
-The security middleware is integrated in the correct order in [`crates/app-http/src/lib.rs`](crates/app-http/src/lib.rs:128):
+The security middleware is integrated in the correct order in `crates/app-http/src/lib.rs`:
 
 ```rust
 Router::new()
@@ -211,7 +211,7 @@ Router::new()
 
 ### Application State Updates
 
-The [`AppState`](crates/app-http/src/lib.rs:31) struct was updated to include security configurations:
+The `AppState` struct in `crates/app-http/src/lib.rs` was updated to include security configurations:
 
 ```rust
 #[derive(Clone)]

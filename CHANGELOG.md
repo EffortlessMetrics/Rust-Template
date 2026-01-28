@@ -9,7 +9,90 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-(empty)
+### Added
+
+- **Selftest expanded to 12 steps**
+  - Added step 2: Docs-as-Code check (`cargo xtask docs-check`)
+  - New checks validate documentation consistency early in the pipeline
+  - All subsequent steps renumbered accordingly
+
+- **Enhanced `docs-check` with three new advisory validators**
+  - **Markdown link validation**: Scans `docs/`, `specs/features/`, and root markdown files for broken local links
+  - **BDD feature tag validation**: Validates `@AC-*` tags in `.feature` files exist in `spec_ledger.yaml`
+  - **Skills/Agents alignment check**: Validates skills and agents are referenced in spec_ledger
+  - All three are advisory (warnings only) to allow gradual adoption
+
+- **New `gov-http-types` crate**
+  - Shared HTTP API types for governance endpoints (`FrictionEntry`, `Question`)
+  - Enables decoupling between sibling `gov-http-*` crates
+  - Pure data structures with serde support, no HTTP framework dependencies
+
+- **Enhanced `gov-model` crate**
+  - `TaskStatus` now parses from string with common aliases (e.g., "in_progress", "in-progress", "open")
+  - Added `TaskStatusParseError` for better error handling
+  - Property-based tests (proptest) for `TaskStatus` roundtrip and transition invariants
+  - Added `is_done()` method for terminal state checking
+
+- **Ignored tests reference documentation** (`docs/reference/ignored-tests.md`)
+  - Catalogs all `#[ignore]` tests in the codebase
+  - Documents why each test is ignored and how to run it
+  - Covers database integration, gRPC smoke, and infrastructure tests
+
+### Changed
+
+- **Async runtime improvements**
+  - `gov-http-friction` and `gov-http-questions` now use `tokio::task::spawn_blocking` for filesystem I/O
+  - Prevents blocking operations from starving the Tokio async runtime under concurrent load
+  - All blocking file operations (reading friction/questions YAML files) are now properly offloaded
+
+- **Error handling improvements**
+  - `AppError` now uses boxed `ErrorDetails` struct to reduce stack size
+  - Internal refactoring with no API changes
+  - Reduces memory footprint for error types on the stack
+
+- **Acceptance test improvements**
+  - BDD step definitions now return `Result<()>` instead of panicking on assertion failures
+  - Uses `anyhow::ensure!` and `anyhow::bail!` for better error messages
+  - Improved test output and debugging experience
+
+- **Crate dependency cleanup**
+  - `gov-http-friction` and `gov-http-questions` now use shared types from `gov-http-types`
+  - Reduced duplication of `FrictionEntry` and `Question` type definitions
+  - `xtask` now depends on `gov-model` instead of `business-core` for `TaskStatus`
+  - Updated architecture documentation to reflect complete crate taxonomy
+
+- **Feature flag modernization**
+  - `adapters-db-sqlx`: Added explicit `default = []` feature section
+  - `telemetry`: Modernized `otlp` feature to use `dep:` syntax for optional dependencies
+
+- **Test infrastructure improvements**
+  - DB integration test now uses `WaitFor::message_on_stderr` instead of `sleep(3s)`
+  - Added missing `tokio` dependency to `gov-http-friction` and `gov-http-questions`
+  - Property-based tests (proptest) added to workspace dependencies
+
+- **Skills and documentation updated for 12-step selftest**
+  - Updated all skills (`governed-feature-dev`, `governed-maintenance`, etc.) to reference 12 steps
+  - Updated README and related docs to reflect expanded selftest pipeline
+
+### Fixed
+
+- **JWT validation test reliability**
+  - Fixed intermittent test failures in `crates/app-http/tests/jwt_validation.rs`
+  - Tests now properly handle async context and error conditions
+
+- **CORS middleware**
+  - Minor cleanup in `crates/app-http/src/middleware/cors.rs`
+
+### Documentation
+
+- **API documentation improvements**
+  - Added frontmatter to `docs/api/forks.md`, `docs/api/idp-snapshot.md`, `docs/api/status.md`, `docs/api/ui-contract.md`
+  - Updated `docs/api/overview/index.md` with improved navigation
+
+- **Docs consistency sweep**
+  - Updated version references across ~30 documentation files
+  - Ensured consistent terminology and cross-references
+  - Added `<!-- doclint:disable orphan-version -->` suppressions where appropriate
 
 ## [3.3.14] - 2025-12-29
 

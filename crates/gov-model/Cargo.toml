@@ -2,6 +2,9 @@
 serde = {workspace = true}
 thiserror = {workspace = true}
 
+[dev-dependencies]
+proptest.workspace = true
+
 [package]
 description = "Governance domain model types for Rust-as-Spec platform"
 name = "gov-model"

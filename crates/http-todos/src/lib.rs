@@ -163,11 +163,11 @@ where
         ));
     }
 
-    let todo = Todo { id: payload.id.clone(), title: payload.title.clone() };
+    let todo = Todo { id: payload.id, title: payload.title };
 
     state.1.add(todo.clone()).await;
 
-    info!(id = %payload.id, "Todo created successfully");
+    info!(id = %todo.id, "Todo created successfully");
 
     Ok((StatusCode::CREATED, Json(todo)))
 }

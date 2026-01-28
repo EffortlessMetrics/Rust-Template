@@ -1437,7 +1437,7 @@ tests:
 
 ## Selftest Enforcement
 
-The `cargo xtask selftest` command validates all kernel contracts through 11 steps:
+The `cargo xtask selftest` command validates all kernel contracts through 12 steps:
 
 1. **Core checks**: fmt, clippy, tests (AC-PLT-003)
 2. **Skills governance**: Validate SKILL.md structure and policies

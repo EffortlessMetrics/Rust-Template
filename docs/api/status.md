@@ -12,6 +12,9 @@ adrs: [ADR-0005]
 last_updated: 2025-12-27
 ---
 
+<!-- doclint:disable orphan-version -->
+<!-- Note: JSON examples contain version strings that are intentionally not tied to template version -->
+
 # Platform Status API
 
 The Status API provides comprehensive platform health, governance metrics, AC coverage, and runtime configuration information.
@@ -30,6 +33,7 @@ curl http://localhost:8080/platform/status
 
 #### Response
 
+<!-- doclint:disable orphan-version -->
 ```json
 {
   "service": {
@@ -148,6 +152,7 @@ curl http://localhost:8080/platform/status
   }
 }
 ```
+<!-- doclint:enable orphan-version -->
 
 #### Response Schema
 

@@ -53,7 +53,7 @@ Where enforcement lives:
 
 - `policy/*.rego` - OPA/Rego policies for ledger, features, privacy
 - `.github/workflows/` - CI workflows enforcing gates
-- `cargo xtask selftest` - The 11-step governance validation
+- `cargo xtask selftest` - The 12-step governance validation
 
 ### 4. Tooling and LLM Plane
 
