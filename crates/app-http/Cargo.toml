@@ -15,7 +15,7 @@ serde_urlencoded = "0.7.1"
 spec-runtime = {path = "../spec-runtime"}
 telemetry = {path = "../telemetry"}
 tokio = {features = ["net", "signal"], workspace = true}
-tower-http = {features = ["metrics", "trace"], version = "0.6.8"}
+tower-http = {features = ["metrics", "trace", "compression-full"], version = "0.6.8"}
 uuid = {features = ["v4"], workspace = true}
 # Workspace dependencies
 anyhow.workspace = true
