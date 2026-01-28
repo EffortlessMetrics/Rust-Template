@@ -2,6 +2,11 @@
 anyhow = {workspace = true}
 axum = {workspace = true}
 gov-contracts = {path = "../gov-contracts"}
+gov-http-core = {path = "../gov-http-core"}
+gov-http-forks = {path = "../gov-http-forks"}
+gov-http-friction = {path = "../gov-http-friction"}
+gov-http-issues = {path = "../gov-http-issues"}
+gov-http-questions = {path = "../gov-http-questions"}
 gov-model = {path = "../gov-model"}
 serde = {workspace = true}
 serde_json = {workspace = true}

@@ -19,32 +19,39 @@
 //! let app = Router::new()
 //!     .nest("/platform", platform_router(state));
 //! ```
+//!
+//! # Architecture
+//!
+//! This crate acts as a facade that re-exports types from subrouter crates:
+//! - `gov-http-core` - Shared foundation (errors, state, extractors)
+//! - `gov-http-forks` - Forks endpoints
+//! - `gov-http-friction` - Friction endpoints
+//! - `gov-http-questions` - Questions endpoints
+//! - `gov-http-issues` - Issues endpoints
+//!
+//! The core handlers (health, schema, docs, tasks) remain in this crate.
 
-pub mod error;
-pub mod forks;
-pub mod friction;
+// Re-export from subrouter crates for backward compatibility
+pub use gov_http_core::state::DefaultPlatformState;
+pub use gov_http_core::{PlatformError, PlatformState, RequestId};
+pub use gov_http_forks::{ForkEntry, ForkSummary, ForksListResponse, Maintainer};
+pub use gov_http_friction::{FrictionContext, FrictionEntry, FrictionListResponse, Resolution};
+pub use gov_http_issues::{
+    Issue, IssueFilters, IssueKind, IssueStatus, IssuesResponse, IssuesSummary, KindCounts,
+    Pagination, StatusCounts,
+};
+pub use gov_http_questions::{
+    Question, QuestionContext, QuestionFilters, QuestionOption, QuestionResolution,
+    QuestionSummary, QuestionsListResponse, Recommendation,
+};
+
+// Core handlers remain in this crate
 pub mod handlers;
-pub mod issues;
-pub mod questions;
-pub mod state;
-
-pub use error::PlatformError;
-pub use forks::{ForkEntry, ForkSummary, ForksListResponse, Maintainer};
-pub use friction::{FrictionContext, FrictionEntry, FrictionListResponse, Resolution};
 pub use handlers::{
     CoverageDetail, CoverageResponse, CoverageSummary, DocHealthSummary, DocInfoWithHealth,
     DocsIndexResponse, SuggestNextQuery, TaskDocsOut, TaskFilters, TaskGraphQuery,
     TaskGraphResponse, TaskOut, TasksResponse,
 };
-pub use issues::{
-    Issue, IssueFilters, IssueKind, IssueStatus, IssuesResponse, IssuesSummary, KindCounts,
-    Pagination, StatusCounts,
-};
-pub use questions::{
-    Question, QuestionContext, QuestionFilters, QuestionOption, QuestionResolution,
-    QuestionSummary, QuestionsListResponse, Recommendation,
-};
-pub use state::{DefaultPlatformState, PlatformState};
 
 use axum::{Router, routing::get};
 
@@ -73,6 +80,13 @@ use axum::{Router, routing::get};
 ///
 /// - `/health` - Health check
 /// - `/status` - Governance status (simplified)
+///
+/// # Governance Artifact Endpoints
+///
+/// - `/forks/*` - Forks registry (via gov-http-forks)
+/// - `/friction/*` - Friction log (via gov-http-friction)
+/// - `/questions/*` - Questions (via gov-http-questions)
+/// - `/issues` - Unified issues (via gov-http-issues)
 pub fn platform_router<S>(state: S) -> Router
 where
     S: PlatformState + Clone + Send + Sync + 'static,
@@ -116,6 +130,11 @@ where
         .route("/tasks", get(handlers::get_tasks::<S>))
         .route("/tasks/suggest-next", get(handlers::get_suggest_next::<S>))
         .route("/tasks/graph", get(handlers::get_task_graph::<S>))
+        // Governance artifact endpoints (from subrouter crates)
+        .merge(gov_http_forks::router::<S>())
+        .merge(gov_http_friction::router::<S>())
+        .merge(gov_http_questions::router::<S>())
+        .merge(gov_http_issues::router::<S>())
 }
 
 /// Build the platform router excluding the simplified `/status` endpoint.
@@ -154,11 +173,11 @@ where
         .route("/tasks", get(handlers::get_tasks::<S>))
         .route("/tasks/suggest-next", get(handlers::get_suggest_next::<S>))
         .route("/tasks/graph", get(handlers::get_task_graph::<S>))
-        // Governance artifact endpoints
-        .merge(friction::router::<S>())
-        .merge(questions::router::<S>())
-        .merge(forks::router::<S>())
-        .merge(issues::router::<S>())
+        // Governance artifact endpoints (from subrouter crates)
+        .merge(gov_http_forks::router::<S>())
+        .merge(gov_http_friction::router::<S>())
+        .merge(gov_http_questions::router::<S>())
+        .merge(gov_http_issues::router::<S>())
 }
 
 /// Build a minimal platform router with only health/status endpoints.

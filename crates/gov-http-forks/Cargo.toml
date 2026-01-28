@@ -1,0 +1,25 @@
+[package]
+name = "gov-http-forks"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+documentation.workspace = true
+publish = false
+
+[dependencies]
+axum.workspace = true
+http.workspace = true
+http-errors = { path = "../http-errors", features = ["axum"] }
+platform-contract = { path = "../platform-contract" }
+gov-model = { path = "../gov-model" }
+gov-http-core = { path = "../gov-http-core" }
+serde.workspace = true
+serde_yaml.workspace = true
+tracing.workspace = true
+
+[dev-dependencies]
+serde_json.workspace = true

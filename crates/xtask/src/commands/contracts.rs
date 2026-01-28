@@ -23,8 +23,8 @@ use serde::Deserialize;
 use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
-
-use crate::contracts::ContractsSnapshot;
+use xtask_contracts::ContractsSnapshot;
+use xtask_lib::RepoContext;
 
 /// Contracts manifest loaded from specs/contracts_manifest.yaml
 #[derive(Debug, Deserialize)]
@@ -108,8 +108,9 @@ fn fmt_impl(repo_root: &Path, dry_run: bool) -> Result<()> {
     }
     println!();
 
-    // 1. Compute the snapshot from sources
-    let snapshot = ContractsSnapshot::compute(repo_root)?;
+    // 1. Compute the snapshot from sources using library
+    let repo = RepoContext { root: repo_root.to_path_buf() };
+    let snapshot = ContractsSnapshot::compute(&repo)?;
 
     println!("Computed facts from source:");
     println!("  • Selftest steps: {}", snapshot.selftest_step_count);
@@ -279,6 +280,7 @@ fn apply_contract_edits(repo_root: &Path, edits: &[ContractEdit]) -> Result<()> 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use xtask_contracts::AcCounts;
 
     #[test]
     fn test_check_without_manifest_is_soft_fail() {
@@ -322,8 +324,6 @@ stories:
 
     #[test]
     fn test_plan_edits_with_matching_content() {
-        use crate::contracts::AcCounts;
-
         // When content already matches, should produce no edits
         let snapshot = ContractsSnapshot {
             selftest_step_count: 11,
@@ -355,8 +355,6 @@ contracts:
 
     #[test]
     fn test_plan_edits_with_outdated_content() {
-        use crate::contracts::AcCounts;
-
         // When content is outdated, should produce edit
         let snapshot = ContractsSnapshot {
             selftest_step_count: 11,

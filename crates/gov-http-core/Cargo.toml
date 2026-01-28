@@ -1,0 +1,22 @@
+[package]
+name = "gov-http-core"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+documentation.workspace = true
+publish = false
+
+[dependencies]
+anyhow.workspace = true
+axum.workspace = true
+http.workspace = true
+http-errors = { path = "../http-errors", features = ["axum"] }
+platform-contract = { path = "../platform-contract" }
+gov-model = { path = "../gov-model" }
+serde.workspace = true
+thiserror.workspace = true
+uuid.workspace = true

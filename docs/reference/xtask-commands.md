@@ -35,6 +35,10 @@ Complete reference for all `xtask` CLI commands.
 - [contracts-check](#xtask-contracts-check) - Validate governed facts match docs
 - [contracts-fmt](#xtask-contracts-fmt) - Sync governed facts to docs
 - [ui-contract-check](#xtask-ui-contract-check) - Validate UI contract and DOM anchors
+- [check-api-diff](#xtask-check-api-diff) - Check contract crates for API breaking changes
+- [check-openapi-diff](#xtask-check-openapi-diff) - Check OpenAPI contract for breaking changes
+- [check-json-schemas](#xtask-check-json-schemas) - Check CLI JSON output schemas
+- [check-layering](#xtask-check-layering) - Enforce dependency layering rules
 - [issues-search](#xtask-issues-search) - Search across friction, questions, and tasks
 - [friction-gh-create](#xtask-friction-gh-create) - Create GitHub issue from friction entry
 - [friction-gh-link](#xtask-friction-gh-link) - Link existing GitHub issue to friction entry
@@ -3175,6 +3179,414 @@ resolution:
 - **Timestamp**: Uses UTC timestamp in RFC 3339 format
 - **Overwrites**: Previous resolution is replaced, not appended
 - **Surfaced via API**: Resolution appears in `/platform/questions` endpoint
+
+---
+
+## Contract Stability Checks
+
+### xtask check-api-diff
+
+Check contract crates for API breaking changes.
+
+#### Usage
+
+```bash
+cargo run -p xtask -- check-api-diff
+
+# With ADR approval (optional)
+cargo run -p xtask -- check-api-diff --adr docs/adr/0030-microcrate-architecture.md
+```
+
+#### Parameters
+
+| Flag | Description |
+|------|-------------|
+| `--adr <PATH>` | Path to ADR approving the change (optional) |
+
+#### What It Does
+
+Checks contract crates for breaking API changes by comparing against baseline:
+
+1. **Contract Crates Checked:**
+   - `platform-contract` - HTTP API types
+   - `xtask-contract` - CLI output types
+   - `receipts-core` - Receipt schemas
+   - `spec-types` - Spec file types
+
+2. **Layering Validation:**
+   - Verifies contract crates don't depend on forbidden packages (axum, tokio, clap, sqlx, tonic, jsonschema)
+   - Ensures dependencies point inward to foundation crates only
+
+3. **API Diff Detection:**
+   - Uses `cargo-public-api` if available
+   - Falls back to basic `cargo check` if tool not available
+   - Detects breaking changes (removed functions, type changes)
+
+#### Exit Codes
+
+- `0`: No breaking changes detected
+- `1`: Breaking changes detected (requires ADR)
+
+#### When to Use
+
+- **Before merging PR** - Ensure no breaking changes to contract crates
+- **After modifying contract APIs** - Verify stability before committing
+- **In CI** - Part of contract stability gate
+
+#### Example Output
+
+**No breaking changes:**
+
+```
+🔍 Checking platform-contract...
+  ✓ No breaking changes
+🔍 Checking xtask-contract...
+  ✓ No breaking changes
+🔍 Checking receipts-core...
+  ✓ No breaking changes
+🔍 Checking spec-types...
+  ✓ No breaking changes
+
+Summary:
+  Checked crates: 4
+  Contract crates: platform-contract, xtask-contract, receipts-core, spec-types
+✓ All contract crates are stable
+```
+
+**Breaking changes detected:**
+
+```
+🔍 Checking platform-contract...
+Breaking changes detected:
+  Removed: platform_contract::Status::version
+  Type change: platform_contract::Status::health (String -> Health)
+
+To approve this change:
+  1. Create an ADR documenting the breaking change
+  2. Update specs/contracts_manifest.yaml with new contract version
+  3. Update dependent crates and consumers
+  4. Run: cargo xtask release-prepare
+
+❌ Breaking changes detected
+```
+
+#### Notes
+
+- **Contract Stability:** Contract crates define the stable API surface of the platform
+- **Layering Enforcement:** Contract crates cannot depend on adapters or HTTP frameworks
+- **ADR Requirement:** Breaking changes must be documented in an ADR
+- **Tool Dependency:** Uses `cargo-public-api` when available for precise diff detection
+
+---
+
+### xtask check-openapi-diff
+
+Check OpenAPI contract for breaking changes.
+
+#### Usage
+
+```bash
+cargo run -p xtask -- check-openapi-diff
+```
+
+#### What It Does
+
+Validates the `/platform/*` HTTP contract by checking OpenAPI spec:
+
+1. **Extracts Platform Endpoints:**
+   - Parses `specs/openapi/openapi.yaml` for `/platform/*` paths
+   - Validates expected endpoints are present
+
+2. **Checks for Removed Endpoints:**
+   - Compares against baseline list of expected platform endpoints
+   - Reports any missing endpoints as potential breaking changes
+
+3. **Validates Contract Version:**
+   - Checks `specs/contracts_manifest.yaml` for HTTP contract version
+   - Warns if contract version not tracked
+
+#### Exit Codes
+
+- `0`: No breaking changes detected
+- `1`: Breaking changes detected (requires ADR)
+
+#### When to Use
+
+- **After modifying platform endpoints** - Ensure OpenAPI spec is updated
+- **Before releasing** - Verify contract stability
+- **In CI** - Part of contract stability gate
+
+#### Example Output
+
+**All endpoints present:**
+
+```
+🔍 Checking OpenAPI contract for breaking changes...
+
+Current platform endpoints:
+  - /platform/status
+  - /platform/graph
+  - /platform/tasks
+  - /platform/openapi
+  - /platform/issues
+
+Summary:
+  Total endpoints: 13
+  Missing endpoints: 0
+✓ OpenAPI contract is stable
+```
+
+**Missing endpoints detected:**
+
+```
+🔍 Checking OpenAPI contract for breaking changes...
+
+Current platform endpoints:
+  - /platform/status
+  - /platform/graph
+  - /platform/tasks
+
+Missing expected endpoints:
+  - /platform/openapi
+  - /platform/issues
+
+❌ OpenAPI contract issues detected
+
+Please ensure all expected platform endpoints are defined in OpenAPI spec.
+```
+
+#### Notes
+
+- **Platform Contract:** The `/platform/*` endpoints are part of the stable platform contract
+- **Expected Endpoints:** 13 core platform endpoints must always be present
+- **Contract Tracking:** HTTP contract versions should be tracked in `specs/contracts_manifest.yaml`
+
+---
+
+### xtask check-json-schemas
+
+Check CLI JSON output schemas for breaking changes.
+
+#### Usage
+
+```bash
+# Check against golden snapshots
+cargo run -p xtask -- check-json-schemas
+
+# Generate golden snapshots (for initial setup or after approved changes)
+cargo run -p xtask -- check-json-schemas --generate
+```
+
+#### Parameters
+
+| Flag | Description |
+|------|-------------|
+| `--generate` | Generate golden snapshots instead of checking |
+
+#### What It Does
+
+Validates JSON output schemas for xtask commands:
+
+1. **Commands Checked:**
+   - `ac-status --json` - AC coverage report
+   - `friction-list --json` - Friction log entries
+   - `questions-list --json` - Questions list
+   - `fork-list --json` - Fork registry
+   - `issues-search --json` - Unified issues search
+   - `version --json` - Version information
+
+2. **Golden Snapshot Comparison:**
+   - Compares current output against `specs/schemas/*.golden.json`
+   - Detects breaking changes (removed fields, type changes)
+   - Reports additions (non-breaking but notable)
+
+3. **Schema Validation:**
+   - Validates JSON structure is valid
+   - Ensures golden snapshots exist for all commands
+
+#### Exit Codes
+
+- `0`: No breaking changes detected
+- `1`: Breaking changes detected (requires ADR)
+
+#### When to Use
+
+- **After modifying JSON output** - Ensure schema remains stable
+- **Before releasing** - Verify contract stability
+- **Initial setup** - Use `--generate` to create golden snapshots
+
+#### Example Output
+
+**No breaking changes:**
+
+```
+🔍 Checking ac-status...
+  ✓ No breaking changes
+🔍 Checking friction-list...
+  ✓ No breaking changes
+🔍 Checking questions-list...
+  ✓ No breaking changes
+🔍 Checking fork-list...
+  ✓ No breaking changes
+🔍 Checking issues-search...
+  ✓ No breaking changes
+🔍 Checking version...
+  ✓ No breaking changes
+
+Summary:
+  Checked commands: 6
+  Commands: ac-status, friction-list, questions-list, fork-list, issues-search, version
+✓ All JSON schemas are stable
+```
+
+**Breaking changes detected:**
+
+```
+🔍 Checking ac-status...
+Breaking changes detected:
+  Command: ac-status
+  - Removed field: schema_version
+  - Type change for field: coverage_percent (number -> string)
+
+To approve this change:
+  1. Create an ADR documenting the breaking change
+  2. Update golden snapshot: specs/schemas/ac-status.golden.json
+  3. Update consumer documentation
+  4. Run: cargo xtask release-prepare
+
+❌ Breaking changes detected
+```
+
+**Generating golden snapshots:**
+
+```
+📝 Generating golden snapshot for ac-status...
+  ✓ Golden snapshot written to specs/schemas/ac-status.golden.json
+📝 Generating golden snapshot for friction-list...
+  ✓ Golden snapshot written to specs/schemas/friction-list.golden.json
+...
+```
+
+#### Notes
+
+- **Golden Snapshots:** Stored in `specs/schemas/` directory
+- **Contract Stability:** JSON schemas are part of the stable CLI contract
+- **Initial Setup:** Run with `--generate` to create initial golden snapshots
+- **Schema Format:** All schemas must be valid JSON
+
+---
+
+### xtask check-layering
+
+Enforce dependency layering rules across the workspace.
+
+#### Usage
+
+```bash
+cargo run -p xtask -- check-layering
+```
+
+#### What It Does
+
+Validates dependency layering to maintain architectural boundaries:
+
+1. **Contract Crate Layering:**
+   - Checks contract crates don't depend on forbidden packages
+   - Forbidden: axum, tokio, clap, sqlx, tonic, jsonschema
+   - Ensures dependencies point to foundation crates only
+
+2. **Foundation Crate Constraints:**
+   - Checks foundation crates have minimal dependencies (max 10)
+   - Foundation crates: http-errors, http-platform, http-core, telemetry
+
+3. **Circular Dependency Detection:**
+   - Builds dependency graph from `cargo metadata`
+   - Detects cycles using DFS algorithm
+   - Reports any circular dependencies found
+
+#### Exit Codes
+
+- `0`: All layering rules satisfied
+- `1`: Layering violation detected
+
+#### When to Use
+
+- **After adding new crates** - Verify layering compliance
+- **Before merging PR** - Ensure architectural boundaries are maintained
+- **In CI** - Part of architectural integrity gate
+
+#### Example Output
+
+**All rules satisfied:**
+
+```
+🔍 Checking crate layering...
+
+Checking contract crates:
+  ✓ platform-contract - OK (4 dependencies)
+  ✓ xtask-contract - OK (3 dependencies)
+  ✓ receipts-core - OK (2 dependencies)
+  ✓ spec-types - OK (2 dependencies)
+
+Checking foundation crates:
+  ✓ http-errors - OK (2 dependencies)
+  ✓ http-platform - OK (3 dependencies)
+  ✓ http-core - OK (4 dependencies)
+  ✓ telemetry - OK (6 dependencies)
+
+Checking for circular dependencies...
+  ✓ No circular dependencies
+
+Summary:
+  Checked crates: 8
+  Contract crates: platform-contract, xtask-contract, receipts-core, spec-types
+  Foundation crates: http-errors, http-platform, http-core, telemetry
+  Circular dependencies: 0
+✓ All layering rules satisfied
+```
+
+**Layering violations detected:**
+
+```
+🔍 Checking crate layering...
+
+Checking contract crates:
+  ✓ platform-contract - OK (4 dependencies)
+  ❌ xtask-contract has forbidden dependencies:
+      - tokio
+      - clap
+  ✓ receipts-core - OK (2 dependencies)
+  ✓ spec-types - OK (2 dependencies)
+
+❌ Layering violations detected
+
+Contract crates must not depend on: axum, tokio, clap, sqlx, tonic, jsonschema
+
+Please fix layering issues before proceeding.
+```
+
+**Circular dependencies detected:**
+
+```
+🔍 Checking crate layering...
+
+Checking for circular dependencies...
+Circular dependencies detected:
+  Cycle: xtask-contract -> http-platform -> http-core -> xtask-contract
+
+❌ Layering violations detected
+
+Circular dependencies prevent clean builds and should be avoided.
+
+Please fix layering issues before proceeding.
+```
+
+#### Notes
+
+- **Layering Rules:** Enforce dependency inversion (higher layers depend on lower layers)
+- **Contract Isolation:** Contract crates must not depend on adapters or HTTP frameworks
+- **Foundation Lightness:** Foundation crates should stay lightweight (max 10 dependencies)
+- **Circular Dependencies:** Prevent clean builds and indicate architectural issues
 
 ---
 

@@ -9,7 +9,7 @@ telemetry = {path = "../telemetry"}
 testing = {path = "../testing"}
 uuid = {features = ["v4"], workspace = true}
 axum.workspace = true
-cucumber.workspace = true
+cucumber = { workspace = true, features = ["output-junit"] }
 gherkin.workspace = true
 http.workspace = true
 http-body-util.workspace = true

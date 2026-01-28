@@ -1,0 +1,33 @@
+[package]
+name = "http-todos"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+documentation.workspace = true
+publish = false
+
+[dependencies]
+# HTTP framework
+axum.workspace = true
+http.workspace = true
+http-errors = { path = "../http-errors", features = ["axum"] }
+# Platform contract types
+platform-contract = { path = "../platform-contract" }
+# Core HTTP types
+http-core = { path = "../http-core" }
+# Model types
+model = { path = "../model" }
+# Utilities
+serde.workspace = true
+tracing.workspace = true
+tokio.workspace = true
+uuid.workspace = true
+
+[dev-dependencies]
+tokio.workspace = true
+tower.workspace = true
+testing = { path = "../testing" }

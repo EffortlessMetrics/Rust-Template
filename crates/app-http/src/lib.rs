@@ -1,20 +1,24 @@
 //! HTTP application layer for the Rust-as-Spec platform.
 //!
-//! This crate implements the HTTP interface for the platform, serving as the primary
-//! adapter between external HTTP clients and the core business logic. It provides a
-//! complete web application with routing, middleware, security, and observability.
+//! This crate acts as a facade for the HTTP layer, re-exporting functionality
+//! from the focused http-* crates. It provides backward compatibility for existing
+//! imports while delegating to the specialized crates.
 //!
 //! # Architecture
 //!
-//! The crate follows hexagonal/clean architecture principles:
+//! The crate follows the facade pattern for dependency isolation:
 //!
-//! - **HTTP Layer (this crate)**: Handles HTTP concerns (routing, serialization, status codes)
-//!   and translates between HTTP requests/responses and domain operations.
-//! - **Domain Layer** (`business-core`): Pure business logic with no HTTP knowledge.
-//! - **Model Layer** (`gov-model`): Domain entities and value objects shared across layers.
-//! - **Telemetry** (`telemetry`): Cross-cutting observability concerns.
+//! - **Facade Layer (this crate)**: Provides backward-compatible API by re-exporting
+//!   from http-* crates.
+//! - **Specialized HTTP Crates**: Each http-* crate handles a specific domain:
+//!   - `http-core`: Shared foundation (app state traits, common handlers)
+//!   - `http-platform`: Platform endpoints (`/platform/*`, UI routes)
+//!   - `http-tasks`: Task management endpoints
+//!   - `http-todos`: Todo management endpoints
+//!   - `http-agents`: Agent hints endpoints
+//!   - `http-middleware`: Cross-cutting middleware
 //!
-//! Dependencies point inward: `app-http` → `business-core` (correct), never the reverse.
+//! Dependencies point inward: http-* → http-core → platform-contract (correct).
 //!
 //! # Main Components
 //!
@@ -38,48 +42,58 @@
 //!
 //! ## Security Features
 //!
-//! - **Platform Authentication**: JWT-based auth for `/platform/*` endpoints via `platform_auth_guard`
-//! - **Security Headers**: Comprehensive security header configuration (CSP, HSTS, X-Content-Type-Options)
+//! - **Platform Authentication**: JWT-based auth for `/platform/*` endpoints
+//! - **Security Headers**: Comprehensive security header configuration
 //! - **CORS**: Configurable origin validation and credentials handling
 //! - **Request ID Propagation**: Correlation IDs for request tracing and audit trails
 //!
 //! ## Error Handling
 //!
-//! The `errors` module provides a comprehensive error handling system:
+//! Error types are re-exported from `http-errors` crate:
 //!
 //! - **Machine-readable error codes** (`ErrorCode` enum)
 //! - **AC/Feature ID tracking** for governance alignment
 //! - **Structured logging** with request correlation
 //! - **JSON error envelopes** with consistent format and context
 //!
-//! See [`errors::AppError`] for details.
-//!
 //! # Integration with Other Crates
+//!
+//! ## `http-core`
+//!
+//! Provides shared HTTP foundation including app state traits, common handlers,
+//! and shutdown signal handling.
+//!
+//! ## `http-platform`
+//!
+//! Provides `/platform/*` endpoints for governance introspection and UI routes.
+//!
+//! ## `http-tasks`
+//!
+//! Provides task management endpoints.
+//!
+//! ## `http-todos`
+//!
+//! Provides todo management endpoints.
+//!
+//! ## `http-agents`
+//!
+//! Provides agent hints endpoints.
+//!
+//! ## `http-middleware`
+//!
+//! Provides cross-cutting middleware (CORS, security headers, request ID).
 //!
 //! ## `business-core`
 //!
-//! Provides domain logic accessed by handlers. The HTTP layer calls into core services
-//! and translates domain errors into HTTP responses.
-//!
-//! ## `gov-http`
-//!
-//! Provides `/platform/*` endpoints for governance introspection. This crate implements
-//! the `gov_http::PlatformState` trait on `AppState` to enable integration.
-//!
-//! ## `gov-model`
-//!
-//! Provides governance data structures (`RepoContext`, `GovernanceRepository`) used
-//! throughout the platform endpoints.
+//! Provides domain logic accessed by handlers.
 //!
 //! ## `spec-runtime`
 //!
-//! Validates configuration files (`config/local.yaml` against `specs/config_schema.yaml`)
-//! at startup, providing type-safe config access.
+//! Validates configuration files at startup.
 //!
 //! ## `telemetry`
 //!
-//! Initialized at application startup to provide structured logging, tracing, and metrics.
-//! Handlers use `#[instrument]` for automatic span creation and request correlation.
+//! Initialized at application startup for structured logging and metrics.
 //!
 //! # Usage
 //!
@@ -100,31 +114,15 @@
 //! # }
 //! ```
 //!
-//! ## Custom Configuration
-//!
-//! ```rust,no_run
-//! use app_http::{AppState, app_with_state};
-//! use adapters_spec_fs::FsGovernanceRepository;
-//! use std::sync::Arc;
-//! use std::path::PathBuf;
-//!
-//! # fn example() {
-//! let workspace_root = PathBuf::from("/workspace/root");
-//! let repo = Arc::new(FsGovernanceRepository::new(workspace_root.clone()));
-//! let state = AppState::with_config(repo, workspace_root, None)
-//!     .expect("invalid platform auth configuration");
-//! let router = app_with_state(state);
-//! # }
-//! ```
-//!
 //! # Key Features
 //!
+//! - **Dependency Isolation**: Each http-* crate has minimal, focused dependencies
+//! - **Backward Compatibility**: Existing imports continue to work via re-exports
 //! - **Governance-first**: All endpoints integrate with the platform's governance system
 //! - **Observability**: Request IDs, structured logs, metrics, distributed tracing
 //! - **Security**: JWT auth, security headers, CORS, defense-in-depth
-//! - **Type-safe Config**: Schema-validated YAML configuration via `spec-runtime`
+//! - **Type-safe Config**: Schema-validated YAML configuration
 //! - **AC Traceability**: Error responses link to Acceptance Criteria IDs
-//! - **Developer Experience**: Clear error messages, comprehensive docs, testing utilities
 
 use axum::{
     Router,
@@ -135,47 +133,203 @@ use axum::{
 use serde::{Deserialize, Serialize};
 use tracing::{info, instrument};
 
-// Public modules
-pub mod agent;
+// ============================================================================
+// Re-exports from http-* crates
+// ============================================================================
+
+// Re-export from http-core
+pub use http_core::{
+    AppState as CoreAppState, base_router, resolve_workspace_root, shutdown_signal,
+};
+
+// Re-export from http-platform
+pub use http_platform::{
+    // Re-exported gov-http types
+    CoverageDetail,
+    CoverageResponse,
+    CoverageSummary,
+    DebugInfo,
+    DocHealthSummary,
+    DocInfoWithHealth,
+    DocsIndexResponse,
+    ForkEntry,
+    ForkSummary,
+    ForksListResponse,
+    FrictionContext,
+    FrictionEntry,
+    FrictionListResponse,
+    // Re-exported IDP types
+    IdpSnapshot,
+    PlatformState as HttpPlatformState,
+    Question,
+    QuestionContext,
+    QuestionFilters,
+    QuestionSummary,
+    QuestionsListResponse,
+    SuggestNextQuery,
+    TaskDocsOut,
+    TaskFilters,
+    TaskGraphQuery,
+    TaskGraphResponse,
+    TaskOut,
+    TasksResponse,
+    router as platform_router,
+    ui_router,
+};
+
+// Re-export from http-tasks
+pub use http_tasks::{TasksState, router as tasks_router, tasks_ui, update_task_status};
+
+// Re-export from http-todos
+pub use http_todos::{CreateTodoRequest, TodosStateTrait, router as todos_router};
+
+// Re-export from http-agents
+pub use http_agents::{
+    AgentHint, AgentHintReason, AgentHintsResponse, AgentsState, HintsFilters, RecommendedStep,
+    router as agents_router,
+};
+
+// Re-export from app-http internal modules (backward compatibility)
+pub use errors::{AppError, ErrorCode, ErrorSummary, get_error_summary};
+pub use middleware::{
+    CorsConfig, REQUEST_ID_HEADER, RequestId, SecurityHeadersConfig, cors_middleware,
+    platform_auth_guard, request_id_middleware, security_headers_middleware,
+};
+
+// ============================================================================
+// Public modules (kept for backward compatibility)
+// ============================================================================
+
+// Note: Most modules have been moved to http-* crates.
+// These are kept as thin wrappers for backward compatibility.
+
+// Public modules (kept for backward compatibility)
 pub mod errors;
 pub mod metrics;
 pub mod middleware;
-pub mod platform;
 pub mod security;
 pub mod shutdown;
-pub mod tasks;
-pub mod todos;
 
-// Re-export commonly used types
-pub use errors::{AppError, ErrorCode, ErrorSummary, get_error_summary};
-pub use middleware::{REQUEST_ID_HEADER, RequestId};
+// Compatibility modules for legacy paths
+pub mod platform {
+    pub use http_platform::*;
+}
+
+// Re-export commonly used types (backward compatibility)
+pub use metrics::metrics_handler;
+pub use security::PlatformAuthConfig;
 
 use business_core::governance::GovernanceRepository;
 use gov_model::RepoContext;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
+// ============================================================================
+// Application State (Facade)
+// ============================================================================
+
+/// Application state combining all required state for the HTTP layer.
+///
+/// This state implements all the required traits from the http-* crates
+/// to enable seamless integration.
 #[derive(Clone)]
 pub struct AppState {
+    /// Governance repository
     pub governance_repo: Arc<dyn GovernanceRepository>,
+    /// Workspace root path
     pub workspace_root: PathBuf,
+    /// Validated configuration
     pub config: Option<spec_runtime::ValidatedConfig>,
-    pub platform_auth: security::PlatformAuthConfig,
+    /// Platform authentication configuration
+    pub platform_auth: PlatformAuthConfig,
     /// CORS configuration
-    pub cors_config: middleware::CorsConfig,
+    pub cors_config: CorsConfig,
     /// Security headers configuration
-    pub security_headers_config: middleware::SecurityHeadersConfig,
-    /// Repository context for gov-http integration.
+    pub security_headers_config: SecurityHeadersConfig,
+    /// Repository context for gov-http integration
     pub repo_context: RepoContext,
 }
 
-// Implement PlatformState for AppState so we can use gov-http handlers
+// Implement http-core AppState trait
+impl http_core::AppState for AppState {
+    fn workspace_root(&self) -> &Path {
+        &self.workspace_root
+    }
+
+    fn governance_repo(&self) -> Arc<dyn business_core::governance::GovernanceRepository> {
+        Arc::clone(&self.governance_repo)
+    }
+
+    fn repo_context(&self) -> &RepoContext {
+        &self.repo_context
+    }
+
+    fn config(&self) -> Option<&spec_runtime::ValidatedConfig> {
+        self.config.as_ref()
+    }
+}
+
+// Implement gov-http PlatformState trait (for governance endpoints)
 impl gov_http::PlatformState for AppState {
     fn context(&self) -> &RepoContext {
         &self.repo_context
     }
 
     fn governance_repo(&self) -> Arc<dyn gov_model::GovernanceRepository> {
+        Arc::clone(&self.governance_repo)
+    }
+}
+
+// Implement http-platform PlatformState trait
+impl HttpPlatformState for AppState {
+    fn workspace_root(&self) -> &std::path::Path {
+        &self.workspace_root
+    }
+
+    fn config(&self) -> Option<&spec_runtime::ValidatedConfig> {
+        self.config.as_ref()
+    }
+
+    fn platform_auth(&self) -> &dyn http_platform::PlatformAuthConfig {
+        &self.platform_auth
+    }
+}
+
+impl http_platform::PlatformAuthConfig for security::PlatformAuthConfig {
+    fn mode_label(&self) -> &str {
+        self.mode_label()
+    }
+
+    fn token_present(&self) -> bool {
+        self.token_present()
+    }
+}
+
+// Implement http-tasks TasksState trait
+impl TasksState for AppState {
+    fn governance_repo(
+        &self,
+    ) -> std::sync::Arc<dyn business_core::governance::GovernanceRepository> {
+        Arc::clone(&self.governance_repo)
+    }
+}
+
+// Implement http-todos TodosStateTrait trait
+impl TodosStateTrait for AppState {
+    fn todos_state(&self) -> http_todos::TodosState {
+        http_todos::TodosState::new()
+    }
+}
+
+// Implement http-agents AgentsState trait
+impl AgentsState for AppState {
+    fn workspace_root(&self) -> &std::path::Path {
+        &self.workspace_root
+    }
+
+    fn governance_repo(
+        &self,
+    ) -> std::sync::Arc<dyn business_core::governance::GovernanceRepository> {
         Arc::clone(&self.governance_repo)
     }
 }
@@ -200,9 +354,8 @@ impl AppState {
         platform_auth.warn_if_misconfigured();
 
         // Initialize security configurations
-        let cors_config = middleware::CorsConfig::from_sources(config.as_ref());
-        let security_headers_config =
-            middleware::SecurityHeadersConfig::from_sources(config.as_ref());
+        let cors_config = CorsConfig::from_sources(config.as_ref());
+        let security_headers_config = SecurityHeadersConfig::from_sources(config.as_ref());
 
         // Create RepoContext for gov-http integration
         let repo_context = RepoContext::new(&workspace_root);
@@ -219,7 +372,7 @@ impl AppState {
     }
 }
 
-/// Create the application router (reusable for both main and tests)
+/// Create the application router (reusable for both main and tests).
 ///
 /// # Errors
 ///
@@ -257,49 +410,42 @@ fn build_router(app_state: AppState) -> Router {
 
     let platform_router = Router::new()
         .with_state(platform_state.clone())
-        .merge(platform::router(platform_state.clone()))
-        .route("/tasks/{id}/status", post(tasks::update_task_status))
-        .layer(axum::middleware::from_fn_with_state(auth_state, middleware::platform_auth_guard))
+        .merge(platform_router(platform_state.clone()))
+        .route("/tasks/{id}/status", post(update_task_status::<AppState>))
+        .layer(axum::middleware::from_fn_with_state(auth_state, platform_auth_guard))
         .with_state(platform_state.clone());
 
     let tasks_router =
-        Router::new().with_state(app_state.clone()).route("/ui/tasks", get(tasks::tasks_ui));
+        Router::new().with_state(app_state.clone()).route("/ui/tasks", get(tasks_ui::<AppState>));
 
-    let agent_router = agent::router(app_state.clone());
-    let todos_router = todos::router(app_state.clone());
+    let agent_router = agents_router(app_state.clone());
+    let todos_router = todos_router(app_state.clone());
 
     Router::new()
         // Template core endpoints - keep these
         .route("/health", get(health))
         .route("/version", get(version))
-        .route("/metrics", get(metrics::metrics_handler))
+        .route("/metrics", get(metrics_handler))
         .route("/api/echo", post(echo)) // For demonstrating error handling in tests
         // Platform introspection endpoints
         .nest("/platform", platform_router)
         // Platform UI routes (at root level)
-        .merge(platform::ui_router(platform_state))
+        .merge(ui_router(platform_state))
         // Merge domain endpoints
         .merge(tasks_router)
         .merge(agent_router)
         .merge(todos_router)
         // Middleware layers (applied in reverse order - bottom to top)
         // Request ID middleware (outermost - applied first to request)
-        .layer(axum::middleware::from_fn(middleware::request_id_middleware))
+        .layer(axum::middleware::from_fn(request_id_middleware))
         // Metrics middleware
         .layer(axum::middleware::from_fn(metrics::metrics_middleware))
         // CORS middleware
-        .layer(axum::middleware::from_fn_with_state(app_state.clone(), middleware::cors_middleware))
+        .layer(axum::middleware::from_fn_with_state(app_state.clone(), cors_middleware))
         // Security headers (innermost - applied first to response)
-        .layer(axum::middleware::from_fn_with_state(
-            app_state.clone(),
-            middleware::security_headers_middleware,
-        ))
+        .layer(axum::middleware::from_fn_with_state(app_state.clone(), security_headers_middleware))
         .with_state(app_state)
 }
-
-// ============================================================================
-// Handlers - showing edge -> core path
-// ============================================================================
 
 // ============================================================================
 // Template Core Handlers - Keep these in your service
@@ -315,9 +461,6 @@ fn build_router(app_state: AppState) -> Router {
 async fn health(Extension(_request_id): Extension<RequestId>) -> impl IntoResponse {
     // Log with request_id automatically included from span
     info!("Health check requested");
-
-    // METRICS STUB: Increment health check counter
-    // metrics::counter!("health_checks_total").increment(1);
 
     Json(HealthResponse { status: "ok".to_string(), service: "service-api".to_string() })
 }
@@ -424,61 +567,51 @@ struct EchoResponse {
 // }
 
 // ============================================================================
-// Error handling - See errors.rs for comprehensive error handling
+// Error handling
 // ============================================================================
 //
-// The old inline AppError enum has been replaced with a full-featured
-// error type in errors.rs that provides:
+// Error types are now re-exported from http-errors crate.
+// The http-errors crate provides:
 // - Machine-readable error codes
 // - AC ID and Feature ID tracking
 // - Structured logging with correlation
 // - Proper JSON error responses with context
 //
-// See errors.rs for implementation details and examples.
+// See http-errors crate for implementation details and examples.
 
 // ============================================================================
 // Architecture Notes:
 //
-// This demonstrates hexagonal/clean architecture:
+// This demonstrates the facade pattern for dependency isolation:
 //
-// 1. HTTP layer (this file):
-//    - Handles HTTP concerns (routing, serialization, status codes)
-//    - Translates HTTP requests -> domain operations
-//    - Translates domain errors -> HTTP responses
+// 1. Facade layer (this crate):
+//    - Provides backward-compatible API by re-exporting from http-* crates
+//    - Delegates to specialized crates for domain-specific functionality
 //
-// 2. Domain layer (crates/core):
+// 2. Specialized HTTP crates (http-*):
+//    - http-core: Shared foundation (app state traits, common handlers)
+//    - http-platform: Platform endpoints (`/platform/*`, UI routes)
+//    - http-tasks: Task management endpoints
+//    - http-todos: Todo management endpoints
+//    - http-agents: Agent hints endpoints
+//    - http-middleware: Cross-cutting middleware
+//
+// 3. Domain layer (business-core):
 //    - Pure business logic, no HTTP knowledge
 //    - Called BY adapters, never calls adapters
 //
-// 3. Model layer (crates/model):
+// 4. Model layer (gov-model):
 //    - Domain entities and value objects
 //    - Shared across adapters and core
 //
-// 4. Telemetry (crates/telemetry):
+// 5. Telemetry (telemetry):
 //    - Cross-cutting concern for observability
 //    - Initialized once at startup
 //
 // Key pattern: The dependency arrow points INWARD
-//   app-http -> core  ([OK] correct)
-//   core -> app-http  ([X] never!)
+//   http-* crates -> http-core, platform-contract (correct)
+//   app-http (facade) -> http-* crates (correct)
 // ============================================================================
-
-pub fn resolve_workspace_root() -> PathBuf {
-    if let Ok(root) = std::env::var("SPEC_ROOT") {
-        return PathBuf::from(root);
-    }
-
-    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .parent()
-        .and_then(|p| p.parent())
-        .map(|p| p.to_path_buf())
-        .unwrap_or_else(|| {
-            tracing::warn!(
-                "Failed to resolve workspace root from CARGO_MANIFEST_DIR, using current directory"
-            );
-            PathBuf::from(".")
-        })
-}
 
 fn load_valid_config(workspace_root: &Path) -> Option<spec_runtime::ValidatedConfig> {
     let config_path = workspace_root.join("config/local.yaml");

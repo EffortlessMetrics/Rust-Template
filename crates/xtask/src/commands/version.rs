@@ -1,36 +1,12 @@
 use anyhow::{Context, Result};
 use colored::Colorize;
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
+use serde_yaml;
 use std::fs;
-use std::path::Path;
+use xtask_lib::RepoContext;
+use xtask_versioning::{Version, VersionInfo};
 
-const SPEC_LEDGER_PATH: &str = "specs/spec_ledger.yaml";
-const SERVICE_METADATA_PATH: &str = "specs/service_metadata.yaml";
 const TEMPLATE_DESCRIPTION: &str = "Rust-as-Spec Platform Cell";
-
-#[derive(Debug, Deserialize)]
-struct SpecLedger {
-    metadata: LedgerMetadata,
-}
-
-#[derive(Debug, Deserialize)]
-struct LedgerMetadata {
-    template_version: String,
-    #[serde(default)]
-    schema_version: Option<String>,
-    #[serde(default)]
-    description: Option<String>,
-    #[serde(default)]
-    last_updated: Option<String>,
-}
-
-#[derive(Debug, Deserialize)]
-struct ServiceMetadata {
-    #[serde(default)]
-    service_id: Option<String>,
-    #[serde(default)]
-    display_name: Option<String>,
-}
 
 /// Machine-readable version output (stable contract for AI/IDP consumers)
 #[derive(Debug, Serialize)]
@@ -59,38 +35,63 @@ pub struct VersionArgs {
 }
 
 pub fn run(args: VersionArgs) -> Result<()> {
-    let ledger_path = Path::new(SPEC_LEDGER_PATH);
+    let repo = RepoContext::from_current_dir().context("Failed to get repository context")?;
+
+    let ledger_path = repo.specs_dir().join("spec_ledger.yaml");
 
     // Read and parse spec_ledger.yaml
-    let content = fs::read_to_string(ledger_path)
+    let content = fs::read_to_string(&ledger_path)
         .with_context(|| format!("Failed to read spec ledger: {}", ledger_path.display()))?;
 
-    let ledger: SpecLedger = serde_yaml::from_str(&content)
+    let ledger: serde_yaml::Value = serde_yaml::from_str(&content)
         .with_context(|| format!("Failed to parse spec ledger YAML: {}", ledger_path.display()))?;
 
-    let version = ledger.metadata.template_version.clone();
-    let schema_version =
-        ledger.metadata.schema_version.clone().unwrap_or_else(|| "1.0".to_string());
-    let description =
-        ledger.metadata.description.clone().unwrap_or_else(|| TEMPLATE_DESCRIPTION.to_string());
-    let last_updated = ledger.metadata.last_updated.clone();
+    let version = ledger
+        .get("metadata")
+        .and_then(|m| m.get("template_version"))
+        .and_then(|v| v.as_str())
+        .ok_or_else(|| anyhow::anyhow!("Missing template_version in spec_ledger.yaml"))?
+        .to_string();
+
+    let schema_version = ledger
+        .get("metadata")
+        .and_then(|m| m.get("schema_version"))
+        .and_then(|v| v.as_str())
+        .unwrap_or("1.0")
+        .to_string();
+
+    let description = ledger
+        .get("metadata")
+        .and_then(|m| m.get("description"))
+        .and_then(|v| v.as_str())
+        .unwrap_or(TEMPLATE_DESCRIPTION)
+        .to_string();
+
+    let last_updated = ledger
+        .get("metadata")
+        .and_then(|m| m.get("last_updated"))
+        .and_then(|v| v.as_str())
+        .map(|s| s.to_string());
 
     // Try to load service metadata for service_id
-    let service_id = load_service_id();
+    let service_id = load_service_id(&repo);
 
-    // Build kernel_tag from version
-    let kernel_tag = format!("v{}-kernel", version);
+    // Build kernel_tag from version using library
+    let parsed_version = Version::parse(&version)?;
+    let kernel_tag = parsed_version.to_kernel_tag();
 
     if args.json {
-        // Machine-readable JSON output
+        // Machine-readable JSON output using library's VersionInfo
+        let _version_info =
+            VersionInfo::with_date(&version, last_updated.as_deref().unwrap_or("unknown"))?;
         let output = VersionOutput {
-            kernel_version: version,
-            kernel_tag,
+            kernel_version: version.clone(),
+            kernel_tag: kernel_tag.clone(),
             schema_version,
-            spec_ledger_path: SPEC_LEDGER_PATH.to_string(),
+            spec_ledger_path: ledger_path.display().to_string(),
             description,
             service_id,
-            last_updated,
+            last_updated: last_updated.clone(),
         };
         let json = serde_json::to_string_pretty(&output)
             .context("Failed to serialize version output to JSON")?;
@@ -104,7 +105,7 @@ pub fn run(args: VersionArgs) -> Result<()> {
         println!("  {}: {}", "Kernel version".bold(), version.green());
         println!("  {}: {}", "Kernel tag".bold(), kernel_tag.cyan());
         println!("  {}: {}", "Schema version".bold(), schema_version.dimmed());
-        println!("  {}: {}", "Spec ledger".bold(), SPEC_LEDGER_PATH.dimmed());
+        println!("  {}: {}", "Spec ledger".bold(), ledger_path.display().to_string().dimmed());
         if let Some(id) = &service_id {
             println!("  {}: {}", "Service ID".bold(), id.yellow());
         }
@@ -119,11 +120,15 @@ pub fn run(args: VersionArgs) -> Result<()> {
 }
 
 /// Try to load service_id from service_metadata.yaml (returns None if unavailable)
-fn load_service_id() -> Option<String> {
-    let path = Path::new(SERVICE_METADATA_PATH);
-    let content = fs::read_to_string(path).ok()?;
-    let metadata: ServiceMetadata = serde_yaml::from_str(&content).ok()?;
-    metadata.service_id.or(metadata.display_name)
+fn load_service_id(repo: &RepoContext) -> Option<String> {
+    let path = repo.specs_dir().join("service_metadata.yaml");
+    let content = fs::read_to_string(&path).ok()?;
+    let metadata: serde_yaml::Value = serde_yaml::from_str(&content).ok()?;
+    metadata
+        .get("service_id")
+        .and_then(|v| v.as_str())
+        .or_else(|| metadata.get("display_name").and_then(|v| v.as_str()))
+        .map(|s| s.to_string())
 }
 
 #[cfg(test)]
@@ -158,6 +163,18 @@ mod tests {
         assert_eq!(json["schema_version"], "1.0");
         assert_eq!(json["spec_ledger_path"], "specs/spec_ledger.yaml");
         assert_eq!(json["description"], "Rust-as-Spec Platform Cell");
+    }
+
+    #[test]
+    fn library_version_parse() {
+        // Test that the library's Version::parse works correctly
+        let v = Version::parse("3.3.4").unwrap();
+        assert_eq!(v.major, 3);
+        assert_eq!(v.minor, 3);
+        assert_eq!(v.patch, 4);
+        assert_eq!(v.to_string(), "3.3.4");
+        assert_eq!(v.to_tag(), "v3.3.4");
+        assert_eq!(v.to_kernel_tag(), "v3.3.4-kernel");
     }
 
     #[test]

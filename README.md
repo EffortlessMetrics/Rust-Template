@@ -214,6 +214,39 @@ Under the hood:
 
 ---
 
+### 3.1 Crate Structure (Microcrate Architecture)
+
+The workspace follows a **microcrate architecture** with explicit layering and contract stability. Crates are organized into five categories:
+
+| Category | Purpose | Examples |
+|----------|---------|----------|
+| **Contract** | Stable API surface, versioned, minimal deps | `platform-contract`, `xtask-contract`, `receipts-core`, `spec-types` |
+| **Core Logic** | Business rules, domain models, governance logic | `gov-model`, `spec-ledger` |
+| **Foundation** | Cross-cutting utilities, lightweight infrastructure | `http-errors`, `http-platform`, `http-core`, `telemetry` |
+| **Adapter** | Infrastructure implementations (DB, HTTP, messaging) | `adapters-db-sqlx`, `gov-http-*`, `http-middleware` |
+| **HTTP/Router** | Axum application, routing, middleware wiring | `app-http` |
+| **Facade** | Build-time tools, configuration, IaC | `rust_iac_config`, `rust_iac_xtask_core` |
+
+**Layering Rules:**
+- Contract crates depend only on foundation crates (or std)
+- Foundation crates depend only on other foundation crates (or std)
+- Core logic crates depend on contract and foundation crates
+- Adapter crates depend on core logic and foundation crates
+- HTTP/router crate depends on adapter and core logic crates
+- Facade crates have no runtime layering restrictions
+
+**Contract Stability:**
+Contract crates define the stable API surface of the platform. Breaking changes require:
+1. An ADR documenting the change
+2. Version bump in `specs/contracts_manifest.yaml`
+3. Updates to dependent crates and consumers
+
+For detailed architecture documentation, see:
+- [Architecture Overview](docs/explanation/architecture.md) — Complete microcrate architecture documentation
+- [ADR-0030: Microcrate Architecture](docs/adr/0030-microcrate-architecture.md) — Decision record with rationale
+
+---
+
 ## 4. Detailed Setup Guide
 
 ### 4.1 Prerequisites
@@ -717,6 +750,7 @@ Read these to understand how the template works:
 
 **ADRs (Architecture Decision Records):**
 
+- [ADR-0030: Microcrate Architecture for Contract Stability](docs/adr/0030-microcrate-architecture.md)
 - [ADR-0020: Claude Code Skills Governance](docs/adr/0020-claude-code-skills-governance.md)
 - [ADR-0021: Claude Code Agents Governance](docs/adr/0021-claude-code-agents-governance.md)
 - [ADR-0022: Platform Metadata and Test Isolation](docs/adr/0022-platform-metadata-and-test-isolation.md)
