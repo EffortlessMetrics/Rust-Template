@@ -100,13 +100,13 @@ mod tests {
 
         // Verify JSON serialization includes pr
         let json = serde_json::to_string(&receipt).unwrap();
-        assert!(json.contains(r#"\"pr\":123"#));
+        assert!(json.contains(r#""pr":123"#));
     }
 
     #[test]
     fn gate_status_serialization() {
-        assert_eq!(serde_json::to_string(&GateStatus::Pass).unwrap(), r#"\"pass\""#);
-        assert_eq!(serde_json::to_string(&GateStatus::Fail).unwrap(), r#"\"fail\""#);
-        assert_eq!(serde_json::to_string(&GateStatus::Skipped).unwrap(), r#"\"skipped\""#);
+        assert_eq!(serde_json::to_string(&GateStatus::Pass).unwrap(), r#""pass""#);
+        assert_eq!(serde_json::to_string(&GateStatus::Fail).unwrap(), r#""fail""#);
+        assert_eq!(serde_json::to_string(&GateStatus::Skipped).unwrap(), r#""skipped""#);
     }
 }
