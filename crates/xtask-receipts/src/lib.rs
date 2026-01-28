@@ -16,8 +16,6 @@
 //! - Audit trails
 //! - Agent workflows
 
-use chrono::Utc;
-
 pub mod economics;
 pub mod forensic;
 pub mod friction;
@@ -25,6 +23,7 @@ pub mod gate;
 pub mod git;
 pub mod historian;
 pub mod quality;
+pub mod run_id;
 pub mod telemetry;
 pub mod timeline;
 pub mod validate;
@@ -35,26 +34,17 @@ pub use friction::{FrictionCategory, categorize_friction_zones};
 pub use gate::{ReceiptsGateArgs, run_gate};
 pub use git::{get_current_commit_full, get_current_commit_short, get_ref_sha};
 pub use historian::{
-    HistorianQualityAppendix, extract_historian_appendix_json,
-    extract_historian_appendix_json as extract_historian_appendix, parse_historian_appendix,
+    HistorianQualityAppendix, extract_historian_appendix_json as extract_historian_appendix,
+    parse_historian_appendix,
 };
 pub use quality::{ReceiptsQualityArgs, run_quality};
+pub use run_id::generate_run_id;
 pub use telemetry::{ReceiptsTelemetryArgs, run_telemetry};
 pub use timeline::{
     FRICTION_EXCLUDE_PATTERNS, ReceiptsTimelineArgs, normalize_path_separators, run_timeline,
     should_exclude_path,
 };
 pub use validate::{ReceiptsValidateArgs, run_validate};
-
-/// Generate a consistent run_id for receipts.
-/// Format: `{timestamp}-pr{pr_number}` or `{timestamp}-pr0` if no PR.
-pub fn generate_run_id(pr: Option<u32>) -> String {
-    format!(
-        "{}-pr{}",
-        Utc::now().format("%Y-%m-%dT%H-%M-%SZ"),
-        pr.map(|n| n.to_string()).unwrap_or_else(|| "0".to_string())
-    )
-}
 
 #[cfg(test)]
 mod tests {
