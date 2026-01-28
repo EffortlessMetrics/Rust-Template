@@ -463,6 +463,38 @@ To customize hook strictness:
 
 ---
 
+### 4.4.2 Post-v3.3.14 – Microcrate Architecture Polish
+
+> **Scope:** Architecture refinements and documentation improvements merged after v3.3.14 tag.
+> Focused on cleaner crate separation and reduced type duplication.
+
+**Status:** In Progress (uncommitted)
+
+#### Merged/In Progress (Post-v3.3.14)
+
+| Item | Description | Status |
+| ---- | ----------- | ------ |
+| **New `gov-http-types` crate** | Shared HTTP API types (`FrictionEntry`, `Question`) extracted to reduce duplication across `gov-http-*` crates | ✅ Complete |
+| **Enhanced `gov-model`** | `TaskStatus` parsing with aliases ("in_progress", "open", etc.) and property-based tests | ✅ Complete |
+| **Ignored tests documentation** | New `docs/reference/ignored-tests.md` catalogs all `#[ignore]` tests with rationale and run instructions | ✅ Complete |
+| **Architecture doc update** | `docs/explanation/architecture.md` updated with complete crate taxonomy (21+ crates across 6 layers) | ✅ Complete |
+| **Crate dependency cleanup** | `gov-http-friction` and `gov-http-questions` now use shared types from `gov-http-types` | ✅ Complete |
+
+#### Architecture Highlights
+
+The microcrate architecture now clearly separates crates into 6 layers:
+
+1. **Contract** — Stable APIs (`platform-contract`, `gov-contracts`, `receipts-core`)
+2. **Core Logic** — Business rules (`gov-model`, `gov-policy`, `spec-ledger`)
+3. **Foundation** — Shared utilities (`http-core`, `gov-http-types`, `telemetry`)
+4. **Adapter** — External interfaces (`gov-http-*`, `adapters-db-sqlx`)
+5. **HTTP/Router** — Application entry (`app-http`, `http-middleware`)
+6. **Facade** — Developer tooling (`gov-xtask-core`, `rust_iac_config`)
+
+This layering enables future crate extraction (v3.5.0+ vision) by establishing clear dependency boundaries now.
+
+---
+
 ### 4.5 v3.4.0 – External Validation (Minor Release)
 
 > **Note:** v3.4.0 is the *next minor* kernel closure. The current frozen baseline is `v3.3.9-kernel`.

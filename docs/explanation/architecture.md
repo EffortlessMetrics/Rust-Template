@@ -70,29 +70,36 @@ The workspace follows a layered microcrate architecture with five primary crate 
 crates/
 ├── Contract Crates (Stable APIs)
 │   ├── platform-contract/    - HTTP API types and contracts
-│   ├── xtask-contract/      - CLI output types and contracts
-│   ├── receipts-core/       - Receipt schemas
-│   └── spec-types/          - Spec file types
+│   ├── xtask-contract/       - CLI output types and contracts
+│   ├── receipts-core/        - Receipt schemas
+│   ├── spec-types/           - Spec file types
+│   ├── gov-contracts/        - Governance contracts and interfaces
+│   └── gov-receipts/         - Governance receipt types
 ├── Core Logic Crates (Business Domain)
-│   ├── gov-model/           - Governance domain models
-│   └── spec-ledger/         - Spec ledger types
+│   ├── gov-model/            - Governance domain models (Task, TaskStatus)
+│   ├── gov-policy/           - Policy enforcement logic
+│   └── spec-ledger/          - Spec ledger types
 ├── Foundation Crates (Shared Infrastructure)
-│   ├── http-errors/         - HTTP error types
+│   ├── http-errors/          - HTTP error types
 │   ├── http-platform/        - Platform integration types (IDP, UI)
-│   ├── http-core/           - Core HTTP utilities
-│   └── telemetry/           - Observability/telemetry
+│   ├── http-core/            - Core HTTP utilities
+│   ├── gov-http-core/        - Governance HTTP core utilities
+│   ├── gov-http-types/       - Shared HTTP API types (FrictionEntry, Question)
+│   └── telemetry/            - Observability/telemetry
 ├── Adapter Crates (External Interfaces)
-│   ├── adapters-db-sqlx/    - PostgreSQL adapter
+│   ├── adapters-db-sqlx/     - PostgreSQL adapter
 │   ├── gov-http/             - Governance HTTP handlers
 │   ├── gov-http-forks/       - Forks HTTP handlers
-│   ├── gov-http-friction/     - Friction HTTP handlers
+│   ├── gov-http-friction/    - Friction HTTP handlers
+│   ├── gov-http-questions/   - Questions HTTP handlers
 │   └── gov-http-issues/      - Issues HTTP handlers
 ├── HTTP/Router Crates (Application Entry Points)
 │   ├── app-http/             - Main HTTP application
-│   └── http-middleware/       - HTTP middleware (CORS, etc.)
+│   └── http-middleware/      - HTTP middleware (CORS, etc.)
 └── Facade Crates (Developer Experience)
     ├── rust_iac_config/      - IaC configuration
-    └── rust_iac_xtask_core/ - IaC xtask core
+    ├── rust_iac_xtask_core/  - IaC xtask core
+    └── gov-xtask-core/       - Governance xtask utilities
 ```
 
 ### Layering Rules

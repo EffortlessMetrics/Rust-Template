@@ -14,75 +14,11 @@ use axum::{
     routing::get,
 };
 use gov_http_core::{PlatformError, PlatformState};
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 use std::fs;
 
-/// Friction entry representing process/tooling issues
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct FrictionEntry {
-    pub id: String,
-    pub date: String,
-    pub category: String,
-    pub severity: String,
-    pub summary: String,
-    pub description: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub expected_behavior: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub workaround: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub impact: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub context: Option<FrictionContext>,
-    #[serde(default = "default_status")]
-    pub status: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub resolution: Option<Resolution>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub refs: Vec<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub related_items: Option<RelatedItems>,
-}
-
-fn default_status() -> String {
-    "open".to_string()
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct FrictionContext {
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub discovered_by: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub flow: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub phase: Option<String>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub files_involved: Vec<String>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub commands_involved: Vec<String>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Resolution {
-    pub resolved_by: String,
-    pub resolved_at: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub fix_description: Option<String>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub pr_links: Vec<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub verification: Option<String>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct RelatedItems {
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub issues: Vec<String>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub adrs: Vec<String>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub tasks: Vec<String>,
-}
+// Re-export types from gov-http-types for backwards compatibility
+pub use gov_http_types::{FrictionContext, FrictionEntry, RelatedItems, Resolution};
 
 #[derive(Debug, Serialize)]
 pub struct FrictionListResponse {

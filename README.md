@@ -220,12 +220,12 @@ The workspace follows a **microcrate architecture** with explicit layering and c
 
 | Category | Purpose | Examples |
 |----------|---------|----------|
-| **Contract** | Stable API surface, versioned, minimal deps | `platform-contract`, `xtask-contract`, `receipts-core`, `spec-types` |
-| **Core Logic** | Business rules, domain models, governance logic | `gov-model`, `spec-ledger` |
-| **Foundation** | Cross-cutting utilities, lightweight infrastructure | `http-errors`, `http-platform`, `http-core`, `telemetry` |
+| **Contract** | Stable API surface, versioned, minimal deps | `platform-contract`, `xtask-contract`, `gov-contracts`, `receipts-core`, `spec-types` |
+| **Core Logic** | Business rules, domain models, governance logic | `gov-model`, `gov-policy`, `spec-ledger` |
+| **Foundation** | Cross-cutting utilities, lightweight infrastructure | `http-errors`, `http-platform`, `http-core`, `gov-http-types`, `telemetry` |
 | **Adapter** | Infrastructure implementations (DB, HTTP, messaging) | `adapters-db-sqlx`, `gov-http-*`, `http-middleware` |
 | **HTTP/Router** | Axum application, routing, middleware wiring | `app-http` |
-| **Facade** | Build-time tools, configuration, IaC | `rust_iac_config`, `rust_iac_xtask_core` |
+| **Facade** | Build-time tools, configuration, IaC | `rust_iac_config`, `gov-xtask-core` |
 
 **Layering Rules:**
 - Contract crates depend only on foundation crates (or std)
@@ -783,6 +783,7 @@ Technical references and command documentation:
 - [Documentation Sources](docs/reference/doc-sources.md) – What to trust when docs disagree
 - [xtask Commands](docs/reference/xtask-commands.md) – Complete CLI reference
 - [CI Coverage](docs/reference/ci-coverage.md) – What CI tests
+- [Ignored Tests](docs/reference/ignored-tests.md) – Tests marked with `#[ignore]` and how to run them
 - [Feature Status](docs/feature_status.md) – Auto-generated AC health dashboard
 - [Testing Strategy](docs/testing-strategy.md) – How testing works
 - [CONSTITUTION.md](docs/CONSTITUTION.md) – Core principles and boundaries

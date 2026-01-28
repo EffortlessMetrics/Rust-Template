@@ -1306,3 +1306,13 @@ docs:
     requirements: [REQ-PLT-DOCS-CONSISTENCY]
     acs: [AC-PLT-009, AC-PLT-010]
     adrs: []
+
+  # Ignored Tests Reference
+  - id: REF-IGNORED-TESTS-001
+    file: docs/reference/ignored-tests.md
+    title: "Ignored Tests Reference"
+    doc_type: reference
+    stories: [US-TPL-PLT-001]
+    requirements: [REQ-PLT-DEVEX-CONTRACT]
+    acs: []
+    adrs: []

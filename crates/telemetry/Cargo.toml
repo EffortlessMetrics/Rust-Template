@@ -13,11 +13,11 @@ testing = {path = "../testing"}
 [features]
 default = []
 otlp = [
-  "opentelemetry",
-  "opentelemetry-otlp",
+  "dep:opentelemetry",
+  "dep:opentelemetry-otlp",
   "opentelemetry-otlp/grpc-tonic",
-  "opentelemetry_sdk",
-  "tracing-opentelemetry"
+  "dep:opentelemetry_sdk",
+  "dep:tracing-opentelemetry"
 ]
 
 [package]

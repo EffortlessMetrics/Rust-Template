@@ -324,4 +324,55 @@ mod tests {
         assert!(!TaskStatus::Review.is_done());
         assert!(TaskStatus::Done.is_done());
     }
+
+    mod proptests {
+        use super::*;
+        use proptest::prelude::*;
+
+        /// Strategy to generate arbitrary TaskStatus values
+        fn arb_task_status() -> impl Strategy<Value = TaskStatus> {
+            prop_oneof![
+                Just(TaskStatus::Todo),
+                Just(TaskStatus::InProgress),
+                Just(TaskStatus::Review),
+                Just(TaskStatus::Done),
+            ]
+        }
+
+        proptest! {
+            /// Property: Display -> FromStr roundtrip always produces the same value
+            #[test]
+            fn prop_task_status_display_roundtrip(status in arb_task_status()) {
+                let displayed = status.to_string();
+                let parsed: TaskStatus = displayed.parse().unwrap();
+                prop_assert_eq!(status, parsed);
+            }
+
+            /// Property: can_transition_to is deterministic for same input pair
+            #[test]
+            fn prop_transition_deterministic(from in arb_task_status(), to in arb_task_status()) {
+                let result1 = from.can_transition_to(&to);
+                let result2 = from.can_transition_to(&to);
+                prop_assert_eq!(result1, result2);
+            }
+
+            /// Property: is_done is only true for Done status
+            #[test]
+            fn prop_is_done_only_for_done(status in arb_task_status()) {
+                prop_assert_eq!(status.is_done(), status == TaskStatus::Done);
+            }
+
+            /// Property: no status can transition to itself
+            #[test]
+            fn prop_no_self_transition(status in arb_task_status()) {
+                prop_assert!(!status.can_transition_to(&status));
+            }
+
+            /// Property: Done is a terminal state (cannot transition to anything)
+            #[test]
+            fn prop_done_is_terminal(to in arb_task_status()) {
+                prop_assert!(!TaskStatus::Done.can_transition_to(&to));
+            }
+        }
+    }
 }

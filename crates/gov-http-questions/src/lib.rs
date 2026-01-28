@@ -17,76 +17,10 @@ use gov_http_core::{PlatformError, PlatformState};
 use serde::{Deserialize, Serialize};
 use std::fs;
 
-/// Question artifact representing flow decision points
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Question {
-    pub id: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub task_id: Option<String>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub req_ids: Vec<String>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub ac_ids: Vec<String>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub refs: Vec<String>,
-    pub summary: String,
-    pub context: QuestionContext,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub options: Vec<QuestionOption>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub recommendation: Option<Recommendation>,
-    pub created_by: String,
-    pub created_at: String,
-    #[serde(default = "default_status")]
-    pub status: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub resolution: Option<QuestionResolution>,
-}
-
-fn default_status() -> String {
-    "open".to_string()
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct QuestionContext {
-    pub flow: String,
-    pub phase: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub description: Option<String>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub files_involved: Vec<String>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct QuestionOption {
-    pub label: String,
-    pub description: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub risk: Option<String>,
-    #[serde(default = "default_reversible")]
-    pub reversible: bool,
-}
-
-fn default_reversible() -> bool {
-    true
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Recommendation {
-    pub option_label: String,
-    pub rationale: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub confidence: Option<String>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct QuestionResolution {
-    pub resolved_by: String,
-    pub resolved_at: String,
-    pub chosen_option: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub notes: Option<String>,
-}
+// Re-export types from gov-http-types for backwards compatibility
+pub use gov_http_types::{
+    Question, QuestionContext, QuestionOption, QuestionResolution, Recommendation,
+};
 
 #[derive(Debug, Serialize)]
 pub struct QuestionsListResponse {

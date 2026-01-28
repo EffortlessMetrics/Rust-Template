@@ -17,6 +17,7 @@ chrono.workspace = true
 tokio.workspace = true
 
 [features]
+default = []
 integration-db = []
 
 [package]

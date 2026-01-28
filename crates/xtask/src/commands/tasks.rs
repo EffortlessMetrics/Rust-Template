@@ -1,5 +1,5 @@
 use anyhow::{Context, Result, bail};
-use business_core::governance::TaskStatus;
+use gov_model::TaskStatus;
 use spec_runtime::{
     ledger::SpecLedger,
     load_spec_ledger, load_tasks,

@@ -9,7 +9,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-(empty)
+### Added
+
+- **New `gov-http-types` crate**
+  - Shared HTTP API types for governance endpoints (`FrictionEntry`, `Question`)
+  - Enables decoupling between sibling `gov-http-*` crates
+  - Pure data structures with serde support, no HTTP framework dependencies
+
+- **Enhanced `gov-model` crate**
+  - `TaskStatus` now parses from string with common aliases (e.g., "in_progress", "in-progress", "open")
+  - Added `TaskStatusParseError` for better error handling
+  - Property-based tests (proptest) for `TaskStatus` roundtrip and transition invariants
+  - Added `is_done()` method for terminal state checking
+
+- **Ignored tests reference documentation** (`docs/reference/ignored-tests.md`)
+  - Catalogs all `#[ignore]` tests in the codebase
+  - Documents why each test is ignored and how to run it
+  - Covers database integration, gRPC smoke, and infrastructure tests
+
+### Changed
+
+- **Crate dependency cleanup**
+  - `gov-http-friction` and `gov-http-questions` now use shared types from `gov-http-types`
+  - Reduced duplication of `FrictionEntry` and `Question` type definitions
+  - Updated architecture documentation to reflect complete crate taxonomy
 
 ## [3.3.14] - 2025-12-29
 
