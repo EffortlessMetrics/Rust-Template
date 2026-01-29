@@ -216,3 +216,93 @@ async fn concurrent_task_reads_do_not_block_executor() {
 
     assert!(results > 0, "No read operations completed");
 }
+
+fn setup_snapshot_workspace() -> (tempfile::TempDir, std::path::PathBuf) {
+    let temp = tempdir().expect("failed to create temp dir");
+    let spec_root = temp.path().to_path_buf();
+    let specs_dir = spec_root.join("specs");
+    fs::create_dir_all(&specs_dir).expect("failed to create specs dir");
+
+    // Seed spec_ledger.yaml
+    let ledger_path = specs_dir.join("spec_ledger.yaml");
+    let ledger_content = r#"
+metadata:
+  template_version: "1.0.0"
+stories: []
+"#;
+    fs::write(ledger_path, ledger_content).expect("failed to write spec_ledger.yaml");
+
+    // Seed service_metadata.yaml
+    let meta_path = specs_dir.join("service_metadata.yaml");
+    let meta_content = r#"
+service_id: "test-service"
+display_name: "Test Service"
+"#;
+    fs::write(meta_path, meta_content).expect("failed to write service_metadata.yaml");
+
+    (temp, spec_root)
+}
+
+/// Regression test: concurrent IDP snapshot reads don't block the executor.
+///
+/// This tests the /platform/idp/snapshot endpoint specifically, which performs
+/// multiple file I/O operations (ledger, coverage, tasks, etc.).
+#[tokio::test(flavor = "multi_thread", worker_threads = 1)]
+async fn concurrent_idp_snapshot_reads_do_not_block_executor() {
+    let (_temp, spec_root) = setup_snapshot_workspace();
+
+    // Timer task
+    let timer_task = tokio::spawn(async {
+        let start = std::time::Instant::now();
+        for _ in 0..10 {
+            tokio::time::sleep(Duration::from_millis(10)).await;
+        }
+        start.elapsed()
+    });
+
+    // Spawn concurrent read requests
+    let mut handles = Vec::new();
+    for _ in 0..5 {
+        let spec_root = spec_root.clone();
+        handles.push(tokio::spawn(async move {
+            let repo =
+                Arc::new(adapters_spec_fs::FsGovernanceRepository::new(spec_root.join("specs")));
+            let app = app_with_workspace_root(repo, spec_root).expect("valid config");
+
+            let request = Request::builder()
+                .method("GET")
+                .uri("/platform/idp/snapshot")
+                .body(Body::empty())
+                .expect("failed to build request");
+
+            app.oneshot(request).await.is_ok()
+        }));
+    }
+
+    // Wait for all reads
+    let results = tokio::time::timeout(Duration::from_secs(10), async {
+        let mut completed = 0;
+        for handle in handles {
+            if handle.await.unwrap_or(false) {
+                completed += 1;
+            }
+        }
+        completed
+    })
+    .await
+    .expect("snapshot read operations timed out");
+
+    // Wait for timer
+    let timer_elapsed = tokio::time::timeout(Duration::from_secs(5), timer_task)
+        .await
+        .expect("timer timed out")
+        .expect("timer task panicked");
+
+    assert!(
+        timer_elapsed < Duration::from_secs(2),
+        "Timer took {:?} - expected ~100ms. Executor may have been blocked.",
+        timer_elapsed
+    );
+
+    assert!(results > 0, "No snapshot operations completed");
+}
