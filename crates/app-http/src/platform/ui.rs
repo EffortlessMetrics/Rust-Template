@@ -127,6 +127,22 @@ fn layout(
                         background: #fff3cd;
                         color: #856404;
                     }
+                    .status-todo {
+                        background: #e9ecef;
+                        color: #495057;
+                    }
+                    .status-inprogress {
+                        background: #cfe2ff;
+                        color: #084298;
+                    }
+                    .status-review {
+                        background: #e0cffc;
+                        color: #6610f2;
+                    }
+                    .status-done {
+                        background: #d1e7dd;
+                        color: #0f5132;
+                    }
                     pre {
                         background: #f8f9fa;
                         padding: 1rem;
@@ -179,6 +195,16 @@ fn layout(
                 }
             }
         }
+    }
+}
+
+fn task_status_class(status: &str) -> &'static str {
+    match status.to_lowercase().as_str() {
+        "todo" | "open" => "status-badge status-todo",
+        "inprogress" | "in_progress" | "in-progress" => "status-badge status-inprogress",
+        "review" => "status-badge status-review",
+        "done" | "closed" => "status-badge status-done",
+        _ => "status-badge status-unknown",
     }
 }
 
@@ -482,9 +508,10 @@ pub async fn flows_view(State(state): State<AppState>) -> Html<String> {
                         .metric style="margin-bottom: 1rem;" {
                             h3 style="color: #667eea; font-size: 1.1rem;" { (task.title) }
                             p style="color: #666; margin: 0.5rem 0;" { (task.summary) }
-                            p style="font-size: 0.875rem; margin: 0.5rem 0;" {
-                                strong { "Status: " } (task.status)
-                                " | "
+                            div style="font-size: 0.875rem; margin: 0.5rem 0; display: flex; align-items: center; gap: 0.5rem;" {
+                                strong { "Status: " }
+                                span class=(task_status_class(&task.status)) { (task.status) }
+                                span style="color: #ccc;" { "|" }
                                 strong { "Requirement: " } (task.requirement)
                             }
                             details {
