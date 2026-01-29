@@ -2,18 +2,19 @@
 description: Cleanup pass to make the current branch PR-ready (agents in waves; apply fixes; save purposeful receipts; report)
 argument-hint: [optional: intent/constraints e.g. "minimal churn", "run full gate", "skip benches", "prep for issue #218"]
 allowed-tools: >
+  Read, Grep, Glob, Edit, Write,
   Bash(git status:*), Bash(git branch:*), Bash(git rev-parse:*), Bash(git symbolic-ref:*), Bash(git remote:*),
   Bash(git merge-base:*), Bash(git log:*), Bash(git show:*), Bash(git diff:*),
   Bash(git add:*), Bash(git restore:*), Bash(git checkout:*), Bash(git stash:*), Bash(git commit:*),
-  Bash(ls:*), Bash(find:*), Bash(rg:*), Bash(sed:*), Bash(awk:*), Bash(wc:*),
-  Bash(mkdir:*), Bash(cat:*), Bash(tee:*), Bash(date:*),
+  Bash(mkdir:*), Bash(date:*),
   Bash(make:*), Bash(just:*), Bash(nix:*),
-  Bash(cargo:*), Bash(cargo-*:*) , Bash(pytest:*), Bash(ruff:*), Bash(mypy:*), Bash(pyright:*),
+  Bash(cargo:*), Bash(cargo-*:*), Bash(pytest:*), Bash(ruff:*), Bash(mypy:*), Bash(pyright:*),
   Bash(node:*), Bash(npm:*), Bash(pnpm:*), Bash(yarn:*),
   Bash(tokei:*), Bash(scc:*), Bash(lizard:*), Bash(radon:*),
   Bash(lychee:*),
   Bash(pip-audit:*), Bash(pip:*), Bash(uv:*), Bash(poetry:*),
-  Bash(gitleaks:*), Bash(trufflehog:*)
+  Bash(gitleaks:*), Bash(trufflehog:*),
+  Task, TaskCreate, TaskUpdate, TaskList, TaskGet
 ---
 
 # PR Cleanup Pass (current branch)
@@ -30,67 +31,98 @@ Use any extra context I provide: **$ARGUMENTS**
 
 ## First: Gather Context
 
-Before doing anything else, gather this information yourself:
+Run these git commands in parallel to gather branch state:
 
-1. **Branch info**: Run `git branch --show-current` and `git status --porcelain=v1 -b`
-2. **Default branch**: Try `git symbolic-ref refs/remotes/origin/HEAD` or assume `main`
-3. **Merge base**: Find the merge-base with the default branch
-4. **Changed files**: `git diff --name-only <merge-base>..HEAD`
-5. **Diff stats**: `git diff --stat <merge-base>..HEAD`
-6. **Tooling detection**: Look for `Cargo.toml`, `pyproject.toml`, `package.json`, `Makefile`, `justfile`, `flake.nix`, etc.
+```bash
+# Run in parallel (single message with multiple Bash tool calls)
+git branch --show-current
+git status --porcelain=v1 -b
+git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null || echo "main"
+```
 
-Optionally create a receipts directory if you want to save artifacts:
-- Suggested path: `target/pr-cleanup/<timestamp>-<branch>/`
-- Only create if you'll actually save useful outputs there
+Then sequentially (depends on merge-base):
 
-## How to work (agents in waves)
+```bash
+MERGE_BASE=$(git merge-base HEAD origin/main)
+git diff --name-only ${MERGE_BASE}..HEAD
+git diff --stat ${MERGE_BASE}..HEAD
+```
+
+Use **Glob** tool (not `find`) to detect tooling:
+
+```
+Glob: Cargo.toml, pyproject.toml, package.json, Makefile, justfile, flake.nix
+```
+
+## How to work (Task tool with specialized agents)
+
+Use the **Task** tool to spawn specialized agents. Launch independent agents in parallel (single message with multiple Task tool calls).
 
 ### Wave 1 — Explore (find what matters)
 
-Invoke **Explore** to:
-- map semantic hotspots and what's mechanical
-- flag interface/contract touchpoints
-- flag risk surface deltas (unsafe/concurrency/IO/deps)
-- identify repo-native "gate" commands and how to run them locally
+Use the Task tool with `subagent_type: "Explore"`:
 
-Explore should report back with anchors (paths, commands, commit references), not raw diffs.
+```
+Task(subagent_type="Explore", prompt="Analyze the changes on this branch for PR cleanup:
+- Map semantic hotspots vs mechanical changes
+- Flag interface/contract touchpoints (public APIs, schemas, CLI)
+- Flag risk surface deltas (unsafe, concurrency, IO, deps)
+- Identify repo-native gate commands (cargo xtask selftest, make check, etc.)
+- Report with anchors: file paths, function names, commit refs
+Do NOT make changes, just analyze and report.")
+```
 
 ### Wave 2 — Plan (cleanup plan with maintainability intent)
 
-Invoke **Plan** to:
-- propose a cleanup plan that improves maintainability/PR quality without scope creep
-- separate "quick wins" vs "follow-ups"
-- choose which tooling to run (gate-first, then targeted checks)
-- suggest a commit plan if it will materially improve review (mechanical vs semantic)
+Use the Task tool with `subagent_type: "Plan"`:
 
-### Wave 3 — Improve & fix (apply changes in the working tree)
+```
+Task(subagent_type="Plan", prompt="Create a cleanup plan for this branch:
+- Propose cleanup actions that improve maintainability without scope creep
+- Separate 'quick wins' (format/lint) vs 'follow-ups' (bigger refactors)
+- Recommend which tools to run (gate-first, then targeted checks)
+- Suggest commit strategy if it helps review (mechanical vs semantic commits)
+Do NOT implement, just plan.")
+```
 
-Invoke appropriate fixing agents (general-purpose or specialist) to:
-- run the repo's best available gate (just/make/scripts/xtask/nix) and address findings
-- apply safe mechanical fixes (format/lint/docs drift) and straightforward correctness fixes
-- tighten boundaries / reduce future change-cost where it's clearly beneficial (especially in hotspots)
-- save tool outputs you will cite into the receipts dir (gate logs, audit outputs, link checks, etc.)
+### Wave 3 — Improve & fix (apply changes)
+
+Use the Task tool with `subagent_type: "general-purpose"` for fixing:
+
+```
+Task(subagent_type="general-purpose", prompt="Apply the cleanup plan:
+- Run the repo's gate command and fix findings
+- Apply safe mechanical fixes (format, lint, docs drift)
+- Tighten boundaries where clearly beneficial
+- Use Edit tool for file changes, not sed/awk
+- Save tool outputs to receipts dir if created")
+```
 
 ### Wave 4 — Verify & report (prove readiness)
 
-After fixes:
-- re-run the relevant gate/checks
-- save "after" snapshots + key logs into the receipts dir
-- produce a narrative cleanup report with a crisp interface verdict and evidence pointers
+After fixes, run verification yourself:
 
-## Useful tools (guidance)
+```bash
+cargo xtask selftest  # or repo-native gate
+```
 
-Prefer repo-native commands; otherwise use what fits:
-- Rust: `cargo fmt`, `cargo clippy`, `cargo test`/`cargo nextest`, `cargo semver-checks`/`cargo-semver-checks`, `cargo-audit`, `cargo-deny`, `cargo-geiger`, `cargo llvm-lines`, `tokei`
-- Python: `ruff`, `mypy`/`pyright`, `pytest`, `pip-audit`, `radon`
-- JS/TS: `eslint`, `tsc`, `jest`, `npm audit`
-- Docs: doctests, `lychee`
+Then produce the cleanup report.
 
-Save outputs you cite into the receipts dir.
+## Native tool preferences
+
+| Task | Use | Avoid |
+|------|-----|-------|
+| Read files | `Read` tool | `cat`, `head`, `tail` |
+| Search content | `Grep` tool | `grep`, `rg` bash |
+| Find files | `Glob` tool | `find`, `ls` |
+| Edit files | `Edit` tool | `sed`, `awk` |
+| Write files | `Write` tool | `echo >`, heredocs |
+
+Reserve Bash for: git operations, build commands, test runners.
 
 ## Output (cleanup report)
 
-At the end, provide a cleanup report (print it, and optionally save to receipts dir). Include:
+At the end, provide a cleanup report. Include:
 
 ### Cleanup summary (narrative)
 
@@ -101,15 +133,16 @@ What you tightened and why (maintainability + reviewability), and what you delib
 - Public API: unchanged | additive | breaking | not measured
 - Schemas/contracts: unchanged | updated | breaking | not measured
 - CLI/config surface: unchanged | changed | not measured
-Back each with anchors (paths, commands, or saved tool outputs).
+
+Back each with anchors (paths, functions, or tool outputs).
 
 ### Evidence & receipts
 
-What you ran and where you saved it (if applicable).
+What you ran and key findings.
 
 ### What changed during cleanup
 
-Key files/dirs touched + "before → after" highlights (lint/test/docs/risk surface).
+Key files/dirs touched + "before → after" highlights.
 
 ### Remaining concerns / follow-ups
 
@@ -120,15 +153,20 @@ What's still worth doing and what you'd mechanize next time.
 Ready / not ready + blockers.
 If ready, recommend running `/pr-create` next (with suggested context).
 
-## Checklist (use TodoWrite to track)
+## Progress tracking (use TaskCreate/TaskUpdate)
 
-Use TodoWrite to create and track these steps:
+Create tasks to track progress:
 
-1. **Gather context** - Get branch info, merge-base, changed files, diff stats, detect tooling
-2. **Wave 1: Explore** - Map hotspots, interfaces, risk surfaces, find gate commands
-3. **Wave 2: Plan** - Create cleanup plan, separate quick wins from follow-ups
-4. **Wave 3: Fix** - Run gate, apply mechanical fixes, tighten boundaries
-5. **Wave 4: Verify** - Re-run checks, save receipts, produce cleanup report
-6. **Report** - Print final cleanup report with PR readiness verdict
+```
+TaskCreate(subject="Gather branch context", description="Get branch info, merge-base, changed files, detect tooling", activeForm="Gathering context")
+TaskCreate(subject="Wave 1: Explore changes", description="Map hotspots, interfaces, risk surfaces via Explore agent", activeForm="Exploring changes")
+TaskCreate(subject="Wave 2: Plan cleanup", description="Create cleanup plan via Plan agent", activeForm="Planning cleanup")
+TaskCreate(subject="Wave 3: Apply fixes", description="Run gate, apply mechanical fixes", activeForm="Applying fixes")
+TaskCreate(subject="Wave 4: Verify and report", description="Re-run checks, produce cleanup report", activeForm="Verifying changes")
+```
 
-Now proceed through the checklist.
+Update task status as you work:
+- `TaskUpdate(taskId="...", status="in_progress")` when starting
+- `TaskUpdate(taskId="...", status="completed")` when done
+
+Now proceed through the tasks.
