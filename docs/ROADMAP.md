@@ -594,7 +594,7 @@ Items completed and part of the frozen kernel:
 | **Centralized Env Helpers**   | `crate::env::is_ci()`, `is_noninteractive()` reduce duplication        | ✅ In v3.3.7 |
 | **Example fork CI**           | `examples/fork-customization/` with CI template                        | ✅ In v3.3.7 |
 
-See [v3.4.0-plan.md](archive/v3.4.0-plan.md) for scope when v3.4.0 work begins.
+See [v3.4.0-plan.md](plans/v3.4.0-plan.md) for scope when v3.4.0 work begins.
 
 ---
 

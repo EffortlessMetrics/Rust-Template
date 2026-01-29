@@ -14,6 +14,8 @@ last_updated: 2025-11-26
 
 # Brownfield Adoption Guide
 
+> **Note**: This is a high-level strategy guide. For step-by-step technical instructions, see **[how-to/add-governance-to-existing-repo.md](../how-to/add-governance-to-existing-repo.md)**.
+
 **You have an existing Rust service. You want governance without rewriting.**
 
 This guide helps you choose the right adoption strategy and links you to detailed resources.
