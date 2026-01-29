@@ -1,6 +1,9 @@
-use jsonwebtoken::{Algorithm, DecodingKey, EncodingKey, Header, Validation, decode, encode};
+use jsonwebtoken::{Algorithm, DecodingKey, Validation, decode};
+#[cfg(test)]
+use jsonwebtoken::{EncodingKey, Header, encode};
 use serde::{Deserialize, Serialize};
 use spec_runtime::ValidatedConfig;
+#[cfg(test)]
 use std::time::{SystemTime, UNIX_EPOCH};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -183,7 +186,8 @@ fn validate_jwt_token(token: &str, secret: &str) -> bool {
 }
 
 /// Create a JWT token with the provided secret and claims (test-only helper)
-pub fn create_jwt_token(
+#[cfg(test)]
+pub(crate) fn create_jwt_token(
     secret: &str,
     subject: &str,
     issuer: &str,
@@ -236,18 +240,18 @@ impl From<&str> for PlatformAuthMode {
     }
 }
 
-// Simple constant-time comparison to avoid leaking length/case differences in tokens.
+// Constant-time comparison for equal-length strings.
+// Note: This leaks length mismatch information (which is standard practice to prevent DoS),
+// but ensures constant time execution for equal-length inputs.
 fn constant_time_eq(a: &str, b: &str) -> bool {
-    let mut result = (a.len() ^ b.len()) as u8;
-    let max_len = a.len().max(b.len());
-
-    for i in 0..max_len {
-        let x = a.as_bytes().get(i).copied().unwrap_or(0);
-        let y = b.as_bytes().get(i).copied().unwrap_or(0);
-        result |= x ^ y;
+    if a.len() != b.len() {
+        return false;
     }
 
-    result == 0
+    a.bytes()
+        .zip(b.bytes())
+        .fold(0, |acc, (x, y)| acc | (x ^ y))
+        == 0
 }
 
 fn token_kind(token: &str) -> TokenKind<'_> {
