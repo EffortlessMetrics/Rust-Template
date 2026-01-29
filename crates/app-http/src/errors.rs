@@ -16,6 +16,28 @@
 //! 3. **Correlated**: Include request ID, AC ID, feature ID for tracing
 //! 4. **Secure**: Don't leak internal details to clients
 //! 5. **Observable**: Log errors with structured data for analysis
+//!
+//! # Example Usage
+//!
+//! ```rust,ignore
+//! use crate::errors::{AppError, ErrorCode};
+//!
+//! // Simple error
+//! return Err(AppError::bad_request("Invalid input"));
+//!
+//! // Error with code and context
+//! return Err(AppError::validation_error(
+//!     ErrorCode::InvalidFormat,
+//!     "Task ID must match pattern TASK-\d+"
+//! ).with_context("task_id", payload.task_id));
+//!
+//! // Error with AC/Feature tracking
+//! return Err(AppError::business_logic_error(
+//!     ErrorCode::ResourceNotFound,
+//!     "Task not found"
+//! ).with_ac_id("AC-TPL-001")
+//!   .with_feature_id("FT-TASKS"));
+//! ```
 
 use axum::{
     Json,
@@ -151,11 +173,24 @@ struct ErrorDetails {
     request_id: Option<String>,
 }
 
+/// Application error with full observability support
+///
+/// This error type includes:
+/// - HTTP status code (for response)
+/// - Error code (for clients and metrics)
+/// - User message (safe to show to clients)
+/// - Internal context (for logging, not shown to clients)
+/// - AC ID and Feature ID (for product tracking)
+/// - Request ID (for correlation - AC-TPL-004)
 #[derive(Debug)]
 pub struct AppError {
+    /// HTTP status code to return
     status: StatusCode,
+    /// Machine-readable error code
     code: ErrorCode,
+    /// User-facing error message (safe to expose)
     message: String,
+    /// Details (boxed to reduce stack size)
     details: Box<ErrorDetails>,
 }
 
@@ -363,5 +398,114 @@ impl From<gov_http::PlatformError> for AppError {
             SpecLoad { context, source } => AppError::spec_load_error(context, source),
             Internal(msg) => AppError::internal_error(msg),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_error_code_display() {
+        assert_eq!(ErrorCode::InvalidAmount.to_string(), "InvalidAmount");
+        assert_eq!(ErrorCode::ResourceNotFound.to_string(), "ResourceNotFound");
+    }
+
+    #[test]
+    fn test_bad_request_error() {
+        let error = AppError::bad_request("Invalid input");
+        assert_eq!(error.status, StatusCode::BAD_REQUEST);
+        assert_eq!(error.code, ErrorCode::InvalidRequest);
+        assert_eq!(error.message, "Invalid input");
+    }
+
+    #[test]
+    fn test_error_with_context() {
+        let error = AppError::validation_error(ErrorCode::InvalidAmount, "Amount must be positive")
+            .with_context("amount", -100)
+            .with_context("field", "amount_cents");
+
+        assert!(error.details.context.contains_key("amount"));
+        assert!(error.details.context.contains_key("field"));
+    }
+
+    #[test]
+    fn test_error_with_ac_and_feature() {
+        let error =
+            AppError::business_logic_error(ErrorCode::InvalidState, "Task cannot be updated")
+                .with_ac_id("AC-TPL-001")
+                .with_feature_id("FT-TASKS");
+
+        assert_eq!(error.details.ac_id, Some("AC-TPL-001".to_string()));
+        assert_eq!(error.details.feature_id, Some("FT-TASKS".to_string()));
+    }
+
+    #[test]
+    fn test_error_serialization() {
+        let error = AppError::validation_error(ErrorCode::InvalidAmount, "Amount must be positive")
+            .with_ac_id("AC-123")
+            .with_feature_id("FT-456")
+            .with_request_id("req-test-123");
+
+        let response = ErrorResponse {
+            error: error.code.to_string(),
+            message: error.message.clone(),
+            request_id: error.details.request_id.clone().unwrap_or_default(),
+            ac_id: error.details.ac_id.clone(),
+            feature_id: error.details.feature_id.clone(),
+        };
+
+        let json = serde_json::to_string(&response).unwrap();
+        assert!(json.contains("InvalidAmount"));
+        assert!(json.contains("Amount must be positive"));
+        assert!(json.contains("req-test-123"));
+        assert!(json.contains("AC-123"));
+        assert!(json.contains("FT-456"));
+    }
+
+    #[test]
+    fn test_governance_invalid_transition_maps_to_bad_request() {
+        use business_core::governance::TaskStatus;
+
+        let app_error: AppError = business_core::governance::GovernanceError::InvalidTransition {
+            from: TaskStatus::Todo,
+            to: TaskStatus::Done,
+        }
+        .into();
+
+        // Invalid transitions are client errors (user requested invalid state change)
+        assert_eq!(app_error.status, StatusCode::BAD_REQUEST);
+        assert_eq!(app_error.code, ErrorCode::InvalidTransition);
+        assert!(
+            app_error.message.contains("Invalid status transition"),
+            "message should mention status transition, got: {}",
+            app_error.message
+        );
+    }
+
+    #[test]
+    fn test_spec_load_error_helper() {
+        let error = AppError::spec_load_error("load tasks.yaml", "file not found");
+        assert_eq!(error.status, StatusCode::INTERNAL_SERVER_ERROR);
+        assert_eq!(error.code, ErrorCode::InternalError);
+        assert_eq!(error.message, "Failed to load tasks.yaml: file not found");
+    }
+
+    #[test]
+    fn test_io_error_helper() {
+        let error = AppError::io_error("read config file", "permission denied");
+        assert_eq!(error.status, StatusCode::INTERNAL_SERVER_ERROR);
+        assert_eq!(error.code, ErrorCode::InternalError);
+        assert_eq!(error.message, "Failed to read config file: permission denied");
+    }
+
+    #[test]
+    fn test_spec_load_error_with_real_io_error() {
+        let io_error = std::io::Error::new(std::io::ErrorKind::NotFound, "file not found");
+        let error = AppError::spec_load_error("load devex_flows.yaml", io_error);
+        assert_eq!(error.status, StatusCode::INTERNAL_SERVER_ERROR);
+        assert_eq!(error.code, ErrorCode::InternalError);
+        assert!(error.message.contains("Failed to load devex_flows.yaml"));
+        assert!(error.message.contains("file not found"));
     }
 }

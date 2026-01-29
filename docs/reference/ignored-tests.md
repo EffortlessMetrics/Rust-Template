@@ -181,7 +181,6 @@ cargo test --workspace -- --ignored --test-threads=1
 When marking a test as ignored:
 
 1. Always provide a reason in the ignore attribute:
-
    ```rust
    #[ignore = "Requires Docker for testcontainers"]
    ```
