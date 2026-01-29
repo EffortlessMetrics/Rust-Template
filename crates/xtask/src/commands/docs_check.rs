@@ -1838,10 +1838,17 @@ fn validate_bdd_tags() -> Result<()> {
 
         let relative_file = file_path.strip_prefix(root).unwrap_or(file_path).display().to_string();
 
+        // Track previous scenario info for checking when we encounter a new scenario
+        let mut prev_scenario_line = 0;
+        let mut prev_scenario_has_ac_tag = false;
+        let mut prev_scenario_tags: Vec<String> = Vec::new();
+        let mut prev_scenario_name = String::new();
+
+        // Track current (pending) tags collected since last scenario
+        let mut current_tags: Vec<String> = Vec::new();
+        let mut current_has_ac_tag = false;
+
         let mut in_scenario = false;
-        let mut scenario_has_ac_tag = false;
-        let mut scenario_line = 0;
-        let mut scenario_tags: Vec<String> = Vec::new();
 
         for (line_num, line) in content.lines().enumerate() {
             let trimmed = line.trim();
@@ -1851,7 +1858,7 @@ fn validate_bdd_tags() -> Result<()> {
                 // Extract all AC tags from this line
                 for cap in ac_tag_re.captures_iter(trimmed) {
                     let tag = cap.get(1).map(|m| m.as_str()).unwrap_or("");
-                    scenario_tags.push(format!("@{}", tag));
+                    current_tags.push(format!("@{}", tag));
 
                     // Check if this AC ID exists in spec_ledger
                     if !ac_ids.contains(tag) {
@@ -1862,60 +1869,75 @@ fn validate_bdd_tags() -> Result<()> {
                             issue: "AC not found in spec_ledger".to_string(),
                         });
                     } else {
-                        scenario_has_ac_tag = true;
+                        current_has_ac_tag = true;
+                    }
+                }
+                // Also collect non-AC tags for special tag checking
+                for tag in trimmed.split_whitespace() {
+                    if tag.starts_with('@') && !tag.starts_with("@AC-") {
+                        current_tags.push(tag.to_string());
                     }
                 }
             }
 
             // Check for Scenario or Scenario Outline
             if trimmed.starts_with("Scenario:") || trimmed.starts_with("Scenario Outline:") {
-                // If we were in a previous scenario, check if it had an AC tag
-                if in_scenario && !scenario_has_ac_tag {
+                // If we were in a previous scenario, check if IT had an AC tag
+                // (using saved previous scenario info, not current tags)
+                if in_scenario && !prev_scenario_has_ac_tag {
                     // Only report if there were no special tags either
-                    let has_special_tag = scenario_tags.iter().any(|t| {
+                    let has_special_tag = prev_scenario_tags.iter().any(|t| {
                         special_tags.iter().any(|st| t.to_lowercase() == st.to_lowercase())
                     });
                     if !has_special_tag {
-                        // Extract scenario name
-                        let scenario_name = trimmed
-                            .trim_start_matches("Scenario:")
-                            .trim_start_matches("Scenario Outline:")
-                            .trim();
                         untagged_scenarios.push(BddTagIssue {
                             file: relative_file.clone(),
-                            line: scenario_line,
+                            line: prev_scenario_line,
                             tag: String::new(),
-                            issue: format!("Scenario '{}' has no @AC-* tag", scenario_name),
+                            issue: format!("Scenario '{}' has no @AC-* tag", prev_scenario_name),
                         });
                     }
                 }
 
-                // Start tracking new scenario
+                // Current tags belong to THIS scenario - save as previous for next iteration
+                prev_scenario_line = line_num + 1;
+                prev_scenario_has_ac_tag = current_has_ac_tag;
+                prev_scenario_tags = current_tags.clone();
+                prev_scenario_name = trimmed
+                    .trim_start_matches("Scenario:")
+                    .trim_start_matches("Scenario Outline:")
+                    .trim()
+                    .to_string();
+
+                // Reset current tags for the next scenario
                 in_scenario = true;
-                scenario_has_ac_tag = false;
-                scenario_line = line_num + 1;
-                scenario_tags.clear();
+                current_tags.clear();
+                current_has_ac_tag = false;
             }
 
             // Feature-level tags apply to all scenarios (reset tracking)
             if trimmed.starts_with("Feature:") {
                 in_scenario = false;
-                scenario_has_ac_tag = false;
-                scenario_tags.clear();
+                prev_scenario_has_ac_tag = false;
+                prev_scenario_tags.clear();
+                prev_scenario_name.clear();
+                current_tags.clear();
+                current_has_ac_tag = false;
             }
         }
 
-        // Check final scenario
-        if in_scenario && !scenario_has_ac_tag {
-            let has_special_tag = scenario_tags
+        // Check final scenario (using saved previous scenario info)
+        if in_scenario && !prev_scenario_has_ac_tag {
+            let has_special_tag = prev_scenario_tags
                 .iter()
                 .any(|t| special_tags.iter().any(|st| t.to_lowercase() == st.to_lowercase()));
-            if !has_special_tag && !untagged_scenarios.iter().any(|s| s.line == scenario_line) {
+            if !has_special_tag && !untagged_scenarios.iter().any(|s| s.line == prev_scenario_line)
+            {
                 untagged_scenarios.push(BddTagIssue {
                     file: relative_file.clone(),
-                    line: scenario_line,
+                    line: prev_scenario_line,
                     tag: String::new(),
-                    issue: "Scenario has no @AC-* tag".to_string(),
+                    issue: format!("Scenario '{}' has no @AC-* tag", prev_scenario_name),
                 });
             }
         }
