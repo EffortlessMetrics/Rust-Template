@@ -1,103 +1,89 @@
 ---
-description: Cleanup pass to make the current branch PR-ready (agents in waves; apply fixes; save purposeful receipts; report)
-argument-hint: [optional: intent/constraints e.g. "minimal churn", "run full gate", "skip benches", "prep for issue #218"]
+description: Cleanup pass to make the current branch PR-ready (reduce review cost; prove correctness; avoid scope creep)
+argument-hint: [optional: constraints e.g. "minimal churn", "doc-only", "tight scope", "prep for issue #218", "local-gate-canonical"]
 ---
 
-# PR Cleanup Pass (current branch)
+# PR Cleanup Pass
 
-Do a **quality-first cleanup pass** on the **CURRENT WORKING TREE state** to make this branch PR-ready.
+This command turns "branch has changes" into "branch is reviewable".
 
-The goal is maintainability and reviewability:
-- reduce future change-cost
-- make interfaces/boundaries clearer
-- make verification credible
-- remove obvious footguns (lint/test/docs drift, dependency posture, risky patterns)
+The goal is not perfection. The goal is **lower review cost** and **higher confidence**.
 
 Use any extra context I provide: **$ARGUMENTS**
 
-## First: Gather Context
+## Defaults
 
-Get the branch state before doing anything else:
-- Current branch name and status (clean/dirty)
-- Default branch (usually `main`)
-- Merge-base with default branch
-- Changed files and diff stats since merge-base
-- Detect tooling: look for `Cargo.toml`, `pyproject.toml`, `package.json`, `Makefile`, `justfile`, etc.
+- Don't widen scope.
+- Prefer reversible/mechanical fixes over refactors.
+- If CI is disabled, treat the repo's local gate as canonical and include reproduce commands.
 
-## How to work (agents in waves)
+## Wave 0 — Context
 
-Work through these waves, using subagents for exploration and planning. Launch independent work in parallel where possible.
+Before changing anything, capture:
 
-### Wave 1 — Explore (find what matters)
+- Branch name, whether the tree is clean/dirty
+- Default branch + merge base
+- Changed files + diff stats since merge base
+- Repo gate posture (what "green" means here)
+- Any obvious contracts touched (API/schema/CLI output/specs/policies)
 
-Spawn an **Explore agent** to analyze the changes:
-- Map semantic hotspots vs mechanical changes
-- Flag interface/contract touchpoints (public APIs, schemas, CLI)
-- Flag risk surface deltas (unsafe, concurrency, IO, deps)
-- Identify repo-native gate commands (cargo xtask selftest, make check, etc.)
-- Report with anchors: file paths, function names, commit refs
+## Wave 1 — Explore
 
-The explore agent should analyze only, not make changes.
+Produce a review map:
 
-### Wave 2 — Plan (cleanup plan with maintainability intent)
+- What's semantic vs mechanical
+- Interfaces/contracts touched (public API, schema files, CLI outputs, policy surfaces)
+- Risk deltas (unsafe/concurrency/IO/deps)
+- The smallest verification ladder that supports the claims
 
-Spawn a **Plan agent** to create a cleanup strategy:
-- Propose cleanup actions that improve maintainability without scope creep
-- Separate "quick wins" (format/lint) vs "follow-ups" (bigger refactors)
-- Recommend which tools to run (gate-first, then targeted checks)
-- Suggest commit strategy if it helps review (mechanical vs semantic commits)
+**No changes in this wave.**
 
-The plan agent should plan only, not implement.
+## Wave 2 — Plan
 
-### Wave 3 — Improve & fix (apply changes)
+Produce a bounded cleanup plan:
 
-Apply the cleanup plan yourself or spawn a helper agent:
+- Quick wins to apply now (format/lint/docs drift, obvious correctness fixes)
+- Follow-ups explicitly deferred (bigger refactors, behavior shifts)
+- Verification plan (what you will run and why)
+- Commit strategy if it materially improves review (mechanical vs semantic)
+
+**No changes in this wave.**
+
+## Wave 3 — Fix
+
+Apply the bounded plan:
+
 - Run the repo's best available gate and address findings
-- Apply safe mechanical fixes (format, lint, docs drift)
-- Tighten boundaries where clearly beneficial (especially in hotspots)
-- Save tool outputs you'll cite (gate logs, audit outputs, etc.)
+- Apply safe mechanical fixes
+- Fix straightforward correctness issues revealed by the gate
+- Tighten boundaries only where it clearly reduces future change-cost
 
-### Wave 4 — Verify & report (prove readiness)
+Avoid "nice to have" refactors unrelated to the PR story.
 
-After fixes:
-- Re-run the relevant gate/checks
-- Produce the cleanup report (see below)
+## Wave 4 — Verify & Report
 
-## Output (cleanup report)
+- Re-run the relevant gate(s)
+- Capture the reproduce commands and key outputs
+- Produce the cleanup report below
 
-At the end, provide a cleanup report with these sections:
+## Output: Cleanup report
 
-### Cleanup summary (narrative)
+### Summary
+1–3 paragraphs: what changed during cleanup and why.
 
-What you tightened and why (maintainability + reviewability), and what you deliberately didn't touch.
-
-### Interface & compatibility verdict (crisp)
-
+### Interface & compatibility verdict
 - Public API: unchanged | additive | breaking | not measured
 - Schemas/contracts: unchanged | updated | breaking | not measured
 - CLI/config surface: unchanged | changed | not measured
 
-Back each with anchors (paths, functions, or tool outputs).
-
-### Evidence & receipts
-
-What you ran and key findings.
+### Evidence
+What you ran and what it proves. If something wasn't run, say so.
 
 ### What changed during cleanup
-
-Key files/dirs touched + "before → after" highlights.
+Key files/dirs touched + before→after highlights.
 
 ### Remaining concerns / follow-ups
+Concrete next items; explicitly out of scope for this run.
 
-What's still worth doing and what you'd mechanize next time.
-
-### PR readiness verdict
-
-Ready / not ready + blockers.
-If ready, recommend running `/pr-create` next (with suggested context).
-
-## Progress tracking
-
-Track your progress through the waves. Mark each wave as you start and complete it so the user can see status.
-
-Now proceed through the waves.
+### PR readiness
+Ready / not ready + blockers. If ready, recommend running `/pr-create`.
