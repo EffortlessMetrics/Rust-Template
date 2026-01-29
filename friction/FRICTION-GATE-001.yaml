@@ -44,7 +44,12 @@ context:
   commands_involved:
     - cargo xtask selftest
     - cargo xtask ac-status
-status: open
+status: resolved
+resolution: |
+  Fixed by clear_coverage_files() in crates/xtask/src/commands/bdd.rs
+  which clears target/ac/coverage.jsonl and .tmp at the start of each BDD run.
+  This ensures each selftest invocation starts with fresh coverage data.
+resolved_date: 2026-01-29
 related_items:
   issues:
     - '#104'
