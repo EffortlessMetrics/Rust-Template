@@ -68,6 +68,28 @@ impl PlatformAuthConfig {
         matches!(self.mode, PlatformAuthMode::Basic | PlatformAuthMode::Jwt)
     }
 
+    /// Returns true if auth credentials are actually configured and can be enforced.
+    ///
+    /// This is different from `requires_auth()` which indicates intent.
+    /// Auth is enforceable when mode is non-Open AND the appropriate credential
+    /// for that mode is present (non-empty).
+    ///
+    /// - Basic mode: requires a basic token
+    /// - JWT mode: requires a JWT secret (tokens are validated via JWT signature)
+    pub fn can_enforce_auth(&self) -> bool {
+        match self.mode {
+            PlatformAuthMode::Open => false,
+            PlatformAuthMode::Basic => {
+                // Basic mode primarily uses the basic token
+                self.token.as_ref().is_some_and(|t| !t.is_empty())
+            }
+            PlatformAuthMode::Jwt => {
+                // JWT mode requires a secret to validate signatures
+                self.jwt_secret.as_ref().is_some_and(|s| !s.is_empty())
+            }
+        }
+    }
+
     pub fn is_authorized(&self, provided: Option<&str>) -> bool {
         if !self.requires_auth() {
             return true;
@@ -248,10 +270,7 @@ fn constant_time_eq(a: &str, b: &str) -> bool {
         return false;
     }
 
-    a.bytes()
-        .zip(b.bytes())
-        .fold(0, |acc, (x, y)| acc | (x ^ y))
-        == 0
+    a.bytes().zip(b.bytes()).fold(0, |acc, (x, y)| acc | (x ^ y)) == 0
 }
 
 fn token_kind(token: &str) -> TokenKind<'_> {

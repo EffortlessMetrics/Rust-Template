@@ -13,38 +13,58 @@ fn setup_full_workspace() -> (tempfile::TempDir, std::path::PathBuf) {
     // Create minimal valid spec files to avoid errors
 
     // spec_ledger.yaml
-    fs::write(specs_dir.join("spec_ledger.yaml"), r#"
+    fs::write(
+        specs_dir.join("spec_ledger.yaml"),
+        r#"
 metadata:
   schema_version: "1.0.0"
   template_version: "1.0.0"
   last_updated: "2024-01-01T00:00:00Z"
   description: "Test Ledger"
 stories: []
-"#).unwrap();
+"#,
+    )
+    .unwrap();
 
     // devex_flows.yaml
-    fs::write(specs_dir.join("devex_flows.yaml"), r#"
+    fs::write(
+        specs_dir.join("devex_flows.yaml"),
+        r#"
 flows: {}
-"#).unwrap();
+"#,
+    )
+    .unwrap();
 
     // doc_index.yaml
-    fs::write(specs_dir.join("doc_index.yaml"), r#"
+    fs::write(
+        specs_dir.join("doc_index.yaml"),
+        r#"
 docs: []
-"#).unwrap();
+"#,
+    )
+    .unwrap();
 
     // tasks.yaml
-    fs::write(specs_dir.join("tasks.yaml"), r#"
+    fs::write(
+        specs_dir.join("tasks.yaml"),
+        r#"
 schema_version: "1.0.0"
 template_version: "1.0.0"
 tasks: []
-"#).unwrap();
+"#,
+    )
+    .unwrap();
 
     // service_metadata.yaml
-    fs::write(specs_dir.join("service_metadata.yaml"), r#"
+    fs::write(
+        specs_dir.join("service_metadata.yaml"),
+        r#"
 name: "test-service"
 description: "Test Service"
 owner: "test"
-"#).unwrap();
+"#,
+    )
+    .unwrap();
 
     (temp, spec_root)
 }
@@ -65,10 +85,12 @@ async fn dashboard_does_not_block_executor() {
 
     // Spawn concurrent dashboard requests
     let mut handles = Vec::new();
-    for _ in 0..10 { // Increase count to ensure enough work
+    for _ in 0..10 {
+        // Increase count to ensure enough work
         let spec_root = spec_root.clone();
         handles.push(tokio::spawn(async move {
-            let repo = Arc::new(adapters_spec_fs::FsGovernanceRepository::new(spec_root.join("specs")));
+            let repo =
+                Arc::new(adapters_spec_fs::FsGovernanceRepository::new(spec_root.join("specs")));
             let app = app_with_workspace_root(repo, spec_root).expect("valid config");
 
             let request = Request::builder()
@@ -82,11 +104,13 @@ async fn dashboard_does_not_block_executor() {
     }
 
     // Wait for requests
-    let _results = tokio::time::timeout(Duration::from_secs(10), async {
+    tokio::time::timeout(Duration::from_secs(10), async {
         for handle in handles {
             let _ = handle.await;
         }
-    }).await.expect("requests timed out");
+    })
+    .await
+    .expect("requests timed out");
 
     // Check timer
     let timer_elapsed = tokio::time::timeout(Duration::from_secs(5), timer_task)

@@ -11,8 +11,8 @@ use std::time::{SystemTime, UNIX_EPOCH};
 #[derive(Serialize)]
 struct TestClaims {
     sub: String,
-    exp: usize,
-    iat: usize,
+    exp: u64,
+    iat: u64,
     iss: String,
 }
 
@@ -27,8 +27,8 @@ fn create_jwt_token(
 
     let claims = TestClaims {
         sub: subject.to_string(),
-        exp: (now + expires_in_seconds) as usize,
-        iat: now as usize,
+        exp: now + expires_in_seconds,
+        iat: now,
         iss: issuer.to_string(),
     };
 
