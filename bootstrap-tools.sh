@@ -81,13 +81,14 @@ install_buf() {
   local bin="buf-${os_cap}-${buf_arch}"
   local url="https://github.com/bufbuild/buf/releases/download/v${v}/${bin}"
   if ! [ -x "$BIN/buf" ]; then
-    curl -sSL "$url" -o "$BIN/buf"; chmod +x "$BIN/buf"; sha_check "$BIN/buf" "buf-${v}-${os}-${buf_arch}"
+    # Note: We use $arch (amd64) for the checksum key to match tools.sha256, but $buf_arch (x86_64) for the download URL
+    curl -sSL "$url" -o "$BIN/buf"; chmod +x "$BIN/buf"; sha_check "$BIN/buf" "buf-${v}-${os}-${arch}"
   fi
 }
 install_atlas() {
   # Atlas binaries are served from release.ariga.io, not GitHub releases
   # URL format: https://release.ariga.io/atlas/atlas-{os}-{arch}-{version}
-  local v="${ATLAS_VERSION:-latest}"
+  local v="${ATLAS_VERSION:-v0.31.0}"
   local url="https://release.ariga.io/atlas/atlas-${os}-${arch}-${v}"
   if ! [ -x "$BIN/atlas" ]; then
     curl -sSfL "$url" -o "$BIN/atlas"; chmod +x "$BIN/atlas"; sha_check "$BIN/atlas" "atlas-${v}-${os}-${arch}"

@@ -6,7 +6,7 @@
 
 # oasdiff v1.11.7 - OpenAPI Specification diff tool
 # GitHub releases: https://github.com/oasdiff/oasdiff/releases
-oasdiff-1.11.7-linux-amd64 97f1052365f74e6fd6f4d8fa108606e09391aebb8ecbf3b5e7a4059d54327224
+oasdiff-1.11.7-linux-amd64 0f3f70ea55dc50b8cae7e495f26f1bfc7e9eded1114990241f0b00f89950ba55
 oasdiff-1.11.7-linux-arm64 6a7394ec7129ccfbfcf4837db8426198b79e933341a96adf53b0f33498846b45
 oasdiff-1.11.7-darwin-all 2aab1d33f3b9f9c28cd6c1977f63b1aa43ba83f9ab94887f3097fcac152d20a1
 oasdiff-1.11.7-windows-amd64 5327e48ac9926d8b63c63b6768b7599369f890aac768780621a8315fd3beb2cb
@@ -19,13 +19,13 @@ buf-1.45.0-darwin-amd64 0542b62eabf4bdaa67d53b8a9aed43c8674d5e447a8c353e8e25cfcb
 buf-1.45.0-darwin-arm64 7c4131ee7af0e1a9c34acf6a7e5b7f82123bf44726f0eac1ccae31eed7ebb094
 buf-1.45.0-windows-amd64 656f38ecdd7633af9eaf8c15e0e15402c5a4852307515951fbcf7d91a37ff5b3
 
-# atlas latest - Database schema management tool
+# atlas v0.31.0 - Database schema management tool
 # Release server: https://release.ariga.io/atlas/
-atlas-latest-linux-amd64 724decd2d39b7c9870301ee4cbad2297b8538199c2936e15ca4366a33581430d
-atlas-latest-linux-arm64 0ff4218b8c51d640d749fc49cde128eb4ae2043878238d13ab84748b22f266ab
-atlas-latest-darwin-amd64 812c91b97f3ff4670e342ad46c3ce6af34fdfb54f71c19719fd7ba9baacb28c9
-atlas-latest-darwin-arm64 8ae3f2093059a2d2959c03dcc2c5cde9e64b192a7b87de450b4e30fa2c92567b
-atlas-latest-windows-amd64 13156b55ed5da072b3370427b0f73f2717a0edbfcd9264211d4db10e3ba8b354
+atlas-v0.31.0-linux-amd64 f821bbd466ed77f69814b3f5627ffe5458a43acd28c05c3f27bb4f3267dd042a
+atlas-v0.31.0-linux-arm64 b10c02b0610720ff4f601b77a8c1f5521e89f5a14a6e7e0cc7887fb244e0473d
+atlas-v0.31.0-darwin-amd64 94876bf45d201d054936903c11df98974b2e632bbf8885cf2239d1fdb2a5eb7d
+atlas-v0.31.0-darwin-arm64 69203828b55996c06784d46ef1737132489a1794fb459ba2a663a51f5a740caa
+atlas-v0.31.0-windows-amd64 26ef9800ea70b59b1197a958c473c1dc9aa357f315e8aeebd85086855e69459e
 
 # gitleaks v8.21.2 - Secret scanning tool (CI-only)
 # GitHub releases: https://github.com/gitleaks/gitleaks/releases
