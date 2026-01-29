@@ -12,11 +12,14 @@ pub async fn platform_auth_guard(
     request: Request<Body>,
     next: Next,
 ) -> Result<Response, AppError> {
-    if !state.platform_auth.requires_auth() {
+    // Skip auth if mode is Open OR if credentials aren't configured
+    // (can't enforce auth without credentials to validate against)
+    if !state.platform_auth.can_enforce_auth() {
         return Ok(next.run(request).await);
     }
 
-    if matches!(request.method(), &Method::GET | &Method::HEAD | &Method::OPTIONS) {
+    // Only OPTIONS (preflight) is public; all other methods require auth
+    if matches!(request.method(), &Method::OPTIONS) {
         return Ok(next.run(request).await);
     }
 
@@ -150,13 +153,29 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn allows_get_without_auth_even_in_basic_mode() {
+    async fn rejects_get_without_auth_in_basic_mode() {
         let state = app_state(crate::security::PlatformAuthMode::Basic, Some("secret"), None);
         let app = guarded_router(state);
 
         let request = Request::builder()
             .method(Method::GET)
             .uri("/platform/protected")
+            .body(Body::empty())
+            .unwrap();
+
+        let response = app.oneshot(request).await.expect("handler should respond");
+        assert_eq!(response.status(), StatusCode::UNAUTHORIZED);
+    }
+
+    #[tokio::test]
+    async fn accepts_get_with_correct_token_in_basic_mode() {
+        let state = app_state(crate::security::PlatformAuthMode::Basic, Some("secret"), None);
+        let app = guarded_router(state);
+
+        let request = Request::builder()
+            .method(Method::GET)
+            .uri("/platform/protected")
+            .header(PLATFORM_AUTH_HEADER, "secret")
             .body(Body::empty())
             .unwrap();
 
@@ -325,13 +344,32 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn allows_get_without_auth_even_in_jwt_mode() {
+    async fn rejects_get_without_auth_in_jwt_mode() {
         let state = app_state(crate::security::PlatformAuthMode::Jwt, None, Some("secret"));
         let app = guarded_router(state);
 
         let request = Request::builder()
             .method(Method::GET)
             .uri("/platform/protected")
+            .body(Body::empty())
+            .unwrap();
+
+        let response = app.oneshot(request).await.expect("handler should respond");
+        assert_eq!(response.status(), StatusCode::UNAUTHORIZED);
+    }
+
+    #[tokio::test]
+    async fn accepts_get_with_valid_jwt_in_jwt_mode() {
+        let secret = "test-secret";
+        let token =
+            crate::security::create_jwt_token(secret, "user123", "rust-template", 3600).unwrap();
+        let state = app_state(crate::security::PlatformAuthMode::Jwt, None, Some(secret));
+        let app = guarded_router(state);
+
+        let request = Request::builder()
+            .method(Method::GET)
+            .uri("/platform/protected")
+            .header(AUTHORIZATION_HEADER, format!("Bearer {}", token))
             .body(Body::empty())
             .unwrap();
 
