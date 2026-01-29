@@ -263,7 +263,7 @@ fn parse_status(status_str: &str) -> (TaskStatus, String) {
             (TaskStatus::InProgress, "InProgress".to_string())
         }
         "review" => (TaskStatus::Review, "Review".to_string()),
-        "done" => (TaskStatus::Done, "Done".to_string()),
+        "done" | "closed" => (TaskStatus::Done, "Done".to_string()),
         other => (TaskStatus::Todo, other.to_string()),
     }
 }
