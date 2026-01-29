@@ -19,35 +19,98 @@ struct Platform {
     os: String,
     arch: String,
     url: String,
+    // If set, the URL is an archive (tar.gz/zip) and we need to extract this file to compute checksum
+    extract_binary: Option<String>,
 }
 
 /// Generate SHA256 checksum for a URL
-fn get_sha256_for_url(url: &str) -> Result<String> {
+fn get_sha256_for_url(platform: &Platform) -> Result<String> {
     // Download to temporary file first
-    let temp_file = format!("/tmp/tool_checksum_{}", std::process::id());
+    let temp_file = format!("/tmp/tool_dl_{}", std::process::id());
 
     let output = Command::new("curl")
-        .args(["-sSfL", url, "-o", &temp_file])
+        .args(["-sSfL", &platform.url, "-o", &temp_file])
         .output()
         .context("Failed to download tool")?;
 
     if !output.status.success() {
         anyhow::bail!(
             "Failed to download from {}: {}",
-            url,
+            platform.url,
             String::from_utf8_lossy(&output.stderr)
         );
     }
 
+    let file_to_checksum = if let Some(binary_name) = &platform.extract_binary {
+        // Extract archive
+        let temp_dir = format!("/tmp/tool_extract_{}", std::process::id());
+        fs::create_dir_all(&temp_dir).context("Failed to create temp dir")?;
+
+        // Determine extraction method based on extension
+        if platform.url.ends_with(".zip") {
+             let status = Command::new("unzip")
+                .args(["-j", &temp_file, binary_name, "-d", &temp_dir])
+                .status()
+                .context("Failed to run unzip")?;
+
+             if !status.success() {
+                 let _ = fs::remove_file(&temp_file);
+                 let _ = fs::remove_dir_all(&temp_dir);
+                 anyhow::bail!("Failed to unzip {}", platform.url);
+             }
+        } else {
+            // Assume tar.gz or tar
+             let status = Command::new("tar")
+                .args(["-xzf", &temp_file, "-C", &temp_dir, binary_name])
+                .status()
+                .context("Failed to run tar")?;
+
+             if !status.success() {
+                 let _ = fs::remove_file(&temp_file);
+                 let _ = fs::remove_dir_all(&temp_dir);
+                 anyhow::bail!("Failed to extract tarball {}", platform.url);
+             }
+        }
+
+        // Return path to extracted binary
+        let extracted_path = Path::new(&temp_dir).join(binary_name);
+        if !extracted_path.exists() {
+             let _ = fs::remove_file(&temp_file);
+             let _ = fs::remove_dir_all(&temp_dir);
+             anyhow::bail!("Extracted binary {} not found in archive", binary_name);
+        }
+
+        // We will move it to a unique temp file to avoid cleanup issues or use it directly
+        // Better to return the path and handle cleanup later, but let's just checksum it here
+        // Actually, get_sha256_for_url returns String (checksum).
+        // So we can compute checksum of extracted_path
+
+        // Clean up the downloaded archive
+        let _ = fs::remove_file(&temp_file);
+
+        extracted_path.to_string_lossy().to_string()
+    } else {
+        temp_file
+    };
+
     let sha_output =
-        Command::new("sha256sum").arg(&temp_file).output().context("Failed to compute SHA256")?;
+        Command::new("sha256sum").arg(&file_to_checksum).output().context("Failed to compute SHA256")?;
+
+    // Cleanup
+    if platform.extract_binary.is_some() {
+        // If we extracted, file_to_checksum is inside a temp dir
+        // We should remove the temp dir (and file inside)
+        if let Some(parent) = Path::new(&file_to_checksum).parent() {
+            let _ = fs::remove_dir_all(parent);
+        }
+    } else {
+        // file_to_checksum is just temp_file
+        let _ = fs::remove_file(&file_to_checksum);
+    }
 
     if !sha_output.status.success() {
         anyhow::bail!("Failed to compute SHA256: {}", String::from_utf8_lossy(&sha_output.stderr));
     }
-
-    // Clean up temp file
-    let _ = std::fs::remove_file(&temp_file);
 
     let sha_str = String::from_utf8_lossy(&sha_output.stdout);
     let checksum = sha_str.split_whitespace().next().context("Invalid sha256sum output")?;
@@ -65,21 +128,25 @@ fn generate_checksums() -> Result<Vec<(String, String)>> {
                     os: "linux".to_string(),
                     arch: "amd64".to_string(),
                     url: "https://github.com/oasdiff/oasdiff/releases/download/v1.11.7/oasdiff_1.11.7_linux_amd64.tar.gz".to_string(),
+                    extract_binary: Some("oasdiff".to_string()),
                 },
                 Platform {
                     os: "linux".to_string(),
                     arch: "arm64".to_string(),
                     url: "https://github.com/oasdiff/oasdiff/releases/download/v1.11.7/oasdiff_1.11.7_linux_arm64.tar.gz".to_string(),
+                    extract_binary: Some("oasdiff".to_string()),
                 },
                 Platform {
                     os: "darwin".to_string(),
                     arch: "all".to_string(),
                     url: "https://github.com/oasdiff/oasdiff/releases/download/v1.11.7/oasdiff_1.11.7_darwin_all.tar.gz".to_string(),
+                    extract_binary: Some("oasdiff".to_string()),
                 },
                 Platform {
                     os: "windows".to_string(),
                     arch: "amd64".to_string(),
                     url: "https://github.com/oasdiff/oasdiff/releases/download/v1.11.7/oasdiff_1.11.7_windows_amd64.tar.gz".to_string(),
+                    extract_binary: Some("oasdiff.exe".to_string()),
                 },
             ],
         },
@@ -91,26 +158,31 @@ fn generate_checksums() -> Result<Vec<(String, String)>> {
                     os: "linux".to_string(),
                     arch: "amd64".to_string(),
                     url: "https://github.com/bufbuild/buf/releases/download/v1.45.0/buf-Linux-x86_64".to_string(),
+                    extract_binary: None,
                 },
                 Platform {
                     os: "linux".to_string(),
                     arch: "arm64".to_string(),
                     url: "https://github.com/bufbuild/buf/releases/download/v1.45.0/buf-Linux-aarch64".to_string(),
+                    extract_binary: None,
                 },
                 Platform {
                     os: "darwin".to_string(),
                     arch: "amd64".to_string(),
                     url: "https://github.com/bufbuild/buf/releases/download/v1.45.0/buf-Darwin-x86_64".to_string(),
+                    extract_binary: None,
                 },
                 Platform {
                     os: "darwin".to_string(),
                     arch: "arm64".to_string(),
                     url: "https://github.com/bufbuild/buf/releases/download/v1.45.0/buf-Darwin-arm64".to_string(),
+                    extract_binary: None,
                 },
                 Platform {
                     os: "windows".to_string(),
                     arch: "amd64".to_string(),
                     url: "https://github.com/bufbuild/buf/releases/download/v1.45.0/buf-Windows-x86_64.exe".to_string(),
+                    extract_binary: None,
                 },
             ],
         },
@@ -122,26 +194,31 @@ fn generate_checksums() -> Result<Vec<(String, String)>> {
                     os: "linux".to_string(),
                     arch: "amd64".to_string(),
                     url: "https://release.ariga.io/atlas/atlas-linux-amd64-latest".to_string(),
+                    extract_binary: None,
                 },
                 Platform {
                     os: "linux".to_string(),
                     arch: "arm64".to_string(),
                     url: "https://release.ariga.io/atlas/atlas-linux-arm64-latest".to_string(),
+                    extract_binary: None,
                 },
                 Platform {
                     os: "darwin".to_string(),
                     arch: "amd64".to_string(),
                     url: "https://release.ariga.io/atlas/atlas-darwin-amd64-latest".to_string(),
+                    extract_binary: None,
                 },
                 Platform {
                     os: "darwin".to_string(),
                     arch: "arm64".to_string(),
                     url: "https://release.ariga.io/atlas/atlas-darwin-arm64-latest".to_string(),
+                    extract_binary: None,
                 },
                 Platform {
                     os: "windows".to_string(),
                     arch: "amd64".to_string(),
                     url: "https://release.ariga.io/atlas/atlas-windows-amd64-latest.exe".to_string(),
+                    extract_binary: None,
                 },
             ],
         },
@@ -153,21 +230,25 @@ fn generate_checksums() -> Result<Vec<(String, String)>> {
                     os: "linux".to_string(),
                     arch: "amd64".to_string(),
                     url: "https://github.com/gitleaks/gitleaks/releases/download/v8.21.2/gitleaks_8.21.2_linux_x64.tar.gz".to_string(),
+                    extract_binary: Some("gitleaks".to_string()),
                 },
                 Platform {
                     os: "darwin".to_string(),
                     arch: "amd64".to_string(),
                     url: "https://github.com/gitleaks/gitleaks/releases/download/v8.21.2/gitleaks_8.21.2_darwin_x64.tar.gz".to_string(),
+                    extract_binary: Some("gitleaks".to_string()),
                 },
                 Platform {
                     os: "darwin".to_string(),
                     arch: "arm64".to_string(),
                     url: "https://github.com/gitleaks/gitleaks/releases/download/v8.21.2/gitleaks_8.21.2_darwin_arm64.tar.gz".to_string(),
+                    extract_binary: Some("gitleaks".to_string()),
                 },
                 Platform {
                     os: "windows".to_string(),
                     arch: "amd64".to_string(),
                     url: "https://github.com/gitleaks/gitleaks/releases/download/v8.21.2/gitleaks_8.21.2_windows_x64.zip".to_string(),
+                    extract_binary: Some("gitleaks.exe".to_string()),
                 },
             ],
         },
@@ -182,7 +263,7 @@ fn generate_checksums() -> Result<Vec<(String, String)>> {
             let key = format!("{}-{}-{}-{}", tool.name, tool.version, platform.os, platform.arch);
             print!("  {} {}: ", "→".dimmed(), key);
 
-            match get_sha256_for_url(&platform.url) {
+            match get_sha256_for_url(&platform) {
                 Ok(checksum) => {
                     println!("{}", "OK".green());
                     checksums.push((key, checksum));

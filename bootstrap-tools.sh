@@ -81,7 +81,7 @@ install_buf() {
   local bin="buf-${os_cap}-${buf_arch}"
   local url="https://github.com/bufbuild/buf/releases/download/v${v}/${bin}"
   if ! [ -x "$BIN/buf" ]; then
-    curl -sSL "$url" -o "$BIN/buf"; chmod +x "$BIN/buf"; sha_check "$BIN/buf" "buf-${v}-${os}-${buf_arch}"
+    curl -sSL "$url" -o "$BIN/buf"; chmod +x "$BIN/buf"; sha_check "$BIN/buf" "buf-${v}-${os}-${arch}"
   fi
 }
 install_atlas() {
