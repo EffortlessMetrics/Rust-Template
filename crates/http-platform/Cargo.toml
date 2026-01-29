@@ -33,8 +33,8 @@ maud = "0.27.0"
 # Date/time utilities
 chrono.workspace = true
 tracing.workspace = true
+tokio.workspace = true
 
 [dev-dependencies]
-tokio.workspace = true
 tower.workspace = true
 testing = { path = "../testing" }
