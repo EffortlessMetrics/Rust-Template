@@ -259,3 +259,30 @@ async fn test_full_contract_coverage() {
             .join("\n")
     );
 }
+
+/// @AC-TPL-PLATFORM-UI-ACCESSIBILITY: Active navigation link has aria-current="page"
+#[tokio::test]
+async fn test_active_nav_link_has_aria_current() {
+    let workspace_root = test_workspace_root();
+    let repo = Arc::new(FsGovernanceRepository::new(workspace_root.clone()));
+    let app = app_with_workspace_root(repo, workspace_root.clone()).expect("valid config");
+
+    // Fetch dashboard HTML
+    let html = fetch_html(app, "/").await;
+    let document = Html::parse_document(&html);
+
+    // Find the Dashboard link in the nav
+    let selector = Selector::parse("nav a").unwrap();
+    let dashboard_link = document
+        .select(&selector)
+        .find(|el| el.text().collect::<String>() == "Dashboard")
+        .expect("Dashboard link should exist");
+
+    // Check for aria-current="page"
+    let aria_current = dashboard_link.value().attr("aria-current");
+    assert_eq!(
+        aria_current,
+        Some("page"),
+        "Dashboard link on dashboard page should have aria-current='page'"
+    );
+}
