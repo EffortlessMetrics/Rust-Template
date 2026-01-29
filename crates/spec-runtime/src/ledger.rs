@@ -3,7 +3,7 @@
 //! This module defines the structure of `spec_ledger.yaml`, the core governance document
 //! that maps user stories → requirements → acceptance criteria → tests.
 
-use anyhow::{Context, Result};
+use crate::error::{Result, SpecError};
 use serde::{Deserialize, Serialize};
 use std::path::Path;
 
@@ -115,11 +115,10 @@ pub struct AcceptanceCriterion {
 /// println!("Loaded {} stories", ledger.stories.len());
 /// ```
 pub fn load_spec_ledger(path: &Path) -> Result<SpecLedger> {
-    let content = std::fs::read_to_string(path)
-        .with_context(|| format!("Failed to read spec ledger: {}", path.display()))?;
+    let content =
+        std::fs::read_to_string(path).map_err(|e| SpecError::io(path.to_path_buf(), e))?;
 
-    serde_yaml::from_str(&content)
-        .with_context(|| format!("Failed to parse spec ledger: {}", path.display()))
+    serde_yaml::from_str(&content).map_err(SpecError::Yaml)
 }
 
 // =============================================================================

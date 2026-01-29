@@ -1,4 +1,5 @@
 <!-- doclint:disable orphan-version -->
+<!-- doclint:disable broken-links -->
 # Rust Template v1.1.0 Release Notes
 
 **Release Date:** November 15, 2025
@@ -80,7 +81,7 @@ Production-ready Kubernetes deployment with security-first defaults:
 - ✅ **Environment support** (dev/staging/prod) with validation
 - ✅ **Prerequisite checking** (Docker, kubectl, namespace)
 - ✅ **Local cluster detection** and warnings
-- 📖 **[Deploy guide](docs/how-to/deploy-dev.md)** with comprehensive examples
+- 📖 **Deploy guide** *(archived)* with comprehensive examples
 
 ---
 
@@ -141,14 +142,14 @@ Enhanced tooling and multi-platform support:
 
 ### New Guides
 
-- 📗 **[Deploy to Development](docs/how-to/deploy-dev.md)** - Complete deployment workflow
-- 📐 **[Meta-Contract Design](docs/meta_contract_phase1.3.md)** - Implementation details
-- 📋 **[Policy Organization](policy/README.md)** - Policy structure and testing
+- 📗 **Deploy to Development** *(archived)* - Complete deployment workflow
+- 📐 **Meta-Contract Design** *(archived)* - Implementation details
+- 📋 **Policy Organization** *(archived)* - Policy structure and testing
 
 ### Updated Guides
 
-- **[CHANGELOG.md](CHANGELOG.md)** - Detailed v1.1.0 changelog
-- **[docs/README.md](docs/README.md)** - Updated index with new documentation
+- **CHANGELOG.md** *(archived)* - Detailed v1.1.0 changelog
+- **docs/README.md** *(archived)* - Updated index with new documentation
 
 ---
 
@@ -258,17 +259,19 @@ Special focus on **ensuring template stability** through formal contracts and po
 
 ## 📝 Full Changelog
 
-See [CHANGELOG.md](CHANGELOG.md) for complete technical details.
+See CHANGELOG.md *(archived)* for complete technical details.
 
 ---
 
 ## 🔗 Quick Links
 
-- **Documentation**: [docs/README.md](docs/README.md)
-- **Getting Started**: [docs/tutorials/getting-started.md](docs/tutorials/getting-started.md)
-- **Deploy Guide**: [docs/how-to/deploy-dev.md](docs/how-to/deploy-dev.md)
-- **Meta-Contract Design**: [docs/meta_contract_phase1.3.md](docs/meta_contract_phase1.3.md)
-- **Policy Organization**: [policy/README.md](policy/README.md)
+*Note: The following resources were available at release time but have since been archived or reorganized.*
+
+- **Documentation**: docs/README.md *(archived)*
+- **Getting Started**: docs/tutorials/getting-started.md *(archived)*
+- **Deploy Guide**: docs/how-to/deploy-dev.md *(archived)*
+- **Meta-Contract Design**: docs/meta_contract_phase1.3.md *(archived)*
+- **Policy Organization**: policy/README.md *(archived)*
 
 ---
 

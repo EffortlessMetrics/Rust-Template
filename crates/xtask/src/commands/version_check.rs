@@ -29,7 +29,7 @@ const VERSION_SOURCES: &[VersionSource] = &[
     },
     VersionSource {
         path: "README.md",
-        pattern: r#"^#\s+Test Service\s+\(v(\d+\.\d+\.\d+)\)"#,
+        pattern: r#"^#\s+rust-as-spec IDP Platform Cell\s+\(v(\d+\.\d+\.\d+)\)"#,
         description: "README.md title version",
     },
     VersionSource {

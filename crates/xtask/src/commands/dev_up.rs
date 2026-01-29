@@ -71,8 +71,9 @@ pub fn run() -> Result<()> {
     println!();
     println!("{}", "✅ dev-up complete.".green().bold());
     println!("Next steps:");
-    println!("  1. {}", DEV_UP_NEXT_STEPS[0].cyan());
-    println!("  2. Open {}", DEV_UP_NEXT_STEPS[1].cyan());
+    println!("  1. Read this first: {}", "docs/tutorials/day-1-first-change.md".blue());
+    println!("  2. {}", DEV_UP_NEXT_STEPS[0].cyan());
+    println!("  3. Open {}", DEV_UP_NEXT_STEPS[1].cyan());
 
     Ok(())
 }

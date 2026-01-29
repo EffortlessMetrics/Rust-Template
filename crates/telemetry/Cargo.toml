@@ -1,26 +1,27 @@
 [dependencies]
 # Optional OTLP dependencies (enabled via 'otlp' feature)
-opentelemetry = {optional = true, workspace = true}
-opentelemetry-otlp = {optional = true, workspace = true}
-opentelemetry_sdk = {optional = true, workspace = true}
-tracing-opentelemetry = {optional = true, workspace = true}
+opentelemetry = { optional = true, workspace = true }
+opentelemetry-otlp = { optional = true, workspace = true }
+opentelemetry_sdk = { optional = true, workspace = true }
+tracing-opentelemetry = { optional = true, workspace = true }
 tracing.workspace = true
 tracing-subscriber.workspace = true
 
 [dev-dependencies]
-testing = {path = "../testing"}
+testing = { path = "../testing" }
 
 [features]
 default = []
 otlp = [
   "dep:opentelemetry",
   "dep:opentelemetry-otlp",
-  "opentelemetry-otlp/grpc-tonic",
   "dep:opentelemetry_sdk",
-  "dep:tracing-opentelemetry"
+  "dep:tracing-opentelemetry",
+  "opentelemetry-otlp/grpc-tonic"
 ]
 
 [package]
+description = "Optional OpenTelemetry tracing and metrics configuration"
 name = "telemetry"
 version = "0.1.0"
 edition.workspace = true

@@ -23,11 +23,13 @@ This crate provides:
 ## Public API
 
 ### Types
+
 - `UiContract`: Top-level UI contract specification
 - `Screen`: A UI screen definition
 - `Region`: A region within a UI screen
 
 ### Functions
+
 - `load_ui_contract(path)`: Load UI contract from YAML file
 - `validate_region_kinds(contract)`: Validate that all region kinds reference valid kind definitions
 - `all_region_ids(contract)`: Get all region IDs across all screens

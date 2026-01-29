@@ -35,29 +35,10 @@ ci:
 
 repos:
   # ============================================
-  # Rust-specific hooks
+  # NOTE: Rust checks (rustfmt, clippy) are handled by `cargo xtask precommit`
+  # which is the canonical gate. The git pre-commit hook calls xtask directly.
+  # This config handles non-Rust hygiene only.
   # ============================================
-  - repo: local
-    hooks:
-      # Rust formatting with rustfmt
-      - id: rustfmt
-        name: rustfmt
-        entry: cargo fmt
-        language: system
-        types: [rust]
-        pass_filenames: false
-        description: Format Rust code with rustfmt
-        args: ['--', '--check']
-
-      # Rust linting with clippy (fast mode)
-      - id: clippy
-        name: clippy
-        entry: cargo clippy
-        language: system
-        types: [rust]
-        pass_filenames: false
-        description: Lint Rust code with clippy
-        args: ['--all-targets', '--all-features', '--', '-D', 'warnings']
 
   # ============================================
   # YAML linting

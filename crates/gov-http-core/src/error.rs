@@ -31,6 +31,10 @@ pub enum PlatformError {
     #[error("{0}")]
     NotFound(String),
 
+    /// Too many entries in collection.
+    #[error("Too many entries: {0} > {1}")]
+    TooManyEntries(usize, usize),
+
     /// Internal error.
     #[error("{0}")]
     Internal(String),
@@ -47,6 +51,11 @@ impl PlatformError {
         Self::NotFound(message.into())
     }
 
+    /// Create a too many entries error.
+    pub fn too_many_entries(actual: usize, max: usize) -> Self {
+        Self::TooManyEntries(actual, max)
+    }
+
     /// Create an internal error.
     pub fn internal(message: impl Into<String>) -> Self {
         Self::Internal(message.into())
@@ -60,6 +69,9 @@ impl IntoResponse for PlatformError {
                 (StatusCode::INTERNAL_SERVER_ERROR, "spec_load_error", self.to_string())
             }
             PlatformError::NotFound(msg) => (StatusCode::NOT_FOUND, "not_found", msg.clone()),
+            PlatformError::TooManyEntries(_, _) => {
+                (StatusCode::INTERNAL_SERVER_ERROR, "too_many_entries", self.to_string())
+            }
             PlatformError::Internal(msg) => {
                 (StatusCode::INTERNAL_SERVER_ERROR, "internal_error", msg.clone())
             }

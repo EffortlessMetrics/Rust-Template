@@ -290,7 +290,7 @@ pub fn run(task_name: &str) -> Result<()> {
         bundle_version: 1,
         task_id: task_name.to_string(),
         requirement_ids,
-        ac_ids,
+        ac_ids: ac_ids.clone(),
         git_sha,
         timestamp: Utc::now().to_rfc3339(),
         specs: vec![ManifestSpec { file: "specs/spec_ledger.yaml".to_string() }],
@@ -309,6 +309,13 @@ pub fn run(task_name: &str) -> Result<()> {
     println!("  Files: {}", file_count);
     println!("  Size: {} bytes", total_bytes);
     println!("  Manifest: {}", manifest_path.display());
+    println!();
+    println!("{}", "Next steps:".bold());
+    println!("  1. Use the bundle with an agent (e.g., Claude):");
+    println!("     {} {}", "cat".dimmed(), context_path.display().to_string().dimmed());
+    println!("  2. Implement changes based on linked ACs: {}", ac_ids.join(", ").cyan());
+    println!("  3. Add/verify BDD scenarios in specs/features/");
+    println!("  4. Run tests: {}", "cargo xtask selftest".cyan());
 
     if total_bytes > task.max_bytes {
         println!("  {} Size limit exceeded!", "[WARN]".yellow());

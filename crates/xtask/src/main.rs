@@ -90,11 +90,15 @@ struct Cli {
     #[arg(short, long, global = true)]
     quiet: bool,
 
+    /// Show relevant documentation for the command
+    #[arg(long, global = true)]
+    help_docs: bool,
+
     #[command(subcommand)]
     command: Commands,
 }
 
-#[derive(Subcommand)]
+#[derive(Subcommand, Debug)]
 enum Commands {
     // ============================================================================
     // ONBOARDING (Getting started & environment setup)
@@ -745,9 +749,9 @@ enum Commands {
         /// Output file (default: stdout)
         #[arg(long, short)]
         output: Option<std::path::PathBuf>,
-        /// Description of what changed (defaults to TODO placeholder)
-        #[arg(long, short)]
-        description: Option<String>,
+        /// Description of what changed (1-3 sentences)
+        #[arg(long, short, required = true)]
+        description: String,
     },
 
     /// Update PR body with cover sheet (bounded replacement)
@@ -1204,6 +1208,11 @@ fn main() -> Result<()> {
     } else {
         Verbosity::Normal
     };
+
+    if cli.help_docs {
+        show_command_docs(&cli.command)?;
+        return Ok(());
+    }
 
     match cli.command {
         Commands::AcStatus { summary, json, ac, check, require_coverage } => {
@@ -1834,4 +1843,150 @@ pub fn cargo_cmd(subcommand: &str, args: &[&str]) -> Command {
     }
 
     cmd
+}
+
+fn show_command_docs(command: &Commands) -> Result<()> {
+    let name = get_command_name(command);
+    println!();
+    println!("{} {}", "Documentation for:".bold(), name.cyan());
+    println!("{}", "=".repeat(20 + name.len()).blue());
+    println!();
+
+    let manifest_dir = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    let root = manifest_dir.parent().unwrap().parent().unwrap();
+    let spec_path = root.join("specs/devex_flows.yaml");
+
+    if let Ok(spec) = devex::load_spec(&spec_path) {
+        if let Some(cmd_spec) = spec.commands.get(name) {
+            println!("{}", cmd_spec.summary);
+            println!();
+            println!("{}: {}", "Category".bold(), cmd_spec.category);
+
+            // Find flows containing this command
+            let mut flows: Vec<_> =
+                spec.flows.iter().filter(|(_, f)| f.steps.iter().any(|s| s == name)).collect();
+            flows.sort_by_key(|(id, _)| *id);
+
+            if !flows.is_empty() {
+                println!();
+                println!("{}", "Part of flows:".bold());
+                for (flow_id, flow) in flows {
+                    println!("  • {} ({})", flow.name.cyan(), flow_id);
+                    for doc in &flow.documented_in {
+                        println!("    → {}", doc.dimmed());
+                    }
+                }
+            }
+        } else {
+            println!("No specific documentation found in devex_flows.yaml for '{}'", name);
+        }
+    } else {
+        println!("Warning: Failed to load specs/devex_flows.yaml");
+    }
+
+    // Always link to glossary
+    println!();
+    println!("{}", "See also:".bold());
+    println!("  • {}", "docs/GLOSSARY.md".blue());
+    println!("  • {}", "docs/AGENT_GUIDE.md".dimmed());
+
+    Ok(())
+}
+
+fn get_command_name(command: &Commands) -> &'static str {
+    match command {
+        Commands::Doctor => "doctor",
+        Commands::DevUp => "dev-up",
+        Commands::InstallHooks => "install-hooks",
+        Commands::CiLocal => "ci-local",
+        Commands::KernelSmoke => "kernel-smoke",
+        Commands::KernelStatus => "kernel-status",
+        Commands::Selftest => "selftest",
+        Commands::Quickstart => "quickstart",
+        Commands::Check => "check",
+        Commands::Precommit { .. } => "precommit",
+        Commands::TestChanged { .. } => "test-changed",
+        Commands::CheckApiDiff { .. } => "check-api-diff",
+        Commands::CheckOpenapiDiff => "check-openapi-diff",
+        Commands::CheckJsonSchemas { .. } => "check-json-schemas",
+        Commands::CheckLayering => "check-layering",
+        Commands::AcStatus { .. } => "ac-status",
+        Commands::AcNew { .. } => "ac-new",
+        Commands::AcCoverage { .. } => "ac-coverage",
+        Commands::AcSuggestScenarios { .. } => "ac-suggest-scenarios",
+        Commands::AcTests { .. } => "ac-tests",
+        Commands::TestAc { .. } => "test-ac",
+        Commands::Bdd => "bdd",
+        Commands::AcReport { .. } => "ac-report",
+        Commands::AcHistory { .. } => "ac-history",
+        Commands::AcSlo { .. } => "ac-slo",
+        Commands::AcEnsureKernelMapped { .. } => "ac-ensure-kernel-mapped",
+        Commands::AcLint { .. } => "ac-lint",
+        Commands::AdrNew { .. } => "adr-new",
+        Commands::AdrCheck => "adr-check",
+        Commands::DesignNew { .. } => "design-new",
+        Commands::DocsCheck => "docs-check",
+        Commands::DocsFrontmatterSync { .. } => "docs-frontmatter-sync",
+        Commands::Spellcheck => "spellcheck",
+        Commands::ContractsCheck => "contracts-check",
+        Commands::ContractsFmt => "contracts-fmt",
+        Commands::UiContractCheck => "ui-contract-check",
+        Commands::FrictionList { .. } => "friction-list",
+        Commands::FrictionNew { .. } => "friction-new",
+        Commands::FrictionResolve { .. } => "friction-resolve",
+        Commands::FrictionGhCreate { .. } => "friction-gh-create",
+        Commands::FrictionGhLink { .. } => "friction-gh-link",
+        Commands::QuestionsList { .. } => "questions-list",
+        Commands::QuestionNew { .. } => "question-new",
+        Commands::QuestionResolve { .. } => "question-resolve",
+        Commands::IssuesSearch { .. } => "issues-search",
+        Commands::ForkList { .. } => "fork-list",
+        Commands::ForkRegister { .. } => "fork-register",
+        Commands::SkillsFmt => "skills-fmt",
+        Commands::SkillsLint => "skills-lint",
+        Commands::AgentsFmt => "agents-fmt",
+        Commands::AgentsLint => "agents-lint",
+        Commands::TasksList => "tasks-list",
+        Commands::TaskCreate { .. } => "task-create",
+        Commands::TaskUpdate { .. } => "task-update",
+        Commands::SuggestNext(..) => "suggest-next",
+        Commands::ReleasePrepare { .. } => "release-prepare",
+        Commands::ReleaseBundle { .. } => "release-bundle",
+        Commands::ReleaseVerify => "release-verify",
+        Commands::SbomLocal => "sbom-local",
+        Commands::PrCover { .. } => "pr-cover",
+        Commands::PrUpdate { .. } => "pr-update",
+        Commands::ReceiptsGate { .. } => "receipts-gate",
+        Commands::ReceiptsEconomics { .. } => "receipts-economics",
+        Commands::ReceiptsValidate { .. } => "receipts-validate",
+        Commands::ReceiptsQuality { .. } => "receipts-quality",
+        Commands::ReceiptsTelemetry { .. } => "receipts-telemetry",
+        Commands::ReceiptsTimeline { .. } => "receipts-timeline",
+        Commands::ReceiptsForensic { .. } => "receipts-forensic",
+        Commands::ServiceInit { .. } => "service-init",
+        Commands::ServiceDescriptor { .. } => "service-descriptor",
+        Commands::ConfigValidate { .. } => "config-validate",
+        Commands::Audit => "audit",
+        Commands::PolicyTest => "policy-test",
+        Commands::Coverage => "coverage",
+        Commands::BuildTimeCapture => "build-time-capture",
+        Commands::BuildTimeCompare { .. } => "build-time-compare",
+        Commands::Bundle { .. } => "bundle",
+        Commands::HelpFlows => "help-flows",
+        Commands::FmtAll => "fmt-all",
+        Commands::ToolsChecksumUpdate => "tools-checksum-update",
+        Commands::ToolsChecksumVerify => "tools-checksum-verify",
+        Commands::Clean => "clean",
+        Commands::GraphExport { .. } => "graph-export",
+        Commands::Hakari => "hakari",
+        Commands::Migrate => "migrate",
+        Commands::PinActions => "pin-actions",
+        Commands::Deploy { .. } => "deploy",
+        Commands::Status => "status",
+        Commands::Version { .. } => "version",
+        Commands::VersionCheck { .. } => "version-check",
+        Commands::EnvMode { .. } => "env-mode",
+        Commands::IdpSnapshot { .. } => "idp-snapshot",
+        Commands::IdpCheck => "idp-check",
+    }
 }

@@ -220,7 +220,7 @@ Any change that affects kernel contracts requires:
 3. Regenerate `release_evidence/*`
 4. New `vX.Y.Z-kernel` tag
 
-See [KERNEL_SNAPSHOT.md](./KERNEL_SNAPSHOT.md#changing-the-kernel-after-v337-kernel) for the full protocol.
+See [KERNEL_SNAPSHOT.md](./KERNEL_SNAPSHOT.md#changing-the-kernel-after-v339-kernel) for the full protocol.
 
 ---
 

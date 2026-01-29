@@ -13,9 +13,8 @@ use axum::{
     extract::{Path, State},
     routing::get,
 };
-use gov_http_core::{PlatformError, PlatformState};
+use gov_http_core::{PlatformError, PlatformState, YamlResourceRepo};
 use serde::{Deserialize, Serialize};
-use std::fs;
 
 /// Fork registry entry representing a known template fork
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -43,6 +42,12 @@ pub struct ForkEntry {
     pub related_items: Option<RelatedItems>,
 }
 
+impl gov_model::YamlResource for ForkEntry {
+    fn id(&self) -> &str {
+        &self.id
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Maintainer {
     pub name: String,
@@ -64,6 +69,7 @@ pub struct RelatedItems {
 pub struct ForksListResponse {
     pub forks: Vec<ForkSummary>,
     pub total: usize,
+    pub pagination: gov_http_core::Pagination,
 }
 
 #[derive(Debug, Serialize)]
@@ -89,85 +95,26 @@ where
         .route("/forks/{name}", get(get_fork_by_name::<S>))
 }
 
-/// Load all fork entries from forks/ directory
-fn load_all_forks(root: &std::path::Path) -> Result<Vec<ForkEntry>, PlatformError> {
-    let forks_dir = root.join("forks");
-
-    if !forks_dir.exists() {
-        return Ok(Vec::new());
-    }
-
-    let mut forks = Vec::new();
-
-    let dir_entries = fs::read_dir(&forks_dir)
-        .map_err(|e| PlatformError::internal(format!("Failed to read forks directory: {}", e)))?;
-
-    for entry in dir_entries {
-        let entry = entry.map_err(|e| {
-            PlatformError::internal(format!("Failed to read directory entry: {}", e))
-        })?;
-
-        let path = entry.path();
-
-        // Skip non-YAML files and special files
-        if !path.is_file()
-            || path.extension().and_then(|s| s.to_str()) != Some("yaml")
-            || matches!(
-                path.file_name().and_then(|s| s.to_str()),
-                Some("README.yaml") | Some("fork_registry.yaml") | Some("fork_schema.yaml")
-            )
-        {
-            continue;
-        }
-
-        // Only load files matching FORK-*.yaml pattern
-        #[allow(clippy::collapsible_if)]
-        if let Some(filename) = path.file_name().and_then(|s| s.to_str()) {
-            if !filename.starts_with("FORK-") {
-                continue;
-            }
-        }
-
-        match load_fork_entry(&path) {
-            Ok(fork) => forks.push(fork),
-            Err(e) => {
-                tracing::warn!(
-                    path = %path.display(),
-                    error = ?e,
-                    "Failed to load fork entry"
-                );
-            }
-        }
-    }
-
-    // Sort by ID for consistent output
-    forks.sort_by(|a, b| a.id.cmp(&b.id));
-
-    Ok(forks)
-}
-
-/// Load a single fork entry from a YAML file
-fn load_fork_entry(path: &std::path::Path) -> Result<ForkEntry, PlatformError> {
-    let content = fs::read_to_string(path).map_err(|e| {
-        PlatformError::internal(format!("Failed to read fork file {}: {}", path.display(), e))
-    })?;
-
-    let fork: ForkEntry = serde_yaml::from_str(&content).map_err(|e| {
-        PlatformError::internal(format!("Failed to parse fork YAML {}: {}", path.display(), e))
-    })?;
-
-    Ok(fork)
-}
-
 /// GET /forks - Get all fork entries
 async fn get_all_forks<S>(State(state): State<S>) -> Result<Json<ForksListResponse>, PlatformError>
 where
     S: PlatformState,
 {
-    let root = state.context().root();
-    let forks = load_all_forks(root)?;
+    let root = state.context().root().to_path_buf();
 
-    let summaries: Vec<ForkSummary> = forks
+    let response = tokio::task::spawn_blocking(move || {
+        let repo = YamlResourceRepo::<ForkEntry>::new(&root, "forks");
+        repo.list(
+            gov_http_core::PaginationParams::default(),
+            |f: &ForkEntry| f.id.starts_with("FORK-"), // Only load files matching FORK-*.yaml pattern
+            |a: &ForkEntry, b: &ForkEntry| a.id.cmp(&b.id), // Sort by ID
+        )
+    })
+    .await
+    .map_err(|e| PlatformError::internal(format!("spawn_blocking failed: {}", e)))??;
+
+    let summaries: Vec<ForkSummary> = response
+        .data
         .iter()
         .map(|f| ForkSummary {
             id: f.id.clone(),
@@ -178,9 +125,11 @@ where
         })
         .collect();
 
-    let total = summaries.len();
-
-    Ok(Json(ForksListResponse { forks: summaries, total }))
+    Ok(Json(ForksListResponse {
+        forks: summaries,
+        total: response.pagination.total_items,
+        pagination: response.pagination,
+    }))
 }
 
 /// GET /forks/{name} - Get a specific fork entry by ID or name
@@ -191,35 +140,36 @@ async fn get_fork_by_name<S>(
 where
     S: PlatformState,
 {
-    let root = state.context().root();
-    let forks_dir = root.join("forks");
+    let root = state.context().root().to_path_buf();
 
-    // Try to find the fork file
-    // It could be the full ID (FORK-XXX-001) or just the identifier
-    let possible_filenames =
-        vec![format!("{}.yaml", name), format!("FORK-{}.yaml", name.trim_start_matches("FORK-"))];
+    let fork = tokio::task::spawn_blocking(move || {
+        // Validate name/ID format first
+        spec_runtime::validate_fork_id(&name)
+            .or_else(|_| spec_runtime::validate_name("fork_name", &name))
+            .map_err(|e| PlatformError::internal(format!("Invalid fork identifier: {}", e)))?;
 
-    for filename in possible_filenames {
-        let file_path = forks_dir.join(&filename);
-        if file_path.exists() {
-            let fork = load_fork_entry(&file_path)?;
+        let repo = YamlResourceRepo::<ForkEntry>::new(&root, "forks");
 
-            // Verify the ID or name matches
-            if fork.id != name && !fork.name.eq_ignore_ascii_case(&name) {
-                tracing::warn!(
-                    requested = %name,
-                    found_id = %fork.id,
-                    found_name = %fork.name,
-                    file = %file_path.display(),
-                    "Fork identifier mismatch"
-                );
-            }
-
-            return Ok(Json(fork));
+        // Try exact ID match first
+        if let Ok(fork) = repo.get(&name) {
+            return Ok(fork);
         }
-    }
 
-    Err(PlatformError::not_found(format!("Fork '{}' not found", name)))
+        // Then try name match (more expensive)
+        let list = repo.list(
+            gov_http_core::PaginationParams::default(),
+            |_: &ForkEntry| true,
+            |_, _| std::cmp::Ordering::Equal,
+        )?;
+        list.data
+            .into_iter()
+            .find(|f| f.name.eq_ignore_ascii_case(&name))
+            .ok_or_else(|| PlatformError::not_found(format!("Fork '{}' not found", name)))
+    })
+    .await
+    .map_err(|e| PlatformError::internal(format!("spawn_blocking failed: {}", e)))??;
+
+    Ok(Json(fork))
 }
 
 #[cfg(test)]

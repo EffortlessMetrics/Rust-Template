@@ -26,6 +26,7 @@ name = "adapters_grpc"
 path = "src/lib.rs"
 
 [package]
+description = "Tonic-based gRPC adapter for cross-service communication"
 name = "adapters-grpc"
 version = "0.1.0"
 edition.workspace = true

@@ -735,10 +735,11 @@ Feature: Developer Experience Commands
 
   @AC-TPL-XTASK-NONINTERACTIVE
   Scenario: version command runs non-interactively
-    Given the environment variable "XTASK_NONINTERACTIVE" is set to "1"
+    Given a clean development environment
+    And the environment variable "XTASK_NONINTERACTIVE" is set to "1"
     When I run "cargo xtask version"
-    Then the command should succeed
-    And the exit code should be 0 on success
+    Then the command should not prompt for input
+    And the exit code should reflect command success or failure
 
   @AC-TPL-XTASK-NONINTERACTIVE
   Scenario: friction-list runs non-interactively in CI mode

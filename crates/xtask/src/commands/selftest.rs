@@ -571,6 +571,12 @@ pub fn run_with_verbosity(verbosity: crate::Verbosity) -> Result<()> {
         if verbosity.is_verbose() {
             eprintln!("\n{} {:.2}s", "Total elapsed time:".bold(), total_elapsed.as_secs_f64());
         }
+        println!();
+        println!(
+            "{} For troubleshooting help, see: {}",
+            "💡 Tip:".yellow(),
+            "docs/explanation/SELFTEST.md".blue()
+        );
         anyhow::bail!("{} test suites failed", failed)
     }
 }

@@ -1,19 +1,20 @@
-[package]
-name = "spec-types"
-version.workspace = true
-edition.workspace = true
-rust-version.workspace = true
-authors.workspace = true
-license.workspace = true
-repository.workspace = true
-homepage.workspace = true
-documentation.workspace = true
-publish = false
-
 [dependencies]
-serde = { workspace = true }
-serde_yaml = { workspace = true }
-thiserror = { workspace = true }
+serde = {workspace = true}
+serde_yaml = {workspace = true}
+thiserror = {workspace = true}
 
 [lints]
 workspace = true
+
+[package]
+description = "Type-safe spec ID newtypes for stories, requirements, and acceptance criteria"
+name = "spec-types"
+publish = false
+authors.workspace = true
+documentation.workspace = true
+edition.workspace = true
+homepage.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+version.workspace = true

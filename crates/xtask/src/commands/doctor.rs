@@ -9,6 +9,16 @@ pub fn run() -> Result<()> {
     let mut issues = 0;
     let mut warnings = 0;
 
+    // Platform Section: Detect OS and Tier
+    println!("{}", "Platform Detection:".bold());
+    let platform = detect_platform();
+    println!("  OS:       {}", platform.name.cyan());
+    println!("  Tier:     {}", platform.tier);
+    if !platform.recommendation.is_empty() {
+        println!("  {}", platform.recommendation.yellow());
+    }
+    println!();
+
     // Environment Section: Detect Nix vs native, rustc version, sccache status
     println!("{}", "Environment:".bold());
 
@@ -421,6 +431,55 @@ fn check_libz_availability() -> Result<String, String> {
                  See: docs/TROUBLESHOOTING.md §sccache"
                 .to_string())
         }
+    }
+}
+
+struct PlatformInfo {
+    name: String,
+    tier: String,
+    recommendation: String,
+}
+
+fn detect_platform() -> PlatformInfo {
+    let os = std::env::consts::OS;
+
+    #[cfg(target_os = "linux")]
+    let is_wsl = std::env::var("WSL_DISTRO_NAME").is_ok()
+        || std::fs::read_to_string("/proc/version")
+            .map(|v| v.to_lowercase().contains("microsoft"))
+            .unwrap_or(false);
+
+    #[cfg(not(target_os = "linux"))]
+    let is_wsl = false;
+
+    match (os, is_wsl) {
+        ("linux", true) => PlatformInfo {
+            name: "WSL2 (Linux on Windows)".to_string(),
+            tier: "Tier-1 (Recommended for Windows)".to_string(),
+            recommendation: "".to_string(),
+        },
+        ("linux", false) => PlatformInfo {
+            name: "Native Linux".to_string(),
+            tier: "Tier-1 (Preferred)".to_string(),
+            recommendation: "".to_string(),
+        },
+        ("macos", _) => PlatformInfo {
+            name: "Native macOS".to_string(),
+            tier: "Tier-1 (Supported)".to_string(),
+            recommendation: "".to_string(),
+        },
+        ("windows", _) => PlatformInfo {
+            name: "Native Windows".to_string(),
+            tier: "Tier-2 (Limited Support)".to_string(),
+            recommendation:
+                "Recommendation: Use WSL2 for full selftest support. See: docs/setup/WSL2.md"
+                    .to_string(),
+        },
+        _ => PlatformInfo {
+            name: os.to_string(),
+            tier: "Tier-3 (Experimental)".to_string(),
+            recommendation: "".to_string(),
+        },
     }
 }
 

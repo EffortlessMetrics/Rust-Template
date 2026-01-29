@@ -1,4 +1,5 @@
 # Development profile optimizations for faster builds
+
 [profile.dev]
 # Reduce debuginfo for faster linking
 debug = 1
@@ -19,20 +20,9 @@ lto = "thin"
 debug = 1
 
 [workspace]
-resolver = "3"
 exclude = ["examples/brownfield-demo"]
 members = ["crates/*"]
-
-[workspace.package]
-authors = ["EffortlessSteven"]
-documentation = "https://docs.rs/as-spec"
-edition = "2024"
-homepage = "https://github.com/effortlessmetrics/rust-as-spec"
-license = "Apache-2.0 OR MIT"
-publish = false
-repository = "https://github.com/effortlessmetrics/rust-as-spec"
-rust-version = "1.89.0"
-version = "3.3.14"
+resolver = "3"
 
 [workspace.dependencies]
 anyhow = "1.0.100"
@@ -44,11 +34,14 @@ gherkin = "0.15.0"
 http = "1.4.0"
 http-body-util = "0.1.3"
 md5 = "0.8.0"
+once_cell = "1.20.3"
 opentelemetry = "0.31.0"
 opentelemetry-otlp = "0.31.0"
 opentelemetry_sdk = "0.31.0"
 parking_lot = "0.12.3"
 prometheus = "0.14.0"
+# Property-based testing
+proptest = "1.6"
 regex = "1.12.2"
 serde = {features = ["derive"], version = "1.0.228"}
 serde_json = "1.0.146"
@@ -67,10 +60,19 @@ tracing-opentelemetry = "0.32.0"
 tracing-subscriber = {features = ["env-filter", "fmt"], version = "0.3.22"}
 url = "2.5.7"
 uuid = {features = ["serde", "v4"], version = "1.19.0"}
-# Property-based testing
-proptest = "1.6"
 
 [workspace.lints.rust]
 missing_docs = "warn"
 rust_2018_idioms = {level = "deny", priority = -1}
 unused = {level = "deny", priority = -1}
+
+[workspace.package]
+authors = ["EffortlessSteven"]
+documentation = "https://docs.rs/as-spec"
+edition = "2024"
+homepage = "https://github.com/effortlessmetrics/rust-as-spec"
+license = "Apache-2.0 OR MIT"
+publish = false
+repository = "https://github.com/effortlessmetrics/rust-as-spec"
+rust-version = "1.89.0"
+version = "3.3.14"

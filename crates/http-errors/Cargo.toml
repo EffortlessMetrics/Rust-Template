@@ -1,26 +1,25 @@
-[package]
-name = "http-errors"
-version.workspace = true
-edition.workspace = true
-rust-version.workspace = true
-authors.workspace = true
-license.workspace = true
-repository.workspace = true
-homepage.workspace = true
-documentation.workspace = true
-publish = false
-
 [dependencies]
-thiserror.workspace = true
+axum = {optional = true, workspace = true}
+uuid = {optional = true, workspace = true}
 serde.workspace = true
-
-axum = { workspace = true, optional = true }
-uuid = { workspace = true, optional = true }
-
-[features]
-default = []
-axum = ["dep:axum", "dep:uuid"]
-uuid = ["dep:uuid"]
+thiserror.workspace = true
 
 [dev-dependencies]
 serde_json.workspace = true
+
+[features]
+axum = ["dep:axum", "dep:uuid"]
+default = []
+uuid = ["dep:uuid"]
+
+[package]
+name = "http-errors"
+publish = false
+authors.workspace = true
+documentation.workspace = true
+edition.workspace = true
+homepage.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+version.workspace = true

@@ -1,22 +1,22 @@
-[package]
-name = "spec-graph"
-version.workspace = true
-edition.workspace = true
-rust-version.workspace = true
-authors.workspace = true
-license.workspace = true
-repository.workspace = true
-homepage.workspace = true
-documentation.workspace = true
-publish = false
-
 [dependencies]
-spec-types = { path = "../spec-types" }
-spec-ledger = { path = "../spec-ledger" }
-serde = { workspace = true }
-anyhow = { workspace = true }
-chrono = { workspace = true }
-tracing = { workspace = true }
+anyhow = {workspace = true}
+chrono = {workspace = true}
+serde = {workspace = true}
+spec-ledger = {path = "../spec-ledger"}
+spec-types = {path = "../spec-types"}
+tracing = {workspace = true}
 
 [lints]
 workspace = true
+
+[package]
+name = "spec-graph"
+publish = false
+authors.workspace = true
+documentation.workspace = true
+edition.workspace = true
+homepage.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+version.workspace = true

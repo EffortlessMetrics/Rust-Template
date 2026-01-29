@@ -31,7 +31,12 @@ context:
   commands_involved:
   - cargo test -p xtask
   - cargo xtask selftest
-status: open
+status: resolved
+resolution: |
+  Fixed by EnvVarGuard in crates/testing/src/process.rs which uses a global
+  reentrant mutex (PROCESS_LOCK) to serialize all environment variable modifications.
+  The selftest env var tests now properly use EnvVarGuard, ensuring safe parallel execution.
+resolved_date: 2026-01-29
 related_items:
   issues:
   - '#59'

@@ -41,8 +41,9 @@ impl TaskService for TaskServiceImpl {
         request: Request<CreateTaskRequest>,
     ) -> Result<Response<CreateTaskResponse>, Status> {
         let title = request.into_inner().title;
-        let task =
-            use_cases::create_example_task(&*self.repo, title).await.map_err(Status::internal)?;
+        let task = use_cases::create_example_task(&*self.repo, title)
+            .await
+            .map_err(|e| Status::internal(e.to_string()))?;
         let proto_task = example_task_to_proto(&task);
         Ok(Response::new(CreateTaskResponse { task: Some(proto_task) }))
     }
@@ -52,7 +53,9 @@ impl TaskService for TaskServiceImpl {
         request: Request<GetTaskRequest>,
     ) -> Result<Response<GetTaskResponse>, Status> {
         let id = request.into_inner().id;
-        let task = use_cases::get_example_task(&*self.repo, id).await.map_err(Status::internal)?;
+        let task = use_cases::get_example_task(&*self.repo, id)
+            .await
+            .map_err(|e| Status::internal(e.to_string()))?;
         let proto_task =
             task.map(|t| example_task_to_proto(&t)).ok_or(Status::not_found("task not found"))?;
         Ok(Response::new(GetTaskResponse { task: Some(proto_task) }))
@@ -62,7 +65,9 @@ impl TaskService for TaskServiceImpl {
         &self,
         _request: Request<ListTasksRequest>,
     ) -> Result<Response<ListTasksResponse>, Status> {
-        let tasks = use_cases::list_example_tasks(&*self.repo).await.map_err(Status::internal)?;
+        let tasks = use_cases::list_example_tasks(&*self.repo)
+            .await
+            .map_err(|e| Status::internal(e.to_string()))?;
         let proto_tasks = tasks.into_iter().map(|t| example_task_to_proto(&t)).collect();
         Ok(Response::new(ListTasksResponse { tasks: proto_tasks }))
     }
@@ -76,7 +81,7 @@ impl TaskService for TaskServiceImpl {
         let status = parse_example_task_status(&inner.status)?;
         let task = use_cases::update_example_task_status(&*self.repo, id, status)
             .await
-            .map_err(Status::internal)?;
+            .map_err(|e| Status::internal(e.to_string()))?;
         let proto_task =
             task.map(|t| example_task_to_proto(&t)).ok_or(Status::not_found("task not found"))?;
         Ok(Response::new(UpdateStatusResponse { task: Some(proto_task) }))

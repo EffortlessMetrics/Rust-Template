@@ -9,7 +9,7 @@ stories: [US-TPL-PLT-001]
 requirements: [REQ-PLT-DOCS-CONSISTENCY]
 acs: [AC-PLT-009, AC-PLT-010]
 adrs: [ADR-0005]
-last_updated: 2025-12-22
+last_updated: 2026-01-29
 ---
 
 # Documentation Index
@@ -62,11 +62,11 @@ New to this repository? Start here:
 
 ### First Steps
 
-- **[Getting Started Tutorial](tutorials/getting-started.md)** - Complete walkthrough for new users
-- **[First AC Change](tutorials/first-ac-change.md)** - Implement your first acceptance criterion
-- **[Day 1: First Change](tutorials/day-1-first-change.md)** - Your first day with the template
-- **[Day 7: First Real Feature](tutorials/day-7-first-real-feature.md)** - Building your first complete feature
-- **[First Service](tutorials/first-service.md)** - Creating a new service from scratch
+- **[Day 1: First Change](tutorials/day-1-first-change.md)** - **Primary tutorial** - Your first day with the template (30 min)
+- **[Day 7: First Real Feature](tutorials/day-7-first-real-feature.md)** - Building your first complete feature (90 min)
+- **[Getting Started Tutorial](tutorials/getting-started.md)** - Alternative deep dive for new users
+- **[First AC Change](tutorials/first-ac-change.md)** - *Legacy* - See Day 1 instead
+- **[First Service](tutorials/first-service.md)** - *Superseded* - See how-to guides instead
 
 ---
 
@@ -197,11 +197,15 @@ Deeper understanding of concepts:
 
 Step-by-step learning paths:
 
-1. **[Getting Started](tutorials/getting-started.md)** - Complete onboarding tutorial
-2. **[First AC Change](tutorials/first-ac-change.md)** - Hello World for this template
-3. **[Day 1: First Change](tutorials/day-1-first-change.md)** - Your first day with the template
-4. **[Day 7: First Real Feature](tutorials/day-7-first-real-feature.md)** - Building your first complete feature
-5. **[First Service](tutorials/first-service.md)** - Creating a new service from scratch
+| Tutorial | Time | Description |
+|----------|------|-------------|
+| **[Day 1: First Change](tutorials/day-1-first-change.md)** | 30 min | **Start here** - Clone, validate, implement first AC |
+| **[Day 7: First Real Feature](tutorials/day-7-first-real-feature.md)** | 90 min | Build a complete multi-layer feature |
+| **[Getting Started](tutorials/getting-started.md)** | 30 min | Alternative intro with deeper environment details |
+
+**Legacy tutorials** (superseded by the above):
+- [First AC Change](tutorials/first-ac-change.md) - See Day 1 instead
+- [First Service](tutorials/first-service.md) - See how-to guides instead
 
 ---
 
@@ -358,7 +362,9 @@ cargo xtask selftest                  # Full validation
 
 ## Guides (Legacy)
 
-- **[Brownfield Adoption Guide](guides/brownfield-adoption.md)** - Legacy brownfield adoption guide
+> These guides have been superseded by more detailed how-to guides.
+
+- **[Brownfield Adoption Guide](guides/brownfield-adoption.md)** - High-level overview; see **[how-to/add-governance-to-existing-repo.md](how-to/add-governance-to-existing-repo.md)** for step-by-step instructions
 
 ---
 

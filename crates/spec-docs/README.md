@@ -24,6 +24,7 @@ This crate provides:
 ## Public API
 
 ### Types
+
 - `DocIndex`: Documentation index structure
 - `DocEntry`: Single documentation entry
 - `DocPolicies`: Documentation policy specification
@@ -34,6 +35,7 @@ This crate provides:
 - `MissingDoc`: A missing document that should exist
 
 ### Functions
+
 - `load_doc_index(path)`: Load doc index from YAML file
 - `load_policies(path)`: Load doc policies from YAML file
 - `check_staleness(docs, ledger)`: Check documentation staleness

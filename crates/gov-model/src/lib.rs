@@ -20,6 +20,16 @@ use std::str::FromStr;
 
 pub use context::{RepoContext, SpecLayout};
 
+/// Trait for governance artifacts stored as YAML.
+///
+/// Types implementing this trait can be managed by generic repositories
+/// that provide filesystem-backed CRUD operations. They must be
+/// serializable to/from YAML and have a unique identifier used as a filename.
+pub trait YamlResource: Serialize + serde::de::DeserializeOwned + Send + Sync + 'static {
+    /// Get the unique identifier for this resource.
+    fn id(&self) -> &str;
+}
+
 /// Error returned when parsing an unknown task status string.
 #[derive(Debug, Clone, thiserror::Error)]
 #[error("unknown task status: {0}")]

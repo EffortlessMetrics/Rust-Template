@@ -108,6 +108,13 @@ Feature: Platform Introspection API
     And the JSON response should have field "total"
     And the field "total" should be of type "number"
 
+  @AC-TPL-XTASK-NONINTERACTIVE
+  Scenario: Xtask identifies non-interactive environment
+    Given the environment variable "XTASK_NONINTERACTIVE" is set to "1"
+    When I run "cargo xtask env-mode --json"
+    Then the command should succeed
+    And the output should contain "\"is_noninteractive\": true"
+
   # ============================================================================
   # CLI/HTTP Parity Scenarios (REQ-TPL-INTROSPECTION-PARITY)
   # ============================================================================

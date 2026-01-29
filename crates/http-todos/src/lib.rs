@@ -153,23 +153,21 @@ where
         ));
     }
 
-    // Check for duplicate ID
-    if state.1.exists(&payload.id).await {
-        warn!(id = %payload.id, "Duplicate todo ID");
-        return Err(HttpError::new(
-            409,
-            ErrorCode::Conflict,
-            format!("Todo with id '{}' already exists", payload.id),
-        ));
+    // Check for duplicate ID and add in one operation
+    match state.1.try_add(payload.id, payload.title).await {
+        Ok(todo) => {
+            info!(id = %todo.id, "Todo created successfully");
+            Ok((StatusCode::CREATED, Json(todo)))
+        }
+        Err(id) => {
+            warn!(id = %id, "Duplicate todo ID");
+            Err(HttpError::new(
+                409,
+                ErrorCode::Conflict,
+                format!("Todo with id '{}' already exists", id),
+            ))
+        }
     }
-
-    let todo = Todo { id: payload.id, title: payload.title };
-
-    state.1.add(todo.clone()).await;
-
-    info!(id = %todo.id, "Todo created successfully");
-
-    Ok((StatusCode::CREATED, Json(todo)))
 }
 
 /// DELETE /todos/:id - Delete a todo by ID.
@@ -244,6 +242,20 @@ impl TodosState {
     /// Add a new todo.
     pub async fn add(&self, todo: Todo) {
         self.todos.write().await.push(todo);
+    }
+
+    /// Try to add a new todo, returning error if ID exists.
+    ///
+    /// This performs both check and insertion under a single write lock
+    /// to avoid race conditions and extra locking overhead.
+    pub async fn try_add(&self, id: String, title: String) -> Result<Todo, String> {
+        let mut guard = self.todos.write().await;
+        if guard.iter().any(|t| t.id == id) {
+            return Err(id);
+        }
+        let todo = Todo { id, title };
+        guard.push(todo.clone());
+        Ok(todo)
     }
 
     /// Check if a todo with the given ID exists.

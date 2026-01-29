@@ -6,16 +6,20 @@
 //! # Endpoints
 //!
 //! - `GET /questions` - List all questions (with optional status filter)
+//! - `POST /questions` - Create a new question
 //! - `GET /questions/{id}` - Get a specific question
+//! - `PUT /questions/{id}` - Resolve a question
+//! - `DELETE /questions/{id}` - Delete a question
 
 use axum::{
     Json, Router,
     extract::{Path, Query, State},
+    http::StatusCode,
     routing::get,
 };
-use gov_http_core::{PlatformError, PlatformState};
+use chrono::Utc;
+use gov_http_core::{PlatformError, PlatformState, YamlResourceRepo};
 use serde::{Deserialize, Serialize};
-use std::path::PathBuf;
 
 // Re-export types from gov-http-types for backwards compatibility
 pub use gov_http_types::{
@@ -29,6 +33,8 @@ pub struct QuestionsListResponse {
     pub questions: Vec<QuestionSummary>,
     /// Total number of questions.
     pub total: usize,
+    /// Pagination metadata.
+    pub pagination: gov_http_core::Pagination,
 }
 
 /// Summary of a question for list views.
@@ -51,98 +57,61 @@ pub struct QuestionSummary {
 #[derive(Debug, Deserialize)]
 pub struct QuestionFilters {
     pub status: Option<String>,
+    #[serde(flatten)]
+    pub pagination: gov_http_core::PaginationParams,
+}
+
+/// Request for creating a new question.
+#[derive(Debug, Deserialize)]
+pub struct CreateQuestionRequest {
+    /// Category/component (e.g., TPL, BUNDLE).
+    pub category: String,
+    /// Brief summary.
+    pub summary: String,
+    /// Originating flow.
+    pub flow: String,
+    /// Phase within flow.
+    pub phase: String,
+    /// Detailed description.
+    pub description: String,
+    /// Who created it (human, agent, flow).
+    pub created_by: String,
+    /// Optional related task ID.
+    pub task_id: Option<String>,
+    /// Optional REQ/AC references.
+    #[serde(default)]
+    pub refs: Vec<String>,
+}
+
+/// Request for resolving a question.
+#[derive(Debug, Deserialize)]
+pub struct ResolveQuestionRequest {
+    /// Who resolved it.
+    pub resolved_by: String,
+    /// Label of the chosen option (if any).
+    pub chosen_option: Option<String>,
+    /// Resolution notes.
+    pub notes: Option<String>,
+    /// New status (answered, resolved, obsolete).
+    pub status: String,
 }
 
 /// Router for question endpoints.
 ///
 /// Returns a router that handles:
 /// - `GET /questions` - List all questions (with optional status filter)
+/// - `POST /questions` - Create a new question
 /// - `GET /questions/{id}` - Get a specific question
+/// - `PUT /questions/{id}` - Resolve a question
+/// - `DELETE /questions/{id}` - Delete a question
 pub fn router<S>() -> Router<S>
 where
     S: PlatformState + Clone + Send + Sync + 'static,
 {
-    Router::new()
-        .route("/questions", get(get_all_questions::<S>))
-        .route("/questions/{id}", get(get_question_by_id::<S>))
-}
-
-/// Load all question entries from questions/ directory.
-///
-/// This function performs blocking filesystem I/O and should be called from
-/// within `spawn_blocking` to avoid starving the Tokio async runtime.
-fn load_all_questions(
-    root: &std::path::Path,
-    status_filter: Option<&str>,
-) -> Result<Vec<Question>, PlatformError> {
-    let questions_dir = root.join("questions");
-
-    if !questions_dir.exists() {
-        return Ok(Vec::new());
-    }
-
-    let mut questions = Vec::new();
-
-    let dir_entries = std::fs::read_dir(&questions_dir).map_err(|e| {
-        PlatformError::internal(format!("Failed to read questions directory: {}", e))
-    })?;
-
-    for entry in dir_entries {
-        let entry = entry.map_err(|e| {
-            PlatformError::internal(format!("Failed to read directory entry: {}", e))
-        })?;
-
-        let path = entry.path();
-
-        // Skip non-YAML files and README
-        if !path.is_file()
-            || path.extension().and_then(|s| s.to_str()) != Some("yaml")
-            || path.file_name().and_then(|s| s.to_str()) == Some("README.yaml")
-        {
-            continue;
-        }
-
-        match load_question_entry(&path) {
-            Ok(question) => {
-                // Apply status filter if provided
-                if let Some(filter_status) = status_filter {
-                    if question.status.eq_ignore_ascii_case(filter_status) {
-                        questions.push(question);
-                    }
-                } else {
-                    questions.push(question);
-                }
-            }
-            Err(e) => {
-                tracing::warn!(
-                    path = %path.display(),
-                    error = ?e,
-                    "Failed to load question entry"
-                );
-            }
-        }
-    }
-
-    // Sort by created_at (most recent first)
-    questions.sort_by(|a, b| b.created_at.cmp(&a.created_at));
-
-    Ok(questions)
-}
-
-/// Load a single question entry from a YAML file.
-///
-/// This function performs blocking filesystem I/O and should be called from
-/// within `spawn_blocking` to avoid starving the Tokio async runtime.
-fn load_question_entry(path: &std::path::Path) -> Result<Question, PlatformError> {
-    let content = std::fs::read_to_string(path).map_err(|e| {
-        PlatformError::internal(format!("Failed to read question file {}: {}", path.display(), e))
-    })?;
-
-    let question: Question = serde_yaml::from_str(&content).map_err(|e| {
-        PlatformError::internal(format!("Failed to parse question YAML {}: {}", path.display(), e))
-    })?;
-
-    Ok(question)
+    Router::new().route("/questions", get(get_all_questions::<S>).post(post_question::<S>)).route(
+        "/questions/{id}",
+        get(get_question_by_id::<S>).put(put_question::<S>).delete(delete_question::<S>),
+    )
 }
 
 /// GET /questions - Get all question entries (optionally filtered by status)
@@ -156,15 +125,27 @@ where
     let root = state.context().root().to_path_buf();
     let status_filter = filters.status.clone();
 
-    // Offload blocking filesystem I/O to spawn_blocking to avoid starving
-    // the Tokio async runtime under concurrent load.
-    let questions =
-        tokio::task::spawn_blocking(move || load_all_questions(&root, status_filter.as_deref()))
-            .await
-            .map_err(|e| PlatformError::internal(format!("spawn_blocking failed: {}", e)))??;
+    let response = tokio::task::spawn_blocking(move || {
+        let repo = YamlResourceRepo::<Question>::new(&root, "questions");
 
-    let summaries: Vec<QuestionSummary> = questions
-        .iter()
+        repo.list(
+            filters.pagination,
+            |q: &Question| {
+                if let Some(ref status) = status_filter {
+                    q.status.eq_ignore_ascii_case(status)
+                } else {
+                    true
+                }
+            },
+            |a: &Question, b: &Question| b.created_at.cmp(&a.created_at), // Sort by created_at desc
+        )
+    })
+    .await
+    .map_err(|e| PlatformError::internal(format!("spawn_blocking failed: {}", e)))??;
+
+    let summaries: Vec<QuestionSummary> = response
+        .data
+        .into_iter()
         .map(|q| QuestionSummary {
             id: q.id.clone(),
             summary: q.summary.clone(),
@@ -175,47 +156,11 @@ where
         })
         .collect();
 
-    let total = summaries.len();
-
-    Ok(Json(QuestionsListResponse { questions: summaries, total }))
-}
-
-/// Load a question entry by ID.
-///
-/// This function performs blocking filesystem I/O and should be called from
-/// within `spawn_blocking` to avoid starving the Tokio async runtime.
-fn load_question_by_id(
-    questions_dir: &std::path::Path,
-    id: &str,
-) -> Result<Question, PlatformError> {
-    // Try to find the question file
-    // It could be named with or without a prefix (e.g., Q-EXAMPLE-001.yaml or QUESTION-001.yaml)
-    let possible_filenames = vec![
-        format!("{}.yaml", id),
-        format!("Q-{}.yaml", id.trim_start_matches("Q-")),
-        format!("QUESTION-{}.yaml", id.trim_start_matches("QUESTION-")),
-    ];
-
-    for filename in possible_filenames {
-        let file_path = questions_dir.join(&filename);
-        if file_path.exists() {
-            let question = load_question_entry(&file_path)?;
-
-            // Verify the ID matches (sanity check)
-            if question.id != id {
-                tracing::warn!(
-                    expected_id = %id,
-                    found_id = %question.id,
-                    file = %file_path.display(),
-                    "Question ID mismatch"
-                );
-            }
-
-            return Ok(question);
-        }
-    }
-
-    Err(PlatformError::not_found(format!("Question '{}' not found", id)))
+    Ok(Json(QuestionsListResponse {
+        total: response.pagination.total_items,
+        questions: summaries,
+        pagination: response.pagination,
+    }))
 }
 
 /// GET /questions/{id} - Get a specific question entry by ID
@@ -226,15 +171,142 @@ async fn get_question_by_id<S>(
 where
     S: PlatformState,
 {
-    let questions_dir: PathBuf = state.context().root().join("questions");
+    let root = state.context().root().to_path_buf();
 
-    // Offload blocking filesystem I/O to spawn_blocking to avoid starving
-    // the Tokio async runtime under concurrent load.
-    let question = tokio::task::spawn_blocking(move || load_question_by_id(&questions_dir, &id))
-        .await
-        .map_err(|e| PlatformError::internal(format!("spawn_blocking failed: {}", e)))??;
+    let question = tokio::task::spawn_blocking(move || {
+        spec_runtime::validate_question_id(&id)
+            .map_err(|e| PlatformError::internal(format!("Invalid ID format: {}", e)))?;
+
+        let repo = YamlResourceRepo::<Question>::new(&root, "questions");
+        repo.get(&id)
+    })
+    .await
+    .map_err(|e| PlatformError::internal(format!("spawn_blocking failed: {}", e)))??;
 
     Ok(Json(question))
+}
+
+/// POST /questions - Create a new question.
+async fn post_question<S>(
+    State(state): State<S>,
+    Json(req): Json<CreateQuestionRequest>,
+) -> Result<(StatusCode, Json<Question>), PlatformError>
+where
+    S: PlatformState,
+{
+    let root = state.context().root().to_path_buf();
+
+    let question = tokio::task::spawn_blocking(move || {
+        // Validate inputs
+        spec_runtime::validate_name("category", &req.category)
+            .map_err(|e| PlatformError::internal(format!("Invalid category: {}", e)))?;
+
+        let repo = YamlResourceRepo::<Question>::new(&root, "questions");
+
+        // Get all to find next ID
+        let existing = repo.list(
+            gov_http_core::PaginationParams::default(),
+            |_| true,
+            |_, _| std::cmp::Ordering::Equal,
+        )?;
+        let prefix = format!("Q-{}-", req.category.to_uppercase());
+        let max_num = existing
+            .data
+            .iter()
+            .filter(|q| q.id.starts_with(&prefix))
+            .filter_map(|q| q.id.strip_prefix(&prefix))
+            .filter_map(|s| s.parse::<u32>().ok())
+            .max()
+            .unwrap_or(0);
+
+        let id = format!("{} {:03}", prefix, max_num + 1).replace(' ', "");
+
+        let question = Question {
+            id,
+            task_id: req.task_id,
+            req_ids: Vec::new(),
+            ac_ids: Vec::new(),
+            refs: req.refs,
+            summary: spec_runtime::sanitize_string(&req.summary),
+            context: QuestionContext {
+                flow: req.flow,
+                phase: req.phase,
+                description: Some(spec_runtime::sanitize_string(&req.description)),
+                files_involved: Vec::new(),
+            },
+            options: Vec::new(),
+            recommendation: None,
+            created_by: req.created_by,
+            created_at: Utc::now().to_rfc3339(),
+            status: "open".to_string(),
+            resolution: None,
+        };
+
+        repo.save(&question)?;
+        Ok(question)
+    })
+    .await
+    .map_err(|e| PlatformError::internal(format!("spawn_blocking failed: {}", e)))??;
+
+    Ok((StatusCode::CREATED, Json(question)))
+}
+
+/// PUT /questions/{id} - Resolve a question.
+async fn put_question<S>(
+    State(state): State<S>,
+    Path(id): Path<String>,
+    Json(req): Json<ResolveQuestionRequest>,
+) -> Result<Json<Question>, PlatformError>
+where
+    S: PlatformState,
+{
+    let root = state.context().root().to_path_buf();
+
+    let question = tokio::task::spawn_blocking(move || {
+        spec_runtime::validate_question_id(&id)
+            .map_err(|e| PlatformError::internal(format!("Invalid ID format: {}", e)))?;
+
+        let repo = YamlResourceRepo::<Question>::new(&root, "questions");
+        let mut question: Question = repo.get(&id)?;
+
+        question.status = req.status;
+        question.resolution = Some(QuestionResolution {
+            resolved_by: req.resolved_by,
+            resolved_at: Utc::now().to_rfc3339(),
+            chosen_option: req.chosen_option.unwrap_or_default(),
+            notes: req.notes.map(|n| spec_runtime::sanitize_string(&n)),
+        });
+
+        repo.save(&question)?;
+        Ok(question)
+    })
+    .await
+    .map_err(|e| PlatformError::internal(format!("spawn_blocking failed: {}", e)))??;
+
+    Ok(Json(question))
+}
+
+/// DELETE /questions/{id} - Delete a question.
+async fn delete_question<S>(
+    State(state): State<S>,
+    Path(id): Path<String>,
+) -> Result<StatusCode, PlatformError>
+where
+    S: PlatformState,
+{
+    let root = state.context().root().to_path_buf();
+
+    tokio::task::spawn_blocking(move || {
+        spec_runtime::validate_question_id(&id)
+            .map_err(|e| PlatformError::internal(format!("Invalid ID format: {}", e)))?;
+
+        let repo = YamlResourceRepo::<Question>::new(&root, "questions");
+        repo.delete(&id)
+    })
+    .await
+    .map_err(|e| PlatformError::internal(format!("spawn_blocking failed: {}", e)))??;
+
+    Ok(StatusCode::NO_CONTENT)
 }
 
 #[cfg(test)]

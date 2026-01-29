@@ -27,11 +27,13 @@ This crate provides:
 ## Public API
 
 ### Types
+
 - `PlatformSchemas`: Complete platform schema information
 - `SchemaInfo`: Information about a specific schema
 - `EndpointSchema`: API endpoint schema information
 
 ### Functions
+
 - `get_all_schemas()`: Get all platform schemas
 - `get_schema_by_name(name)`: Get schema by name
 

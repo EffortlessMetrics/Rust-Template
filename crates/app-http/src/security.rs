@@ -32,35 +32,10 @@ enum TokenKind<'a> {
 }
 
 impl PlatformAuthConfig {
-    /// Create auth config from environment and validated config sources.
+    /// Try to create auth config from environment and validated config sources.
     ///
-    /// # Deprecated
-    ///
-    /// This method panics on invalid configuration. Use [`try_from_sources`] instead
-    /// for proper error handling.
-    ///
-    /// # Panics
-    ///
-    /// Panics if PLATFORM_AUTH_MODE is set to an invalid value.
-    /// Valid values: "basic", "jwt", "none", "open" (case-insensitive).
-    /// This is fail-closed behavior to prevent silent fallback to unauthenticated mode.
-    #[deprecated(
-        since = "3.3.15",
-        note = "Use `try_from_sources()` instead for proper error handling"
-    )]
-    pub fn from_sources(config: Option<&ValidatedConfig>) -> Self {
-        match Self::try_from_sources(config) {
-            Ok(cfg) => cfg,
-            Err(e) => {
-                panic!("FATAL: Invalid platform auth configuration: {}", e);
-            }
-        }
-    }
-
-    /// Try to create auth config, returning an error on invalid configuration.
-    ///
-    /// This is the fallible version of `from_sources()` for contexts where
-    /// panicking is not appropriate (e.g., testing, graceful error handling).
+    /// This is the primary entry point for creating auth config, returning an error
+    /// on invalid configuration (e.g. invalid auth mode).
     pub fn try_from_sources(config: Option<&ValidatedConfig>) -> Result<Self, String> {
         let mode_raw = std::env::var("PLATFORM_AUTH_MODE")
             .ok()

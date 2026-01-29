@@ -113,7 +113,7 @@ See [Roadmap](#roadmap) for how pilot results inform future releases.
    - Detailed command explanations
    - All subsystems overview
 
-3. 📕 **[First AC Change Tutorial](tutorials/first-ac-change.md)** (15 min)
+3. 📕 **[First AC Change Tutorial](tutorials/first-ac-change.md)** (15 min) *[Legacy - see Day 1 instead]*
    - Complete AC-first workflow
    - Spec → Test → Code → Validate
 

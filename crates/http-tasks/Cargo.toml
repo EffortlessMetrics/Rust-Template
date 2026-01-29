@@ -1,34 +1,34 @@
-[package]
-name = "http-tasks"
-version.workspace = true
-edition.workspace = true
-rust-version.workspace = true
-authors.workspace = true
-license.workspace = true
-repository.workspace = true
-homepage.workspace = true
-documentation.workspace = true
-publish = false
-
 [dependencies]
+# Business core for task operations
+business-core = {path = "../business-core"}
+# Core HTTP types
+http-core = {path = "../http-core"}
+http-errors = {features = ["axum"], path = "../http-errors"}
+# Platform contract types
+platform-contract = {path = "../platform-contract"}
+serde_urlencoded = "0.7.1"
 # HTTP framework
 axum.workspace = true
 http.workspace = true
-http-errors = { path = "../http-errors", features = ["axum"] }
-# Platform contract types
-platform-contract = { path = "../platform-contract" }
-# Core HTTP types
-http-core = { path = "../http-core" }
-# Business core for task operations
-business-core = { path = "../business-core" }
 # Utilities
 serde.workspace = true
 serde_json.workspace = true
-serde_urlencoded = "0.7.1"
-tracing.workspace = true
 tokio.workspace = true
+tracing.workspace = true
 
 [dev-dependencies]
+testing = {path = "../testing"}
 tokio.workspace = true
 tower.workspace = true
-testing = { path = "../testing" }
+
+[package]
+name = "http-tasks"
+publish = false
+authors.workspace = true
+documentation.workspace = true
+edition.workspace = true
+homepage.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+version.workspace = true

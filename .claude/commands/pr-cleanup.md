@@ -1,134 +1,95 @@
 ---
-description: Cleanup pass to make the current branch PR-ready (agents in waves; apply fixes; save purposeful receipts; report)
-argument-hint: [optional: intent/constraints e.g. "minimal churn", "run full gate", "skip benches", "prep for issue #218"]
-allowed-tools: >
-  Bash(git status:*), Bash(git branch:*), Bash(git rev-parse:*), Bash(git symbolic-ref:*), Bash(git remote:*),
-  Bash(git merge-base:*), Bash(git log:*), Bash(git show:*), Bash(git diff:*),
-  Bash(git add:*), Bash(git restore:*), Bash(git checkout:*), Bash(git stash:*), Bash(git commit:*),
-  Bash(ls:*), Bash(find:*), Bash(rg:*), Bash(sed:*), Bash(awk:*), Bash(wc:*),
-  Bash(mkdir:*), Bash(cat:*), Bash(tee:*), Bash(date:*),
-  Bash(make:*), Bash(just:*), Bash(nix:*),
-  Bash(cargo:*), Bash(cargo-*:*) , Bash(pytest:*), Bash(ruff:*), Bash(mypy:*), Bash(pyright:*),
-  Bash(node:*), Bash(npm:*), Bash(pnpm:*), Bash(yarn:*),
-  Bash(tokei:*), Bash(scc:*), Bash(lizard:*), Bash(radon:*),
-  Bash(lychee:*),
-  Bash(pip-audit:*), Bash(pip:*), Bash(uv:*), Bash(poetry:*),
-  Bash(gitleaks:*), Bash(trufflehog:*)
+description: Cleanup pass to make the current branch PR-ready (reduce review cost; prove correctness; avoid scope creep)
+argument-hint: [optional: constraints e.g. "minimal churn", "doc-only", "tight scope", "prep for issue #218", "local-gate-canonical"]
 ---
 
-# PR Cleanup Pass (current branch)
+# PR Cleanup Pass
 
-Do a **quality-first cleanup pass** on the **CURRENT WORKING TREE state** to make this branch PR-ready.
+This command turns "branch has changes" into "branch is reviewable".
 
-The goal is maintainability and reviewability:
-- reduce future change-cost
-- make interfaces/boundaries clearer
-- make verification credible
-- remove obvious footguns (lint/test/docs drift, dependency posture, risky patterns)
+The goal is not perfection. The goal is **lower review cost** and **higher confidence**.
 
 Use any extra context I provide: **$ARGUMENTS**
 
-## First: Gather Context
+## Defaults
 
-Before doing anything else, gather this information yourself:
+- Don't widen scope.
+- Prefer reversible/mechanical fixes over refactors.
+- If CI is disabled, treat the repo's local gate as canonical and include reproduce commands.
 
-1. **Branch info**: Run `git branch --show-current` and `git status --porcelain=v1 -b`
-2. **Default branch**: Try `git symbolic-ref refs/remotes/origin/HEAD` or assume `main`
-3. **Merge base**: Find the merge-base with the default branch
-4. **Changed files**: `git diff --name-only <merge-base>..HEAD`
-5. **Diff stats**: `git diff --stat <merge-base>..HEAD`
-6. **Tooling detection**: Look for `Cargo.toml`, `pyproject.toml`, `package.json`, `Makefile`, `justfile`, `flake.nix`, etc.
+## Wave 0 — Context
 
-Optionally create a receipts directory if you want to save artifacts:
-- Suggested path: `target/pr-cleanup/<timestamp>-<branch>/`
-- Only create if you'll actually save useful outputs there
+Before changing anything, capture:
 
-## How to work (agents in waves)
+- Branch name, whether the tree is clean/dirty
+- Default branch + merge base
+- Changed files + diff stats since merge base
+- Repo gate posture (what "green" means here)
+- Any obvious contracts touched (API/schema/CLI output/specs/policies)
 
-### Wave 1 — Explore (find what matters)
+## Wave 1 — Explore
 
-Invoke **Explore** to:
-- map semantic hotspots and what's mechanical
-- flag interface/contract touchpoints
-- flag risk surface deltas (unsafe/concurrency/IO/deps)
-- identify repo-native "gate" commands and how to run them locally
+Produce a review map (explore agent works well here):
 
-Explore should report back with anchors (paths, commands, commit references), not raw diffs.
+- What's semantic vs mechanical
+- Interfaces/contracts touched (public API, schema files, CLI outputs, policy surfaces)
+- Risk deltas (unsafe/concurrency/IO/deps)
+- The smallest verification ladder that supports the claims
 
-### Wave 2 — Plan (cleanup plan with maintainability intent)
+**No changes in this wave.**
 
-Invoke **Plan** to:
-- propose a cleanup plan that improves maintainability/PR quality without scope creep
-- separate "quick wins" vs "follow-ups"
-- choose which tooling to run (gate-first, then targeted checks)
-- suggest a commit plan if it will materially improve review (mechanical vs semantic)
+## Wave 2 — Plan
 
-### Wave 3 — Improve & fix (apply changes in the working tree)
+Produce a bounded cleanup plan (plan agent works well here):
 
-Invoke appropriate fixing agents (general-purpose or specialist) to:
-- run the repo's best available gate (just/make/scripts/xtask/nix) and address findings
-- apply safe mechanical fixes (format/lint/docs drift) and straightforward correctness fixes
-- tighten boundaries / reduce future change-cost where it's clearly beneficial (especially in hotspots)
-- save tool outputs you will cite into the receipts dir (gate logs, audit outputs, link checks, etc.)
+- Quick wins to apply now (format/lint/docs drift, obvious correctness fixes)
+- Follow-ups explicitly deferred (bigger refactors, behavior shifts)
+- Verification plan (what you will run and why)
+- Commit strategy if it materially improves review (mechanical vs semantic)
 
-### Wave 4 — Verify & report (prove readiness)
+**No changes in this wave.**
 
-After fixes:
-- re-run the relevant gate/checks
-- save "after" snapshots + key logs into the receipts dir
-- produce a narrative cleanup report with a crisp interface verdict and evidence pointers
+## Wave 3 — Fix
 
-## Useful tools (guidance)
+Apply the bounded plan:
 
-Prefer repo-native commands; otherwise use what fits:
-- Rust: `cargo fmt`, `cargo clippy`, `cargo test`/`cargo nextest`, `cargo semver-checks`/`cargo-semver-checks`, `cargo-audit`, `cargo-deny`, `cargo-geiger`, `cargo llvm-lines`, `tokei`
-- Python: `ruff`, `mypy`/`pyright`, `pytest`, `pip-audit`, `radon`
-- JS/TS: `eslint`, `tsc`, `jest`, `npm audit`
-- Docs: doctests, `lychee`
+- Run the repo's best available gate and address findings
+- Apply safe mechanical fixes
+- Fix straightforward correctness issues revealed by the gate
+- Tighten boundaries only where it clearly reduces future change-cost
 
-Save outputs you cite into the receipts dir.
+Avoid "nice to have" refactors unrelated to the PR story.
 
-## Output (cleanup report)
+## Wave 4 — Verify & Report
 
-At the end, provide a cleanup report (print it, and optionally save to receipts dir). Include:
+- Re-run the relevant gate(s)
+- Capture the reproduce commands and key outputs
+- Produce the cleanup report below
 
-### Cleanup summary (narrative)
+## Output: Cleanup report
 
-What you tightened and why (maintainability + reviewability), and what you deliberately didn't touch.
+### Summary
 
-### Interface & compatibility verdict (crisp)
+1–3 paragraphs: what changed during cleanup and why.
+
+### Interface & compatibility verdict
 
 - Public API: unchanged | additive | breaking | not measured
 - Schemas/contracts: unchanged | updated | breaking | not measured
 - CLI/config surface: unchanged | changed | not measured
-Back each with anchors (paths, commands, or saved tool outputs).
 
-### Evidence & receipts
+### Evidence
 
-What you ran and where you saved it (if applicable).
+What you ran and what it proves. If something wasn't run, say so.
 
 ### What changed during cleanup
 
-Key files/dirs touched + "before → after" highlights (lint/test/docs/risk surface).
+Key files/dirs touched + before→after highlights.
 
 ### Remaining concerns / follow-ups
 
-What's still worth doing and what you'd mechanize next time.
+Concrete next items; explicitly out of scope for this run.
 
-### PR readiness verdict
+### PR readiness
 
-Ready / not ready + blockers.
-If ready, recommend running `/pr-create` next (with suggested context).
-
-## Checklist (use TodoWrite to track)
-
-Use TodoWrite to create and track these steps:
-
-1. **Gather context** - Get branch info, merge-base, changed files, diff stats, detect tooling
-2. **Wave 1: Explore** - Map hotspots, interfaces, risk surfaces, find gate commands
-3. **Wave 2: Plan** - Create cleanup plan, separate quick wins from follow-ups
-4. **Wave 3: Fix** - Run gate, apply mechanical fixes, tighten boundaries
-5. **Wave 4: Verify** - Re-run checks, save receipts, produce cleanup report
-6. **Report** - Print final cleanup report with PR readiness verdict
-
-Now proceed through the checklist.
+Ready / not ready + blockers. If ready, recommend running `/pr-create`.

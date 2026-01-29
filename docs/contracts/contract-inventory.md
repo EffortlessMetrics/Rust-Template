@@ -202,6 +202,7 @@ The following crates are designated as contract crates and must follow strict de
 **Purpose**: Detect breaking changes in public API of contract crates
 
 **Usage**:
+
 ```bash
 cargo xtask check-api-diff
 ```
@@ -223,6 +224,7 @@ cargo xtask check-api-diff
 **Purpose**: Detect breaking changes in `/platform/*` endpoint contracts
 
 **Usage**:
+
 ```bash
 cargo xtask check-openapi-diff
 ```
@@ -244,6 +246,7 @@ cargo xtask check-openapi-diff
 **Purpose**: Detect breaking changes in CLI JSON output contracts
 
 **Usage**:
+
 ```bash
 cargo xtask check-json-schemas
 ```
@@ -265,6 +268,7 @@ cargo xtask check-json-schemas
 **Purpose**: Enforce dependency rules for contract crates
 
 **Usage**:
+
 ```bash
 cargo xtask check-layering
 ```

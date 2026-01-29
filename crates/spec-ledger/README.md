@@ -27,6 +27,7 @@ This crate provides the foundation layer for spec-related operations. It handles
 ## Public API
 
 ### Types
+
 - `SpecLedger`: Root ledger structure
 - `Metadata`: Ledger metadata
 - `Story`: User story with requirements
@@ -35,10 +36,12 @@ This crate provides the foundation layer for spec-related operations. It handles
 - `TestMapping`: Test reference
 
 ### Index Types
+
 - `AcIdIndex`: HashSet of AC IDs for fast lookup
 - `ReqIdIndex`: HashSet of REQ IDs for fast lookup
 
 ### Functions
+
 - `load_spec_ledger(path)`: Load ledger from YAML file
 - `build_ac_id_index(ledger)`: Build AC ID index
 - `build_req_id_index(ledger)`: Build REQ ID index

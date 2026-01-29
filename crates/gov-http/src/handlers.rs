@@ -400,7 +400,9 @@ fn load_bdd_report(bdd_json_path: &std::path::Path) -> Option<CucumberReport> {
 ///
 /// Returns a summary and details of acceptance criteria coverage
 /// based on Cucumber JSON reports.
-pub async fn get_coverage<S>(State(state): State<S>) -> Json<CoverageResponse>
+pub async fn get_coverage<S>(
+    State(state): State<S>,
+) -> Result<Json<CoverageResponse>, PlatformError>
 where
     S: PlatformState,
 {
@@ -408,16 +410,8 @@ where
     let root = ctx.root().to_path_buf();
 
     // Load spec ledger to get all ACs
-    let specs = match spec_runtime::load_all_specs_with_context(ctx) {
-        Ok(s) => s,
-        Err(_) => {
-            // Return empty response if specs can't be loaded
-            return Json(CoverageResponse {
-                summary: CoverageSummary { passing: 0, failing: 0, unknown: 0, total: 0 },
-                details: vec![],
-            });
-        }
-    };
+    let specs = spec_runtime::load_all_specs_with_context(ctx)
+        .map_err(|e| PlatformError::spec_load("specs", e))?;
 
     // Build a map of all ACs from the ledger
     let mut ac_map: HashMap<String, (String, String, String)> = HashMap::new();
@@ -512,10 +506,10 @@ where
 
     let total = passing + failing + unknown;
 
-    Json(CoverageResponse {
+    Ok(Json(CoverageResponse {
         summary: CoverageSummary { passing, failing, unknown, total },
         details,
-    })
+    }))
 }
 
 // =============================================================================

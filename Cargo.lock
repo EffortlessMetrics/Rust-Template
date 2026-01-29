@@ -1548,7 +1548,10 @@ dependencies = [
  "http-errors",
  "platform-contract",
  "serde",
+ "serde_yaml_ng",
+ "spec-runtime",
  "thiserror 2.0.18",
+ "tracing",
  "uuid",
 ]
 
@@ -1565,6 +1568,8 @@ dependencies = [
  "serde",
  "serde_json",
  "serde_yaml_ng",
+ "spec-runtime",
+ "tokio",
  "tracing",
 ]
 
@@ -1582,6 +1587,7 @@ dependencies = [
  "serde",
  "serde_json",
  "serde_yaml_ng",
+ "spec-runtime",
  "tokio",
  "tracing",
 ]
@@ -1612,6 +1618,7 @@ name = "gov-http-questions"
 version = "3.3.14"
 dependencies = [
  "axum",
+ "chrono",
  "gov-http-core",
  "gov-http-types",
  "gov-model",
@@ -1621,6 +1628,7 @@ dependencies = [
  "serde",
  "serde_json",
  "serde_yaml_ng",
+ "spec-runtime",
  "tokio",
  "tracing",
 ]
@@ -1629,6 +1637,7 @@ dependencies = [
 name = "gov-http-types"
 version = "3.3.14"
 dependencies = [
+ "gov-model",
  "serde",
  "serde_json",
 ]
@@ -4190,10 +4199,13 @@ dependencies = [
  "anyhow",
  "chrono",
  "gov-model",
+ "once_cell",
+ "regex",
  "serde",
  "serde_json",
  "serde_yaml_ng",
  "tempfile",
+ "thiserror 2.0.18",
  "tracing",
  "url",
 ]
