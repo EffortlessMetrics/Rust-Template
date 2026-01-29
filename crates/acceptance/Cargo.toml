@@ -3,14 +3,14 @@ ac-kernel = {path = "../ac-kernel"}
 adapters-spec-fs = {path = "../adapters-spec-fs"}
 # Internal crates
 app-http = {path = "../app-http"}
-anyhow.workspace = true
 business-core = {path = "../business-core"}
+cucumber = {features = ["output-junit"], workspace = true}
 spec-runtime = {path = "../spec-runtime"}
 telemetry = {path = "../telemetry"}
 testing = {path = "../testing"}
 uuid = {features = ["v4"], workspace = true}
+anyhow.workspace = true
 axum.workspace = true
-cucumber = { workspace = true, features = ["output-junit"] }
 gherkin.workspace = true
 http.workspace = true
 http-body-util.workspace = true

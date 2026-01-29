@@ -1,18 +1,19 @@
-[package]
-name = "gov-http-types"
-description = "Shared HTTP API types for governance endpoints (FrictionEntry, Question)"
-version.workspace = true
-edition.workspace = true
-rust-version.workspace = true
-authors.workspace = true
-license.workspace = true
-repository.workspace = true
-homepage.workspace = true
-documentation.workspace = true
-publish = false
-
 [dependencies]
+gov-model = {path = "../gov-model"}
 serde.workspace = true
 
 [dev-dependencies]
 serde_json.workspace = true
+
+[package]
+description = "Shared HTTP API types for governance endpoints (FrictionEntry, Question)"
+name = "gov-http-types"
+publish = false
+authors.workspace = true
+documentation.workspace = true
+edition.workspace = true
+homepage.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+version.workspace = true

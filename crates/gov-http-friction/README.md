@@ -37,6 +37,7 @@ let app = Router::new()
 ## Data Types
 
 ### FrictionEntry
+
 Full friction entry with all metadata:
 - `id`: Unique identifier (e.g., "FRICTION-001")
 - `date`: Discovery date (ISO 8601)
@@ -54,6 +55,7 @@ Full friction entry with all metadata:
 - `related_items`: Related issues, ADRs, tasks
 
 ### FrictionContext
+
 Discovery context for friction entry:
 - `discovered_by`: Who discovered the issue
 - `flow`: Related development flow
@@ -62,6 +64,7 @@ Discovery context for friction entry:
 - `commands_involved`: Commands involved
 
 ### Resolution
+
 Resolution information:
 - `resolved_by`: Who resolved it
 - `resolved_at`: Resolution date

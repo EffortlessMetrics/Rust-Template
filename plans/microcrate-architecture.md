@@ -826,14 +826,14 @@ graph TD
         telemetry[telemetry]
         testing[testing]
     end
-    
+
     subgraph Adapters
         adapters_core[adapters-core]
         adapters_db[adapters-db-sqlx]
         adapters_grpc[adapters-grpc]
         adapters_spec[adapters-spec-fs]
     end
-    
+
     subgraph Receipts
         receipts_core[receipts-core]
         receipts_gate[receipts-gate]
@@ -843,7 +843,7 @@ graph TD
         receipts_economics[receipts-economics]
         receipts_dossier[receipts-dossier]
     end
-    
+
     subgraph Spec
         spec_config[spec-config]
         spec_ledger[spec-ledger]
@@ -857,13 +857,13 @@ graph TD
         spec_iac[spec-iac]
         spec_metadata[spec-metadata]
     end
-    
+
     subgraph Business
         business_core[business-core]
         gov_contracts[gov-contracts]
         gov_policy[gov-policy]
     end
-    
+
     subgraph HTTP
         http_core[http-core]
         http_middleware[http-middleware]
@@ -879,7 +879,7 @@ graph TD
         gov_http_issues[gov-http-issues]
         gov_http_questions[gov-http-questions]
     end
-    
+
     subgraph XTask
         xtask_core[xtask-core]
         xtask_ac[xtask-ac]
@@ -902,7 +902,7 @@ graph TD
         xtask_versioning[xtask-versioning]
         xtask_workspace[xtask-workspace]
     end
-    
+
     subgraph Application
         app_http[app-http]
         gov_http[gov-http]
@@ -913,18 +913,18 @@ graph TD
         rust_iac_config[rust_iac_config]
         rust_iac_xtask_core[rust_iac_xtask_core]
     end
-    
+
     %% Infrastructure to Business
     model --> business_core
     gov_model --> business_core
     gov_model --> gov_contracts
     gov_model --> gov_policy
-    
+
     %% Business to Adapters
     business_core --> adapters_db
     business_core --> adapters_grpc
     business_core --> adapters_spec
-    
+
     %% Spec dependencies
     gov_model --> spec_config
     spec_ledger --> spec_config
@@ -936,7 +936,7 @@ graph TD
     spec_ui --> spec_config
     spec_iac --> spec_config
     spec_metadata --> spec_config
-    
+
     %% Receipt dependencies
     receipts_core --> receipts_gate
     receipts_core --> receipts_quality
@@ -944,7 +944,7 @@ graph TD
     receipts_core --> receipts_timeline
     receipts_core --> receipts_economics
     receipts_core --> receipts_dossier
-    
+
     %% HTTP dependencies
     http_middleware --> http_core
     http_errors --> http_core
@@ -953,26 +953,26 @@ graph TD
     http_agents --> http_core
     http_tasks --> http_core
     http_todos --> http_core
-    
+
     app_http --> http_core
     app_http --> http_platform
     app_http --> http_agents
     app_http --> http_tasks
     app_http --> http_todos
-    
+
     gov_http_core --> gov_model
     gov_http_core --> spec_schema
     gov_http_forks --> gov_model
     gov_http_friction --> gov_model
     gov_http_issues --> gov_model
     gov_http_questions --> gov_model
-    
+
     gov_http --> gov_http_core
     gov_http --> gov_http_forks
     gov_http --> gov_http_friction
     gov_http --> gov_http_issues
     gov_http --> gov_http_questions
-    
+
     %% XTask dependencies
     xtask_core --> xtask_ac
     xtask_core --> xtask_adr
@@ -993,7 +993,7 @@ graph TD
     xtask_core --> xtask_tools
     xtask_core --> xtask_versioning
     xtask_core --> xtask_workspace
-    
+
     xtask --> xtask_core
     xtask --> xtask_ac
     xtask --> xtask_adr
@@ -1014,7 +1014,7 @@ graph TD
     xtask --> xtask_tools
     xtask --> xtask_versioning
     xtask --> xtask_workspace
-    
+
     %% Application dependencies
     acceptance --> ac_kernel
     acceptance --> adapters_spec
@@ -1023,7 +1023,7 @@ graph TD
     acceptance --> spec_config
     acceptance --> telemetry
     acceptance --> testing
-    
+
     ac_kernel --> spec_config
     gov_xtask_core --> gov_model
 ```
@@ -1373,18 +1373,21 @@ Use AI tools to generate AI-friendly documentation:
 During migration, maintain backward compatibility by:
 
 1. **Re-export Types:** Keep old types available through re-exports
+
    ```rust
    // In old crate
    pub use new_microcrate::Type as OldType;
    ```
 
 2. **Deprecation Warnings:** Add deprecation warnings for old paths
+
    ```rust
    #[deprecated(since = "0.2.0", note = "Use new_microcrate::Type instead")]
    pub use new_microcrate::Type as OldType;
    ```
 
 3. **Feature Flags:** Use feature flags to enable/disable migration
+
    ```toml
    [features]
    default = []
@@ -1723,15 +1726,16 @@ let instance = TypeName::new(...);
 ```
 
 ## Common Patterns
+
 - Pattern 1: [Description]
 - Pattern 2: [Description]
 
 ## Error Conditions
-- [Error condition 1]: [Description]
-- [Error condition 2]: [Description]
 
 ## Migration Notes
+
 - [Any notes about migrating from previous versions]
+
 ```
 
 **AI-Native Documentation Guidelines:**
@@ -1765,6 +1769,7 @@ This crate provides [single responsibility].
 ```
 
 **2. Public API Documentation**
+
 ```markdown
 ## Public API
 
@@ -1782,6 +1787,7 @@ This crate provides [single responsibility].
 ```
 
 **3. Usage Patterns**
+
 ```markdown
 ## Usage Patterns
 
@@ -1791,9 +1797,11 @@ This crate provides [single responsibility].
 ```
 
 ### Pattern 2: [Name]
+
 ```rust
 // Example code
 ```
+
 ```
 
 #### 7.2.2 Boundary Documentation

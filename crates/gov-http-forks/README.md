@@ -37,6 +37,7 @@ let app = Router::new()
 ## Data Types
 
 ### ForkEntry
+
 Full fork registry entry with all metadata:
 - `id`: Unique identifier (e.g., "FORK-TEST-001")
 - `name`: Human-readable fork name
@@ -53,6 +54,7 @@ Full fork registry entry with all metadata:
 - `related_items`: Related issues, ADRs, friction entries
 
 ### ForkSummary
+
 Lightweight fork summary for list views:
 - `id`: Unique identifier
 - `name`: Human-readable fork name

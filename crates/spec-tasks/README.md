@@ -24,6 +24,7 @@ This crate provides:
 ## Public API
 
 ### Types
+
 - `TasksSpec`: Tasks specification
 - `Task`: A work item/task
 - `TaskDocs`: Documentation references for a task
@@ -37,6 +38,7 @@ This crate provides:
 - `BlockingRelationship`: Blocking relationship between tasks
 
 ### Functions
+
 - `load_tasks(path)`: Load tasks specification from YAML file
 - `validate_task_references(tasks, ledger)`: Validate task AC/REQ references
 - `build_task_graph(tasks_spec)`: Build a task dependency graph

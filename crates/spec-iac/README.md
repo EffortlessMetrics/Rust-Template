@@ -23,6 +23,7 @@ This crate provides:
 ## Public API
 
 ### Types
+
 - `IacSpec`: IaC specification
 - `IacService`: IaC service specification
 - `IacResource`: IaC resource specification
@@ -33,6 +34,7 @@ This crate provides:
 - `IacValidationError`: IaC validation error
 
 ### Functions
+
 - `load_iac_spec(path)`: Load IaC specification from YAML file
 - `generate_k8s_manifest(iac)`: Generate K8s manifest from IaC spec
 - `generate_k8s_service(service)`: Generate K8s Service manifest

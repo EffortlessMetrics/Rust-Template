@@ -20,6 +20,22 @@
 /// This module defines the boundary traits that adapters must implement.
 pub mod ports {
     use model::ExampleTask;
+    use thiserror::Error;
+
+    /// Errors that can occur during repository operations.
+    #[derive(Error, Debug)]
+    pub enum RepositoryError {
+        #[error("Resource not found: {0}")]
+        NotFound(String),
+        #[error("Database error: {0}")]
+        Database(String),
+        #[error("Serialization error: {0}")]
+        Serialization(String),
+        #[error("I/O error: {0}")]
+        Io(#[from] std::io::Error),
+        #[error("Unknown error: {0}")]
+        Other(String),
+    }
 
     /// Port for example task persistence.
     ///
@@ -28,20 +44,20 @@ pub mod ports {
     #[async_trait::async_trait]
     pub trait ExampleTaskRepository: Send + Sync {
         /// Save a new task to storage.
-        async fn save(&self, task: &ExampleTask) -> Result<(), String>;
+        async fn save(&self, task: &ExampleTask) -> Result<(), RepositoryError>;
 
         /// Find a task by its unique ID.
-        async fn find_by_id(&self, id: &str) -> Result<Option<ExampleTask>, String>;
+        async fn find_by_id(&self, id: &str) -> Result<Option<ExampleTask>, RepositoryError>;
 
         /// Retrieve all tasks from storage.
-        async fn find_all(&self) -> Result<Vec<ExampleTask>, String>;
+        async fn find_all(&self) -> Result<Vec<ExampleTask>, RepositoryError>;
 
-        /// Update a task's status by ID.
+        /// Update a task\s status by ID.
         async fn update_status(
             &self,
             id: &str,
             status: model::ExampleTaskStatus,
-        ) -> Result<Option<ExampleTask>, String>;
+        ) -> Result<Option<ExampleTask>, RepositoryError>;
     }
 }
 
@@ -50,7 +66,7 @@ pub mod ports {
 /// This module contains the business logic functions that orchestrate
 /// task creation, retrieval, and status updates using the repository port.
 pub mod use_cases {
-    use super::ports::ExampleTaskRepository;
+    use super::ports::{ExampleTaskRepository, RepositoryError};
     use model::{ExampleTask, ExampleTaskStatus};
 
     /// Create a new example task with a given title.
@@ -63,7 +79,7 @@ pub mod use_cases {
     pub async fn create_example_task(
         repo: &dyn ExampleTaskRepository,
         title: String,
-    ) -> Result<ExampleTask, String> {
+    ) -> Result<ExampleTask, RepositoryError> {
         let task = ExampleTask {
             id: uuid::Uuid::new_v4().to_string(),
             title,
@@ -82,7 +98,7 @@ pub mod use_cases {
     pub async fn get_example_task(
         repo: &dyn ExampleTaskRepository,
         id: String,
-    ) -> Result<Option<ExampleTask>, String> {
+    ) -> Result<Option<ExampleTask>, RepositoryError> {
         repo.find_by_id(&id).await
     }
 
@@ -93,11 +109,11 @@ pub mod use_cases {
     /// Returns an error if the repository operation fails.
     pub async fn list_example_tasks(
         repo: &dyn ExampleTaskRepository,
-    ) -> Result<Vec<ExampleTask>, String> {
+    ) -> Result<Vec<ExampleTask>, RepositoryError> {
         repo.find_all().await
     }
 
-    /// Update an example task's status by ID.
+    /// Update an example task\s status by ID.
     ///
     /// # Errors
     ///
@@ -106,7 +122,7 @@ pub mod use_cases {
         repo: &dyn ExampleTaskRepository,
         id: String,
         status: ExampleTaskStatus,
-    ) -> Result<Option<ExampleTask>, String> {
+    ) -> Result<Option<ExampleTask>, RepositoryError> {
         repo.update_status(&id, status).await
     }
 }

@@ -1,22 +1,25 @@
-[package]
-name = "gov-http-core"
-version.workspace = true
-edition.workspace = true
-rust-version.workspace = true
-authors.workspace = true
-license.workspace = true
-repository.workspace = true
-homepage.workspace = true
-documentation.workspace = true
-publish = false
-
 [dependencies]
+gov-model = {path = "../gov-model"}
+http-errors = {features = ["axum"], path = "../http-errors"}
+platform-contract = {path = "../platform-contract"}
+spec-runtime = {path = "../spec-runtime"}
 anyhow.workspace = true
 axum.workspace = true
 http.workspace = true
-http-errors = { path = "../http-errors", features = ["axum"] }
-platform-contract = { path = "../platform-contract" }
-gov-model = { path = "../gov-model" }
 serde.workspace = true
+serde_yaml.workspace = true
 thiserror.workspace = true
+tracing.workspace = true
 uuid.workspace = true
+
+[package]
+name = "gov-http-core"
+publish = false
+authors.workspace = true
+documentation.workspace = true
+edition.workspace = true
+homepage.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+version.workspace = true

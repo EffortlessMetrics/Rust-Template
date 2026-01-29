@@ -2,7 +2,7 @@ use adapters_grpc::spawn;
 use adapters_grpc::task::v1::task_service_client::TaskServiceClient;
 use adapters_grpc::task::v1::{CreateTaskRequest, GetTaskRequest, ListTasksRequest};
 use async_trait::async_trait;
-use business_core::ports::ExampleTaskRepository;
+use business_core::ports::{ExampleTaskRepository, RepositoryError};
 use model::{ExampleTask, ExampleTaskStatus};
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -26,18 +26,18 @@ impl InMemoryExampleTaskRepository {
 
 #[async_trait]
 impl ExampleTaskRepository for InMemoryExampleTaskRepository {
-    async fn save(&self, task: &ExampleTask) -> Result<(), String> {
+    async fn save(&self, task: &ExampleTask) -> Result<(), RepositoryError> {
         let mut tasks = self.tasks.write().await;
         tasks.insert(task.id.clone(), task.clone());
         Ok(())
     }
 
-    async fn find_by_id(&self, id: &str) -> Result<Option<ExampleTask>, String> {
+    async fn find_by_id(&self, id: &str) -> Result<Option<ExampleTask>, RepositoryError> {
         let tasks = self.tasks.read().await;
         Ok(tasks.get(id).cloned())
     }
 
-    async fn find_all(&self) -> Result<Vec<ExampleTask>, String> {
+    async fn find_all(&self) -> Result<Vec<ExampleTask>, RepositoryError> {
         let tasks = self.tasks.read().await;
         Ok(tasks.values().cloned().collect())
     }
@@ -46,7 +46,7 @@ impl ExampleTaskRepository for InMemoryExampleTaskRepository {
         &self,
         id: &str,
         status: ExampleTaskStatus,
-    ) -> Result<Option<ExampleTask>, String> {
+    ) -> Result<Option<ExampleTask>, RepositoryError> {
         let mut tasks = self.tasks.write().await;
         if let Some(task) = tasks.get_mut(id) {
             task.status = status;

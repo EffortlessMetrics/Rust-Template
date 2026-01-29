@@ -505,9 +505,9 @@ fn dashboard_content(
             }
         }
 
-        @if let Some(cfg) = config {
-            .card data-uiid="dashboard.config" {
-                h2 { "Runtime Config (redacted)" }
+        .card data-uiid="dashboard.config" {
+            h2 { "Runtime Config (redacted)" }
+            @if let Some(cfg) = config {
                 p style="margin-bottom: 0.75rem; color: #555;" {
                     "Config values are rendered for visibility without leaking secrets; tokens are never shown."
                 }
@@ -547,6 +547,8 @@ fn dashboard_content(
                         }
                     }
                 }
+            } @else {
+                p { "Configuration details unavailable." }
             }
         }
 

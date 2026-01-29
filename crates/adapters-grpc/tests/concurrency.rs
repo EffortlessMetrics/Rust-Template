@@ -6,19 +6,14 @@
 //! Run with: `cargo test -p adapters-grpc --test concurrency`
 
 use async_trait::async_trait;
-use business_core::ports::ExampleTaskRepository;
+use business_core::ports::{ExampleTaskRepository, RepositoryError};
 use chrono::Utc;
 use model::{ExampleTask, ExampleTaskStatus};
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 
-/// In-memory example task repository for concurrency testing.
-///
-/// Uses `tokio::sync::RwLock` for async-aware locking:
-/// - Lock acquisition yields to the executor instead of blocking the thread
-/// - Concurrent reads are allowed (read-heavy workloads benefit)
-/// - Writes are exclusive but don't block the executor while waiting
+/// In-memory example task repository for testing.
 struct InMemoryExampleTaskRepository {
     tasks: RwLock<HashMap<String, ExampleTask>>,
 }
@@ -31,18 +26,18 @@ impl InMemoryExampleTaskRepository {
 
 #[async_trait]
 impl ExampleTaskRepository for InMemoryExampleTaskRepository {
-    async fn save(&self, task: &ExampleTask) -> Result<(), String> {
+    async fn save(&self, task: &ExampleTask) -> Result<(), RepositoryError> {
         let mut tasks = self.tasks.write().await;
         tasks.insert(task.id.clone(), task.clone());
         Ok(())
     }
 
-    async fn find_by_id(&self, id: &str) -> Result<Option<ExampleTask>, String> {
+    async fn find_by_id(&self, id: &str) -> Result<Option<ExampleTask>, RepositoryError> {
         let tasks = self.tasks.read().await;
         Ok(tasks.get(id).cloned())
     }
 
-    async fn find_all(&self) -> Result<Vec<ExampleTask>, String> {
+    async fn find_all(&self) -> Result<Vec<ExampleTask>, RepositoryError> {
         let tasks = self.tasks.read().await;
         Ok(tasks.values().cloned().collect())
     }
@@ -51,7 +46,7 @@ impl ExampleTaskRepository for InMemoryExampleTaskRepository {
         &self,
         id: &str,
         status: ExampleTaskStatus,
-    ) -> Result<Option<ExampleTask>, String> {
+    ) -> Result<Option<ExampleTask>, RepositoryError> {
         let mut tasks = self.tasks.write().await;
         if let Some(task) = tasks.get_mut(id) {
             task.status = status;

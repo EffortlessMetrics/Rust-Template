@@ -23,6 +23,7 @@ traceability graph connecting:
 ## Public API
 
 ### Types
+
 - `Graph`: Governance graph with nodes and edges
 - `Node`: Graph node (story, requirement, AC, test, document, command, flow)
 - `Edge`: Graph edge connecting two nodes
@@ -32,10 +33,12 @@ traceability graph connecting:
 - `InvariantReport`: Report from invariant checking
 
 ### Functions
+
 - `build_graph(ledger, devex, docs)`: Build governance graph
 - `check_invariants(graph, devex, ledger)`: Check graph invariants
 
 ### Graph Methods
+
 - `Graph::to_mermaid()`: Export graph as Mermaid diagram
 
 ## Example

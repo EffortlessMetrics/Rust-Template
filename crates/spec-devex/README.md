@@ -22,6 +22,7 @@ This crate provides:
 ## Public API
 
 ### Types
+
 - `DevExFlows`: Developer experience flows specification
 - `CommandSpec`: Specification for an individual xtask command
 - `DocsRequirement`: Documentation requirements for a command
@@ -31,6 +32,7 @@ This crate provides:
 - `StepStatus`: Status of a flow step
 
 ### Functions
+
 - `load_devex_flows(path)`: Load devex flows from YAML file
 - `resolve_command(devex, command_id)`: Resolve a command by ID
 - `get_commands_by_category(devex, category)`: Get all commands by category

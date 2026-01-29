@@ -1,10 +1,13 @@
 [dependencies]
 gov-model = {path = "../gov-model"}
+once_cell = {workspace = true}
+regex = {workspace = true}
+serde_yaml = {workspace = true}
 anyhow.workspace = true
 chrono.workspace = true
 serde.workspace = true
 serde_json.workspace = true
-serde_yaml.workspace = true
+thiserror.workspace = true
 tracing.workspace = true
 url.workspace = true
 
@@ -16,7 +19,12 @@ categories = ["config", "development-tools"]
 description = "Runtime environment for spec-based development workflows and infrastructure"
 keywords = ["development", "infrastructure", "runtime", "spec"]
 name = "spec-runtime"
+publish = true
 version = "0.1.0"
+authors.workspace = true
+documentation.workspace = true
 edition.workspace = true
-publish.workspace = true
+homepage.workspace = true
+license.workspace = true
+repository.workspace = true
 rust-version.workspace = true

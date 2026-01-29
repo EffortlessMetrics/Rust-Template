@@ -40,6 +40,7 @@ let app = Router::new()
 ## Data Types
 
 ### Issue
+
 Unified issue representation:
 - `id`: Unique identifier (FRICTION-XXX, Q-XXX, TASK-XXX)
 - `kind`: Issue type (friction, question, task)
@@ -54,18 +55,21 @@ Unified issue representation:
 - `labels`: Labels/tags
 
 ### IssueKind
+
 Issue type discriminator:
 - `Friction` - DevEx friction entries
 - `Question` - Design decision questions
 - `Task` - Governance tasks
 
 ### IssueStatus
+
 Normalized status across all issue types:
 - `Open` - Not started
 - `InProgress` - In progress
 - `Resolved` - Completed
 
 ### IssueFilters
+
 Query parameters for filtering:
 - `kind`: Filter by issue kind
 - `status`: Filter by status
@@ -78,6 +82,7 @@ Query parameters for filtering:
 - `per_page`: Items per page (default 50, max 100)
 
 ### IssuesResponse
+
 Response containing:
 - `issues`: Paginated list of issues
 - `pagination`: Pagination metadata

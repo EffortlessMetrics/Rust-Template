@@ -23,6 +23,7 @@ This crate provides:
 ## Public API
 
 ### Types
+
 - `SpecMetadata`: Spec metadata specification
 - `LedgerMetadata`: Ledger metadata
 - `TagsMetadata`: Tags metadata
@@ -32,6 +33,7 @@ This crate provides:
 - `MetadataValidationError`: Metadata validation error
 
 ### Functions
+
 - `load_metadata(path)`: Load spec metadata from YAML file
 - `extract_tags(ledger)`: Extract tags from spec ledger
 - `build_ledger_metadata(ledger)`: Build ledger metadata

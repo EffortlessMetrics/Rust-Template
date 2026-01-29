@@ -726,28 +726,25 @@ Feature: Developer Experience Commands
     Then the command should not prompt for input
     And the exit code should reflect command success or failure
 
-  @AC-TPL-XTASK-NONINTERACTIVE
   Scenario: bundle command runs non-interactively with CI=1
     Given the environment variable "CI" is set to "1"
     When I run "cargo xtask bundle implement_ac"
     Then the command should not prompt for input
     And the exit code should reflect command success or failure
 
-  @AC-TPL-XTASK-NONINTERACTIVE
   Scenario: version command runs non-interactively
-    Given the environment variable "XTASK_NONINTERACTIVE" is set to "1"
+    Given I am in a Rust-Template workspace
+    And the environment variable "XTASK_NONINTERACTIVE" is set to "1"
     When I run "cargo xtask version"
     Then the command should succeed
     And the exit code should be 0 on success
 
-  @AC-TPL-XTASK-NONINTERACTIVE
   Scenario: friction-list runs non-interactively in CI mode
     Given the environment variable "CI" is set to "1"
     When I run "cargo xtask friction-list"
     Then the command should not prompt for input
     And the exit code should be 0 on success
 
-  @AC-TPL-XTASK-NONINTERACTIVE
   Scenario: exit codes reflect operation success in automation mode
     Given automation mode is enabled
     When commands succeed in non-interactive mode

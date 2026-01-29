@@ -1,18 +1,18 @@
-[package]
-name = "xtask-versioning"
-version = "0.1.0"
-edition.workspace = true
-publish.workspace = true
-rust-version.workspace = true
-
 [dependencies]
+xtask-lib = {path = "../xtask-lib"}
 anyhow.workspace = true
 chrono.workspace = true
 regex.workspace = true
 serde.workspace = true
 serde_yaml.workspace = true
 thiserror.workspace = true
-xtask-lib = { path = "../xtask-lib" }
 
 [dev-dependencies]
 tempfile.workspace = true
+
+[package]
+name = "xtask-versioning"
+version = "0.1.0"
+edition.workspace = true
+publish.workspace = true
+rust-version.workspace = true

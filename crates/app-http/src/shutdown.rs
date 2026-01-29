@@ -23,15 +23,28 @@ use tracing::info;
 /// allowing the server to begin graceful shutdown.
 pub async fn shutdown_signal() {
     let ctrl_c = async {
-        signal::ctrl_c().await.expect("Failed to install Ctrl+C handler");
+        match signal::ctrl_c().await {
+            Ok(_) => {}
+            Err(e) => {
+                tracing::error!("Failed to install Ctrl+C handler: {}", e);
+                // Fallback: stay pending so we don't trigger immediate shutdown
+                std::future::pending::<()>().await;
+            }
+        }
     };
 
     #[cfg(unix)]
     let terminate = async {
-        signal::unix::signal(signal::unix::SignalKind::terminate())
-            .expect("Failed to install SIGTERM handler")
-            .recv()
-            .await;
+        match signal::unix::signal(signal::unix::SignalKind::terminate()) {
+            Ok(mut s) => {
+                s.recv().await;
+            }
+            Err(e) => {
+                tracing::error!("Failed to install SIGTERM handler: {}", e);
+                // Fallback: stay pending
+                std::future::pending::<()>().await;
+            }
+        }
     };
 
     #[cfg(not(unix))]

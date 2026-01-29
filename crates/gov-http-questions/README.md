@@ -37,6 +37,7 @@ let app = Router::new()
 ## Data Types
 
 ### Question
+
 Full question entry with all metadata:
 - `id`: Unique identifier (e.g., "Q-001")
 - `task_id`: Optional related task ID
@@ -53,6 +54,7 @@ Full question entry with all metadata:
 - `resolution`: Optional resolution information
 
 ### QuestionContext
+
 Context for the question:
 - `flow`: Related development flow
 - `phase`: Development phase
@@ -60,6 +62,7 @@ Context for the question:
 - `files_involved`: Files involved
 
 ### QuestionOption
+
 An option for the question:
 - `label`: Option label
 - `description`: Option description
@@ -67,12 +70,14 @@ An option for the question:
 - `reversible`: Whether the decision is reversible (defaults to true)
 
 ### Recommendation
+
 Recommended option:
 - `option_label`: Label of recommended option
 - `rationale`: Rationale for recommendation
 - `confidence`: Optional confidence level
 
 ### QuestionResolution
+
 Resolution information:
 - `resolved_by`: Who resolved it
 - `resolved_at`: Resolution timestamp

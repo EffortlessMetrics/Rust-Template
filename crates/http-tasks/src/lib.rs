@@ -198,9 +198,24 @@ where
     Ok(Html(html))
 }
 
-// ============================================================================
+// = ===========================================================================
 // Internal Helpers
 // ============================================================================
+
+fn map_gov_error(error: business_core::governance::GovernanceError) -> HttpError {
+    use business_core::governance::GovernanceError::*;
+    match error {
+        TaskNotFound(id) => HttpError::not_found(format!("Task not found: {:?}", id)),
+        InvalidTransition { from, to } => HttpError::new(
+            400,
+            ErrorCode::InvalidTransition,
+            format!("Invalid status transition from {} to {}", from, to),
+        ),
+        Lock(msg) => HttpError::internal_error(format!("Lock error: {}", msg)),
+        Io(e) => HttpError::internal_error(format!("IO error: {}", e)),
+        Serialization(msg) => HttpError::internal_error(format!("Serialization error: {}", msg)),
+    }
+}
 
 /// Execute a blocking closure on a dedicated thread pool.
 ///
@@ -216,7 +231,7 @@ where
     tokio::task::spawn_blocking(f)
         .await
         .map_err(|e| HttpError::internal_error(format!("spawn_blocking({label}) join: {e}")))?
-        .map_err(|e| HttpError::internal_error(format!("{:?}", e)))
+        .map_err(map_gov_error)
 }
 
 /// Parse update task status request from headers and body.

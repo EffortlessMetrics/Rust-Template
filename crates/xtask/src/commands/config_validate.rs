@@ -1,32 +1,38 @@
-use anyhow::{Result, anyhow};
-use serde_yaml::Value;
-use std::fs;
+use anyhow::Result;
+use colored::Colorize;
+use std::path::Path;
 
-/// Minimal config-validate: parse `specs/config_schema.yaml` and perform basic checks.
+/// Validate a configuration file against the schema.
 pub fn run(env: &str) -> Result<()> {
-    let text = fs::read_to_string("specs/config_schema.yaml")
-        .map_err(|e| anyhow!("failed to read config schema: {}", e))?;
+    println!("{} {}...", "Validating configuration for:".bold(), env.cyan());
 
-    let doc: Value = serde_yaml::from_str(&text)?;
+    let schema_path = Path::new("specs/config_schema.yaml");
+    let config_path = Path::new("config").join(format!("{}.yaml", env));
 
-    // Basic validations
-    if doc.get("settings").is_none() && doc.get("secrets").is_none() {
-        anyhow::bail!("config schema must contain at least one of 'settings' or 'secrets'");
+    if !config_path.exists() {
+        anyhow::bail!("Configuration file not found: {}", config_path.display());
     }
 
-    println!("Parsed config schema for env='{}' successfully", env);
-    if let Some(Value::Sequence(secrets)) = doc.get("secrets") {
-        for s in secrets.iter() {
-            if let Value::Mapping(m) = s
-                && !m.contains_key(Value::from("key"))
-            {
-                anyhow::bail!("each secret entry must have a 'key' field");
+    match spec_runtime::validate_config(schema_path, &config_path) {
+        Ok(config) => {
+            println!("  {} Schema validation passed", "✓".green());
+            println!("  {} All required fields present", "✓".green());
+            println!("  {} Type constraints satisfied", "✓".green());
+            println!();
+            println!("{} Config valid for {}", "✓".green().bold(), env.cyan());
+            if !config.secrets.is_empty() {
+                println!(
+                    "  (Found {} secrets, {} settings)",
+                    config.secrets.len(),
+                    config.settings.len()
+                );
             }
+            Ok(())
+        }
+        Err(e) => {
+            eprintln!("  {} Validation failed:", "✗".red());
+            eprintln!("    {}", e.to_string().red());
+            anyhow::bail!("Configuration validation failed for '{}'", env);
         }
     }
-
-    println!("Basic schema checks passed");
-    println!("Note: this is a lightweight validator; environment resolution not implemented yet.");
-
-    Ok(())
 }

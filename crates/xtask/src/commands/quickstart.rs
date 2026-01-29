@@ -95,12 +95,16 @@ pub fn run() -> Result<()> {
     // Step 5: Test helper commands
     println!("{}", "[5/5] Testing helper commands...".blue());
 
-    let commands_to_test = ["version", "help-flows"];
+    let commands_to_test = ["version", "help-flows", "ac-status"];
 
     for cmd in commands_to_test {
-        let output = std::process::Command::new("cargo")
-            .args(["run", "-q", "-p", "xtask", "--", cmd])
-            .output();
+        let args = if cmd == "ac-status" {
+            vec!["run", "-q", "-p", "xtask", "--", "ac-status", "--summary"]
+        } else {
+            vec!["run", "-q", "-p", "xtask", "--", cmd]
+        };
+
+        let output = std::process::Command::new("cargo").args(&args).output();
 
         match output {
             Ok(out) if out.status.success() => {

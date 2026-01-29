@@ -38,8 +38,8 @@ pub struct PrCoverArgs {
     pub run_dir: Option<PathBuf>,
     /// Output file (default: stdout)
     pub output: Option<PathBuf>,
-    /// Description of what changed (optional, defaults to placeholder)
-    pub description: Option<String>,
+    /// Description of what changed (1-3 sentences)
+    pub description: String,
 }
 
 /// Errata entry structure matching the canonical format
@@ -174,9 +174,7 @@ pub fn run(args: PrCoverArgs) -> Result<()> {
 
     // What changed section
     content.push_str("### What changed\n");
-    let description =
-        args.description.unwrap_or_else(|| "<TODO: 1-3 sentences describing the change>".into());
-    content.push_str(&format!("- {}\n\n", description));
+    content.push_str(&format!("- {}\n\n", args.description));
 
     // Review map section
     content.push_str("### Where to look (review map)\n");
@@ -847,7 +845,8 @@ mod tests {
 
     #[test]
     fn test_default_run_dir() {
-        let args = PrCoverArgs { pr: 123, run_dir: None, output: None, description: None };
+        let args =
+            PrCoverArgs { pr: 123, run_dir: None, output: None, description: "Test".to_string() };
 
         let expected = PathBuf::from(".runs/pr/123/latest");
         let actual =
@@ -862,7 +861,7 @@ mod tests {
             pr: 456,
             run_dir: Some(PathBuf::from("/custom/path")),
             output: None,
-            description: None,
+            description: "Test".to_string(),
         };
 
         assert_eq!(args.run_dir, Some(PathBuf::from("/custom/path")));

@@ -5,13 +5,13 @@ adapters-spec-fs = {path = "../adapters-spec-fs"}
 business-core = {path = "../business-core"}
 gov-http = {path = "../gov-http"}
 gov-model = {path = "../gov-model"}
+http-agents = {path = "../http-agents"}
 # HTTP crates (facade pattern)
 http-core = {path = "../http-core"}
+http-middleware = {path = "../http-middleware"}
 http-platform = {path = "../http-platform"}
 http-tasks = {path = "../http-tasks"}
 http-todos = {path = "../http-todos"}
-http-agents = {path = "../http-agents"}
-http-middleware = {path = "../http-middleware"}
 # JWT authentication
 jsonwebtoken = {features = ["rust_crypto"], version = "10.2.0"}
 # HTML templates

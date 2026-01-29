@@ -38,7 +38,7 @@ pub fn run(args: PrUpdateArgs) -> Result<()> {
 
     // 2. Generate new cover sheet
     println!("  Generating new cover sheet from receipts...");
-    let new_cover_sheet = generate_cover_sheet(&args)?;
+    let new_cover_sheet = generate_cover_sheet(&args, &current_body)?;
 
     // 3. Replace cover sheet in body (bounded update)
     let updated_body = replace_cover_sheet(&current_body, &new_cover_sheet);
@@ -88,17 +88,25 @@ fn fetch_pr_body(pr: u32) -> Result<String> {
 }
 
 /// Generate cover sheet using pr_cover module
-fn generate_cover_sheet(args: &PrUpdateArgs) -> Result<String> {
+fn generate_cover_sheet(args: &PrUpdateArgs, current_body: &str) -> Result<String> {
     // Create a temp file to capture output
     let temp_dir = std::env::temp_dir();
     let temp_file = temp_dir.join(format!("pr-cover-{}.md", args.pr));
+
+    // Determine description: use arg if provided, otherwise try to extract from current body
+    let description = if let Some(ref desc) = args.description {
+        desc.clone()
+    } else {
+        extract_description_from_body(current_body)
+            .unwrap_or_else(|| "Update PR with latest receipts".to_string())
+    };
 
     // Run pr_cover::run with output to temp file
     let pr_cover_args = PrCoverArgs {
         pr: args.pr,
         run_dir: args.run_dir.clone(),
         output: Some(temp_file.clone()),
-        description: args.description.clone(),
+        description,
     };
 
     super::pr_cover::run(pr_cover_args)?;
@@ -112,6 +120,21 @@ fn generate_cover_sheet(args: &PrUpdateArgs) -> Result<String> {
     let _ = fs::remove_file(&temp_file);
 
     Ok(content)
+}
+
+fn extract_description_from_body(body: &str) -> Option<String> {
+    // Try to find the "What changed" section and extract the first list item
+    let marker = "### What changed";
+    if let Some(pos) = body.find(marker) {
+        let after_marker = &body[pos + marker.len()..];
+        for line in after_marker.lines() {
+            let trimmed = line.trim();
+            if trimmed.starts_with('-') || trimmed.starts_with('*') {
+                return Some(trimmed[1..].trim().to_string());
+            }
+        }
+    }
+    None
 }
 
 /// Update PR body using gh CLI

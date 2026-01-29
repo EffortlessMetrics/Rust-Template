@@ -15,9 +15,9 @@ default = []
 otlp = [
   "dep:opentelemetry",
   "dep:opentelemetry-otlp",
-  "opentelemetry-otlp/grpc-tonic",
   "dep:opentelemetry_sdk",
-  "dep:tracing-opentelemetry"
+  "dep:tracing-opentelemetry",
+  "opentelemetry-otlp/grpc-tonic"
 ]
 
 [package]

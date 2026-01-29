@@ -127,7 +127,7 @@ pub fn run(fix: bool) -> Result<()> {
 
 /// Load doc_index.yaml using spec_runtime
 fn load_doc_index(path: &Path) -> Result<spec_runtime::DocIndex> {
-    spec_runtime::load_doc_index(path)
+    spec_runtime::load_doc_index(path).map_err(anyhow::Error::from)
 }
 
 /// Sync a single file: check or update front-matter from index

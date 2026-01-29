@@ -1,40 +1,40 @@
-[package]
-name = "http-agents"
-version.workspace = true
-edition.workspace = true
-rust-version.workspace = true
-authors.workspace = true
-license.workspace = true
-repository.workspace = true
-homepage.workspace = true
-documentation.workspace = true
-publish = false
-
 [dependencies]
+# Adapters for loading task definitions
+adapters-spec-fs = {path = "../adapters-spec-fs"}
+# Business core for task operations
+business-core = {path = "../business-core"}
+# Governance model
+gov-model = {path = "../gov-model"}
+# Core HTTP types
+http-core = {path = "../http-core"}
+http-errors = {features = ["axum"], path = "../http-errors"}
+# Platform contract types
+platform-contract = {path = "../platform-contract"}
+# Spec runtime for loading specs and hints
+spec-runtime = {path = "../spec-runtime"}
 # HTTP framework
 axum.workspace = true
 http.workspace = true
-http-errors = { path = "../http-errors", features = ["axum"] }
-# Platform contract types
-platform-contract = { path = "../platform-contract" }
-# Core HTTP types
-http-core = { path = "../http-core" }
-# Spec runtime for loading specs and hints
-spec-runtime = { path = "../spec-runtime" }
-# Adapters for loading task definitions
-adapters-spec-fs = { path = "../adapters-spec-fs" }
-# Governance model
-gov-model = { path = "../gov-model" }
-# Business core for task operations
-business-core = { path = "../business-core" }
 # Utilities
 serde.workspace = true
 serde_json.workspace = true
 serde_yaml.workspace = true
-tracing.workspace = true
 tokio.workspace = true
+tracing.workspace = true
 
 [dev-dependencies]
+testing = {path = "../testing"}
 tokio.workspace = true
 tower.workspace = true
-testing = { path = "../testing" }
+
+[package]
+name = "http-agents"
+publish = false
+authors.workspace = true
+documentation.workspace = true
+edition.workspace = true
+homepage.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+version.workspace = true

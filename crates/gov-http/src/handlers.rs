@@ -388,19 +388,25 @@ struct CucumberStepResult {
 ///
 /// This function performs blocking filesystem I/O and should be called from
 /// within `spawn_blocking` to avoid starving the Tokio async runtime.
-fn load_bdd_report(bdd_json_path: &std::path::Path) -> Option<CucumberReport> {
+fn load_bdd_report(bdd_json_path: &std::path::Path) -> Result<CucumberReport, PlatformError> {
     if !bdd_json_path.exists() {
-        return None;
+        return Err(PlatformError::not_found(
+            "BDD report not found. Run `cargo xtask bdd` first.".to_string(),
+        ));
     }
-    let content = std::fs::read_to_string(bdd_json_path).ok()?;
-    serde_json::from_str(&content).ok()
+    let content = std::fs::read_to_string(bdd_json_path)
+        .map_err(|e| PlatformError::internal(format!("Failed to read BDD report: {}", e)))?;
+    serde_json::from_str(&content)
+        .map_err(|e| PlatformError::internal(format!("Failed to parse BDD report: {}", e)))
 }
 
 /// Get AC coverage from BDD test results.
 ///
 /// Returns a summary and details of acceptance criteria coverage
 /// based on Cucumber JSON reports.
-pub async fn get_coverage<S>(State(state): State<S>) -> Json<CoverageResponse>
+pub async fn get_coverage<S>(
+    State(state): State<S>,
+) -> Result<Json<CoverageResponse>, PlatformError>
 where
     S: PlatformState,
 {
@@ -408,16 +414,8 @@ where
     let root = ctx.root().to_path_buf();
 
     // Load spec ledger to get all ACs
-    let specs = match spec_runtime::load_all_specs_with_context(ctx) {
-        Ok(s) => s,
-        Err(_) => {
-            // Return empty response if specs can't be loaded
-            return Json(CoverageResponse {
-                summary: CoverageSummary { passing: 0, failing: 0, unknown: 0, total: 0 },
-                details: vec![],
-            });
-        }
-    };
+    let specs = spec_runtime::load_all_specs_with_context(ctx)
+        .map_err(|e| PlatformError::spec_load("specs", e))?;
 
     // Build a map of all ACs from the ledger
     let mut ac_map: HashMap<String, (String, String, String)> = HashMap::new();
@@ -433,48 +431,43 @@ where
     // Offload blocking filesystem I/O to spawn_blocking to avoid starving
     // the Tokio async runtime under concurrent load.
     let bdd_json_path = root.join("target/ac_report.json");
-    let report =
-        tokio::task::spawn_blocking(move || load_bdd_report(&bdd_json_path)).await.ok().flatten();
+    let report = tokio::task::spawn_blocking(move || load_bdd_report(&bdd_json_path))
+        .await
+        .map_err(|e| PlatformError::internal(format!("spawn_blocking failed: {}", e)))??;
 
     let mut ac_status: HashMap<String, String> = HashMap::new();
     let mut ac_scenarios: HashMap<String, Vec<String>> = HashMap::new();
 
-    if let Some(report) = report {
-        for feature in report.0 {
-            for element in feature.elements {
-                // Only process scenarios
-                if element.element_type == "scenario" {
-                    // Extract AC IDs from tags
-                    let ac_ids: Vec<String> = element
-                        .tags
-                        .iter()
-                        .filter_map(|tag| {
-                            // Tags in Cucumber JSON include an @ prefix - normalize before matching
-                            let tag_name = tag.name.trim_start_matches('@');
-                            if tag_name.starts_with("AC-") {
-                                Some(tag_name.to_string())
-                            } else {
-                                None
-                            }
-                        })
-                        .collect();
+    for feature in report.0 {
+        for element in feature.elements {
+            // Only process scenarios
+            if element.element_type == "scenario" {
+                // Extract AC IDs from tags
+                let ac_ids: Vec<String> = element
+                    .tags
+                    .iter()
+                    .filter_map(|tag| {
+                        // Tags in Cucumber JSON include an @ prefix - normalize before matching
+                        let tag_name = tag.name.trim_start_matches('@');
+                        if tag_name.starts_with("AC-") { Some(tag_name.to_string()) } else { None }
+                    })
+                    .collect();
 
-                    // Determine if scenario passed (all steps passed)
-                    let passed = element.steps.iter().all(|step| step.result.status == "passed");
+                // Determine if scenario passed (all steps passed)
+                let passed = element.steps.iter().all(|step| step.result.status == "passed");
 
-                    // Update status and scenarios for each AC
-                    for ac_id in ac_ids {
-                        // Track scenario name
-                        ac_scenarios.entry(ac_id.clone()).or_default().push(element.name.clone());
+                // Update status and scenarios for each AC
+                for ac_id in ac_ids {
+                    // Track scenario name
+                    ac_scenarios.entry(ac_id.clone()).or_default().push(element.name.clone());
 
-                        // Update status (if any scenario fails, AC fails)
-                        let current_status = ac_status.entry(ac_id.clone()).or_insert_with(|| {
-                            if passed { "passing".to_string() } else { "failing".to_string() }
-                        });
+                    // Update status (if any scenario fails, AC fails)
+                    let current_status = ac_status.entry(ac_id.clone()).or_insert_with(|| {
+                        if passed { "passing".to_string() } else { "failing".to_string() }
+                    });
 
-                        if !passed {
-                            *current_status = "failing".to_string();
-                        }
+                    if !passed {
+                        *current_status = "failing".to_string();
                     }
                 }
             }
@@ -512,10 +505,10 @@ where
 
     let total = passing + failing + unknown;
 
-    Json(CoverageResponse {
+    Ok(Json(CoverageResponse {
         summary: CoverageSummary { passing, failing, unknown, total },
         details,
-    })
+    }))
 }
 
 // =============================================================================
