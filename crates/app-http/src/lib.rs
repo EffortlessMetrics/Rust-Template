@@ -133,6 +133,7 @@ use axum::{
     routing::{get, post},
 };
 use serde::{Deserialize, Serialize};
+use tower_http::compression::CompressionLayer;
 use tracing::{info, instrument};
 
 // Public modules
@@ -287,6 +288,8 @@ fn build_router(app_state: AppState) -> Router {
         .layer(axum::middleware::from_fn(middleware::request_id_middleware))
         // Metrics middleware
         .layer(axum::middleware::from_fn(metrics::metrics_middleware))
+        // Compression middleware
+        .layer(CompressionLayer::new())
         // CORS middleware
         .layer(axum::middleware::from_fn_with_state(app_state.clone(), middleware::cors_middleware))
         // Security headers (innermost - applied first to response)
