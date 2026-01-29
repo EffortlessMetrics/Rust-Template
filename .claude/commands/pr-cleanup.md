@@ -29,7 +29,7 @@ Before changing anything, capture:
 
 ## Wave 1 — Explore
 
-Produce a review map:
+Produce a review map (explore agent works well here):
 
 - What's semantic vs mechanical
 - Interfaces/contracts touched (public API, schema files, CLI outputs, policy surfaces)
@@ -40,7 +40,7 @@ Produce a review map:
 
 ## Wave 2 — Plan
 
-Produce a bounded cleanup plan:
+Produce a bounded cleanup plan (plan agent works well here):
 
 - Quick wins to apply now (format/lint/docs drift, obvious correctness fixes)
 - Follow-ups explicitly deferred (bigger refactors, behavior shifts)
@@ -69,21 +69,27 @@ Avoid "nice to have" refactors unrelated to the PR story.
 ## Output: Cleanup report
 
 ### Summary
+
 1–3 paragraphs: what changed during cleanup and why.
 
 ### Interface & compatibility verdict
+
 - Public API: unchanged | additive | breaking | not measured
 - Schemas/contracts: unchanged | updated | breaking | not measured
 - CLI/config surface: unchanged | changed | not measured
 
 ### Evidence
+
 What you ran and what it proves. If something wasn't run, say so.
 
 ### What changed during cleanup
+
 Key files/dirs touched + before→after highlights.
 
 ### Remaining concerns / follow-ups
+
 Concrete next items; explicitly out of scope for this run.
 
 ### PR readiness
+
 Ready / not ready + blockers. If ready, recommend running `/pr-create`.

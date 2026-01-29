@@ -23,10 +23,10 @@ Establish:
 
 ## Wave 1 — Explore
 
-Build a reviewer map:
+Build a reviewer map (explore agent works well here):
 
 - What behavior changed (semantic hotspots vs mechanical churn)
-- Contract touchpoints (public API, schemas, CLI output formats)
+- Contract touch-points (public API, schemas, CLI output formats)
 - Risk deltas (unsafe/concurrency/IO/deps)
 - Rollback story (what reverting would mean)
 
@@ -34,7 +34,7 @@ Build a reviewer map:
 
 ## Wave 2 — Structure
 
-Define:
+Define the PR shape (plan agent works well here):
 
 - One-sentence intent
 - Scope boundaries (what's in/out)
@@ -54,27 +54,34 @@ Push the branch if needed and create the PR (draft by default).
 ## PR body format
 
 ### Summary
+
 1–3 paragraphs: what changed + why, trade-offs, what should be true after merge.
 
 ### Scope
+
 - Type (governance/devex/docs/runtime/etc.)
-- Touchpoints (key crates/files/surfaces)
+- Touch-points (key crates/files/surfaces)
 
 ### Interface & compatibility verdict
+
 - Public API: unchanged | additive | breaking | not measured
 - Schemas/contracts: unchanged | updated | breaking | not measured
 - CLI/config surface: unchanged | changed | not measured
 
 ### Evidence & verification
+
 What you ran, what it proves, and how to reproduce.
 
 ### Risk & rollback
+
 What could go wrong; how to back out safely.
 
 ### Follow-ups (explicitly out of scope)
+
 Short list; no vague "we should".
 
 ### Retrospective
+
 Surprises, corrections, what to mechanize next time.
 
 ## Known workflow issue: PR body edits may fail in some repos
