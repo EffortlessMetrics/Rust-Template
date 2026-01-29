@@ -153,7 +153,7 @@ pub fn run() -> Result<()> {
                 "  2. Register it in {} with the REQ ID in 'requirements:'",
                 "specs/doc_index.yaml".cyan()
             );
-            eprintln!("  3. Or demote the REQ by removing must_have_ac: true");
+            eprintln!("  3. Or demote the REQ by removing 'must_have_ac: true'");
             issues += 1;
         }
     }
