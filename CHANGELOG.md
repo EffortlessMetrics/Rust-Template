@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+> Changes on main branch since v3.3.14. These will ship in the next release.
+
 ### Added
 
 - **Selftest expanded to 12 steps**
@@ -38,12 +40,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Documents why each test is ignored and how to run it
   - Covers database integration, gRPC smoke, and infrastructure tests
 
+- **Automated release notes generation** (PR #109)
+  - Integrated git-cliff for conventional commit-based changelogs
+  - Supports customizable templates and scopes
+  - Can generate release notes for any version range
+
+- **Schema registry compatibility check** (PR #110)
+  - New `cargo xtask schema-check` command validates schema compatibility
+  - Detects breaking changes in OpenAPI and JSON schemas
+  - Integrates with CI for automated schema validation
+
 ### Changed
 
 - **Async runtime improvements**
   - `gov-http-friction` and `gov-http-questions` now use `tokio::task::spawn_blocking` for filesystem I/O
   - Prevents blocking operations from starving the Tokio async runtime under concurrent load
   - All blocking file operations (reading friction/questions YAML files) are now properly offloaded
+  - UI operations also offloaded to `spawn_blocking` (PR #142)
 
 - **Error handling improvements**
   - `AppError` now uses boxed `ErrorDetails` struct to reduce stack size
@@ -69,10 +82,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - DB integration test now uses `WaitFor::message_on_stderr` instead of `sleep(3s)`
   - Added missing `tokio` dependency to `gov-http-friction` and `gov-http-questions`
   - Property-based tests (proptest) added to workspace dependencies
+  - Eliminated unsafe env/cwd mutation via guarded test utilities (PR #106)
 
 - **Skills and documentation updated for 12-step selftest**
   - Updated all skills (`governed-feature-dev`, `governed-maintenance`, etc.) to reference 12 steps
   - Updated README and related docs to reflect expanded selftest pipeline
+
+- **UI accessibility improvements** (PR #162)
+  - Added `aria-current` attribute to active navigation links
+  - Better screen reader support for navigation state
+
+- **Task board performance optimization** (PR #115)
+  - Optimized HTML generation for task board view
+  - Reduced rendering time for large task lists
 
 ### Fixed
 
@@ -82,6 +104,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **CORS middleware**
   - Minor cleanup in `crates/app-http/src/middleware/cors.rs`
+
+- **AC status tracking**
+  - Updated multiple requirements from [UNKNOWN] to [PASS] status
+  - Improved conditional check mode for AC status validation
+
+### Security
+
+- **DOM-based XSS fix in AC Coverage view** (PR #146)
+  - Fixed high-severity XSS vulnerability in the AC coverage HTML view
+  - User input is now properly escaped before rendering
+
+- **DoS prevention in constant-time comparison** (PR #116)
+  - Fixed potential denial-of-service in authentication timing comparison
+  - Ensures consistent timing regardless of input length
+
+- **Auth enforcement on GET/HEAD requests** (PR #164)
+  - When credentials are configured, authentication is now enforced on all request methods
+  - Previously, GET/HEAD requests could bypass authentication in some configurations
+
+- **CI checksum enforcement for database tools** (PR #111)
+  - Database tooling downloads now verified with checksums
+  - Prevents supply chain attacks via compromised binaries
 
 ### Documentation
 
@@ -93,6 +137,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Updated version references across ~30 documentation files
   - Ensured consistent terminology and cross-references
   - Added `<!-- doclint:disable orphan-version -->` suppressions where appropriate
+
+- **Microcrate architecture documentation** (PRs #148, #163)
+  - Comprehensive documentation of the 21+ crate architecture
+  - Clear layer separation (Contract, Core, Foundation, Adapter, HTTP, Facade)
+  - Receipt system documentation for governance artifacts
+
+- **Maintainer handover documentation** (PR #159)
+  - Added documentation for maintainer transitions
+  - Contract validations and governance expectations documented
 
 ## [3.3.14] - 2025-12-29
 
@@ -360,21 +413,7 @@ See [ac-status JSON Schema Reference](docs/reference/ac-status-json-schema.md) f
 - **AC delta reporting in `release-bundle`** - Shows which ACs are new, modified, or unchanged since last release
 - **Fork registry** (`docs/FORK_REGISTRY.md`) - Template for tracking downstream forks with metadata and health checks
 
-### Changed
-
-- **BDD test isolation** - All acceptance tests now use dedicated test database instances to prevent cross-test contamination
-- **ADR numbering** - Standardized ADR filenames with 4-digit padding (0001-0019) for consistent sorting and referencing
-- **Friction log structure** - Formalized sections (Pain Points, Feature Ideas, Questions, Process Observations) with metadata and timestamps
-
-### Fixed
-
-- **BDD version alignment** - Updated template_core.feature to expect v3.3.3 instead of v3.3.2
-- **Spec ledger version consistency** - Aligned all spec files to v3.3.3
-- **ADR cross-references** - Updated all ADR links in spec ledger and documentation to use 4-digit numbering
-
-## [3.3.4] - 2025-11-30
-
-### Added
+**Governance Contracts:**
 
 - **BDD harness meta-contract** (`AC-TPL-BDD-EXIT-CODES`):
   - `is_bdd_success(&Output)` canonicalizes BDD success across exit code, `[BDD-PASS]`, JUnit, and textual markers
@@ -395,6 +434,9 @@ See [ac-status JSON Schema Reference](docs/reference/ac-status-json-schema.md) f
 
 ### Changed
 
+- **BDD test isolation** - All acceptance tests now use dedicated test database instances to prevent cross-test contamination
+- **ADR numbering** - Standardized ADR filenames with 4-digit padding (0001-0019) for consistent sorting and referencing
+- **Friction log structure** - Formalized sections (Pain Points, Feature Ideas, Questions, Process Observations) with metadata and timestamps
 - **xtask check**: Change-aware BDD now uses `bdd::run_with_options()` instead of raw `cargo test`
 - **xtask test-ac / test-changed**: Use `bdd::is_bdd_success()` for acceptance test success detection
 - **/platform/agent/hints & suggest-next**: Both reuse the same Hint schema and filtering logic
@@ -402,6 +444,9 @@ See [ac-status JSON Schema Reference](docs/reference/ac-status-json-schema.md) f
 
 ### Fixed
 
+- **BDD version alignment** - Updated template_core.feature to expect v3.3.3 instead of v3.3.2
+- **Spec ledger version consistency** - Aligned all spec files to v3.3.3
+- **ADR cross-references** - Updated all ADR links in spec ledger and documentation to use 4-digit numbering
 - Intermittent `cargo test -p acceptance` exit=101 failures no longer cause `xtask bdd`, `xtask check`, or `xtask selftest` to flap when all scenarios pass
 
 ## [3.2.0] - 2025-11-22
@@ -1562,6 +1607,26 @@ cargo run -p xtask -- selftest
 
 ---
 
+[Unreleased]: https://github.com/your-org/rust-template/compare/v3.3.14...HEAD
+[3.3.14]: https://github.com/your-org/rust-template/releases/tag/v3.3.14
+[3.3.13]: https://github.com/your-org/rust-template/releases/tag/v3.3.13
+[3.3.12]: https://github.com/your-org/rust-template/releases/tag/v3.3.12
+[3.3.11]: https://github.com/your-org/rust-template/releases/tag/v3.3.11
+[3.3.10]: https://github.com/your-org/rust-template/releases/tag/v3.3.10
+[3.3.9]: https://github.com/your-org/rust-template/releases/tag/v3.3.9
+[3.3.8]: https://github.com/your-org/rust-template/releases/tag/v3.3.8
+[3.3.7]: https://github.com/your-org/rust-template/releases/tag/v3.3.7
+[3.3.6]: https://github.com/your-org/rust-template/releases/tag/v3.3.6
+[3.3.5]: https://github.com/your-org/rust-template/releases/tag/v3.3.5
+[3.3.4]: https://github.com/your-org/rust-template/releases/tag/v3.3.4
+[3.2.0]: https://github.com/your-org/rust-template/releases/tag/v3.2.0
+[3.0.0-sprint1]: https://github.com/your-org/rust-template/releases/tag/v3.0.0-sprint1
+[2.5.0]: https://github.com/your-org/rust-template/releases/tag/v2.5.0
+[2.4.0]: https://github.com/your-org/rust-template/releases/tag/v2.4.0
+[2.3.1]: https://github.com/your-org/rust-template/releases/tag/v2.3.1
+[2.3.0]: https://github.com/your-org/rust-template/releases/tag/v2.3.0
+[2.2.0]: https://github.com/your-org/rust-template/releases/tag/v2.2.0
+[2.1.0]: https://github.com/your-org/rust-template/releases/tag/v2.1.0
 [2.0.1]: https://github.com/your-org/rust-template/releases/tag/v2.0.1
 [2.0.0]: https://github.com/your-org/rust-template/releases/tag/v2.0.0
 [1.1.0]: https://github.com/your-org/rust-template/releases/tag/v1.1.0

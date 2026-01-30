@@ -1343,3 +1343,23 @@ docs:
     requirements: [REQ-PLT-ONBOARDING, REQ-PLT-DEVEX-CONTRACT, REQ-PLT-DOCS-CONSISTENCY]
     acs: []
     adrs: [ADR-0030]
+
+  # Spec Ledger Schema Reference
+  - id: REF-SPEC-LEDGER-SCHEMA-001
+    file: docs/reference/spec-ledger-schema.md
+    title: "Spec Ledger Schema Reference"
+    doc_type: reference
+    stories: [US-TPL-PLT-001]
+    requirements: [REQ-PLT-DEVEX-CONTRACT]
+    acs: []
+    adrs: [ADR-0003, ADR-0005]
+
+  # Configuration Schema Reference
+  - id: REF-CONFIG-SCHEMA-001
+    file: docs/reference/config-schema.md
+    title: "Configuration Schema Reference"
+    doc_type: reference
+    stories: [US-TPL-PLT-001]
+    requirements: [REQ-PLT-DEVEX-CONTRACT]
+    acs: []
+    adrs: [ADR-0003]

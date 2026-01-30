@@ -9,7 +9,7 @@ stories: [US-TPL-PLT-001]
 requirements: [REQ-PLT-DOCS-CONSISTENCY]
 acs: [AC-PLT-009, AC-PLT-010]
 adrs: [ADR-0005]
-last_updated: 2026-01-07
+last_updated: 2026-01-30
 ---
 
 # Roadmap: Rust-as-Spec Platform Cell (v3.3.14)
@@ -62,7 +62,8 @@ Template versions (v3.3.12, v3.3.13, etc.) are **tagged snapshots** of this repo
 | ------- | ------ | ----- |
 | v3.3.12 | Tagged | Security hardening, governance architecture, CI improvements |
 | v3.3.13 | Tagged | Docs polish + release tooling hardening (see §4.4) |
-| v3.3.14 | On main | DevEx loop: faster precommit, staged-only semantics (see §4.4.1) |
+| v3.3.14 | Tagged | DevEx loop: faster precommit, staged-only semantics (see §4.4.1) |
+| v3.3.15 | On main | Security fixes, 12-step selftest, schema registry, release automation (see §4.4.2) |
 | v3.4.0 | Planned | External validation: IDP consumer, contract tests, API docs (see §4.5) |
 | v3.5.0+ | Vision | Surface minimization: crate extraction (see §4.6) |
 
@@ -117,17 +118,28 @@ To fork from v3.3.9, start with `docs/how-to/FIRST_FORK.md`.
 
 ---
 
-## 2. Current State (v3.3.14)
+## 2. Current State (v3.3.14+ on main)
 
-The template is at v3.3.14, building on the frozen v3.3.9-kernel baseline.
+The template is at v3.3.14 (tagged), with significant improvements on `main` heading toward v3.3.15.
 
 - **Kernel ACs** (`must_have_ac: true`): All passing
-- **Selftest**: Green (12/12 gates)
+- **Selftest**: Green (12/12 gates, expanded from 10)
 - **Non-kernel ACs**: Soft gates, may be UNKNOWN depending on test capture
 
-**Template Version (v3.3.14):**
+**On `main` (post-v3.3.14):**
 
-This is the current released template version with DevEx improvements (faster precommit, staged-only semantics). Adoption receipts are v3.4.0 entry criteria.
+Significant work has landed since v3.3.14, including:
+
+- **Security fixes**: DOM-based XSS in AC Coverage view (#146), DoS prevention (#116), auth enforcement on GET/HEAD (#164)
+- **12-step selftest**: Docs-as-Code check added as step 2, all subsequent steps renumbered
+- **Schema registry compatibility check**: New `cargo xtask schema-check` command (#110)
+- **Automated release notes**: Integration with git-cliff for conventional commits (#109)
+- **Performance**: Task board optimization (#115), spawn_blocking for UI operations (#142)
+- **Microcrate architecture**: gov-http-types, enhanced gov-model with proptest, architecture documentation
+
+**Template Version (v3.3.14 tagged):**
+
+The last released template version includes DevEx improvements (faster precommit, staged-only semantics). Work on main will ship as v3.3.15.
 
 **Frozen Kernel Baseline (v3.3.9-kernel tag):**
 
@@ -463,22 +475,57 @@ To customize hook strictness:
 
 ---
 
-### 4.4.2 Post-v3.3.14 – Microcrate Architecture Polish
+### 4.4.2 Post-v3.3.14 – v3.3.15 Scope (Security, Performance, Tooling)
 
-> **Scope:** Architecture refinements and documentation improvements merged after v3.3.14 tag.
-> Focused on cleaner crate separation and reduced type duplication.
+> **Scope:** Security fixes, performance improvements, and tooling enhancements merged after v3.3.14 tag.
+> This will ship as v3.3.15.
 
-**Status:** In Progress (uncommitted)
+**Status:** In Progress on `main` (30+ commits since v3.3.14)
 
-#### Merged/In Progress (Post-v3.3.14)
+#### Security Fixes
 
 | Item | Description | Status |
 | ---- | ----------- | ------ |
-| **New `gov-http-types` crate** | Shared HTTP API types (`FrictionEntry`, `Question`) extracted to reduce duplication across `gov-http-*` crates | ✅ Complete |
-| **Enhanced `gov-model`** | `TaskStatus` parsing with aliases ("in_progress", "open", etc.) and property-based tests | ✅ Complete |
-| **Ignored tests documentation** | New `docs/reference/ignored-tests.md` catalogs all `#[ignore]` tests with rationale and run instructions | ✅ Complete |
-| **Architecture doc update** | `docs/explanation/architecture.md` updated with complete crate taxonomy (21+ crates across 6 layers) | ✅ Complete |
-| **Crate dependency cleanup** | `gov-http-friction` and `gov-http-questions` now use shared types from `gov-http-types` | ✅ Complete |
+| **DOM-based XSS fix** | Fixed high-severity XSS vulnerability in AC Coverage HTML view (PR #146) | ✅ Merged |
+| **DoS prevention** | Fixed potential denial-of-service in constant-time auth comparison (PR #116) | ✅ Merged |
+| **Auth enforcement** | GET/HEAD requests now require auth when credentials configured (PR #164) | ✅ Merged |
+| **Checksum enforcement** | Database tooling downloads verified with checksums in CI (PR #111) | ✅ Merged |
+
+#### Selftest & Governance
+
+| Item | Description | Status |
+| ---- | ----------- | ------ |
+| **12-step selftest** | Docs-as-Code check added as step 2; all steps renumbered (PR #159) | ✅ Merged |
+| **AC status updates** | Multiple requirements updated from UNKNOWN to PASS status | ✅ Merged |
+| **Kernel req coverage** | Clarified error messages for kernel requirement doc coverage (PR #114) | ✅ Merged |
+
+#### Tooling & Automation
+
+| Item | Description | Status |
+| ---- | ----------- | ------ |
+| **Schema registry check** | New `cargo xtask schema-check` validates schema compatibility (PR #110) | ✅ Merged |
+| **Automated release notes** | Integration with git-cliff for conventional commit changelogs (PR #109) | ✅ Merged |
+| **Scanner-safe test secrets** | Fake secrets in tests replaced with EXAMPLE_* patterns | ✅ Merged |
+
+#### Performance & Architecture
+
+| Item | Description | Status |
+| ---- | ----------- | ------ |
+| **Task board optimization** | Optimized HTML generation for task board view (PR #115) | ✅ Merged |
+| **UI spawn_blocking** | Blocking UI operations offloaded to spawn_blocking (PR #142) | ✅ Merged |
+| **UI accessibility** | Added aria-current to active navigation links (PR #162) | ✅ Merged |
+| **Test isolation** | Eliminated unsafe env/cwd mutation via guarded utilities (PR #106) | ✅ Merged |
+| **Async fixes** | tokio::sync::RwLock in adapters-grpc async tests (PR #103) | ✅ Merged |
+
+#### Microcrate Architecture Polish
+
+| Item | Description | Status |
+| ---- | ----------- | ------ |
+| **New `gov-http-types` crate** | Shared HTTP API types extracted to reduce duplication | ✅ Merged |
+| **Enhanced `gov-model`** | TaskStatus parsing with aliases and property-based tests (proptest) | ✅ Merged |
+| **Ignored tests documentation** | `docs/reference/ignored-tests.md` catalogs all `#[ignore]` tests | ✅ Merged |
+| **Architecture doc update** | Complete crate taxonomy (21+ crates across 6 layers) documented | ✅ Merged |
+| **Crate dependency cleanup** | gov-http-friction/questions now use shared types from gov-http-types | ✅ Merged |
 
 #### Architecture Highlights
 
@@ -492,6 +539,17 @@ The microcrate architecture now clearly separates crates into 6 layers:
 6. **Facade** — Developer tooling (`gov-xtask-core`, `rust_iac_config`)
 
 This layering enables future crate extraction (v3.5.0+ vision) by establishing clear dependency boundaries now.
+
+#### Release Checklist for v3.3.15
+
+```text
+[ ] Verify selftest green: cargo xtask selftest
+[ ] Update version in spec_ledger.yaml and related files
+[ ] Add evidence bundle: cargo xtask release-bundle 3.3.15
+[ ] Commit evidence and merge to main
+[ ] Tag: git tag v3.3.15 -m "v3.3.15"
+[ ] Push: git push --follow-tags
+```
 
 ---
 
@@ -678,7 +736,7 @@ This track runs in parallel with feature work. It builds the "truth surface" tha
 
 **Goal:** Freeze the kernel as-is, use it for services, let friction drive improvements.
 
-**Status:** This is the current path. v3.3.9-kernel is frozen; v3.3.14 is released.
+**Status:** This is the current path. v3.3.9-kernel is frozen; v3.3.14 is released; v3.3.15 is in progress on main.
 
 **Immediate Next Steps:**
 
@@ -687,9 +745,10 @@ This track runs in parallel with feature work. It builds the "truth surface" tha
 3. ✅ Documentation complete (v3.3.12 -> v3.3.13)
 4. ✅ v3.3.13 tagged with evidence bundle
 5. ✅ v3.3.14 tagged (DevEx improvements + unified issues endpoint)
-6. 🔜 Create fork from v3.3.9-kernel tag
-7. 🔜 Complete fork dry-run and AI first-hour receipts (v3.4.0 gate)
-8. 🔜 v3.4.0: External validation (reference consumer, contract tests, API examples)
+6. 🔜 Tag v3.3.15 (security fixes + 12-step selftest + tooling)
+7. 🔜 Create fork from v3.3.9-kernel tag
+8. 🔜 Complete fork dry-run and AI first-hour receipts (v3.4.0 gate)
+9. 🔜 v3.4.0: External validation (reference consumer, contract tests, API examples)
 
 **After v3.3.14:**
 
@@ -1009,15 +1068,22 @@ The template is "production ready" when:
 | Layer | Version | Status |
 | ----- | ------- | ------ |
 | **Template** | v3.3.14 | Released (tag: v3.3.14) |
+| **On main** | v3.3.15 | In progress (30+ commits since v3.3.14) |
 | **Kernel** | v3.3.9-kernel | Frozen baseline |
 | **Next Minor** | v3.4.0 | External validation release (see §4.5) |
 | **Future** | v3.5.0+ | Surface minimization / crate extraction (see §4.6) |
 
 **v3.3.9-kernel** is a stable, selftest-green kernel. All **kernel ACs** (`must_have_ac: true`) pass; non-kernel ACs are tracked as soft gates and may be failing or unknown without blocking selftest.
 
-**v3.3.13** shipped documentation polish, version alignment, and security configuration docs.
-
 **v3.3.14** shipped faster precommit defaults, staged-only semantics, targeted spellcheck, unified `/platform/issues` endpoint (PR #74), `issues-search` CLI command, and BDD pagination error contract coverage (PR #76).
+
+**v3.3.15 (on main)** includes:
+- Security fixes: DOM-based XSS (PR #146), DoS prevention (PR #116), auth enforcement on GET/HEAD (PR #164)
+- 12-step selftest expansion with Docs-as-Code check
+- Schema registry compatibility check (`cargo xtask schema-check`)
+- Automated release notes via git-cliff integration
+- Performance: task board optimization, spawn_blocking for UI operations
+- Microcrate architecture: gov-http-types crate, enhanced gov-model with proptest
 
 **v3.4.0** is the "external proof" release: reference IDP consumer, contract tests, and real fork receipts.
 
@@ -1029,9 +1095,10 @@ archaeology and factory improvements. P0 (audit pack docs) is complete.
 **Immediate Next Steps:**
 
 1. ✅ v3.3.14 tagged (DevEx improvements + unified issues endpoint)
-2. Collect fork dry-run + AI first-hour receipts (v3.4.0 gate)
-3. Fork for real service development
-4. Capture friction -> batch improvements into v3.4.0
+2. 🔜 Tag v3.3.15 (security fixes + tooling improvements)
+3. Collect fork dry-run + AI first-hour receipts (v3.4.0 gate)
+4. Fork for real service development
+5. Capture friction -> batch improvements into v3.4.0
 
 **What's Still Missing (Honest Assessment):**
 
