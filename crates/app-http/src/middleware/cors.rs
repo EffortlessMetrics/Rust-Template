@@ -219,7 +219,7 @@ impl CorsConfig {
                     || (pos == 8 && allowed.starts_with("https://"))
                     || (pos == 7 && allowed.starts_with("http://")))
             {
-                let wildcard_domain = &allowed[pos + 2..];
+                let wildcard_domain = &allowed[pos + 1..];
                 // Origin scheme must match allowed scheme for wildcard matching
                 let schemes_match = (origin.starts_with("https://")
                     && allowed.starts_with("https://"))
@@ -397,6 +397,8 @@ mod tests {
         assert!(config.is_origin_allowed("https://api.example.com"));
         assert!(config.is_origin_allowed("https://app.example.com"));
         assert!(!config.is_origin_allowed("https://malicious.com"));
+        // This should fail, but currently might pass if partial matching is not prevented
+        assert!(!config.is_origin_allowed("https://evilexample.com"));
     }
 
     #[test]
