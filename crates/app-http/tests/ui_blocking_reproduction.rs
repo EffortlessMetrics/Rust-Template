@@ -122,4 +122,10 @@ async fn dashboard_does_not_block_executor() {
     // With 1 thread, every FS call blocks the thread.
 
     println!("Timer elapsed: {:?}", timer_elapsed);
+
+    assert!(
+        timer_elapsed < Duration::from_millis(500),
+        "Timer took {:?} - expected < 500ms. Executor was blocked by sync I/O.",
+        timer_elapsed
+    );
 }
