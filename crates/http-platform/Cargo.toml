@@ -21,10 +21,10 @@ serde.workspace = true
 serde_json.workspace = true
 serde_yaml.workspace = true
 tracing.workspace = true
+tokio.workspace = true
 
 [dev-dependencies]
 testing = {path = "../testing"}
-tokio.workspace = true
 tower.workspace = true
 
 [package]

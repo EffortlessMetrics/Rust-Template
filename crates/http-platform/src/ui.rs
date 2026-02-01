@@ -21,47 +21,37 @@ pub async fn dashboard<S>(State(state): State<S>) -> Html<String>
 where
     S: super::PlatformState,
 {
-    let root = state.workspace_root();
-    let status_result = load_all_specs(root);
-    let tasks_result = spec_runtime::load_tasks(&root.join("specs/tasks.yaml"));
-    let metadata = load_service_metadata(&root.join("specs/service_metadata.yaml")).ok();
+    let root = state.workspace_root().to_path_buf();
     let config = super::config_summary(&state);
 
-    let content = match (status_result, tasks_result) {
-        (Ok(specs), Ok(tasks_spec)) => {
-            let _req_count: usize = specs.ledger.stories.iter().map(|s| s.requirements.len()).sum();
-            let ac_count: usize = specs
-                .ledger
-                .stories
-                .iter()
-                .flat_map(|s| s.requirements.iter())
-                .map(|r| r.acceptance_criteria.len())
-                .sum();
+    let result = tokio::task::spawn_blocking(move || {
+        let status_result = load_all_specs(&root);
+        let tasks_result = spec_runtime::load_tasks(&root.join("specs/tasks.yaml"));
+        let metadata = load_service_metadata(&root.join("specs/service_metadata.yaml")).ok();
 
-            // Read policy status
-            let policy_path = root.join("target/policy_status.json");
-            let policy_status = std::fs::read_to_string(policy_path)
-                .ok()
-                .and_then(|content| serde_json::from_str::<serde_json::Value>(&content).ok())
-                .and_then(|v| v.get("summary").and_then(|s| s.as_str()).map(String::from))
-                .unwrap_or_else(|| "unknown".to_string());
+        // Read policy status
+        let policy_path = root.join("target/policy_status.json");
+        let policy_status = std::fs::read_to_string(policy_path)
+            .ok()
+            .and_then(|content| serde_json::from_str::<serde_json::Value>(&content).ok())
+            .and_then(|v| v.get("summary").and_then(|s| s.as_str()).map(String::from))
+            .unwrap_or_else(|| "unknown".to_string());
 
-            let status_class = match policy_status.as_str() {
-                "pass" => "status-pass",
-                "fail" => "status-fail",
-                _ => "status-unknown",
-            };
+        let status_class = match policy_status.as_str() {
+            "pass" => "status-pass",
+            "fail" => "status-fail",
+            _ => "status-unknown",
+        };
 
-            // Read AC coverage from feature_status.md
-            let feature_status_path = root.join("docs/feature_status.md");
-            let mut passing = 0;
-            let mut failing = 0;
-            let mut unknown = 0;
-            let mut coverage_rows = 0;
+        // Read AC coverage from feature_status.md
+        let feature_status_path = root.join("docs/feature_status.md");
+        let mut passing = 0;
+        let mut failing = 0;
+        let mut unknown = 0;
+        let mut coverage_rows = 0;
 
-            if feature_status_path.exists()
-                && let Ok(content) = std::fs::read_to_string(feature_status_path)
-            {
+        if feature_status_path.exists() {
+            if let Ok(content) = std::fs::read_to_string(feature_status_path) {
                 for line in content.lines() {
                     if !line.starts_with("| AC-") {
                         continue;
@@ -78,8 +68,18 @@ where
                     }
                 }
             }
+        }
 
-            // If no coverage data, count all ACs as unknown
+        // If no coverage data, count all ACs as unknown
+        if let Ok(ref specs) = status_result {
+            let ac_count: usize = specs
+                .ledger
+                .stories
+                .iter()
+                .flat_map(|s| s.requirements.iter())
+                .map(|r| r.acceptance_criteria.len())
+                .sum();
+
             if coverage_rows == 0 {
                 unknown = ac_count;
             } else {
@@ -88,29 +88,67 @@ where
                     unknown += ac_count - accounted_for;
                 }
             }
-
-            dashboard_content(
-                specs,
-                tasks_spec,
-                config,
-                policy_status,
-                status_class,
-                passing,
-                failing,
-                unknown,
-            )
         }
-        _ => {
+
+        (
+            status_result,
+            tasks_result,
+            metadata,
+            policy_status,
+            status_class,
+            passing,
+            failing,
+            unknown,
+        )
+    })
+    .await;
+
+    match result {
+        Ok((
+            status_result,
+            tasks_result,
+            metadata,
+            policy_status,
+            status_class,
+            passing,
+            failing,
+            unknown,
+        )) => {
+            let content = match (status_result, tasks_result) {
+                (Ok(specs), Ok(tasks_spec)) => dashboard_content(
+                    specs,
+                    tasks_spec,
+                    config,
+                    policy_status,
+                    status_class,
+                    passing,
+                    failing,
+                    unknown,
+                ),
+                _ => {
+                    html! {
+                        .card {
+                            h2 { "Error" }
+                            p { "Failed to load platform specifications. Ensure specs are valid and available." }
+                        }
+                    }
+                }
+            };
+            Html(layout("Dashboard", "dashboard", &metadata, content).into_string())
+        }
+        Err(e) => Html(layout(
+            "Dashboard",
+            "dashboard",
+            &None,
             html! {
                 .card {
-                    h2 { "Error" }
-                    p { "Failed to load platform specifications. Ensure specs are valid and available." }
+                    h2 { "Internal Server Error" }
+                    p { (format!("Failed to spawn blocking task: {}", e)) }
                 }
-            }
-        }
-    };
-
-    Html(layout("Dashboard", "dashboard", &metadata, content).into_string())
+            },
+        )
+        .into_string()),
+    }
 }
 
 /// Graph visualization page.
@@ -119,47 +157,74 @@ pub async fn graph_view<S>(State(state): State<S>) -> Html<String>
 where
     S: super::PlatformState,
 {
-    let root = state.workspace_root();
-    let metadata = load_service_metadata(&root.join("specs/service_metadata.yaml")).ok();
+    let root = state.workspace_root().to_path_buf();
 
-    let content = match load_all_specs(root) {
-        Ok(specs) => match spec_runtime::build_graph(&specs.ledger, &specs.devex, &specs.docs) {
-            Ok(graph) => {
-                let mermaid_diagram = graph.to_mermaid();
+    let result = tokio::task::spawn_blocking(move || {
+        let metadata = load_service_metadata(&root.join("specs/service_metadata.yaml")).ok();
 
-                html! {
-                    .card {
-                        h2 { "Governance Graph" }
-                        p style="margin-bottom: 1rem;" {
-                            "This graph shows relationships between stories, requirements, acceptance criteria, "
-                            "documentation, DevEx commands, and flows."
-                        }
-                        .mermaid data-uiid="graph.diagram" {
-                            (mermaid_diagram)
+        let content_data = match load_all_specs(&root) {
+            Ok(specs) => {
+                match spec_runtime::build_graph(&specs.ledger, &specs.devex, &specs.docs) {
+                    Ok(graph) => Ok(Ok(graph.to_mermaid())),
+                    Err(e) => Ok(Err(e)),
+                }
+            }
+            Err(e) => Err(e),
+        };
+
+        (metadata, content_data)
+    })
+    .await;
+
+    match result {
+        Ok((metadata, content_data)) => {
+            let content = match content_data {
+                Ok(Ok(mermaid_diagram)) => {
+                    html! {
+                        .card {
+                            h2 { "Governance Graph" }
+                            p style="margin-bottom: 1rem;" {
+                                "This graph shows relationships between stories, requirements, acceptance criteria, "
+                                "documentation, DevEx commands, and flows."
+                            }
+                            .mermaid data-uiid="graph.diagram" {
+                                (mermaid_diagram)
+                            }
                         }
                     }
                 }
-            }
-            Err(e) => {
-                html! {
-                    .card {
-                        h2 { "Error Building Graph" }
-                        pre { (format!("{:?}", e)) }
+                Ok(Err(e)) => {
+                    html! {
+                        .card {
+                            h2 { "Error Building Graph" }
+                            pre { (format!("{:?}", e)) }
+                        }
                     }
                 }
-            }
-        },
-        Err(e) => {
+                Err(e) => {
+                    html! {
+                        .card {
+                            h2 { "Error Loading Specs" }
+                            pre { (format!("{:?}", e)) }
+                        }
+                    }
+                }
+            };
+            Html(layout("Graph", "graph", &metadata, content).into_string())
+        }
+        Err(e) => Html(layout(
+            "Graph",
+            "graph",
+            &None,
             html! {
                 .card {
-                    h2 { "Error Loading Specs" }
-                    pre { (format!("{:?}", e)) }
+                    h2 { "Internal Server Error" }
+                    p { (format!("Failed to spawn blocking task: {}", e)) }
                 }
-            }
-        }
-    };
-
-    Html(layout("Graph", "graph", &metadata, content).into_string())
+            },
+        )
+        .into_string()),
+    }
 }
 
 /// Flows and tasks page.
@@ -168,74 +233,93 @@ pub async fn flows_view<S>(State(state): State<S>) -> Html<String>
 where
     S: super::PlatformState,
 {
-    let root = state.workspace_root();
-    let metadata = load_service_metadata(&root.join("specs/service_metadata.yaml")).ok();
+    let root = state.workspace_root().to_path_buf();
 
-    let flows_result = spec_runtime::load_devex_flows(&root.join("specs/devex_flows.yaml"));
-    let tasks_result = spec_runtime::load_tasks(&root.join("specs/tasks.yaml"));
+    let result = tokio::task::spawn_blocking(move || {
+        let metadata = load_service_metadata(&root.join("specs/service_metadata.yaml")).ok();
+        let flows_result = spec_runtime::load_devex_flows(&root.join("specs/devex_flows.yaml"));
+        let tasks_result = spec_runtime::load_tasks(&root.join("specs/tasks.yaml"));
+        (metadata, flows_result, tasks_result)
+    })
+    .await;
 
-    let content = match (flows_result, tasks_result) {
-        (Ok(devex), Ok(tasks_spec)) => {
-            html! {
-                .card data-uiid="flows.devex" {
-                    h2 { "DevEx Flows" }
-                    p style="margin-bottom: 1rem;" {
-                        "Developer experience flows define common workflows for working with this repository."
-                    }
-                    @for flow in devex.flows.values() {
-                        .metric style="margin-bottom: 1rem;" {
-                            h3 style="color: #667eea; font-size: 1.1rem;" { (flow.name) }
-                            p style="color: #666; margin: 0.5rem 0;" { (flow.description) }
-                            details {
-                                summary style="cursor: pointer; color: #667eea;" { "Steps (" (flow.steps.len()) ")" }
-                                ol style="margin: 0.5rem 0 0 2rem;" {
-                                    @for step in &flow.steps {
-                                        li { code { "cargo xtask " (step) } }
+    match result {
+        Ok((metadata, flows_result, tasks_result)) => {
+            let content = match (flows_result, tasks_result) {
+                (Ok(devex), Ok(tasks_spec)) => {
+                    html! {
+                        .card data-uiid="flows.devex" {
+                            h2 { "DevEx Flows" }
+                            p style="margin-bottom: 1rem;" {
+                                "Developer experience flows define common workflows for working with this repository."
+                            }
+                            @for flow in devex.flows.values() {
+                                .metric style="margin-bottom: 1rem;" {
+                                    h3 style="color: #667eea; font-size: 1.1rem;" { (flow.name) }
+                                    p style="color: #666; margin: 0.5rem 0;" { (flow.description) }
+                                    details {
+                                        summary style="cursor: pointer; color: #667eea;" { "Steps (" (flow.steps.len()) ")" }
+                                        ol style="margin: 0.5rem 0 0 2rem;" {
+                                            @for step in &flow.steps {
+                                                li { code { "cargo xtask " (step) } }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        .card data-uiid="flows.tasks" {
+                            h2 { "Tasks" }
+                            p style="margin-bottom: 1rem;" {
+                                "Tasks represent concrete work items with recommended flows and suggested sequences."
+                            }
+                            @for task in &tasks_spec.tasks {
+                                .metric style="margin-bottom: 1rem;" {
+                                    h3 style="color: #667eea; font-size: 1.1rem;" { (task.title) }
+                                    p style="color: #666; margin: 0.5rem 0;" { (task.summary) }
+                                    p style="font-size: 0.875rem; margin: 0.5rem 0;" {
+                                        strong { "Status: " } (task.status)
+                                        " | "
+                                        strong { "Requirement: " } (task.requirement)
+                                    }
+                                    details {
+                                        summary style="cursor: pointer; color: #667eea;" {
+                                            "View suggested sequence"
+                                        }
+                                        p style="margin: 0.5rem 0; font-size: 0.875rem;" {
+                                            "Run: " code { "cargo xtask suggest-next --task " (task.id) }
+                                        }
                                     }
                                 }
                             }
                         }
                     }
                 }
-
-                .card data-uiid="flows.tasks" {
-                    h2 { "Tasks" }
-                    p style="margin-bottom: 1rem;" {
-                        "Tasks represent concrete work items with recommended flows and suggested sequences."
-                    }
-                    @for task in &tasks_spec.tasks {
-                        .metric style="margin-bottom: 1rem;" {
-                            h3 style="color: #667eea; font-size: 1.1rem;" { (task.title) }
-                            p style="color: #666; margin: 0.5rem 0;" { (task.summary) }
-                            p style="font-size: 0.875rem; margin: 0.5rem 0;" {
-                                strong { "Status: " } (task.status)
-                                " | "
-                                strong { "Requirement: " } (task.requirement)
-                            }
-                            details {
-                                summary style="cursor: pointer; color: #667eea;" {
-                                    "View suggested sequence"
-                                }
-                                p style="margin: 0.5rem 0; font-size: 0.875rem;" {
-                                    "Run: " code { "cargo xtask suggest-next --task " (task.id) }
-                                }
-                            }
+                _ => {
+                    html! {
+                        .card {
+                            h2 { "Error" }
+                            p { "Failed to load flows or tasks." }
                         }
                     }
                 }
-            }
+            };
+            Html(layout("Flows & Tasks", "flows", &metadata, content).into_string())
         }
-        _ => {
+        Err(e) => Html(layout(
+            "Flows & Tasks",
+            "flows",
+            &None,
             html! {
                 .card {
-                    h2 { "Error" }
-                    p { "Failed to load flows or tasks." }
+                    h2 { "Internal Server Error" }
+                    p { (format!("Failed to spawn blocking task: {}", e)) }
                 }
-            }
-        }
-    };
-
-    Html(layout("Flows & Tasks", "flows", &metadata, content).into_string())
+            },
+        )
+        .into_string()),
+    }
 }
 
 /// Coverage details page.
