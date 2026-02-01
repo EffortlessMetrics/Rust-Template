@@ -224,8 +224,14 @@ impl CorsConfig {
                 let schemes_match = (origin.starts_with("https://")
                     && allowed.starts_with("https://"))
                     || (origin.starts_with("http://") && allowed.starts_with("http://"));
-                if schemes_match {
-                    return origin.ends_with(wildcard_domain);
+                if schemes_match && origin.ends_with(wildcard_domain) {
+                    // Check that the suffix is preceded by a dot to prevent partial matches
+                    // e.g. "evilexample.com" matching "*.example.com"
+                    if origin.len() > wildcard_domain.len() {
+                        let char_before_suffix = origin.as_bytes()[origin.len() - wildcard_domain.len() - 1];
+                        return char_before_suffix == b'.';
+                    }
+                    return false;
                 }
             }
             false
@@ -397,6 +403,10 @@ mod tests {
         assert!(config.is_origin_allowed("https://api.example.com"));
         assert!(config.is_origin_allowed("https://app.example.com"));
         assert!(!config.is_origin_allowed("https://malicious.com"));
+        // Test partial suffix match vulnerability (should be false)
+        assert!(!config.is_origin_allowed("https://evilexample.com"));
+        // Test exact domain match (usually excluded by wildcard)
+        assert!(!config.is_origin_allowed("https://example.com"));
     }
 
     #[test]
