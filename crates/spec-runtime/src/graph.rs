@@ -199,6 +199,19 @@ pub fn check_invariants(graph: &Graph, devex: &DevExFlows, ledger: &SpecLedger) 
     let mut violations = Vec::new();
     let mut invariants = Vec::new();
 
+    // Optimize lookups by pre-indexing edges
+    // - req_sources_with_ac: Set of source IDs that have a "contains" edge (used for REQ check)
+    // - reachable_targets: Set of target IDs that are reachable (used for CMD check)
+    let mut req_sources_with_ac = std::collections::HashSet::new();
+    let mut reachable_targets = std::collections::HashSet::new();
+
+    for edge in &graph.edges {
+        if edge.edge_type == "contains" {
+            req_sources_with_ac.insert(edge.source.as_str());
+        }
+        reachable_targets.insert(edge.target.as_str());
+    }
+
     // 1. REQ must_have_ac -> at least one AC
     let mut req_ac_checked = 0;
     let mut req_ac_violations = Vec::new();
@@ -209,7 +222,7 @@ pub fn check_invariants(graph: &Graph, devex: &DevExFlows, ledger: &SpecLedger) 
         }
         req_ac_checked += 1;
 
-        let has_ac = graph.edges.iter().any(|e| e.source == req.id && e.edge_type == "contains");
+        let has_ac = req_sources_with_ac.contains(req.id.as_str());
 
         if !has_ac {
             req_ac_violations.push(InvariantViolation {
@@ -263,7 +276,7 @@ pub fn check_invariants(graph: &Graph, devex: &DevExFlows, ledger: &SpecLedger) 
         {
             cmd_reachable_checked += 1;
             let cmd_id = format!("cmd:{}", cmd_name);
-            let is_reachable = graph.edges.iter().any(|e| e.target == cmd_id);
+            let is_reachable = reachable_targets.contains(cmd_id.as_str());
 
             if !is_reachable {
                 cmd_reachable_violations.push(InvariantViolation {
