@@ -225,7 +225,14 @@ impl CorsConfig {
                     && allowed.starts_with("https://"))
                     || (origin.starts_with("http://") && allowed.starts_with("http://"));
                 if schemes_match {
-                    return origin.ends_with(wildcard_domain);
+                    // Check if origin ends with the wildcard domain
+                    if !origin.ends_with(wildcard_domain) {
+                        return false;
+                    }
+                    // Ensure that the character before the match is a dot
+                    // to prevent partial domain matches (e.g., evilexample.com matching *.example.com)
+                    let prefix_len = origin.len() - wildcard_domain.len();
+                    return prefix_len > 0 && origin.chars().nth(prefix_len - 1) == Some('.');
                 }
             }
             false
@@ -397,6 +404,16 @@ mod tests {
         assert!(config.is_origin_allowed("https://api.example.com"));
         assert!(config.is_origin_allowed("https://app.example.com"));
         assert!(!config.is_origin_allowed("https://malicious.com"));
+    }
+
+    #[test]
+    fn test_cors_config_partial_domain_match() {
+        let config = CorsConfig {
+            allowed_origins: vec!["https://*.example.com".to_string()],
+            ..Default::default()
+        };
+        // This should fail until the vulnerability is fixed
+        assert!(!config.is_origin_allowed("https://evilexample.com"));
     }
 
     #[test]
