@@ -119,8 +119,17 @@ impl CorsConfig {
                 let schemes_match = (origin.starts_with("https://")
                     && allowed.starts_with("https://"))
                     || (origin.starts_with("http://") && allowed.starts_with("http://"));
-                if schemes_match {
-                    return origin.ends_with(wildcard_domain);
+                if schemes_match && origin.ends_with(wildcard_domain) {
+                    // Prevent partial domain matches (e.g., "evilexample.com") by ensuring
+                    // the suffix is preceded by a dot or matches exactly.
+                    if origin.len() == wildcard_domain.len() {
+                        return true;
+                    }
+                    if origin.len() > wildcard_domain.len()
+                        && origin.as_bytes()[origin.len() - wildcard_domain.len() - 1] == b'.'
+                    {
+                        return true;
+                    }
                 }
             }
             false
