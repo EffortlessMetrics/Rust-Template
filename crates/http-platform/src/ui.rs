@@ -593,8 +593,8 @@ fn dashboard_content(
 /// Coverage page content markup.
 fn coverage_content() -> Markup {
     html! {
-        style { (coverage_styles()) }
-        script { (coverage_script()) }
+        style { (maud::PreEscaped(coverage_styles())) }
+        script { (maud::PreEscaped(coverage_script())) }
 
         .card data-uiid="coverage.summary" {
             h2 { "AC Coverage Summary" }
@@ -621,12 +621,12 @@ fn coverage_content() -> Markup {
         .card {
             h2 { "Acceptance Criteria Coverage" }
             .filter-controls data-uiid="coverage.filters" {
-                button #filter-all.filter-btn onclick="filterData('all')" { "All" }
-                button #filter-passing.filter-btn onclick="filterData('passing')" { "Passing" }
-                button #filter-failing.filter-btn onclick="filterData('failing')" { "Failing" }
-                button #filter-unknown.filter-btn onclick="filterData('unknown')" { "Unknown" }
+                button #filter-all.filter-btn type="button" aria-pressed="true" onclick="filterData('all')" { "All" }
+                button #filter-passing.filter-btn type="button" aria-pressed="false" onclick="filterData('passing')" { "Passing" }
+                button #filter-failing.filter-btn type="button" aria-pressed="false" onclick="filterData('failing')" { "Failing" }
+                button #filter-unknown.filter-btn type="button" aria-pressed="false" onclick="filterData('unknown')" { "Unknown" }
                 input #search-box.search-box type="text" placeholder="Search by AC ID or title..."
-                    oninput="searchData()";
+                    aria-label="Search acceptance criteria" oninput="searchData()";
             }
 
             #table-container data-uiid="coverage.table" {
@@ -766,8 +766,11 @@ fn coverage_script() -> &'static str {
         // Update active button
         document.querySelectorAll('.filter-btn').forEach(btn => {
             btn.classList.remove('active');
+            btn.setAttribute('aria-pressed', 'false');
         });
-        document.getElementById('filter-' + status).classList.add('active');
+        const activeBtn = document.getElementById('filter-' + status);
+        activeBtn.classList.add('active');
+        activeBtn.setAttribute('aria-pressed', 'true');
 
         // Apply filter
         applyFilters();
