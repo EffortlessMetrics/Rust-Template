@@ -225,7 +225,12 @@ impl CorsConfig {
                     && allowed.starts_with("https://"))
                     || (origin.starts_with("http://") && allowed.starts_with("http://"));
                 if schemes_match {
-                    return origin.ends_with(wildcard_domain);
+                    if origin.ends_with(wildcard_domain) {
+                        let remaining_len = origin.len() - wildcard_domain.len();
+                        // Check if the character preceding the match is a dot
+                        // This prevents "evilexample.com" from matching "*.example.com"
+                        return remaining_len > 0 && origin.as_bytes()[remaining_len - 1] == b'.';
+                    }
                 }
             }
             false
@@ -397,6 +402,16 @@ mod tests {
         assert!(config.is_origin_allowed("https://api.example.com"));
         assert!(config.is_origin_allowed("https://app.example.com"));
         assert!(!config.is_origin_allowed("https://malicious.com"));
+    }
+
+    #[test]
+    fn test_cors_config_subdomain_wildcard_partial_match() {
+        let config = CorsConfig {
+            allowed_origins: vec!["https://*.example.com".to_string()],
+            ..Default::default()
+        };
+        // This should fail if partial suffix matching is allowed (e.g. evilexample.com)
+        assert!(!config.is_origin_allowed("https://evilexample.com"));
     }
 
     #[test]
