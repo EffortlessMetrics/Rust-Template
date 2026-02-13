@@ -73,6 +73,11 @@ owner: "test"
 async fn dashboard_does_not_block_executor() {
     let (_temp, spec_root) = setup_full_workspace();
 
+    // Initialize app once outside the loop to avoid measuring initialization overhead
+    let repo =
+        Arc::new(adapters_spec_fs::FsGovernanceRepository::new(spec_root.join("specs")));
+    let app = app_with_workspace_root(repo, spec_root.clone()).expect("valid config");
+
     // Timer task
     let timer_task = tokio::spawn(async {
         let start = std::time::Instant::now();
@@ -84,15 +89,11 @@ async fn dashboard_does_not_block_executor() {
     });
 
     // Spawn concurrent dashboard requests
+    // Increase to 500 to make blocking significant enough to measure
     let mut handles = Vec::new();
-    for _ in 0..10 {
-        // Increase count to ensure enough work
-        let spec_root = spec_root.clone();
+    for _ in 0..500 {
+        let app = app.clone();
         handles.push(tokio::spawn(async move {
-            let repo =
-                Arc::new(adapters_spec_fs::FsGovernanceRepository::new(spec_root.join("specs")));
-            let app = app_with_workspace_root(repo, spec_root).expect("valid config");
-
             let request = Request::builder()
                 .method("GET")
                 .uri("/") // Dashboard
@@ -104,7 +105,7 @@ async fn dashboard_does_not_block_executor() {
     }
 
     // Wait for requests
-    tokio::time::timeout(Duration::from_secs(10), async {
+    tokio::time::timeout(Duration::from_secs(20), async {
         for handle in handles {
             let _ = handle.await;
         }
@@ -120,6 +121,8 @@ async fn dashboard_does_not_block_executor() {
 
     // If blocking I/O happens on main thread, timer will be delayed significantly.
     // With 1 thread, every FS call blocks the thread.
-
+    // 500 concurrent requests * file reads. If blocking, timer should be > 200ms (100ms base + >100ms blocking).
     println!("Timer elapsed: {:?}", timer_elapsed);
+
+    assert!(timer_elapsed < Duration::from_millis(250), "Executor blocked! Timer took {:?} instead of ~100ms", timer_elapsed);
 }
