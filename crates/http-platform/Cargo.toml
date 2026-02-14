@@ -12,6 +12,8 @@ platform-contract = {path = "../platform-contract"}
 spec-runtime = {path = "../spec-runtime"}
 # Utilities
 anyhow.workspace = true
+# Async runtime
+tokio.workspace = true
 # HTTP framework
 axum.workspace = true
 # Date/time utilities
