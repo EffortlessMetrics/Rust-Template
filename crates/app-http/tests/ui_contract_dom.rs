@@ -286,3 +286,38 @@ async fn test_active_nav_link_has_aria_current() {
         "Dashboard link on dashboard page should have aria-current='page'"
     );
 }
+
+/// @AC-TPL-PLATFORM-UI-ACCESSIBILITY: Coverage filter buttons have aria-pressed
+#[tokio::test]
+async fn test_coverage_filter_buttons_have_aria_pressed() {
+    let workspace_root = test_workspace_root();
+    let repo = Arc::new(FsGovernanceRepository::new(workspace_root.clone()));
+    let app = app_with_workspace_root(repo, workspace_root.clone()).expect("valid config");
+
+    // Fetch coverage HTML
+    let html = fetch_html(app, "/ui/coverage").await;
+    let document = Html::parse_document(&html);
+
+    // Find the filter buttons
+    let selector = Selector::parse(".filter-btn").unwrap();
+    let buttons: Vec<_> = document.select(&selector).collect();
+
+    assert!(!buttons.is_empty(), "Should have filter buttons");
+
+    for button in buttons {
+        let aria_pressed = button.value().attr("aria-pressed");
+        assert!(
+            aria_pressed.is_some(),
+            "Filter button '{}' should have aria-pressed attribute",
+            button.text().collect::<String>()
+        );
+    }
+
+    // Verify "All" is pressed by default
+    let all_btn = document.select(&Selector::parse("#filter-all").unwrap()).next().unwrap();
+    assert_eq!(all_btn.value().attr("aria-pressed"), Some("true"), "All button should be pressed by default");
+
+    // Verify "Passing" is not pressed
+    let pass_btn = document.select(&Selector::parse("#filter-passing").unwrap()).next().unwrap();
+    assert_eq!(pass_btn.value().attr("aria-pressed"), Some("false"), "Passing button should not be pressed by default");
+}
