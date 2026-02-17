@@ -21,11 +21,50 @@ pub async fn dashboard<S>(State(state): State<S>) -> Html<String>
 where
     S: super::PlatformState,
 {
-    let root = state.workspace_root();
-    let status_result = load_all_specs(root);
-    let tasks_result = spec_runtime::load_tasks(&root.join("specs/tasks.yaml"));
-    let metadata = load_service_metadata(&root.join("specs/service_metadata.yaml")).ok();
+    let root = state.workspace_root().to_path_buf();
     let config = super::config_summary(&state);
+
+    let (status_result, tasks_result, metadata, policy_status, feature_status_content) =
+        tokio::task::spawn_blocking(move || {
+            let status_result = load_all_specs(&root);
+            let tasks_result = spec_runtime::load_tasks(&root.join("specs/tasks.yaml"));
+            let metadata = load_service_metadata(&root.join("specs/service_metadata.yaml")).ok();
+
+            // Read policy status
+            let policy_path = root.join("target/policy_status.json");
+            let policy_status = std::fs::read_to_string(policy_path)
+                .ok()
+                .and_then(|content| serde_json::from_str::<serde_json::Value>(&content).ok())
+                .and_then(|v| v.get("summary").and_then(|s| s.as_str()).map(String::from))
+                .unwrap_or_else(|| "unknown".to_string());
+
+            // Read feature status
+            let feature_status_path = root.join("docs/feature_status.md");
+            let feature_status_content = if feature_status_path.exists() {
+                std::fs::read_to_string(feature_status_path).ok()
+            } else {
+                None
+            };
+
+            (
+                status_result,
+                tasks_result,
+                metadata,
+                policy_status,
+                feature_status_content,
+            )
+        })
+        .await
+        .unwrap_or_else(|e| {
+            tracing::error!("Blocking task failed: {}", e);
+            (
+                Err(spec_runtime::SpecError::Internal(format!("Task failed: {}", e))),
+                Err(spec_runtime::SpecError::Internal(format!("Task failed: {}", e))),
+                None,
+                "unknown".to_string(),
+                None,
+            )
+        });
 
     let content = match (status_result, tasks_result) {
         (Ok(specs), Ok(tasks_spec)) => {
@@ -38,30 +77,19 @@ where
                 .map(|r| r.acceptance_criteria.len())
                 .sum();
 
-            // Read policy status
-            let policy_path = root.join("target/policy_status.json");
-            let policy_status = std::fs::read_to_string(policy_path)
-                .ok()
-                .and_then(|content| serde_json::from_str::<serde_json::Value>(&content).ok())
-                .and_then(|v| v.get("summary").and_then(|s| s.as_str()).map(String::from))
-                .unwrap_or_else(|| "unknown".to_string());
-
             let status_class = match policy_status.as_str() {
                 "pass" => "status-pass",
                 "fail" => "status-fail",
                 _ => "status-unknown",
             };
 
-            // Read AC coverage from feature_status.md
-            let feature_status_path = root.join("docs/feature_status.md");
+            // Parse AC coverage from feature_status content
             let mut passing = 0;
             let mut failing = 0;
             let mut unknown = 0;
             let mut coverage_rows = 0;
 
-            if feature_status_path.exists()
-                && let Ok(content) = std::fs::read_to_string(feature_status_path)
-            {
+            if let Some(content) = feature_status_content {
                 for line in content.lines() {
                     if !line.starts_with("| AC-") {
                         continue;
@@ -119,44 +147,51 @@ pub async fn graph_view<S>(State(state): State<S>) -> Html<String>
 where
     S: super::PlatformState,
 {
-    let root = state.workspace_root();
-    let metadata = load_service_metadata(&root.join("specs/service_metadata.yaml")).ok();
+    let root = state.workspace_root().to_path_buf();
 
-    let content = match load_all_specs(root) {
-        Ok(specs) => match spec_runtime::build_graph(&specs.ledger, &specs.devex, &specs.docs) {
-            Ok(graph) => {
-                let mermaid_diagram = graph.to_mermaid();
+    let (metadata, graph_content) = tokio::task::spawn_blocking(move || {
+        let metadata = load_service_metadata(&root.join("specs/service_metadata.yaml")).ok();
 
-                html! {
-                    .card {
-                        h2 { "Governance Graph" }
-                        p style="margin-bottom: 1rem;" {
-                            "This graph shows relationships between stories, requirements, acceptance criteria, "
-                            "documentation, DevEx commands, and flows."
-                        }
-                        .mermaid data-uiid="graph.diagram" {
-                            (mermaid_diagram)
-                        }
-                    }
+        let graph_content = match load_all_specs(&root) {
+            Ok(specs) => match spec_runtime::build_graph(&specs.ledger, &specs.devex, &specs.docs) {
+                Ok(graph) => Ok(graph.to_mermaid()),
+                Err(e) => Err(("Error Building Graph".to_string(), format!("{:?}", e))),
+            },
+            Err(e) => Err(("Error Loading Specs".to_string(), format!("{:?}", e))),
+        };
+        (metadata, graph_content)
+    })
+    .await
+    .unwrap_or_else(|e| {
+        tracing::error!("Blocking task failed: {}", e);
+        (
+            None,
+            Err((
+                "Internal Error".to_string(),
+                format!("Task failed: {}", e),
+            )),
+        )
+    });
+
+    let content = match graph_content {
+        Ok(mermaid_diagram) => html! {
+            .card {
+                h2 { "Governance Graph" }
+                p style="margin-bottom: 1rem;" {
+                    "This graph shows relationships between stories, requirements, acceptance criteria, "
+                    "documentation, DevEx commands, and flows."
                 }
-            }
-            Err(e) => {
-                html! {
-                    .card {
-                        h2 { "Error Building Graph" }
-                        pre { (format!("{:?}", e)) }
-                    }
+                .mermaid data-uiid="graph.diagram" {
+                    (mermaid_diagram)
                 }
             }
         },
-        Err(e) => {
-            html! {
-                .card {
-                    h2 { "Error Loading Specs" }
-                    pre { (format!("{:?}", e)) }
-                }
+        Err((title, error)) => html! {
+            .card {
+                h2 { (title) }
+                pre { (error) }
             }
-        }
+        },
     };
 
     Html(layout("Graph", "graph", &metadata, content).into_string())
@@ -168,11 +203,23 @@ pub async fn flows_view<S>(State(state): State<S>) -> Html<String>
 where
     S: super::PlatformState,
 {
-    let root = state.workspace_root();
-    let metadata = load_service_metadata(&root.join("specs/service_metadata.yaml")).ok();
+    let root = state.workspace_root().to_path_buf();
 
-    let flows_result = spec_runtime::load_devex_flows(&root.join("specs/devex_flows.yaml"));
-    let tasks_result = spec_runtime::load_tasks(&root.join("specs/tasks.yaml"));
+    let (metadata, flows_result, tasks_result) = tokio::task::spawn_blocking(move || {
+        let metadata = load_service_metadata(&root.join("specs/service_metadata.yaml")).ok();
+        let flows_result = spec_runtime::load_devex_flows(&root.join("specs/devex_flows.yaml"));
+        let tasks_result = spec_runtime::load_tasks(&root.join("specs/tasks.yaml"));
+        (metadata, flows_result, tasks_result)
+    })
+    .await
+    .unwrap_or_else(|e| {
+        tracing::error!("Blocking task failed: {}", e);
+        (
+            None,
+            Err(spec_runtime::SpecError::Internal(format!("Task failed: {}", e))),
+            Err(spec_runtime::SpecError::Internal(format!("Task failed: {}", e))),
+        )
+    });
 
     let content = match (flows_result, tasks_result) {
         (Ok(devex), Ok(tasks_spec)) => {
@@ -244,8 +291,17 @@ pub async fn coverage_view<S>(State(state): State<S>) -> Html<String>
 where
     S: super::PlatformState,
 {
-    let metadata =
-        load_service_metadata(&state.workspace_root().join("specs/service_metadata.yaml")).ok();
+    let root = state.workspace_root().to_path_buf();
+
+    let metadata = tokio::task::spawn_blocking(move || {
+        load_service_metadata(&root.join("specs/service_metadata.yaml")).ok()
+    })
+    .await
+    .unwrap_or_else(|e| {
+        tracing::error!("Blocking task failed: {}", e);
+        None
+    });
+
     let content = coverage_content();
 
     Html(layout("AC Coverage", "coverage", &metadata, content).into_string())
