@@ -230,16 +230,14 @@ pub fn run() -> Result<()> {
         }
     }
 
-    // Check markdown links (advisory - doesn't block docs-check)
-    // TODO: Promote to hard gate once existing broken links are fixed
+    // Check markdown links (hard gate - broken internal links fail docs-check)
     print!("Markdown links... ");
     match validate_markdown_links() {
         Ok(_) => println!("{}", "✓ Valid".green()),
         Err(e) => {
-            println!("{}", "⚠ Broken links (advisory)".yellow());
+            println!("{}", "✗ Broken links found".red());
             eprintln!("  {}", e);
-            // Advisory only - don't increment issues count
-            // issues += 1;
+            issues += 1;
         }
     }
 
