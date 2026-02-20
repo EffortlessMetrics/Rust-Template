@@ -28,6 +28,18 @@ version_format:
 
 # Files that contain version references
 files:
+  # Workspace package version
+  - path: "Cargo.toml"
+    description: "Workspace package version"
+    patterns:
+      - marker: 'version = "'
+        type: yaml_value
+        format: "quoted"
+        line_pattern: '^version = "\d+\.\d+\.\d+"$'
+        example: 'version = "3.3.15"'
+    required: true
+    priority: 1
+
   # Core specification files
   - path: "specs/spec_ledger.yaml"
     description: "Primary spec ledger with canonical template version"
