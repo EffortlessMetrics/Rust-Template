@@ -2,16 +2,16 @@
 # Adapters for loading task definitions
 adapters-spec-fs = {path = "../adapters-spec-fs"}
 # Business core for task operations
-business-core = {path = "../business-core"}
+business-core.workspace = true
 # Governance model
-gov-model = {path = "../gov-model"}
+gov-model.workspace = true
 # Core HTTP types
 http-core = {path = "../http-core"}
 http-errors = {features = ["axum"], path = "../http-errors"}
 # Platform contract types
 platform-contract = {path = "../platform-contract"}
 # Spec runtime for loading specs and hints
-spec-runtime = {path = "../spec-runtime"}
+spec-runtime.workspace = true
 # HTTP framework
 axum.workspace = true
 http.workspace = true
@@ -23,7 +23,7 @@ tokio.workspace = true
 tracing.workspace = true
 
 [dev-dependencies]
-testing = {path = "../testing"}
+testing.workspace = true
 tokio.workspace = true
 tower.workspace = true
 

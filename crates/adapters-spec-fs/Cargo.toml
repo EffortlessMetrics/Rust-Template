@@ -1,9 +1,9 @@
 [dependencies]
-business-core = {path = "../business-core"}
+business-core.workspace = true
 fs2 = "0.4.3"
 serde = {workspace = true}
 serde_yaml = {workspace = true}
-spec-runtime = {path = "../spec-runtime"}
+spec-runtime.workspace = true
 thiserror = {workspace = true}
 tracing = {workspace = true}
 
@@ -15,8 +15,11 @@ workspace = true
 
 [package]
 name = "adapters-spec-fs"
-version = "0.1.0"
+version.workspace = true
 edition.workspace = true
 license.workspace = true
 publish.workspace = true
+repository.workspace = true
+homepage.workspace = true
+authors.workspace = true
 rust-version.workspace = true

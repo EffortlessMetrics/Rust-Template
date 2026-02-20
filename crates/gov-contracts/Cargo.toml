@@ -1,15 +1,25 @@
 [dependencies]
 anyhow = {workspace = true}
-gov-model = {path = "../gov-model"}
+gov-model.workspace = true
 serde = {workspace = true}
 serde_json = {workspace = true}
 serde_yaml = {workspace = true}
 
+[lib]
+name = "gov_contracts"
+
 [package]
+name = "rust-as-spec-gov-contracts"
 description = "Governance contracts and schemas for Rust-as-Spec platform"
-name = "gov-contracts"
-version = "0.1.0"
+version.workspace = true
 edition.workspace = true
 license.workspace = true
-publish.workspace = true
+publish = true
+repository.workspace = true
+homepage.workspace = true
+authors.workspace = true
 rust-version.workspace = true
+documentation = "https://docs.rs/rust-as-spec-gov-contracts"
+categories = ["development-tools"]
+keywords = ["contracts", "governance", "schemas", "spec"]
+include = ["src/**/*", "README.md", "LICENSE-APACHE", "LICENSE-MIT", "Cargo.toml"]

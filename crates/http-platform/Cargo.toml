@@ -9,7 +9,7 @@ maud = "0.27.0"
 # Platform contract types
 platform-contract = {path = "../platform-contract"}
 # Spec runtime for loading specs
-spec-runtime = {path = "../spec-runtime"}
+spec-runtime.workspace = true
 # Utilities
 anyhow.workspace = true
 # HTTP framework
@@ -23,7 +23,7 @@ serde_yaml.workspace = true
 tracing.workspace = true
 
 [dev-dependencies]
-testing = {path = "../testing"}
+testing.workspace = true
 tokio.workspace = true
 tower.workspace = true
 

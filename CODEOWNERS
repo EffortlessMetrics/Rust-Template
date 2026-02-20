@@ -79,6 +79,15 @@ release_evidence/**                       @EffortlessMetrics/kernel-maintainers
 .claude/agents/**                         @EffortlessMetrics/kernel-maintainers
 
 # =============================================================================
+# COMMUNITY GOVERNANCE
+# =============================================================================
+# Code of Conduct and community participation guidelines.
+
+CODE_OF_CONDUCT.md                        @EffortlessMetrics/kernel-maintainers
+.github/ISSUE_TEMPLATE/**                 @EffortlessMetrics/kernel-maintainers
+CONTRIBUTING.md                           @EffortlessMetrics/kernel-maintainers
+
+# =============================================================================
 # NOTE FOR FORKS
 # =============================================================================
 # When forking this template:

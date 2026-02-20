@@ -33,4 +33,4 @@ assignees: ''
 
 ---
 
-**See [KERNEL_MAINTENANCE.md](../../KERNEL_MAINTENANCE.md) for how kernel improvements are evaluated.**
+**See [maintain-kernel.md](../../docs/how-to/maintain-kernel.md) for how kernel improvements are evaluated.**

@@ -1,6 +1,6 @@
 [dependencies]
 # Business core for task operations
-business-core = {path = "../business-core"}
+business-core.workspace = true
 # Core HTTP types
 http-core = {path = "../http-core"}
 http-errors = {features = ["axum"], path = "../http-errors"}
@@ -17,7 +17,7 @@ tokio.workspace = true
 tracing.workspace = true
 
 [dev-dependencies]
-testing = {path = "../testing"}
+testing.workspace = true
 tokio.workspace = true
 tower.workspace = true
 

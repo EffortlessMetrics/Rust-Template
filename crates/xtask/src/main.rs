@@ -729,6 +729,22 @@ enum Commands {
         version: String,
     },
 
+    /// Generate kernel pack manifest and tarball
+    #[command(next_help_heading = "🚢 Releases")]
+    KernelPack {
+        /// Output directory for the manifest (default: target/kernel-pack)
+        #[arg(long, default_value = "target/kernel-pack")]
+        output_dir: String,
+    },
+
+    /// Verify repo matches kernel pack manifest
+    #[command(next_help_heading = "🚢 Releases")]
+    KernelCheck {
+        /// Path to manifest file (default: target/kernel-pack/kernel-pack.manifest.json)
+        #[arg(long)]
+        manifest: Option<String>,
+    },
+
     /// Verify release readiness (selftest + audit + docs-check)
     #[command(next_help_heading = "🚢 Releases")]
     ReleaseVerify,
@@ -736,6 +752,17 @@ enum Commands {
     /// Generate local SBOM (software bill of materials)
     #[command(next_help_heading = "🚢 Releases")]
     SbomLocal,
+
+    /// Check crate publish readiness for crates.io
+    #[command(next_help_heading = "🚢 Releases")]
+    PublishCheck {
+        /// Check a specific crate (default: all publishable crates)
+        #[arg(long = "crate")]
+        crate_name: Option<String>,
+        /// Also run cargo publish --dry-run
+        #[arg(long)]
+        dry_run: bool,
+    },
 
     /// Generate PR cover sheet from receipts
     #[command(next_help_heading = "🚢 Releases")]
@@ -1338,8 +1365,17 @@ fn main() -> Result<()> {
             commands::release_prepare::run(&version, dry_run)
         }
         Commands::ReleaseBundle { version } => commands::release_bundle::run(&version),
+        Commands::KernelPack { output_dir } => commands::kernel_pack::run_pack(&output_dir),
+        Commands::KernelCheck { manifest } => commands::kernel_pack::run_check(manifest.as_deref()),
         Commands::ReleaseVerify => commands::release_verify::run(),
         Commands::SbomLocal => commands::sbom_local::run(),
+        Commands::PublishCheck { crate_name, dry_run } => {
+            commands::publish_check::run(commands::publish_check::PublishCheckArgs {
+                crate_name,
+                dry_run,
+                verbose: verbosity.is_verbose(),
+            })
+        }
         Commands::PrCover { pr, run_dir, output, description } => {
             commands::pr_cover::run(commands::pr_cover::PrCoverArgs {
                 pr,
@@ -1784,6 +1820,8 @@ pub fn all_command_names() -> Vec<&'static str> {
         "idp-snapshot",
         "install-hooks",
         "issues-search",
+        "kernel-check",
+        "kernel-pack",
         "kernel-smoke",
         "kernel-status",
         "migrate",
@@ -1792,6 +1830,7 @@ pub fn all_command_names() -> Vec<&'static str> {
         "pr-cover",
         "pr-update",
         "precommit",
+        "publish-check",
         "question-new",
         "question-resolve",
         "questions-list",
@@ -1899,6 +1938,8 @@ fn get_command_name(command: &Commands) -> &'static str {
         Commands::DevUp => "dev-up",
         Commands::InstallHooks => "install-hooks",
         Commands::CiLocal => "ci-local",
+        Commands::KernelCheck { .. } => "kernel-check",
+        Commands::KernelPack { .. } => "kernel-pack",
         Commands::KernelSmoke => "kernel-smoke",
         Commands::KernelStatus => "kernel-status",
         Commands::Selftest => "selftest",
@@ -1954,6 +1995,7 @@ fn get_command_name(command: &Commands) -> &'static str {
         Commands::ReleaseBundle { .. } => "release-bundle",
         Commands::ReleaseVerify => "release-verify",
         Commands::SbomLocal => "sbom-local",
+        Commands::PublishCheck { .. } => "publish-check",
         Commands::PrCover { .. } => "pr-cover",
         Commands::PrUpdate { .. } => "pr-update",
         Commands::ReceiptsGate { .. } => "receipts-gate",

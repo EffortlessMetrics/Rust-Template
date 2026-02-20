@@ -133,17 +133,21 @@ The following advisories are explicitly ignored in `deny.toml` and `.cargo/audit
 - **Status:** No fix available
 - **Reason:** Transitive dependency from `sqlx-mysql`. The Marvin Attack requires timing side-channel access to exploit. For this template's use case (typical web services), the risk is acceptable. When a fix is released, we will update.
 
-### RUSTSEC-2021-0046 (telemetry)
+### ~~RUSTSEC-2021-0046 (telemetry)~~ -- Resolved
 
-- **Crate:** `telemetry` (local workspace crate)
-- **Status:** FALSE POSITIVE
-- **Reason:** Our local `telemetry` crate shares a name with an unrelated published crate. Our crate does not contain the vulnerable code.
+- **Crate:** `telemetry` (local workspace crate, now `rust-as-spec-telemetry`)
+- **Status:** ~~FALSE POSITIVE~~ RESOLVED in v3.3.15
+- **Reason:** Our local `telemetry` crate was renamed to `rust-as-spec-telemetry`, eliminating the name collision. Ignore entry removed from `.cargo/audit.toml`.
 
-### RUSTSEC-2020-0140 (model)
+### ~~RUSTSEC-2020-0140 (model)~~ -- Resolved
 
-- **Crate:** `model` (local workspace crate)
-- **Status:** FALSE POSITIVE
-- **Reason:** Our local `model` crate shares a name with an unrelated published crate. Our crate does not contain the vulnerable code.
+- **Crate:** `model` (local workspace crate, now `rust-as-spec-model`)
+- **Status:** ~~FALSE POSITIVE~~ RESOLVED in v3.3.15
+- **Reason:** Our local `model` crate was renamed to `rust-as-spec-model`, eliminating the name collision. Ignore entry removed from `.cargo/audit.toml`.
+
+## Update: False-Positive Resolution (v3.3.15)
+
+The false-positive RustSec advisories for `model` (RUSTSEC-2020-0140) and `telemetry` (RUSTSEC-2021-0046) have been resolved by renaming these workspace crates to `rust-as-spec-model` and `rust-as-spec-telemetry`. The `cargo audit` ignore entries for these advisories have been removed from `.cargo/audit.toml`.
 
 ## References
 

@@ -12,7 +12,7 @@ documentation.workspace = true
 publish = false
 
 [dependencies]
-gov-model = { path = "../gov-model" }
+gov-model.workspace = true
 serde.workspace = true
 
 [dev-dependencies]

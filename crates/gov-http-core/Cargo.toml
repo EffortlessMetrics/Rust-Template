@@ -1,8 +1,8 @@
 [dependencies]
-gov-model = {path = "../gov-model"}
+gov-model.workspace = true
 http-errors = {features = ["axum"], path = "../http-errors"}
 platform-contract = {path = "../platform-contract"}
-spec-runtime = {path = "../spec-runtime"}
+spec-runtime.workspace = true
 anyhow.workspace = true
 axum.workspace = true
 http.workspace = true

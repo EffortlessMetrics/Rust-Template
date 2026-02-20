@@ -1,12 +1,12 @@
 [dependencies]
-ac-kernel = {path = "../ac-kernel"}
+ac-kernel.workspace = true
 adapters-spec-fs = {path = "../adapters-spec-fs"}
 # Internal crates
 app-http = {path = "../app-http"}
-business-core = {path = "../business-core"}
-spec-runtime = {path = "../spec-runtime"}
-telemetry = {path = "../telemetry"}
-testing = {path = "../testing"}
+business-core.workspace = true
+spec-runtime.workspace = true
+telemetry.workspace = true
+testing.workspace = true
 anyhow.workspace = true
 axum.workspace = true
 cucumber = {features = ["output-junit"], workspace = true}
@@ -29,9 +29,13 @@ uuid = {features = ["v4"], workspace = true}
 
 [package]
 name = "acceptance"
-version = "0.1.0"
+version.workspace = true
 edition.workspace = true
+license.workspace = true
 publish.workspace = true
+repository.workspace = true
+homepage.workspace = true
+authors.workspace = true
 rust-version.workspace = true
 
 [[test]]

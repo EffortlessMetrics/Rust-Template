@@ -3,40 +3,27 @@
 version = 4
 
 [[package]]
-name = "ac-kernel"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "chrono",
- "serde",
- "serde_json",
- "serde_yaml_ng",
- "spec-runtime",
- "tempfile",
-]
-
-[[package]]
 name = "acceptance"
-version = "0.1.0"
+version = "3.3.15"
 dependencies = [
- "ac-kernel",
  "adapters-spec-fs",
  "anyhow",
  "app-http",
  "axum",
- "business-core",
  "cucumber",
  "gherkin",
  "http",
  "http-body-util",
  "md5",
  "regex",
+ "rust-as-spec-ac-kernel",
+ "rust-as-spec-business-core",
+ "rust-as-spec-runtime",
+ "rust-as-spec-telemetry",
  "serde",
  "serde_json",
  "serde_yaml_ng",
  "shell-words",
- "spec-runtime",
- "telemetry",
  "tempfile",
  "testing",
  "tokio",
@@ -47,13 +34,13 @@ dependencies = [
 
 [[package]]
 name = "adapters-db-sqlx"
-version = "0.1.0"
+version = "3.3.15"
 dependencies = [
  "anyhow",
  "async-trait",
- "business-core",
  "chrono",
- "model",
+ "rust-as-spec-business-core",
+ "rust-as-spec-model",
  "sqlx",
  "testcontainers",
  "tokio",
@@ -63,14 +50,14 @@ dependencies = [
 
 [[package]]
 name = "adapters-grpc"
-version = "0.1.0"
+version = "3.3.15"
 dependencies = [
  "async-trait",
- "business-core",
  "chrono",
- "model",
  "prost",
  "prost-types",
+ "rust-as-spec-business-core",
+ "rust-as-spec-model",
  "tokio",
  "tonic",
  "tonic-build",
@@ -82,13 +69,13 @@ dependencies = [
 
 [[package]]
 name = "adapters-spec-fs"
-version = "0.1.0"
+version = "3.3.15"
 dependencies = [
- "business-core",
  "fs2",
+ "rust-as-spec-business-core",
+ "rust-as-spec-runtime",
  "serde",
  "serde_yaml_ng",
- "spec-runtime",
  "tempfile",
  "thiserror 2.0.18",
  "tracing",
@@ -184,22 +171,20 @@ dependencies = [
 
 [[package]]
 name = "anyhow"
-version = "1.0.100"
+version = "1.0.102"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a23eb6b1614318a8071c9b2521f36b424b2c83db5eb3a0fead4a6c0809af6e61"
+checksum = "7f202df86484c868dbad7eaa557ef785d5c66295e41b460ef922eca0723b842c"
 
 [[package]]
 name = "app-http"
-version = "0.1.0"
+version = "3.3.15"
 dependencies = [
  "adapters-db-sqlx",
  "adapters-spec-fs",
  "anyhow",
  "axum",
- "business-core",
  "chrono",
  "gov-http",
- "gov-model",
  "http-agents",
  "http-body-util",
  "http-core",
@@ -209,16 +194,18 @@ dependencies = [
  "http-todos",
  "jsonwebtoken",
  "maud",
- "model",
  "once_cell",
  "prometheus",
+ "rust-as-spec-business-core",
+ "rust-as-spec-gov-model",
+ "rust-as-spec-model",
+ "rust-as-spec-runtime",
+ "rust-as-spec-telemetry",
  "scraper",
  "serde",
  "serde_json",
  "serde_yaml_ng",
  "serial_test",
- "spec-runtime",
- "telemetry",
  "tempfile",
  "testing",
  "tokio",
@@ -506,19 +493,6 @@ name = "bumpalo"
 version = "3.19.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5dd9dc738b7a8311c7ade152424974d8115f2cdad61e8dab8dac9f2362298510"
-
-[[package]]
-name = "business-core"
-version = "0.1.0"
-dependencies = [
- "async-trait",
- "chrono",
- "gov-model",
- "model",
- "serde",
- "thiserror 2.0.18",
- "uuid",
-]
 
 [[package]]
 name = "bytecount"
@@ -1457,6 +1431,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "getrandom"
+version = "0.4.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "139ef39800118c7683f2fd3c98c1b23c09ae076556b435f8e9064ae108aaeeec"
+dependencies = [
+ "cfg-if",
+ "libc",
+ "r-efi",
+ "wasip2",
+ "wasip3",
+]
+
+[[package]]
 name = "gherkin"
 version = "0.15.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1504,33 +1491,22 @@ dependencies = [
 ]
 
 [[package]]
-name = "gov-contracts"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "gov-model",
- "serde",
- "serde_json",
- "serde_yaml_ng",
-]
-
-[[package]]
 name = "gov-http"
-version = "0.1.0"
+version = "3.3.15"
 dependencies = [
  "anyhow",
  "axum",
- "gov-contracts",
  "gov-http-core",
  "gov-http-forks",
  "gov-http-friction",
  "gov-http-issues",
  "gov-http-questions",
- "gov-model",
+ "rust-as-spec-gov-contracts",
+ "rust-as-spec-gov-model",
+ "rust-as-spec-runtime",
  "serde",
  "serde_json",
  "serde_yaml_ng",
- "spec-runtime",
  "thiserror 2.0.18",
  "tokio",
  "tracing",
@@ -1543,13 +1519,13 @@ version = "3.3.15"
 dependencies = [
  "anyhow",
  "axum",
- "gov-model",
  "http",
  "http-errors",
  "platform-contract",
+ "rust-as-spec-gov-model",
+ "rust-as-spec-runtime",
  "serde",
  "serde_yaml_ng",
- "spec-runtime",
  "thiserror 2.0.18",
  "tracing",
  "uuid",
@@ -1561,14 +1537,14 @@ version = "3.3.15"
 dependencies = [
  "axum",
  "gov-http-core",
- "gov-model",
  "http",
  "http-errors",
  "platform-contract",
+ "rust-as-spec-gov-model",
+ "rust-as-spec-runtime",
  "serde",
  "serde_json",
  "serde_yaml_ng",
- "spec-runtime",
  "tokio",
  "tracing",
 ]
@@ -1580,14 +1556,14 @@ dependencies = [
  "axum",
  "gov-http-core",
  "gov-http-types",
- "gov-model",
  "http",
  "http-errors",
  "platform-contract",
+ "rust-as-spec-gov-model",
+ "rust-as-spec-runtime",
  "serde",
  "serde_json",
  "serde_yaml_ng",
- "spec-runtime",
  "tokio",
  "tracing",
 ]
@@ -1600,14 +1576,14 @@ dependencies = [
  "axum",
  "gov-http-core",
  "gov-http-types",
- "gov-model",
  "http",
  "http-errors",
  "platform-contract",
+ "rust-as-spec-gov-model",
+ "rust-as-spec-runtime",
  "serde",
  "serde_json",
  "serde_yaml_ng",
- "spec-runtime",
  "thiserror 2.0.18",
  "tokio",
  "tracing",
@@ -1621,14 +1597,14 @@ dependencies = [
  "chrono",
  "gov-http-core",
  "gov-http-types",
- "gov-model",
  "http",
  "http-errors",
  "platform-contract",
+ "rust-as-spec-gov-model",
+ "rust-as-spec-runtime",
  "serde",
  "serde_json",
  "serde_yaml_ng",
- "spec-runtime",
  "tokio",
  "tracing",
 ]
@@ -1637,52 +1613,9 @@ dependencies = [
 name = "gov-http-types"
 version = "3.3.15"
 dependencies = [
- "gov-model",
+ "rust-as-spec-gov-model",
  "serde",
  "serde_json",
-]
-
-[[package]]
-name = "gov-model"
-version = "0.1.0"
-dependencies = [
- "proptest",
- "serde",
- "thiserror 2.0.18",
-]
-
-[[package]]
-name = "gov-policy"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "chrono",
- "gov-model",
- "serde",
- "serde_json",
- "thiserror 2.0.18",
-]
-
-[[package]]
-name = "gov-receipts"
-version = "0.1.0"
-dependencies = [
- "chrono",
- "serde",
- "serde_json",
-]
-
-[[package]]
-name = "gov-xtask-core"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "chrono",
- "gov-model",
- "serde",
- "serde_json",
- "tempfile",
- "thiserror 2.0.18",
 ]
 
 [[package]]
@@ -1817,16 +1750,16 @@ version = "3.3.15"
 dependencies = [
  "adapters-spec-fs",
  "axum",
- "business-core",
- "gov-model",
  "http",
  "http-core",
  "http-errors",
  "platform-contract",
+ "rust-as-spec-business-core",
+ "rust-as-spec-gov-model",
+ "rust-as-spec-runtime",
  "serde",
  "serde_json",
  "serde_yaml_ng",
- "spec-runtime",
  "testing",
  "tokio",
  "tower",
@@ -1861,15 +1794,15 @@ name = "http-core"
 version = "3.3.15"
 dependencies = [
  "axum",
- "business-core",
- "gov-model",
  "http",
  "http-errors",
  "platform-contract",
  "prometheus",
+ "rust-as-spec-business-core",
+ "rust-as-spec-gov-model",
+ "rust-as-spec-runtime",
  "serde",
  "serde_json",
- "spec-runtime",
  "testing",
  "tokio",
  "tower",
@@ -1916,10 +1849,10 @@ dependencies = [
  "http-errors",
  "maud",
  "platform-contract",
+ "rust-as-spec-runtime",
  "serde",
  "serde_json",
  "serde_yaml_ng",
- "spec-runtime",
  "testing",
  "tokio",
  "tower",
@@ -1931,11 +1864,11 @@ name = "http-tasks"
 version = "3.3.15"
 dependencies = [
  "axum",
- "business-core",
  "http",
  "http-core",
  "http-errors",
  "platform-contract",
+ "rust-as-spec-business-core",
  "serde",
  "serde_json",
  "serde_urlencoded",
@@ -1953,8 +1886,8 @@ dependencies = [
  "http",
  "http-core",
  "http-errors",
- "model",
  "platform-contract",
+ "rust-as-spec-model",
  "serde",
  "testing",
  "tokio",
@@ -2193,6 +2126,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "id-arena"
+version = "2.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3d3067d79b975e8844ca9eb072e16b31c3c1c36928edf9c6789548c524d0d954"
+
+[[package]]
 name = "ident_case"
 version = "1.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2393,6 +2332,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "leb128fmt"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "09edd9e8b54e49e587e4f6295a7d29c3ea94d469cb40ab8ca70b288248a81db2"
+
+[[package]]
 name = "libc"
 version = "0.2.180"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2549,14 +2494,6 @@ dependencies = [
  "libc",
  "wasi",
  "windows-sys 0.61.2",
-]
-
-[[package]]
-name = "model"
-version = "0.1.0"
-dependencies = [
- "chrono",
- "serde",
 ]
 
 [[package]]
@@ -3157,9 +3094,9 @@ dependencies = [
 
 [[package]]
 name = "proptest"
-version = "1.9.0"
+version = "1.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bee689443a2bd0a16ab0348b52ee43e3b2d1b1f931c8aa5c9f8de4c86fbe8c40"
+checksum = "37566cb3fdacef14c0737f9546df7cfeadbfbc9fef10991038bf5015d0c80532"
 dependencies = [
  "bit-set",
  "bit-vec",
@@ -3440,9 +3377,9 @@ dependencies = [
 
 [[package]]
 name = "regex"
-version = "1.12.2"
+version = "1.12.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "843bc0191f75f3e22651ae5f1e72939ab2f72a4bc30fa80a066bd66edefc24d4"
+checksum = "e10754a14b9137dd7b1e3e5b0493cc9171fdd105e0ab477f51b72e7f3ac0e276"
 dependencies = [
  "aho-corasick",
  "memchr",
@@ -3546,8 +3483,126 @@ dependencies = [
 ]
 
 [[package]]
+name = "rust-as-spec-ac-kernel"
+version = "3.3.15"
+dependencies = [
+ "anyhow",
+ "chrono",
+ "rust-as-spec-runtime",
+ "serde",
+ "serde_json",
+ "serde_yaml_ng",
+ "tempfile",
+]
+
+[[package]]
+name = "rust-as-spec-business-core"
+version = "3.3.15"
+dependencies = [
+ "async-trait",
+ "chrono",
+ "rust-as-spec-gov-model",
+ "rust-as-spec-model",
+ "serde",
+ "thiserror 2.0.18",
+ "uuid",
+]
+
+[[package]]
+name = "rust-as-spec-gov-contracts"
+version = "3.3.15"
+dependencies = [
+ "anyhow",
+ "rust-as-spec-gov-model",
+ "serde",
+ "serde_json",
+ "serde_yaml_ng",
+]
+
+[[package]]
+name = "rust-as-spec-gov-model"
+version = "3.3.15"
+dependencies = [
+ "proptest",
+ "serde",
+ "thiserror 2.0.18",
+]
+
+[[package]]
+name = "rust-as-spec-gov-policy"
+version = "3.3.15"
+dependencies = [
+ "anyhow",
+ "chrono",
+ "rust-as-spec-gov-model",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.18",
+]
+
+[[package]]
+name = "rust-as-spec-gov-receipts"
+version = "3.3.15"
+dependencies = [
+ "chrono",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "rust-as-spec-gov-xtask-core"
+version = "3.3.15"
+dependencies = [
+ "anyhow",
+ "chrono",
+ "rust-as-spec-gov-model",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "thiserror 2.0.18",
+]
+
+[[package]]
+name = "rust-as-spec-model"
+version = "3.3.15"
+dependencies = [
+ "chrono",
+ "serde",
+]
+
+[[package]]
+name = "rust-as-spec-runtime"
+version = "3.3.15"
+dependencies = [
+ "anyhow",
+ "chrono",
+ "once_cell",
+ "regex",
+ "rust-as-spec-gov-model",
+ "serde",
+ "serde_json",
+ "serde_yaml_ng",
+ "tempfile",
+ "thiserror 2.0.18",
+ "tracing",
+ "url",
+]
+
+[[package]]
+name = "rust-as-spec-telemetry"
+version = "3.3.15"
+dependencies = [
+ "opentelemetry",
+ "opentelemetry-otlp",
+ "opentelemetry_sdk",
+ "tracing",
+ "tracing-opentelemetry",
+ "tracing-subscriber",
+]
+
+[[package]]
 name = "rust_iac_config"
-version = "0.1.0"
+version = "3.3.15"
 dependencies = [
  "serde",
  "serde_yaml_ng",
@@ -3558,7 +3613,7 @@ dependencies = [
 
 [[package]]
 name = "rust_iac_xtask_core"
-version = "0.1.0"
+version = "3.3.15"
 dependencies = [
  "anyhow",
  "clap",
@@ -4193,24 +4248,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "spec-runtime"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "chrono",
- "gov-model",
- "once_cell",
- "regex",
- "serde",
- "serde_json",
- "serde_yaml_ng",
- "tempfile",
- "thiserror 2.0.18",
- "tracing",
- "url",
-]
-
-[[package]]
 name = "spec-schema"
 version = "3.3.15"
 dependencies = [
@@ -4635,23 +4672,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "telemetry"
-version = "0.1.0"
-dependencies = [
- "opentelemetry",
- "opentelemetry-otlp",
- "opentelemetry_sdk",
- "testing",
- "tracing",
- "tracing-opentelemetry",
- "tracing-subscriber",
-]
-
-[[package]]
 name = "tempfile"
-version = "3.24.0"
+version = "3.25.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "655da9c7eb6305c55742045d5a8d2037996d61d8de95806335c7c86ce0f82e9c"
+checksum = "0136791f7c95b1f6dd99f9cc786b91bb81c3800b639b3478e561ddb7be95e5f1"
 dependencies = [
  "fastrand",
  "getrandom 0.3.4",
@@ -4936,9 +4960,9 @@ checksum = "ab16f14aed21ee8bfd8ec22513f7287cd4a91aa92e44edfe2c17ddd004e92607"
 
 [[package]]
 name = "tonic"
-version = "0.14.2"
+version = "0.14.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "eb7613188ce9f7df5bfe185db26c5814347d110db17920415cf2fbcad85e7203"
+checksum = "fec7c61a0695dc1887c1b53952990f3ad2e3a31453e1f49f10e75424943a93ec"
 dependencies = [
  "async-trait",
  "axum",
@@ -5305,11 +5329,11 @@ checksum = "06abde3611657adf66d383f00b093d7faecc7fa57071cce2578660c9f1010821"
 
 [[package]]
 name = "uuid"
-version = "1.20.0"
+version = "1.21.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ee48d38b119b0cd71fe4141b30f5ba9c7c5d9f4e7a3a8b4a674e4b6ef789976f"
+checksum = "b672338555252d43fd2240c714dc444b8c6fb0a5c5335e65a07bba7742735ddb"
 dependencies = [
- "getrandom 0.3.4",
+ "getrandom 0.4.1",
  "js-sys",
  "serde_core",
  "wasm-bindgen",
@@ -5402,6 +5426,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "wasip3"
+version = "0.4.0+wasi-0.3.0-rc-2026-01-06"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5428f8bf88ea5ddc08faddef2ac4a67e390b88186c703ce6dbd955e1c145aca5"
+dependencies = [
+ "wit-bindgen",
+]
+
+[[package]]
 name = "wasite"
 version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5464,6 +5497,40 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1f01b580c9ac74c8d8f0c0e4afb04eeef2acf145458e52c03845ee9cd23e3d12"
 dependencies = [
  "unicode-ident",
+]
+
+[[package]]
+name = "wasm-encoder"
+version = "0.244.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "990065f2fe63003fe337b932cfb5e3b80e0b4d0f5ff650e6985b1048f62c8319"
+dependencies = [
+ "leb128fmt",
+ "wasmparser",
+]
+
+[[package]]
+name = "wasm-metadata"
+version = "0.244.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bb0e353e6a2fbdc176932bbaab493762eb1255a7900fe0fea1a2f96c296cc909"
+dependencies = [
+ "anyhow",
+ "indexmap 2.13.0",
+ "wasm-encoder",
+ "wasmparser",
+]
+
+[[package]]
+name = "wasmparser"
+version = "0.244.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "47b807c72e1bac69382b3a6fb3dbe8ea4c0ed87ff5629b8685ae6b9a611028fe"
+dependencies = [
+ "bitflags",
+ "hashbrown 0.15.5",
+ "indexmap 2.13.0",
+ "semver",
 ]
 
 [[package]]
@@ -5866,6 +5933,88 @@ name = "wit-bindgen"
 version = "0.51.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d7249219f66ced02969388cf2bb044a09756a083d0fab1e566056b04d9fbcaa5"
+dependencies = [
+ "wit-bindgen-rust-macro",
+]
+
+[[package]]
+name = "wit-bindgen-core"
+version = "0.51.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ea61de684c3ea68cb082b7a88508a8b27fcc8b797d738bfc99a82facf1d752dc"
+dependencies = [
+ "anyhow",
+ "heck",
+ "wit-parser",
+]
+
+[[package]]
+name = "wit-bindgen-rust"
+version = "0.51.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b7c566e0f4b284dd6561c786d9cb0142da491f46a9fbed79ea69cdad5db17f21"
+dependencies = [
+ "anyhow",
+ "heck",
+ "indexmap 2.13.0",
+ "prettyplease",
+ "syn 2.0.114",
+ "wasm-metadata",
+ "wit-bindgen-core",
+ "wit-component",
+]
+
+[[package]]
+name = "wit-bindgen-rust-macro"
+version = "0.51.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0c0f9bfd77e6a48eccf51359e3ae77140a7f50b1e2ebfe62422d8afdaffab17a"
+dependencies = [
+ "anyhow",
+ "prettyplease",
+ "proc-macro2",
+ "quote",
+ "syn 2.0.114",
+ "wit-bindgen-core",
+ "wit-bindgen-rust",
+]
+
+[[package]]
+name = "wit-component"
+version = "0.244.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9d66ea20e9553b30172b5e831994e35fbde2d165325bec84fc43dbf6f4eb9cb2"
+dependencies = [
+ "anyhow",
+ "bitflags",
+ "indexmap 2.13.0",
+ "log",
+ "serde",
+ "serde_derive",
+ "serde_json",
+ "wasm-encoder",
+ "wasm-metadata",
+ "wasmparser",
+ "wit-parser",
+]
+
+[[package]]
+name = "wit-parser"
+version = "0.244.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ecc8ac4bc1dc3381b7f59c34f00b67e18f910c2c0f50015669dde7def656a736"
+dependencies = [
+ "anyhow",
+ "id-arena",
+ "indexmap 2.13.0",
+ "log",
+ "semver",
+ "serde",
+ "serde_derive",
+ "serde_json",
+ "unicode-xid",
+ "wasmparser",
+]
 
 [[package]]
 name = "writeable"
@@ -5885,26 +6034,26 @@ dependencies = [
 
 [[package]]
 name = "xtask"
-version = "0.1.0"
+version = "3.3.15"
 dependencies = [
- "ac-kernel",
  "anyhow",
  "chrono",
  "clap",
  "colored",
  "glob",
- "gov-model",
- "gov-receipts",
- "gov-xtask-core",
  "ignore",
  "jsonschema",
  "once_cell",
  "quick-xml 0.38.4",
  "regex",
+ "rust-as-spec-ac-kernel",
+ "rust-as-spec-gov-model",
+ "rust-as-spec-gov-receipts",
+ "rust-as-spec-gov-xtask-core",
+ "rust-as-spec-runtime",
  "serde",
  "serde_json",
  "serde_yaml_ng",
- "spec-runtime",
  "tempfile",
  "testing",
  "walkdir",
@@ -5928,7 +6077,7 @@ dependencies = [
 
 [[package]]
 name = "xtask-contracts"
-version = "0.1.0"
+version = "3.3.15"
 dependencies = [
  "anyhow",
  "regex",
@@ -5941,7 +6090,7 @@ dependencies = [
 
 [[package]]
 name = "xtask-lib"
-version = "0.1.0"
+version = "3.3.15"
 dependencies = [
  "anyhow",
  "chrono",
@@ -5956,14 +6105,14 @@ dependencies = [
 
 [[package]]
 name = "xtask-receipts"
-version = "0.1.0"
+version = "3.3.15"
 dependencies = [
  "anyhow",
  "chrono",
  "colored",
- "gov-receipts",
  "jsonschema",
  "regex",
+ "rust-as-spec-gov-receipts",
  "serde",
  "serde_json",
  "serde_yaml_ng",
@@ -5974,7 +6123,7 @@ dependencies = [
 
 [[package]]
 name = "xtask-versioning"
-version = "0.1.0"
+version = "3.3.15"
 dependencies = [
  "anyhow",
  "chrono",

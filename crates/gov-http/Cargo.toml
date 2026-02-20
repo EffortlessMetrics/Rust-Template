@@ -1,17 +1,17 @@
 [dependencies]
 anyhow = {workspace = true}
 axum = {workspace = true}
-gov-contracts = {path = "../gov-contracts"}
+gov-contracts.workspace = true
 gov-http-core = {path = "../gov-http-core"}
 gov-http-forks = {path = "../gov-http-forks"}
 gov-http-friction = {path = "../gov-http-friction"}
 gov-http-issues = {path = "../gov-http-issues"}
 gov-http-questions = {path = "../gov-http-questions"}
-gov-model = {path = "../gov-model"}
+gov-model.workspace = true
 serde = {workspace = true}
 serde_json = {workspace = true}
 serde_yaml = {workspace = true}
-spec-runtime = {path = "../spec-runtime"}
+spec-runtime.workspace = true
 thiserror = {workspace = true}
 tokio = {workspace = true}
 tracing = {workspace = true}
@@ -20,8 +20,11 @@ uuid = {workspace = true}
 [package]
 description = "Platform HTTP router for Rust-as-Spec governance endpoints"
 name = "gov-http"
-version = "0.1.0"
+version.workspace = true
 edition.workspace = true
 license.workspace = true
 publish.workspace = true
+repository.workspace = true
+homepage.workspace = true
+authors.workspace = true
 rust-version.workspace = true

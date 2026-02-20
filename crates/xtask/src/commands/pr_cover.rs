@@ -44,6 +44,7 @@ pub struct PrCoverArgs {
 
 /// Errata entry structure matching the canonical format
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[allow(dead_code)]
 pub struct ErrataEntry {
     /// What was incorrect
     pub wrong: String,

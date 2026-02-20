@@ -1,6 +1,6 @@
 [dependencies]
 colored = "3.0.0"
-gov-receipts = {path = "../gov-receipts"}
+gov-receipts.workspace = true
 jsonschema = "0.38.1"
 xtask-lib = {path = "../xtask-lib"}
 anyhow.workspace = true
@@ -17,7 +17,11 @@ tempfile.workspace = true
 [package]
 description = "Receipt generation and validation for xtask governance gates"
 name = "xtask-receipts"
-version = "0.1.0"
+version.workspace = true
 edition.workspace = true
+license.workspace = true
 publish.workspace = true
+repository.workspace = true
+homepage.workspace = true
+authors.workspace = true
 rust-version.workspace = true

@@ -23,6 +23,34 @@
 //! OTLP_ENDPOINT=http://localhost:4317 cargo run --features telemetry/otlp
 //! ```
 
+use std::ffi::OsString;
+
+/// Abstraction over environment variable reading for testability.
+pub(crate) trait EnvReader {
+    /// Read an environment variable, returning `None` if absent.
+    fn var_os(&self, key: &str) -> Option<OsString>;
+}
+
+/// Production implementation — delegates to `std::env`.
+pub(crate) struct SystemEnv;
+
+impl EnvReader for SystemEnv {
+    fn var_os(&self, key: &str) -> Option<OsString> {
+        std::env::var_os(key)
+    }
+}
+
+/// Resolve the tracing env filter from the given environment.
+///
+/// Reads `RUST_LOG`; falls back to `"info"` if absent or unparseable.
+pub(crate) fn resolve_env_filter(env: &dyn EnvReader) -> tracing_subscriber::EnvFilter {
+    use tracing_subscriber::EnvFilter;
+    match env.var_os("RUST_LOG").and_then(|v| v.into_string().ok()) {
+        Some(val) => EnvFilter::try_new(&val).unwrap_or_else(|_| EnvFilter::new("info")),
+        None => EnvFilter::new("info"),
+    }
+}
+
 /// Initialize tracing with env-based log filtering and optional OTLP export
 ///
 /// Respects `RUST_LOG` environment variable for filtering.
@@ -45,14 +73,17 @@
 /// OTLP_ENDPOINT=http://localhost:4317 cargo run --features telemetry/otlp
 /// ```
 pub fn init_tracing(service_name: &str) {
-    use tracing_subscriber::EnvFilter;
+    init_tracing_with_env(service_name, &SystemEnv);
+}
 
-    let env_filter = EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("info"));
+/// Inner implementation accepting an injectable env reader.
+pub(crate) fn init_tracing_with_env(service_name: &str, env: &dyn EnvReader) {
+    let env_filter = resolve_env_filter(env);
 
     #[cfg(feature = "otlp")]
     {
-        if let Ok(endpoint) = std::env::var("OTLP_ENDPOINT")
-            && !endpoint.is_empty()
+        if let Some(endpoint) =
+            env.var_os("OTLP_ENDPOINT").and_then(|v| v.into_string().ok()).filter(|s| !s.is_empty())
         {
             match try_init_otlp(service_name, &endpoint, env_filter.clone()) {
                 Ok(()) => {
@@ -71,6 +102,9 @@ pub fn init_tracing(service_name: &str) {
             }
         }
     }
+
+    // Suppress unused-variable warning when otlp feature is off
+    let _ = env;
 
     // Default console tracing (also used as fallback if OTLP fails)
     let _ = tracing_subscriber::fmt().with_env_filter(env_filter).try_init();
@@ -129,20 +163,70 @@ pub fn init_test() {
 
 #[cfg(test)]
 mod tests {
-    use testing::process::EnvVarGuard;
+    use std::collections::HashMap;
+    use std::ffi::OsString;
+
     use tracing_subscriber::EnvFilter;
 
-    /// Tests that EnvFilter correctly parses valid RUST_LOG values.
-    ///
-    /// Note: We test the EnvFilter parsing logic directly rather than calling
-    /// init_tracing(), because global tracing subscribers can only be set once
-    /// per process. Testing the filter parsing ensures the core logic works
-    /// correctly without side effects.
+    /// Deterministic fake environment for testing without process-global mutation.
+    struct FakeEnv {
+        vars: HashMap<String, OsString>,
+    }
+
+    impl FakeEnv {
+        fn new() -> Self {
+            Self { vars: HashMap::new() }
+        }
+
+        fn with_var(mut self, key: &str, val: &str) -> Self {
+            self.vars.insert(key.to_string(), OsString::from(val));
+            self
+        }
+    }
+
+    impl super::EnvReader for FakeEnv {
+        fn var_os(&self, key: &str) -> Option<OsString> {
+            self.vars.get(key).cloned()
+        }
+    }
+
+    // ── resolve_env_filter tests ──
+
+    #[test]
+    fn resolve_env_filter_falls_back_when_rust_log_unset() {
+        let env = FakeEnv::new();
+        let filter = super::resolve_env_filter(&env);
+        assert!(filter.to_string().contains("info"));
+    }
+
+    #[test]
+    fn resolve_env_filter_uses_rust_log_when_set() {
+        let env = FakeEnv::new().with_var("RUST_LOG", "debug");
+        let filter = super::resolve_env_filter(&env);
+        assert!(filter.to_string().contains("debug"));
+    }
+
+    #[test]
+    fn resolve_env_filter_falls_back_on_invalid_rust_log() {
+        let env = FakeEnv::new().with_var("RUST_LOG", "not_a_valid_level[[[");
+        let filter = super::resolve_env_filter(&env);
+        assert!(filter.to_string().contains("info"));
+    }
+
+    #[test]
+    fn resolve_env_filter_parses_module_specific_levels() {
+        let env = FakeEnv::new().with_var("RUST_LOG", "app_http=trace,business_core=debug");
+        let filter = super::resolve_env_filter(&env);
+        let s = filter.to_string();
+        assert!(s.contains("app_http"));
+        assert!(s.contains("business_core"));
+    }
+
+    // ── EnvFilter parsing (pure, no env) ──
+
     #[test]
     fn env_filter_parses_default_level() {
-        // When RUST_LOG is not set, we should fall back to "info"
         let filter = EnvFilter::try_new("info").expect("should parse 'info'");
-        // The filter should be created successfully
         assert!(!filter.to_string().is_empty());
     }
 
@@ -171,48 +255,28 @@ mod tests {
     }
 
     #[test]
-    fn env_filter_parses_module_specific_levels() {
-        // Test that we can set different levels for different modules
-        let filter =
-            EnvFilter::try_new("app_http=trace,business_core=debug").expect("should parse");
-        let filter_str = filter.to_string();
-        assert!(filter_str.contains("app_http"));
-        assert!(filter_str.contains("business_core"));
-    }
-
-    #[test]
     fn env_filter_parses_complex_filter() {
-        // Test a more complex filter with multiple targets and levels
         let filter = EnvFilter::try_new("info,telemetry=debug,tower_http=warn,sqlx=error")
             .expect("should parse complex filter");
-        let filter_str = filter.to_string();
-        // At minimum, we should have created a valid filter
-        assert!(!filter_str.is_empty());
+        assert!(!filter.to_string().is_empty());
     }
 
     #[test]
     fn env_filter_handles_invalid_gracefully() {
-        // Empty string is valid (no filter rules)
         let result = EnvFilter::try_new("");
         assert!(result.is_ok());
     }
 
-    /// Tests OTLP endpoint validation logic.
-    ///
-    /// These tests verify the URL parsing behavior that would be used
-    /// when OTLP_ENDPOINT is set. We can't test the actual OTLP connection
-    /// without network dependencies, but we can validate the configuration
-    /// parsing.
+    // ── OTLP endpoint validation ──
+
     #[test]
     fn otlp_endpoint_empty_string_is_not_valid_endpoint() {
-        // An empty string should not be treated as a valid OTLP endpoint
         let endpoint = "";
         assert!(endpoint.is_empty(), "empty endpoint should be detected");
     }
 
     #[test]
     fn otlp_endpoint_valid_http_url() {
-        // Valid HTTP endpoints should be accepted
         let endpoint = "http://localhost:4317";
         assert!(
             endpoint.starts_with("http://") || endpoint.starts_with("https://"),
@@ -223,7 +287,6 @@ mod tests {
 
     #[test]
     fn otlp_endpoint_valid_https_url() {
-        // Valid HTTPS endpoints should be accepted
         let endpoint = "https://otel-collector.example.com:4317";
         assert!(endpoint.starts_with("https://"));
         assert!(!endpoint.is_empty());
@@ -231,32 +294,22 @@ mod tests {
 
     #[test]
     fn otlp_endpoint_with_custom_port() {
-        // Custom ports should work
         let endpoint = "http://127.0.0.1:55680";
         assert!(endpoint.contains(":55680"));
     }
 
-    /// Tests that the init_tracing function signature and service name
-    /// parameter work correctly.
-    ///
-    /// Note: We can't actually call init_tracing in tests because it sets
-    /// a global subscriber. Instead, we verify that the function exists
-    /// and has the expected signature.
+    // ── Smoke tests ──
+
     #[test]
     fn init_tracing_function_exists() {
-        // Verify the function signature by referencing it
         let _func: fn(&str) = super::init_tracing;
     }
 
-    /// Test that service names are valid identifiers for tracing.
     #[test]
     fn service_name_validation() {
-        // These are valid service names that should work with tracing
         let valid_names =
             ["my-service", "app_http", "business-core", "telemetry", "test-service-123"];
-
         for name in valid_names {
-            // Service names should be non-empty and contain valid characters
             assert!(!name.is_empty(), "service name should not be empty");
             assert!(
                 name.chars().all(|c| c.is_alphanumeric() || c == '-' || c == '_'),
@@ -266,63 +319,17 @@ mod tests {
         }
     }
 
-    /// Tests that the init_test function is available and works.
     #[test]
     fn init_test_function_can_be_called() {
-        // This should not panic - it uses try_init() internally
-        // so multiple calls are safe (subsequent calls are no-ops)
         super::init_test();
     }
 
-    /// Tests the fallback behavior logic.
-    ///
-    /// When OTLP initialization fails (or OTLP feature is disabled),
-    /// the system should fall back to console-only tracing.
     #[test]
     fn fallback_logic_prefers_console_when_otlp_unavailable() {
-        // Without the otlp feature, console tracing is the only option
         #[cfg(not(feature = "otlp"))]
         {
-            // In non-OTLP mode, we only have console tracing
-            // Verify the configuration would work
             let filter = EnvFilter::try_new("info").expect("should parse");
             assert!(!filter.to_string().is_empty());
         }
-    }
-
-    /// Tests that environment variable parsing follows expected behavior.
-    ///
-    /// Note: These tests use `EnvVarGuard` from the `testing` crate to safely
-    /// modify environment variables with proper serialization and automatic restore.
-    #[test]
-    fn rust_log_env_parsing_uses_default_when_unset() {
-        // EnvFilter::try_from_default_env() will fail if RUST_LOG is unset,
-        // which is the expected behavior that triggers our fallback to "info"
-        // We simulate this by using try_from_default_env's error case
-
-        let guard = EnvVarGuard::new(&["RUST_LOG"]);
-        guard.remove("RUST_LOG");
-
-        // This should return an error when RUST_LOG is not set
-        let result = EnvFilter::try_from_default_env();
-
-        // When RUST_LOG is not set, try_from_default_env returns an error
-        // and our code falls back to "info"
-        assert!(result.is_err(), "should fail when RUST_LOG is not set, triggering fallback");
-
-        // Automatic restore on drop
-    }
-
-    #[test]
-    fn rust_log_env_parsing_succeeds_when_set() {
-        let guard = EnvVarGuard::new(&["RUST_LOG"]);
-        guard.set("RUST_LOG", "debug");
-
-        // This should succeed when RUST_LOG is set
-        let result = EnvFilter::try_from_default_env();
-
-        assert!(result.is_ok(), "should succeed when RUST_LOG is set");
-
-        // Automatic restore on drop
     }
 }

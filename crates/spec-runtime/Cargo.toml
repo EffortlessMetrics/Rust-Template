@@ -1,5 +1,5 @@
 [dependencies]
-gov-model = {path = "../gov-model"}
+gov-model.workspace = true
 once_cell = {workspace = true}
 regex = {workspace = true}
 serde_yaml = {workspace = true}
@@ -14,17 +14,21 @@ url.workspace = true
 [dev-dependencies]
 tempfile.workspace = true
 
+[lib]
+name = "spec_runtime"
+
 [package]
-categories = ["config", "development-tools"]
+name = "rust-as-spec-runtime"
 description = "Runtime environment for spec-based development workflows and infrastructure"
-keywords = ["development", "infrastructure", "runtime", "spec"]
-name = "spec-runtime"
-publish = true
-version = "0.1.0"
-authors.workspace = true
-documentation.workspace = true
+version.workspace = true
 edition.workspace = true
-homepage.workspace = true
 license.workspace = true
+publish = true
 repository.workspace = true
+homepage.workspace = true
+authors.workspace = true
 rust-version.workspace = true
+documentation = "https://docs.rs/rust-as-spec-runtime"
+categories = ["config", "development-tools"]
+keywords = ["development", "infrastructure", "runtime", "spec"]
+include = ["src/**/*", "README.md", "LICENSE-APACHE", "LICENSE-MIT", "Cargo.toml"]
