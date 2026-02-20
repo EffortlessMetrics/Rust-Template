@@ -36,7 +36,7 @@ All tools are available in the Nix shell (optional but recommended):
 nix develop
 
 # Option 2: Install tools manually
-# - Rust 1.89+ (rustup install stable)
+# - Rust 1.92+ (rustup install stable)
 # - conftest (for policy tests) - https://www.conftest.dev/install/
 # - git (for tracking files)
 ```

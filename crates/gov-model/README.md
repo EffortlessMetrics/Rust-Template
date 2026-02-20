@@ -263,4 +263,4 @@ This crate is used by:
 This crate is part of the **rust-as-spec** governance kernel.
 Version numbers track the kernel release (currently 3.3.15).
 Breaking changes require a major version bump and an ADR.
-MSRV: 1.89.0.
+MSRV: 1.92.0.

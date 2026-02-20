@@ -1373,7 +1373,6 @@ fn main() -> Result<()> {
             commands::publish_check::run(commands::publish_check::PublishCheckArgs {
                 crate_name,
                 dry_run,
-                verbose: verbosity.is_verbose(),
             })
         }
         Commands::PrCover { pr, run_dir, output, description } => {

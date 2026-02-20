@@ -39,19 +39,7 @@ const KERNEL_FILE_PATTERNS: &[&str] = &[
     "CLAUDE.md",
 ];
 
-/// Wave 1 publishable crates (same list as publish_check.rs, kept in sync)
-const PUBLISHABLE_CRATES: &[&str] = &[
-    "rust-as-spec-ac-kernel",
-    "rust-as-spec-business-core",
-    "rust-as-spec-gov-contracts",
-    "rust-as-spec-gov-model",
-    "rust-as-spec-gov-policy",
-    "rust-as-spec-gov-receipts",
-    "rust-as-spec-gov-xtask-core",
-    "rust-as-spec-model",
-    "rust-as-spec-runtime",
-    "rust-as-spec-telemetry",
-];
+use super::publish_check::PUBLISHABLE_CRATES;
 
 /// Manifest structure written to kernel-pack.manifest.json
 #[derive(Debug, Serialize, Deserialize)]

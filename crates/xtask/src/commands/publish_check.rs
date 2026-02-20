@@ -13,8 +13,11 @@ use std::process::Command;
 
 use colored::Colorize;
 
-/// Wave 1 publishable crates (order matters for batch publishing)
-const PUBLISHABLE_CRATES: &[&str] = &[
+/// Wave 1 publishable crates (order matters for batch publishing).
+///
+/// This is the single source of truth for the publishable crate list.
+/// Used by both `publish-check` and `kernel-pack` commands.
+pub const PUBLISHABLE_CRATES: &[&str] = &[
     // Batch 1: No internal deps
     "rust-as-spec-gov-model",
     "rust-as-spec-model",
@@ -33,7 +36,6 @@ const PUBLISHABLE_CRATES: &[&str] = &[
 pub struct PublishCheckArgs {
     pub crate_name: Option<String>,
     pub dry_run: bool,
-    pub verbose: bool,
 }
 
 pub fn run(args: PublishCheckArgs) -> Result<()> {
@@ -63,7 +65,7 @@ pub fn run(args: PublishCheckArgs) -> Result<()> {
     let mut errors: Vec<(String, Vec<String>)> = Vec::new();
 
     for crate_name in &crates_to_check {
-        let crate_errors = check_crate(&root, crate_name, args.dry_run, args.verbose)?;
+        let crate_errors = check_crate(&root, crate_name, args.dry_run)?;
         if crate_errors.is_empty() {
             println!("  {} {}", "✓".green(), crate_name);
             passed += 1;
@@ -93,7 +95,7 @@ pub fn run(args: PublishCheckArgs) -> Result<()> {
     Ok(())
 }
 
-fn check_crate(root: &Path, crate_name: &str, dry_run: bool, verbose: bool) -> Result<Vec<String>> {
+fn check_crate(root: &Path, crate_name: &str, dry_run: bool) -> Result<Vec<String>> {
     let mut errors = Vec::new();
 
     // Find the crate directory by looking up the package in cargo metadata
@@ -122,9 +124,9 @@ fn check_crate(root: &Path, crate_name: &str, dry_run: bool, verbose: bool) -> R
     if !package_result.status.success() {
         let stderr = String::from_utf8_lossy(&package_result.stderr);
         errors.push(format!("cargo package --list failed: {}", stderr.trim()));
-    } else if verbose {
+    } else {
         let stdout = String::from_utf8_lossy(&package_result.stdout);
-        // Verify README and LICENSE appear in manifest
+        // Verify README and LICENSE appear in package manifest
         let manifest = stdout.to_string();
         if !manifest.lines().any(|l| l.contains("README.md")) {
             errors.push("README.md not included in package manifest".to_string());
@@ -140,12 +142,8 @@ fn check_crate(root: &Path, crate_name: &str, dry_run: bool, verbose: bool) -> R
     // Check 4: Verify Cargo.toml has publish = true
     let cargo_toml = std::fs::read_to_string(crate_dir.join("Cargo.toml"))
         .context("Failed to read Cargo.toml")?;
-    if cargo_toml.contains("publish = false") || cargo_toml.contains("publish.workspace = true") {
-        // publish.workspace = true inherits false from workspace
-        // But if we've already fixed it, this won't trigger
-        if !cargo_toml.contains("publish = true") {
-            errors.push("publish is not set to true".to_string());
-        }
+    if !cargo_toml.contains("publish = true") {
+        errors.push("publish is not explicitly set to true".to_string());
     }
 
     // Check 5 (optional): cargo publish --dry-run

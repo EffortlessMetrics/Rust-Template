@@ -315,13 +315,13 @@ cargo test
 
 #### `ci-msrv.yml` - Minimum Supported Rust Version
 
-**Purpose:** Ensure compatibility with MSRV (1.89.0)
+**Purpose:** Ensure compatibility with MSRV (1.92.0)
 **Triggers:** Pull requests
 **Runtime:** 10-15 minutes
 **Blocks Merges:** ❌ No (informational)
 
 **What it validates:**
-- Code compiles on Rust 1.89.0
+- Code compiles on Rust 1.92.0
 - All tests pass on MSRV
 
 **When it fails:**
