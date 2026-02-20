@@ -267,11 +267,14 @@ fn check_rust_version() -> Result<String> {
 
     // Check if version meets minimum requirement
     let version_str = version.trim();
-    if version_str.contains("1.89") || version_str.contains("1.90") || version_str.contains("1.91")
+    if version_str.contains("1.89")
+        || version_str.contains("1.90")
+        || version_str.contains("1.91")
+        || version_str.contains("1.92")
     {
         Ok(version_str.to_string())
     } else {
-        anyhow::bail!("{} (requires 1.89.0+)", version_str)
+        anyhow::bail!("{} (requires 1.92.0+)", version_str)
     }
 }
 
@@ -497,11 +500,15 @@ mod tests {
             "rustc 1.89.0 (abc123456 2024-01-01)",
             "rustc 1.90.0 (def789012 2024-02-01)",
             "rustc 1.91.0 (ghi345678 2024-03-01)",
+            "rustc 1.92.0 (jkl901234 2024-04-01)",
         ];
 
         for version in valid_versions {
             assert!(
-                version.contains("1.89") || version.contains("1.90") || version.contains("1.91"),
+                version.contains("1.89")
+                    || version.contains("1.90")
+                    || version.contains("1.91")
+                    || version.contains("1.92"),
                 "Version {} should be accepted",
                 version
             );
@@ -519,7 +526,10 @@ mod tests {
 
         for version in old_versions {
             assert!(
-                !(version.contains("1.89") || version.contains("1.90") || version.contains("1.91")),
+                !(version.contains("1.89")
+                    || version.contains("1.90")
+                    || version.contains("1.91")
+                    || version.contains("1.92")),
                 "Version {} should be rejected",
                 version
             );
@@ -540,6 +550,7 @@ mod tests {
             ("rustc 1.89.0 (abc123456 2024-01-01)", "1.89.0"),
             ("rustc 1.90.1 (def789012 2024-02-01)", "1.90.1"),
             ("rustc 1.91.0 (ghi345678 2024-03-01)", "1.91.0"),
+            ("rustc 1.92.0 (jkl901234 2024-04-01)", "1.92.0"),
             ("  rustc 1.89.0 (abc123 2024-01-01)  ", "1.89.0"), // with whitespace
         ];
 

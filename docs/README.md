@@ -549,7 +549,7 @@ This documentation is for **Rust Template v3.3.14**.
 **Recent Releases:**
 - **v3.3.14 (2025-12-31)**: OpenAPI and endpoint configuration improvements
 - **v3.3.13 (2025-12-27)**: Adoption Receipts and Docs Polish
-  - Updated Rust toolchain to 1.89.0
+  - Updated Rust toolchain to 1.92.0
   - Tool checksum validation and security advisory management
   - Security middleware and infrastructure hardening
   - Version consistency improvements

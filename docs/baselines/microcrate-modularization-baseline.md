@@ -195,7 +195,7 @@ The slow incremental build for HTTP handler edits (~37s) suggests:
 - **OS:** Linux 6.6
 - **Shell:** /bin/bash
 - **Workspace:** /home/steven/code/Rust/Rust-Template
-- **Rust Version:** 1.89.0 (from rust-toolchain.toml)
+- **Rust Version:** 1.92.0 (from rust-toolchain.toml)
 - **Workspace Members:** 18 crates
 - **External Dependencies:** ~610 crates (from release build)
 

@@ -57,4 +57,4 @@ echo
 echo "Next steps:"
 echo "1. Run 'cargo check --workspace' to verify fixes"
 echo "2. Run './scripts/validate-build-infrastructure.sh' to confirm"
-echo "3. Test MSRV validation with: cargo +1.89.0 check --workspace"
+echo "3. Test MSRV validation with: cargo +1.92.0 check --workspace"

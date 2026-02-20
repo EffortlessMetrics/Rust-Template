@@ -407,7 +407,7 @@ jobs:
   test:
     strategy:
       matrix:
-        rust: [stable, beta, nightly, 1.89.0]  # Adjust MSRV as needed
+        rust: [stable, beta, nightly, 1.92.0]  # Adjust MSRV as needed
         os: [ubuntu-latest, macos-latest, windows-latest]
     runs-on: ${{ matrix.os }}
     timeout-minutes: 20

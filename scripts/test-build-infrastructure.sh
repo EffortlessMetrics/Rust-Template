@@ -64,7 +64,7 @@ run_test "Cargo.toml exists" "[ -f Cargo.toml ]"
 
 run_test "Rust versions are aligned" "[ \$(grep -E '^\s*channel\s*=\s*\"[0-9.]+\"' rust-toolchain.toml | sed -E 's/.*\"([0-9.]+)\".*/\1/') = \$(grep -E '^\s*rust-version\s*=\s*\"[0-9.]+\"' Cargo.toml | sed -E 's/.*\"([0-9.]+)\".*/\1/') ]"
 
-run_test "Target Rust version is 1.89.0" "[ \$(grep -E '^\s*rust-version\s*=\s*\"[0-9.]+\"' Cargo.toml | sed -E 's/.*\"([0-9.]+)\".*/\1/') = '1.89.0' ]"
+run_test "Target Rust version is 1.92.0" "[ \$(grep -E '^\s*rust-version\s*=\s*\"[0-9.]+\"' Cargo.toml | sed -E 's/.*\"([0-9.]+)\".*/\1/') = '1.92.0' ]"
 
 # 3. MSRV Validation Tests
 echo "3. MSRV VALIDATION TESTS"
@@ -117,7 +117,7 @@ echo "============================="
 run_test "Checksum enforcement works correctly" "ENFORCE_CHECKSUMS=1 ${REPO_ROOT}/bootstrap-tools.sh 2>/dev/null"
 
 # Test MSRV validation
-run_test "MSRV validation passes with correct version" "cargo +1.89.0 check --workspace --quiet"
+run_test "MSRV validation passes with correct version" "cargo +1.92.0 check --workspace --quiet"
 
 # Test security advisory scanning
 run_test "Security advisory scan runs without errors" "cargo deny check advisories --quiet"
