@@ -50,16 +50,16 @@ serde_yaml_ng = { package = "serde_yaml_ng", version = "0.10.0" }
 shell-words = "1.1.1"
 tempfile = "3.25.0"
 # Internal workspace crates (Wave 1 publishable)
-ac-kernel = { package = "rust-as-spec-ac-kernel", path = "crates/ac-kernel", version = "3.3.15" }
-business-core = { package = "rust-as-spec-business-core", path = "crates/business-core", version = "3.3.15" }
-gov-contracts = { package = "rust-as-spec-gov-contracts", path = "crates/gov-contracts", version = "3.3.15" }
-gov-model = { package = "rust-as-spec-gov-model", path = "crates/gov-model", version = "3.3.15" }
-gov-policy = { package = "rust-as-spec-gov-policy", path = "crates/gov-policy", version = "3.3.15" }
-gov-receipts = { package = "rust-as-spec-gov-receipts", path = "crates/gov-receipts", version = "3.3.15" }
-gov-xtask-core = { package = "rust-as-spec-gov-xtask-core", path = "crates/gov-xtask-core", version = "3.3.15" }
-model = { package = "rust-as-spec-model", path = "crates/model", version = "3.3.15" }
-spec-runtime = { package = "rust-as-spec-runtime", path = "crates/spec-runtime", version = "3.3.15" }
-telemetry = { package = "rust-as-spec-telemetry", path = "crates/telemetry", version = "3.3.15" }
+ac-kernel = { package = "rust-as-spec-ac-kernel", path = "crates/ac-kernel", version = "=3.3.15" }
+business-core = { package = "rust-as-spec-business-core", path = "crates/business-core", version = "=3.3.15" }
+gov-contracts = { package = "rust-as-spec-gov-contracts", path = "crates/gov-contracts", version = "=3.3.15" }
+gov-model = { package = "rust-as-spec-gov-model", path = "crates/gov-model", version = "=3.3.15" }
+gov-policy = { package = "rust-as-spec-gov-policy", path = "crates/gov-policy", version = "=3.3.15" }
+gov-receipts = { package = "rust-as-spec-gov-receipts", path = "crates/gov-receipts", version = "=3.3.15" }
+gov-xtask-core = { package = "rust-as-spec-gov-xtask-core", path = "crates/gov-xtask-core", version = "=3.3.15" }
+model = { package = "rust-as-spec-model", path = "crates/model", version = "=3.3.15" }
+spec-runtime = { package = "rust-as-spec-runtime", path = "crates/spec-runtime", version = "=3.3.15" }
+telemetry = { package = "rust-as-spec-telemetry", path = "crates/telemetry", version = "=3.3.15" }
 testing = { path = "crates/testing" }
 thiserror = "2.0.18"
 tokio = { features = ["macros", "rt-multi-thread"], version = "1.49.0" }
@@ -79,11 +79,11 @@ unused = { level = "deny", priority = -1 }
 
 [workspace.package]
 authors = ["Steven Zimmerman, CPA <git@effortlesssteven.com>"]
-documentation = "https://github.com/effortlessmetrics/rust-template"
+documentation = "https://github.com/EffortlessMetrics/Rust-Template"
 edition = "2024"
-homepage = "https://github.com/effortlessmetrics/rust-template"
+homepage = "https://github.com/EffortlessMetrics/Rust-Template"
 license = "Apache-2.0 OR MIT"
 publish = false
-repository = "https://github.com/effortlessmetrics/rust-template"
+repository = "https://github.com/EffortlessMetrics/Rust-Template"
 rust-version = "1.92.0"
 version = "3.3.15"
