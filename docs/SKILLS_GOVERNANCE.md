@@ -2,7 +2,7 @@
 
 **Audience**: Team leads, Skill authors, and developers creating agent capabilities
 **Status**: Governed by REQ-TPL-SKILLS-GOVERNANCE, ADR-0020
-**Version**: v3.3.14
+**Version**: v3.3.15
 **Last Updated**: 2025-12-22
 
 ---

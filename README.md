@@ -1,4 +1,4 @@
-# rust-as-spec IDP Platform Cell (v3.3.14)
+# rust-as-spec IDP Platform Cell (v3.3.15)
 
 > **TL;DR:** A governed Rust service template where specs, tests, docs, policies, and CI all agree — and the repo can prove it.
 >
@@ -90,7 +90,7 @@ Forks inherit the kernel as-is and extend with domain-specific specs, ACs, and c
 
 ---
 
-**Template Version:** v3.3.14
+**Template Version:** v3.3.15
 
 **Kernel Baseline:** [v3.3.9-kernel](./docs/KERNEL_SNAPSHOT.md)
 

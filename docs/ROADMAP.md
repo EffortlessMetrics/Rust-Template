@@ -12,7 +12,7 @@ adrs: [ADR-0005]
 last_updated: 2026-01-30
 ---
 
-# Roadmap: Rust-as-Spec Platform Cell (v3.3.14)
+# Roadmap: Rust-as-Spec Platform Cell (v3.3.15)
 
 This document describes the current state of the template (v3.3.14) and the frozen baseline kernel (v3.3.9-kernel tag).
 
@@ -63,7 +63,7 @@ Template versions (v3.3.12, v3.3.13, etc.) are **tagged snapshots** of this repo
 | v3.3.12 | Tagged | Security hardening, governance architecture, CI improvements |
 | v3.3.13 | Tagged | Docs polish + release tooling hardening (see §4.4) |
 | v3.3.14 | Tagged | DevEx loop: faster precommit, staged-only semantics (see §4.4.1) |
-| v3.3.15 | On main | Security fixes, 12-step selftest, schema registry, release automation (see §4.4.2) |
+| v3.3.15 | Tagged | Security fixes, 12-step selftest, schema registry, release automation (see §4.4.2) |
 | v3.4.0 | Planned | External validation: IDP consumer, contract tests, API docs (see §4.5) |
 | v3.5.0+ | Vision | Surface minimization: crate extraction (see §4.6) |
 
@@ -118,28 +118,17 @@ To fork from v3.3.9, start with `docs/how-to/FIRST_FORK.md`.
 
 ---
 
-## 2. Current State (v3.3.14+ on main)
+## 2. Current State (v3.3.15)
 
-The template is at v3.3.14 (tagged), with significant improvements on `main` heading toward v3.3.15.
+The template is at v3.3.15 (tagged).
 
 - **Kernel ACs** (`must_have_ac: true`): All passing
 - **Selftest**: Green (12/12 gates, expanded from 10)
 - **Non-kernel ACs**: Soft gates, may be UNKNOWN depending on test capture
 
-**On `main` (post-v3.3.14):**
+**Template Version (v3.3.15 tagged):**
 
-Significant work has landed since v3.3.14, including:
-
-- **Security fixes**: DOM-based XSS in AC Coverage view (#146), DoS prevention (#116), auth enforcement on GET/HEAD (#164)
-- **12-step selftest**: Docs-as-Code check added as step 2, all subsequent steps renumbered
-- **Schema registry compatibility check**: New `cargo xtask schema-check` command (#110)
-- **Automated release notes**: Integration with git-cliff for conventional commits (#109)
-- **Performance**: Task board optimization (#115), spawn_blocking for UI operations (#142)
-- **Microcrate architecture**: gov-http-types, enhanced gov-model with proptest, architecture documentation
-
-**Template Version (v3.3.14 tagged):**
-
-The last released template version includes DevEx improvements (faster precommit, staged-only semantics). Work on main will ship as v3.3.15.
+The latest template version includes security fixes (DOM-based XSS, DoS prevention, auth enforcement), 12-step selftest, schema registry, automated release notes, unified issues endpoint, OpenAPI endpoint, performance optimizations, and microcrate architecture polish. See [§4.4.2](#442-post-v3314--v3315-scope-security-performance-tooling) for full details.
 
 **Frozen Kernel Baseline (v3.3.9-kernel tag):**
 
@@ -480,7 +469,7 @@ To customize hook strictness:
 > **Scope:** Security fixes, performance improvements, and tooling enhancements merged after v3.3.14 tag.
 > This will ship as v3.3.15.
 
-**Status:** In Progress on `main` (30+ commits since v3.3.14)
+**Status:** Released (tag: v3.3.15)
 
 #### Security Fixes
 
@@ -543,12 +532,12 @@ This layering enables future crate extraction (v3.5.0+ vision) by establishing c
 #### Release Checklist for v3.3.15
 
 ```text
-[ ] Verify selftest green: cargo xtask selftest
-[ ] Update version in spec_ledger.yaml and related files
-[ ] Add evidence bundle: cargo xtask release-bundle 3.3.15
-[ ] Commit evidence and merge to main
-[ ] Tag: git tag v3.3.15 -m "v3.3.15"
-[ ] Push: git push --follow-tags
+[x] Verify selftest green: cargo xtask selftest
+[x] Update version in spec_ledger.yaml and related files
+[x] Add evidence bundle: cargo xtask release-bundle 3.3.15
+[x] Commit evidence and merge to main
+[x] Tag: git tag v3.3.15 -m "v3.3.15"
+[x] Push: git push --follow-tags
 ```
 
 ---
@@ -730,13 +719,13 @@ This track runs in parallel with feature work. It builds the "truth surface" tha
 
 ## 5. Path Forward Options
 
-> **Current State:** Template v3.3.14 is released. The next step is external validation via fork receipts (v3.4.0 entry criteria).
+> **Current State:** Template v3.3.15 is released. The next step is external validation via fork receipts (v3.4.0 entry criteria).
 
 ### 5.1 Option A: Minimal (Lock and Fork) — *Active*
 
 **Goal:** Freeze the kernel as-is, use it for services, let friction drive improvements.
 
-**Status:** This is the current path. v3.3.9-kernel is frozen; v3.3.14 is released; v3.3.15 is in progress on main.
+**Status:** This is the current path. v3.3.9-kernel is frozen; v3.3.15 is released.
 
 **Immediate Next Steps:**
 
@@ -745,7 +734,7 @@ This track runs in parallel with feature work. It builds the "truth surface" tha
 3. ✅ Documentation complete (v3.3.12 -> v3.3.13)
 4. ✅ v3.3.13 tagged with evidence bundle
 5. ✅ v3.3.14 tagged (DevEx improvements + unified issues endpoint)
-6. 🔜 Tag v3.3.15 (security fixes + 12-step selftest + tooling)
+6. ✅ v3.3.15 tagged (security fixes + 12-step selftest + tooling)
 7. 🔜 Create fork from v3.3.9-kernel tag
 8. 🔜 Complete fork dry-run and AI first-hour receipts (v3.4.0 gate)
 9. 🔜 v3.4.0: External validation (reference consumer, contract tests, API examples)
@@ -1067,23 +1056,14 @@ The template is "production ready" when:
 
 | Layer | Version | Status |
 | ----- | ------- | ------ |
-| **Template** | v3.3.14 | Released (tag: v3.3.14) |
-| **On main** | v3.3.15 | In progress (30+ commits since v3.3.14) |
+| **Template** | v3.3.15 | Released (tag: v3.3.15) |
 | **Kernel** | v3.3.9-kernel | Frozen baseline |
 | **Next Minor** | v3.4.0 | External validation release (see §4.5) |
 | **Future** | v3.5.0+ | Surface minimization / crate extraction (see §4.6) |
 
 **v3.3.9-kernel** is a stable, selftest-green kernel. All **kernel ACs** (`must_have_ac: true`) pass; non-kernel ACs are tracked as soft gates and may be failing or unknown without blocking selftest.
 
-**v3.3.14** shipped faster precommit defaults, staged-only semantics, targeted spellcheck, unified `/platform/issues` endpoint (PR #74), `issues-search` CLI command, and BDD pagination error contract coverage (PR #76).
-
-**v3.3.15 (on main)** includes:
-- Security fixes: DOM-based XSS (PR #146), DoS prevention (PR #116), auth enforcement on GET/HEAD (PR #164)
-- 12-step selftest expansion with Docs-as-Code check
-- Schema registry compatibility check (`cargo xtask schema-check`)
-- Automated release notes via git-cliff integration
-- Performance: task board optimization, spawn_blocking for UI operations
-- Microcrate architecture: gov-http-types crate, enhanced gov-model with proptest
+**v3.3.15** shipped security fixes (DOM-based XSS PR #146, DoS prevention PR #116, auth enforcement on GET/HEAD PR #164), 12-step selftest expansion, schema registry compatibility check, automated release notes via git-cliff, unified issues endpoint, OpenAPI endpoint, performance optimizations, and microcrate architecture polish.
 
 **v3.4.0** is the "external proof" release: reference IDP consumer, contract tests, and real fork receipts.
 
@@ -1095,7 +1075,7 @@ archaeology and factory improvements. P0 (audit pack docs) is complete.
 **Immediate Next Steps:**
 
 1. ✅ v3.3.14 tagged (DevEx improvements + unified issues endpoint)
-2. 🔜 Tag v3.3.15 (security fixes + tooling improvements)
+2. ✅ v3.3.15 tagged (security fixes + tooling improvements)
 3. Collect fork dry-run + AI first-hour receipts (v3.4.0 gate)
 4. Fork for real service development
 5. Capture friction -> batch improvements into v3.4.0

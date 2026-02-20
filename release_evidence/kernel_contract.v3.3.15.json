@@ -1,0 +1,430 @@
+{
+  "kernel_version": "3.3.15",
+  "generated_at": "2026-02-20T10:14:53.709683133+00:00",
+  "commands": [
+    {
+      "name": "ac-lint",
+      "summary": "Lint spec_ledger.yaml for structural issues (naming, duplicates, test types)",
+      "category": "design_ac",
+      "required": true
+    },
+    {
+      "name": "ac-new",
+      "summary": "Scaffold new acceptance criterion",
+      "category": "design_ac",
+      "required": true
+    },
+    {
+      "name": "ac-status",
+      "summary": "Generate AC coverage/status report",
+      "category": "design_ac",
+      "required": true
+    },
+    {
+      "name": "adr-check",
+      "summary": "Validate ADR references and linkage",
+      "category": "design_ac",
+      "required": true
+    },
+    {
+      "name": "adr-new",
+      "summary": "Create architecture decision record",
+      "category": "design_ac",
+      "required": true
+    },
+    {
+      "name": "audit",
+      "summary": "Security & license audit (cargo-audit + cargo-deny)",
+      "category": "security",
+      "required": true
+    },
+    {
+      "name": "bdd",
+      "summary": "Run BDD acceptance tests",
+      "category": "design_ac",
+      "required": true
+    },
+    {
+      "name": "build-time-capture",
+      "summary": "Capture build time metrics (clean release build)",
+      "category": "infrastructure",
+      "required": false
+    },
+    {
+      "name": "build-time-compare",
+      "summary": "Compare two build time metric files",
+      "category": "infrastructure",
+      "required": false
+    },
+    {
+      "name": "bundle",
+      "summary": "Generate LLM context bundle",
+      "category": "design_ac",
+      "required": true
+    },
+    {
+      "name": "check",
+      "summary": "Fast dev loop (fmt + clippy + tests)",
+      "category": "onboarding",
+      "required": true
+    },
+    {
+      "name": "ci-local",
+      "summary": "Run CI checks locally (doctor + selftest + audit + docs)",
+      "category": "onboarding",
+      "required": false
+    },
+    {
+      "name": "clean",
+      "summary": "Clean workspace artifacts",
+      "category": "infrastructure",
+      "required": true
+    },
+    {
+      "name": "coverage",
+      "summary": "Test coverage analysis with tarpaulin (baseline: 65%)",
+      "category": "security",
+      "required": false
+    },
+    {
+      "name": "deploy",
+      "summary": "Deploy to environment",
+      "category": "infrastructure",
+      "required": true
+    },
+    {
+      "name": "dev-up",
+      "summary": "One-command developer bootstrap (doctor + install-hooks + check)",
+      "category": "onboarding",
+      "required": true
+    },
+    {
+      "name": "docs-check",
+      "summary": "Verify version alignment & generated docs",
+      "category": "docs",
+      "required": true
+    },
+    {
+      "name": "doctor",
+      "summary": "Validate environment (Rust, Nix, tools)",
+      "category": "onboarding",
+      "required": true
+    },
+    {
+      "name": "fmt-all",
+      "summary": "Format Rust and related artifacts",
+      "category": "infrastructure",
+      "required": true
+    },
+    {
+      "name": "friction-gh-create",
+      "summary": "Create GitHub issue from friction entry",
+      "category": "governance",
+      "required": true
+    },
+    {
+      "name": "friction-gh-link",
+      "summary": "Link existing GitHub issue to friction entry",
+      "category": "governance",
+      "required": true
+    },
+    {
+      "name": "friction-list",
+      "summary": "List friction log entries (track process/tooling issues)",
+      "category": "governance",
+      "required": true
+    },
+    {
+      "name": "friction-new",
+      "summary": "Create a new friction log entry",
+      "category": "governance",
+      "required": true
+    },
+    {
+      "name": "friction-resolve",
+      "summary": "Resolve a friction entry (mark as resolved with resolution details)",
+      "category": "governance",
+      "required": true
+    },
+    {
+      "name": "graph-export",
+      "summary": "Export governance graph (JSON or Mermaid)",
+      "category": "platform",
+      "required": true
+    },
+    {
+      "name": "hakari",
+      "summary": "Manage workspace dependencies",
+      "category": "infrastructure",
+      "required": false
+    },
+    {
+      "name": "help-flows",
+      "summary": "Show flow-based command map",
+      "category": "meta",
+      "required": true
+    },
+    {
+      "name": "install-hooks",
+      "summary": "Install git hooks for pre-commit governance",
+      "category": "onboarding",
+      "required": true
+    },
+    {
+      "name": "issues-search",
+      "summary": "Search across friction, questions, and tasks",
+      "category": "platform",
+      "required": true
+    },
+    {
+      "name": "migrate",
+      "summary": "Run database migrations",
+      "category": "infrastructure",
+      "required": true
+    },
+    {
+      "name": "pin-actions",
+      "summary": "Pin GitHub Actions to SHAs",
+      "category": "infrastructure",
+      "required": false
+    },
+    {
+      "name": "policy-test",
+      "summary": "Run Rego/OPA policy tests",
+      "category": "infrastructure",
+      "required": true
+    },
+    {
+      "name": "question-new",
+      "summary": "Create a new question artifact (capture ambiguity during flows)",
+      "category": "governance",
+      "required": true
+    },
+    {
+      "name": "question-resolve",
+      "summary": "Resolve a question (mark as answered/resolved/obsolete)",
+      "category": "governance",
+      "required": true
+    },
+    {
+      "name": "questions-list",
+      "summary": "List questions from questions/ directory",
+      "category": "governance",
+      "required": true
+    },
+    {
+      "name": "quickstart",
+      "summary": "Minimal smoke-check",
+      "category": "infrastructure",
+      "required": false
+    },
+    {
+      "name": "release-prepare",
+      "summary": "Bump versions & seed changelog",
+      "category": "release",
+      "required": true
+    },
+    {
+      "name": "release-verify",
+      "summary": "Pre-release gate (selftest + audit + docs)",
+      "category": "release",
+      "required": true
+    },
+    {
+      "name": "sbom-local",
+      "summary": "Generate local SPDX SBOM",
+      "category": "security",
+      "required": false
+    },
+    {
+      "name": "selftest",
+      "summary": "Full gate (BDD + AC + policies)",
+      "category": "onboarding",
+      "required": true
+    },
+    {
+      "name": "service-init",
+      "summary": "Initialize service branding (ID, name, description in metadata, README, CLAUDE.md)",
+      "category": "onboarding",
+      "required": true
+    },
+    {
+      "name": "status",
+      "summary": "Show governance status dashboard (version, REQ/AC/task counts, selftest status)",
+      "category": "onboarding",
+      "required": true
+    },
+    {
+      "name": "suggest-next",
+      "summary": "Suggest next steps for a task",
+      "category": "platform",
+      "required": true
+    },
+    {
+      "name": "tasks-list",
+      "summary": "List tasks from specs/tasks.yaml",
+      "category": "platform",
+      "required": true
+    }
+  ],
+  "platform_endpoints": [
+    {
+      "path": "/platform/status",
+      "method": "GET",
+      "description": "Get platform governance and service status",
+      "response_type": "PlatformStatus"
+    },
+    {
+      "path": "/platform/graph",
+      "method": "GET",
+      "description": "Get full governance traceability graph",
+      "response_type": "Graph"
+    },
+    {
+      "path": "/platform/schema",
+      "method": "GET",
+      "description": "Get platform schema definitions and API documentation",
+      "response_type": "PlatformSchemas"
+    },
+    {
+      "path": "/platform/openapi",
+      "method": "GET",
+      "description": "Get OpenAPI specification (YAML)",
+      "response_type": "text/yaml"
+    },
+    {
+      "path": "/platform/openapi.yaml",
+      "method": "GET",
+      "description": "Get OpenAPI specification (YAML)",
+      "response_type": "text/yaml"
+    },
+    {
+      "path": "/platform/devex/flows",
+      "method": "GET",
+      "description": "Get developer experience flows and commands",
+      "response_type": "DevExFlows"
+    },
+    {
+      "path": "/platform/docs/index",
+      "method": "GET",
+      "description": "Get documentation inventory",
+      "response_type": "DocIndex"
+    },
+    {
+      "path": "/platform/tasks",
+      "method": "GET",
+      "description": "Get work items and tasks (filterable by status, REQ)",
+      "response_type": "TasksResponse"
+    },
+    {
+      "path": "/platform/tasks/suggest-next",
+      "method": "GET",
+      "description": "Get suggested next steps for a task",
+      "response_type": "SuggestedSequence"
+    },
+    {
+      "path": "/platform/agent/hints",
+      "method": "GET",
+      "description": "Get prioritized hints for tasks ready to work on",
+      "response_type": "AgentHintsResponse"
+    },
+    {
+      "path": "/platform/coverage",
+      "method": "GET",
+      "description": "Get AC coverage from BDD test results",
+      "response_type": "CoverageResponse"
+    },
+    {
+      "path": "/platform/idp/snapshot",
+      "method": "GET",
+      "description": "Get IDP-ready governance snapshot for portal integration",
+      "response_type": "IdpSnapshot"
+    },
+    {
+      "path": "/platform/questions",
+      "method": "GET",
+      "description": "Get design questions and ambiguities",
+      "response_type": "QuestionsResponse"
+    },
+    {
+      "path": "/platform/friction",
+      "method": "GET",
+      "description": "Get development friction log entries",
+      "response_type": "FrictionResponse"
+    },
+    {
+      "path": "/platform/forks",
+      "method": "GET",
+      "description": "Get registered fork information",
+      "response_type": "ForksResponse"
+    },
+    {
+      "path": "/ui",
+      "method": "GET",
+      "description": "Platform dashboard UI",
+      "response_type": "text/html"
+    },
+    {
+      "path": "/ui/graph",
+      "method": "GET",
+      "description": "Governance graph visualization UI",
+      "response_type": "text/html"
+    },
+    {
+      "path": "/ui/flows",
+      "method": "GET",
+      "description": "DevEx flows visualization UI",
+      "response_type": "text/html"
+    },
+    {
+      "path": "/ui/coverage",
+      "method": "GET",
+      "description": "AC coverage dashboard UI",
+      "response_type": "text/html"
+    }
+  ],
+  "governance_schemas": [
+    {
+      "name": "spec_ledger",
+      "version": "1.0",
+      "description": "Story → Requirement → Acceptance Criterion traceability ledger",
+      "source_file": "specs/spec_ledger.yaml"
+    },
+    {
+      "name": "tasks",
+      "version": "1.0",
+      "description": "Work item tracking and task management",
+      "source_file": "specs/tasks.yaml"
+    },
+    {
+      "name": "questions",
+      "version": "1.0",
+      "description": "Structured ambiguity artifacts for capturing unresolved decisions",
+      "source_file": "specs/questions_schema.yaml"
+    },
+    {
+      "name": "devex_flows",
+      "version": "1.0",
+      "description": "Developer experience workflows and xtask commands",
+      "source_file": "specs/devex_flows.yaml"
+    },
+    {
+      "name": "config",
+      "version": "1.0",
+      "description": "Service configuration schema (settings and secrets)",
+      "source_file": "specs/config_schema.yaml"
+    },
+    {
+      "name": "doc_index",
+      "version": "1.0",
+      "description": "Documentation inventory mapping docs to stories/requirements/ACs/ADRs",
+      "source_file": "specs/doc_index.yaml"
+    },
+    {
+      "name": "service_metadata",
+      "version": "1.0",
+      "description": "Service identity and metadata",
+      "source_file": "specs/service_metadata.yaml"
+    }
+  ]
+}

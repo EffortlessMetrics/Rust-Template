@@ -9,7 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-> Changes on main branch since v3.3.14. These will ship in the next release.
+(empty)
+
+## [3.3.15] - 2026-02-20
 
 ### Added
 
@@ -49,6 +51,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - New `cargo xtask schema-check` command validates schema compatibility
   - Detects breaking changes in OpenAPI and JSON schemas
   - Integrates with CI for automated schema validation
+
+- **Unified issues endpoint** (`/platform/issues`) (PR #74)
+  - Aggregates friction, questions, and tasks with pagination
+  - `cargo xtask issues-search` for cross-artifact unified search
+
+- **OpenAPI endpoint** (`/platform/openapi`) (PR #61)
+  - Returns OpenAPI 3.0 spec for platform APIs
+
+- **Audit governance receipts and PR quality tooling** (PR #102)
 
 ### Changed
 
@@ -96,6 +107,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Optimized HTML generation for task board view
   - Reduced rendering time for large task lists
 
+- **Dependency updates**
+  - Updated `bytes` to v1.11.1 (fixes RUSTSEC-2026-0007 integer overflow in `BytesMut::reserve`)
+  - Updated `time` to v0.3.47 (fixes RUSTSEC-2026-0009 stack exhaustion DoS)
+  - Added `MIT-0` license to cargo-deny allow list (for `borrow-or-share` crate)
+  - Updated advisory ignore list: removed resolved `fxhash` advisory, added `rsa` Marvin Attack (no fix available, mitigated by JWT-only usage)
+
 ### Fixed
 
 - **JWT validation test reliability**
@@ -108,6 +125,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **AC status tracking**
   - Updated multiple requirements from [UNKNOWN] to [PASS] status
   - Improved conditional check mode for AC status validation
+
+- **Markdown link validation** now fails on broken links (previously advisory only)
 
 ### Security
 
