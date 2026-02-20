@@ -1507,8 +1507,8 @@ For users upgrading from v1.x:
 
 **Validation:**
 
-- ✅ `cargo build -p telemetry` - Builds without OTLP feature (default)
-- ✅ `cargo build -p telemetry --features otlp` - Builds with OTLP feature
+- ✅ `cargo build -p rust-as-spec-telemetry` - Builds without OTLP feature (default)
+- ✅ `cargo build -p rust-as-spec-telemetry --features otlp` - Builds with OTLP feature
 - ✅ `cargo clippy --all-targets --all-features -- -D warnings` - Clean
 - ✅ `cargo fmt --all -- --check` - Clean
 - ✅ `cargo run -p xtask -- selftest` - Core checks passing

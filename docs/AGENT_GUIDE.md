@@ -1480,9 +1480,9 @@ If the platform APIs return unexpected data:
 
 ```bash
 # Try loading each spec manually
-cargo run -p spec-runtime --example load_ledger
-cargo run -p spec-runtime --example load_devex
-cargo run -p spec-runtime --example load_tasks
+cargo run -p rust-as-spec-runtime --example load_ledger
+cargo run -p rust-as-spec-runtime --example load_devex
+cargo run -p rust-as-spec-runtime --example load_tasks
 ```
 
 If parsing fails, the YAML has schema errors.
