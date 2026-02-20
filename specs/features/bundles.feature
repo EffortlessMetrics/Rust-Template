@@ -68,6 +68,15 @@ Feature: LLM Bundle Structure
     Then the command should succeed
     And "bundle/implement_ac/bundle.yaml" should contain "bundle_version: 1"
 
+  @AC-TPL-BUNDLE-MINIMAL-SCOPE
+  Scenario: Bundle output reports bounded file count and payload size
+    Given I am in the actual workspace
+    When I run "cargo xtask bundle implement_ac"
+    Then the command should succeed
+    And the output should contain "Max bytes:"
+    And the output should contain "Files:"
+    And the output should contain "Size:"
+
   # ============================================================================
   # Referential Integrity Scenarios (REQ-TPL-AGENT-ERGONOMICS)
   # ============================================================================

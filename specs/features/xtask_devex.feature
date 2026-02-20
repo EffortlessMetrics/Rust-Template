@@ -415,6 +415,70 @@ Feature: Developer Experience Commands
     When I run "cargo xtask skills-lint"
     Then the command should succeed
 
+  @AC-TPL-SKILLS-GOVERNANCE-001 @AC-TPL-SKILLS-GOVERNANCE-003 @AC-TPL-SKILLS-LIFECYCLE-DOCS
+  Scenario: Skills governance docs describe lifecycle and template contracts
+    Given I am in the actual workspace
+    Then the file "docs/SKILLS_GOVERNANCE.md" should exist
+    And the file "docs/SKILLS_GOVERNANCE.md" should contain "create, maintain, retire"
+    And the file "docs/SKILLS_GOVERNANCE.md" should contain "ADR-0020"
+    And the file "docs/SKILLS_TEMPLATE.md" should exist
+    And the file "docs/SKILLS_TEMPLATE.md" should contain "When to Use"
+    And the file "docs/SKILLS_TEMPLATE.md" should contain "allowed-tools"
+
+  @AC-TPL-SKILLS-GOVERNANCE-002 @AC-TPL-SKILLS-DESCRIPTION-QUALITY @AC-TPL-SKILLS-ALLOWED-TOOLS-SAFETY @AC-TPL-SKILLS-FLOW-MAPPING
+  Scenario: skills-lint enforces description quality, tool safety, and flow mapping
+    Given I am in the actual workspace
+    When I run "XTASK_LOW_RESOURCES=0 cargo xtask skills-lint"
+    Then the command should succeed
+    And the output should contain "[SKILL LINT]"
+    And the file "docs/SKILLS_TEMPLATE.md" should contain "WHAT (capability) and WHEN (triggers/context)"
+    And the file "docs/SKILLS_TEMPLATE.md" should contain "allowed-tools follows least-privilege principle"
+    And the file "docs/SKILLS_TEMPLATE.md" should contain "references devex_flows or xtask commands"
+
+  @AC-TPL-AGENTS-LIFECYCLE-DOCS
+  Scenario: Agent governance docs describe lifecycle responsibilities
+    Given I am in the actual workspace
+    Then the file "docs/AGENTS_GOVERNANCE.md" should exist
+    And the file "docs/AGENTS_GOVERNANCE.md" should contain "Lifecycle"
+    And the file "docs/AGENTS_GOVERNANCE.md" should contain "Create an Agent"
+    And the file "docs/AGENTS_GOVERNANCE.md" should contain "Maintain an Agent"
+    And the file "docs/AGENTS_GOVERNANCE.md" should contain "Retire an Agent"
+
+  @AC-TPL-AGENTS-DESCRIPTION-QUALITY @AC-TPL-AGENTS-TOOLS-PERMISSION-SAFETY @AC-TPL-AGENTS-MODEL-POLICY @AC-TPL-AGENTS-SKILLS-REFERENCES
+  Scenario: agents-lint validates description, model, permission, and skill references
+    Given I am in the actual workspace
+    When I run "cargo xtask agents-lint"
+    Then the command should succeed
+    And the output should contain "[AGENT LINT]"
+    And the file "docs/AGENTS_GOVERNANCE.md" should contain "description non-empty"
+    And the file "docs/AGENTS_GOVERNANCE.md" should contain "permissionMode"
+    And the file "docs/AGENTS_GOVERNANCE.md" should contain "model"
+    And the file "docs/AGENTS_GOVERNANCE.md" should contain "skills"
+
+  @AC-PLT-AC-DEMOTION-GOVERNED
+  Scenario: AC demotion workflow is documented as ADR-governed change
+    Given I am in the actual workspace
+    Then the file "docs/how-to/change-acceptance-criterion.md" should exist
+    And the file "docs/how-to/change-acceptance-criterion.md" should contain "Demote Kernel AC"
+    And the file "docs/how-to/change-acceptance-criterion.md" should contain "must_have_ac: true"
+    And the file "docs/how-to/change-acceptance-criterion.md" should contain "must_have_ac: false"
+    And the file "docs/how-to/change-acceptance-criterion.md" should contain "ADR or issue filed"
+
+  @AC-TPL-XTASK-SPEC-ROOT
+  Scenario: tasks-list honors SPEC_ROOT override when set
+    Given the environment variable "SPEC_ROOT" is set to "/tmp/does-not-exist"
+    When I run "XTASK_LOW_RESOURCES=0 cargo xtask tasks-list"
+    Then the command should fail
+    And the output should contain "/tmp/does-not-exist/specs/tasks.yaml"
+
+  @AC-TPL-TS-CONFIG-VALIDATION
+  Scenario: ts-config validator catches deprecated settings contract
+    Given I am in the actual workspace
+    When I run "bash scripts/validate-ts-config.sh"
+    Then the command should succeed
+    And the output should contain "Validating TypeScript configuration standards"
+    And the output should contain "pass validation"
+
   @AC-TPL-SKILLS-NAME-FORMAT
   Scenario: skills-lint enforces skill name format in the template
     Given I am in the actual workspace

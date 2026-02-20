@@ -1594,8 +1594,14 @@ async fn execute_command(world: &mut World, command: &str, env_vars: &[(&str, &s
     }
     cmd.env_remove("RUSTC_WRAPPER");
 
-    // Set SPEC_ROOT to the temp directory so xtask commands use test specs
-    cmd.env("SPEC_ROOT", world.spec_root());
+    // Default SPEC_ROOT to the test repo, but allow scenarios to override it
+    // via `Given the environment variable "SPEC_ROOT" is set to ...` or
+    // inline command env vars like `SPEC_ROOT=... cargo xtask ...`.
+    let spec_root_overridden = world.xtask_context().env.contains_key("SPEC_ROOT")
+        || env_vars.iter().any(|(key, _)| *key == "SPEC_ROOT");
+    if !spec_root_overridden {
+        cmd.env("SPEC_ROOT", world.spec_root());
+    }
     // Prevent Nix wrapper from activating (we're already in Nix shell during tests)
     cmd.env("IN_NIX_SHELL", "1");
     // Avoid leaking BDD selection env vars into child commands.

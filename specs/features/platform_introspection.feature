@@ -29,10 +29,11 @@ Feature: Platform Introspection API
     And the JSON response should have field "flows"
     And the field "flows" should be of type "object"
 
-  @AC-TPL-PLATFORM-DOCS
+  @AC-TPL-PLATFORM-DOCS @AC-TPL-PLATFORM-DOCS-CONTRACT
   Scenario: Docs index endpoint returns document index
     When I GET "http://localhost:8080/platform/docs/index"
     Then the response status should be 200
+    And the JSON response should have field "summary"
     And the JSON response should have field "docs"
     And the field "docs" should be of type "array"
 
@@ -119,10 +120,13 @@ Feature: Platform Introspection API
   # CLI/HTTP Parity Scenarios (REQ-TPL-INTROSPECTION-PARITY)
   # ============================================================================
 
-  @AC-TPL-STATUS-PARITY-CLI-HTTP
+  @AC-TPL-STATUS-PARITY-CLI-HTTP @AC-TPL-PLATFORM-STATUS-CONTRACT
   Scenario: Platform status exposes same key fields as CLI
     When I GET "http://localhost:8080/platform/status"
     Then the response status should be 200
+    And the JSON response should have field "service"
+    And the JSON response should have nested field "service.service_id"
+    And the JSON response should have nested field "service.template_version"
     And the JSON response should have field "governance"
     And the JSON response should have nested field "governance.ledger.stories"
     And the JSON response should have nested field "governance.ledger.requirements"
