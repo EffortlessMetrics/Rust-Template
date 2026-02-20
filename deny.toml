@@ -1,11 +1,11 @@
 [advisories]
 # See ADR-0007 for dependency security policy.
 #
-# RUSTSEC-2025-0057 (fxhash unmaintained):
-# - Transitive: selectors → scraper → app-http (dev-only)
-# - Not a security vulnerability, just unmaintained
-# - Upstream issue: https://github.com/servo/selectors/issues
-# - We use the latest scraper/selectors versions
+# RUSTSEC-2023-0071 (rsa Marvin Attack):
+# - Transitive: rsa → jsonwebtoken → app-http
+# - Timing sidechannel in RSA decryption (Marvin Attack)
+# - No upstream fix available yet
+# - We use RSA only for JWT verification, not decryption
 #
 # RUSTSEC-2025-0134 (rustls-pemfile unmaintained):
 # - Transitive: bollard → testcontainers → adapters-db-sqlx (dev-only)
@@ -14,14 +14,14 @@
 # - We use the latest testcontainers version
 #
 ignore = [
-  # RUSTSEC-2025-0057 (fxhash unmaintained)
-  # - Path: selectors → scraper → app-http (dev-dependencies only)
-  # - Risk: Unmaintained dependency, not directly exploitable
-  # - Last reviewed: 2025-12-18
-  # - Next review: 2026-03-18 (quarterly)
-  # - Action: Monitor upstream selectors crate for fix
-  # - Tracking: https://github.com/servo/selectors/issues
-  "RUSTSEC-2025-0057",
+  # RUSTSEC-2023-0071 (rsa Marvin Attack)
+  # - Path: rsa → jsonwebtoken → app-http
+  # - Risk: Timing sidechannel, mitigated by JWT-only usage (no raw RSA decryption)
+  # - Last reviewed: 2026-02-20
+  # - Next review: 2026-05-20 (quarterly)
+  # - Action: Monitor RustCrypto/RSA for constant-time implementation
+  # - Tracking: https://github.com/RustCrypto/RSA/issues/19
+  "RUSTSEC-2023-0071",
   # RUSTSEC-2025-0134 (rustls-pemfile unmaintained)
   # - Path: bollard → testcontainers → adapters-db-sqlx (dev-dependencies only)
   # - Risk: Unmaintained dependency, not directly exploitable
@@ -49,6 +49,7 @@ allow = [
   "CDLA-Permissive-2.0", # Community Data License Agreement (webpki-roots)
   "ISC", # ISC License (common in crypto crates)
   "MIT",
+  "MIT-0", # MIT No Attribution (borrow-or-share crate)
   "MPL-2.0", # Mozilla Public License (colored crate)
   "Unicode-3.0", # Unicode License v3 (icu_* crates)
   "Unicode-DFS-2016",

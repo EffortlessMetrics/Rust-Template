@@ -1,6 +1,6 @@
 # CLAUDE.md – Rust-as-Spec Platform Cell
 
-**Template Version:** v3.3.14
+**Template Version:** v3.3.15
 
 You are an autonomous engineer working **inside** a Rust-as-Spec platform cell. Work confidently, validate with selftest, and leave a clear trail for async human review.
 

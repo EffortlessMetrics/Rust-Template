@@ -1,12 +1,13 @@
 # Friction Entry: Env var test isolation issue in selftest budget parsing
-# Created at 2026-01-06
-# Status: open
+# Created by agent at 2026-01-06
+# Status: resolved
 
 id: FRICTION-TEST-001
-date: 2026-01-06
+date: "2026-01-06"
 category: testing
 severity: medium
-summary: Env var test isolation issue in selftest budget parsing
+summary: "Env var test isolation issue in selftest budget parsing"
+
 description: |
   The test `kernel_unknown_budget_env_var_parsing` in selftest.rs fails
   intermittently when run with parallel test threads. It passes reliably
@@ -15,28 +16,39 @@ description: |
   Root cause: The test modifies shared environment variables (XTASK_STRICT_AC_COVERAGE,
   KERNEL_UNKNOWN_BUDGET) but other tests in the same test run may also set these,
   causing race conditions.
+
 expected_behavior: |
   Tests should be isolated from each other and able to run in parallel without
   interference from environment variable mutations.
+
 workaround: |
   Run the test with `cargo test -p xtask kernel_unknown_budget -- --test-threads=1`
+
 impact: |
   - CI may flake on this test
   - Developers may see spurious test failures
+
 context:
   discovered_by: agent
-  phase: development
+  phase: "development"
   files_involved:
-  - crates/xtask/src/commands/selftest.rs
+    - "crates/xtask/src/commands/selftest.rs"
   commands_involved:
-  - cargo test -p xtask
-  - cargo xtask selftest
+    - "cargo test -p xtask"
+    - "cargo xtask selftest"
+
 status: resolved
-resolution: |
-  Fixed by EnvVarGuard in crates/testing/src/process.rs which uses a global
-  reentrant mutex (PROCESS_LOCK) to serialize all environment variable modifications.
-  The selftest env var tests now properly use EnvVarGuard, ensuring safe parallel execution.
-resolved_date: 2026-01-29
+
+resolution:
+  resolved_by: agent
+  resolved_at: "2026-01-29"
+  fix_description: |
+    Fixed by EnvVarGuard in crates/testing/src/process.rs which uses a global
+    reentrant mutex (PROCESS_LOCK) to serialize all environment variable modifications.
+    The selftest env var tests now properly use EnvVarGuard, ensuring safe parallel execution.
+  verification: |
+    Tests now pass reliably with parallel test threads.
+
 related_items:
   issues:
-  - '#59'
+    - "#59"
