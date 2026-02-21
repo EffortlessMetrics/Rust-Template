@@ -261,20 +261,51 @@ pub fn run() -> Result<()> {
     Ok(())
 }
 
+/// Compile-time fallback MSRV (major, minor, patch).
+/// Prefer reading from Cargo.toml at runtime via `read_msrv_from_cargo_toml()`.
+const MSRV: (u32, u32, u32) = (1, 92, 0);
+
+fn parse_version_tuple(version: &str) -> Option<(u32, u32, u32)> {
+    let mut parts = version.split('.');
+    let major = parts.next()?.parse().ok()?;
+    let minor = parts.next()?.parse().ok()?;
+    let patch = parts.next().and_then(|p| p.parse().ok()).unwrap_or(0);
+    Some((major, minor, patch))
+}
+
+/// Read the MSRV from the workspace root `Cargo.toml` (`rust-version` field).
+/// Returns `None` if the file can't be read or the field can't be parsed.
+fn read_msrv_from_cargo_toml() -> Option<(u32, u32, u32)> {
+    let manifest_dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR"));
+    let workspace_root = manifest_dir.parent()?.parent()?;
+    let cargo_toml_path = workspace_root.join("Cargo.toml");
+    let content = std::fs::read_to_string(cargo_toml_path).ok()?;
+
+    for line in content.lines() {
+        let trimmed = line.trim();
+        if trimmed.starts_with("rust-version") {
+            // Parse: rust-version = "X.Y.Z"
+            let value = trimmed.split('=').nth(1)?.trim().trim_matches('"');
+            return parse_version_tuple(value);
+        }
+    }
+    None
+}
+
 fn check_rust_version() -> Result<String> {
     let output = Command::new("rustc").arg("--version").output()?;
-    let version = String::from_utf8_lossy(&output.stdout).to_string();
+    let version_str = String::from_utf8_lossy(&output.stdout).trim().to_string();
+    let version_number = extract_version_number(&version_str);
 
-    // Check if version meets minimum requirement
-    let version_str = version.trim();
-    if version_str.contains("1.89")
-        || version_str.contains("1.90")
-        || version_str.contains("1.91")
-        || version_str.contains("1.92")
-    {
-        Ok(version_str.to_string())
-    } else {
-        anyhow::bail!("{} (requires 1.92.0+)", version_str)
+    // Prefer Cargo.toml MSRV, fall back to compile-time constant
+    let msrv = read_msrv_from_cargo_toml().unwrap_or(MSRV);
+
+    match parse_version_tuple(&version_number) {
+        Some(v) if v >= msrv => Ok(version_str),
+        Some(_) => {
+            anyhow::bail!("{} (requires {}.{}.{}+)", version_str, msrv.0, msrv.1, msrv.2)
+        }
+        None => anyhow::bail!("Could not parse version from: {}", version_str),
     }
 }
 
@@ -492,47 +523,41 @@ mod tests {
     use testing::process::EnvVarGuard;
 
     #[test]
-    fn test_check_rust_version_accepts_valid_versions() {
-        // This test validates the version checking logic would accept valid Rust versions
-        // We can't test the actual check_rust_version() function in isolation easily,
-        // but we can verify the version string matching logic
-        let valid_versions = vec![
-            "rustc 1.89.0 (abc123456 2024-01-01)",
-            "rustc 1.90.0 (def789012 2024-02-01)",
-            "rustc 1.91.0 (ghi345678 2024-03-01)",
-            "rustc 1.92.0 (jkl901234 2024-04-01)",
-        ];
+    fn test_parse_version_tuple() {
+        assert_eq!(parse_version_tuple("1.92.0"), Some((1, 92, 0)));
+        assert_eq!(parse_version_tuple("1.93.1"), Some((1, 93, 1)));
+        assert_eq!(parse_version_tuple("2.0.0"), Some((2, 0, 0)));
+        assert_eq!(parse_version_tuple(""), None);
+        assert_eq!(parse_version_tuple("1.92"), Some((1, 92, 0)));
+        assert_eq!(parse_version_tuple("not.a.version"), None);
+        assert_eq!(parse_version_tuple("1.2.3.4"), Some((1, 2, 3))); // extra parts ignored by split
+    }
 
-        for version in valid_versions {
-            assert!(
-                version.contains("1.89")
-                    || version.contains("1.90")
-                    || version.contains("1.91")
-                    || version.contains("1.92"),
-                "Version {} should be accepted",
-                version
-            );
+    #[test]
+    fn test_version_meets_minimum() {
+        // Versions at or above MSRV should be accepted
+        let valid = vec!["1.92.0", "1.92.1", "1.93.0", "1.100.0", "2.0.0"];
+        for v in valid {
+            let tuple = parse_version_tuple(v).unwrap();
+            assert!(tuple >= MSRV, "Version {} should meet MSRV", v);
         }
     }
 
     #[test]
-    fn test_version_check_rejects_old_versions() {
-        // Verify that old versions would be rejected
-        let old_versions = vec![
-            "rustc 1.88.0 (abc123456 2023-12-01)",
-            "rustc 1.70.0 (def789012 2023-06-01)",
-            "rustc 1.60.0 (ghi345678 2023-01-01)",
-        ];
+    fn test_version_below_minimum_rejected() {
+        let old = vec!["1.91.0", "1.89.0", "1.70.0", "1.60.0", "0.99.0"];
+        for v in old {
+            let tuple = parse_version_tuple(v).unwrap();
+            assert!(tuple < MSRV, "Version {} should be below MSRV", v);
+        }
+    }
 
-        for version in old_versions {
-            assert!(
-                !(version.contains("1.89")
-                    || version.contains("1.90")
-                    || version.contains("1.91")
-                    || version.contains("1.92")),
-                "Version {} should be rejected",
-                version
-            );
+    #[test]
+    fn test_future_versions_accepted() {
+        let future = vec!["1.93.0", "1.100.0", "2.0.0", "2.1.0"];
+        for v in future {
+            let tuple = parse_version_tuple(v).unwrap();
+            assert!(tuple >= MSRV, "Future version {} should be accepted", v);
         }
     }
 
@@ -574,6 +599,18 @@ mod tests {
                 input
             );
         }
+    }
+
+    #[test]
+    fn test_read_msrv_from_cargo_toml() {
+        // Read the actual workspace Cargo.toml and verify it returns a valid MSRV
+        let msrv = read_msrv_from_cargo_toml();
+        assert!(msrv.is_some(), "Should be able to read MSRV from workspace Cargo.toml");
+        let (major, minor, _patch) = msrv.unwrap();
+        assert_eq!(major, 1, "MSRV major version should be 1");
+        assert!(minor >= 70, "MSRV minor version should be reasonable (>= 70)");
+        // Verify it matches the compile-time constant
+        assert_eq!(msrv.unwrap(), MSRV, "Cargo.toml MSRV should match the compile-time constant");
     }
 
     #[test]

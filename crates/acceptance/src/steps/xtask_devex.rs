@@ -213,6 +213,11 @@ async fn given_low_resources_unset(world: &mut World) {
     world.xtask_context_mut().env.remove("XTASK_LOW_RESOURCES");
 }
 
+#[given("low resources are disabled")]
+async fn given_low_resources_disabled(world: &mut World) {
+    world.xtask_context_mut().env.insert("XTASK_LOW_RESOURCES".to_string(), "0".to_string());
+}
+
 #[given(regex = r#"^the environment variable "([^"]+)" is set to "([^"]+)"$"#)]
 async fn given_env_var_set(world: &mut World, var_name: String, var_value: String) {
     world.xtask_context_mut().env.insert(var_name, var_value);

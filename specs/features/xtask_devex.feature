@@ -415,7 +415,7 @@ Feature: Developer Experience Commands
     When I run "cargo xtask skills-lint"
     Then the command should succeed
 
-  @AC-TPL-SKILLS-GOVERNANCE-001 @AC-TPL-SKILLS-GOVERNANCE-003 @AC-TPL-SKILLS-LIFECYCLE-DOCS
+  @AC-TPL-SKILLS-LIFECYCLE-DOCS
   Scenario: Skills governance docs describe lifecycle and template contracts
     Given I am in the actual workspace
     Then the file "docs/SKILLS_GOVERNANCE.md" should exist
@@ -425,14 +425,53 @@ Feature: Developer Experience Commands
     And the file "docs/SKILLS_TEMPLATE.md" should contain "When to Use"
     And the file "docs/SKILLS_TEMPLATE.md" should contain "allowed-tools"
 
-  @AC-TPL-SKILLS-GOVERNANCE-002 @AC-TPL-SKILLS-DESCRIPTION-QUALITY @AC-TPL-SKILLS-ALLOWED-TOOLS-SAFETY @AC-TPL-SKILLS-FLOW-MAPPING
+  @AC-TPL-SKILLS-GOVERNANCE-001
+  Scenario: Skills governance doc covers spec, validation rules, and ADR-0020
+    Given I am in the actual workspace
+    Then the file "docs/SKILLS_GOVERNANCE.md" should exist
+    And the file "docs/SKILLS_GOVERNANCE.md" should contain "ADR-0020"
+    And the file "docs/SKILLS_GOVERNANCE.md" should contain "validation"
+
+  @AC-TPL-SKILLS-GOVERNANCE-003
+  Scenario: Skills template doc provides creation checklist
+    Given I am in the actual workspace
+    Then the file "docs/SKILLS_TEMPLATE.md" should exist
+    And the file "docs/SKILLS_TEMPLATE.md" should contain "checklist"
+    And the file "docs/SKILLS_TEMPLATE.md" should contain "description"
+
+  @AC-TPL-SKILLS-GOVERNANCE-002
   Scenario: skills-lint enforces description quality, tool safety, and flow mapping
     Given I am in the actual workspace
-    When I run "XTASK_LOW_RESOURCES=0 cargo xtask skills-lint"
+    Given low resources are disabled
+    When I run "cargo xtask skills-lint"
     Then the command should succeed
     And the output should contain "[SKILL LINT]"
     And the file "docs/SKILLS_TEMPLATE.md" should contain "WHAT (capability) and WHEN (triggers/context)"
     And the file "docs/SKILLS_TEMPLATE.md" should contain "allowed-tools follows least-privilege principle"
+    And the file "docs/SKILLS_TEMPLATE.md" should contain "references devex_flows or xtask commands"
+
+  @AC-TPL-SKILLS-DESCRIPTION-QUALITY
+  Scenario: skills-lint validates description WHAT and WHEN criteria
+    Given I am in the actual workspace
+    Given low resources are disabled
+    When I run "cargo xtask skills-lint"
+    Then the command should succeed
+    And the file "docs/SKILLS_TEMPLATE.md" should contain "WHAT (capability) and WHEN (triggers/context)"
+
+  @AC-TPL-SKILLS-ALLOWED-TOOLS-SAFETY
+  Scenario: skills-lint enforces allowed-tools least-privilege
+    Given I am in the actual workspace
+    Given low resources are disabled
+    When I run "cargo xtask skills-lint"
+    Then the command should succeed
+    And the file "docs/SKILLS_TEMPLATE.md" should contain "allowed-tools follows least-privilege principle"
+
+  @AC-TPL-SKILLS-FLOW-MAPPING
+  Scenario: skills-lint validates flow mapping references
+    Given I am in the actual workspace
+    Given low resources are disabled
+    When I run "cargo xtask skills-lint"
+    Then the command should succeed
     And the file "docs/SKILLS_TEMPLATE.md" should contain "references devex_flows or xtask commands"
 
   @AC-TPL-AGENTS-LIFECYCLE-DOCS
@@ -444,7 +483,7 @@ Feature: Developer Experience Commands
     And the file "docs/AGENTS_GOVERNANCE.md" should contain "Maintain an Agent"
     And the file "docs/AGENTS_GOVERNANCE.md" should contain "Retire an Agent"
 
-  @AC-TPL-AGENTS-DESCRIPTION-QUALITY @AC-TPL-AGENTS-TOOLS-PERMISSION-SAFETY @AC-TPL-AGENTS-MODEL-POLICY @AC-TPL-AGENTS-SKILLS-REFERENCES
+  @AC-TPL-AGENTS-DESCRIPTION-QUALITY
   Scenario: agents-lint validates description, model, permission, and skill references
     Given I am in the actual workspace
     When I run "cargo xtask agents-lint"
@@ -453,6 +492,28 @@ Feature: Developer Experience Commands
     And the file "docs/AGENTS_GOVERNANCE.md" should contain "description non-empty"
     And the file "docs/AGENTS_GOVERNANCE.md" should contain "permissionMode"
     And the file "docs/AGENTS_GOVERNANCE.md" should contain "model"
+    And the file "docs/AGENTS_GOVERNANCE.md" should contain "skills"
+
+  @AC-TPL-AGENTS-TOOLS-PERMISSION-SAFETY
+  Scenario: agents-lint validates tools and permissionMode safety
+    Given I am in the actual workspace
+    When I run "cargo xtask agents-lint"
+    Then the command should succeed
+    And the file "docs/AGENTS_GOVERNANCE.md" should contain "permissionMode"
+    And the file "docs/AGENTS_GOVERNANCE.md" should contain "least-privilege"
+
+  @AC-TPL-AGENTS-MODEL-POLICY
+  Scenario: agents-lint validates model policy compliance
+    Given I am in the actual workspace
+    When I run "cargo xtask agents-lint"
+    Then the command should succeed
+    And the file "docs/AGENTS_GOVERNANCE.md" should contain "model"
+
+  @AC-TPL-AGENTS-SKILLS-REFERENCES
+  Scenario: agents-lint validates skill references exist
+    Given I am in the actual workspace
+    When I run "cargo xtask agents-lint"
+    Then the command should succeed
     And the file "docs/AGENTS_GOVERNANCE.md" should contain "skills"
 
   @AC-PLT-AC-DEMOTION-GOVERNED
@@ -467,7 +528,8 @@ Feature: Developer Experience Commands
   @AC-TPL-XTASK-SPEC-ROOT
   Scenario: tasks-list honors SPEC_ROOT override when set
     Given the environment variable "SPEC_ROOT" is set to "/tmp/does-not-exist"
-    When I run "XTASK_LOW_RESOURCES=0 cargo xtask tasks-list"
+    Given low resources are disabled
+    When I run "cargo xtask tasks-list"
     Then the command should fail
     And the output should contain "/tmp/does-not-exist/specs/tasks.yaml"
 

@@ -29,13 +29,20 @@ Feature: Platform Introspection API
     And the JSON response should have field "flows"
     And the field "flows" should be of type "object"
 
-  @AC-TPL-PLATFORM-DOCS @AC-TPL-PLATFORM-DOCS-CONTRACT
+  @AC-TPL-PLATFORM-DOCS-CONTRACT
   Scenario: Docs index endpoint returns document index
     When I GET "http://localhost:8080/platform/docs/index"
     Then the response status should be 200
     And the JSON response should have field "summary"
     And the JSON response should have field "docs"
     And the field "docs" should be of type "array"
+
+  @AC-TPL-PLATFORM-DOCS
+  Scenario: Docs index returns a non-empty document list
+    When I GET "http://localhost:8080/platform/docs/index"
+    Then the response status should be 200
+    And the JSON response should have field "docs"
+    And the field "docs" should not be empty
 
   @AC-TPL-PLATFORM-GOVERNANCE-APIS
   Scenario: Questions endpoint returns all questions
@@ -120,7 +127,7 @@ Feature: Platform Introspection API
   # CLI/HTTP Parity Scenarios (REQ-TPL-INTROSPECTION-PARITY)
   # ============================================================================
 
-  @AC-TPL-STATUS-PARITY-CLI-HTTP @AC-TPL-PLATFORM-STATUS-CONTRACT
+  @AC-TPL-STATUS-PARITY-CLI-HTTP
   Scenario: Platform status exposes same key fields as CLI
     When I GET "http://localhost:8080/platform/status"
     Then the response status should be 200
@@ -132,6 +139,13 @@ Feature: Platform Introspection API
     And the JSON response should have nested field "governance.ledger.requirements"
     And the JSON response should have nested field "governance.ledger.acs"
     And the JSON response should have nested field "governance.tasks.total"
+
+  @AC-TPL-PLATFORM-STATUS-CONTRACT
+  Scenario: Platform status response has service and governance sections
+    When I GET "http://localhost:8080/platform/status"
+    Then the response status should be 200
+    And the JSON response should have field "service"
+    And the JSON response should have field "governance"
 
   @AC-TPL-STATUS-AC-COVERAGE
   Scenario: Platform status includes AC coverage metrics

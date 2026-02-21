@@ -4,6 +4,46 @@ use gherkin::tagexpr::TagOperation;
 use std::fs::File;
 use std::sync::Arc;
 
+/// Write coverage metadata so downstream tools (ac-status, ac-coverage) can
+/// detect whether the run was filtered and warn accordingly.
+fn write_coverage_meta(coverage_dir: &std::path::Path, tag_filter: &TagFilter) {
+    let tag_expression = std::env::var("CUCUMBER_TAG_EXPRESSION").unwrap_or_default();
+    let run_mode = if tag_filter.user_expr.is_none() {
+        "full"
+    } else {
+        let expr = tag_expression.trim();
+        if expr == "not @ci-only" || expr == "not @ci_only" { "local-default" } else { "filtered" }
+    };
+    let timestamp = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| d.as_secs())
+        .unwrap_or(0);
+    let git_sha = std::process::Command::new("git")
+        .args(["rev-parse", "HEAD"])
+        .output()
+        .ok()
+        .and_then(|o| {
+            if o.status.success() {
+                String::from_utf8(o.stdout).ok().map(|s| s.trim().to_string())
+            } else {
+                None
+            }
+        })
+        .unwrap_or_default();
+
+    let meta = serde_json::json!({
+        "tag_expression": tag_expression,
+        "run_mode": run_mode,
+        "timestamp": timestamp,
+        "git_sha": git_sha,
+    });
+
+    let meta_path = coverage_dir.join("coverage.meta.json");
+    if let Ok(contents) = serde_json::to_string_pretty(&meta) {
+        let _ = std::fs::write(meta_path, contents);
+    }
+}
+
 // Platform-specific null device
 #[cfg(unix)]
 const NULL_DEVICE: &str = "/dev/null";
@@ -70,6 +110,9 @@ async fn main() {
     // Build tag filter configuration once at startup.
     // All filtering is done in the closure - no env var mutation needed.
     let tag_filter = Arc::new(build_tag_filter());
+
+    // Best-effort: write coverage metadata for downstream tools
+    write_coverage_meta(&coverage_dir, &tag_filter);
 
     // Use filter_run_and_exit with coverage and JUnit writers
     // The JUnit file may be empty due to the cucumber-rs exit() issue documented above.

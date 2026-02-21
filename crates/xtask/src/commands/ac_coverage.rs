@@ -39,6 +39,22 @@ pub fn run(args: AcCoverageArgs) -> Result<()> {
     let coverage_exists = args.coverage.exists()
         && fs::metadata(&args.coverage).map(|m| m.len() > 0).unwrap_or(false);
 
+    // Check coverage metadata for filtered-run warnings
+    {
+        let meta_path = args.coverage.with_file_name("coverage.meta.json");
+        if let Ok(meta_str) = fs::read_to_string(&meta_path)
+            && let Ok(meta) = serde_json::from_str::<serde_json::Value>(&meta_str)
+            && meta.get("run_mode").and_then(|v| v.as_str()) == Some("filtered")
+        {
+            let expr = meta.get("tag_expression").and_then(|v| v.as_str()).unwrap_or("<unknown>");
+            println!(
+                "  {} Coverage data from filtered run (tag: {}). Results may be incomplete.",
+                "[WARN]".yellow(),
+                expr
+            );
+        }
+    }
+
     let ac_results = if coverage_exists {
         println!("  Using primary source: {}", args.coverage.display());
         let (_, results) = parse_ac_coverage(&args.coverage)?;

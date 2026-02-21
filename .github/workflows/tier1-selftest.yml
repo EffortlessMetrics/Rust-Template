@@ -238,7 +238,8 @@ jobs:
         if: (failure() || github.ref == 'refs/heads/main') && steps.changes.outputs.bdd_needed == 'true'
         uses: actions/upload-artifact@v4
         with:
-          # Group by branch for easier time-series analysis
-          name: ac-status-${{ github.ref_name }}
+          # Use PR number for PRs (avoids '/' in ref_name like '209/merge'),
+          # branch name for pushes (e.g. 'main')
+          name: ac-status-${{ github.event.pull_request.number && format('pr-{0}', github.event.pull_request.number) || github.ref_name }}
           path: artifacts/ac-status/
           retention-days: 30
