@@ -34,11 +34,11 @@ jobs:
             echo "declared=true" >> $GITHUB_OUTPUT
 
             # Extract Type field
-            TYPE=$(echo "$PR_BODY" | grep -oP '(?<=Type:\s*)(mechanical|behavior|governance|release|docs)' | head -1 || echo "any")
+            TYPE=$(echo "$PR_BODY" | grep -oP 'Type:\s*\K(mechanical|behavior|governance|release|docs)' | head -1 || echo "any")
             echo "type=${TYPE:-any}" >> $GITHUB_OUTPUT
 
             # Extract Intent field
-            INTENT=$(echo "$PR_BODY" | grep -oP '(?<=Intent:\s*).*' | head -1 || echo "")
+            INTENT=$(echo "$PR_BODY" | grep -oP 'Intent:\s*\K.*' | head -1 || echo "")
             echo "intent=$INTENT" >> $GITHUB_OUTPUT
 
             # Check for waiver label
@@ -81,12 +81,12 @@ jobs:
             if conftest test -p policy/scope.rego /tmp/scope_input.json --no-fail 2>&1 | tee /tmp/conftest_output.txt; then
               echo "deny_count=0" >> $GITHUB_OUTPUT
             else
-              DENY_COUNT=$(grep -c "FAIL" /tmp/conftest_output.txt || echo 0)
+              DENY_COUNT=$(grep -c "FAIL" /tmp/conftest_output.txt || true)
               echo "deny_count=$DENY_COUNT" >> $GITHUB_OUTPUT
             fi
 
             # Count warnings
-            WARN_COUNT=$(grep -c "WARN" /tmp/conftest_output.txt || echo 0)
+            WARN_COUNT=$(grep -c "WARN" /tmp/conftest_output.txt || true)
             echo "warn_count=$WARN_COUNT" >> $GITHUB_OUTPUT
 
             # Save output for comment
@@ -102,11 +102,11 @@ jobs:
           WAIVED=${{ steps.scope.outputs.waived }}
 
           # Categorize changed files
-          RUNTIME_COUNT=$(cat /tmp/changed_files.txt | grep -cE '^crates/|\.rs$' || echo 0)
-          DOCS_COUNT=$(cat /tmp/changed_files.txt | grep -cE '^docs/|\.md$' || echo 0)
-          SPECS_COUNT=$(cat /tmp/changed_files.txt | grep -cE '^specs/' || echo 0)
-          POLICY_COUNT=$(cat /tmp/changed_files.txt | grep -cE '^policy/' || echo 0)
-          CI_COUNT=$(cat /tmp/changed_files.txt | grep -cE '^\.github/workflows/' || echo 0)
+          RUNTIME_COUNT=$(cat /tmp/changed_files.txt | grep -cE '^crates/|\.rs$' || true)
+          DOCS_COUNT=$(cat /tmp/changed_files.txt | grep -cE '^docs/|\.md$' || true)
+          SPECS_COUNT=$(cat /tmp/changed_files.txt | grep -cE '^specs/' || true)
+          POLICY_COUNT=$(cat /tmp/changed_files.txt | grep -cE '^policy/' || true)
+          CI_COUNT=$(cat /tmp/changed_files.txt | grep -cE '^\.github/workflows/' || true)
 
           # Check danger zones
           DANGER_FILES=$(cat /tmp/changed_files.txt | grep -E '^specs/spec_ledger\.yaml|^specs/devex_flows\.yaml|^policy/|^\.github/workflows/|^CLAUDE\.md|^CHANGELOG\.md' || true)
