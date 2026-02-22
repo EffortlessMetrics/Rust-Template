@@ -224,8 +224,15 @@ impl CorsConfig {
                 let schemes_match = (origin.starts_with("https://")
                     && allowed.starts_with("https://"))
                     || (origin.starts_with("http://") && allowed.starts_with("http://"));
-                if schemes_match {
-                    return origin.ends_with(wildcard_domain);
+                if schemes_match && origin.ends_with(wildcard_domain) {
+                    let domain_len = wildcard_domain.len();
+                    let origin_len = origin.len();
+
+                    // Ensure there is a dot before the matched domain to prevent partial matches
+                    // e.g. "evilexample.com" should not match "*.example.com"
+                    if origin_len > domain_len {
+                        return origin.as_bytes()[origin_len - domain_len - 1] == b'.';
+                    }
                 }
             }
             false
@@ -397,6 +404,25 @@ mod tests {
         assert!(config.is_origin_allowed("https://api.example.com"));
         assert!(config.is_origin_allowed("https://app.example.com"));
         assert!(!config.is_origin_allowed("https://malicious.com"));
+    }
+
+    #[test]
+    fn test_cors_config_wildcard_security() {
+        let config = CorsConfig {
+            allowed_origins: vec!["https://*.example.com".to_string()],
+            ..Default::default()
+        };
+        // Should NOT allow partial domain matches
+        assert!(
+            !config.is_origin_allowed("https://evilexample.com"),
+            "Should not allow evilexample.com"
+        );
+        // Should NOT allow the root domain if only wildcard is specified
+        // (behavior: *.example.com implies subdomains)
+        assert!(
+            !config.is_origin_allowed("https://example.com"),
+            "Should not allow root domain for wildcard"
+        );
     }
 
     #[test]
