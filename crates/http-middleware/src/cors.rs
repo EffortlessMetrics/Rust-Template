@@ -120,7 +120,7 @@ impl CorsConfig {
                     && allowed.starts_with("https://"))
                     || (origin.starts_with("http://") && allowed.starts_with("http://"));
                 if schemes_match {
-                    return origin.ends_with(wildcard_domain);
+                    return origin.ends_with(&format!(".{}", wildcard_domain));
                 }
             }
             false
