@@ -99,14 +99,15 @@ async fn dashboard_does_not_block_executor() {
                 .body(Body::empty())
                 .expect("failed to build request");
 
-            app.oneshot(request).await
+            let response = app.oneshot(request).await.expect("request failed");
+            assert_eq!(response.status(), axum::http::StatusCode::OK);
         }));
     }
 
     // Wait for requests
     tokio::time::timeout(Duration::from_secs(10), async {
         for handle in handles {
-            let _ = handle.await;
+            let _ = handle.await.expect("task failed");
         }
     })
     .await
