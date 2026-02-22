@@ -43,6 +43,7 @@ jobs:
         if: always()
         env:
           RUSTC_WRAPPER: ""
+          SCCACHE_GHA_ENABLED: ""
         run: nix develop -c cargo run -p xtask -- ac-status
 
       - name: Publish BDD JUnit results

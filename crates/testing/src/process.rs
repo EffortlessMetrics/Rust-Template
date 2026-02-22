@@ -199,7 +199,10 @@ mod tests {
 
         {
             let _guard = CwdGuard::chdir(&temp_dir);
-            assert_eq!(env::current_dir().unwrap(), temp_dir);
+            assert_eq!(
+                env::current_dir().unwrap().canonicalize().unwrap(),
+                temp_dir.canonicalize().unwrap(),
+            );
         }
 
         // Should be restored
