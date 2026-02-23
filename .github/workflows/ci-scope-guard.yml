@@ -146,16 +146,27 @@ jobs:
             echo '```' >> /tmp/summary.md
           fi
 
-          # Substitute variables
-          sed -i "s/\$FILE_COUNT/$FILE_COUNT/g" /tmp/summary.md
-          sed -i "s/\$SCOPE_DECLARED/$SCOPE_DECLARED/g" /tmp/summary.md
-          sed -i "s/\$DECLARED_TYPE/$DECLARED_TYPE/g" /tmp/summary.md
-          sed -i "s/\$WAIVED/$WAIVED/g" /tmp/summary.md
-          sed -i "s/\$RUNTIME_COUNT/$RUNTIME_COUNT/g" /tmp/summary.md
-          sed -i "s/\$DOCS_COUNT/$DOCS_COUNT/g" /tmp/summary.md
-          sed -i "s/\$SPECS_COUNT/$SPECS_COUNT/g" /tmp/summary.md
-          sed -i "s/\$POLICY_COUNT/$POLICY_COUNT/g" /tmp/summary.md
-          sed -i "s/\$CI_COUNT/$CI_COUNT/g" /tmp/summary.md
+          # Substitute variables (using | delimiter to avoid issues with / in values)
+          # Also ensure variables are clean of newlines
+          FILE_COUNT=$(echo "$FILE_COUNT" | tr -d '\n')
+          SCOPE_DECLARED=$(echo "$SCOPE_DECLARED" | tr -d '\n')
+          DECLARED_TYPE=$(echo "$DECLARED_TYPE" | tr -d '\n')
+          WAIVED=$(echo "$WAIVED" | tr -d '\n')
+          RUNTIME_COUNT=$(echo "$RUNTIME_COUNT" | tr -d '\n')
+          DOCS_COUNT=$(echo "$DOCS_COUNT" | tr -d '\n')
+          SPECS_COUNT=$(echo "$SPECS_COUNT" | tr -d '\n')
+          POLICY_COUNT=$(echo "$POLICY_COUNT" | tr -d '\n')
+          CI_COUNT=$(echo "$CI_COUNT" | tr -d '\n')
+
+          sed -i "s|\$FILE_COUNT|$FILE_COUNT|g" /tmp/summary.md
+          sed -i "s|\$SCOPE_DECLARED|$SCOPE_DECLARED|g" /tmp/summary.md
+          sed -i "s|\$DECLARED_TYPE|$DECLARED_TYPE|g" /tmp/summary.md
+          sed -i "s|\$WAIVED|$WAIVED|g" /tmp/summary.md
+          sed -i "s|\$RUNTIME_COUNT|$RUNTIME_COUNT|g" /tmp/summary.md
+          sed -i "s|\$DOCS_COUNT|$DOCS_COUNT|g" /tmp/summary.md
+          sed -i "s|\$SPECS_COUNT|$SPECS_COUNT|g" /tmp/summary.md
+          sed -i "s|\$POLICY_COUNT|$POLICY_COUNT|g" /tmp/summary.md
+          sed -i "s|\$CI_COUNT|$CI_COUNT|g" /tmp/summary.md
 
           cat /tmp/summary.md >> $GITHUB_STEP_SUMMARY
 

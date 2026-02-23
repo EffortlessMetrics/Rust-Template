@@ -286,3 +286,48 @@ async fn test_active_nav_link_has_aria_current() {
         "Dashboard link on dashboard page should have aria-current='page'"
     );
 }
+
+/// @AC-TPL-PLATFORM-UI-ACCESSIBILITY: Coverage page has accessible search and filters
+#[tokio::test]
+async fn test_coverage_accessibility() {
+    let workspace_root = test_workspace_root();
+    let repo = Arc::new(FsGovernanceRepository::new(workspace_root.clone()));
+    let app = app_with_workspace_root(repo, workspace_root.clone()).expect("valid config");
+
+    // Fetch coverage HTML
+    let html = fetch_html(app, "/ui/coverage").await;
+    let document = Html::parse_document(&html);
+
+    // Verify search box has aria-label
+    let search_selector = Selector::parse("#search-box").unwrap();
+    let search_box = document.select(&search_selector).next().expect("Search box should exist");
+
+    let aria_label = search_box.value().attr("aria-label");
+    assert!(
+        aria_label.is_some() && !aria_label.unwrap().is_empty(),
+        "Search box should have a non-empty aria-label"
+    );
+
+    // Verify filter buttons have aria-pressed
+    let all_filter_selector = Selector::parse("#filter-all").unwrap();
+    let all_filter =
+        document.select(&all_filter_selector).next().expect("Filter 'All' button should exist");
+
+    assert_eq!(
+        all_filter.value().attr("aria-pressed"),
+        Some("true"),
+        "Filter 'All' should be pressed by default"
+    );
+
+    let passing_filter_selector = Selector::parse("#filter-passing").unwrap();
+    let passing_filter = document
+        .select(&passing_filter_selector)
+        .next()
+        .expect("Filter 'Passing' button should exist");
+
+    assert_eq!(
+        passing_filter.value().attr("aria-pressed"),
+        Some("false"),
+        "Filter 'Passing' should not be pressed by default"
+    );
+}

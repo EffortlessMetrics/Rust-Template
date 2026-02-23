@@ -192,7 +192,7 @@ jobs:
           XTASK_STRICT_AC_COVERAGE: ${{ github.ref == 'refs/heads/main' && '1' || '' }}
           XTASK_STRICT_PRECOMMIT: "1"
         run: |
-          nix develop -c bash -lc '
+          nix develop -c env ACTIONS_CACHE_URL="$ACTIONS_CACHE_URL" ACTIONS_RUNTIME_TOKEN="$ACTIONS_RUNTIME_TOKEN" bash -lc '
             set -euo pipefail
 
             # Run full selftest (includes BDD)
@@ -239,6 +239,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           # Group by branch for easier time-series analysis
-          name: ac-status-${{ github.ref_name }}
+          # Sanitize branch name (replace / with -) to avoid artifact name errors
+          name: ac-status-${{ github.sha }}
           path: artifacts/ac-status/
           retention-days: 30
