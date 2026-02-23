@@ -188,6 +188,7 @@ dependencies = [
  "gov-http",
  "http-agents",
  "http-auth",
+ "http-auth-token",
  "http-body-util",
  "http-core",
  "http-metrics",
@@ -1779,6 +1780,14 @@ dependencies = [
  "serde_yaml_ng",
  "testing",
  "tracing",
+]
+
+[[package]]
+name = "http-auth-token"
+version = "3.3.15"
+dependencies = [
+ "http",
+ "proptest",
 ]
 
 [[package]]

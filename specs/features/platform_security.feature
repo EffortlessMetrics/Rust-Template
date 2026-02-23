@@ -58,6 +58,21 @@ Feature: Platform security and log hygiene
       """
     Then the response status code should be 204
 
+  @AC-TPL-PLATFORM-AUTH-BASIC
+  Scenario: Authorization bearer token takes precedence over legacy platform token
+    Given platform auth mode is "basic" with token "test-token"
+    And a task "TASK-AUTH-PRECEDENCE-001" exists with status "Todo"
+    When I set "X-Platform-Token" header to "test-token"
+    And I set "Authorization" header to "Bearer invalid.jwt.token"
+    And I send a POST request to "/platform/tasks/TASK-AUTH-PRECEDENCE-001/status" with body:
+      """
+      {
+        "status": "InProgress"
+      }
+      """
+    Then the response status code should be 401
+    And the task "TASK-AUTH-PRECEDENCE-001" should have status "Todo"
+
   @AC-TPL-LOG-NO-SECRETS
   Scenario: Platform status redacts secrets
     When I send a GET request to "/platform/status"
