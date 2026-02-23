@@ -158,8 +158,13 @@ pub fn run() -> Result<()> {
             }
         };
 
+        // Determine if we need to extract binary (must match logic in tools_checksum_update.rs)
+        let extract_binary = tool_name == "oasdiff";
+        let bin_name =
+            if tool_name == "oasdiff" && os == "windows" { "oasdiff.exe" } else { tool_name };
+
         // Download and verify
-        match verify_checksum(&url, expected_checksum) {
+        match verify_checksum(&url, expected_checksum, extract_binary, bin_name) {
             Ok(_) => println!("{}", "OK".green()),
             Err(e) => {
                 println!("{} {}", "FAIL".red(), e);
@@ -231,36 +236,87 @@ fn get_download_url(tool_name: &str, version: &str, os: &str, arch: &str) -> Res
 }
 
 /// Verify that a URL has the expected checksum
-fn verify_checksum(url: &str, expected_checksum: &str) -> Result<()> {
+fn verify_checksum(
+    url: &str,
+    expected_checksum: &str,
+    extract_binary: bool,
+    bin_name: &str,
+) -> Result<()> {
     use std::process::Command;
-
-    // Download to temporary file
-    let temp_file = format!("/tmp/verify_checksum_{}", std::process::id());
+    // Download to temporary file first
+    let temp_dir = tempfile::Builder::new()
+        .prefix("tool_checksum_verify_")
+        .tempdir()
+        .context("Failed to create temp dir")?;
+    let temp_path = temp_dir.path();
+    let download_file = temp_path.join("download");
 
     let output = Command::new("curl")
-        .args(["-sSfL", url, "-o", &temp_file])
+        .args(["-sSfL", url, "-o", download_file.to_str().unwrap()])
         .output()
         .context("Failed to download tool")?;
 
     if !output.status.success() {
-        let _ = std::fs::remove_file(&temp_file);
         return Err(anyhow::anyhow!(
             "Download failed: {}",
             String::from_utf8_lossy(&output.stderr)
         ));
     }
 
+    let target_file = if extract_binary {
+        // Extract binary from tarball
+        let output = Command::new("tar")
+            .args(["-xzf", download_file.to_str().unwrap(), "-C", temp_path.to_str().unwrap()])
+            .output()
+            .context("Failed to extract tarball")?;
+
+        if !output.status.success() {
+            return Err(anyhow::anyhow!(
+                "Failed to extract tarball: {}",
+                String::from_utf8_lossy(&output.stderr)
+            ));
+        }
+
+        // Find binary
+        temp_path.join(bin_name)
+    } else {
+        download_file
+    };
+
+    if !target_file.exists() {
+        return Err(anyhow::anyhow!("Target file not found: {:?}", target_file));
+    }
+
     // Calculate checksum
     let sha_output =
-        Command::new("sha256sum").arg(&temp_file).output().context("Failed to compute SHA256")?;
-
-    let _ = std::fs::remove_file(&temp_file);
+        Command::new("sha256sum").arg(&target_file).output().context("Failed to compute SHA256")?;
 
     if !sha_output.status.success() {
-        return Err(anyhow::anyhow!(
-            "Failed to compute SHA256: {}",
-            String::from_utf8_lossy(&sha_output.stderr)
-        ));
+        // Fallback to shasum -a 256 for macOS
+        let shasum_output =
+            Command::new("shasum").args(["-a", "256", target_file.to_str().unwrap()]).output();
+
+        match shasum_output {
+            Ok(out) if out.status.success() => {
+                let sha_str = String::from_utf8_lossy(&out.stdout);
+                let actual_checksum =
+                    sha_str.split_whitespace().next().context("Invalid shasum output")?;
+                if actual_checksum != expected_checksum {
+                    return Err(anyhow::anyhow!(
+                        "Checksum mismatch: expected {}, got {}",
+                        expected_checksum,
+                        actual_checksum
+                    ));
+                }
+                return Ok(());
+            }
+            _ => {
+                return Err(anyhow::anyhow!(
+                    "Failed to compute SHA256: {}",
+                    String::from_utf8_lossy(&sha_output.stderr)
+                ));
+            }
+        }
     }
 
     let sha_str = String::from_utf8_lossy(&sha_output.stdout);
