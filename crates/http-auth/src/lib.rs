@@ -1,26 +1,17 @@
 //! Platform HTTP authentication primitives.
 //!
-//! This crate owns authentication mode parsing, credential sourcing, and token validation.
-//! It intentionally avoids framework concerns (headers, middleware, routing).
+//! This crate owns credential sourcing and auth-mode policy decisions.
+//! `PlatformAuthMode` parsing lives in `http-auth-mode` and is re-exported here
+//! for compatibility.
 
-use jsonwebtoken::{Algorithm, DecodingKey, Validation, decode};
+pub use http_auth_mode::PlatformAuthMode;
+pub use http_auth_verifier::Claims;
+use http_auth_verifier::authorize_token;
 #[cfg(test)]
 use jsonwebtoken::{EncodingKey, Header, encode};
-use serde::{Deserialize, Serialize};
 use spec_runtime::ValidatedConfig;
 #[cfg(test)]
 use std::time::{SystemTime, UNIX_EPOCH};
-
-/// Supported platform auth modes.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum PlatformAuthMode {
-    /// No auth checks.
-    Open,
-    /// Shared bearer-style static token.
-    Basic,
-    /// JWT validation with shared secret.
-    Jwt,
-}
 
 /// Runtime auth configuration used by HTTP middleware.
 #[derive(Clone, Debug)]
@@ -31,25 +22,6 @@ pub struct PlatformAuthConfig {
     pub token: Option<String>,
     /// JWT secret key (for `Jwt` mode).
     pub jwt_secret: Option<String>,
-}
-
-/// JWT claims used by platform auth.
-#[derive(Debug, Serialize, Deserialize)]
-pub struct Claims {
-    /// Subject identifier.
-    pub sub: String,
-    /// Expiration timestamp (unix seconds).
-    pub exp: u64,
-    /// Issued-at timestamp (unix seconds).
-    pub iat: u64,
-    /// Issuer identifier.
-    pub iss: String,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum TokenKind<'a> {
-    Basic(&'a str),
-    Jwt(&'a str),
 }
 
 impl PlatformAuthConfig {
@@ -102,26 +74,12 @@ impl PlatformAuthConfig {
             return true;
         }
 
-        let Some(token) = provided else { return false };
-
-        match token_kind(token) {
-            TokenKind::Basic(candidate) => {
-                self.token.as_deref().is_some_and(|expected| constant_time_eq(expected, candidate))
-            }
-            TokenKind::Jwt(candidate) => self
-                .jwt_secret
-                .as_deref()
-                .is_some_and(|secret| validate_jwt_token(candidate, secret)),
-        }
+        authorize_token(provided, self.token.as_deref(), self.jwt_secret.as_deref())
     }
 
     /// Lowercase label for UI/status responses.
     pub fn mode_label(&self) -> &'static str {
-        match self.mode {
-            PlatformAuthMode::Open => "open",
-            PlatformAuthMode::Basic => "basic",
-            PlatformAuthMode::Jwt => "jwt",
-        }
+        self.mode.label()
     }
 
     /// True when required credential for current mode is present.
@@ -162,89 +120,6 @@ impl PlatformAuthConfig {
     }
 }
 
-/// Validate JWT token with HMAC-SHA256 and strict claim checks.
-fn validate_jwt_token(token: &str, secret: &str) -> bool {
-    let mut validation = Validation::new(Algorithm::HS256);
-    validation.required_spec_claims.insert("exp".to_string());
-    validation.validate_exp = true;
-    validation.leeway = 60;
-    validation.validate_nbf = true;
-
-    let decoding_key = DecodingKey::from_secret(secret.as_ref());
-
-    match decode::<Claims>(token, &decoding_key, &validation) {
-        Ok(token_data) => {
-            let claims = token_data.claims;
-
-            if claims.iss.is_empty() {
-                tracing::debug!("JWT validation failed: missing issuer");
-                return false;
-            }
-
-            if claims.sub.is_empty() {
-                tracing::debug!("JWT validation failed: missing subject");
-                return false;
-            }
-
-            let now = jsonwebtoken::get_current_timestamp();
-            if claims.iat > now + 300 {
-                tracing::debug!("JWT validation failed: token issued too far in the future");
-                return false;
-            }
-
-            true
-        }
-        Err(error) => {
-            tracing::debug!("JWT validation failed: {}", error);
-            false
-        }
-    }
-}
-
-impl PlatformAuthMode {
-    /// Strict parser for auth mode values.
-    pub fn parse_strict(value: &str) -> Result<Self, String> {
-        match value.to_ascii_lowercase().as_str() {
-            "basic" => Ok(PlatformAuthMode::Basic),
-            "jwt" => Ok(PlatformAuthMode::Jwt),
-            "none" | "open" => Ok(PlatformAuthMode::Open),
-            other => {
-                Err(format!("Invalid auth mode '{}'. Valid options: basic, jwt, none, open", other))
-            }
-        }
-    }
-}
-
-impl From<&str> for PlatformAuthMode {
-    fn from(value: &str) -> Self {
-        match value.to_ascii_lowercase().as_str() {
-            "basic" => PlatformAuthMode::Basic,
-            "jwt" => PlatformAuthMode::Jwt,
-            "none" | "open" => PlatformAuthMode::Open,
-            other => {
-                tracing::warn!(
-                    "Invalid PLATFORM_AUTH_MODE '{}' falling back to 'open'. Valid options: basic, jwt, none, open",
-                    other
-                );
-                PlatformAuthMode::Open
-            }
-        }
-    }
-}
-
-// Constant-time compare for equal-length strings.
-fn constant_time_eq(a: &str, b: &str) -> bool {
-    if a.len() != b.len() {
-        return false;
-    }
-
-    a.bytes().zip(b.bytes()).fold(0_u8, |acc, (x, y)| acc | (x ^ y)) == 0
-}
-
-fn token_kind(token: &str) -> TokenKind<'_> {
-    if token.matches('.').count() == 2 { TokenKind::Jwt(token) } else { TokenKind::Basic(token) }
-}
-
 #[cfg(test)]
 fn create_jwt_token(
     secret: &str,
@@ -282,6 +157,17 @@ mod tests {
         assert!(config.is_authorized(Some("secret")));
         assert!(!config.is_authorized(Some("other")));
         assert!(!config.is_authorized(None));
+    }
+
+    #[test]
+    fn basic_mode_accepts_literal_token_with_jwt_like_shape() {
+        let config = PlatformAuthConfig {
+            mode: PlatformAuthMode::Basic,
+            token: Some("dot.token.value".into()),
+            jwt_secret: Some("unused-secret".into()),
+        };
+
+        assert!(config.is_authorized(Some("dot.token.value")));
     }
 
     #[test]

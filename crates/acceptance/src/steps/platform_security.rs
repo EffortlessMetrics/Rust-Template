@@ -4,6 +4,7 @@ use cucumber::{given, then};
 use jsonwebtoken::{EncodingKey, Header, encode};
 use serde::Serialize;
 use std::time::{SystemTime, UNIX_EPOCH};
+use testing::process::EnvVarGuard;
 
 #[given(regex = r#"^platform auth mode is "([^"]+)" with token "([^"]+)"$"#)]
 async fn given_platform_auth_mode(world: &mut World, mode: String, token: String) {
@@ -25,6 +26,13 @@ async fn given_basic_auth_without_token(world: &mut World) {
 #[given(regex = r#"^platform auth mode is "jwt" with secret "([^"]+)"$"#)]
 async fn given_jwt_auth_mode(world: &mut World, secret: String) {
     world.set_platform_jwt_auth(Some("jwt".to_string()), Some(secret));
+    world.reload_app();
+}
+
+#[given(regex = r#"^CORS allowed origins are configured as "([^"]+)"$"#)]
+async fn given_cors_allowed_origins(world: &mut World, allowed_origins: String) {
+    let guard = EnvVarGuard::new(&["CORS_ALLOWED_ORIGINS"]);
+    guard.set("CORS_ALLOWED_ORIGINS", &allowed_origins);
     world.reload_app();
 }
 
@@ -61,5 +69,17 @@ async fn response_body_not_contains(world: &mut World, needle: String) {
         "Response body should not contain '{}', but was: {}",
         needle,
         response.raw_body
+    );
+}
+
+#[then(regex = r#"^the response omits "([^"]+)" header$"#)]
+async fn response_omits_header(world: &mut World, header_name: String) {
+    let response = world.last_response.as_ref().expect("response should exist");
+    let header_name = header_name.to_ascii_lowercase();
+    assert!(
+        response.headers.get(header_name.as_str()).is_none(),
+        "Response should omit '{}' header. Headers: {:?}",
+        header_name,
+        response.headers
     );
 }

@@ -7,6 +7,7 @@
 #![forbid(unsafe_code)]
 
 use gov_model::TaskStatus;
+use http_body_format::{BodyFormat, classify_body_format};
 use serde::Deserialize;
 use std::fmt;
 
@@ -54,33 +55,10 @@ pub fn parse_update_task_status(
     content_type: Option<&str>,
     body: &[u8],
 ) -> Result<UpdateTaskStatusRequest, ParseUpdateTaskStatusError> {
-    match classify_content_type(content_type) {
-        BodyKind::Json => parse_json(body),
-        BodyKind::Form => parse_form(body),
-        BodyKind::Unknown => parse_fallback(body),
-    }
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum BodyKind {
-    Json,
-    Form,
-    Unknown,
-}
-
-fn classify_content_type(content_type: Option<&str>) -> BodyKind {
-    let normalized = content_type
-        .unwrap_or_default()
-        .split(';')
-        .next()
-        .unwrap_or_default()
-        .trim()
-        .to_ascii_lowercase();
-
-    match normalized.as_str() {
-        "application/json" => BodyKind::Json,
-        "application/x-www-form-urlencoded" => BodyKind::Form,
-        _ => BodyKind::Unknown,
+    match classify_body_format(content_type) {
+        BodyFormat::Json => parse_json(body),
+        BodyFormat::FormUrlEncoded => parse_form(body),
+        BodyFormat::Unknown => parse_fallback(body),
     }
 }
 

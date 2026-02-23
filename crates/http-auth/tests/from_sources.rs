@@ -61,3 +61,18 @@ fn invalid_mode_fails_closed() {
         "unexpected error: {error}"
     );
 }
+
+#[test]
+fn none_alias_maps_to_open_mode() {
+    let guard =
+        EnvVarGuard::new(&["PLATFORM_AUTH_MODE", "PLATFORM_AUTH_TOKEN", "PLATFORM_JWT_SECRET"]);
+    guard.remove("PLATFORM_AUTH_MODE");
+    guard.remove("PLATFORM_AUTH_TOKEN");
+    guard.remove("PLATFORM_JWT_SECRET");
+
+    let cfg = cfg_with("none", "cfg-token", "cfg-secret");
+    let auth = PlatformAuthConfig::try_from_sources(Some(&cfg)).expect("config should parse");
+
+    assert_eq!(auth.mode, PlatformAuthMode::Open);
+    assert!(!auth.requires_auth());
+}

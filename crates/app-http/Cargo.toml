@@ -2,24 +2,20 @@
 # Internal crates
 adapters-db-sqlx = {path = "../adapters-db-sqlx"}
 adapters-spec-fs = {path = "../adapters-spec-fs"}
-business-core.workspace = true
 gov-http = {path = "../gov-http"}
-gov-model.workspace = true
+http-agents = {path = "../http-agents"}
 http-auth = {path = "../http-auth"}
 http-auth-token = {path = "../http-auth-token"}
-http-agents = {path = "../http-agents"}
 # HTTP crates (facade pattern)
 http-core = {path = "../http-core"}
 http-metrics = {path = "../http-metrics"}
 http-middleware = {path = "../http-middleware"}
+http-origin-policy = {path = "../http-origin-policy"}
 http-platform = {path = "../http-platform"}
 http-tasks = {path = "../http-tasks"}
 http-todos = {path = "../http-todos"}
 # HTML templates
 maud = "0.27.0"
-model.workspace = true
-spec-runtime.workspace = true
-telemetry.workspace = true
 tokio = {features = ["net", "signal"], workspace = true}
 tower-http = {features = ["metrics", "trace"], version = "0.6.8"}
 uuid = {features = ["v4"], workspace = true}
@@ -27,13 +23,18 @@ uuid = {features = ["v4"], workspace = true}
 anyhow.workspace = true
 # Web framework
 axum.workspace = true
+business-core.workspace = true
 chrono.workspace = true
+gov-model.workspace = true
 # HTTP body utilities
 http-body-util.workspace = true
+model.workspace = true
 serde.workspace = true
 # JSON and UUID
 serde_json.workspace = true
 serde_yaml.workspace = true
+spec-runtime.workspace = true
+telemetry.workspace = true
 tower.workspace = true
 tracing.workspace = true
 tracing-subscriber.workspace = true
@@ -42,8 +43,8 @@ tracing-subscriber.workspace = true
 jsonwebtoken = {features = ["rust_crypto"], version = "10.2.0"}
 scraper = "0.25.0"
 serial_test = "3.3.1"
-testing.workspace = true
 tempfile.workspace = true
+testing.workspace = true
 tokio.workspace = true
 tower.workspace = true
 
@@ -52,11 +53,11 @@ categories = ["api-bindings", "web-programming", "web-programming::http-server"]
 description = "HTTP router and API handlers for application endpoints including todos, questions, and forks"
 keywords = ["api", "axum", "http", "router", "web"]
 name = "app-http"
-version.workspace = true
+authors.workspace = true
 edition.workspace = true
+homepage.workspace = true
 license.workspace = true
 publish.workspace = true
 repository.workspace = true
-homepage.workspace = true
-authors.workspace = true
 rust-version.workspace = true
+version.workspace = true

@@ -1,0 +1,19 @@
+[dependencies]
+
+[dev-dependencies]
+proptest.workspace = true
+
+[package]
+name = "http-origin-boundary"
+publish = false
+authors.workspace = true
+documentation.workspace = true
+edition.workspace = true
+homepage.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+version.workspace = true
+description = "Boundary predicate primitives for CORS origin rule matching"
+categories = ["web-programming", "web-programming::http-server"]
+keywords = ["cors", "origin", "boundary"]

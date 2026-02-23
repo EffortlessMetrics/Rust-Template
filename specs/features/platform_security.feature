@@ -39,6 +39,20 @@ Feature: Platform security and log hygiene
     And the response body should contain '"token_present":false'
 
   @AC-TPL-PLATFORM-AUTH-BASIC
+  @AC-TPL-PLATFORM-AUTH-NONE-ALIAS
+  Scenario: None auth mode alias behaves as open mode for writes
+    Given platform auth mode is "none" with token "ignored-token"
+    And a task "TASK-AUTH-NONE-001" exists with status "Todo"
+    When I send a POST request to "/platform/tasks/TASK-AUTH-NONE-001/status" with body:
+      """
+      {
+        "status": "InProgress"
+      }
+      """
+    Then the response status code should be 204
+    And the task "TASK-AUTH-NONE-001" should have status "InProgress"
+
+  @AC-TPL-PLATFORM-AUTH-BASIC
   Scenario: Write endpoints require a valid JWT bearer token when auth mode is jwt
     Given platform auth mode is "jwt" with secret "jwt-test-secret"
     And a task "TASK-AUTH-JWT-001" exists with status "Todo"
@@ -86,6 +100,79 @@ Feature: Platform security and log hygiene
       """
     Then the response status code should be 204
     And the task "TASK-AUTH-CASE-001" should have status "InProgress"
+
+  @AC-TPL-PLATFORM-AUTH-BASIC @auth-dotted-basic-token
+  Scenario: Basic auth accepts literal tokens that contain dots
+    Given platform auth mode is "basic" with token "dot.token.value"
+    And a task "TASK-AUTH-DOT-001" exists with status "Todo"
+    When I set "X-Platform-Token" header to "dot.token.value"
+    And I send a POST request to "/platform/tasks/TASK-AUTH-DOT-001/status" with body:
+      """
+      {
+        "status": "InProgress"
+      }
+      """
+    Then the response status code should be 204
+    And the task "TASK-AUTH-DOT-001" should have status "InProgress"
+
+  @AC-TPL-PLATFORM-AUTH-BASIC
+  Scenario: CORS reflects an allowed origin on health responses
+    When I set "Origin" header to "http://localhost:3000"
+    And I send a GET request to "/health"
+    Then the response status code should be 200
+    And the response includes "access-control-allow-origin" header with value "http://localhost:3000"
+
+  @AC-TPL-PLATFORM-AUTH-BASIC @cors-origin-boundary
+  Scenario: CORS prefix wildcard enforces authority boundaries
+    Given CORS allowed origins are configured as "https://example.com/*"
+    When I set "Origin" header to "https://example.com"
+    And I send a GET request to "/health"
+    Then the response status code should be 200
+    And the response includes "access-control-allow-origin" header with value "https://example.com"
+    When I set "Origin" header to "https://example.com.evil"
+    And I send a GET request to "/health"
+    Then the response status code should be 200
+    And the response omits "access-control-allow-origin" header
+    When I set "Origin" header to "https://example.com:8443"
+    And I send a GET request to "/health"
+    Then the response status code should be 200
+    And the response omits "access-control-allow-origin" header
+
+  @AC-TPL-PLATFORM-AUTH-BASIC @cors-origin-boundary
+  Scenario: CORS subdomain wildcard enforces a label boundary
+    Given CORS allowed origins are configured as "https://*.example.com"
+    When I set "Origin" header to "https://api.example.com"
+    And I send a GET request to "/health"
+    Then the response status code should be 200
+    And the response includes "access-control-allow-origin" header with value "https://api.example.com"
+    When I set "Origin" header to "https://notexample.com"
+    And I send a GET request to "/health"
+    Then the response status code should be 200
+    And the response omits "access-control-allow-origin" header
+
+  @AC-TPL-PLATFORM-AUTH-BASIC @cors-origin-boundary
+  Scenario: CORS subdomain wildcard rejects root domain and scheme mismatch
+    Given CORS allowed origins are configured as "https://*.example.com"
+    When I set "Origin" header to "https://example.com"
+    And I send a GET request to "/health"
+    Then the response status code should be 200
+    And the response omits "access-control-allow-origin" header
+    When I set "Origin" header to "http://api.example.com"
+    And I send a GET request to "/health"
+    Then the response status code should be 200
+    And the response omits "access-control-allow-origin" header
+
+  @AC-TPL-PLATFORM-AUTH-BASIC @cors-origin-boundary
+  Scenario: CORS subdomain wildcard rejects malformed origin values
+    Given CORS allowed origins are configured as "https://*.example.com"
+    When I set "Origin" header to "https://api.example.com/path"
+    And I send a GET request to "/health"
+    Then the response status code should be 200
+    And the response omits "access-control-allow-origin" header
+    When I set "Origin" header to "https://user@api.example.com"
+    And I send a GET request to "/health"
+    Then the response status code should be 200
+    And the response omits "access-control-allow-origin" header
 
   @AC-TPL-LOG-NO-SECRETS
   Scenario: Platform status redacts secrets

@@ -193,6 +193,7 @@ dependencies = [
  "http-core",
  "http-metrics",
  "http-middleware",
+ "http-origin-policy",
  "http-platform",
  "http-tasks",
  "http-todos",
@@ -1772,13 +1773,22 @@ dependencies = [
 name = "http-auth"
 version = "3.3.15"
 dependencies = [
+ "http-auth-mode",
+ "http-auth-verifier",
  "jsonwebtoken",
  "proptest",
  "rust-as-spec-runtime",
- "serde",
  "serde_json",
  "serde_yaml_ng",
  "testing",
+ "tracing",
+]
+
+[[package]]
+name = "http-auth-mode"
+version = "3.3.15"
+dependencies = [
+ "proptest",
  "tracing",
 ]
 
@@ -1789,6 +1799,17 @@ dependencies = [
  "http",
  "http-bearer-token",
  "proptest",
+]
+
+[[package]]
+name = "http-auth-verifier"
+version = "3.3.15"
+dependencies = [
+ "jsonwebtoken",
+ "proptest",
+ "serde",
+ "serde_json",
+ "tracing",
 ]
 
 [[package]]
@@ -1806,6 +1827,13 @@ checksum = "1efedce1fb8e6913f23e0c92de8e62cd5b772a67e7b3946df930a62566c93184"
 dependencies = [
  "bytes",
  "http",
+]
+
+[[package]]
+name = "http-body-format"
+version = "3.3.15"
+dependencies = [
+ "proptest",
 ]
 
 [[package]]
@@ -1871,6 +1899,7 @@ version = "3.3.15"
 dependencies = [
  "axum",
  "http",
+ "http-origin-policy",
  "serde",
  "serde_json",
  "tokio",
@@ -1878,6 +1907,55 @@ dependencies = [
  "tower-http",
  "tracing",
  "uuid",
+]
+
+[[package]]
+name = "http-origin-boundary"
+version = "3.3.15"
+dependencies = [
+ "proptest",
+]
+
+[[package]]
+name = "http-origin-parser"
+version = "3.3.15"
+dependencies = [
+ "proptest",
+]
+
+[[package]]
+name = "http-origin-policy"
+version = "3.3.15"
+dependencies = [
+ "http-origin-rule",
+ "proptest",
+]
+
+[[package]]
+name = "http-origin-prefix"
+version = "3.3.15"
+dependencies = [
+ "http-origin-boundary",
+ "http-origin-parser",
+ "proptest",
+]
+
+[[package]]
+name = "http-origin-rule"
+version = "3.3.15"
+dependencies = [
+ "http-origin-prefix",
+ "http-origin-subdomain",
+ "proptest",
+]
+
+[[package]]
+name = "http-origin-subdomain"
+version = "3.3.15"
+dependencies = [
+ "http-origin-boundary",
+ "http-origin-parser",
+ "proptest",
 ]
 
 [[package]]
@@ -1908,6 +1986,7 @@ dependencies = [
 name = "http-task-status-parser"
 version = "3.3.15"
 dependencies = [
+ "http-body-format",
  "proptest",
  "rust-as-spec-gov-model",
  "serde",

@@ -1,0 +1,19 @@
+[dependencies]
+
+[dev-dependencies]
+proptest.workspace = true
+
+[package]
+name = "http-origin-parser"
+publish = false
+authors.workspace = true
+documentation.workspace = true
+edition.workspace = true
+homepage.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+version.workspace = true
+description = "HTTP origin parser primitive for CORS allowlist matching"
+categories = ["web-programming", "web-programming::http-server"]
+keywords = ["cors", "origin", "http"]

@@ -97,34 +97,7 @@ impl CorsConfig {
 
     /// Check if origin is allowed
     pub fn is_origin_allowed(&self, origin: &str) -> bool {
-        self.allowed_origins.iter().any(|allowed| {
-            if allowed == "*" {
-                return true;
-            }
-            if allowed == origin {
-                return true;
-            }
-            // Handle path wildcards like "https://example.com/*"
-            if allowed.ends_with("/*") && origin.starts_with(&allowed[..allowed.len() - 2]) {
-                return true;
-            }
-            // Handle subdomain wildcards like "https://*.example.com"
-            if let Some(pos) = allowed.find("*.")
-                && (pos == 0
-                    || (pos == 8 && allowed.starts_with("https://"))
-                    || (pos == 7 && allowed.starts_with("http://")))
-            {
-                let wildcard_domain = &allowed[pos + 2..];
-                // Origin scheme must match allowed scheme for wildcard matching
-                let schemes_match = (origin.starts_with("https://")
-                    && allowed.starts_with("https://"))
-                    || (origin.starts_with("http://") && allowed.starts_with("http://"));
-                if schemes_match {
-                    return origin.ends_with(wildcard_domain);
-                }
-            }
-            false
-        })
+        http_origin_policy::is_origin_allowed_by_any(&self.allowed_origins, origin)
     }
 
     /// Check if method is allowed

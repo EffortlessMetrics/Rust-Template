@@ -2,9 +2,10 @@
 
 Single-responsibility HTTP platform authentication primitives:
 
-- auth mode parsing (`open`, `basic`, `jwt`)
+- auth mode usage (re-exported from `http-auth-mode`)
 - token/secret sourcing from runtime config and env vars
-- basic token validation (constant-time compare)
-- JWT validation (HS256 + leeway and claim checks)
+- auth policy decisions across open/basic/jwt modes
+- re-exported `Claims` for compatibility with existing callers
 
-This crate is intentionally framework-agnostic and only owns auth policy and token checks.
+This crate is intentionally framework-agnostic and owns auth policy + credential sourcing.
+Low-level token verification lives in `http-auth-verifier`.

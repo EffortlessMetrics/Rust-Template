@@ -59,8 +59,16 @@ static HTTP_REQUEST_DURATION_SECONDS: Lazy<HistogramVec> = Lazy::new(|| {
     histogram
 });
 
+/// Ensure metric vectors are initialized and registered with the global registry.
+fn ensure_metrics_registered() {
+    Lazy::force(&HTTP_REQUESTS_TOTAL);
+    Lazy::force(&HTTP_REQUEST_DURATION_SECONDS);
+}
+
 /// Prometheus metrics endpoint handler.
 pub async fn metrics_handler() -> impl IntoResponse {
+    ensure_metrics_registered();
+
     let encoder = TextEncoder::new();
     let metric_families = REGISTRY.gather();
     let mut buffer = Vec::new();

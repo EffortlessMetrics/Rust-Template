@@ -1,8 +1,9 @@
 [dependencies]
+http-body-format = {path = "../http-body-format"}
+serde_urlencoded = "0.7.1"
 gov-model.workspace = true
 serde.workspace = true
 serde_json.workspace = true
-serde_urlencoded = "0.7.1"
 
 [dev-dependencies]
 proptest.workspace = true
