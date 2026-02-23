@@ -238,7 +238,9 @@ jobs:
         if: (failure() || github.ref == 'refs/heads/main') && steps.changes.outputs.bdd_needed == 'true'
         uses: actions/upload-artifact@v4
         with:
-          # Group by branch for easier time-series analysis
-          name: ac-status-${{ github.ref_name }}
+          # Group by branch for easier time-series analysis (sanitized for artifact names)
+          # GitHub Ref Name can contain slashes (e.g., dependabot/npm_and_yarn/...)
+          # We use github.sha to ensure uniqueness and validity if ref_name is complex
+          name: ac-status-${{ github.sha }}
           path: artifacts/ac-status/
           retention-days: 30
