@@ -12,6 +12,8 @@ struct Tool {
     name: String,
     version: String,
     platforms: Vec<Platform>,
+    /// If true, extract the binary from the downloaded tarball before hashing
+    extract_binary: bool,
 }
 
 #[derive(Debug, Clone)]
@@ -22,12 +24,17 @@ struct Platform {
 }
 
 /// Generate SHA256 checksum for a URL
-fn get_sha256_for_url(url: &str) -> Result<String> {
+fn get_sha256_for_url(url: &str, extract_binary: bool, bin_name: &str) -> Result<String> {
     // Download to temporary file first
-    let temp_file = format!("/tmp/tool_checksum_{}", std::process::id());
+    let temp_dir = tempfile::Builder::new()
+        .prefix("tool_checksum_")
+        .tempdir()
+        .context("Failed to create temp dir")?;
+    let temp_path = temp_dir.path();
+    let download_file = temp_path.join("download");
 
     let output = Command::new("curl")
-        .args(["-sSfL", url, "-o", &temp_file])
+        .args(["-sSfL", url, "-o", download_file.to_str().unwrap()])
         .output()
         .context("Failed to download tool")?;
 
@@ -39,19 +46,61 @@ fn get_sha256_for_url(url: &str) -> Result<String> {
         );
     }
 
-    let sha_output =
-        Command::new("sha256sum").arg(&temp_file).output().context("Failed to compute SHA256")?;
+    let target_file = if extract_binary {
+        // Extract binary from tarball
+        let output = Command::new("tar")
+            .args(["-xzf", download_file.to_str().unwrap(), "-C", temp_path.to_str().unwrap()])
+            .output()
+            .context("Failed to extract tarball")?;
 
-    if !sha_output.status.success() {
-        anyhow::bail!("Failed to compute SHA256: {}", String::from_utf8_lossy(&sha_output.stderr));
+        if !output.status.success() {
+            anyhow::bail!(
+                "Failed to extract tarball: {}",
+                String::from_utf8_lossy(&output.stderr)
+            );
+        }
+
+        // Find binary
+        // For oasdiff, it's at root of tarball.
+        // On Windows it might have .exe, but we are running this on Linux/macOS usually.
+        // We iterate to find the file matching bin_name (ignoring extension if needed, or exact match)
+        // bootstrap-tools.sh expects exact match "oasdiff" for linux/mac
+        temp_path.join(bin_name)
+    } else {
+        download_file
+    };
+
+    if !target_file.exists() {
+        anyhow::bail!("Target file not found: {:?}", target_file);
     }
 
-    // Clean up temp file
-    let _ = std::fs::remove_file(&temp_file);
+    let sha_output = Command::new("sha256sum")
+        .arg(&target_file)
+        .output()
+        .context("Failed to compute SHA256")?;
 
-    let sha_str = String::from_utf8_lossy(&sha_output.stdout);
-    let checksum = sha_str.split_whitespace().next().context("Invalid sha256sum output")?;
-    Ok(checksum.to_string())
+    if !sha_output.status.success() {
+        // Fallback to shasum -a 256 for macOS
+        let shasum_output = Command::new("shasum")
+            .args(["-a", "256", target_file.to_str().unwrap()])
+            .output();
+
+        match shasum_output {
+            Ok(out) if out.status.success() => Ok(String::from_utf8_lossy(&out.stdout)
+                .split_whitespace()
+                .next()
+                .context("Invalid shasum output")?
+                .to_string()),
+            _ => anyhow::bail!(
+                "Failed to compute SHA256: {}",
+                String::from_utf8_lossy(&sha_output.stderr)
+            ),
+        }
+    } else {
+        let sha_str = String::from_utf8_lossy(&sha_output.stdout);
+        let checksum = sha_str.split_whitespace().next().context("Invalid sha256sum output")?;
+        Ok(checksum.to_string())
+    }
 }
 
 /// Generate checksums for all tools
@@ -60,6 +109,7 @@ fn generate_checksums() -> Result<Vec<(String, String)>> {
         Tool {
             name: "oasdiff".to_string(),
             version: "1.11.7".to_string(),
+            extract_binary: true,
             platforms: vec![
                 Platform {
                     os: "linux".to_string(),
@@ -86,6 +136,7 @@ fn generate_checksums() -> Result<Vec<(String, String)>> {
         Tool {
             name: "buf".to_string(),
             version: "1.45.0".to_string(),
+            extract_binary: false,
             platforms: vec![
                 Platform {
                     os: "linux".to_string(),
@@ -117,6 +168,7 @@ fn generate_checksums() -> Result<Vec<(String, String)>> {
         Tool {
             name: "atlas".to_string(),
             version: "latest".to_string(),
+            extract_binary: false,
             platforms: vec![
                 Platform {
                     os: "linux".to_string(),
@@ -148,6 +200,7 @@ fn generate_checksums() -> Result<Vec<(String, String)>> {
         Tool {
             name: "gitleaks".to_string(),
             version: "8.21.2".to_string(),
+            extract_binary: false, // gitleaks CI setups usually handle the tarball, keep it as is
             platforms: vec![
                 Platform {
                     os: "linux".to_string(),
@@ -182,7 +235,13 @@ fn generate_checksums() -> Result<Vec<(String, String)>> {
             let key = format!("{}-{}-{}-{}", tool.name, tool.version, platform.os, platform.arch);
             print!("  {} {}: ", "→".dimmed(), key);
 
-            match get_sha256_for_url(&platform.url) {
+            let bin_name = if tool.name == "oasdiff" && platform.os == "windows" {
+                "oasdiff.exe"
+            } else {
+                &tool.name
+            };
+
+            match get_sha256_for_url(&platform.url, tool.extract_binary, bin_name) {
                 Ok(checksum) => {
                     println!("{}", "OK".green());
                     checksums.push((key, checksum));
