@@ -4,15 +4,13 @@ business-core.workspace = true
 # Core HTTP types
 http-core = {path = "../http-core"}
 http-errors = {features = ["axum"], path = "../http-errors"}
+http-task-status-parser = {path = "../http-task-status-parser"}
 # Platform contract types
 platform-contract = {path = "../platform-contract"}
-serde_urlencoded = "0.7.1"
 # HTTP framework
 axum.workspace = true
 http.workspace = true
 # Utilities
-serde.workspace = true
-serde_json.workspace = true
 tokio.workspace = true
 tracing.workspace = true
 

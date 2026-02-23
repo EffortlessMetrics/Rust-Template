@@ -158,8 +158,12 @@ async fn when_post_request(world: &mut World, path: String, step: &Step) {
     let body = step.docstring.as_ref().cloned();
     assert!(body.is_some(), "Docstring body not provided for POST {}", path);
     let body = body.unwrap();
-    let mut request_builder =
-        Request::builder().method("POST").uri(&path).header("content-type", "application/json");
+    let mut request_builder = Request::builder().method("POST").uri(&path);
+
+    // Default to JSON for existing scenarios unless content-type is explicitly set.
+    if !world.request_headers.contains_key(http::header::CONTENT_TYPE) {
+        request_builder = request_builder.header("content-type", "application/json");
+    }
 
     for (key, value) in &world.request_headers {
         request_builder = request_builder.header(key, value);

@@ -1888,6 +1888,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "http-task-status-parser"
+version = "3.3.15"
+dependencies = [
+ "proptest",
+ "rust-as-spec-gov-model",
+ "serde",
+ "serde_json",
+ "serde_urlencoded",
+]
+
+[[package]]
 name = "http-tasks"
 version = "3.3.15"
 dependencies = [
@@ -1895,11 +1906,9 @@ dependencies = [
  "http",
  "http-core",
  "http-errors",
+ "http-task-status-parser",
  "platform-contract",
  "rust-as-spec-business-core",
- "serde",
- "serde_json",
- "serde_urlencoded",
  "testing",
  "tokio",
  "tower",

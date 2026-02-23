@@ -1,0 +1,20 @@
+[dependencies]
+gov-model.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+serde_urlencoded = "0.7.1"
+
+[dev-dependencies]
+proptest.workspace = true
+
+[package]
+name = "http-task-status-parser"
+publish = false
+authors.workspace = true
+documentation.workspace = true
+edition.workspace = true
+homepage.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+version.workspace = true

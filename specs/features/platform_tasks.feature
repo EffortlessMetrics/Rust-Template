@@ -97,6 +97,17 @@ Feature: Platform Tasks Management
     And the task "TASK-001" should have status "InProgress"
 
   @AC-TPL-TASK-TRANSITIONS
+  Scenario: Update task status via HTTP API with form body
+    Given a task "TASK-001-FORM" exists with status "Todo"
+    And I set "content-type" header to "application/x-www-form-urlencoded"
+    When I send a POST request to "/platform/tasks/TASK-001-FORM/status" with body:
+      """
+      status=InProgress
+      """
+    Then the response status code should be 204
+    And the task "TASK-001-FORM" should have status "InProgress"
+
+  @AC-TPL-TASK-TRANSITIONS
   Scenario: Invalid task transition via HTTP API
     Given a task "TASK-002" exists with status "Done"
     When I send a POST request to "/platform/tasks/TASK-002/status" with body:
