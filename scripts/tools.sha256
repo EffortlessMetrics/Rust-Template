@@ -19,13 +19,13 @@ buf-1.45.0-darwin-amd64 0542b62eabf4bdaa67d53b8a9aed43c8674d5e447a8c353e8e25cfcb
 buf-1.45.0-darwin-arm64 7c4131ee7af0e1a9c34acf6a7e5b7f82123bf44726f0eac1ccae31eed7ebb094
 buf-1.45.0-windows-amd64 656f38ecdd7633af9eaf8c15e0e15402c5a4852307515951fbcf7d91a37ff5b3
 
-# atlas latest - Database schema management tool
+# atlas v0.31.0 - Database schema management tool
 # Release server: https://release.ariga.io/atlas/
-atlas-latest-linux-amd64 fe04d9c1af0feebca38f06561d09acfdf102eae7f2c352e15a7e7fd6a897cde1
-atlas-latest-linux-arm64 afaf905566fff06048bc856e3cb552c71f2c20234d1f64481b15cd57180cea18
-atlas-latest-darwin-amd64 5bcfa920f37a1e4a9c4ca859a2ab3ce2e358fa91b1efe2e7d9dcc0da02d91b00
-atlas-latest-darwin-arm64 3f3845ec416196ea08a1608b37c53141d5cb6214e83c425c152c3491981e94af
-atlas-latest-windows-amd64 bc3a0670aeede49df5cc0aa73a770f8783770a4ac88d6c00094dcdbcd3808f12
+atlas-v0.31.0-linux-amd64 f821bbd466ed77f69814b3f5627ffe5458a43acd28c05c3f27bb4f3267dd042a
+atlas-v0.31.0-linux-arm64 b10c02b0610720ff4f601b77a8c1f5521e89f5a14a6e7e0cc7887fb244e0473d
+atlas-v0.31.0-darwin-amd64 94876bf45d201d054936903c11df98974b2e632bbf8885cf2239d1fdb2a5eb7d
+atlas-v0.31.0-darwin-arm64 69203828b55996c06784d46ef1737132489a1794fb459ba2a663a51f5a740caa
+atlas-v0.31.0-windows-amd64 26ef9800ea70b59b1197a958c473c1dc9aa357f315e8aeebd85086855e69459e
 
 # gitleaks v8.21.2 - Secret scanning tool (CI-only)
 # GitHub releases: https://github.com/gitleaks/gitleaks/releases

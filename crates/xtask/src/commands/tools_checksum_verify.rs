@@ -189,7 +189,8 @@ fn get_download_url(tool_name: &str, version: &str, os: &str, arch: &str) -> Res
     match tool_name {
         "oasdiff" => {
             let oas_arch = if os == "darwin" && arch == "arm64" { "all" } else { arch };
-            let ext = if os == "windows" { "zip" } else { "tar.gz" };
+            // Windows release is also .tar.gz for this version, not .zip
+            let ext = "tar.gz";
             Ok(format!(
                 "https://github.com/oasdiff/oasdiff/releases/download/v{}/oasdiff_{}_{}_{}.{}",
                 version, version, os, oas_arch, ext
@@ -197,9 +198,10 @@ fn get_download_url(tool_name: &str, version: &str, os: &str, arch: &str) -> Res
         }
         "buf" => {
             let os_cap = format!("{}{}", &os[..1].to_uppercase(), &os[1..]);
-            let buf_arch = match arch {
-                "amd64" => "x86_64",
-                "arm64" => "arm64",
+            let buf_arch = match (os, arch) {
+                (_, "amd64") => "x86_64",
+                ("linux", "arm64") => "aarch64",
+                (_, "arm64") => "arm64",
                 _ => arch,
             };
             let ext = if os == "windows" { ".exe" } else { "" };

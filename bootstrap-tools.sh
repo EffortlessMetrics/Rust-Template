@@ -69,15 +69,26 @@ install_oasdiff() {
 
   if ! [ -x "$BIN/oasdiff" ]; then
     echo "Installing oasdiff ${v} from ${url}..."
-    curl -sSfL "$url" | tar -xz -C "$BIN" oasdiff
+    local tmp; tmp="$(mktemp)"
+    curl -sSfL "$url" -o "$tmp"
+    sha_check "$tmp" "oasdiff-${v}-${os}-${oas_arch}"
+    tar -xzf "$tmp" -C "$BIN" oasdiff
+    rm -f "$tmp"
     chmod +x "$BIN/oasdiff"
-    sha_check "$BIN/oasdiff" "oasdiff-${v}-${os}-${oas_arch}"
   fi
 }
 install_buf() {
   local v="1.45.0"
   local os_cap; os_cap="$(tr '[:lower:]' '[:upper:]' <<< "${os:0:1}")${os:1}"
-  local buf_arch; case "$arch" in amd64) buf_arch="x86_64" ;; arm64) buf_arch="arm64" ;; esac
+  local buf_arch
+  if [ "$os" = "linux" ] && [ "$arch" = "arm64" ]; then
+    buf_arch="aarch64"
+  elif [ "$arch" = "amd64" ]; then
+    buf_arch="x86_64"
+  else
+    buf_arch="$arch"
+  fi
+
   local bin="buf-${os_cap}-${buf_arch}"
   local url="https://github.com/bufbuild/buf/releases/download/v${v}/${bin}"
   if ! [ -x "$BIN/buf" ]; then
