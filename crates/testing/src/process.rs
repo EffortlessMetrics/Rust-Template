@@ -206,6 +206,9 @@ mod tests {
         }
 
         // Should be restored
-        assert_eq!(env::current_dir().unwrap(), original_dir);
+        assert_eq!(
+            env::current_dir().unwrap().canonicalize().unwrap(),
+            original_dir.canonicalize().unwrap(),
+        );
     }
 }

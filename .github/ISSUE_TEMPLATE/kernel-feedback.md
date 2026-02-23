@@ -33,4 +33,4 @@ assignees: ''
 
 ---
 
-**See [maintain-kernel.md](../../docs/how-to/maintain-kernel.md) for how kernel improvements are evaluated.**
+**See [maintain-kernel.md](https://github.com/EffortlessMetrics/Rust-Template/blob/main/docs/how-to/maintain-kernel.md) for how kernel improvements are evaluated.**

@@ -14,6 +14,7 @@ dependencies = [
  "gherkin",
  "http",
  "http-body-util",
+ "jsonwebtoken",
  "md5",
  "regex",
  "rust-as-spec-ac-kernel",
@@ -186,16 +187,16 @@ dependencies = [
  "chrono",
  "gov-http",
  "http-agents",
+ "http-auth",
  "http-body-util",
  "http-core",
+ "http-metrics",
  "http-middleware",
  "http-platform",
  "http-tasks",
  "http-todos",
  "jsonwebtoken",
  "maud",
- "once_cell",
- "prometheus",
  "rust-as-spec-business-core",
  "rust-as-spec-gov-model",
  "rust-as-spec-model",
@@ -1767,6 +1768,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "http-auth"
+version = "3.3.15"
+dependencies = [
+ "jsonwebtoken",
+ "proptest",
+ "rust-as-spec-runtime",
+ "serde",
+ "serde_json",
+ "serde_yaml_ng",
+ "testing",
+ "tracing",
+]
+
+[[package]]
 name = "http-body"
 version = "1.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1822,6 +1837,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "http-metrics"
+version = "3.3.15"
+dependencies = [
+ "axum",
+ "once_cell",
+ "prometheus",
+ "tokio",
+ "tower",
+ "tracing",
+]
+
+[[package]]
 name = "http-middleware"
 version = "3.3.15"
 dependencies = [
@@ -1845,6 +1872,7 @@ dependencies = [
  "chrono",
  "gov-http",
  "http",
+ "http-auth",
  "http-core",
  "http-errors",
  "maud",

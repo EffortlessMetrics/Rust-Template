@@ -60,7 +60,7 @@ mod tests {
     use business_core::governance::{
         GovernanceError, GovernanceRepository, Task, TaskId, TaskStatus,
     };
-    use jsonwebtoken::{EncodingKey, Header};
+    use jsonwebtoken::{EncodingKey, Header, encode};
     use std::{
         path::PathBuf,
         sync::Arc,
@@ -91,6 +91,23 @@ mod tests {
 
     async fn protected_handler() -> &'static str {
         "ok"
+    }
+
+    fn create_jwt_token(
+        secret: &str,
+        subject: &str,
+        issuer: &str,
+        expires_in_seconds: u64,
+    ) -> Result<String, jsonwebtoken::errors::Error> {
+        let now = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs();
+        let claims = crate::security::Claims {
+            sub: subject.to_string(),
+            exp: now + expires_in_seconds,
+            iat: now,
+            iss: issuer.to_string(),
+        };
+
+        encode(&Header::default(), &claims, &EncodingKey::from_secret(secret.as_ref()))
     }
 
     fn app_state(
@@ -186,8 +203,7 @@ mod tests {
     #[tokio::test]
     async fn accepts_jwt_when_basic_token_is_enabled() {
         let secret = "test-secret";
-        let token =
-            crate::security::create_jwt_token(secret, "user123", "rust-template", 3600).unwrap();
+        let token = create_jwt_token(secret, "user123", "rust-template", 3600).unwrap();
         let state =
             app_state(crate::security::PlatformAuthMode::Basic, Some("legacy-token"), Some(secret));
         let app = guarded_router(state);
@@ -239,8 +255,7 @@ mod tests {
     #[tokio::test]
     async fn accepts_post_with_valid_jwt_bearer_token() {
         let secret = "test-secret";
-        let token =
-            crate::security::create_jwt_token(secret, "user123", "rust-template", 3600).unwrap();
+        let token = create_jwt_token(secret, "user123", "rust-template", 3600).unwrap();
         let state = app_state(crate::security::PlatformAuthMode::Jwt, None, Some(secret));
         let app = guarded_router(state);
 
@@ -258,8 +273,7 @@ mod tests {
     #[tokio::test]
     async fn accepts_post_with_valid_jwt_custom_header() {
         let secret = "test-secret";
-        let token =
-            crate::security::create_jwt_token(secret, "user123", "rust-template", 3600).unwrap();
+        let token = create_jwt_token(secret, "user123", "rust-template", 3600).unwrap();
         let state = app_state(crate::security::PlatformAuthMode::Jwt, None, Some(secret));
         let app = guarded_router(state);
 
@@ -361,8 +375,7 @@ mod tests {
     #[tokio::test]
     async fn accepts_get_with_valid_jwt_in_jwt_mode() {
         let secret = "test-secret";
-        let token =
-            crate::security::create_jwt_token(secret, "user123", "rust-template", 3600).unwrap();
+        let token = create_jwt_token(secret, "user123", "rust-template", 3600).unwrap();
         let state = app_state(crate::security::PlatformAuthMode::Jwt, None, Some(secret));
         let app = guarded_router(state);
 

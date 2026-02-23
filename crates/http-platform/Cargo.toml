@@ -2,6 +2,7 @@
 # Governance HTTP
 gov-http = {path = "../gov-http"}
 # Core HTTP types
+http-auth = {path = "../http-auth"}
 http-core = {path = "../http-core"}
 http-errors = {features = ["axum", "uuid"], path = "../http-errors"}
 # HTML templates

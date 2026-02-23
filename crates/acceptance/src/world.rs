@@ -83,6 +83,8 @@ pub struct World {
     pub platform_auth_mode: Option<String>,
     /// Per-scenario platform auth token (for isolation from parallel scenarios)
     pub platform_auth_token: Option<String>,
+    /// Per-scenario platform JWT secret (for isolation from parallel scenarios)
+    pub platform_jwt_secret: Option<String>,
     /// Temporary git worktree guard (cleans up worktree metadata on drop)
     pub temp_worktree: Option<TempWorktree>,
 }
@@ -211,6 +213,7 @@ impl Default for World {
             cli_json_output: None,
             platform_auth_mode: None,
             platform_auth_token: None,
+            platform_jwt_secret: None,
             temp_worktree: None,
         }
     }
@@ -265,7 +268,8 @@ impl World {
         // Use EnvVarGuard to safely set env vars from World's isolated auth config.
         // The guard serializes access via a global lock and restores the original
         // values on drop, ensuring no cross-scenario pollution.
-        let guard = EnvVarGuard::new(&["PLATFORM_AUTH_MODE", "PLATFORM_AUTH_TOKEN"]);
+        let guard =
+            EnvVarGuard::new(&["PLATFORM_AUTH_MODE", "PLATFORM_AUTH_TOKEN", "PLATFORM_JWT_SECRET"]);
 
         match self.platform_auth_mode.as_deref() {
             Some(mode) => guard.set("PLATFORM_AUTH_MODE", mode),
@@ -274,6 +278,10 @@ impl World {
         match self.platform_auth_token.as_deref() {
             Some(tok) => guard.set("PLATFORM_AUTH_TOKEN", tok),
             None => guard.remove("PLATFORM_AUTH_TOKEN"),
+        }
+        match self.platform_jwt_secret.as_deref() {
+            Some(secret) => guard.set("PLATFORM_JWT_SECRET", secret),
+            None => guard.remove("PLATFORM_JWT_SECRET"),
         }
 
         let specs_dir = self._temp_dir.path().join("specs");
@@ -292,6 +300,14 @@ impl World {
     pub fn set_platform_auth(&mut self, mode: Option<String>, token: Option<String>) {
         self.platform_auth_mode = mode;
         self.platform_auth_token = token;
+        self.platform_jwt_secret = None;
+    }
+
+    /// Set platform auth mode + JWT secret for this scenario.
+    pub fn set_platform_jwt_auth(&mut self, mode: Option<String>, jwt_secret: Option<String>) {
+        self.platform_auth_mode = mode;
+        self.platform_auth_token = None;
+        self.platform_jwt_secret = jwt_secret;
     }
 }
 

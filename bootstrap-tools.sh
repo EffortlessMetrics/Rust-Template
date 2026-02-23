@@ -69,9 +69,12 @@ install_oasdiff() {
 
   if ! [ -x "$BIN/oasdiff" ]; then
     echo "Installing oasdiff ${v} from ${url}..."
-    curl -sSfL "$url" | tar -xz -C "$BIN" oasdiff
+    local tmp; tmp="$(mktemp)"
+    curl -sSfL "$url" -o "$tmp"
+    sha_check "$tmp" "oasdiff-${v}-${os}-${oas_arch}"
+    tar -xzf "$tmp" -C "$BIN" oasdiff
+    rm -f "$tmp"
     chmod +x "$BIN/oasdiff"
-    sha_check "$BIN/oasdiff" "oasdiff-${v}-${os}-${oas_arch}"
   fi
 }
 install_buf() {

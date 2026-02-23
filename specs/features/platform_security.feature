@@ -38,6 +38,26 @@ Feature: Platform security and log hygiene
     And the response body should contain '"mode":"basic"'
     And the response body should contain '"token_present":false'
 
+  @AC-TPL-PLATFORM-AUTH-BASIC
+  Scenario: Write endpoints require a valid JWT bearer token when auth mode is jwt
+    Given platform auth mode is "jwt" with secret "jwt-test-secret"
+    And a task "TASK-AUTH-JWT-001" exists with status "Todo"
+    When I send a POST request to "/platform/tasks/TASK-AUTH-JWT-001/status" with body:
+      """
+      {
+        "status": "InProgress"
+      }
+      """
+    Then the response status code should be 401
+    When I set Authorization bearer token signed with secret "jwt-test-secret"
+    And I send a POST request to "/platform/tasks/TASK-AUTH-JWT-001/status" with body:
+      """
+      {
+        "status": "InProgress"
+      }
+      """
+    Then the response status code should be 204
+
   @AC-TPL-LOG-NO-SECRETS
   Scenario: Platform status redacts secrets
     When I send a GET request to "/platform/status"

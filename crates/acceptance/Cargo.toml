@@ -13,6 +13,7 @@ cucumber = {features = ["output-junit"], workspace = true}
 gherkin.workspace = true
 http.workspace = true
 http-body-util.workspace = true
+jsonwebtoken = {features = ["rust_crypto"], version = "10.2.0"}
 md5.workspace = true
 regex.workspace = true
 serde.workspace = true
