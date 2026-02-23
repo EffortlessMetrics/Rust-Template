@@ -1,12 +1,10 @@
 [dependencies]
-http.workspace = true
-http-bearer-token = {path = "../http-bearer-token"}
 
 [dev-dependencies]
 proptest.workspace = true
 
 [package]
-name = "http-auth-token"
+name = "http-bearer-token"
 publish = false
 authors.workspace = true
 documentation.workspace = true

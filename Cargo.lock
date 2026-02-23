@@ -1787,6 +1787,14 @@ name = "http-auth-token"
 version = "3.3.15"
 dependencies = [
  "http",
+ "http-bearer-token",
+ "proptest",
+]
+
+[[package]]
+name = "http-bearer-token"
+version = "3.3.15"
+dependencies = [
  "proptest",
 ]
 

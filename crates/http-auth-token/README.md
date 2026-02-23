@@ -4,6 +4,7 @@ Single-responsibility token extraction for platform HTTP authentication headers.
 
 ## Scope
 
+- Delegate bearer parsing to `http-bearer-token`
 - Parse bearer tokens from `Authorization` header values
 - Select the effective auth token from `Authorization` and legacy `X-Platform-Token`
 - Extract auth token from `http::HeaderMap`

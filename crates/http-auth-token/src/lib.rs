@@ -7,6 +7,7 @@
 #![forbid(unsafe_code)]
 
 use http::HeaderMap;
+pub use http_bearer_token::extract_bearer_token;
 
 /// Standard authorization header name.
 pub const AUTHORIZATION_HEADER: &str = "authorization";
@@ -32,14 +33,6 @@ pub fn extract_auth_token_from_headers(headers: &HeaderMap) -> Option<&str> {
     let authorization = headers.get(AUTHORIZATION_HEADER).and_then(|value| value.to_str().ok());
     let platform = headers.get(PLATFORM_AUTH_HEADER).and_then(|value| value.to_str().ok());
     extract_auth_token(authorization, platform)
-}
-
-/// Extract bearer token from a single `Authorization` header value.
-///
-/// Accepts case-insensitive `Bearer` scheme followed by a single space.
-pub fn extract_bearer_token(value: &str) -> Option<&str> {
-    let (scheme, token) = value.split_once(' ')?;
-    if scheme.eq_ignore_ascii_case("bearer") { Some(token) } else { None }
 }
 
 #[cfg(test)]

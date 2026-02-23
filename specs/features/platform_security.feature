@@ -73,6 +73,20 @@ Feature: Platform security and log hygiene
     Then the response status code should be 401
     And the task "TASK-AUTH-PRECEDENCE-001" should have status "Todo"
 
+  @AC-TPL-PLATFORM-AUTH-BASIC
+  Scenario: Authorization bearer scheme is case-insensitive in basic mode
+    Given platform auth mode is "basic" with token "test-token"
+    And a task "TASK-AUTH-CASE-001" exists with status "Todo"
+    When I set "Authorization" header to "bEaReR test-token"
+    And I send a POST request to "/platform/tasks/TASK-AUTH-CASE-001/status" with body:
+      """
+      {
+        "status": "InProgress"
+      }
+      """
+    Then the response status code should be 204
+    And the task "TASK-AUTH-CASE-001" should have status "InProgress"
+
   @AC-TPL-LOG-NO-SECRETS
   Scenario: Platform status redacts secrets
     When I send a GET request to "/platform/status"
