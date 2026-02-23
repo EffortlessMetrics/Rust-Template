@@ -54,10 +54,7 @@ fn get_sha256_for_url(url: &str, extract_binary: bool, bin_name: &str) -> Result
             .context("Failed to extract tarball")?;
 
         if !output.status.success() {
-            anyhow::bail!(
-                "Failed to extract tarball: {}",
-                String::from_utf8_lossy(&output.stderr)
-            );
+            anyhow::bail!("Failed to extract tarball: {}", String::from_utf8_lossy(&output.stderr));
         }
 
         // Find binary
@@ -74,16 +71,13 @@ fn get_sha256_for_url(url: &str, extract_binary: bool, bin_name: &str) -> Result
         anyhow::bail!("Target file not found: {:?}", target_file);
     }
 
-    let sha_output = Command::new("sha256sum")
-        .arg(&target_file)
-        .output()
-        .context("Failed to compute SHA256")?;
+    let sha_output =
+        Command::new("sha256sum").arg(&target_file).output().context("Failed to compute SHA256")?;
 
     if !sha_output.status.success() {
         // Fallback to shasum -a 256 for macOS
-        let shasum_output = Command::new("shasum")
-            .args(["-a", "256", target_file.to_str().unwrap()])
-            .output();
+        let shasum_output =
+            Command::new("shasum").args(["-a", "256", target_file.to_str().unwrap()]).output();
 
         match shasum_output {
             Ok(out) if out.status.success() => Ok(String::from_utf8_lossy(&out.stdout)
