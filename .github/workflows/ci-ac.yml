@@ -37,17 +37,11 @@ jobs:
             echo "Warning: sccache not found in nix devshell, skipping"
           fi
       - name: Run BDD tests via xtask
-        env:
-          ACTIONS_CACHE_URL: ${{ env.ACTIONS_CACHE_URL }}
-          ACTIONS_RUNTIME_TOKEN: ${{ env.ACTIONS_RUNTIME_TOKEN }}
-        run: nix develop -c cargo run -p xtask -- bdd
+        run: nix develop -c env ACTIONS_CACHE_URL="$ACTIONS_CACHE_URL" ACTIONS_RUNTIME_TOKEN="$ACTIONS_RUNTIME_TOKEN" cargo run -p xtask -- bdd
 
       - name: Generate AC status (Rust)
         if: always()
-        env:
-          ACTIONS_CACHE_URL: ${{ env.ACTIONS_CACHE_URL }}
-          ACTIONS_RUNTIME_TOKEN: ${{ env.ACTIONS_RUNTIME_TOKEN }}
-        run: nix develop -c cargo run -p xtask -- ac-status
+        run: nix develop -c env ACTIONS_CACHE_URL="$ACTIONS_CACHE_URL" ACTIONS_RUNTIME_TOKEN="$ACTIONS_RUNTIME_TOKEN" cargo run -p xtask -- ac-status
 
       - name: Publish BDD JUnit results
         if: always()

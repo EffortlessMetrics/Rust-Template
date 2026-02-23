@@ -191,10 +191,8 @@ jobs:
           KERNEL_UNKNOWN_BUDGET: "0"
           XTASK_STRICT_AC_COVERAGE: ${{ github.ref == 'refs/heads/main' && '1' || '' }}
           XTASK_STRICT_PRECOMMIT: "1"
-          ACTIONS_CACHE_URL: ${{ env.ACTIONS_CACHE_URL }}
-          ACTIONS_RUNTIME_TOKEN: ${{ env.ACTIONS_RUNTIME_TOKEN }}
         run: |
-          nix develop -c bash -lc '
+          nix develop -c env ACTIONS_CACHE_URL="$ACTIONS_CACHE_URL" ACTIONS_RUNTIME_TOKEN="$ACTIONS_RUNTIME_TOKEN" bash -lc '
             set -euo pipefail
 
             # Run full selftest (includes BDD)
