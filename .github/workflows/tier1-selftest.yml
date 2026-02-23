@@ -239,6 +239,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           # Group by branch for easier time-series analysis
-          name: ac-status-${{ github.ref_name }}
+          # Sanitize branch name (replace / with -) to avoid artifact name errors
+          name: ac-status-${{ github.sha }}
           path: artifacts/ac-status/
           retention-days: 30

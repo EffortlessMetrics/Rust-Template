@@ -300,10 +300,7 @@ async fn test_coverage_accessibility() {
 
     // Verify search box has aria-label
     let search_selector = Selector::parse("#search-box").unwrap();
-    let search_box = document
-        .select(&search_selector)
-        .next()
-        .expect("Search box should exist");
+    let search_box = document.select(&search_selector).next().expect("Search box should exist");
 
     let aria_label = search_box.value().attr("aria-label");
     assert!(
@@ -313,10 +310,8 @@ async fn test_coverage_accessibility() {
 
     // Verify filter buttons have aria-pressed
     let all_filter_selector = Selector::parse("#filter-all").unwrap();
-    let all_filter = document
-        .select(&all_filter_selector)
-        .next()
-        .expect("Filter 'All' button should exist");
+    let all_filter =
+        document.select(&all_filter_selector).next().expect("Filter 'All' button should exist");
 
     assert_eq!(
         all_filter.value().attr("aria-pressed"),
