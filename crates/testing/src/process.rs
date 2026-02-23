@@ -197,9 +197,14 @@ mod tests {
         let original_dir = env::current_dir().unwrap();
         let temp_dir = env::temp_dir();
 
+        // Use canonicalize to resolve symlinks (e.g. /tmp -> /private/tmp on macOS)
+        let canonical_temp = temp_dir.canonicalize().unwrap_or(temp_dir.clone());
+
         {
             let _guard = CwdGuard::chdir(&temp_dir);
-            assert_eq!(env::current_dir().unwrap(), temp_dir);
+            let current = env::current_dir().unwrap();
+            let canonical_current = current.canonicalize().unwrap_or(current);
+            assert_eq!(canonical_current, canonical_temp);
         }
 
         // Should be restored
