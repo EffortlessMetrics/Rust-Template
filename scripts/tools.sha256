@@ -1,12 +1,12 @@
 # Tool checksums for bootstrap-tools.sh integrity verification
-# Generated: 2025-12-22T19:21:15Z
+# Generated: 2026-02-23T13:38:28Z
 # Format: <tool_name>-<version>-<platform> <sha256_checksum>
 # To update: cargo xtask tools-checksum-update
 
 
 # oasdiff v1.11.7 - OpenAPI Specification diff tool
 # GitHub releases: https://github.com/oasdiff/oasdiff/releases
-oasdiff-1.11.7-linux-amd64 0f3f70ea55dc50b8cae7e495f26f1bfc7e9eded1114990241f0b00f89950ba55
+oasdiff-1.11.7-linux-amd64 97f1052365f74e6fd6f4d8fa108606e09391aebb8ecbf3b5e7a4059d54327224
 oasdiff-1.11.7-linux-arm64 6a7394ec7129ccfbfcf4837db8426198b79e933341a96adf53b0f33498846b45
 oasdiff-1.11.7-darwin-all 2aab1d33f3b9f9c28cd6c1977f63b1aa43ba83f9ab94887f3097fcac152d20a1
 oasdiff-1.11.7-windows-amd64 5327e48ac9926d8b63c63b6768b7599369f890aac768780621a8315fd3beb2cb
@@ -19,13 +19,13 @@ buf-1.45.0-darwin-amd64 0542b62eabf4bdaa67d53b8a9aed43c8674d5e447a8c353e8e25cfcb
 buf-1.45.0-darwin-arm64 7c4131ee7af0e1a9c34acf6a7e5b7f82123bf44726f0eac1ccae31eed7ebb094
 buf-1.45.0-windows-amd64 656f38ecdd7633af9eaf8c15e0e15402c5a4852307515951fbcf7d91a37ff5b3
 
-# atlas v0.31.0 - Database schema management tool
+# atlas latest - Database schema management tool
 # Release server: https://release.ariga.io/atlas/
-atlas-v0.31.0-linux-amd64 f821bbd466ed77f69814b3f5627ffe5458a43acd28c05c3f27bb4f3267dd042a
-atlas-v0.31.0-linux-arm64 b10c02b0610720ff4f601b77a8c1f5521e89f5a14a6e7e0cc7887fb244e0473d
-atlas-v0.31.0-darwin-amd64 94876bf45d201d054936903c11df98974b2e632bbf8885cf2239d1fdb2a5eb7d
-atlas-v0.31.0-darwin-arm64 69203828b55996c06784d46ef1737132489a1794fb459ba2a663a51f5a740caa
-atlas-v0.31.0-windows-amd64 26ef9800ea70b59b1197a958c473c1dc9aa357f315e8aeebd85086855e69459e
+atlas-latest-linux-amd64 17d5c76621f256b012f230089c094e0a1cbd5ee3af4b2642938f007802d3ce1f
+atlas-latest-linux-arm64 774588b06c540e5fe6c3104f5cc216c8d140cd9606f02cd4d7e0c113079e8920
+atlas-latest-darwin-amd64 24c805dbe8a4cb9cb6bb9c25a8cc033221750ba887a88d737b7114d901a1c97e
+atlas-latest-darwin-arm64 5014a8aa90fa68a60d9e195d5657df62b79c2a1346dbff26549e35596fb3fe20
+atlas-latest-windows-amd64 f56aa16a39374728e40efada9bc7c0bb59c60c55e95ef00b406178c0480c964a
 
 # gitleaks v8.21.2 - Secret scanning tool (CI-only)
 # GitHub releases: https://github.com/gitleaks/gitleaks/releases
