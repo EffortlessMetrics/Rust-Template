@@ -146,16 +146,16 @@ jobs:
             echo '```' >> /tmp/summary.md
           fi
 
-          # Substitute variables
-          sed -i "s/\$FILE_COUNT/$FILE_COUNT/g" /tmp/summary.md
-          sed -i "s/\$SCOPE_DECLARED/$SCOPE_DECLARED/g" /tmp/summary.md
-          sed -i "s/\$DECLARED_TYPE/$DECLARED_TYPE/g" /tmp/summary.md
-          sed -i "s/\$WAIVED/$WAIVED/g" /tmp/summary.md
-          sed -i "s/\$RUNTIME_COUNT/$RUNTIME_COUNT/g" /tmp/summary.md
-          sed -i "s/\$DOCS_COUNT/$DOCS_COUNT/g" /tmp/summary.md
-          sed -i "s/\$SPECS_COUNT/$SPECS_COUNT/g" /tmp/summary.md
-          sed -i "s/\$POLICY_COUNT/$POLICY_COUNT/g" /tmp/summary.md
-          sed -i "s/\$CI_COUNT/$CI_COUNT/g" /tmp/summary.md
+          # Substitute variables - use pipe as delimiter to avoid slashes in values (though these are numbers/booleans, safer to be consistent)
+          sed -i "s|\$FILE_COUNT|$FILE_COUNT|g" /tmp/summary.md
+          sed -i "s|\$SCOPE_DECLARED|$SCOPE_DECLARED|g" /tmp/summary.md
+          sed -i "s|\$DECLARED_TYPE|$DECLARED_TYPE|g" /tmp/summary.md
+          sed -i "s|\$WAIVED|$WAIVED|g" /tmp/summary.md
+          sed -i "s|\$RUNTIME_COUNT|$RUNTIME_COUNT|g" /tmp/summary.md
+          sed -i "s|\$DOCS_COUNT|$DOCS_COUNT|g" /tmp/summary.md
+          sed -i "s|\$SPECS_COUNT|$SPECS_COUNT|g" /tmp/summary.md
+          sed -i "s|\$POLICY_COUNT|$POLICY_COUNT|g" /tmp/summary.md
+          sed -i "s|\$CI_COUNT|$CI_COUNT|g" /tmp/summary.md
 
           cat /tmp/summary.md >> $GITHUB_STEP_SUMMARY
 
