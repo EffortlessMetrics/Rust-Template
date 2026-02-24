@@ -10,11 +10,20 @@ if [ -f "$ck" ]; then
   local expect
   expect=$(awk -v k="$key" '$1==k {print $2}' "$ck" | head -n1)
   if [ -n "${expect:-}" ]; then
+    local got
     if command -v sha256sum >/dev/null 2>&1; then
-      echo "${expect}  ${file}" | sha256sum -c -
+      got=$(sha256sum "$file" | awk '{print $1}')
     else
-      local got; got=$(shasum -a 256 "$file" | awk '{print $1}')
-      test "$got" = "$expect"
+      got=$(shasum -a 256 "$file" | awk '{print $1}')
+    fi
+
+    if [ "$got" = "$expect" ]; then
+      echo "Checksum OK for $key"
+    else
+      echo "Checksum mismatch for $key" >&2
+      echo "  Expected: $expect" >&2
+      echo "  Got:      $got" >&2
+      return 1
     fi
     echo "Checksum OK for $key"
   else
