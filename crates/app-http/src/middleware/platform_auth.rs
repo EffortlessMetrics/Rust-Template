@@ -1,8 +1,8 @@
-use axum::http::{Method, Request};
+use axum::http::Request;
 use axum::{body::Body, extract::State, http::StatusCode, middleware::Next, response::Response};
+use http_auth_guard::is_request_authorized_for_platform;
 #[cfg(test)]
 use http_auth_token::AUTHORIZATION_HEADER;
-use http_auth_token::extract_auth_token_from_headers;
 
 use crate::{AppError, AppState, ErrorCode};
 
@@ -14,20 +14,8 @@ pub async fn platform_auth_guard(
     request: Request<Body>,
     next: Next,
 ) -> Result<Response, AppError> {
-    // Skip auth if mode is Open OR if credentials aren't configured
-    // (can't enforce auth without credentials to validate against)
-    if !state.platform_auth.can_enforce_auth() {
-        return Ok(next.run(request).await);
-    }
-
-    // Only OPTIONS (preflight) is public; all other methods require auth
-    if matches!(request.method(), &Method::OPTIONS) {
-        return Ok(next.run(request).await);
-    }
-
-    let provided = extract_auth_token(&request);
-
-    if state.platform_auth.is_authorized(provided) {
+    if is_request_authorized_for_platform(request.method(), request.headers(), &state.platform_auth)
+    {
         return Ok(next.run(request).await);
     }
 
@@ -36,11 +24,6 @@ pub async fn platform_auth_guard(
         ErrorCode::Unauthorized,
         "Unauthorized: missing or invalid platform token",
     ))
-}
-
-/// Extract authentication token, preferring Authorization over the legacy header.
-fn extract_auth_token(request: &Request<Body>) -> Option<&str> {
-    extract_auth_token_from_headers(request.headers())
 }
 
 #[cfg(test)]

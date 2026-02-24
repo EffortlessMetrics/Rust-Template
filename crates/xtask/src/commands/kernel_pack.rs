@@ -12,7 +12,6 @@ use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 use std::fs;
 use std::path::{Path, PathBuf};
-use std::process::Command;
 
 /// Glob patterns for files included in the kernel pack.
 ///
@@ -263,6 +262,16 @@ pub fn run_check(manifest_path: Option<&str>) -> Result<()> {
     let mut mismatches: Vec<String> = Vec::new();
     let mut missing: Vec<String> = Vec::new();
 
+    // Validate manifest keys for path safety
+    for relative_path in manifest.files.keys() {
+        if !xtask_lib::path_safety::is_safe_relative_path(std::path::Path::new(relative_path)) {
+            anyhow::bail!(
+                "Manifest contains unsafe path: {:?} — possible path traversal",
+                relative_path
+            );
+        }
+    }
+
     for (relative_path, expected) in &manifest.files {
         let full_path = root.join(relative_path);
 
@@ -335,94 +344,36 @@ pub fn run_check(manifest_path: Option<&str>) -> Result<()> {
 // Helpers
 // ---------------------------------------------------------------------------
 
-/// Compute SHA-256 checksum of a file using `sha256sum` CLI.
+/// Compute SHA-256 checksum of a file using pure-Rust `sha2` crate.
 fn compute_sha256(path: &Path) -> Result<String> {
-    let output = Command::new("sha256sum")
-        .arg(path)
-        .output()
-        .with_context(|| format!("Failed to run sha256sum on {}", path.display()))?;
-
-    if !output.status.success() {
-        anyhow::bail!(
-            "sha256sum failed for {}: {}",
-            path.display(),
-            String::from_utf8_lossy(&output.stderr)
-        );
-    }
-
-    let stdout = String::from_utf8_lossy(&output.stdout);
-    let hash = stdout
-        .split_whitespace()
-        .next()
-        .with_context(|| format!("Unexpected sha256sum output for {}", path.display()))?;
-
-    Ok(hash.to_string())
+    xtask_lib::hash::sha256_file(path)
+        .with_context(|| format!("Failed to compute SHA-256 for {}", path.display()))
 }
 
 /// Read the workspace version from the root Cargo.toml.
 ///
-/// Parses `version = "X.Y.Z"` from the `[workspace.package]` section.
+/// Parses `version` from the `[workspace.package]` section using proper TOML parsing.
 fn read_workspace_version(root: &Path) -> Result<String> {
     let cargo_toml_path = root.join("Cargo.toml");
     let content = fs::read_to_string(&cargo_toml_path)
         .with_context(|| format!("Failed to read {}", cargo_toml_path.display()))?;
 
-    // Find the version in [workspace.package] section
-    let mut in_workspace_package = false;
-    for line in content.lines() {
-        let trimmed = line.trim();
-        if trimmed == "[workspace.package]" {
-            in_workspace_package = true;
-            continue;
-        }
-        if in_workspace_package && trimmed.starts_with('[') {
-            // Left the section
-            break;
-        }
-        if in_workspace_package && trimmed.starts_with("version") {
-            // Parse version = "X.Y.Z"
-            if let Some(version) =
-                trimmed.split('=').nth(1).map(|v| v.trim().trim_matches('"').to_string())
-            {
-                return Ok(version);
-            }
-        }
-    }
+    let doc: toml::Value = toml::from_str(&content)
+        .with_context(|| format!("Failed to parse {}", cargo_toml_path.display()))?;
 
-    anyhow::bail!("Could not find version in [workspace.package] section of Cargo.toml")
+    doc.get("workspace")
+        .and_then(|ws| ws.get("package"))
+        .and_then(|pkg| pkg.get("version"))
+        .and_then(|v| v.as_str())
+        .map(|s| s.to_string())
+        .with_context(|| {
+            "Could not find version in [workspace.package] section of Cargo.toml".to_string()
+        })
 }
 
-/// Minimal TOML parser for as_spec.toml (avoids adding a `toml` crate dependency).
-///
-/// We only need to extract `[kernel].version`, so a serde_json roundtrip via
-/// a simple key-value parser is sufficient.
+/// Parse TOML content into an `AsSpecConfig` using the `toml` crate.
 fn toml_parse(content: &str) -> Result<AsSpecConfig> {
-    // Use a simple line-based parser for the subset we need.
-    // This avoids pulling in the `toml` crate just for one config file.
-    let mut kernel_version: Option<String> = None;
-    let mut current_section = String::new();
-
-    for line in content.lines() {
-        let trimmed = line.trim();
-        if trimmed.is_empty() || trimmed.starts_with('#') {
-            continue;
-        }
-        if trimmed.starts_with('[') && trimmed.ends_with(']') {
-            current_section = trimmed[1..trimmed.len() - 1].trim().to_string();
-            continue;
-        }
-        if current_section == "kernel"
-            && let Some((key, value)) = trimmed.split_once('=')
-        {
-            let key = key.trim();
-            let value = value.trim().trim_matches('"');
-            if key == "version" {
-                kernel_version = Some(value.to_string());
-            }
-        }
-    }
-
-    Ok(AsSpecConfig { kernel: kernel_version.map(|v| AsSpecKernel { version: Some(v) }) })
+    toml::from_str(content).context("Failed to parse TOML")
 }
 
 /// Determine workspace root from CARGO_MANIFEST_DIR.

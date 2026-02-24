@@ -1,0 +1,25 @@
+[[bin]]
+bench = false
+doc = false
+name = "policy"
+path = "fuzz_targets/policy.rs"
+test = false
+
+[dependencies]
+arbitrary = {features = ["derive"], version = "1"}
+libfuzzer-sys = "0.4"
+
+[dependencies.http-auth-policy]
+path = ".."
+
+[package]
+edition = "2024"
+name = "http-auth-policy-fuzz"
+publish = false
+version = "0.0.0"
+
+[package.metadata]
+cargo-fuzz = true
+
+[workspace]
+members = ["."]

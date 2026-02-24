@@ -1,43 +1,43 @@
 [dependencies]
-ac-kernel.workspace = true
 adapters-spec-fs = {path = "../adapters-spec-fs"}
 # Internal crates
 app-http = {path = "../app-http"}
-business-core.workspace = true
-spec-runtime.workspace = true
-telemetry.workspace = true
-testing.workspace = true
+cucumber = {features = ["output-junit"], workspace = true}
+jsonwebtoken = {features = ["rust_crypto"], version = "10.2.0"}
+uuid = {features = ["v4"], workspace = true}
+ac-kernel.workspace = true
 anyhow.workspace = true
 axum.workspace = true
-cucumber = {features = ["output-junit"], workspace = true}
+business-core.workspace = true
 gherkin.workspace = true
 http.workspace = true
 http-body-util.workspace = true
-jsonwebtoken = {features = ["rust_crypto"], version = "10.2.0"}
 md5.workspace = true
 regex.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 serde_yaml.workspace = true
 shell-words.workspace = true
+spec-runtime.workspace = true
+telemetry.workspace = true
 tempfile.workspace = true
+testing.workspace = true
 tokio.workspace = true
 tower.workspace = true
 tracing.workspace = true
-uuid = {features = ["v4"], workspace = true}
 
 [dev-dependencies]
 
 [package]
 name = "acceptance"
-version.workspace = true
+authors.workspace = true
 edition.workspace = true
+homepage.workspace = true
 license.workspace = true
 publish.workspace = true
 repository.workspace = true
-homepage.workspace = true
-authors.workspace = true
 rust-version.workspace = true
+version.workspace = true
 
 [[test]]
 harness = false

@@ -1,0 +1,26 @@
+[[bin]]
+bench = false
+doc = false
+name = "auth_config_loader"
+path = "fuzz_targets/auth_config_loader.rs"
+test = false
+
+[dependencies]
+arbitrary = {features = ["derive"], version = "1"}
+libfuzzer-sys = "0.4"
+serde_yaml = "0.9"
+
+[dependencies.http-auth-config-loader]
+path = ".."
+
+[package]
+edition = "2024"
+name = "http-auth-config-loader-fuzz"
+publish = false
+version = "0.0.0"
+
+[package.metadata]
+cargo-fuzz = true
+
+[workspace]
+members = ["."]

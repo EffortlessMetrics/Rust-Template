@@ -39,6 +39,14 @@ Feature: Platform security and log hygiene
     And the response body should contain '"token_present":false'
 
   @AC-TPL-PLATFORM-AUTH-BASIC
+  Scenario: Platform status reports token presence when basic token is configured
+    Given platform auth mode is "basic" with token "test-token"
+    When I send a GET request to "/platform/status"
+    Then the response status code should be 200
+    And the response body should contain '"mode":"basic"'
+    And the response body should contain '"token_present":true'
+
+  @AC-TPL-PLATFORM-AUTH-BASIC
   Scenario: None auth mode alias behaves as open mode for writes
     Given platform auth mode is "none" with token "ignored-token"
     And a task "TASK-AUTH-NONE-001" exists with status "Todo"

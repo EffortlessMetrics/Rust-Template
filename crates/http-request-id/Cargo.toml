@@ -1,0 +1,25 @@
+[dependencies]
+axum.workspace = true
+tower.workspace = true
+tracing.workspace = true
+uuid.workspace = true
+
+[dev-dependencies]
+proptest.workspace = true
+tokio.workspace = true
+tower.workspace = true
+
+[package]
+categories = ["observability", "web-programming", "web-programming::http-server"]
+description = "Request-ID middleware and helpers for HTTP tracing correlation"
+keywords = ["axum", "correlation", "middleware", "request-id"]
+name = "http-request-id"
+publish = false
+authors.workspace = true
+documentation.workspace = true
+edition.workspace = true
+homepage.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+version.workspace = true

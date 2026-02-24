@@ -1,0 +1,28 @@
+[[bin]]
+bench = false
+doc = false
+name = "auth_config_resolver"
+path = "fuzz_targets/auth_config_resolver.rs"
+test = false
+
+[dependencies]
+arbitrary = {features = ["derive"], version = "1"}
+libfuzzer-sys = "0.4"
+
+[dependencies.http-auth-config-inputs]
+path = "../../http-auth-config-inputs"
+
+[dependencies.http-auth-config-resolver]
+path = ".."
+
+[package]
+edition = "2024"
+name = "http-auth-config-resolver-fuzz"
+publish = false
+version = "0.0.0"
+
+[package.metadata]
+cargo-fuzz = true
+
+[workspace]
+members = ["."]

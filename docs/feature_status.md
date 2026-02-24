@@ -124,7 +124,7 @@ Auto-generated AC status from acceptance (BDD) and unit tests.
 | AC-TPL-OPINIONS-DOCUMENTED | US-TPL-PHILOSOPHY-001 | REQ-TPL-OPINIONATED-DEFAULTS | [PASS] pass | 1 |
 | AC-TPL-OVERRIDE-DOC | US-TPL-PHILOSOPHY-001 | REQ-TPL-OVERRIDE-PATH | [PASS] pass | 1 |
 | AC-TPL-OVERRIDE-TRACEABLE | US-TPL-PHILOSOPHY-001 | REQ-TPL-OVERRIDE-PATH | [PASS] pass | 1 |
-| AC-TPL-PLATFORM-AUTH-BASIC | US-TPL-PLT-001 | REQ-TPL-PLATFORM-AUTH | [PASS] pass | 1 |
+| AC-TPL-PLATFORM-AUTH-BASIC | US-TPL-PLT-001 | REQ-TPL-PLATFORM-AUTH | [FAIL] fail | 1 |
 | AC-TPL-PLATFORM-DEVEX | US-TPL-PLT-001 | REQ-TPL-PLATFORM-INTROSPECTION | [PASS] pass | 3 |
 | AC-TPL-PLATFORM-DOCS | US-TPL-PLT-001 | REQ-TPL-PLATFORM-INTROSPECTION | [PASS] pass | 1 |
 | AC-TPL-PLATFORM-DOCS-CONTRACT | US-TPL-PLT-001 | REQ-TPL-PLATFORM-CONTRACT | [PASS] pass | 1 |
@@ -182,3 +182,10 @@ These ACs describe test harness or example workspace behaviour. They are
 validated in CI, not by local selftest:
 
 - AC-TPL-EXAMPLE-FORK-BUILDS – `examples/fork-customization/` is validated and demonstrates fork extensibility patterns in CI, proving template provides a working foundation for forked services.
+
+## Unmapped Scenarios
+
+Scenarios referencing non-existent ACs:
+
+- Scenario 'Existing request identifier is preserved' references AC-TPL-REQUEST-ID (in specs/features/request_id.feature)
+- Scenario 'Request identifier is generated when missing' references AC-TPL-REQUEST-ID (in specs/features/request_id.feature)

@@ -1,11 +1,14 @@
 [dependencies]
-http-origin-prefix = { path = "../http-origin-prefix" }
-http-origin-subdomain = { path = "../http-origin-subdomain" }
+http-origin-prefix = {path = "../http-origin-prefix"}
+http-origin-subdomain = {path = "../http-origin-subdomain"}
 
 [dev-dependencies]
 proptest.workspace = true
 
 [package]
+categories = ["web-programming", "web-programming::http-server"]
+description = "Single-rule origin matcher primitive for CORS allowlist evaluation"
+keywords = ["cors", "http", "origin"]
 name = "http-origin-rule"
 publish = false
 authors.workspace = true
@@ -16,6 +19,3 @@ license.workspace = true
 repository.workspace = true
 rust-version.workspace = true
 version.workspace = true
-description = "Single-rule origin matcher primitive for CORS allowlist evaluation"
-categories = ["web-programming", "web-programming::http-server"]
-keywords = ["cors", "origin", "http"]

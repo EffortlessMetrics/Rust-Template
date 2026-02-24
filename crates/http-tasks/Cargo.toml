@@ -1,6 +1,4 @@
 [dependencies]
-# Business core for task operations
-business-core.workspace = true
 # Core HTTP types
 http-core = {path = "../http-core"}
 http-errors = {features = ["axum"], path = "../http-errors"}
@@ -9,6 +7,8 @@ http-task-status-parser = {path = "../http-task-status-parser"}
 platform-contract = {path = "../platform-contract"}
 # HTTP framework
 axum.workspace = true
+# Business core for task operations
+business-core.workspace = true
 http.workspace = true
 # Utilities
 tokio.workspace = true

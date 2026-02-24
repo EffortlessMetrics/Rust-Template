@@ -139,10 +139,16 @@ fn check_crate(root: &Path, crate_name: &str, dry_run: bool) -> Result<Vec<Strin
         }
     }
 
-    // Check 4: Verify Cargo.toml has publish = true
-    let cargo_toml = std::fs::read_to_string(crate_dir.join("Cargo.toml"))
+    // Check 4: Verify Cargo.toml has publish = true (semantic TOML parsing)
+    let cargo_toml_content = std::fs::read_to_string(crate_dir.join("Cargo.toml"))
         .context("Failed to read Cargo.toml")?;
-    if !cargo_toml.contains("publish = true") {
+    let cargo_toml: toml::Value =
+        toml::from_str(&cargo_toml_content).context("Failed to parse Cargo.toml")?;
+    let is_publish_true = cargo_toml
+        .get("package")
+        .and_then(|pkg| pkg.get("publish"))
+        .is_some_and(|v| v.as_bool() == Some(true));
+    if !is_publish_true {
         errors.push("publish is not explicitly set to true".to_string());
     }
 

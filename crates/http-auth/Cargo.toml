@@ -1,15 +1,8 @@
 [dependencies]
-http-auth-mode = {path = "../http-auth-mode"}
+http-auth-config = {path = "../http-auth-config"}
 http-auth-verifier = {path = "../http-auth-verifier"}
-spec-runtime.workspace = true
-tracing.workspace = true
 
 [dev-dependencies]
-jsonwebtoken = {features = ["rust_crypto"], version = "10.2.0"}
-proptest.workspace = true
-serde_json.workspace = true
-serde_yaml.workspace = true
-testing.workspace = true
 
 [package]
 name = "http-auth"

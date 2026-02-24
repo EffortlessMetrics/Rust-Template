@@ -4,6 +4,9 @@
 proptest.workspace = true
 
 [package]
+categories = ["web-programming", "web-programming::http-server"]
+description = "HTTP request body format classifier primitive"
+keywords = ["content-type", "http", "parser"]
 name = "http-body-format"
 publish = false
 authors.workspace = true
@@ -14,6 +17,3 @@ license.workspace = true
 repository.workspace = true
 rust-version.workspace = true
 version.workspace = true
-description = "HTTP request body format classifier primitive"
-categories = ["web-programming", "web-programming::http-server"]
-keywords = ["http", "content-type", "parser"]

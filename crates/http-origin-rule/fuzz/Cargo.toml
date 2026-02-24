@@ -1,25 +1,25 @@
-[package]
-name = "http-origin-rule-fuzz"
-version = "0.0.0"
-publish = false
-edition = "2024"
-
-[package.metadata]
-cargo-fuzz = true
+[[bin]]
+bench = false
+doc = false
+name = "origin_rule_matcher"
+path = "fuzz_targets/origin_rule_matcher.rs"
+test = false
 
 [dependencies]
-arbitrary = { version = "1", features = ["derive"] }
+arbitrary = {features = ["derive"], version = "1"}
 libfuzzer-sys = "0.4"
 
 [dependencies.http-origin-rule]
 path = ".."
 
-[[bin]]
-name = "origin_rule_matcher"
-path = "fuzz_targets/origin_rule_matcher.rs"
-test = false
-doc = false
-bench = false
+[package]
+edition = "2024"
+name = "http-origin-rule-fuzz"
+publish = false
+version = "0.0.0"
+
+[package.metadata]
+cargo-fuzz = true
 
 [workspace]
 members = ["."]

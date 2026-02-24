@@ -1,25 +1,25 @@
-[package]
-name = "http-task-status-parser-fuzz"
-version = "0.0.0"
-publish = false
-edition = "2024"
-
-[package.metadata]
-cargo-fuzz = true
+[[bin]]
+bench = false
+doc = false
+name = "request_parser"
+path = "fuzz_targets/request_parser.rs"
+test = false
 
 [dependencies]
-arbitrary = {version = "1", features = ["derive"]}
+arbitrary = {features = ["derive"], version = "1"}
 libfuzzer-sys = "0.4"
 
 [dependencies.http-task-status-parser]
 path = ".."
 
-[[bin]]
-name = "request_parser"
-path = "fuzz_targets/request_parser.rs"
-test = false
-doc = false
-bench = false
+[package]
+edition = "2024"
+name = "http-task-status-parser-fuzz"
+publish = false
+version = "0.0.0"
+
+[package.metadata]
+cargo-fuzz = true
 
 [workspace]
 members = ["."]

@@ -12,6 +12,9 @@ libfuzzer-sys = "0.4"
 [dependencies.http-auth]
 path = ".."
 
+[dependencies.http-auth-config]
+path = "../../http-auth-config"
+
 [package]
 edition = "2024"
 name = "http-auth-fuzz"

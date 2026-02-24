@@ -11,11 +11,13 @@ Dependency-light contract types for `/platform/*` API endpoints. Defines the sta
 ## Key Exports
 
 ### Error Types
+
 - `ErrorCode` – Machine-readable error codes
 - `ErrorResponse` – JSON error envelope
 - `ErrorStats`, `ErrorSummary` – Error aggregation
 
 ### Platform DTOs
+
 - `PlatformStatus` – Top-level `/platform/status` response
 - `ServiceInfo`, `GovernanceStatus` – Service metadata
 - `LedgerCounts`, `DevExCounts`, `DocCounts`, `TaskCounts` – Spec metrics

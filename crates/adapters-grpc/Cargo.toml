@@ -3,13 +3,13 @@ tonic-build = "0.14.2"
 tonic-prost-build = "0.14.2"
 
 [dependencies]
-business-core.workspace = true
-model.workspace = true
 prost = "0.14.1"
 prost-types = "0.14.1"
 tokio = {features = ["sync", "time"], workspace = true}
 tonic = {features = ["transport"], workspace = true}
 tonic-prost = "0.14.2"
+business-core.workspace = true
+model.workspace = true
 tracing.workspace = true
 uuid.workspace = true
 
@@ -28,11 +28,11 @@ path = "src/lib.rs"
 [package]
 description = "Tonic-based gRPC adapter for cross-service communication"
 name = "adapters-grpc"
-version.workspace = true
+authors.workspace = true
 edition.workspace = true
+homepage.workspace = true
 license.workspace = true
 publish.workspace = true
 repository.workspace = true
-homepage.workspace = true
-authors.workspace = true
 rust-version.workspace = true
+version.workspace = true

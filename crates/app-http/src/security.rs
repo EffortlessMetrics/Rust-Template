@@ -2,4 +2,4 @@
 //!
 //! Canonical implementation now lives in the `http-auth` microcrate.
 
-pub use http_auth::{Claims, PlatformAuthConfig, PlatformAuthMode};
+pub use http_auth::{Claims, PlatformAuthConfig, PlatformAuthMode, try_from_sources};

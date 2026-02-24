@@ -4,6 +4,9 @@
 proptest.workspace = true
 
 [package]
+categories = ["web-programming", "web-programming::http-server"]
+description = "HTTP origin parser primitive for CORS allowlist matching"
+keywords = ["cors", "http", "origin"]
 name = "http-origin-parser"
 publish = false
 authors.workspace = true
@@ -14,6 +17,3 @@ license.workspace = true
 repository.workspace = true
 rust-version.workspace = true
 version.workspace = true
-description = "HTTP origin parser primitive for CORS allowlist matching"
-categories = ["web-programming", "web-programming::http-server"]
-keywords = ["cors", "origin", "http"]

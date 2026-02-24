@@ -12,6 +12,8 @@
 //! - **Re-exports**: Provides a clean public API for xtask consumers
 
 pub mod env;
+pub mod hash;
+pub mod path_safety;
 pub mod validation;
 
 pub use env::{describe_mode, is_ci, is_low_resources, is_noninteractive, should_skip_bdd};

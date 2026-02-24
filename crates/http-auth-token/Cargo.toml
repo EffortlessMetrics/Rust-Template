@@ -1,6 +1,6 @@
 [dependencies]
-http.workspace = true
 http-bearer-token = {path = "../http-bearer-token"}
+http.workspace = true
 
 [dev-dependencies]
 proptest.workspace = true

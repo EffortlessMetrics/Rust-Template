@@ -1,0 +1,25 @@
+[[bin]]
+bench = false
+doc = false
+name = "authorization"
+path = "fuzz_targets/authorization.rs"
+test = false
+
+[dependencies]
+arbitrary = {features = ["derive"], version = "1"}
+libfuzzer-sys = "0.4"
+
+[dependencies.http-auth-config]
+path = ".."
+
+[package]
+edition = "2024"
+name = "http-auth-config-fuzz"
+publish = false
+version = "0.0.0"
+
+[package.metadata]
+cargo-fuzz = true
+
+[workspace]
+members = ["."]

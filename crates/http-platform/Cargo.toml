@@ -9,8 +9,6 @@ http-errors = {features = ["axum", "uuid"], path = "../http-errors"}
 maud = "0.27.0"
 # Platform contract types
 platform-contract = {path = "../platform-contract"}
-# Spec runtime for loading specs
-spec-runtime.workspace = true
 # Utilities
 anyhow.workspace = true
 # HTTP framework
@@ -21,6 +19,8 @@ http.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 serde_yaml.workspace = true
+# Spec runtime for loading specs
+spec-runtime.workspace = true
 tracing.workspace = true
 
 [dev-dependencies]

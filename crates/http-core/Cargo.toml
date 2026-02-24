@@ -1,26 +1,26 @@
 [dependencies]
-# Core business logic
-business-core.workspace = true
-gov-model.workspace = true
 http-errors = {features = ["axum", "uuid"], path = "../http-errors"}
 # Platform contract types
 platform-contract = {path = "../platform-contract"}
-spec-runtime.workspace = true
 tokio = {features = ["net", "signal"], workspace = true}
 # HTTP framework
 axum.workspace = true
+# Core business logic
+business-core.workspace = true
+gov-model.workspace = true
 http.workspace = true
 # Metrics
 prometheus.workspace = true
 # Utilities
 serde.workspace = true
 serde_json.workspace = true
+spec-runtime.workspace = true
 tracing.workspace = true
 uuid.workspace = true
 
 [dev-dependencies]
-testing.workspace = true
 serde_json.workspace = true
+testing.workspace = true
 tokio.workspace = true
 tower.workspace = true
 

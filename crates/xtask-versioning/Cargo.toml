@@ -13,11 +13,11 @@ tempfile.workspace = true
 [package]
 description = "Semantic version management and Cargo.toml manipulation for releases"
 name = "xtask-versioning"
-version.workspace = true
+authors.workspace = true
 edition.workspace = true
+homepage.workspace = true
 license.workspace = true
 publish.workspace = true
 repository.workspace = true
-homepage.workspace = true
-authors.workspace = true
 rust-version.workspace = true
+version.workspace = true

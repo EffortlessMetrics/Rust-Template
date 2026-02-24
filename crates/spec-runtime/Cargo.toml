@@ -1,10 +1,10 @@
 [dependencies]
-gov-model.workspace = true
 once_cell = {workspace = true}
 regex = {workspace = true}
 serde_yaml = {workspace = true}
 anyhow.workspace = true
 chrono.workspace = true
+gov-model.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 thiserror.workspace = true
@@ -18,17 +18,17 @@ tempfile.workspace = true
 name = "spec_runtime"
 
 [package]
-name = "rust-as-spec-runtime"
-description = "Runtime environment for spec-based development workflows and infrastructure"
-version.workspace = true
-edition.workspace = true
-license.workspace = true
-publish = true
-repository.workspace = true
-homepage.workspace = true
-authors.workspace = true
-rust-version.workspace = true
-documentation = "https://docs.rs/rust-as-spec-runtime"
 categories = ["config", "development-tools"]
+description = "Runtime environment for spec-based development workflows and infrastructure"
+documentation = "https://docs.rs/rust-as-spec-runtime"
+include = ["Cargo.toml", "LICENSE-APACHE", "LICENSE-MIT", "README.md", "src/**/*"]
 keywords = ["development", "infrastructure", "runtime", "spec"]
-include = ["src/**/*", "README.md", "LICENSE-APACHE", "LICENSE-MIT", "Cargo.toml"]
+name = "rust-as-spec-runtime"
+publish = true
+authors.workspace = true
+edition.workspace = true
+homepage.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+version.workspace = true

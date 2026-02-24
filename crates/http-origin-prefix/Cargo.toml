@@ -1,11 +1,14 @@
 [dependencies]
-http-origin-boundary = { path = "../http-origin-boundary" }
-http-origin-parser = { path = "../http-origin-parser" }
+http-origin-boundary = {path = "../http-origin-boundary"}
+http-origin-parser = {path = "../http-origin-parser"}
 
 [dev-dependencies]
 proptest.workspace = true
 
 [package]
+categories = ["web-programming", "web-programming::http-server"]
+description = "Prefix wildcard matcher primitive for CORS origin allowlist rules"
+keywords = ["cors", "origin", "prefix"]
 name = "http-origin-prefix"
 publish = false
 authors.workspace = true
@@ -16,6 +19,3 @@ license.workspace = true
 repository.workspace = true
 rust-version.workspace = true
 version.workspace = true
-description = "Prefix wildcard matcher primitive for CORS origin allowlist rules"
-categories = ["web-programming", "web-programming::http-server"]
-keywords = ["cors", "origin", "prefix"]

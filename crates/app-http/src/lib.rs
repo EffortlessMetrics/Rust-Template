@@ -347,7 +347,7 @@ impl AppState {
         config: Option<spec_runtime::ValidatedConfig>,
     ) -> Result<Self, String> {
         let config = config.or_else(|| load_valid_config(&workspace_root));
-        let platform_auth = security::PlatformAuthConfig::try_from_sources(config.as_ref())?;
+        let platform_auth = security::try_from_sources(config.as_ref())?;
         platform_auth.warn_if_misconfigured();
 
         // Initialize security configurations

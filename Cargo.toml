@@ -25,15 +25,33 @@ members = ["crates/*"]
 resolver = "3"
 
 [workspace.dependencies]
+# Internal workspace crates (Wave 1 publishable)
+ac-kernel = {package = "rust-as-spec-ac-kernel", path = "crates/ac-kernel", version = "=3.3.15"}
 anyhow = "1.0.102"
 async-trait = "0.1.89"
 axum = "0.8.8"
-chrono = { features = ["serde"], version = "0.4.43" }
+business-core = {package = "rust-as-spec-business-core", path = "crates/business-core", version = "=3.3.15"}
+chrono = {features = ["serde"], version = "0.4.43"}
 cucumber = "0.22.1"
 gherkin = "0.15.0"
+gov-contracts = {package = "rust-as-spec-gov-contracts", path = "crates/gov-contracts", version = "=3.3.15"}
+gov-model = {package = "rust-as-spec-gov-model", path = "crates/gov-model", version = "=3.3.15"}
+gov-policy = {package = "rust-as-spec-gov-policy", path = "crates/gov-policy", version = "=3.3.15"}
+gov-receipts = {package = "rust-as-spec-gov-receipts", path = "crates/gov-receipts", version = "=3.3.15"}
+gov-xtask-core = {package = "rust-as-spec-gov-xtask-core", path = "crates/gov-xtask-core", version = "=3.3.15"}
+hex = "0.4"
 http = "1.4.0"
+http-auth-config-inputs = {package = "http-auth-config-inputs", path = "crates/http-auth-config-inputs", version = "=3.3.15"}
+http-auth-config-loader = {package = "http-auth-config-loader", path = "crates/http-auth-config-loader", version = "=3.3.15"}
+http-auth-config-resolver = {package = "http-auth-config-resolver", path = "crates/http-auth-config-resolver", version = "=3.3.15"}
+http-auth-mode = {package = "http-auth-mode", path = "crates/http-auth-mode", version = "=3.3.15"}
+http-auth-policy = {package = "http-auth-policy", path = "crates/http-auth-policy", version = "=3.3.15"}
+http-auth-sources = {package = "http-auth-sources", path = "crates/http-auth-sources", version = "=3.3.15"}
+http-auth-verifier = {package = "http-auth-verifier", path = "crates/http-auth-verifier", version = "=3.3.15"}
 http-body-util = "0.1.3"
+http-request-id = {package = "http-request-id", path = "crates/http-request-id", version = "=3.3.15"}
 md5 = "0.8.0"
+model = {package = "rust-as-spec-model", path = "crates/model", version = "=3.3.15"}
 once_cell = "1.21.3"
 opentelemetry = "0.31.0"
 opentelemetry-otlp = "0.31.0"
@@ -43,39 +61,32 @@ prometheus = "0.14.0"
 # Property-based testing
 proptest = "1.10.0"
 regex = "1.12.3"
-serde = { features = ["derive"], version = "1.0.228" }
+serde = {features = ["derive"], version = "1.0.228"}
 serde_json = "1.0.149"
-serde_yaml = { package = "serde_yaml_ng", version = "0.10.0" }
-serde_yaml_ng = { package = "serde_yaml_ng", version = "0.10.0" }
+serde_yaml = {package = "serde_yaml_ng", version = "0.10.0"}
+serde_yaml_ng = {package = "serde_yaml_ng", version = "0.10.0"}
+sha2 = "0.10"
 shell-words = "1.1.1"
+spec-runtime = {package = "rust-as-spec-runtime", path = "crates/spec-runtime", version = "=3.3.15"}
+telemetry = {package = "rust-as-spec-telemetry", path = "crates/telemetry", version = "=3.3.15"}
 tempfile = "3.25.0"
-# Internal workspace crates (Wave 1 publishable)
-ac-kernel = { package = "rust-as-spec-ac-kernel", path = "crates/ac-kernel", version = "=3.3.15" }
-business-core = { package = "rust-as-spec-business-core", path = "crates/business-core", version = "=3.3.15" }
-gov-contracts = { package = "rust-as-spec-gov-contracts", path = "crates/gov-contracts", version = "=3.3.15" }
-gov-model = { package = "rust-as-spec-gov-model", path = "crates/gov-model", version = "=3.3.15" }
-gov-policy = { package = "rust-as-spec-gov-policy", path = "crates/gov-policy", version = "=3.3.15" }
-gov-receipts = { package = "rust-as-spec-gov-receipts", path = "crates/gov-receipts", version = "=3.3.15" }
-gov-xtask-core = { package = "rust-as-spec-gov-xtask-core", path = "crates/gov-xtask-core", version = "=3.3.15" }
-model = { package = "rust-as-spec-model", path = "crates/model", version = "=3.3.15" }
-spec-runtime = { package = "rust-as-spec-runtime", path = "crates/spec-runtime", version = "=3.3.15" }
-telemetry = { package = "rust-as-spec-telemetry", path = "crates/telemetry", version = "=3.3.15" }
-testing = { path = "crates/testing" }
+testing = {path = "crates/testing"}
 thiserror = "2.0.18"
-tokio = { features = ["macros", "rt-multi-thread"], version = "1.49.0" }
-tonic = { features = [], version = "0.14.5" }
-tower = { features = ["util"], version = "0.5.3" }
+tokio = {features = ["macros", "rt-multi-thread"], version = "1.49.0"}
+toml = "0.8"
+tonic = {features = [], version = "0.14.5"}
+tower = {features = ["util"], version = "0.5.3"}
 tower-http = "0.6.8"
 tracing = "0.1.44"
 tracing-opentelemetry = "0.32.1"
-tracing-subscriber = { features = ["env-filter", "fmt"], version = "0.3.22" }
+tracing-subscriber = {features = ["env-filter", "fmt"], version = "0.3.22"}
 url = "2.5.8"
-uuid = { features = ["serde", "v4"], version = "1.21.0" }
+uuid = {features = ["serde", "v4"], version = "1.21.0"}
 
 [workspace.lints.rust]
 missing_docs = "warn"
-rust_2018_idioms = { level = "deny", priority = -1 }
-unused = { level = "deny", priority = -1 }
+rust_2018_idioms = {level = "deny", priority = -1}
+unused = {level = "deny", priority = -1}
 
 [workspace.package]
 authors = ["Steven Zimmerman, CPA <git@effortlesssteven.com>"]

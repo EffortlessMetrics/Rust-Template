@@ -1,0 +1,23 @@
+[dependencies]
+http-auth-config-inputs = {workspace = true}
+http-auth-config-resolver = {workspace = true}
+http-auth-policy.workspace = true
+http-auth-verifier.workspace = true
+spec-runtime.workspace = true
+
+[dev-dependencies]
+proptest.workspace = true
+serde_yaml.workspace = true
+testing.workspace = true
+
+[package]
+name = "http-auth-config-loader"
+publish = false
+authors.workspace = true
+documentation.workspace = true
+edition.workspace = true
+homepage.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+version.workspace = true

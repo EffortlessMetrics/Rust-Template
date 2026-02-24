@@ -1,0 +1,20 @@
+[dependencies]
+arbitrary = {features = ["derive"], version = "1"}
+libfuzzer-sys = "0.4"
+
+[dependencies.http-platform-status-summary]
+path = ".."
+serde_yaml.workspace = true
+spec-runtime.workspace = true
+
+[package]
+edition = "2024"
+name = "http-platform-status-summary-fuzz"
+publish = false
+version = "0.0.0"
+
+[package.metadata]
+cargo-fuzz = true
+
+[workspace]
+members = ["."]

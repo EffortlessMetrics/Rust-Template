@@ -18,35 +18,35 @@ body = """
 trim = true
 
 [git]
+# regex for parsing and grouping commits
+commit_parsers = [
+  {body = ".*security", group = "Security"},
+  {group = "Added", message = "^feat"},
+  {group = "Changed", message = "^perf"},
+  {group = "Changed", message = "^refactor"},
+  {group = "Changed", message = "^style"},
+  {group = "Documentation", message = "^doc"},
+  {group = "Fixed", message = "^fix"},
+  {group = "Fixed", message = "^revert"},
+  {group = "Fixed", message = "^test"},
+  {group = "Miscellaneous", message = "^chore"},
+  {message = "^chore\\(version\\):", skip = true}
+]
+# regex for preprocessing the commit messages
+commit_preprocessors = [
+]
 # parse the commits based on https://www.conventionalcommits.org
 conventional_commits = true
 # filter out the commits that are not conventional
+filter_commits = false
+# filter out the commits that are not conventional
 filter_unconventional = false
-# process each line of a commit as an individual commit
-split_commits = false
-# regex for preprocessing the commit messages
-commit_preprocessors = [
-  # Check the spelling of the commit with https://github.com/crate-ci/typos
-  # { pattern = '.*', replace_command = 'typos --write-changes -' },
-]
-# regex for parsing and grouping commits
-commit_parsers = [
-  { message = "^feat", group = "Added" },
-  { message = "^fix", group = "Fixed" },
-  { message = "^doc", group = "Documentation" },
-  { message = "^perf", group = "Changed" },
-  { message = "^refactor", group = "Changed" },
-  { message = "^style", group = "Changed" },
-  { message = "^revert", group = "Fixed" },
-  { message = "^test", group = "Fixed" },
-  { message = "^chore\\(version\\):", skip = true },
-  { message = "^chore", group = "Miscellaneous" },
-  { body = ".*security", group = "Security" },
-]
 # protect breaking changes from being skipped due to matching a skipping commit_parser
 protect_breaking_commits = false
-# filter out the commits that are not conventional
-filter_commits = false
+# sort the commits inside sections by oldest/newest order
+sort_commits = "oldest"
+# process each line of a commit as an individual commit
+split_commits = false
 # regex for matching git tags
 tag_pattern = "v[0-9].*"
 # regex for skipping tags
@@ -55,5 +55,3 @@ tag_pattern = "v[0-9].*"
 # ignore_tags = ""
 # sort the tags topologically
 topo_order = false
-# sort the commits inside sections by oldest/newest order
-sort_commits = "oldest"

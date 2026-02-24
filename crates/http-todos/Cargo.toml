@@ -2,13 +2,13 @@
 # Core HTTP types
 http-core = {path = "../http-core"}
 http-errors = {features = ["axum"], path = "../http-errors"}
-# Model types
-model.workspace = true
 # Platform contract types
 platform-contract = {path = "../platform-contract"}
 # HTTP framework
 axum.workspace = true
 http.workspace = true
+# Model types
+model.workspace = true
 # Utilities
 serde.workspace = true
 tokio.workspace = true

@@ -1,16 +1,16 @@
 [dependencies]
-gov-http-core = { path = "../gov-http-core" }
-gov-http-types = { path = "../gov-http-types" }
-gov-model.workspace = true
-http-errors = { path = "../http-errors", features = ["axum"] }
-platform-contract = { path = "../platform-contract" }
-spec-runtime.workspace = true
+gov-http-core = {path = "../gov-http-core"}
+gov-http-types = {path = "../gov-http-types"}
+http-errors = {features = ["axum"], path = "../http-errors"}
+platform-contract = {path = "../platform-contract"}
 anyhow.workspace = true
 axum.workspace = true
+gov-model.workspace = true
 http.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 serde_yaml.workspace = true
+spec-runtime.workspace = true
 thiserror.workspace = true
 tokio.workspace = true
 tracing.workspace = true

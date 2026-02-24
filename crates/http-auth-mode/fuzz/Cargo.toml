@@ -1,11 +1,9 @@
-[package]
-name = "http-auth-mode-fuzz"
-version = "0.0.0"
-publish = false
-edition = "2024"
-
-[package.metadata]
-cargo-fuzz = true
+[[bin]]
+bench = false
+doc = false
+name = "mode_parse"
+path = "fuzz_targets/mode_parse.rs"
+test = false
 
 [dependencies]
 libfuzzer-sys = "0.4"
@@ -13,12 +11,14 @@ libfuzzer-sys = "0.4"
 [dependencies.http-auth-mode]
 path = ".."
 
-[[bin]]
-name = "mode_parse"
-path = "fuzz_targets/mode_parse.rs"
-test = false
-doc = false
-bench = false
+[package]
+edition = "2024"
+name = "http-auth-mode-fuzz"
+publish = false
+version = "0.0.0"
+
+[package.metadata]
+cargo-fuzz = true
 
 [workspace]
 members = ["."]

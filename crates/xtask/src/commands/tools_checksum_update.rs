@@ -39,19 +39,13 @@ fn get_sha256_for_url(url: &str) -> Result<String> {
         );
     }
 
-    let sha_output =
-        Command::new("sha256sum").arg(&temp_file).output().context("Failed to compute SHA256")?;
-
-    if !sha_output.status.success() {
-        anyhow::bail!("Failed to compute SHA256: {}", String::from_utf8_lossy(&sha_output.stderr));
-    }
+    let checksum = xtask_lib::hash::sha256_file(std::path::Path::new(&temp_file))
+        .context("Failed to compute SHA256")?;
 
     // Clean up temp file
     let _ = std::fs::remove_file(&temp_file);
 
-    let sha_str = String::from_utf8_lossy(&sha_output.stdout);
-    let checksum = sha_str.split_whitespace().next().context("Invalid sha256sum output")?;
-    Ok(checksum.to_string())
+    Ok(checksum)
 }
 
 /// Generate checksums for all tools

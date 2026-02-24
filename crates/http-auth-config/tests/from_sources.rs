@@ -1,4 +1,4 @@
-use http_auth::{PlatformAuthConfig, PlatformAuthMode};
+use http_auth_config::{PlatformAuthMode, try_from_sources};
 use spec_runtime::ValidatedConfig;
 use std::collections::HashMap;
 use testing::process::EnvVarGuard;
@@ -24,7 +24,7 @@ fn config_sources_used_when_env_unset() {
     guard.remove("PLATFORM_JWT_SECRET");
 
     let cfg = cfg_with("basic", "cfg-token", "cfg-secret");
-    let auth = PlatformAuthConfig::try_from_sources(Some(&cfg)).expect("config should parse");
+    let auth = try_from_sources(Some(&cfg)).expect("config should parse");
 
     assert_eq!(auth.mode, PlatformAuthMode::Basic);
     assert_eq!(auth.token.as_deref(), Some("cfg-token"));
@@ -40,7 +40,7 @@ fn env_overrides_config_values() {
     guard.set("PLATFORM_JWT_SECRET", "env-secret");
 
     let cfg = cfg_with("basic", "cfg-token", "cfg-secret");
-    let auth = PlatformAuthConfig::try_from_sources(Some(&cfg)).expect("config should parse");
+    let auth = try_from_sources(Some(&cfg)).expect("config should parse");
 
     assert_eq!(auth.mode, PlatformAuthMode::Jwt);
     assert_eq!(auth.token.as_deref(), Some("env-token"));
@@ -55,7 +55,7 @@ fn invalid_mode_fails_closed() {
     guard.remove("PLATFORM_AUTH_TOKEN");
     guard.remove("PLATFORM_JWT_SECRET");
 
-    let error = PlatformAuthConfig::try_from_sources(None).expect_err("invalid mode must error");
+    let error = try_from_sources(None).expect_err("invalid mode must error");
     assert!(
         error.contains("Invalid auth mode 'definitely-not-valid'"),
         "unexpected error: {error}"
@@ -71,7 +71,7 @@ fn none_alias_maps_to_open_mode() {
     guard.remove("PLATFORM_JWT_SECRET");
 
     let cfg = cfg_with("none", "cfg-token", "cfg-secret");
-    let auth = PlatformAuthConfig::try_from_sources(Some(&cfg)).expect("config should parse");
+    let auth = try_from_sources(Some(&cfg)).expect("config should parse");
 
     assert_eq!(auth.mode, PlatformAuthMode::Open);
     assert!(!auth.requires_auth());

@@ -251,20 +251,10 @@ fn verify_checksum(url: &str, expected_checksum: &str) -> Result<()> {
     }
 
     // Calculate checksum
-    let sha_output =
-        Command::new("sha256sum").arg(&temp_file).output().context("Failed to compute SHA256")?;
+    let actual_checksum = xtask_lib::hash::sha256_file(std::path::Path::new(&temp_file))
+        .context("Failed to compute SHA256")?;
 
     let _ = std::fs::remove_file(&temp_file);
-
-    if !sha_output.status.success() {
-        return Err(anyhow::anyhow!(
-            "Failed to compute SHA256: {}",
-            String::from_utf8_lossy(&sha_output.stderr)
-        ));
-    }
-
-    let sha_str = String::from_utf8_lossy(&sha_output.stdout);
-    let actual_checksum = sha_str.split_whitespace().next().context("Invalid sha256sum output")?;
 
     if actual_checksum != expected_checksum {
         return Err(anyhow::anyhow!(

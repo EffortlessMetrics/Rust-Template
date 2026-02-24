@@ -170,7 +170,9 @@ fn collect_tasks_section(root: &Path, _version: &str) -> Result<(Vec<String>, St
             content.push_str(&format!("### {}\n\n", task.id));
             content.push_str(&format!("**Title:** {}\n\n", task.title));
             content.push_str(&format!("**Requirement:** {}\n\n", task.requirement));
-            content.push_str(&format!("**ACs:** {}\n\n", task.acs.join(", ")));
+            if !task.acs.is_empty() {
+                content.push_str(&format!("**ACs:** {}\n\n", task.acs.join(", ")));
+            }
             if !task.labels.is_empty() {
                 content.push_str(&format!("**Labels:** {}\n\n", task.labels.join(", ")));
             }
@@ -230,10 +232,14 @@ fn collect_adrs_section(root: &Path) -> Result<String> {
     for entry in fs::read_dir(&adr_dir)? {
         let entry = entry?;
         let path = entry.path();
-        if path.extension().and_then(|s| s.to_str()) == Some("md")
-            && let Some(filename) = path.file_name().and_then(|s| s.to_str())
-        {
-            adrs.push(filename.to_string());
+        if let Some(filename) = path.file_name().and_then(|s| s.to_str()) {
+            // ADR files start with 4 digits (e.g., 0001-hexagonal-architecture.md)
+            let is_adr = filename.ends_with(".md")
+                && filename.len() > 4
+                && filename[..4].chars().all(|c| c.is_ascii_digit());
+            if is_adr {
+                adrs.push(filename.to_string());
+            }
         }
     }
 

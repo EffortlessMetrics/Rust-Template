@@ -1,5 +1,6 @@
 use crate::{AppError, AppState, get_error_summary};
 use axum::{Json, Router, extract::State, routing::get};
+use http_platform_status_summary::ConfigSummary;
 use serde::{Deserialize, Serialize};
 use spec_runtime::{ValidatedConfig, load_all_specs, load_service_metadata};
 use std::collections::HashMap;
@@ -206,23 +207,6 @@ struct PolicyStatus {
     status: String,
 }
 
-#[derive(Serialize, Clone)]
-pub(crate) struct ConfigSummary {
-    env: Option<String>,
-    http_port: u16,
-    #[serde(skip_serializing_if = "HashMap::is_empty", default)]
-    settings: HashMap<String, serde_json::Value>,
-    #[serde(skip_serializing_if = "HashMap::is_empty", default)]
-    secrets_redacted: HashMap<String, String>,
-    auth: AuthSummary,
-}
-
-#[derive(Serialize, Clone)]
-struct AuthSummary {
-    mode: String,
-    token_present: bool,
-}
-
 #[derive(Deserialize)]
 struct PolicyStatusReport {
     summary: String,
@@ -230,43 +214,13 @@ struct PolicyStatusReport {
 
 pub(crate) fn config_summary(state: &AppState) -> Option<ConfigSummary> {
     let config = state.config.as_ref()?;
-    Some(ConfigSummary::from_parts(config, &state.platform_auth))
+    Some(ConfigSummary::from_parts(
+        config,
+        state.platform_auth.mode_label(),
+        state.platform_auth.token_present(),
+    ))
 }
 
-impl ConfigSummary {
-    fn from_parts(config: &ValidatedConfig, auth: &crate::security::PlatformAuthConfig) -> Self {
-        let settings = settings_as_json(&config.settings);
-
-        ConfigSummary {
-            env: config.env.clone(),
-            http_port: config.http_port,
-            settings,
-            secrets_redacted: redacted_secrets(&config.secrets),
-            auth: AuthSummary {
-                mode: auth.mode_label().to_string(),
-                token_present: auth.token_present(),
-            },
-        }
-    }
-}
-
-fn settings_as_json(
-    source: &HashMap<String, serde_yaml::Value>,
-) -> HashMap<String, serde_json::Value> {
-    let mut out = HashMap::new();
-
-    for (k, v) in source {
-        if let Ok(json_val) = serde_json::to_value(v) {
-            out.insert(k.clone(), json_val);
-        }
-    }
-
-    out
-}
-
-fn redacted_secrets(secrets: &HashMap<String, String>) -> HashMap<String, String> {
-    secrets.keys().map(|k| (k.clone(), "[REDACTED]".to_string())).collect()
-}
 
 // ============================================================================
 // Debug/Info endpoint - matches docs/how-to/add-http-endpoint.md example
@@ -700,7 +654,7 @@ mod tests {
             token: Some("super-secret-token".into()),
             jwt_secret: None,
         };
-        let summary = ConfigSummary::from_parts(&config, &auth);
+        let summary = ConfigSummary::from_parts(&config, auth.mode.label(), auth.token_present());
 
         let serialized = serde_json::to_string(&summary).expect("summary should serialize");
 

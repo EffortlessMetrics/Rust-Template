@@ -1,8 +1,8 @@
 [dependencies]
-gov-model.workspace = true
-model.workspace = true
 async-trait.workspace = true
 chrono.workspace = true
+gov-model.workspace = true
+model.workspace = true
 serde.workspace = true
 thiserror.workspace = true
 uuid.workspace = true
@@ -11,17 +11,17 @@ uuid.workspace = true
 name = "business_core"
 
 [package]
-name = "rust-as-spec-business-core"
-description = "Core business logic and domain services for the application"
-version.workspace = true
-edition.workspace = true
-license.workspace = true
-publish = true
-repository.workspace = true
-homepage.workspace = true
-authors.workspace = true
-rust-version.workspace = true
-documentation = "https://docs.rs/rust-as-spec-business-core"
 categories = ["data-structures"]
+description = "Core business logic and domain services for the application"
+documentation = "https://docs.rs/rust-as-spec-business-core"
+include = ["Cargo.toml", "LICENSE-APACHE", "LICENSE-MIT", "README.md", "src/**/*"]
 keywords = ["business", "core", "domain", "logic"]
-include = ["src/**/*", "README.md", "LICENSE-APACHE", "LICENSE-MIT", "Cargo.toml"]
+name = "rust-as-spec-business-core"
+publish = true
+authors.workspace = true
+edition.workspace = true
+homepage.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+version.workspace = true

@@ -2,7 +2,7 @@
 
 **Tier:** Application (Layer 6)
 **Publish:** Yes
-**Dependencies:** All http-* crates, gov-http, adapters-*, business-core, spec-runtime, axum, tokio
+**Dependencies:** All http-*crates, gov-http, adapters-*, business-core, spec-runtime, axum, tokio
 
 ## Purpose
 

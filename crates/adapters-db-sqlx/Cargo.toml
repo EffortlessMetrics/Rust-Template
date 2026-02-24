@@ -1,11 +1,11 @@
 [dependencies]
-business-core.workspace = true
-model.workspace = true
 sqlx = {features = ["chrono", "migrate", "postgres", "runtime-tokio-rustls", "uuid"], version = "0.8.6"}
 tokio = {features = ["time"], workspace = true}
 anyhow.workspace = true
 async-trait.workspace = true
+business-core.workspace = true
 chrono.workspace = true
+model.workspace = true
 tracing.workspace = true
 uuid.workspace = true
 
@@ -25,11 +25,11 @@ categories = ["database", "database-implementations"]
 description = "SQLx-based PostgreSQL database adapter with migration support"
 keywords = ["database", "persistence", "postgresql", "sqlx"]
 name = "adapters-db-sqlx"
-version.workspace = true
+authors.workspace = true
 edition.workspace = true
+homepage.workspace = true
 license.workspace = true
 publish.workspace = true
 repository.workspace = true
-homepage.workspace = true
-authors.workspace = true
 rust-version.workspace = true
+version.workspace = true

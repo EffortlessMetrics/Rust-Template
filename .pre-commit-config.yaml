@@ -144,13 +144,13 @@ repos:
       - id: end-of-file-fixer
         name: end-of-file-fixer
         description: Ensure files end with a newline
-        exclude: ^(CHANGELOG\.md)$
+        exclude: ^(CHANGELOG\.md|.*/fuzz/(corpus|artifacts)/.*)$
 
       # Fix trailing whitespace
       - id: trailing-whitespace
         name: trailing-whitespace
         description: Trim trailing whitespace
-        exclude: ^(CHANGELOG\.md)$
+        exclude: ^(CHANGELOG\.md|.*/fuzz/(corpus|artifacts)/.*)$
 
       # Mixed line ending fixer
       - id: mixed-line-ending
@@ -186,12 +186,13 @@ repos:
       - id: forbid-crlf
         name: forbid-crlf
         description: Ensure files use LF line endings
+        exclude: ^.*/fuzz/(corpus|artifacts)/.*$
 
       # Check for tabs
       - id: forbid-tabs
         name: forbid-tabs
         description: Ensure files use spaces instead of tabs
-        exclude: ^(Makefile|justfile|\.gitmodules)$
+        exclude: ^(Makefile|justfile|\.gitmodules|.*/fuzz/(corpus|artifacts)/.*)$
 
   # ============================================
   # TOML linting

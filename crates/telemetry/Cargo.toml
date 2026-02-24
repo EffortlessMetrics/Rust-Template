@@ -1,14 +1,11 @@
 [dependencies]
 # Optional OTLP dependencies (enabled via 'otlp' feature)
-opentelemetry = { optional = true, workspace = true }
-opentelemetry-otlp = { optional = true, workspace = true }
-opentelemetry_sdk = { optional = true, workspace = true }
-tracing-opentelemetry = { optional = true, workspace = true }
+opentelemetry = {optional = true, workspace = true}
+opentelemetry-otlp = {optional = true, workspace = true}
+opentelemetry_sdk = {optional = true, workspace = true}
+tracing-opentelemetry = {optional = true, workspace = true}
 tracing.workspace = true
 tracing-subscriber.workspace = true
-
-[lib]
-name = "telemetry"
 
 [features]
 default = []
@@ -20,18 +17,21 @@ otlp = [
   "opentelemetry-otlp/grpc-tonic"
 ]
 
+[lib]
+name = "telemetry"
+
 [package]
-name = "rust-as-spec-telemetry"
-description = "Optional OpenTelemetry tracing and metrics configuration"
-version.workspace = true
-edition.workspace = true
-license.workspace = true
-publish = true
-repository.workspace = true
-homepage.workspace = true
-authors.workspace = true
-rust-version.workspace = true
-documentation = "https://docs.rs/rust-as-spec-telemetry"
 categories = ["development-tools::debugging"]
-keywords = ["opentelemetry", "telemetry", "tracing", "observability"]
-include = ["src/**/*", "README.md", "LICENSE-APACHE", "LICENSE-MIT", "Cargo.toml"]
+description = "Optional OpenTelemetry tracing and metrics configuration"
+documentation = "https://docs.rs/rust-as-spec-telemetry"
+include = ["Cargo.toml", "LICENSE-APACHE", "LICENSE-MIT", "README.md", "src/**/*"]
+keywords = ["observability", "opentelemetry", "telemetry", "tracing"]
+name = "rust-as-spec-telemetry"
+publish = true
+authors.workspace = true
+edition.workspace = true
+homepage.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+version.workspace = true
