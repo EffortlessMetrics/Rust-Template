@@ -194,15 +194,17 @@ mod tests {
 
     #[test]
     fn cwd_guard_restores_on_drop() {
-        let original_dir = env::current_dir().unwrap();
-        let temp_dir = env::temp_dir();
+        // Canonicalize paths to handle macOS /tmp -> /private/tmp symlink resolution
+        // and other platform-specific normalization.
+        let original_dir = env::current_dir().unwrap().canonicalize().unwrap();
+        let temp_dir = env::temp_dir().canonicalize().unwrap();
 
         {
             let _guard = CwdGuard::chdir(&temp_dir);
-            assert_eq!(env::current_dir().unwrap(), temp_dir);
+            assert_eq!(env::current_dir().unwrap().canonicalize().unwrap(), temp_dir);
         }
 
         // Should be restored
-        assert_eq!(env::current_dir().unwrap(), original_dir);
+        assert_eq!(env::current_dir().unwrap().canonicalize().unwrap(), original_dir);
     }
 }
