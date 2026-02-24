@@ -56,7 +56,7 @@ install_oasdiff() {
   # Releases: https://github.com/oasdiff/oasdiff/releases
   # Asset pattern: oasdiff_<version>_<os>_<arch>.tar.gz
   # Note: darwin arm64 uses universal build: oasdiff_<v>_darwin_all.tar.gz
-  local v="${OASDIFF_VERSION:-1.11.7}"
+  local v="${OASDIFF_VERSION:-1.11.10}"
 
   # Map arch for oasdiff assets
   local oas_arch="$arch"
@@ -75,7 +75,7 @@ install_oasdiff() {
   fi
 }
 install_buf() {
-  local v="1.45.0"
+  local v="1.50.0"
   local os_cap; os_cap="$(tr '[:lower:]' '[:upper:]' <<< "${os:0:1}")${os:1}"
   local buf_arch; case "$arch" in amd64) buf_arch="x86_64" ;; arm64) buf_arch="arm64" ;; esac
   local bin="buf-${os_cap}-${buf_arch}"

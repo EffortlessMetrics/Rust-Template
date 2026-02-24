@@ -116,32 +116,32 @@ fn generate_checksums() -> Result<Vec<(String, String)>> {
         },
         Tool {
             name: "atlas".to_string(),
-            version: "latest".to_string(),
+            version: "v0.31.0".to_string(),
             platforms: vec![
                 Platform {
                     os: "linux".to_string(),
                     arch: "amd64".to_string(),
-                    url: "https://release.ariga.io/atlas/atlas-linux-amd64-latest".to_string(),
+                    url: "https://release.ariga.io/atlas/atlas-linux-amd64-v0.31.0".to_string(),
                 },
                 Platform {
                     os: "linux".to_string(),
                     arch: "arm64".to_string(),
-                    url: "https://release.ariga.io/atlas/atlas-linux-arm64-latest".to_string(),
+                    url: "https://release.ariga.io/atlas/atlas-linux-arm64-v0.31.0".to_string(),
                 },
                 Platform {
                     os: "darwin".to_string(),
                     arch: "amd64".to_string(),
-                    url: "https://release.ariga.io/atlas/atlas-darwin-amd64-latest".to_string(),
+                    url: "https://release.ariga.io/atlas/atlas-darwin-amd64-v0.31.0".to_string(),
                 },
                 Platform {
                     os: "darwin".to_string(),
                     arch: "arm64".to_string(),
-                    url: "https://release.ariga.io/atlas/atlas-darwin-arm64-latest".to_string(),
+                    url: "https://release.ariga.io/atlas/atlas-darwin-arm64-v0.31.0".to_string(),
                 },
                 Platform {
                     os: "windows".to_string(),
                     arch: "amd64".to_string(),
-                    url: "https://release.ariga.io/atlas/atlas-windows-amd64-latest.exe".to_string(),
+                    url: "https://release.ariga.io/atlas/atlas-windows-amd64-v0.31.0.exe".to_string(),
                 },
             ],
         },
@@ -237,7 +237,7 @@ fn write_checksums(checksums: &[(String, String)]) -> Result<()> {
                     writeln!(file, "# GitHub releases: https://github.com/bufbuild/buf/releases")?;
                 }
                 "atlas" => {
-                    writeln!(file, "# atlas latest - Database schema management tool")?;
+                    writeln!(file, "# atlas v0.31.0 - Database schema management tool")?;
                     writeln!(file, "# Release server: https://release.ariga.io/atlas/")?;
                 }
                 "gitleaks" => {
