@@ -1,4 +1,5 @@
 [dependencies]
+http-origin-policy = {path = "../http-origin-policy"}
 axum.workspace = true
 http.workspace = true
 serde.workspace = true

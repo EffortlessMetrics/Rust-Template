@@ -1,18 +1,27 @@
 [dependencies]
-gov-model = {path = "../gov-model"}
-model = {path = "../model"}
+gov-model.workspace = true
+model.workspace = true
 async-trait.workspace = true
 chrono.workspace = true
 serde.workspace = true
 thiserror.workspace = true
 uuid.workspace = true
 
+[lib]
+name = "business_core"
+
 [package]
-categories = ["data-structures"]
+name = "rust-as-spec-business-core"
 description = "Core business logic and domain services for the application"
-keywords = ["business", "core", "domain", "logic"]
-name = "business-core"
-version = "0.1.0"
+version.workspace = true
 edition.workspace = true
-publish.workspace = true
+license.workspace = true
+publish = true
+repository.workspace = true
+homepage.workspace = true
+authors.workspace = true
 rust-version.workspace = true
+documentation = "https://docs.rs/rust-as-spec-business-core"
+categories = ["data-structures"]
+keywords = ["business", "core", "domain", "logic"]
+include = ["src/**/*", "README.md", "LICENSE-APACHE", "LICENSE-MIT", "Cargo.toml"]

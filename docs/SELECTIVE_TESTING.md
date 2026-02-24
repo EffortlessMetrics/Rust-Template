@@ -338,7 +338,7 @@ cargo xtask test-changed --dry-run  # (future enhancement)
 
 # 2. Manually compose
 cargo test -p xtask
-cargo test -p spec-runtime
+cargo test -p rust-as-spec-runtime
 cargo test -p acceptance --test acceptance -- --tags "@AC-PLT-001"
 ```
 

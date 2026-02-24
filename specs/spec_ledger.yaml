@@ -256,6 +256,7 @@ stories:
             must_have_ac: false
             tests:
               - { type: ci, tag: "ac_demotion_governed", note: "Governance policy" }
+              - { type: bdd, tag: "@AC-PLT-AC-DEMOTION-GOVERNED", file: "specs/features/xtask_devex.feature" }
 
       - id: REQ-PLT-SECURITY-GOVERNANCE
         title: "Security and dependency health are first-class gates"
@@ -577,6 +578,7 @@ stories:
             note: "Testing infrastructure contract; verified by unit test. BDD scenarios rely on this implicitly."
             tests:
               - { type: unit, tag: "commands::tasks::tests::spec_root_resolved", file: "crates/xtask/src/commands/tasks.rs" }
+              - { type: bdd, tag: "@AC-TPL-XTASK-SPEC-ROOT", file: "specs/features/xtask_devex.feature" }
 
       - id: REQ-TPL-AUTOMATION-BEHAVIOUR
         title: "Automation-safe xtask behaviour"
@@ -734,6 +736,7 @@ stories:
             note: "Contract validated via OpenAPI schema and TypeScript consumer tests in examples/backstage-plugin."
             tests:
               - { type: ci, tag: "openapi_lint_platform_status", workflow: "ci-openapi.yml" }
+              - { type: bdd, tag: "@AC-TPL-PLATFORM-STATUS-CONTRACT", file: "specs/features/platform_introspection.feature" }
 
           - id: AC-TPL-PLATFORM-DOCS-CONTRACT
             text: >
@@ -744,6 +747,7 @@ stories:
             note: "Contract validated via OpenAPI schema and TypeScript consumer tests in examples/backstage-plugin."
             tests:
               - { type: ci, tag: "openapi_lint_docs_index", workflow: "ci-openapi.yml" }
+              - { type: bdd, tag: "@AC-TPL-PLATFORM-DOCS-CONTRACT", file: "specs/features/platform_introspection.feature" }
 
       - id: REQ-TPL-INTROSPECTION-PARITY
         title: "CLI and HTTP status endpoints have parity on key governance fields"
@@ -1019,6 +1023,7 @@ stories:
             must_have_ac: false  # Demoted: unit tests exist, BDD scenarios TBD
             tests:
               - { type: unit, tag: "graph_invariants_req_has_ac", module: "graph::tests::graph_invariants_req_has_ac", file: "crates/spec-runtime/src/graph.rs" }
+              - { type: bdd, tag: "@AC-TPL-GRAPH-REQ-HAS-AC", file: "specs/features/graph_invariants.feature" }
 
           - id: AC-TPL-GRAPH-AC-HAS-TEST
             text: >
@@ -1028,6 +1033,7 @@ stories:
             must_have_ac: false  # Demoted: unit tests exist, BDD scenarios TBD
             tests:
               - { type: unit, tag: "ac_with_tests_produces_graph_node_and_edge", module: "graph::tests::ac_with_tests_produces_graph_node_and_edge", file: "crates/spec-runtime/src/graph.rs" }
+              - { type: bdd, tag: "@AC-TPL-GRAPH-AC-HAS-TEST", file: "specs/features/graph_invariants.feature" }
 
           - id: AC-TPL-GRAPH-COMMAND-REACHABLE
             text: >
@@ -1038,6 +1044,7 @@ stories:
             must_have_ac: false  # Demoted: unit tests exist, BDD scenarios TBD
             tests:
               - { type: unit, tag: "graph_invariants_command_reachable", module: "graph::tests::graph_invariants_command_reachable", file: "crates/spec-runtime/src/graph.rs" }
+              - { type: bdd, tag: "@AC-TPL-GRAPH-COMMAND-REACHABLE", file: "specs/features/graph_invariants.feature" }
 
           - id: AC-TPL-GRAPH-SELFTEST
             text: >
@@ -1231,6 +1238,7 @@ stories:
             must_have_ac: false
             tests:
               - { type: unit, tag: "iac_compose_aligns_with_config", module: "local_docker::tests::iac_compose_aligns_with_config" }
+              - { type: bdd, tag: "@AC-TPL-IAC-COMPOSE-ALIGN", file: "specs/features/local_infrastructure.feature" }
 
           - id: AC-TPL-IAC-K8S-ALIGN
             text: >
@@ -1241,6 +1249,7 @@ stories:
             must_have_ac: false  # Demoted: unit tests exist, BDD scenarios TBD
             tests:
               - { type: unit, tag: "iac_k8s_aligns_with_config", module: "k8s_iac::tests::iac_k8s_aligns_with_config", file: "crates/spec-runtime/src/k8s_iac.rs" }
+              - { type: bdd, tag: "@AC-TPL-IAC-K8S-ALIGN", file: "specs/features/local_infrastructure.feature" }
 
           - id: AC-TPL-IAC-TF-ALIGN
             text: >
@@ -1250,6 +1259,7 @@ stories:
             must_have_ac: false
             tests:
               - { type: unit, tag: "iac_tf_aligns_with_config", module: "local_docker::tests::iac_tf_aligns_with_config", file: "crates/spec-runtime/src/local_docker.rs" }
+              - { type: bdd, tag: "@AC-TPL-IAC-TF-ALIGN", file: "specs/features/local_infrastructure.feature" }
 
       - id: REQ-TPL-LOCAL-RUNTIME
         title: "Local Runtime Sovereignty"
@@ -1443,6 +1453,7 @@ stories:
             note: "Documentation AC – part of governance guide."
             tests:
               - { type: ci, tag: "skills_governance_documented", note: "Governance documentation" }
+              - { type: bdd, tag: "@AC-TPL-SKILLS-GOVERNANCE-001", file: "specs/features/xtask_devex.feature" }
 
           - id: AC-TPL-SKILLS-GOVERNANCE-002
             text: >
@@ -1453,6 +1464,7 @@ stories:
             note: "Guidance AC – validated manually during code review."
             tests:
               - { type: ci, tag: "skills_governance_guidance", note: "Governance guidance" }
+              - { type: bdd, tag: "@AC-TPL-SKILLS-GOVERNANCE-002", file: "specs/features/xtask_devex.feature" }
 
           - id: AC-TPL-SKILLS-GOVERNANCE-003
             text: >
@@ -1464,6 +1476,7 @@ stories:
             note: "Documentation AC – part of governance guide."
             tests:
               - { type: ci, tag: "skills_template_documented", note: "Template documentation" }
+              - { type: bdd, tag: "@AC-TPL-SKILLS-GOVERNANCE-003", file: "specs/features/xtask_devex.feature" }
 
           - id: AC-TPL-SKILLS-NAME-FORMAT
             text: >
@@ -1485,6 +1498,7 @@ stories:
             note: "Guidance AC – skills-lint provides warnings, not hard enforcement."
             tests:
               - { type: ci, tag: "skills_description_quality", note: "Governance guidance" }
+              - { type: bdd, tag: "@AC-TPL-SKILLS-DESCRIPTION-QUALITY", file: "specs/features/xtask_devex.feature" }
 
           - id: AC-TPL-SKILLS-ALLOWED-TOOLS-SAFETY
             text: >
@@ -1496,6 +1510,7 @@ stories:
             note: "Guidance AC – skills-lint provides warnings on tool grants, not hard rejection."
             tests:
               - { type: ci, tag: "skills_tools_safety", note: "Governance guidance" }
+              - { type: bdd, tag: "@AC-TPL-SKILLS-ALLOWED-TOOLS-SAFETY", file: "specs/features/xtask_devex.feature" }
 
           - id: AC-TPL-SKILLS-FLOW-MAPPING
             text: >
@@ -1507,6 +1522,7 @@ stories:
             note: "Guidance AC – skills-lint provides warnings on anti-patterns, not hard rejection."
             tests:
               - { type: ci, tag: "skills_flow_mapping", note: "Governance guidance" }
+              - { type: bdd, tag: "@AC-TPL-SKILLS-FLOW-MAPPING", file: "specs/features/xtask_devex.feature" }
 
           - id: AC-TPL-SKILLS-LIFECYCLE-DOCS
             text: >
@@ -1518,6 +1534,7 @@ stories:
             note: "Documentation AC - part of governance guide."
             tests:
               - { type: ci, tag: "skills_lifecycle_documented", note: "Governance documentation" }
+              - { type: bdd, tag: "@AC-TPL-SKILLS-LIFECYCLE-DOCS", file: "specs/features/xtask_devex.feature" }
 
       - id: REQ-TPL-AGENTS-GOVERNANCE
         title: "Claude Code agents are governed artifacts with REQ/AC traceability"
@@ -1591,6 +1608,7 @@ stories:
             note: "Guidance AC – agents-lint provides warnings, not hard enforcement."
             tests:
               - { type: ci, tag: "agents_description_quality", note: "Governance guidance" }
+              - { type: bdd, tag: "@AC-TPL-AGENTS-DESCRIPTION-QUALITY", file: "specs/features/xtask_devex.feature" }
 
           - id: AC-TPL-AGENTS-TOOLS-PERMISSION-SAFETY
             text: >
@@ -1602,6 +1620,7 @@ stories:
             note: "Guidance AC – agents-lint provides warnings on tool grants, not hard rejection."
             tests:
               - { type: ci, tag: "agents_tools_safety", note: "Governance guidance" }
+              - { type: bdd, tag: "@AC-TPL-AGENTS-TOOLS-PERMISSION-SAFETY", file: "specs/features/xtask_devex.feature" }
 
           - id: AC-TPL-AGENTS-MODEL-POLICY
             text: >
@@ -1613,6 +1632,7 @@ stories:
             note: "Guidance AC – agents-lint provides warnings on expensive models, not hard rejection."
             tests:
               - { type: ci, tag: "agents_model_policy", note: "Governance guidance" }
+              - { type: bdd, tag: "@AC-TPL-AGENTS-MODEL-POLICY", file: "specs/features/xtask_devex.feature" }
 
           - id: AC-TPL-AGENTS-SKILLS-REFERENCES
             text: >
@@ -1623,6 +1643,7 @@ stories:
             note: "Validation AC – enforced by agents-lint command."
             tests:
               - { type: ci, tag: "agents_skills_references", note: "Governance enforcement" }
+              - { type: bdd, tag: "@AC-TPL-AGENTS-SKILLS-REFERENCES", file: "specs/features/xtask_devex.feature" }
 
           - id: AC-TPL-AGENTS-LIFECYCLE-DOCS
             text: >
@@ -1634,6 +1655,7 @@ stories:
             note: "Documentation AC - part of governance guide."
             tests:
               - { type: ci, tag: "agents_lifecycle_documented", note: "Governance documentation" }
+              - { type: bdd, tag: "@AC-TPL-AGENTS-LIFECYCLE-DOCS", file: "specs/features/xtask_devex.feature" }
 
       - id: REQ-TPL-BUNDLE-CONTRACT
         title: "LLM bundle structure"
@@ -1699,6 +1721,7 @@ stories:
             note: "Soft warning implemented; size thresholds guard against 'dump everything into the bundle' regressions."
             tests:
               - { type: unit, tag: "bundle_scope_audit", module: "commands::bundle::tests::bundle_scope_audit", file: "crates/xtask/src/commands/bundle.rs" }
+              - { type: bdd, tag: "@AC-TPL-BUNDLE-MINIMAL-SCOPE", file: "specs/features/bundles.feature" }
 
       - id: REQ-TPL-AGENT-ERGONOMICS
         title: "Agent hints and bundles have referential integrity"
@@ -1775,6 +1798,7 @@ stories:
             note: "CI gate for TypeScript configuration health. Non-kernel (Rust-focused template)."
             tests:
               - { type: ci, tag: "ts-config-lints", workflow: "ci-lints.yml" }
+              - { type: bdd, tag: "@AC-TPL-TS-CONFIG-VALIDATION", file: "specs/features/xtask_devex.feature" }
 
   - id: US-TPL-PLATFORM-V3
     title: "The Recursive Platform"

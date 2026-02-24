@@ -113,6 +113,39 @@ async fn update_task_status_endpoint_accepts_form_body() {
 }
 
 #[tokio::test]
+async fn update_task_status_endpoint_accepts_form_body_without_content_type() {
+    let temp = tempdir().expect("failed to create temp dir");
+    let spec_root = temp.path().to_path_buf();
+    write_tasks_files(&spec_root, "TASK-002-NO-CT", TaskStatus::Todo);
+
+    let repo = Arc::new(adapters_spec_fs::FsGovernanceRepository::new(spec_root.join("specs")));
+    let app = app_with_workspace_root(repo, spec_root.clone()).expect("valid config");
+
+    let request = Request::builder()
+        .method("POST")
+        .uri("/platform/tasks/TASK-002-NO-CT/status")
+        .body(Body::from("status=InProgress"))
+        .expect("failed to build request");
+
+    let response = app.oneshot(request).await.expect("service should not fail");
+    let status = response.status();
+    if !status.is_success() {
+        let body =
+            BodyExt::collect(response.into_body()).await.map(|c| c.to_bytes()).unwrap_or_default();
+        panic!(
+            "expected success status, got {} with body: {}",
+            status,
+            String::from_utf8_lossy(&body)
+        );
+    }
+
+    let state_path = spec_root.join("specs/tasks_state.yaml");
+    let stored_status =
+        tasks_state::get_task_status(&state_path, &TaskId("TASK-002-NO-CT".to_string())).unwrap();
+    assert_eq!(stored_status, Some(TaskStatus::InProgress));
+}
+
+#[tokio::test]
 async fn tasks_endpoint_returns_persisted_status() {
     let temp = tempdir().expect("failed to create temp dir");
     let spec_root = temp.path().to_path_buf();

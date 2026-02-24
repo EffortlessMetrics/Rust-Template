@@ -289,7 +289,7 @@ cargo run -p xtask -- policy-test
 
 ```bash
 nix develop
-cargo test -p business-core
+cargo test -p rust-as-spec-business-core
 ```
 
 ---

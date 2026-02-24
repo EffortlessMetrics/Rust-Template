@@ -57,7 +57,7 @@ Fast feedback loop for policy development and validation.
 
 #### `ci-msrv.yml` - Minimum Supported Rust Version
 
-**Purpose:** Ensure compatibility with MSRV (1.89.0)
+**Purpose:** Ensure compatibility with MSRV (1.92.0)
 **Triggers:** Pull requests
 **Runtime:** ~15 min
 

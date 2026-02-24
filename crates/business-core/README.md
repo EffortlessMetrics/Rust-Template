@@ -160,3 +160,10 @@ This crate is used by:
 - [`gov-model/README.md`](../gov-model/README.md) - Governance domain model
 - [`adapters-db-sqlx/README.md`](../adapters-db-sqlx/README.md) - PostgreSQL adapter implementation
 - [`app-http/README.md`](../app-http/README.md) - HTTP layer that calls this crate
+
+## Stability
+
+This crate is part of the **rust-as-spec** governance kernel.
+Version numbers track the kernel release (currently 3.3.15).
+Breaking changes require a major version bump and an ADR.
+MSRV: 1.92.0.

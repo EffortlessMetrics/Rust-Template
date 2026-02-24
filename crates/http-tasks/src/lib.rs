@@ -28,19 +28,14 @@ use axum::{
 };
 use business_core::governance::{TaskId, TaskService, TaskStatus};
 use http_errors::{ErrorCode, HttpError};
-use serde::Deserialize;
+use http_task_status_parser::parse_update_task_status as parse_task_status_request;
 use tracing::instrument;
 
 // ============================================================================
 // Request DTOs
 // ============================================================================
 
-/// Request body for updating task status.
-#[derive(Deserialize)]
-pub struct UpdateTaskStatusRequest {
-    /// New task status
-    pub status: TaskStatus,
-}
+pub use http_task_status_parser::UpdateTaskStatusRequest;
 
 // ============================================================================
 // State Trait
@@ -243,36 +238,10 @@ fn parse_update_task_status(
     body: &[u8],
 ) -> Result<UpdateTaskStatusRequest, HttpError> {
     let content_type =
-        headers.get(axum::http::header::CONTENT_TYPE).and_then(|h| h.to_str().ok()).unwrap_or("");
+        headers.get(axum::http::header::CONTENT_TYPE).and_then(|header| header.to_str().ok());
 
-    if content_type.starts_with("application/json") {
-        return serde_json::from_slice(body).map_err(|err| {
-            HttpError::validation_error(ErrorCode::InvalidRequest, format!("Invalid JSON: {}", err))
-        });
-    }
-
-    if content_type.starts_with("application/x-www-form-urlencoded") {
-        return serde_urlencoded::from_bytes(body).map_err(|err| {
-            HttpError::validation_error(
-                ErrorCode::InvalidRequest,
-                format!("Invalid form data: {}", err),
-            )
-        });
-    }
-
-    // Fallback: try to parse as JSON first, then form data to be forgiving
-    if let Ok(value) = serde_json::from_slice(body) {
-        return Ok(value);
-    }
-
-    if let Ok(value) = serde_urlencoded::from_bytes(body) {
-        return Ok(value);
-    }
-
-    Err(HttpError::validation_error(
-        ErrorCode::InvalidRequest,
-        "Unsupported body format; use JSON or x-www-form-urlencoded",
-    ))
+    parse_task_status_request(content_type, body)
+        .map_err(|error| HttpError::validation_error(ErrorCode::InvalidRequest, error.to_string()))
 }
 
 // ============================================================================

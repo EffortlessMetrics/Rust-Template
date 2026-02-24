@@ -390,12 +390,12 @@ fn build_test_plan(changed_files: Vec<String>, bdd_plan: &BddPlan) -> Result<Tes
         }
 
         if has_spec_runtime {
-            plan.add_cargo_test("spec-runtime", "spec-runtime crate changes");
+            plan.add_cargo_test("rust-as-spec-runtime", "spec-runtime crate changes");
             plan.add_graph_invariants();
         }
 
         if has_business_core {
-            plan.add_cargo_test("business-core", "business-core crate changes");
+            plan.add_cargo_test("rust-as-spec-business-core", "business-core crate changes");
         }
 
         if has_acceptance {

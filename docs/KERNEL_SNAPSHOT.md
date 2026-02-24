@@ -1,7 +1,7 @@
 ---
 id: SNAPSHOT-TPL-KERNEL-001
 title: Kernel Snapshot v3.3.15
-template_version: "3.3.14"
+template_version: "3.3.15"
 doc_type: status
 status: published
 audience: maintainers, platform-engineers, forks
@@ -10,7 +10,7 @@ stories: [US-TPL-PLT-001]
 requirements: [REQ-PLT-DOCS-CONSISTENCY, REQ-TPL-OPINIONATED-DEFAULTS]
 acs: [AC-PLT-009, AC-PLT-010, AC-TPL-OPINIONS-DOCUMENTED]
 adrs: [ADR-0005]
-last_updated: 2025-12-29
+last_updated: 2026-02-20
 ---
 
 # Kernel Snapshot v3.3.15
@@ -18,7 +18,7 @@ last_updated: 2025-12-29
 **Kernel Baseline:** v3.3.9-kernel
 
 > This snapshot describes the kernel at tag **v3.3.9-kernel**.
-> For machine-readable details, see [`release_evidence/kernel_contract.v3.3.14.json`](../release_evidence/kernel_contract.v3.3.14.json).
+> For machine-readable details, see [`release_evidence/kernel_contract.v3.3.15.json`](../release_evidence/kernel_contract.v3.3.15.json).
 > For AC-level status, see [`docs/feature_status.md`](./feature_status.md).
 > For adoption instructions, see [`docs/how-to/adopt-kernel.md`](./how-to/adopt-kernel.md).
 

@@ -41,7 +41,7 @@ jobs:
 
       - name: Generate AC status (Rust)
         if: always()
-        run: nix develop -c cargo run -p xtask -- ac-status
+        run: nix develop -c env -u RUSTC_WRAPPER -u SCCACHE_GHA_ENABLED cargo run -p xtask -- ac-status
 
       - name: Publish BDD JUnit results
         if: always()

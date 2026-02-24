@@ -359,56 +359,77 @@ fn collect_governance_status(root: &Path) -> Result<String> {
     Ok(content)
 }
 
-/// Collect resolved friction entries
-fn collect_friction_entries(root: &Path) -> Result<String> {
-    let mut content = String::new();
-    let friction_log_path = root.join("FRICTION_LOG.md");
+/// A minimal struct for deserializing friction YAML entries
+#[derive(Debug, Deserialize)]
+struct FrictionEntry {
+    id: String,
+    status: String,
+    summary: String,
+    #[serde(default)]
+    resolution: Option<FrictionResolution>,
+}
 
-    if !friction_log_path.exists() {
-        content.push_str("*No friction log found.*\n");
-        return Ok(content);
+#[derive(Debug, Deserialize)]
+struct FrictionResolution {
+    #[serde(default)]
+    resolved_at: Option<String>,
+    #[serde(default)]
+    fix_description: Option<String>,
+}
+
+/// Collect resolved friction entries from friction/*.yaml
+fn collect_friction_entries(root: &Path) -> Result<String> {
+    let friction_dir = root.join("friction");
+
+    if !friction_dir.exists() || !friction_dir.is_dir() {
+        return Ok("*No friction directory found.*\n".to_string());
     }
 
-    let friction_log =
-        fs::read_to_string(&friction_log_path).context("Failed to read FRICTION_LOG.md")?;
+    let mut resolved = Vec::new();
 
-    // Look for resolved entries (status: resolved)
-    let mut resolved_count = 0;
-    let mut in_entry = false;
-    let mut current_entry = String::new();
+    for entry in fs::read_dir(&friction_dir).context("Failed to read friction/ directory")? {
+        let entry = entry?;
+        let path = entry.path();
 
-    for line in friction_log.lines() {
-        if line.starts_with("###") {
-            if in_entry && !current_entry.is_empty() {
-                content.push_str(&current_entry);
-                content.push('\n');
-            }
-            in_entry = true;
-            current_entry.clear();
-            current_entry.push_str(line);
-            current_entry.push('\n');
-        } else if in_entry {
-            current_entry.push_str(line);
-            current_entry.push('\n');
+        if path.extension().is_some_and(|ext| ext == "yaml" || ext == "yml") {
+            let raw = fs::read_to_string(&path)
+                .with_context(|| format!("Failed to read {}", path.display()))?;
 
-            if line.contains("status: resolved") || line.contains("Status: resolved") {
-                resolved_count += 1;
+            match serde_yaml::from_str::<FrictionEntry>(&raw) {
+                Ok(fe) if fe.status == "resolved" => {
+                    resolved.push(fe);
+                }
+                Ok(_) => {} // not resolved, skip
+                Err(e) => {
+                    eprintln!(
+                        "{}",
+                        format!("Warning: could not parse {}: {}", path.display(), e).yellow()
+                    );
+                }
             }
         }
     }
 
-    // Add last entry if it was resolved
-    if in_entry && !current_entry.is_empty() && current_entry.contains("resolved") {
-        content.push_str(&current_entry);
+    if resolved.is_empty() {
+        return Ok("*No resolved friction entries found.*\n".to_string());
     }
 
-    if resolved_count == 0 {
-        content.clear();
-        content.push_str("*No resolved friction entries found.*\n");
-    } else {
-        let mut final_content = format!("**Total resolved entries:** {}\n\n", resolved_count);
-        final_content.push_str(&content);
-        content = final_content;
+    resolved.sort_by(|a, b| a.id.cmp(&b.id));
+
+    let mut content = format!("**Total resolved entries:** {}\n\n", resolved.len());
+
+    for fe in &resolved {
+        content.push_str(&format!("### {}\n\n", fe.id));
+        content.push_str(&format!("**Summary:** {}\n\n", fe.summary));
+
+        if let Some(ref res) = fe.resolution {
+            if let Some(ref date) = res.resolved_at {
+                content.push_str(&format!("**Resolved:** {}\n\n", date));
+            }
+            if let Some(ref desc) = res.fix_description {
+                content.push_str(&format!("**Fix:** {}\n\n", desc.trim()));
+            }
+        }
     }
 
     Ok(content)

@@ -102,7 +102,7 @@ pub fn run(ac_id: &str) -> Result<()> {
                     println!(
                         "  {} {}",
                         "Unit test:".bright_cyan(),
-                        format!("cargo test -p spec-runtime {}", module).bright_white()
+                        format!("cargo test -p rust-as-spec-runtime {}", module).bright_white()
                     );
                 }
             }

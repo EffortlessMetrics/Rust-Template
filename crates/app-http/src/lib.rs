@@ -16,6 +16,7 @@
 //!   - `http-tasks`: Task management endpoints
 //!   - `http-todos`: Todo management endpoints
 //!   - `http-agents`: Agent hints endpoints
+//!   - `http-metrics`: Prometheus metrics middleware and endpoint
 //!   - `http-middleware`: Cross-cutting middleware
 //!
 //! Dependencies point inward: http-* → http-core → platform-contract (correct).
@@ -78,6 +79,10 @@
 //! ## `http-agents`
 //!
 //! Provides agent hints endpoints.
+//!
+//! ## `http-metrics`
+//!
+//! Provides request metrics middleware and `/metrics` handler.
 //!
 //! ## `http-middleware`
 //!
@@ -189,6 +194,9 @@ pub use http_agents::{
     router as agents_router,
 };
 
+// Re-export from http-metrics
+pub use http_metrics::{metrics_handler, metrics_middleware};
+
 // Re-export from app-http internal modules (backward compatibility)
 pub use errors::{AppError, ErrorCode, ErrorSummary, get_error_summary};
 pub use middleware::{
@@ -216,7 +224,6 @@ pub mod platform {
 }
 
 // Re-export commonly used types (backward compatibility)
-pub use metrics::metrics_handler;
 pub use security::PlatformAuthConfig;
 
 use business_core::governance::GovernanceRepository;
@@ -292,16 +299,6 @@ impl HttpPlatformState for AppState {
 
     fn platform_auth(&self) -> &dyn http_platform::PlatformAuthConfig {
         &self.platform_auth
-    }
-}
-
-impl http_platform::PlatformAuthConfig for security::PlatformAuthConfig {
-    fn mode_label(&self) -> &str {
-        self.mode_label()
-    }
-
-    fn token_present(&self) -> bool {
-        self.token_present()
     }
 }
 
@@ -439,7 +436,7 @@ fn build_router(app_state: AppState) -> Router {
         // Request ID middleware (outermost - applied first to request)
         .layer(axum::middleware::from_fn(request_id_middleware))
         // Metrics middleware
-        .layer(axum::middleware::from_fn(metrics::metrics_middleware))
+        .layer(axum::middleware::from_fn(metrics_middleware))
         // CORS middleware
         .layer(axum::middleware::from_fn_with_state(app_state.clone(), cors_middleware))
         // Security headers (innermost - applied first to response)

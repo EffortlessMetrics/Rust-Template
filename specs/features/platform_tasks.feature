@@ -97,6 +97,41 @@ Feature: Platform Tasks Management
     And the task "TASK-001" should have status "InProgress"
 
   @AC-TPL-TASK-TRANSITIONS
+  Scenario: Update task status via HTTP API with form body
+    Given a task "TASK-001-FORM" exists with status "Todo"
+    And I set "content-type" header to "application/x-www-form-urlencoded"
+    When I send a POST request to "/platform/tasks/TASK-001-FORM/status" with body:
+      """
+      status=InProgress
+      """
+    Then the response status code should be 204
+    And the task "TASK-001-FORM" should have status "InProgress"
+
+  @AC-TPL-TASK-TRANSITIONS
+  Scenario: Update task status via HTTP API with mixed-case JSON content type and parameters
+    Given a task "TASK-001-JSON-CS" exists with status "Todo"
+    And I set "content-type" header to "Application/JSON; charset=UTF-8"
+    When I send a POST request to "/platform/tasks/TASK-001-JSON-CS/status" with body:
+      """
+      {
+        "status": "InProgress"
+      }
+      """
+    Then the response status code should be 204
+    And the task "TASK-001-JSON-CS" should have status "InProgress"
+
+  @AC-TPL-TASK-TRANSITIONS
+  Scenario: Update task status via HTTP API falls back to form parser for unsupported content type
+    Given a task "TASK-001-TEXT-FALLBACK" exists with status "Todo"
+    And I set "content-type" header to "text/plain"
+    When I send a POST request to "/platform/tasks/TASK-001-TEXT-FALLBACK/status" with body:
+      """
+      status=InProgress
+      """
+    Then the response status code should be 204
+    And the task "TASK-001-TEXT-FALLBACK" should have status "InProgress"
+
+  @AC-TPL-TASK-TRANSITIONS
   Scenario: Invalid task transition via HTTP API
     Given a task "TASK-002" exists with status "Done"
     When I send a POST request to "/platform/tasks/TASK-002/status" with body:

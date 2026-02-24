@@ -1,0 +1,14 @@
+# Kernel version pin for downstream repos
+# See ADR-0031 for details
+
+[kernel]
+version = "3.3.15"
+
+[overlay]
+# Service-specific specs extend the kernel
+spec_ledger = "specs/spec_ledger.yaml"
+
+[crates]
+# Crate versions default to kernel version
+# Override specific crates if needed:
+# gov-model = "3.3.15"

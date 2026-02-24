@@ -24,7 +24,7 @@ This crate implements task management API including:
 - `platform-contract` - Platform contract types
 - `http-core` - Core HTTP types
 - `business-core` - Task operations via TaskService
-- `serde_urlencoded` - Form data parsing
+- `http-task-status-parser` - Dedicated parser for JSON/form status payloads
 - `tracing` - Structured logging
 - `tokio` - Async runtime
 

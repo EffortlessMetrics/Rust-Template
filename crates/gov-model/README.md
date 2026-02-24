@@ -257,3 +257,10 @@ This crate is used by:
 - [`business-core/README.md`](../business-core/README.md) - Business logic that re-exports these types
 - [`gov-xtask-core/README.md`](../gov-xtask-core/README.md) - Uses `RepoContext`
 - [`gov-receipts/README.md`](../gov-receipts/README.md) - Receipt generation using governance types
+
+## Stability
+
+This crate is part of the **rust-as-spec** governance kernel.
+Version numbers track the kernel release (currently 3.3.15).
+Breaking changes require a major version bump and an ADR.
+MSRV: 1.92.0.

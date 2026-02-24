@@ -101,6 +101,16 @@ pub trait PlatformAuthConfig {
     fn token_present(&self) -> bool;
 }
 
+impl PlatformAuthConfig for http_auth::PlatformAuthConfig {
+    fn mode_label(&self) -> &str {
+        http_auth::PlatformAuthConfig::mode_label(self)
+    }
+
+    fn token_present(&self) -> bool {
+        http_auth::PlatformAuthConfig::token_present(self)
+    }
+}
+
 // ============================================================================
 // Platform Router
 // ============================================================================

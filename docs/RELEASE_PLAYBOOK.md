@@ -219,8 +219,8 @@ cargo build --all-features
 **Example** (from v2.3.0):
 
 ```bash
-cargo build -p telemetry                    # Console-only
-cargo build -p telemetry --features otlp    # With OTLP
+cargo build -p rust-as-spec-telemetry                    # Console-only
+cargo build -p rust-as-spec-telemetry --features otlp    # With OTLP
 ```
 
 **Gate**: All validation passes cleanly

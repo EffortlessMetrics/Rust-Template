@@ -331,6 +331,88 @@ async fn test_cors_config_custom_origins() {
 }
 
 #[tokio::test]
+async fn test_cors_subdomain_wildcard_rejects_root_and_scheme_mismatch() {
+    // Use environment guard to serialize access and ensure clean state
+    let env_guard = clean_test_env();
+
+    env_guard.set("CORS_ALLOWED_ORIGINS", "https://*.example.com");
+
+    let workspace_root = test_workspace_root();
+    let repo = Arc::new(NoopRepo);
+    let app = app_with_workspace_root(repo, workspace_root).expect("valid config");
+
+    let root_domain_request = Request::builder()
+        .method(Method::GET)
+        .uri("/health")
+        .header("origin", "https://example.com")
+        .body(Body::empty())
+        .unwrap();
+
+    let root_domain_response =
+        app.clone().oneshot(root_domain_request).await.expect("handler should respond");
+    assert!(!root_domain_response.headers().contains_key("access-control-allow-origin"));
+
+    let scheme_mismatch_request = Request::builder()
+        .method(Method::GET)
+        .uri("/health")
+        .header("origin", "http://api.example.com")
+        .body(Body::empty())
+        .unwrap();
+
+    let scheme_mismatch_response =
+        app.oneshot(scheme_mismatch_request).await.expect("handler should respond");
+    assert!(!scheme_mismatch_response.headers().contains_key("access-control-allow-origin"));
+}
+
+#[tokio::test]
+async fn test_cors_prefix_wildcard_enforces_authority_boundary() {
+    // Use environment guard to serialize access and ensure clean state
+    let env_guard = clean_test_env();
+
+    env_guard.set("CORS_ALLOWED_ORIGINS", "https://example.com/*");
+
+    let workspace_root = test_workspace_root();
+    let repo = Arc::new(NoopRepo);
+    let app = app_with_workspace_root(repo, workspace_root).expect("valid config");
+
+    let allowed_request = Request::builder()
+        .method(Method::GET)
+        .uri("/health")
+        .header("origin", "https://example.com")
+        .body(Body::empty())
+        .unwrap();
+
+    let allowed_response =
+        app.clone().oneshot(allowed_request).await.expect("handler should respond");
+    assert_eq!(
+        allowed_response.headers().get("access-control-allow-origin").unwrap(),
+        "https://example.com"
+    );
+
+    let boundaryless_suffix_request = Request::builder()
+        .method(Method::GET)
+        .uri("/health")
+        .header("origin", "https://example.com.evil")
+        .body(Body::empty())
+        .unwrap();
+
+    let boundaryless_suffix_response =
+        app.clone().oneshot(boundaryless_suffix_request).await.expect("handler should respond");
+    assert!(!boundaryless_suffix_response.headers().contains_key("access-control-allow-origin"));
+
+    let port_mismatch_request = Request::builder()
+        .method(Method::GET)
+        .uri("/health")
+        .header("origin", "https://example.com:8443")
+        .body(Body::empty())
+        .unwrap();
+
+    let port_mismatch_response =
+        app.oneshot(port_mismatch_request).await.expect("handler should respond");
+    assert!(!port_mismatch_response.headers().contains_key("access-control-allow-origin"));
+}
+
+#[tokio::test]
 async fn test_security_headers_can_be_disabled() {
     // Use environment guard to serialize access and ensure clean state
     let env_guard = clean_test_env();

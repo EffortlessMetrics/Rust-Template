@@ -9,8 +9,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-(empty)
-
 ## [3.3.15] - 2026-02-20
 
 ### Added
@@ -1509,8 +1507,8 @@ For users upgrading from v1.x:
 
 **Validation:**
 
-- ✅ `cargo build -p telemetry` - Builds without OTLP feature (default)
-- ✅ `cargo build -p telemetry --features otlp` - Builds with OTLP feature
+- ✅ `cargo build -p rust-as-spec-telemetry` - Builds without OTLP feature (default)
+- ✅ `cargo build -p rust-as-spec-telemetry --features otlp` - Builds with OTLP feature
 - ✅ `cargo clippy --all-targets --all-features -- -D warnings` - Clean
 - ✅ `cargo fmt --all -- --check` - Clean
 - ✅ `cargo run -p xtask -- selftest` - Core checks passing
@@ -1626,27 +1624,28 @@ cargo run -p xtask -- selftest
 
 ---
 
-[Unreleased]: https://github.com/your-org/rust-template/compare/v3.3.14...HEAD
-[3.3.14]: https://github.com/your-org/rust-template/releases/tag/v3.3.14
-[3.3.13]: https://github.com/your-org/rust-template/releases/tag/v3.3.13
-[3.3.12]: https://github.com/your-org/rust-template/releases/tag/v3.3.12
-[3.3.11]: https://github.com/your-org/rust-template/releases/tag/v3.3.11
-[3.3.10]: https://github.com/your-org/rust-template/releases/tag/v3.3.10
-[3.3.9]: https://github.com/your-org/rust-template/releases/tag/v3.3.9
-[3.3.8]: https://github.com/your-org/rust-template/releases/tag/v3.3.8
-[3.3.7]: https://github.com/your-org/rust-template/releases/tag/v3.3.7
-[3.3.6]: https://github.com/your-org/rust-template/releases/tag/v3.3.6
-[3.3.5]: https://github.com/your-org/rust-template/releases/tag/v3.3.5
-[3.3.4]: https://github.com/your-org/rust-template/releases/tag/v3.3.4
-[3.2.0]: https://github.com/your-org/rust-template/releases/tag/v3.2.0
-[3.0.0-sprint1]: https://github.com/your-org/rust-template/releases/tag/v3.0.0-sprint1
-[2.5.0]: https://github.com/your-org/rust-template/releases/tag/v2.5.0
-[2.4.0]: https://github.com/your-org/rust-template/releases/tag/v2.4.0
-[2.3.1]: https://github.com/your-org/rust-template/releases/tag/v2.3.1
-[2.3.0]: https://github.com/your-org/rust-template/releases/tag/v2.3.0
-[2.2.0]: https://github.com/your-org/rust-template/releases/tag/v2.2.0
-[2.1.0]: https://github.com/your-org/rust-template/releases/tag/v2.1.0
-[2.0.1]: https://github.com/your-org/rust-template/releases/tag/v2.0.1
-[2.0.0]: https://github.com/your-org/rust-template/releases/tag/v2.0.0
-[1.1.0]: https://github.com/your-org/rust-template/releases/tag/v1.1.0
-[1.0.0]: https://github.com/your-org/rust-template/releases/tag/v1.0.0
+[Unreleased]: https://github.com/EffortlessMetrics/Rust-Template/compare/v3.3.15...HEAD
+[3.3.15]: https://github.com/EffortlessMetrics/Rust-Template/compare/v3.3.14...v3.3.15
+[3.3.14]: https://github.com/EffortlessMetrics/Rust-Template/releases/tag/v3.3.14
+[3.3.13]: https://github.com/EffortlessMetrics/Rust-Template/releases/tag/v3.3.13
+[3.3.12]: https://github.com/EffortlessMetrics/Rust-Template/releases/tag/v3.3.12
+[3.3.11]: https://github.com/EffortlessMetrics/Rust-Template/releases/tag/v3.3.11
+[3.3.10]: https://github.com/EffortlessMetrics/Rust-Template/releases/tag/v3.3.10
+[3.3.9]: https://github.com/EffortlessMetrics/Rust-Template/releases/tag/v3.3.9
+[3.3.8]: https://github.com/EffortlessMetrics/Rust-Template/releases/tag/v3.3.8
+[3.3.7]: https://github.com/EffortlessMetrics/Rust-Template/releases/tag/v3.3.7
+[3.3.6]: https://github.com/EffortlessMetrics/Rust-Template/releases/tag/v3.3.6
+[3.3.5]: https://github.com/EffortlessMetrics/Rust-Template/releases/tag/v3.3.5
+[3.3.4]: https://github.com/EffortlessMetrics/Rust-Template/releases/tag/v3.3.4
+[3.2.0]: https://github.com/EffortlessMetrics/Rust-Template/releases/tag/v3.2.0
+[3.0.0-sprint1]: https://github.com/EffortlessMetrics/Rust-Template/releases/tag/v3.0.0-sprint1
+[2.5.0]: https://github.com/EffortlessMetrics/Rust-Template/releases/tag/v2.5.0
+[2.4.0]: https://github.com/EffortlessMetrics/Rust-Template/releases/tag/v2.4.0
+[2.3.1]: https://github.com/EffortlessMetrics/Rust-Template/releases/tag/v2.3.1
+[2.3.0]: https://github.com/EffortlessMetrics/Rust-Template/releases/tag/v2.3.0
+[2.2.0]: https://github.com/EffortlessMetrics/Rust-Template/releases/tag/v2.2.0
+[2.1.0]: https://github.com/EffortlessMetrics/Rust-Template/releases/tag/v2.1.0
+[2.0.1]: https://github.com/EffortlessMetrics/Rust-Template/releases/tag/v2.0.1
+[2.0.0]: https://github.com/EffortlessMetrics/Rust-Template/releases/tag/v2.0.0
+[1.1.0]: https://github.com/EffortlessMetrics/Rust-Template/releases/tag/v1.1.0
+[1.0.0]: https://github.com/EffortlessMetrics/Rust-Template/releases/tag/v1.0.0

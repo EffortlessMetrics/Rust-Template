@@ -85,7 +85,7 @@ CUCUMBER_TAG_EXPRESSION="@AC-TPL-AGENT-HINTS-SCHEMA" cargo test -p acceptance --
 CUCUMBER_TAG_EXPRESSION="@AC-TPL-AGENT-HINTS" cargo test -p acceptance --test acceptance
 
 # Verify unit test still passes
-cargo test -p spec-runtime hint_serialization_schema
+cargo test -p rust-as-spec-runtime hint_serialization_schema
 
 # Verify AC status
 cargo xtask ac-status | grep AC-TPL-AGENT-HINTS-SCHEMA

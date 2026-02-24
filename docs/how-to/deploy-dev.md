@@ -57,7 +57,7 @@ docker build -t app-http:latest -f crates/app-http/Dockerfile .
 
 ```dockerfile
 # Multi-stage build for Rust application
-FROM rust:1.89-slim as builder
+FROM rust:1.92-slim as builder
 
 WORKDIR /build
 COPY . .

@@ -1,10 +1,10 @@
 [dependencies]
 gov-http-core = { path = "../gov-http-core" }
 gov-http-types = { path = "../gov-http-types" }
-gov-model = { path = "../gov-model" }
+gov-model.workspace = true
 http-errors = { path = "../http-errors", features = ["axum"] }
 platform-contract = { path = "../platform-contract" }
-spec-runtime = { path = "../spec-runtime" }
+spec-runtime.workspace = true
 axum.workspace = true
 http.workspace = true
 serde.workspace = true

@@ -1,0 +1,25 @@
+[package]
+name = "http-bearer-token-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2024"
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+arbitrary = {version = "1", features = ["derive"]}
+libfuzzer-sys = "0.4"
+
+[dependencies.http-bearer-token]
+path = ".."
+
+[[bin]]
+name = "extract_bearer"
+path = "fuzz_targets/extract_bearer.rs"
+test = false
+doc = false
+bench = false
+
+[workspace]
+members = ["."]

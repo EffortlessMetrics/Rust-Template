@@ -3,7 +3,7 @@
 http-core = {path = "../http-core"}
 http-errors = {features = ["axum"], path = "../http-errors"}
 # Model types
-model = {path = "../model"}
+model.workspace = true
 # Platform contract types
 platform-contract = {path = "../platform-contract"}
 # HTTP framework
@@ -16,7 +16,7 @@ tracing.workspace = true
 uuid.workspace = true
 
 [dev-dependencies]
-testing = {path = "../testing"}
+testing.workspace = true
 tokio.workspace = true
 tower.workspace = true
 

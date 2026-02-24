@@ -453,11 +453,17 @@ Those tests include comments explaining how to run them explicitly.
 
 ---
 
-## 9. How to Evolve the Kernel
+## 9. Code of Conduct
+
+We are committed to making participation in this project a harassment-free experience for everyone. Please read and follow our [Code of Conduct](CODE_OF_CONDUCT.md).
+
+---
+
+## 10. How to Evolve the Kernel
 
 This section is for changes that affect the **kernel contract** – the stable surfaces that forks and IDPs rely on.
 
-### 9.1 What's a kernel change?
+### 10.1 What's a kernel change?
 
 A change is a **kernel change** if it modifies:
 
@@ -467,7 +473,7 @@ A change is a **kernel change** if it modifies:
 - Schema files (`specs/openapi/**`, `specs/platform_schema.yaml`)
 - Kernel documentation (`docs/KERNEL_SNAPSHOT.md`, `docs/IDP_CELL_CONTRACT.md`)
 
-### 9.2 Kernel change protocol
+### 10.2 Kernel change protocol
 
 > **Rule:** Any kernel contract change requires ADR → version bump → kernel tag.
 
@@ -514,7 +520,7 @@ A change is a **kernel change** if it modifies:
    git push origin main --tags
    ```
 
-### 9.3 Version increment rules
+### 10.3 Version increment rules
 
 | Change Type | Example | Version Bump |
 |-------------|---------|--------------|
@@ -522,7 +528,7 @@ A change is a **kernel change** if it modifies:
 | **Minor** (3.3.8 → 3.4.0) | New ACs, new endpoints, backward-compatible | Y |
 | **Major** (3.3.8 → 4.0.0) | Breaking changes, removed/renamed endpoints | X |
 
-### 9.4 CODEOWNERS protection
+### 10.4 CODEOWNERS protection
 
 Kernel-critical files are protected by `CODEOWNERS`. Changes to these files require review from kernel maintainers:
 
@@ -535,7 +541,7 @@ Kernel-critical files are protected by `CODEOWNERS`. Changes to these files requ
 
 See [`CODEOWNERS`](./CODEOWNERS) for the full list.
 
-### 9.5 More details
+### 10.5 More details
 
 - **Detailed maintainer guide:** [`docs/how-to/maintain-kernel.md`](docs/how-to/maintain-kernel.md)
 - **Kernel evolution playbook:** [`docs/how-to/evolve-the-kernel.md`](docs/how-to/evolve-the-kernel.md)
@@ -543,7 +549,7 @@ See [`CODEOWNERS`](./CODEOWNERS) for the full list.
 
 ---
 
-## 10. Questions / Discussions
+## 11. Questions / Discussions
 
 If you're unsure whether a change fits:
 

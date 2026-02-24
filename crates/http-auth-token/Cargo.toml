@@ -1,0 +1,18 @@
+[dependencies]
+http.workspace = true
+http-bearer-token = {path = "../http-bearer-token"}
+
+[dev-dependencies]
+proptest.workspace = true
+
+[package]
+name = "http-auth-token"
+publish = false
+authors.workspace = true
+documentation.workspace = true
+edition.workspace = true
+homepage.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+version.workspace = true

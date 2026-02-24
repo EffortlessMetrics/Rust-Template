@@ -134,3 +134,10 @@ This ensures the application never fails to start due to telemetry issues.
 - [OpenTelemetry Rust](https://github.com/open-telemetry/opentelemetry-rust)
 - [Tracing Documentation](https://docs.rs/tracing/latest/tracing/)
 - [OTLP Specification](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/protocol/otlp.md)
+
+## Stability
+
+This crate is part of the **rust-as-spec** governance kernel.
+Version numbers track the kernel release (currently 3.3.15).
+Breaking changes require a major version bump and an ADR.
+MSRV: 1.92.0.

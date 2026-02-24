@@ -63,7 +63,7 @@ Auto-generated AC status from acceptance (BDD) and unit tests.
 | AC-PLT-019 | US-TPL-PLT-001 | REQ-PLT-DEVEX-CONTRACT | [PASS] pass | 3 |
 | AC-PLT-020 | US-TPL-PLT-001 | REQ-PLT-DEVEX-CONTRACT | [PASS] pass | 2 |
 | AC-PLT-021 | US-TPL-PLT-001 | REQ-PLT-ONBOARDING | [PASS] pass | 4 |
-| AC-PLT-AC-DEMOTION-GOVERNED | US-TPL-PLT-001 | REQ-PLT-AC-GOVERNANCE | [UNKNOWN] unknown | 0 |
+| AC-PLT-AC-DEMOTION-GOVERNED | US-TPL-PLT-001 | REQ-PLT-AC-GOVERNANCE | [PASS] pass | 1 |
 | AC-PLT-DOC-INDEX-FRONTMATTER | US-TPL-PLT-001 | REQ-PLT-DOCS-CONSISTENCY | [PASS] pass | 2 |
 | AC-PLT-ENV-ABI-CHECK | US-TPL-PLT-001 | REQ-PLT-ENV-DIAGNOSTICS | [PASS] pass | 3 |
 | AC-PLT-ENV-SCCACHE-WARN | US-TPL-PLT-001 | REQ-PLT-ENV-DIAGNOSTICS | [PASS] pass | 1 |
@@ -76,21 +76,21 @@ Auto-generated AC status from acceptance (BDD) and unit tests.
 | AC-TPL-AGENT-HINTS | US-TPL-PLT-001 | REQ-TPL-AGENT-INTERFACE | [PASS] pass | 1 |
 | AC-TPL-AGENT-HINTS-SCHEMA | US-TPL-PLT-001 | REQ-TPL-AGENT-INTERFACE | [PASS] pass | 2 |
 | AC-TPL-AGENT-SKILLS | US-TPL-PLT-001 | REQ-TPL-AGENT-INTERFACE | [PASS] pass | 2 |
-| AC-TPL-AGENTS-DESCRIPTION-QUALITY | US-TPL-PLT-001 | REQ-TPL-AGENTS-GOVERNANCE | [UNKNOWN] unknown | 0 |
+| AC-TPL-AGENTS-DESCRIPTION-QUALITY | US-TPL-PLT-001 | REQ-TPL-AGENTS-GOVERNANCE | [PASS] pass | 1 |
 | AC-TPL-AGENTS-GOVERNANCE-001 | US-TPL-PLT-001 | REQ-TPL-AGENTS-GOVERNANCE | [PASS] pass | 3 |
 | AC-TPL-AGENTS-GOVERNANCE-002 | US-TPL-PLT-001 | REQ-TPL-AGENTS-GOVERNANCE | [PASS] pass | 3 |
-| AC-TPL-AGENTS-LIFECYCLE-DOCS | US-TPL-PLT-001 | REQ-TPL-AGENTS-GOVERNANCE | [UNKNOWN] unknown | 0 |
-| AC-TPL-AGENTS-MODEL-POLICY | US-TPL-PLT-001 | REQ-TPL-AGENTS-GOVERNANCE | [UNKNOWN] unknown | 0 |
+| AC-TPL-AGENTS-LIFECYCLE-DOCS | US-TPL-PLT-001 | REQ-TPL-AGENTS-GOVERNANCE | [PASS] pass | 1 |
+| AC-TPL-AGENTS-MODEL-POLICY | US-TPL-PLT-001 | REQ-TPL-AGENTS-GOVERNANCE | [PASS] pass | 1 |
 | AC-TPL-AGENTS-NAME-FORMAT | US-TPL-PLT-001 | REQ-TPL-AGENTS-GOVERNANCE | [PASS] pass | 1 |
-| AC-TPL-AGENTS-SKILLS-REFERENCES | US-TPL-PLT-001 | REQ-TPL-AGENTS-GOVERNANCE | [UNKNOWN] unknown | 0 |
+| AC-TPL-AGENTS-SKILLS-REFERENCES | US-TPL-PLT-001 | REQ-TPL-AGENTS-GOVERNANCE | [PASS] pass | 1 |
 | AC-TPL-AGENTS-TEMPLATE-DOC | US-TPL-PLT-001 | REQ-TPL-AGENTS-GOVERNANCE | [PASS] pass | 3 |
-| AC-TPL-AGENTS-TOOLS-PERMISSION-SAFETY | US-TPL-PLT-001 | REQ-TPL-AGENTS-GOVERNANCE | [UNKNOWN] unknown | 0 |
+| AC-TPL-AGENTS-TOOLS-PERMISSION-SAFETY | US-TPL-PLT-001 | REQ-TPL-AGENTS-GOVERNANCE | [PASS] pass | 1 |
 | AC-TPL-ARTIFACTS-HAVE-REFS | US-TPL-PLT-001 | REQ-TPL-GOV-ARTIFACTS | [PASS] pass | 2 |
 | AC-TPL-BDD-EXIT-CODES | US-TPL-PLT-001 | REQ-TPL-BDD-HARNESS | [PASS] pass | 2 |
 | AC-TPL-BUNDLE-LAYOUT | US-TPL-PLT-001 | REQ-TPL-BUNDLE-CONTRACT | [PASS] pass | 2 |
 | AC-TPL-BUNDLE-MANIFEST | US-TPL-PLT-001 | REQ-TPL-BUNDLE-CONTRACT | [PASS] pass | 2 |
 | AC-TPL-BUNDLE-MANIFEST-LINKED | US-TPL-PLT-001 | REQ-TPL-BUNDLE-CONTRACT | [PASS] pass | 2 |
-| AC-TPL-BUNDLE-MINIMAL-SCOPE | US-TPL-PLT-001 | REQ-TPL-BUNDLE-CONTRACT | [PASS] pass | 1 |
+| AC-TPL-BUNDLE-MINIMAL-SCOPE | US-TPL-PLT-001 | REQ-TPL-BUNDLE-CONTRACT | [PASS] pass | 2 |
 | AC-TPL-BUNDLE-REFERENTIAL-INTEGRITY | US-TPL-PLT-001 | REQ-TPL-AGENT-ERGONOMICS | [PASS] pass | 1 |
 | AC-TPL-CLI-JSON-CORE | US-TPL-PHILOSOPHY-001 | REQ-TPL-AI-IDP-COMPAT | [PASS] pass | 3 |
 | AC-TPL-CLI-JSON-OUTPUT | US-TPL-PLT-001 | REQ-PLT-DEVEX-CONTRACT | [PASS] pass | 3 |
@@ -102,18 +102,18 @@ Auto-generated AC status from acceptance (BDD) and unit tests.
 | AC-TPL-GOV-FORKS | US-TPL-PLT-001 | REQ-TPL-GOV-ARTIFACTS | [PASS] pass | 1 |
 | AC-TPL-GOV-FRICTION | US-TPL-PLT-001 | REQ-TPL-GOV-ARTIFACTS | [PASS] pass | 1 |
 | AC-TPL-GOV-WRITE-TASK-STATUS-200 | US-TPL-PLATFORM-V3 | REQ-TPL-GOV-WRITE-001 | [PASS] pass | 3 |
-| AC-TPL-GRAPH-AC-HAS-TEST | US-TPL-PLT-001 | REQ-TPL-GRAPH-INVARIANTS | [PASS] pass | 1 |
-| AC-TPL-GRAPH-COMMAND-REACHABLE | US-TPL-PLT-001 | REQ-TPL-GRAPH-INVARIANTS | [PASS] pass | 1 |
-| AC-TPL-GRAPH-INVARIANTS | US-TPL-PLT-001 | REQ-TPL-GRAPH-INVARIANTS | [UNKNOWN] unknown | 1 |
+| AC-TPL-GRAPH-AC-HAS-TEST | US-TPL-PLT-001 | REQ-TPL-GRAPH-INVARIANTS | [PASS] pass | 2 |
+| AC-TPL-GRAPH-COMMAND-REACHABLE | US-TPL-PLT-001 | REQ-TPL-GRAPH-INVARIANTS | [PASS] pass | 2 |
+| AC-TPL-GRAPH-INVARIANTS | US-TPL-PLT-001 | REQ-TPL-GRAPH-INVARIANTS | [PASS] pass | 1 |
 | AC-TPL-GRAPH-MERMAID | US-TPL-PLT-001 | REQ-TPL-GRAPH-VISUALIZATION | [PASS] pass | 2 |
-| AC-TPL-GRAPH-REQ-HAS-AC | US-TPL-PLT-001 | REQ-TPL-GRAPH-INVARIANTS | [PASS] pass | 1 |
+| AC-TPL-GRAPH-REQ-HAS-AC | US-TPL-PLT-001 | REQ-TPL-GRAPH-INVARIANTS | [PASS] pass | 2 |
 | AC-TPL-GRAPH-SELFTEST | US-TPL-PLT-001 | REQ-TPL-GRAPH-INVARIANTS | [PASS] pass | 4 |
 | AC-TPL-HINTS-KERNEL-SIGNALS | US-TPL-PLT-001 | REQ-TPL-AGENT-ERGONOMICS | [PASS] pass | 2 |
 | AC-TPL-HINTS-REFERENTIAL-INTEGRITY | US-TPL-PLT-001 | REQ-TPL-AGENT-ERGONOMICS | [PASS] pass | 3 |
 | AC-TPL-HOOKS-INSTALL | US-TPL-PLT-001 | REQ-TPL-GOV-HOOKS | [PASS] pass | 1 |
-| AC-TPL-IAC-COMPOSE-ALIGN | US-TPL-PLT-001 | REQ-TPL-IAC-ALIGNMENT | [PASS] pass | 1 |
-| AC-TPL-IAC-K8S-ALIGN | US-TPL-PLT-001 | REQ-TPL-IAC-ALIGNMENT | [PASS] pass | 1 |
-| AC-TPL-IAC-TF-ALIGN | US-TPL-PLT-001 | REQ-TPL-IAC-ALIGNMENT | [PASS] pass | 1 |
+| AC-TPL-IAC-COMPOSE-ALIGN | US-TPL-PLT-001 | REQ-TPL-IAC-ALIGNMENT | [PASS] pass | 2 |
+| AC-TPL-IAC-K8S-ALIGN | US-TPL-PLT-001 | REQ-TPL-IAC-ALIGNMENT | [PASS] pass | 2 |
+| AC-TPL-IAC-TF-ALIGN | US-TPL-PLT-001 | REQ-TPL-IAC-ALIGNMENT | [PASS] pass | 2 |
 | AC-TPL-IDP-CELL-SMOKE | US-TPL-PHILOSOPHY-001 | REQ-TPL-IDP-SNAPSHOT | [PASS] pass | 3 |
 | AC-TPL-IDP-SNAPSHOT | US-TPL-PHILOSOPHY-001 | REQ-TPL-IDP-SNAPSHOT | [PASS] pass | 5 |
 | AC-TPL-IDP-SNAPSHOT-VALID-JSON | US-TPL-PHILOSOPHY-001 | REQ-TPL-IDP-SNAPSHOT | [PASS] pass | 3 |
@@ -127,11 +127,11 @@ Auto-generated AC status from acceptance (BDD) and unit tests.
 | AC-TPL-PLATFORM-AUTH-BASIC | US-TPL-PLT-001 | REQ-TPL-PLATFORM-AUTH | [PASS] pass | 1 |
 | AC-TPL-PLATFORM-DEVEX | US-TPL-PLT-001 | REQ-TPL-PLATFORM-INTROSPECTION | [PASS] pass | 3 |
 | AC-TPL-PLATFORM-DOCS | US-TPL-PLT-001 | REQ-TPL-PLATFORM-INTROSPECTION | [PASS] pass | 1 |
-| AC-TPL-PLATFORM-DOCS-CONTRACT | US-TPL-PLT-001 | REQ-TPL-PLATFORM-CONTRACT | [UNKNOWN] unknown | 0 |
+| AC-TPL-PLATFORM-DOCS-CONTRACT | US-TPL-PLT-001 | REQ-TPL-PLATFORM-CONTRACT | [PASS] pass | 1 |
 | AC-TPL-PLATFORM-GOVERNANCE-APIS | US-TPL-PHILOSOPHY-001 | REQ-TPL-AI-IDP-COMPAT | [PASS] pass | 4 |
 | AC-TPL-PLATFORM-GRAPH | US-TPL-PLT-001 | REQ-TPL-PLATFORM-INTROSPECTION | [PASS] pass | 2 |
 | AC-TPL-PLATFORM-SCHEMA | US-TPL-PLT-001 | REQ-TPL-PLATFORM-SCHEMA | [PASS] pass | 3 |
-| AC-TPL-PLATFORM-STATUS-CONTRACT | US-TPL-PLT-001 | REQ-TPL-PLATFORM-CONTRACT | [UNKNOWN] unknown | 0 |
+| AC-TPL-PLATFORM-STATUS-CONTRACT | US-TPL-PLT-001 | REQ-TPL-PLATFORM-CONTRACT | [PASS] pass | 1 |
 | AC-TPL-PLATFORM-UI-CONTRACT | US-TPL-PLT-001 | REQ-TPL-PLATFORM-UI | [PASS] pass | 4 |
 | AC-TPL-PLATFORM-UI-DASHBOARD | US-TPL-PLT-001 | REQ-TPL-PLATFORM-UI | [PASS] pass | 2 |
 | AC-TPL-PLATFORM-UI-FLOWS | US-TPL-PLT-001 | REQ-TPL-PLATFORM-UI | [PASS] pass | 2 |
@@ -141,15 +141,15 @@ Auto-generated AC status from acceptance (BDD) and unit tests.
 | AC-TPL-REL-CHANGELOG | US-TPL-PLT-001 | REQ-TPL-REL-BUNDLE | [PASS] pass | 1 |
 | AC-TPL-REL-EVIDENCE | US-TPL-PLT-001 | REQ-TPL-REL-BUNDLE | [PASS] pass | 1 |
 | AC-TPL-SKILLS-ALIGN-001 | US-TPL-PLT-001 | REQ-TPL-SKILLS-GUIDE | [PASS] pass | 2 |
-| AC-TPL-SKILLS-ALLOWED-TOOLS-SAFETY | US-TPL-PLT-001 | REQ-TPL-SKILLS-GOVERNANCE | [UNKNOWN] unknown | 0 |
-| AC-TPL-SKILLS-DESCRIPTION-QUALITY | US-TPL-PLT-001 | REQ-TPL-SKILLS-GOVERNANCE | [UNKNOWN] unknown | 0 |
-| AC-TPL-SKILLS-FLOW-MAPPING | US-TPL-PLT-001 | REQ-TPL-SKILLS-GOVERNANCE | [UNKNOWN] unknown | 0 |
+| AC-TPL-SKILLS-ALLOWED-TOOLS-SAFETY | US-TPL-PLT-001 | REQ-TPL-SKILLS-GOVERNANCE | [PASS] pass | 1 |
+| AC-TPL-SKILLS-DESCRIPTION-QUALITY | US-TPL-PLT-001 | REQ-TPL-SKILLS-GOVERNANCE | [PASS] pass | 1 |
+| AC-TPL-SKILLS-FLOW-MAPPING | US-TPL-PLT-001 | REQ-TPL-SKILLS-GOVERNANCE | [PASS] pass | 1 |
 | AC-TPL-SKILLS-FMT | US-TPL-PLT-001 | REQ-TPL-SKILLS-TOOLING | [PASS] pass | 3 |
-| AC-TPL-SKILLS-GOVERNANCE-001 | US-TPL-PLT-001 | REQ-TPL-SKILLS-GOVERNANCE | [UNKNOWN] unknown | 0 |
-| AC-TPL-SKILLS-GOVERNANCE-002 | US-TPL-PLT-001 | REQ-TPL-SKILLS-GOVERNANCE | [UNKNOWN] unknown | 0 |
-| AC-TPL-SKILLS-GOVERNANCE-003 | US-TPL-PLT-001 | REQ-TPL-SKILLS-GOVERNANCE | [UNKNOWN] unknown | 0 |
+| AC-TPL-SKILLS-GOVERNANCE-001 | US-TPL-PLT-001 | REQ-TPL-SKILLS-GOVERNANCE | [PASS] pass | 1 |
+| AC-TPL-SKILLS-GOVERNANCE-002 | US-TPL-PLT-001 | REQ-TPL-SKILLS-GOVERNANCE | [PASS] pass | 1 |
+| AC-TPL-SKILLS-GOVERNANCE-003 | US-TPL-PLT-001 | REQ-TPL-SKILLS-GOVERNANCE | [PASS] pass | 1 |
 | AC-TPL-SKILLS-GUIDE-001 | US-TPL-PLT-001 | REQ-TPL-SKILLS-GUIDE | [PASS] pass | 2 |
-| AC-TPL-SKILLS-LIFECYCLE-DOCS | US-TPL-PLT-001 | REQ-TPL-SKILLS-GOVERNANCE | [UNKNOWN] unknown | 0 |
+| AC-TPL-SKILLS-LIFECYCLE-DOCS | US-TPL-PLT-001 | REQ-TPL-SKILLS-GOVERNANCE | [PASS] pass | 1 |
 | AC-TPL-SKILLS-LINT | US-TPL-PLT-001 | REQ-TPL-SKILLS-TOOLING | [PASS] pass | 3 |
 | AC-TPL-SKILLS-NAME-FORMAT | US-TPL-PLT-001 | REQ-TPL-SKILLS-GOVERNANCE | [PASS] pass | 1 |
 | AC-TPL-STATUS-AC-COVERAGE | US-TPL-PLT-001 | REQ-TPL-INTROSPECTION-PARITY | [PASS] pass | 1 |
@@ -163,12 +163,12 @@ Auto-generated AC status from acceptance (BDD) and unit tests.
 | AC-TPL-TASKS-CREATE-CLI | US-TPL-PLT-001 | REQ-TPL-PLATFORM-TASKS | [PASS] pass | 1 |
 | AC-TPL-TASKS-HTTP | US-TPL-PLT-001 | REQ-TPL-PLATFORM-TASKS | [PASS] pass | 1 |
 | AC-TPL-TASKS-UPDATE-CLI | US-TPL-PLT-001 | REQ-TPL-PLATFORM-TASKS | [PASS] pass | 1 |
-| AC-TPL-TS-CONFIG-VALIDATION | US-TPL-PLT-001 | REQ-TPL-TS-CONFIG-GOVERNANCE | [UNKNOWN] unknown | 0 |
+| AC-TPL-TS-CONFIG-VALIDATION | US-TPL-PLT-001 | REQ-TPL-TS-CONFIG-GOVERNANCE | [PASS] pass | 1 |
 | AC-TPL-VERSION-ATOMIC | US-TPL-PLT-001 | REQ-TPL-VERSIONING-ENGINE | [PASS] pass | 3 |
 | AC-TPL-VERSION-DRYRUN | US-TPL-PLT-001 | REQ-TPL-VERSIONING-ENGINE | [PASS] pass | 3 |
 | AC-TPL-VERSION-MANIFEST | US-TPL-PLT-001 | REQ-TPL-VERSIONING-ENGINE | [PASS] pass | 2 |
 | AC-TPL-XTASK-NONINTERACTIVE | US-TPL-PLT-001 | REQ-TPL-AUTOMATION-BEHAVIOUR | [PASS] pass | 4 |
-| AC-TPL-XTASK-SPEC-ROOT | US-TPL-PLT-001 | REQ-PLT-DEVEX-CONTRACT | [PASS] pass | 1 |
+| AC-TPL-XTASK-SPEC-ROOT | US-TPL-PLT-001 | REQ-PLT-DEVEX-CONTRACT | [PASS] pass | 2 |
 
 ## Unmapped ACs (Service Behaviour)
 
@@ -181,21 +181,4 @@ Auto-generated AC status from acceptance (BDD) and unit tests.
 These ACs describe test harness or example workspace behaviour. They are
 validated in CI, not by local selftest:
 
-- AC-PLT-AC-DEMOTION-GOVERNED – Changes to must_have_ac for any acceptance criterion are treated as kernel contract changes and are documented with an ADR and kernel version update.
-- AC-TPL-AGENTS-DESCRIPTION-QUALITY – Agent descriptions MUST include both WHAT (capability) and WHEN (triggers/context), and be ≤1024 characters. agents-lint MUST treat absence/emptiness as an error and missing WHEN as a warning.
-- AC-TPL-AGENTS-LIFECYCLE-DOCS – docs/AGENTS_GOVERNANCE.md documents the full lifecycle: how to create an agent (REQ + AC → Task → implement), maintain (keep config in sync with flows and Skills), and retire (mark REQ deprecated, archive agent file).
-- AC-TPL-AGENTS-MODEL-POLICY – Agent model selection MUST respect repo policy (e.g., default to 'inherit' or approved aliases only). agents-lint MUST error on unknown models and warn when expensive models (opus) are used without justification.
-- AC-TPL-AGENTS-SKILLS-REFERENCES – Agent 'skills' entries MUST reference existing Skills in .claude/skills/* or be omitted. agents-lint MUST error if an agent declares a Skill that does not exist.
-- AC-TPL-AGENTS-TOOLS-PERMISSION-SAFETY – Agent tools and permissionMode MUST follow least-privilege and explicitness principles. agents-lint MUST error on invalid permissionMode values and warn on broad tool grants (e.g., full Bash + Edit + Write) without justification.
 - AC-TPL-EXAMPLE-FORK-BUILDS – `examples/fork-customization/` is validated and demonstrates fork extensibility patterns in CI, proving template provides a working foundation for forked services.
-- AC-TPL-GRAPH-INVARIANTS – Graph invariants (requirements have ACs, ACs have tests, commands are reachable) are enforced together as a cohesive governance check.
-- AC-TPL-PLATFORM-DOCS-CONTRACT – /platform/docs/index returns a JSON object matching the DocsIndex schema in specs/openapi/openapi.yaml, including summary and docs array.
-- AC-TPL-PLATFORM-STATUS-CONTRACT – /platform/status returns a JSON object matching the PlatformStatus schema in specs/openapi/openapi.yaml, including service, governance, and optional config sections.
-- AC-TPL-SKILLS-ALLOWED-TOOLS-SAFETY – Skill allowed-tools MUST follow least-privilege principle. skills-lint must warn if read-only Skill includes Write/Edit, or if unscoped Bash is used without justification. No hardcoded secrets in SKILL.md or supporting files.
-- AC-TPL-SKILLS-DESCRIPTION-QUALITY – Skill descriptions MUST include both WHAT (capability) and WHEN (triggers/context), use third-person voice, and max 1024 characters. skills-lint must warn if description omits "when to use" triggers.
-- AC-TPL-SKILLS-FLOW-MAPPING – Skill descriptions MUST reference at least one devex_flows entry or xtask command. Anti-pattern detection: warn if Skill name suggests it wraps single command (e.g., skill-check) instead of workflow. Lint rule: description must mention workflow scope.
-- AC-TPL-SKILLS-GOVERNANCE-001 – docs/SKILLS_GOVERNANCE.md exists and documents the governance spec, lifecycle (create/maintain/retire), validation rules, and ADR-0020 principles for this repo.
-- AC-TPL-SKILLS-GOVERNANCE-002 – Each Skill in .claude/skills/* has a corresponding REQ in spec_ledger.yaml and at least one AC defining its SKILL.md structure requirements.
-- AC-TPL-SKILLS-GOVERNANCE-003 – docs/SKILLS_TEMPLATE.md exists and provides a copy-paste template for creating new Skills with checklist for name format, description quality (what + when), allowed-tools safety, and references.
-- AC-TPL-SKILLS-LIFECYCLE-DOCS – docs/SKILLS_GOVERNANCE.md documents the full lifecycle: how to create a Skill (REQ + AC → Task → implement), maintain (keep devex_flows.yaml in sync), and retire (mark REQ deprecated, archive SKILL.md).
-- AC-TPL-TS-CONFIG-VALIDATION – All tsconfig.json files avoid deprecated moduleResolution values (node, node10) and ignoreDeprecations flags; violations are caught by scripts/validate-ts-config.sh and the ts-config-lints CI job.

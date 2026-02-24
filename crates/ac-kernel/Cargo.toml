@@ -1,6 +1,6 @@
 [dependencies]
 # Re-export TestMapping from spec-runtime
-spec-runtime = {path = "../spec-runtime"}
+spec-runtime.workspace = true
 anyhow.workspace = true
 chrono.workspace = true
 serde.workspace = true
@@ -10,10 +10,21 @@ serde_yaml.workspace = true
 [dev-dependencies]
 tempfile.workspace = true
 
+[lib]
+name = "ac_kernel"
+
 [package]
+name = "rust-as-spec-ac-kernel"
 description = "Core AC governance logic for the Rust-as-Spec platform"
-name = "ac-kernel"
-version = "0.1.0"
+version.workspace = true
 edition.workspace = true
-publish.workspace = true
+license.workspace = true
+publish = true
+repository.workspace = true
+homepage.workspace = true
+authors.workspace = true
 rust-version.workspace = true
+documentation = "https://docs.rs/rust-as-spec-ac-kernel"
+categories = ["development-tools"]
+keywords = ["acceptance", "governance", "kernel", "testing"]
+include = ["src/**/*", "README.md", "LICENSE-APACHE", "LICENSE-MIT", "Cargo.toml"]

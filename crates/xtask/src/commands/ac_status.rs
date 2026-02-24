@@ -229,6 +229,22 @@ pub fn run(args: AcStatusArgs) -> Result<()> {
         }
     }
 
+    // Check coverage metadata for filtered-run warnings
+    if should_print_progress {
+        let meta_path = args.coverage.with_file_name("coverage.meta.json");
+        if let Ok(meta_str) = fs::read_to_string(&meta_path)
+            && let Ok(meta) = serde_json::from_str::<serde_json::Value>(&meta_str)
+            && meta.get("run_mode").and_then(|v| v.as_str()) == Some("filtered")
+        {
+            let expr = meta.get("tag_expression").and_then(|v| v.as_str()).unwrap_or("<unknown>");
+            eprintln!(
+                "{} Coverage data from filtered run (tag: {}). Results may be incomplete.",
+                "[WARN]".yellow(),
+                expr
+            );
+        }
+    }
+
     // PRIMARY PATH: AC Coverage JSONL (streams results, resilient to exit())
     // The coverage.jsonl file is the preferred source as it flushes on each
     // scenario completion and doesn't rely on Drop semantics.

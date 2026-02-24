@@ -70,10 +70,10 @@ cargo test -p adapters-db-sqlx --features integration-db
 
 ```bash
 # Build with OTLP support
-cargo build -p telemetry --features otlp
+cargo build -p rust-as-spec-telemetry --features otlp
 
 # Build without OTLP (default)
-cargo build -p telemetry
+cargo build -p rust-as-spec-telemetry
 ```
 
 **CI Coverage:**
@@ -105,7 +105,7 @@ The following feature combinations are **not** currently tested in CI but are va
 
 3. **telemetry + otlp**
    - Requires: OTLP collector endpoint (optional)
-   - Manual test: `cargo build -p telemetry --features otlp`
+   - Manual test: `cargo build -p rust-as-spec-telemetry --features otlp`
 
 4. **Full feature matrix (all optional features)**
    - Manual test: `cargo test --workspace --exclude acceptance --exclude xtask --all-features`

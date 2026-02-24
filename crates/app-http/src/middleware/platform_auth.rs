@@ -1,10 +1,12 @@
 use axum::http::{Method, Request};
 use axum::{body::Body, extract::State, http::StatusCode, middleware::Next, response::Response};
+#[cfg(test)]
+use http_auth_token::AUTHORIZATION_HEADER;
+use http_auth_token::extract_auth_token_from_headers;
 
 use crate::{AppError, AppState, ErrorCode};
 
-pub const PLATFORM_AUTH_HEADER: &str = "x-platform-token";
-pub const AUTHORIZATION_HEADER: &str = "authorization";
+pub use http_auth_token::PLATFORM_AUTH_HEADER;
 
 /// Enforces platform auth for write endpoints when PLATFORM_AUTH_MODE requires auth.
 pub async fn platform_auth_guard(
@@ -38,14 +40,7 @@ pub async fn platform_auth_guard(
 
 /// Extract authentication token, preferring Authorization over the legacy header.
 fn extract_auth_token(request: &Request<Body>) -> Option<&str> {
-    request
-        .headers()
-        .get(AUTHORIZATION_HEADER)
-        .and_then(|v| v.to_str().ok())
-        .and_then(|auth_str| {
-            auth_str.strip_prefix("Bearer ").or_else(|| auth_str.strip_prefix("bearer "))
-        })
-        .or_else(|| request.headers().get(PLATFORM_AUTH_HEADER).and_then(|v| v.to_str().ok()))
+    extract_auth_token_from_headers(request.headers())
 }
 
 #[cfg(test)]
@@ -60,7 +55,7 @@ mod tests {
     use business_core::governance::{
         GovernanceError, GovernanceRepository, Task, TaskId, TaskStatus,
     };
-    use jsonwebtoken::{EncodingKey, Header};
+    use jsonwebtoken::{EncodingKey, Header, encode};
     use std::{
         path::PathBuf,
         sync::Arc,
@@ -91,6 +86,23 @@ mod tests {
 
     async fn protected_handler() -> &'static str {
         "ok"
+    }
+
+    fn create_jwt_token(
+        secret: &str,
+        subject: &str,
+        issuer: &str,
+        expires_in_seconds: u64,
+    ) -> Result<String, jsonwebtoken::errors::Error> {
+        let now = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs();
+        let claims = crate::security::Claims {
+            sub: subject.to_string(),
+            exp: now + expires_in_seconds,
+            iat: now,
+            iss: issuer.to_string(),
+        };
+
+        encode(&Header::default(), &claims, &EncodingKey::from_secret(secret.as_ref()))
     }
 
     fn app_state(
@@ -186,8 +198,7 @@ mod tests {
     #[tokio::test]
     async fn accepts_jwt_when_basic_token_is_enabled() {
         let secret = "test-secret";
-        let token =
-            crate::security::create_jwt_token(secret, "user123", "rust-template", 3600).unwrap();
+        let token = create_jwt_token(secret, "user123", "rust-template", 3600).unwrap();
         let state =
             app_state(crate::security::PlatformAuthMode::Basic, Some("legacy-token"), Some(secret));
         let app = guarded_router(state);
@@ -239,8 +250,7 @@ mod tests {
     #[tokio::test]
     async fn accepts_post_with_valid_jwt_bearer_token() {
         let secret = "test-secret";
-        let token =
-            crate::security::create_jwt_token(secret, "user123", "rust-template", 3600).unwrap();
+        let token = create_jwt_token(secret, "user123", "rust-template", 3600).unwrap();
         let state = app_state(crate::security::PlatformAuthMode::Jwt, None, Some(secret));
         let app = guarded_router(state);
 
@@ -258,8 +268,7 @@ mod tests {
     #[tokio::test]
     async fn accepts_post_with_valid_jwt_custom_header() {
         let secret = "test-secret";
-        let token =
-            crate::security::create_jwt_token(secret, "user123", "rust-template", 3600).unwrap();
+        let token = create_jwt_token(secret, "user123", "rust-template", 3600).unwrap();
         let state = app_state(crate::security::PlatformAuthMode::Jwt, None, Some(secret));
         let app = guarded_router(state);
 
@@ -361,8 +370,7 @@ mod tests {
     #[tokio::test]
     async fn accepts_get_with_valid_jwt_in_jwt_mode() {
         let secret = "test-secret";
-        let token =
-            crate::security::create_jwt_token(secret, "user123", "rust-template", 3600).unwrap();
+        let token = create_jwt_token(secret, "user123", "rust-template", 3600).unwrap();
         let state = app_state(crate::security::PlatformAuthMode::Jwt, None, Some(secret));
         let app = guarded_router(state);
 

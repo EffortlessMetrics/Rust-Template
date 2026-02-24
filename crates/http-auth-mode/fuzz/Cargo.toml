@@ -1,0 +1,24 @@
+[package]
+name = "http-auth-mode-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2024"
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+
+[dependencies.http-auth-mode]
+path = ".."
+
+[[bin]]
+name = "mode_parse"
+path = "fuzz_targets/mode_parse.rs"
+test = false
+doc = false
+bench = false
+
+[workspace]
+members = ["."]

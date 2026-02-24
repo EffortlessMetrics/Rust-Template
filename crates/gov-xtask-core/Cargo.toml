@@ -1,7 +1,7 @@
 [dependencies]
 anyhow = {workspace = true}
 chrono = {workspace = true}
-gov-model = {path = "../gov-model"}
+gov-model.workspace = true
 serde = {workspace = true}
 serde_json = {workspace = true}
 thiserror = {workspace = true}
@@ -9,11 +9,21 @@ thiserror = {workspace = true}
 [dev-dependencies]
 tempfile = {workspace = true}
 
+[lib]
+name = "gov_xtask_core"
+
 [package]
+name = "rust-as-spec-gov-xtask-core"
 description = "Governance xtask core utilities"
-name = "gov-xtask-core"
-version = "0.1.0"
+version.workspace = true
 edition.workspace = true
 license.workspace = true
-publish.workspace = true
+publish = true
+repository.workspace = true
+homepage.workspace = true
+authors.workspace = true
 rust-version.workspace = true
+documentation = "https://docs.rs/rust-as-spec-gov-xtask-core"
+categories = ["development-tools"]
+keywords = ["governance", "utilities", "xtask"]
+include = ["src/**/*", "README.md", "LICENSE-APACHE", "LICENSE-MIT", "Cargo.toml"]

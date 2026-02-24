@@ -1,0 +1,25 @@
+[[bin]]
+bench = false
+doc = false
+name = "origin_matcher"
+path = "fuzz_targets/origin_matcher.rs"
+test = false
+
+[dependencies]
+arbitrary = {features = ["derive"], version = "1"}
+libfuzzer-sys = "0.4"
+
+[dependencies.http-origin-policy]
+path = ".."
+
+[package]
+edition = "2024"
+name = "http-origin-policy-fuzz"
+publish = false
+version = "0.0.0"
+
+[package.metadata]
+cargo-fuzz = true
+
+[workspace]
+members = ["."]

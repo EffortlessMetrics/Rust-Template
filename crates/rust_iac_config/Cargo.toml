@@ -11,15 +11,15 @@ testing.workspace = true
 doctest = false
 
 [package]
-authors = ["Steven Zimmerman <git@effortlesssteven.com>"]
 categories = ["config", "development-tools"]
 description = "YAML-based infrastructure configuration library for Rust IaC projects with validation rules"
-homepage = "https://github.com/EffortlessMetrics/Rust-Template"
 keywords = ["config", "iac", "infrastructure", "validation", "yaml"]
 name = "rust_iac_config"
+version.workspace = true
+authors.workspace = true
+repository.workspace = true
+homepage.workspace = true
 readme = "README.md"
-repository = "https://github.com/EffortlessMetrics/Rust-Template"
-version = "0.1.0"
 edition.workspace = true
 license.workspace = true
 publish.workspace = true

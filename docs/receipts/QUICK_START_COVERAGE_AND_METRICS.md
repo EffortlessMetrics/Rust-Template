@@ -133,7 +133,7 @@ See `/docs/FEATURE_FLAG_TEST_MATRIX.md` for complete documentation.
 |-------|---------|-------|
 | `adapters-grpc` | `integration-grpc` | `cargo test -p adapters-grpc --features integration-grpc` |
 | `adapters-db-sqlx` | `integration-db` | `cargo test -p adapters-db-sqlx --features integration-db` |
-| `telemetry` | `otlp` | `cargo build -p telemetry --features otlp` |
+| `rust-as-spec-telemetry` | `otlp` | `cargo build -p rust-as-spec-telemetry --features otlp` |
 
 ---
 
