@@ -234,11 +234,19 @@ jobs:
             target/junit/acceptance.xml
           if-no-files-found: warn
 
+      - name: Generate artifact name
+        id: artifact-name
+        if: (failure() || github.ref == 'refs/heads/main') && steps.changes.outputs.bdd_needed == 'true'
+        run: |
+          # Replace / with - in branch name to ensure valid artifact name
+          SAFE_REF_NAME=$(echo "${{ github.ref_name }}" | tr '/' '-')
+          echo "safe_ref_name=$SAFE_REF_NAME" >> $GITHUB_OUTPUT
+
       - name: Upload AC status snapshot
         if: (failure() || github.ref == 'refs/heads/main') && steps.changes.outputs.bdd_needed == 'true'
         uses: actions/upload-artifact@v4
         with:
           # Group by branch for easier time-series analysis
-          name: ac-status-${{ github.ref_name }}
+          name: ac-status-${{ steps.artifact-name.outputs.safe_ref_name }}
           path: artifacts/ac-status/
           retention-days: 30
