@@ -10,11 +10,20 @@ if [ -f "$ck" ]; then
   local expect
   expect=$(awk -v k="$key" '$1==k {print $2}' "$ck" | head -n1)
   if [ -n "${expect:-}" ]; then
+    local got
     if command -v sha256sum >/dev/null 2>&1; then
-      echo "${expect}  ${file}" | sha256sum -c -
+      got=$(sha256sum "$file" | awk '{print $1}')
     else
-      local got; got=$(shasum -a 256 "$file" | awk '{print $1}')
-      test "$got" = "$expect"
+      got=$(shasum -a 256 "$file" | awk '{print $1}')
+    fi
+
+    if [ "$got" = "$expect" ]; then
+      echo "Checksum OK for $key"
+    else
+      echo "Checksum mismatch for $key" >&2
+      echo "  Expected: $expect" >&2
+      echo "  Got:      $got" >&2
+      return 1
     fi
     echo "Checksum OK for $key"
   else
@@ -56,7 +65,7 @@ install_oasdiff() {
   # Releases: https://github.com/oasdiff/oasdiff/releases
   # Asset pattern: oasdiff_<version>_<os>_<arch>.tar.gz
   # Note: darwin arm64 uses universal build: oasdiff_<v>_darwin_all.tar.gz
-  local v="${OASDIFF_VERSION:-1.11.7}"
+  local v="${OASDIFF_VERSION:-1.11.10}"
 
   # Map arch for oasdiff assets
   local oas_arch="$arch"
@@ -66,16 +75,26 @@ install_oasdiff() {
 
   local tarball="oasdiff_${v}_${os}_${oas_arch}.tar.gz"
   local url="https://github.com/oasdiff/oasdiff/releases/download/v${v}/${tarball}"
+  local tmp_archive="/tmp/${tarball}"
 
   if ! [ -x "$BIN/oasdiff" ]; then
     echo "Installing oasdiff ${v} from ${url}..."
-    curl -sSfL "$url" | tar -xz -C "$BIN" oasdiff
+    curl -sSfL "$url" -o "$tmp_archive"
+    sha_check "$tmp_archive" "oasdiff-${v}-${os}-${oas_arch}"
+
+    # Extract oasdiff binary from archive
+    if [[ "$tarball" == *.zip ]]; then
+      unzip -p "$tmp_archive" oasdiff > "$BIN/oasdiff"
+    else
+      tar -xzf "$tmp_archive" -C "$BIN" oasdiff
+    fi
+
     chmod +x "$BIN/oasdiff"
-    sha_check "$BIN/oasdiff" "oasdiff-${v}-${os}-${oas_arch}"
+    rm -f "$tmp_archive"
   fi
 }
 install_buf() {
-  local v="1.45.0"
+  local v="1.50.0"
   local os_cap; os_cap="$(tr '[:lower:]' '[:upper:]' <<< "${os:0:1}")${os:1}"
   local buf_arch; case "$arch" in amd64) buf_arch="x86_64" ;; arm64) buf_arch="arm64" ;; esac
   local bin="buf-${os_cap}-${buf_arch}"

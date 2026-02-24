@@ -1,23 +1,23 @@
 # Tool checksums for bootstrap-tools.sh integrity verification
-# Generated: 2025-12-22T19:21:15Z
+# Generated: 2026-02-24T03:27:07Z
 # Format: <tool_name>-<version>-<platform> <sha256_checksum>
 # To update: cargo xtask tools-checksum-update
 
 
-# oasdiff v1.11.7 - OpenAPI Specification diff tool
+# oasdiff v1.11.10 - OpenAPI Specification diff tool
 # GitHub releases: https://github.com/oasdiff/oasdiff/releases
-oasdiff-1.11.7-linux-amd64 0f3f70ea55dc50b8cae7e495f26f1bfc7e9eded1114990241f0b00f89950ba55
-oasdiff-1.11.7-linux-arm64 6a7394ec7129ccfbfcf4837db8426198b79e933341a96adf53b0f33498846b45
-oasdiff-1.11.7-darwin-all 2aab1d33f3b9f9c28cd6c1977f63b1aa43ba83f9ab94887f3097fcac152d20a1
-oasdiff-1.11.7-windows-amd64 5327e48ac9926d8b63c63b6768b7599369f890aac768780621a8315fd3beb2cb
+oasdiff-1.11.10-linux-amd64 6d5880efb3422401f14c85f3c1347d6c41de3e4ea7c04e3ca7dc5c8f452e8ba2
+oasdiff-1.11.10-linux-arm64 94237963efe056bbe550a2afe7e2d9ebb3b359c98eaa4f631351cafba83d1cba
+oasdiff-1.11.10-darwin-all ba9a8a8ec9c905a4e0d05e8b32ad2caa2f41bd5ebb0d16910502a934c561252c
+oasdiff-1.11.10-windows-amd64 f594b870dc7883330759781e1a2b3d684c56814862ae0fdedf8a238d42126f68
 
-# buf v1.45.0 - Protocol Buffers toolchain
+# buf v1.50.0 - Protocol Buffers toolchain
 # GitHub releases: https://github.com/bufbuild/buf/releases
-buf-1.45.0-linux-amd64 79d530a1b9690f2e78a103bbfcaeaa129fe7b51887a10ee64a44c16d67e4837b
-buf-1.45.0-linux-arm64 bd2c37ec7ba6b12fc3660a138d6bfbceb28493ceec202c098d15b84a530482d9
-buf-1.45.0-darwin-amd64 0542b62eabf4bdaa67d53b8a9aed43c8674d5e447a8c353e8e25cfcb358464cb
-buf-1.45.0-darwin-arm64 7c4131ee7af0e1a9c34acf6a7e5b7f82123bf44726f0eac1ccae31eed7ebb094
-buf-1.45.0-windows-amd64 656f38ecdd7633af9eaf8c15e0e15402c5a4852307515951fbcf7d91a37ff5b3
+buf-1.50.0-linux-amd64 154ea883ce098eac4fa106ff9ee4e4964bb97f809dd8ec9c34a432b466ce1494
+buf-1.50.0-linux-arm64 5d630153d4d7aae1093f964ed15f1391ce9288f2d4192a4818c18443b3565bbf
+buf-1.50.0-darwin-amd64 baaf26b33519fe4494729aab9b02cea449a134ed028b5c21d16ca42734da76e4
+buf-1.50.0-darwin-arm64 4a215517d0bcb37c47b9178e2668d7651a7fef9a482cef482227ad09796cdfc0
+buf-1.50.0-windows-amd64 e12d103361a5ace4f05b9e935873944a5334c441c9d457e78ef7fd6f2a86fd6f
 
 # atlas v0.31.0 - Database schema management tool
 # Release server: https://release.ariga.io/atlas/

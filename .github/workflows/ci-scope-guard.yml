@@ -146,16 +146,14 @@ jobs:
             echo '```' >> /tmp/summary.md
           fi
 
-          # Substitute variables
-          sed -i "s/\$FILE_COUNT/$FILE_COUNT/g" /tmp/summary.md
-          sed -i "s/\$SCOPE_DECLARED/$SCOPE_DECLARED/g" /tmp/summary.md
-          sed -i "s/\$DECLARED_TYPE/$DECLARED_TYPE/g" /tmp/summary.md
-          sed -i "s/\$WAIVED/$WAIVED/g" /tmp/summary.md
-          sed -i "s/\$RUNTIME_COUNT/$RUNTIME_COUNT/g" /tmp/summary.md
-          sed -i "s/\$DOCS_COUNT/$DOCS_COUNT/g" /tmp/summary.md
-          sed -i "s/\$SPECS_COUNT/$SPECS_COUNT/g" /tmp/summary.md
-          sed -i "s/\$POLICY_COUNT/$POLICY_COUNT/g" /tmp/summary.md
-          sed -i "s/\$CI_COUNT/$CI_COUNT/g" /tmp/summary.md
+          # Export variables for envsubst
+          export FILE_COUNT SCOPE_DECLARED DECLARED_TYPE WAIVED
+          export RUNTIME_COUNT DOCS_COUNT SPECS_COUNT POLICY_COUNT CI_COUNT
+
+          # Use envsubst to substitute variables safely
+          # We restrict substitution to specific variables to avoid accidental replacements
+          envsubst '$FILE_COUNT $SCOPE_DECLARED $DECLARED_TYPE $WAIVED $RUNTIME_COUNT $DOCS_COUNT $SPECS_COUNT $POLICY_COUNT $CI_COUNT' < /tmp/summary.md > /tmp/summary.md.tmp
+          mv /tmp/summary.md.tmp /tmp/summary.md
 
           cat /tmp/summary.md >> $GITHUB_STEP_SUMMARY
 
