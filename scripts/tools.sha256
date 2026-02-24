@@ -1,5 +1,5 @@
 # Tool checksums for bootstrap-tools.sh integrity verification
-# Generated: 2026-02-24T02:58:01Z
+# Generated: 2026-02-24T03:12:27Z
 # Format: <tool_name>-<version>-<platform> <sha256_checksum>
 # To update: cargo xtask tools-checksum-update
 
