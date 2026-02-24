@@ -27,21 +27,31 @@ jobs:
       - uses: Swatinem/rust-cache@v2
       - uses: cachix/install-nix-action@v31
       - name: Enable sccache
+        env:
+          ACTIONS_CACHE_URL: ${{ env.ACTIONS_CACHE_URL }}
+          ACTIONS_RUNTIME_TOKEN: ${{ env.ACTIONS_RUNTIME_TOKEN }}
         run: |
           if nix develop -c sh -c 'command -v sccache >/dev/null 2>&1'; then
             echo "RUSTC_WRAPPER=sccache" >> $GITHUB_ENV
             echo "SCCACHE_GHA_ENABLED=1" >> $GITHUB_ENV
             echo "CARGO_INCREMENTAL=0" >> $GITHUB_ENV
-            nix develop -c sccache --start-server || true
+            # Pass GH Actions runtime vars to nix environment
+            nix develop -c bash -c "export ACTIONS_CACHE_URL=\"$ACTIONS_CACHE_URL\"; export ACTIONS_RUNTIME_TOKEN=\"$ACTIONS_RUNTIME_TOKEN\"; sccache --start-server" || true
           else
             echo "Warning: sccache not found in nix devshell, skipping"
           fi
       - name: Run BDD tests via xtask
-        run: nix develop -c cargo run -p xtask -- bdd
+        env:
+          ACTIONS_CACHE_URL: ${{ env.ACTIONS_CACHE_URL }}
+          ACTIONS_RUNTIME_TOKEN: ${{ env.ACTIONS_RUNTIME_TOKEN }}
+        run: nix develop -c bash -c "export ACTIONS_CACHE_URL=\"$ACTIONS_CACHE_URL\"; export ACTIONS_RUNTIME_TOKEN=\"$ACTIONS_RUNTIME_TOKEN\"; cargo run -p xtask -- bdd"
 
       - name: Generate AC status (Rust)
         if: always()
-        run: nix develop -c cargo run -p xtask -- ac-status
+        env:
+          ACTIONS_CACHE_URL: ${{ env.ACTIONS_CACHE_URL }}
+          ACTIONS_RUNTIME_TOKEN: ${{ env.ACTIONS_RUNTIME_TOKEN }}
+        run: nix develop -c bash -c "export ACTIONS_CACHE_URL=\"$ACTIONS_CACHE_URL\"; export ACTIONS_RUNTIME_TOKEN=\"$ACTIONS_RUNTIME_TOKEN\"; cargo run -p xtask -- ac-status"
 
       - name: Publish BDD JUnit results
         if: always()

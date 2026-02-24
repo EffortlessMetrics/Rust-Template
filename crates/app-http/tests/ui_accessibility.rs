@@ -61,10 +61,18 @@ async fn test_coverage_controls_are_accessible() {
 
         // Check initial state
         if text.contains("All") {
-             assert_eq!(aria_pressed, Some("true"), "All filter should be pressed by default");
-             assert!(button.value().classes().any(|c| c == "active"), "All filter should have active class");
+            assert_eq!(aria_pressed, Some("true"), "All filter should be pressed by default");
+            assert!(
+                button.value().classes().any(|c| c == "active"),
+                "All filter should have active class"
+            );
         } else {
-             assert_eq!(aria_pressed, Some("false"), "Filter '{}' should not be pressed by default", text);
+            assert_eq!(
+                aria_pressed,
+                Some("false"),
+                "Filter '{}' should not be pressed by default",
+                text
+            );
         }
     }
 
@@ -73,9 +81,6 @@ async fn test_coverage_controls_are_accessible() {
     let input = document.select(&input_selector).next().expect("Search box should exist");
 
     let aria_label = input.value().attr("aria-label");
-    assert!(
-        aria_label.is_some(),
-        "Search input should have aria-label"
-    );
+    assert!(aria_label.is_some(), "Search input should have aria-label");
     assert_eq!(aria_label, Some("Search coverage data"), "Search input should have correct label");
 }
