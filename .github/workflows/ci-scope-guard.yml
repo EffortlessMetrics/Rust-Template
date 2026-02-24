@@ -111,7 +111,7 @@ jobs:
           # Check danger zones
           DANGER_FILES=$(cat /tmp/changed_files.txt | grep -E '^specs/spec_ledger\.yaml|^specs/devex_flows\.yaml|^policy/|^\.github/workflows/|^CLAUDE\.md|^CHANGELOG\.md' || true)
 
-          cat << 'EOF' > /tmp/summary.md
+          cat << EOF > /tmp/summary.md
           ## Scope Guard Summary
 
           | Metric | Value |
