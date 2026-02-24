@@ -7,7 +7,7 @@
 //! - AC coverage
 
 use axum::{extract::State, response::Html};
-use maud::{DOCTYPE, Markup, html};
+use maud::{DOCTYPE, Markup, html, PreEscaped};
 use spec_runtime::{ServiceMetadata, load_all_specs, load_service_metadata};
 use tracing::instrument;
 
@@ -135,7 +135,7 @@ where
                             "documentation, DevEx commands, and flows."
                         }
                         .mermaid data-uiid="graph.diagram" {
-                            (mermaid_diagram)
+                            (PreEscaped(mermaid_diagram))
                         }
                     }
                 }
@@ -287,8 +287,8 @@ fn layout(
                 title { (title) " - Rust-as-Spec Platform" }
                 script src="https://unpkg.com/htmx.org@1.9.10" {}
                 script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js" {}
-                style { (styles()) }
-                script { "mermaid.initialize({ startOnLoad: true, theme: 'default' });" }
+                style { (PreEscaped(styles())) }
+                script { (PreEscaped("mermaid.initialize({ startOnLoad: true, theme: 'default' });")) }
             }
             body {
                 header data-uiid=(format!("{}.header", page_id)) {
@@ -593,8 +593,8 @@ fn dashboard_content(
 /// Coverage page content markup.
 fn coverage_content() -> Markup {
     html! {
-        style { (coverage_styles()) }
-        script { (coverage_script()) }
+        style { (PreEscaped(coverage_styles())) }
+        script { (PreEscaped(coverage_script())) }
 
         .card data-uiid="coverage.summary" {
             h2 { "AC Coverage Summary" }
@@ -621,11 +621,11 @@ fn coverage_content() -> Markup {
         .card {
             h2 { "Acceptance Criteria Coverage" }
             .filter-controls data-uiid="coverage.filters" {
-                button #filter-all.filter-btn onclick="filterData('all')" { "All" }
-                button #filter-passing.filter-btn onclick="filterData('passing')" { "Passing" }
-                button #filter-failing.filter-btn onclick="filterData('failing')" { "Failing" }
-                button #filter-unknown.filter-btn onclick="filterData('unknown')" { "Unknown" }
-                input #search-box.search-box type="text" placeholder="Search by AC ID or title..."
+                button #filter-all.filter-btn onclick="filterData('all')" aria-pressed="true" aria-controls="coverage-tbody" { "All" }
+                button #filter-passing.filter-btn onclick="filterData('passing')" aria-pressed="false" aria-controls="coverage-tbody" { "Passing" }
+                button #filter-failing.filter-btn onclick="filterData('failing')" aria-pressed="false" aria-controls="coverage-tbody" { "Failing" }
+                button #filter-unknown.filter-btn onclick="filterData('unknown')" aria-pressed="false" aria-controls="coverage-tbody" { "Unknown" }
+                input #search-box.search-box type="text" placeholder="Search by AC ID or title..." aria-label="Search coverage data"
                     oninput="searchData()";
             }
 
@@ -766,8 +766,11 @@ fn coverage_script() -> &'static str {
         // Update active button
         document.querySelectorAll('.filter-btn').forEach(btn => {
             btn.classList.remove('active');
+            btn.setAttribute('aria-pressed', 'false');
         });
-        document.getElementById('filter-' + status).classList.add('active');
+        const activeBtn = document.getElementById('filter-' + status);
+        activeBtn.classList.add('active');
+        activeBtn.setAttribute('aria-pressed', 'true');
 
         // Apply filter
         applyFilters();
