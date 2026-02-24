@@ -39,7 +39,6 @@ Feature: Platform security and log hygiene
     And the response body should contain '"token_present":false'
 
   @AC-TPL-PLATFORM-AUTH-BASIC
-  @AC-TPL-PLATFORM-AUTH-NONE-ALIAS
   Scenario: None auth mode alias behaves as open mode for writes
     Given platform auth mode is "none" with token "ignored-token"
     And a task "TASK-AUTH-NONE-001" exists with status "Todo"

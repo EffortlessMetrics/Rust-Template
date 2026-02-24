@@ -400,7 +400,7 @@ cargo xtask ac-lint --strict --check-files
 ## Related Documentation
 
 - **[maintain-kernel.md](./maintain-kernel.md)** – Day-to-day kernel maintenance
-- **[CONTRIBUTING.md](../../CONTRIBUTING.md#9-how-to-evolve-the-kernel)** – Contributor guide kernel section
+- **[CONTRIBUTING.md](../../CONTRIBUTING.md#10-how-to-evolve-the-kernel)** – Contributor guide kernel section
 - **[KERNEL_SNAPSHOT.md](../KERNEL_SNAPSHOT.md)** – Current kernel baseline
 - **[RELEASE_PLAYBOOK.md](../RELEASE_PLAYBOOK.md)** – Full release process
 - **[ADR-0005](../adr/0005-xtask-selftest-single-gate.md)** – Selftest as single gate
