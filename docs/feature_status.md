@@ -182,9 +182,3 @@ These ACs describe test harness or example workspace behaviour. They are
 validated in CI, not by local selftest:
 
 - AC-TPL-EXAMPLE-FORK-BUILDS – `examples/fork-customization/` is validated and demonstrates fork extensibility patterns in CI, proving template provides a working foundation for forked services.
-
-## Unmapped Scenarios
-
-Scenarios referencing non-existent ACs:
-
-- Scenario 'None auth mode alias behaves as open mode for writes' references AC-TPL-PLATFORM-AUTH-NONE-ALIAS (in specs/features/platform_security.feature)
