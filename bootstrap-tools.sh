@@ -66,12 +66,22 @@ install_oasdiff() {
 
   local tarball="oasdiff_${v}_${os}_${oas_arch}.tar.gz"
   local url="https://github.com/oasdiff/oasdiff/releases/download/v${v}/${tarball}"
+  local tmp_archive="/tmp/${tarball}"
 
   if ! [ -x "$BIN/oasdiff" ]; then
     echo "Installing oasdiff ${v} from ${url}..."
-    curl -sSfL "$url" | tar -xz -C "$BIN" oasdiff
+    curl -sSfL "$url" -o "$tmp_archive"
+    sha_check "$tmp_archive" "oasdiff-${v}-${os}-${oas_arch}"
+
+    # Extract oasdiff binary from archive
+    if [[ "$tarball" == *.zip ]]; then
+      unzip -p "$tmp_archive" oasdiff > "$BIN/oasdiff"
+    else
+      tar -xzf "$tmp_archive" -C "$BIN" oasdiff
+    fi
+
     chmod +x "$BIN/oasdiff"
-    sha_check "$BIN/oasdiff" "oasdiff-${v}-${os}-${oas_arch}"
+    rm -f "$tmp_archive"
   fi
 }
 install_buf() {
