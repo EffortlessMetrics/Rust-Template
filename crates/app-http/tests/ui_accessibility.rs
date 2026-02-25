@@ -58,9 +58,13 @@ async fn test_coverage_filters_have_aria_pressed() {
         assert!(aria_pressed.is_some(), "Filter button {} should have aria-pressed attribute", id);
 
         if id == "filter-all" {
-             assert_eq!(aria_pressed, Some("true"), "All filter should be pressed by default");
+            assert_eq!(aria_pressed, Some("true"), "All filter should be pressed by default");
         } else {
-             assert_eq!(aria_pressed, Some("false"), "Other filters should not be pressed by default");
+            assert_eq!(
+                aria_pressed,
+                Some("false"),
+                "Other filters should not be pressed by default"
+            );
         }
     }
 }
@@ -94,5 +98,9 @@ async fn test_coverage_table_has_aria_live() {
     let selector = Selector::parse("#table-container").unwrap();
     let container = document.select(&selector).next().expect("Table container should exist");
 
-    assert_eq!(container.value().attr("aria-live"), Some("polite"), "Table container should have aria-live='polite'");
+    assert_eq!(
+        container.value().attr("aria-live"),
+        Some("polite"),
+        "Table container should have aria-live='polite'"
+    );
 }
