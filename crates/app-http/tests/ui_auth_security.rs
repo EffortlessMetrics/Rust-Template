@@ -1,6 +1,6 @@
 use adapters_spec_fs::FsGovernanceRepository;
-use app_http::{AppState, PlatformAuthConfig};
 use app_http::security::PlatformAuthMode;
+use app_http::{AppState, PlatformAuthConfig};
 use axum::{
     body::Body,
     http::{Request, StatusCode},
@@ -23,17 +23,14 @@ async fn test_ui_dashboard_protected_when_auth_enabled() {
 
     // Configure Basic Auth
     let mut settings = HashMap::new();
-    settings.insert("platform.auth_mode".to_string(), serde_yaml::Value::String("basic".to_string()));
+    settings
+        .insert("platform.auth_mode".to_string(), serde_yaml::Value::String("basic".to_string()));
 
     let mut secrets = HashMap::new();
     secrets.insert("platform.auth_token".to_string(), "test-token".to_string());
 
-    let config = ValidatedConfig {
-        env: Some("test".to_string()),
-        http_port: 8080,
-        settings,
-        secrets,
-    };
+    let config =
+        ValidatedConfig { env: Some("test".to_string()), http_port: 8080, settings, secrets };
 
     // Construct app state manually to bypass load_valid_config
     let platform_auth = PlatformAuthConfig {
@@ -55,7 +52,8 @@ async fn test_ui_dashboard_protected_when_auth_enabled() {
     let app = app_http::app_with_state(app_state);
 
     // 1. Request dashboard without auth header -> 401 Unauthorized
-    let response = app.clone()
+    let response = app
+        .clone()
         .oneshot(Request::builder().uri("/").body(Body::empty()).unwrap())
         .await
         .unwrap();
@@ -69,7 +67,7 @@ async fn test_ui_dashboard_protected_when_auth_enabled() {
                 .uri("/")
                 .header("x-platform-token", "test-token")
                 .body(Body::empty())
-                .unwrap()
+                .unwrap(),
         )
         .await
         .unwrap();
