@@ -46,13 +46,7 @@ where
                 None
             };
 
-            (
-                status_result,
-                tasks_result,
-                metadata,
-                policy_status,
-                feature_status,
-            )
+            (status_result, tasks_result, metadata, policy_status, feature_status)
         })
         .await
         .unwrap_or_else(|e| {
