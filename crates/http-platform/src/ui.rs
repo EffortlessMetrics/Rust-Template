@@ -21,11 +21,49 @@ pub async fn dashboard<S>(State(state): State<S>) -> Html<String>
 where
     S: super::PlatformState,
 {
-    let root = state.workspace_root();
-    let status_result = load_all_specs(root);
-    let tasks_result = spec_runtime::load_tasks(&root.join("specs/tasks.yaml"));
-    let metadata = load_service_metadata(&root.join("specs/service_metadata.yaml")).ok();
+    let root = state.workspace_root().to_path_buf();
     let config = super::config_summary(&state);
+
+    let (status_result, tasks_result, metadata, policy_status, feature_status) =
+        tokio::task::spawn_blocking(move || {
+            let status_result = load_all_specs(&root);
+            let tasks_result = spec_runtime::load_tasks(&root.join("specs/tasks.yaml"));
+            let metadata = load_service_metadata(&root.join("specs/service_metadata.yaml")).ok();
+
+            // Read policy status
+            let policy_path = root.join("target/policy_status.json");
+            let policy_status = std::fs::read_to_string(policy_path)
+                .ok()
+                .and_then(|content| serde_json::from_str::<serde_json::Value>(&content).ok())
+                .and_then(|v| v.get("summary").and_then(|s| s.as_str()).map(String::from))
+                .unwrap_or_else(|| "unknown".to_string());
+
+            // Read AC coverage from feature_status.md
+            let feature_status_path = root.join("docs/feature_status.md");
+            let feature_status = if feature_status_path.exists() {
+                std::fs::read_to_string(feature_status_path).ok()
+            } else {
+                None
+            };
+
+            (
+                status_result,
+                tasks_result,
+                metadata,
+                policy_status,
+                feature_status,
+            )
+        })
+        .await
+        .unwrap_or_else(|e| {
+            (
+                Err(spec_runtime::SpecError::Internal(format!("Task failed: {}", e))),
+                Err(spec_runtime::SpecError::Internal("Task failed".into())),
+                None,
+                "unknown".to_string(),
+                None,
+            )
+        });
 
     let content = match (status_result, tasks_result) {
         (Ok(specs), Ok(tasks_spec)) => {
@@ -38,30 +76,18 @@ where
                 .map(|r| r.acceptance_criteria.len())
                 .sum();
 
-            // Read policy status
-            let policy_path = root.join("target/policy_status.json");
-            let policy_status = std::fs::read_to_string(policy_path)
-                .ok()
-                .and_then(|content| serde_json::from_str::<serde_json::Value>(&content).ok())
-                .and_then(|v| v.get("summary").and_then(|s| s.as_str()).map(String::from))
-                .unwrap_or_else(|| "unknown".to_string());
-
             let status_class = match policy_status.as_str() {
                 "pass" => "status-pass",
                 "fail" => "status-fail",
                 _ => "status-unknown",
             };
 
-            // Read AC coverage from feature_status.md
-            let feature_status_path = root.join("docs/feature_status.md");
             let mut passing = 0;
             let mut failing = 0;
             let mut unknown = 0;
             let mut coverage_rows = 0;
 
-            if feature_status_path.exists()
-                && let Ok(content) = std::fs::read_to_string(feature_status_path)
-            {
+            if let Some(content) = feature_status {
                 for line in content.lines() {
                     if !line.starts_with("| AC-") {
                         continue;
