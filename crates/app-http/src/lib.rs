@@ -409,7 +409,7 @@ fn build_router(app_state: AppState) -> Router {
         .with_state(platform_state.clone())
         .merge(platform_router(platform_state.clone()))
         .route("/tasks/{id}/status", post(update_task_status::<AppState>))
-        .layer(axum::middleware::from_fn_with_state(auth_state, platform_auth_guard))
+        .layer(axum::middleware::from_fn_with_state(auth_state.clone(), platform_auth_guard))
         .with_state(platform_state.clone());
 
     let tasks_router =
@@ -427,7 +427,10 @@ fn build_router(app_state: AppState) -> Router {
         // Platform introspection endpoints
         .nest("/platform", platform_router)
         // Platform UI routes (at root level)
-        .merge(ui_router(platform_state))
+        .merge(
+            ui_router(platform_state)
+                .layer(axum::middleware::from_fn_with_state(auth_state, platform_auth_guard)),
+        )
         // Merge domain endpoints
         .merge(tasks_router)
         .merge(agent_router)
