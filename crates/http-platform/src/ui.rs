@@ -46,25 +46,13 @@ where
                 None
             };
 
-            (
-                status_result,
-                tasks_result,
-                metadata,
-                policy_status,
-                feature_status_content,
-            )
+            (status_result, tasks_result, metadata, policy_status, feature_status_content)
         })
         .await
         .unwrap_or_else(|e| {
             (
-                Err(spec_runtime::SpecError::Internal(format!(
-                    "Task join error: {}",
-                    e
-                ))),
-                Err(spec_runtime::SpecError::Internal(format!(
-                    "Task join error: {}",
-                    e
-                ))),
+                Err(spec_runtime::SpecError::Internal(format!("Task join error: {}", e))),
+                Err(spec_runtime::SpecError::Internal(format!("Task join error: {}", e))),
                 None,
                 "unknown".to_string(),
                 None,

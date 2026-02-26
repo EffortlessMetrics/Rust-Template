@@ -13,13 +13,17 @@ fn setup_full_workspace() -> (tempfile::TempDir, std::path::PathBuf) {
     // Create a larger spec file to simulate real workload (CPU bound parsing)
     let mut stories = String::new();
     for i in 0..500 {
-        stories.push_str(&format!("  - id: STORY-{}\n    title: Story {}\n    requirements: []\n", i, i));
+        stories.push_str(&format!(
+            "  - id: STORY-{}\n    title: Story {}\n    requirements: []\n",
+            i, i
+        ));
     }
 
     // spec_ledger.yaml
     fs::write(
         specs_dir.join("spec_ledger.yaml"),
-        format!(r#"
+        format!(
+            r#"
 metadata:
   schema_version: "1.0.0"
   template_version: "1.0.0"
@@ -27,7 +31,9 @@ metadata:
   description: "Test Ledger"
 stories:
 {}
-"#, stories),
+"#,
+            stories
+        ),
     )
     .unwrap();
 
@@ -127,5 +133,9 @@ async fn dashboard_does_not_block_executor() {
     // The timer (200ms) will be delayed by that amount.
     // So 200ms + 250ms = 450ms.
     // Let's assert it must be < 300ms.
-    assert!(timer_elapsed < Duration::from_millis(300), "Timer took too long: {:?}, executor was likely blocked", timer_elapsed);
+    assert!(
+        timer_elapsed < Duration::from_millis(300),
+        "Timer took too long: {:?}, executor was likely blocked",
+        timer_elapsed
+    );
 }
