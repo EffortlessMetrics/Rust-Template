@@ -15,10 +15,7 @@ use tower::ServiceExt;
 use app_http::app_with_workspace_root;
 
 /// All env vars that these tests read/write.
-const TEST_ENV_VARS: &[&str] = &[
-    "CORS_ENABLED",
-    "CORS_ALLOWED_ORIGINS",
-];
+const TEST_ENV_VARS: &[&str] = &["CORS_ENABLED", "CORS_ALLOWED_ORIGINS"];
 
 fn clean_test_env() -> EnvVarGuard {
     let guard = EnvVarGuard::new(TEST_ENV_VARS);
@@ -71,10 +68,7 @@ async fn test_cors_vary_header_present() {
     let response = app.oneshot(request).await.expect("handler should respond");
 
     // Should have Vary: Origin header
-    assert!(
-        response.headers().contains_key("vary"),
-        "Response missing Vary header"
-    );
+    assert!(response.headers().contains_key("vary"), "Response missing Vary header");
     let vary = response.headers().get("vary").unwrap().to_str().unwrap();
     assert!(
         vary.to_lowercase().contains("origin"),
@@ -102,10 +96,7 @@ async fn test_cors_vary_header_present_preflight() {
     let response = app.oneshot(request).await.expect("handler should respond");
 
     // Should have Vary: Origin header
-    assert!(
-        response.headers().contains_key("vary"),
-        "Preflight response missing Vary header"
-    );
+    assert!(response.headers().contains_key("vary"), "Preflight response missing Vary header");
     let vary = response.headers().get("vary").unwrap().to_str().unwrap();
     assert!(
         vary.to_lowercase().contains("origin"),
