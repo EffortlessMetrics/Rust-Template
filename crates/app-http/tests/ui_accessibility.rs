@@ -47,17 +47,12 @@ async fn test_coverage_search_has_label() {
 
     // Find the search input
     let selector = Selector::parse("#search-box").unwrap();
-    let search_input = document
-        .select(&selector)
-        .next()
-        .expect("Search input #search-box should exist");
+    let search_input =
+        document.select(&selector).next().expect("Search input #search-box should exist");
 
     // Check for aria-label
     let aria_label = search_input.value().attr("aria-label");
-    assert!(
-        aria_label.is_some(),
-        "Search input should have aria-label attribute"
-    );
+    assert!(aria_label.is_some(), "Search input should have aria-label attribute");
     assert_eq!(
         aria_label.unwrap(),
         "Search acceptance criteria",
@@ -86,17 +81,17 @@ async fn test_coverage_filters_have_aria_pressed() {
         let id = button.value().id().unwrap_or("unknown");
         let aria_pressed = button.value().attr("aria-pressed");
 
-        assert!(
-            aria_pressed.is_some(),
-            "Filter button #{} should have aria-pressed attribute",
-            id
-        );
+        assert!(aria_pressed.is_some(), "Filter button #{} should have aria-pressed attribute", id);
 
         // specifically verify initial state
         if id == "filter-all" {
-             assert_eq!(aria_pressed.unwrap(), "true", "All filter should be pressed by default");
+            assert_eq!(aria_pressed.unwrap(), "true", "All filter should be pressed by default");
         } else {
-             assert_eq!(aria_pressed.unwrap(), "false", "Other filters should not be pressed by default");
+            assert_eq!(
+                aria_pressed.unwrap(),
+                "false",
+                "Other filters should not be pressed by default"
+            );
         }
     }
 }
