@@ -812,20 +812,60 @@ fn coverage_script() -> &'static str {
                               ac.status === 'failing' ? 'status-fail' :
                               'status-unknown';
 
-            const scenarios = ac.scenarios.length > 0
-                ? '<ul class="scenario-list">' +
-                  ac.scenarios.map(s => '<li>' + s + '</li>').join('') +
-                  '</ul>'
-                : '<em style="color: #999;">No scenarios</em>';
+            // Create cells using DOM API to prevent XSS
 
-            row.innerHTML = `
-                <td><code>${ac.id}</code></td>
-                <td>${ac.title}</td>
-                <td><span class="status-badge ${badgeClass}">${statusBadge}</span></td>
-                <td><code>${ac.story}</code></td>
-                <td><code>${ac.requirement}</code></td>
-                <td>${scenarios}</td>
-            `;
+            // 1. ID
+            const idCell = document.createElement('td');
+            const idCode = document.createElement('code');
+            idCode.textContent = ac.id;
+            idCell.appendChild(idCode);
+            row.appendChild(idCell);
+
+            // 2. Title
+            const titleCell = document.createElement('td');
+            titleCell.textContent = ac.title;
+            row.appendChild(titleCell);
+
+            // 3. Status
+            const statusCell = document.createElement('td');
+            const statusSpan = document.createElement('span');
+            statusSpan.className = 'status-badge ' + badgeClass;
+            statusSpan.textContent = statusBadge;
+            statusCell.appendChild(statusSpan);
+            row.appendChild(statusCell);
+
+            // 4. Story
+            const storyCell = document.createElement('td');
+            const storyCode = document.createElement('code');
+            storyCode.textContent = ac.story;
+            storyCell.appendChild(storyCode);
+            row.appendChild(storyCell);
+
+            // 5. Requirement
+            const reqCell = document.createElement('td');
+            const reqCode = document.createElement('code');
+            reqCode.textContent = ac.requirement;
+            reqCell.appendChild(reqCode);
+            row.appendChild(reqCell);
+
+            // 6. Scenarios
+            const scenariosCell = document.createElement('td');
+            if (ac.scenarios && ac.scenarios.length > 0) {
+                const ul = document.createElement('ul');
+                ul.className = 'scenario-list';
+                ac.scenarios.forEach(s => {
+                    const li = document.createElement('li');
+                    li.textContent = s;
+                    ul.appendChild(li);
+                });
+                scenariosCell.appendChild(ul);
+            } else {
+                const em = document.createElement('em');
+                em.style.color = '#999';
+                em.textContent = 'No scenarios';
+                scenariosCell.appendChild(em);
+            }
+            row.appendChild(scenariosCell);
 
             tbody.appendChild(row);
         });
