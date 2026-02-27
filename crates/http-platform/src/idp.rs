@@ -215,7 +215,9 @@ where
     let snapshot = tokio::task::spawn_blocking(move || generate_snapshot(&root))
         .await
         .map_err(|e| HttpError::internal_error(format!("Task join error: {}", e)))?
-        .map_err(|e| HttpError::internal_error(format!("Failed to generate IDP snapshot: {}", e)))?;
+        .map_err(|e| {
+            HttpError::internal_error(format!("Failed to generate IDP snapshot: {}", e))
+        })?;
 
     Ok(Json(snapshot))
 }

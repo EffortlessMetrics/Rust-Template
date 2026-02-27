@@ -147,12 +147,7 @@ where
         (specs_result, metadata)
     })
     .await
-    .unwrap_or_else(|_| {
-        (
-            Err(spec_runtime::SpecError::Internal("Task join error".into())),
-            None,
-        )
-    });
+    .unwrap_or_else(|_| (Err(spec_runtime::SpecError::Internal("Task join error".into())), None));
 
     let content = match specs_result {
         Ok(specs) => match spec_runtime::build_graph(&specs.ledger, &specs.devex, &specs.docs) {
