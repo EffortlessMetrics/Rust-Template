@@ -21,9 +21,7 @@ pub mod forensic;
 pub mod friction;
 pub mod gate;
 pub mod git;
-pub mod historian;
 pub mod quality;
-pub mod run_id;
 pub mod telemetry;
 pub mod timeline;
 pub mod validate;
@@ -33,18 +31,18 @@ pub use forensic::{ReceiptsForensicArgs, run_forensic};
 pub use friction::{FrictionCategory, categorize_friction_zones};
 pub use gate::{ReceiptsGateArgs, run_gate};
 pub use git::{get_current_commit_full, get_current_commit_short, get_ref_sha};
-pub use historian::{
-    HistorianQualityAppendix, extract_historian_appendix_json as extract_historian_appendix,
-    parse_historian_appendix,
-};
 pub use quality::{ReceiptsQualityArgs, run_quality};
-pub use run_id::generate_run_id;
 pub use telemetry::{ReceiptsTelemetryArgs, run_telemetry};
 pub use timeline::{
     FRICTION_EXCLUDE_PATTERNS, ReceiptsTimelineArgs, normalize_path_separators, run_timeline,
     should_exclude_path,
 };
 pub use validate::{ReceiptsValidateArgs, run_validate};
+pub use xtask_historian::{
+    HistorianQualityAppendix, extract_historian_appendix_json as extract_historian_appendix,
+    parse_historian_appendix,
+};
+pub use xtask_run_id::generate_run_id;
 
 #[cfg(test)]
 mod tests {

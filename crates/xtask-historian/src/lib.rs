@@ -1,9 +1,8 @@
 //! Historian LLM integration for quality receipts.
 //!
-//! This module provides utilities for:
+//! This crate provides utilities for:
 //! - Extracting JSON appendix from historian markdown output
 //! - Parsing historian appendix into structured types
-//! - Handling historian command execution
 
 use anyhow::{Context, Result};
 
@@ -63,7 +62,6 @@ pub fn extract_historian_appendix_json(markdown: &str) -> Result<&str> {
 
     let json = markdown[after_start..end].trim();
 
-    // Guardrail: refuse fenced blocks
     if json.starts_with("```") {
         return Err(anyhow::anyhow!("Historian appendix must be raw JSON (not in a code fence)"));
     }

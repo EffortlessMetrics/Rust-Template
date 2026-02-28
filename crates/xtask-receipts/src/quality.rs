@@ -9,14 +9,14 @@ use gov_receipts::{
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
-use crate::historian::{
-    HistorianQualityAppendix, extract_historian_appendix_json, parse_historian_appendix,
-};
 use crate::timeline::{
     count_loc_changes, count_modules_touched, count_unsafe_delta, find_hotspots, get_diff_stat,
     get_modules_touched_names,
 };
 use crate::{generate_run_id, get_current_commit_full, get_current_commit_short, get_ref_sha};
+use xtask_historian::{
+    HistorianQualityAppendix, extract_historian_appendix_json, parse_historian_appendix,
+};
 
 /// Arguments for the receipts-quality command
 #[derive(Debug, Clone)]
