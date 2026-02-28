@@ -195,6 +195,7 @@ dependencies = [
  "http-middleware",
  "http-origin-policy",
  "http-platform",
+ "http-task-status-parser",
  "http-tasks",
  "http-todos",
  "jsonwebtoken",
