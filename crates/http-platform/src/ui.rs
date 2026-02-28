@@ -626,6 +626,7 @@ fn coverage_content() -> Markup {
                 button #filter-failing.filter-btn onclick="filterData('failing')" { "Failing" }
                 button #filter-unknown.filter-btn onclick="filterData('unknown')" { "Unknown" }
                 input #search-box.search-box type="text" placeholder="Search by AC ID or title..."
+                    aria-label="Search coverage"
                     oninput="searchData()";
             }
 
