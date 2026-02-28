@@ -13,6 +13,7 @@
 
 use axum::{extract::Request, http::HeaderValue, middleware::Next, response::Response};
 use serde::{Deserialize, Serialize};
+use spec_runtime::ValidatedConfig;
 
 /// Security headers configuration
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -67,6 +68,102 @@ impl Default for SecurityHeadersConfig {
 }
 
 impl SecurityHeadersConfig {
+    /// Create security headers config from environment variables or validated config.
+    pub fn from_sources(config: Option<&ValidatedConfig>) -> Self {
+        let enabled = std::env::var("SECURITY_HEADERS_ENABLED")
+            .ok()
+            .and_then(|v| v.parse::<bool>().ok())
+            .or_else(|| {
+                config
+                    .and_then(|cfg| cfg.settings.get("security_headers.enabled"))
+                    .and_then(|v| v.as_bool())
+            })
+            .unwrap_or(true);
+
+        if !enabled {
+            return Self { enabled: false, ..Default::default() };
+        }
+
+        let is_development =
+            std::env::var("ENV").unwrap_or_else(|_| "development".to_string()).to_lowercase()
+                == "development";
+
+        let content_security_policy = std::env::var("CSP_HEADER")
+            .ok()
+            .or_else(|| get_setting_string(config, "security_headers.content_security_policy"))
+            .or_else(|| {
+                if is_development {
+                    Some("default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' http://localhost:*; style-src 'self' 'unsafe-inline' http://localhost:*; img-src 'self' data: https: http://localhost:*; font-src 'self' data:; connect-src 'self' ws://localhost:* wss://localhost:* http://localhost:*; frame-ancestors 'none';".to_string())
+                } else {
+                    Some("default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self'; frame-ancestors 'none';".to_string())
+                }
+            });
+
+        let x_frame_options = std::env::var("X_FRAME_OPTIONS")
+            .ok()
+            .or_else(|| get_setting_string(config, "security_headers.x_frame_options"))
+            .unwrap_or_else(|| "DENY".to_string());
+
+        let x_content_type_options = std::env::var("X_CONTENT_TYPE_OPTIONS")
+            .ok()
+            .or_else(|| get_setting_string(config, "security_headers.x_content_type_options"))
+            .unwrap_or_else(|| "nosniff".to_string());
+
+        let x_xss_protection = std::env::var("X_XSS_PROTECTION")
+            .ok()
+            .or_else(|| get_setting_string(config, "security_headers.x_xss_protection"))
+            .unwrap_or_else(|| "1; mode=block".to_string());
+
+        let strict_transport_security = if is_development {
+            None
+        } else {
+            std::env::var("STRICT_TRANSPORT_SECURITY")
+                .ok()
+                .or_else(|| {
+                    get_setting_string(config, "security_headers.strict_transport_security")
+                })
+                .or_else(|| Some("max-age=31536000; includeSubDomains; preload".to_string()))
+        };
+
+        let referrer_policy = std::env::var("REFERRER_POLICY")
+            .ok()
+            .or_else(|| get_setting_string(config, "security_headers.referrer_policy"))
+            .unwrap_or_else(|| "strict-origin-when-cross-origin".to_string());
+
+        let permissions_policy = std::env::var("PERMISSIONS_POLICY")
+            .ok()
+            .or_else(|| get_setting_string(config, "security_headers.permissions_policy"))
+            .or_else(|| Some("geolocation=(), microphone=(), camera=(), payment=(), usb=(), magnetometer=(), gyroscope=(), accelerometer=(), autoplay=(), encrypted-media=(), fullscreen=(), picture-in-picture=()".to_string()));
+
+        let cross_origin_embedder_policy = std::env::var("CROSS_ORIGIN_EMBEDDER_POLICY")
+            .ok()
+            .or_else(|| get_setting_string(config, "security_headers.cross_origin_embedder_policy"))
+            .or_else(|| Some("require-corp".to_string()));
+
+        let cross_origin_opener_policy = std::env::var("CROSS_ORIGIN_OPENER_POLICY")
+            .ok()
+            .or_else(|| get_setting_string(config, "security_headers.cross_origin_opener_policy"))
+            .or_else(|| Some("same-origin".to_string()));
+
+        let cross_origin_resource_policy = std::env::var("CROSS_ORIGIN_RESOURCE_POLICY")
+            .ok()
+            .or_else(|| get_setting_string(config, "security_headers.cross_origin_resource_policy"))
+            .unwrap_or_else(|| "same-origin".to_string());
+
+        Self {
+            content_security_policy,
+            x_frame_options,
+            x_content_type_options,
+            x_xss_protection,
+            strict_transport_security,
+            referrer_policy,
+            permissions_policy,
+            cross_origin_embedder_policy,
+            cross_origin_opener_policy,
+            cross_origin_resource_policy,
+            enabled: true,
+        }
+    }
     /// Create development-friendly configuration
     ///
     /// Disables HSTS and uses more permissive CSP for local development.
@@ -158,6 +255,10 @@ impl SecurityHeadersConfig {
             response.headers_mut().insert("Cross-Origin-Resource-Policy", header_value);
         }
     }
+}
+
+fn get_setting_string(config: Option<&ValidatedConfig>, key: &str) -> Option<String> {
+    config.and_then(|cfg| cfg.settings.get(key)).and_then(|v| v.as_str()).map(|s| s.to_string())
 }
 
 /// Security headers middleware layer

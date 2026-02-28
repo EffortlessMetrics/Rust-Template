@@ -17,6 +17,6 @@ pub mod cors;
 pub mod request_id;
 pub mod security_headers;
 
-pub use cors::{CorsConfig, cors_layer};
-pub use request_id::{REQUEST_ID_HEADER, RequestId, request_id_layer};
+pub use cors::{CorsConfig, cors_layer, cors_middleware};
+pub use request_id::{REQUEST_ID_HEADER, RequestId, request_id_layer, request_id_middleware};
 pub use security_headers::{SecurityHeadersConfig, security_headers_layer};

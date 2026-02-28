@@ -18,6 +18,7 @@ use axum::{
     response::Response,
 };
 use serde::{Deserialize, Serialize};
+use spec_runtime::ValidatedConfig;
 
 /// CORS configuration structure
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -63,6 +64,7 @@ impl Default for CorsConfig {
                 "authorization".to_string(),
                 "content-type".to_string(),
                 "x-request-id".to_string(),
+                "x-platform-token".to_string(),
                 "accept".to_string(),
                 "origin".to_string(),
             ],
@@ -75,6 +77,58 @@ impl Default for CorsConfig {
 }
 
 impl CorsConfig {
+    /// Create CORS config from environment variables or validated config.
+    pub fn from_sources(config: Option<&ValidatedConfig>) -> Self {
+        let enabled = std::env::var("CORS_ENABLED")
+            .ok()
+            .and_then(|v| v.parse::<bool>().ok())
+            .or_else(|| {
+                config.and_then(|cfg| cfg.settings.get("cors.enabled")).and_then(|v| v.as_bool())
+            })
+            .unwrap_or(true);
+
+        if !enabled {
+            return Self { enabled: false, ..Default::default() };
+        }
+
+        let allowed_origins = parse_string_list_env("CORS_ALLOWED_ORIGINS")
+            .or_else(|| parse_string_list_config(config, "cors.allowed_origins"))
+            .unwrap_or_else(|| Self::default().allowed_origins);
+
+        let allowed_methods = parse_string_list_env("CORS_ALLOWED_METHODS")
+            .or_else(|| parse_string_list_config(config, "cors.allowed_methods"))
+            .unwrap_or_else(|| Self::default().allowed_methods);
+
+        let allowed_headers = parse_string_list_env("CORS_ALLOWED_HEADERS")
+            .or_else(|| parse_string_list_config(config, "cors.allowed_headers"))
+            .unwrap_or_else(|| Self::default().allowed_headers);
+
+        let allow_credentials = std::env::var("CORS_ALLOW_CREDENTIALS")
+            .ok()
+            .and_then(|v| v.parse::<bool>().ok())
+            .or_else(|| {
+                config
+                    .and_then(|cfg| cfg.settings.get("cors.allow_credentials"))
+                    .and_then(|v| v.as_bool())
+            })
+            .unwrap_or(false);
+
+        let max_age =
+            std::env::var("CORS_MAX_AGE").ok().and_then(|v| v.parse::<u64>().ok()).or_else(|| {
+                config.and_then(|cfg| cfg.settings.get("cors.max_age")).and_then(|v| v.as_u64())
+            });
+
+        Self {
+            allowed_origins,
+            allowed_methods,
+            allowed_headers,
+            exposed_headers: vec!["x-request-id".to_string()],
+            allow_credentials,
+            max_age,
+            enabled: true,
+        }
+    }
+
     /// Create development-friendly configuration
     ///
     /// Allows localhost origins with permissive settings.
@@ -111,6 +165,21 @@ impl CorsConfig {
             .iter()
             .any(|allowed| allowed.to_lowercase() == header.to_lowercase() || allowed == "*")
     }
+}
+
+fn parse_string_list_env(env_var: &str) -> Option<Vec<String>> {
+    std::env::var(env_var)
+        .ok()
+        .map(|v| v.split(',').map(|s| s.trim().to_string()).filter(|s| !s.is_empty()).collect())
+}
+
+fn parse_string_list_config(config: Option<&ValidatedConfig>, key: &str) -> Option<Vec<String>> {
+    config.and_then(|cfg| cfg.settings.get(key)).and_then(|v| match v {
+        serde_yaml::Value::Sequence(arr) => {
+            Some(arr.iter().filter_map(|v| v.as_str()).map(|s| s.to_string()).collect())
+        }
+        _ => None,
+    })
 }
 
 /// CORS middleware layer
