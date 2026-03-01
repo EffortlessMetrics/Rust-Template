@@ -292,9 +292,13 @@ mod tests {
         };
 
         let request_headers = vec!["authorization"];
-        let response = handle_preflight(&config, Some("https://example.com".to_string()), &request_headers);
+        let response =
+            handle_preflight(&config, Some("https://example.com".to_string()), &request_headers);
 
-        assert_eq!(response.headers().get(axum::http::header::ACCESS_CONTROL_ALLOW_ORIGIN).unwrap(), "https://example.com");
+        assert_eq!(
+            response.headers().get(axum::http::header::ACCESS_CONTROL_ALLOW_ORIGIN).unwrap(),
+            "https://example.com"
+        );
         assert_eq!(response.headers().get(axum::http::header::VARY).unwrap(), "Origin");
     }
 }
