@@ -735,7 +735,8 @@ fn coverage_styles() -> &'static str {
 
 /// Coverage page JavaScript.
 fn coverage_script() -> maud::PreEscaped<&'static str> {
-    maud::PreEscaped(r#"
+    maud::PreEscaped(
+        r#"
     let currentFilter = 'all';
     let allData = [];
 
@@ -833,5 +834,6 @@ fn coverage_script() -> maud::PreEscaped<&'static str> {
             tbody.appendChild(row);
         });
     }
-    "#)
+    "#,
+    )
 }
