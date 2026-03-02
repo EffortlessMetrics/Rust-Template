@@ -6,6 +6,7 @@
 
 use http_origin_boundary::has_label_boundary_before_suffix;
 use http_origin_parser::parse_http_origin;
+use http_origin_wildcard::parse_subdomain_wildcard_rule;
 
 /// Returns `true` when `origin` matches a subdomain wildcard rule.
 ///
@@ -18,37 +19,29 @@ use http_origin_parser::parse_http_origin;
 /// - Root domain does not match wildcard (`https://example.com` is rejected)
 /// - Boundaryless suffix does not match (`https://notexample.com` is rejected)
 pub fn matches_subdomain_wildcard_rule(allowed: &str, origin: &str) -> bool {
-    let Some(allowed_origin) = parse_http_origin(allowed) else {
+    let Some(wildcard_rule) = parse_subdomain_wildcard_rule(allowed) else {
         return false;
     };
-
-    let Some(wildcard_domain) = allowed_origin.authority.strip_prefix("*.") else {
-        return false;
-    };
-
-    if wildcard_domain.is_empty() {
-        return false;
-    }
 
     let Some(origin_parts) = parse_http_origin(origin) else {
         return false;
     };
 
-    if allowed_origin.scheme != origin_parts.scheme {
+    if wildcard_rule.scheme != origin_parts.scheme {
         return false;
     }
 
     let origin_authority = origin_parts.authority;
 
-    if origin_authority.len() <= wildcard_domain.len() {
+    if origin_authority.len() <= wildcard_rule.wildcard_domain.len() {
         return false;
     }
 
-    if !origin_authority.ends_with(wildcard_domain) {
+    if !origin_authority.ends_with(wildcard_rule.wildcard_domain) {
         return false;
     }
 
-    has_label_boundary_before_suffix(origin_authority, wildcard_domain)
+    has_label_boundary_before_suffix(origin_authority, wildcard_rule.wildcard_domain)
 }
 
 #[cfg(test)]

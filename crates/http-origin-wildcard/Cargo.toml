@@ -1,13 +1,11 @@
 [dependencies]
-http-origin-boundary = { path = "../http-origin-boundary" }
 http-origin-parser = { path = "../http-origin-parser" }
-http-origin-wildcard = { path = "../http-origin-wildcard" }
 
 [dev-dependencies]
 proptest.workspace = true
 
 [package]
-name = "http-origin-subdomain"
+name = "http-origin-wildcard"
 publish = false
 authors.workspace = true
 documentation.workspace = true
@@ -17,6 +15,6 @@ license.workspace = true
 repository.workspace = true
 rust-version.workspace = true
 version.workspace = true
-description = "Subdomain wildcard matcher primitive for CORS origin allowlist rules"
+description = "Wildcard-origin rule parser primitive for CORS origin allowlist rules"
 categories = ["web-programming", "web-programming::http-server"]
-keywords = ["cors", "origin", "subdomain"]
+keywords = ["cors", "origin", "wildcard"]
