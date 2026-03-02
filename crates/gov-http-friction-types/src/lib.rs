@@ -1,8 +1,9 @@
 //! Friction entry types for tracking development friction.
 
+use gov_model::YamlResource;
 use serde::{Deserialize, Serialize};
 
-/// Friction entry representing process/tooling issues
+/// Friction entry representing process/tooling issues.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FrictionEntry {
     pub id: String,
@@ -33,7 +34,7 @@ fn default_status() -> String {
     "open".to_string()
 }
 
-/// Context about when/how friction was discovered
+/// Context about when/how friction was discovered.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FrictionContext {
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -48,7 +49,7 @@ pub struct FrictionContext {
     pub commands_involved: Vec<String>,
 }
 
-/// Resolution details for a friction entry
+/// Resolution details for a friction entry.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Resolution {
     pub resolved_by: String,
@@ -61,7 +62,7 @@ pub struct Resolution {
     pub verification: Option<String>,
 }
 
-/// Related items linked to a friction entry
+/// Related items linked to a friction entry.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RelatedItems {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -70,6 +71,12 @@ pub struct RelatedItems {
     pub adrs: Vec<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub tasks: Vec<String>,
+}
+
+impl YamlResource for FrictionEntry {
+    fn id(&self) -> &str {
+        &self.id
+    }
 }
 
 #[cfg(test)]

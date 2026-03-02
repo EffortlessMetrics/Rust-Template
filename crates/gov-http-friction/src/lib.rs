@@ -17,7 +17,7 @@ use gov_http_core::{PlatformError, PlatformState, YamlResourceRepo};
 use serde::Serialize;
 
 // Re-export types from gov-http-types for backwards compatibility
-pub use gov_http_types::{FrictionContext, FrictionEntry, RelatedItems, Resolution};
+pub use gov_http_friction_types::{FrictionContext, FrictionEntry, RelatedItems, Resolution};
 
 #[derive(Debug, Serialize)]
 pub struct FrictionListResponse {

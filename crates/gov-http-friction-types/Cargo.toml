@@ -1,0 +1,21 @@
+[package]
+name = "gov-http-friction-types"
+publish = false
+authors.workspace = true
+documentation.workspace = true
+edition.workspace = true
+homepage.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+version.workspace = true
+
+description = "Shared friction artifact types for governance HTTP crates"
+
+[dependencies]
+gov-model.workspace = true
+serde.workspace = true
+
+[dev-dependencies]
+serde_json.workspace = true
+serde_yaml.workspace = true
