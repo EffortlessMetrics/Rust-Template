@@ -19,6 +19,7 @@ use axum::{
 };
 use chrono::Utc;
 use gov_http_core::{PlatformError, PlatformState, YamlResourceRepo};
+use question_id::next_question_id;
 use serde::{Deserialize, Serialize};
 
 // Re-export types from gov-http-types for backwards compatibility
@@ -209,17 +210,7 @@ where
             |_| true,
             |_, _| std::cmp::Ordering::Equal,
         )?;
-        let prefix = format!("Q-{}-", req.category.to_uppercase());
-        let max_num = existing
-            .data
-            .iter()
-            .filter(|q| q.id.starts_with(&prefix))
-            .filter_map(|q| q.id.strip_prefix(&prefix))
-            .filter_map(|s| s.parse::<u32>().ok())
-            .max()
-            .unwrap_or(0);
-
-        let id = format!("{} {:03}", prefix, max_num + 1).replace(' ', "");
+        let id = next_question_id(&req.category, existing.data.iter().map(|q| q.id.as_str()));
 
         let question = Question {
             id,

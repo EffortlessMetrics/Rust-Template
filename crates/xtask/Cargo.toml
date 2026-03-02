@@ -9,6 +9,7 @@ gov-xtask-core.workspace = true
 ignore = "0.4.25"
 jsonschema = "0.38.1"
 once_cell = "1.21.3"
+question-id = { package = "rust-as-spec-question-id", path = "../question-id" }
 quick-xml = "0.38.4"
 spec-runtime.workspace = true
 testing.workspace = true
