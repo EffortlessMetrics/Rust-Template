@@ -195,6 +195,7 @@ dependencies = [
  "http-middleware",
  "http-origin-policy",
  "http-platform",
+ "http-request-id",
  "http-tasks",
  "http-todos",
  "jsonwebtoken",
@@ -1900,6 +1901,7 @@ dependencies = [
  "axum",
  "http",
  "http-origin-policy",
+ "http-request-id",
  "serde",
  "serde_json",
  "tokio",
@@ -1980,6 +1982,14 @@ dependencies = [
  "tokio",
  "tower",
  "tracing",
+]
+
+[[package]]
+name = "http-request-id"
+version = "3.3.15"
+dependencies = [
+ "http",
+ "uuid",
 ]
 
 [[package]]

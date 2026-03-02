@@ -45,40 +45,9 @@ use axum::{
     response::Response,
 };
 use tracing::Span;
-use uuid::Uuid;
 
-/// Header name for request ID (standard practice)
-pub const REQUEST_ID_HEADER: &str = "X-Request-ID";
-
-/// Typed wrapper for request ID
-///
-/// This newtype provides type safety and makes it clear when we're working
-/// with request IDs vs arbitrary strings.
-#[derive(Debug, Clone)]
-pub struct RequestId(String);
-
-impl RequestId {
-    /// Create a new request ID from a string
-    pub fn new(id: String) -> Self {
-        Self(id)
-    }
-
-    /// Generate a new random request ID
-    pub fn generate() -> Self {
-        Self(Uuid::new_v4().to_string())
-    }
-
-    /// Get the request ID as a string slice
-    pub fn as_str(&self) -> &str {
-        &self.0
-    }
-}
-
-impl std::fmt::Display for RequestId {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.0)
-    }
-}
+pub use http_request_id::{REQUEST_ID_HEADER, RequestId};
+use http_request_id::from_headers_or_generate;
 
 /// Request ID middleware implementation
 ///
@@ -89,7 +58,7 @@ impl std::fmt::Display for RequestId {
 /// 4. Adds it to the response headers
 pub async fn request_id_middleware(mut request: Request, next: Next) -> Response {
     // Step 1: Extract request ID from header or generate a new one
-    let request_id = extract_or_generate_request_id(&request);
+    let request_id = from_headers_or_generate(request.headers());
 
     // Step 2: Record the request ID in the current tracing span
     // This ensures all logs within this request context include the request_id field
@@ -111,19 +80,10 @@ pub async fn request_id_middleware(mut request: Request, next: Next) -> Response
     response
 }
 
-/// Extract request ID from header or generate a new one
-fn extract_or_generate_request_id(request: &Request) -> RequestId {
-    request
-        .headers()
-        .get(REQUEST_ID_HEADER)
-        .and_then(|h| h.to_str().ok())
-        .map(|s| RequestId::new(s.to_string()))
-        .unwrap_or_else(RequestId::generate)
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
+    use uuid::Uuid;
 
     #[test]
     fn test_request_id_display() {
@@ -159,7 +119,7 @@ mod tests {
             .map_err(|_| ())
             .unwrap_or_else(|_| Request::builder().uri("/").body(Body::empty()).unwrap());
 
-        let request_id = extract_or_generate_request_id(&request);
+        let request_id = from_headers_or_generate(request.headers());
         // Should be a valid UUID since no header was provided
         assert!(Uuid::parse_str(request_id.as_str()).is_ok());
     }
@@ -176,7 +136,7 @@ mod tests {
             .body(Body::empty())
             .unwrap_or_else(|_| Request::builder().uri("/").body(Body::empty()).unwrap());
 
-        let request_id = extract_or_generate_request_id(&request);
+        let request_id = from_headers_or_generate(request.headers());
         assert_eq!(request_id.as_str(), test_id);
     }
 }
