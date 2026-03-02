@@ -10,6 +10,7 @@ http-auth-token = {path = "../http-auth-token"}
 http-core = {path = "../http-core"}
 http-metrics = {path = "../http-metrics"}
 http-middleware = {path = "../http-middleware"}
+http-request-id = {path = "../http-request-id"}
 http-origin-policy = {path = "../http-origin-policy"}
 http-platform = {path = "../http-platform"}
 http-tasks = {path = "../http-tasks"}
@@ -18,7 +19,6 @@ http-todos = {path = "../http-todos"}
 maud = "0.27.0"
 tokio = {features = ["net", "signal"], workspace = true}
 tower-http = {features = ["metrics", "trace"], version = "0.6.8"}
-uuid = {features = ["v4"], workspace = true}
 # Workspace dependencies
 anyhow.workspace = true
 # Web framework
