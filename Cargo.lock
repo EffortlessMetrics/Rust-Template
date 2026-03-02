@@ -2012,6 +2012,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "http-todo-validation"
+version = "3.3.15"
+dependencies = [
+ "serde",
+]
+
+[[package]]
 name = "http-todos"
 version = "3.3.15"
 dependencies = [
@@ -2019,6 +2026,7 @@ dependencies = [
  "http",
  "http-core",
  "http-errors",
+ "http-todo-validation",
  "platform-contract",
  "rust-as-spec-model",
  "serde",

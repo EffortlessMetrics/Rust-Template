@@ -10,6 +10,7 @@ platform-contract = {path = "../platform-contract"}
 axum.workspace = true
 http.workspace = true
 # Utilities
+http-todo-validation = {path = "../http-todo-validation"}
 serde.workspace = true
 tokio.workspace = true
 tracing.workspace = true
