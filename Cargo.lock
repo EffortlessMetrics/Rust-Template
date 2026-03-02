@@ -1882,6 +1882,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "http-idp-snapshot"
+version = "3.3.15"
+dependencies = [
+ "anyhow",
+ "chrono",
+ "serde",
+ "serde_json",
+ "serde_yaml_ng",
+]
+
+[[package]]
 name = "http-metrics"
 version = "3.3.15"
 dependencies = [
@@ -1970,6 +1981,7 @@ dependencies = [
  "http-auth",
  "http-core",
  "http-errors",
+ "http-idp-snapshot",
  "maud",
  "platform-contract",
  "rust-as-spec-runtime",
