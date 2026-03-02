@@ -24,6 +24,7 @@ anyhow.workspace = true
 # Web framework
 axum.workspace = true
 business-core.workspace = true
+doc-type-contract.workspace = true
 chrono.workspace = true
 gov-model.workspace = true
 # HTTP body utilities
