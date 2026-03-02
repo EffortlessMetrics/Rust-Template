@@ -28,24 +28,13 @@ use axum::{
     routing::{delete, get},
 };
 use http_errors::{ErrorCode, HttpError};
+use http_todo_validation::{
+    CreateTodoRequest, CreateTodoValidationError, MAX_TITLE_LENGTH, validate_create_todo_request,
+};
 use model::Todo;
-use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tokio::sync::RwLock;
 use tracing::{info, instrument, warn};
-
-// ============================================================================
-// Request DTOs
-// ============================================================================
-
-/// Request body for creating a new todo.
-#[derive(Debug, Deserialize, Serialize)]
-pub struct CreateTodoRequest {
-    /// Unique todo identifier
-    pub id: String,
-    /// Todo description
-    pub title: String,
-}
 
 // ============================================================================
 // State
@@ -128,29 +117,29 @@ where
 
     info!(id = %payload.id, title = %payload.title, "Creating todo");
 
-    // Validate required fields (empty string check)
-    if payload.id.is_empty() {
-        warn!("Missing required field: id");
-        return Err(HttpError::bad_request("Missing required field: id"));
-    }
-    if payload.title.is_empty() {
-        warn!("Missing required field: title");
-        return Err(HttpError::bad_request("Missing required field: title"));
-    }
-
-    // Validate title length (max 256 characters)
-    const MAX_TITLE_LENGTH: usize = 256;
-    if payload.title.len() > MAX_TITLE_LENGTH {
-        warn!(
-            title_len = payload.title.len(),
-            max_len = MAX_TITLE_LENGTH,
-            "Title exceeds maximum length"
-        );
-        return Err(HttpError::new(
-            400,
-            ErrorCode::InvalidFormat,
-            format!("Title must not exceed {} characters", MAX_TITLE_LENGTH),
-        ));
+    if let Err(error) = validate_create_todo_request(&payload) {
+        return Err(match error {
+            CreateTodoValidationError::MissingId => {
+                warn!("Missing required field: id");
+                HttpError::bad_request("Missing required field: id")
+            }
+            CreateTodoValidationError::MissingTitle => {
+                warn!("Missing required field: title");
+                HttpError::bad_request("Missing required field: title")
+            }
+            CreateTodoValidationError::TitleTooLong { actual, .. } => {
+                warn!(
+                    title_len = actual,
+                    max_len = MAX_TITLE_LENGTH,
+                    "Title exceeds maximum length"
+                );
+                HttpError::new(
+                    400,
+                    ErrorCode::InvalidFormat,
+                    format!("Title must not exceed {} characters", MAX_TITLE_LENGTH),
+                )
+            }
+        });
     }
 
     // Check for duplicate ID and add in one operation
