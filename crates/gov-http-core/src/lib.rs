@@ -1,13 +1,12 @@
 pub mod error;
 pub mod extractors;
-pub mod pagination;
 pub mod repo;
 pub mod state;
 
 pub use error::{ErrorResponse, PlatformError};
 pub use extractors::RequestId;
+pub use gov_http_pagination::{PaginatedResponse, Pagination, PaginationParams};
 pub use gov_model::YamlResource;
-pub use pagination::{PaginatedResponse, Pagination, PaginationParams};
 pub use repo::YamlResourceRepo;
 pub use state::PlatformState;
 
