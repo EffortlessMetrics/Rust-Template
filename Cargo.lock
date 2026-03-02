@@ -1955,6 +1955,15 @@ version = "3.3.15"
 dependencies = [
  "http-origin-boundary",
  "http-origin-parser",
+ "http-origin-wildcard",
+ "proptest",
+]
+
+[[package]]
+name = "http-origin-wildcard"
+version = "3.3.15"
+dependencies = [
+ "http-origin-parser",
  "proptest",
 ]
 
