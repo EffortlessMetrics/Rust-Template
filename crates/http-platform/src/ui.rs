@@ -7,7 +7,7 @@
 //! - AC coverage
 
 use axum::{extract::State, response::Html};
-use maud::{DOCTYPE, Markup, html, PreEscaped};
+use maud::{DOCTYPE, Markup, PreEscaped, html};
 use spec_runtime::{ServiceMetadata, load_all_specs, load_service_metadata};
 use tracing::instrument;
 
@@ -735,7 +735,8 @@ fn coverage_styles() -> &'static str {
 
 /// Coverage page JavaScript.
 fn coverage_script() -> PreEscaped<&'static str> {
-    PreEscaped(r#"
+    PreEscaped(
+        r#"
     let currentFilter = 'all';
     let allData = [];
 
@@ -834,5 +835,6 @@ fn coverage_script() -> PreEscaped<&'static str> {
         });
     }
 
-    "#)
+    "#,
+    )
 }
