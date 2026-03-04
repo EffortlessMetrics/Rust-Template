@@ -173,12 +173,16 @@ async fn debug_info<S>(State(state): State<S>) -> Json<DebugInfo>
 where
     S: PlatformState,
 {
-    let root = state.workspace_root();
+    let root = state.workspace_root().to_path_buf();
 
-    let template_version = load_service_metadata(&root.join("specs/service_metadata.yaml"))
-        .ok()
-        .and_then(|m| m.template_version)
-        .unwrap_or_else(|| "unknown".to_string());
+    // Optimize: Offload file I/O and parsing to a thread pool
+    let template_version = tokio::task::spawn_blocking(move || {
+        load_service_metadata(&root.join("specs/service_metadata.yaml"))
+            .ok()
+            .and_then(|m| m.template_version)
+            .unwrap_or_else(|| "unknown".to_string())
+    })
+    .await.unwrap();
 
     Json(DebugInfo { kernel_version: env!("CARGO_PKG_VERSION").to_string(), template_version })
 }
@@ -207,11 +211,57 @@ async fn get_status<S>(State(state): State<S>) -> Result<Json<PlatformStatusResp
 where
     S: PlatformState,
 {
-    let root = state.workspace_root();
-    let specs = load_all_specs(root)
-        .map_err(|e| HttpError::internal_error(format!("Failed to load specs: {}", e)))?;
-    let tasks_spec = spec_runtime::load_tasks(&root.join("specs/tasks.yaml"))
-        .map_err(|e| HttpError::internal_error(format!("Failed to load tasks: {}", e)))?;
+    let root = state.workspace_root().to_path_buf();
+
+    // Optimize: Offload blocking I/O and parsing to a thread pool
+    type StatusDataResult = (
+        Result<spec_runtime::AllSpecs, spec_runtime::SpecError>,
+        Result<spec_runtime::TasksSpec, spec_runtime::SpecError>,
+        idp::AcCoverage,
+        QuestionCounts,
+        FrictionCounts,
+        ForkCounts,
+        String,
+        Result<spec_runtime::ServiceMetadata, spec_runtime::SpecError>,
+    );
+
+    let (
+        specs_res,
+        tasks_res,
+        ac_cov,
+        question_counts,
+        friction_counts,
+        fork_counts,
+        policy_status,
+        metadata_res,
+    ) = tokio::task::spawn_blocking::<_, StatusDataResult>(move || {
+        let specs = load_all_specs(&root);
+        let tasks = spec_runtime::load_tasks(&root.join("specs/tasks.yaml"));
+        let ac_cov = idp::load_ac_coverage(&root);
+        let questions = load_question_counts(&root);
+        let friction = load_friction_counts(&root);
+        let forks = load_fork_counts(&root);
+
+        // Read policy status from last policy-test run
+        let policy_path = root.join("target/policy_status.json");
+        let policy = if let Ok(content) = fs::read_to_string(policy_path) {
+            serde_json::from_str::<PolicyStatusReport>(&content)
+                .map(|r| r.summary)
+                .unwrap_or_else(|_| "unknown".to_string())
+        } else {
+            "unknown".to_string()
+        };
+
+        let metadata = load_service_metadata(&root.join("specs/service_metadata.yaml"));
+
+        (specs, tasks, ac_cov, questions, friction, forks, policy, metadata)
+    })
+    .await.map_err(|e| HttpError::internal_error(format!("Thread pool error: {}", e)))?;
+
+    let specs =
+        specs_res.map_err(|e| HttpError::internal_error(format!("Failed to load specs: {}", e)))?;
+    let tasks_spec =
+        tasks_res.map_err(|e| HttpError::internal_error(format!("Failed to load tasks: {}", e)))?;
 
     let ledger_counts = LedgerCounts::new(
         specs.ledger.stories.len(),
@@ -239,34 +289,12 @@ where
     let task_breakdown = calculate_task_breakdown(&tasks_spec);
     let task_counts = TaskCounts::new(tasks_spec.tasks.len(), Some(task_breakdown));
 
-    // Load AC coverage from idp module
-    let ac_cov = idp::load_ac_coverage(root);
     let ac_coverage =
         Some(AcCoverageInfo::new(ac_cov.total, ac_cov.passing, ac_cov.failing, ac_cov.unknown));
 
-    // Load question counts
-    let question_counts = load_question_counts(root);
-
-    // Load friction counts
-    let friction_counts = load_friction_counts(root);
-
-    // Load fork counts
-    let fork_counts = load_fork_counts(root);
-
-    // Read policy status from last policy-test run
-    let policy_path = root.join("target/policy_status.json");
-    let policy_status = if let Ok(content) = fs::read_to_string(policy_path) {
-        serde_json::from_str::<PolicyStatusReport>(&content)
-            .map(|r| r.summary)
-            .unwrap_or_else(|_| "unknown".to_string())
-    } else {
-        "unknown".to_string()
-    };
-
-    let metadata =
-        load_service_metadata(&root.join("specs/service_metadata.yaml")).map_err(|e| {
-            HttpError::internal_error(format!("Failed to load service_metadata.yaml: {}", e))
-        })?;
+    let metadata = metadata_res.map_err(|e| {
+        HttpError::internal_error(format!("Failed to load service_metadata.yaml: {}", e))
+    })?;
 
     let template_version =
         metadata.template_version.clone().unwrap_or_else(|| env!("CARGO_PKG_VERSION").to_string());
