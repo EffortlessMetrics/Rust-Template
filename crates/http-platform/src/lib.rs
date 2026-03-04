@@ -182,7 +182,8 @@ where
             .and_then(|m| m.template_version)
             .unwrap_or_else(|| "unknown".to_string())
     })
-    .await.unwrap();
+    .await
+    .unwrap();
 
     Json(DebugInfo { kernel_version: env!("CARGO_PKG_VERSION").to_string(), template_version })
 }
@@ -256,7 +257,8 @@ where
 
         (specs, tasks, ac_cov, questions, friction, forks, policy, metadata)
     })
-    .await.map_err(|e| HttpError::internal_error(format!("Thread pool error: {}", e)))?;
+    .await
+    .map_err(|e| HttpError::internal_error(format!("Thread pool error: {}", e)))?;
 
     let specs =
         specs_res.map_err(|e| HttpError::internal_error(format!("Failed to load specs: {}", e)))?;
