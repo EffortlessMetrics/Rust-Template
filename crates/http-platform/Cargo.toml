@@ -1,4 +1,5 @@
 [dependencies]
+tokio = { workspace = true }
 # Governance HTTP
 gov-http = {path = "../gov-http"}
 # Core HTTP types
