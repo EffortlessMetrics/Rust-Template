@@ -249,6 +249,9 @@ pub async fn cors_middleware(
 
     let mut response = next.run(request).await;
 
+    // Add Vary header to prevent cache poisoning
+    response.headers_mut().append(header::VARY, HeaderValue::from_static("origin"));
+
     // Add CORS headers to regular responses
     if let Some(origin) = origin
         && state.cors_config.is_origin_allowed(&origin)
@@ -291,11 +294,21 @@ fn handle_preflight(
     if !config.is_origin_allowed(&origin) {
         return Response::builder()
             .status(StatusCode::FORBIDDEN)
+            .header(header::VARY, "origin")
             .body(axum::body::Body::empty())
             .unwrap();
     }
 
     let mut response = Response::new(axum::body::Body::empty());
+
+    // Add Vary header to prevent cache poisoning
+    response.headers_mut().append(header::VARY, HeaderValue::from_static("origin"));
+    response
+        .headers_mut()
+        .append(header::VARY, HeaderValue::from_static("access-control-request-method"));
+    response
+        .headers_mut()
+        .append(header::VARY, HeaderValue::from_static("access-control-request-headers"));
 
     // Set allowed origin
     if let Ok(header_value) = HeaderValue::from_str(&origin) {
