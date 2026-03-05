@@ -19,75 +19,105 @@ use tracing::instrument;
 #[instrument(skip(state))]
 pub async fn dashboard<S>(State(state): State<S>) -> Html<String>
 where
-    S: super::PlatformState,
+    S: super::PlatformState + Send + Sync + 'static,
 {
-    let root = state.workspace_root();
-    let status_result = load_all_specs(root);
-    let tasks_result = spec_runtime::load_tasks(&root.join("specs/tasks.yaml"));
-    let metadata = load_service_metadata(&root.join("specs/service_metadata.yaml")).ok();
+    let root = state.workspace_root().to_path_buf();
     let config = super::config_summary(&state);
 
-    let content = match (status_result, tasks_result) {
-        (Ok(specs), Ok(tasks_spec)) => {
-            let _req_count: usize = specs.ledger.stories.iter().map(|s| s.requirements.len()).sum();
-            let ac_count: usize = specs
+    let (
+        status_result,
+        tasks_result,
+        metadata,
+        policy_status,
+        passing,
+        failing,
+        unknown,
+        _ac_count,
+    ) = tokio::task::spawn_blocking(move || {
+        let status_result = load_all_specs(&root);
+        let tasks_result = spec_runtime::load_tasks(&root.join("specs/tasks.yaml"));
+        let metadata = load_service_metadata(&root.join("specs/service_metadata.yaml")).ok();
+
+        let ac_count = if let Ok(specs) = &status_result {
+            specs
                 .ledger
                 .stories
                 .iter()
                 .flat_map(|s| s.requirements.iter())
                 .map(|r| r.acceptance_criteria.len())
-                .sum();
+                .sum()
+        } else {
+            0
+        };
 
-            // Read policy status
-            let policy_path = root.join("target/policy_status.json");
-            let policy_status = std::fs::read_to_string(policy_path)
-                .ok()
-                .and_then(|content| serde_json::from_str::<serde_json::Value>(&content).ok())
-                .and_then(|v| v.get("summary").and_then(|s| s.as_str()).map(String::from))
-                .unwrap_or_else(|| "unknown".to_string());
+        // Read policy status
+        let policy_path = root.join("target/policy_status.json");
+        let policy_status = std::fs::read_to_string(policy_path)
+            .ok()
+            .and_then(|content| serde_json::from_str::<serde_json::Value>(&content).ok())
+            .and_then(|v| v.get("summary").and_then(|s| s.as_str()).map(String::from))
+            .unwrap_or_else(|| "unknown".to_string());
 
+        // Read AC coverage from feature_status.md
+        let feature_status_path = root.join("docs/feature_status.md");
+        let mut passing = 0;
+        let mut failing = 0;
+        let mut unknown = 0;
+        let mut coverage_rows = 0;
+
+        if feature_status_path.exists()
+            && let Ok(content) = std::fs::read_to_string(feature_status_path)
+        {
+            for line in content.lines() {
+                if !line.starts_with("| AC-") {
+                    continue;
+                }
+
+                coverage_rows += 1;
+
+                if line.contains("[PASS]") {
+                    passing += 1;
+                } else if line.contains("[FAIL]") {
+                    failing += 1;
+                } else if line.contains("[UNKNOWN]") {
+                    unknown += 1;
+                }
+            }
+        }
+
+        // If no coverage data, count all ACs as unknown
+        if coverage_rows == 0 {
+            unknown = ac_count;
+        } else {
+            let accounted_for = passing + failing + unknown;
+            if accounted_for < ac_count {
+                unknown += ac_count - accounted_for;
+            }
+        }
+
+        (status_result, tasks_result, metadata, policy_status, passing, failing, unknown, ac_count)
+    })
+    .await
+    .unwrap_or_else(|_| {
+        (
+            Err(spec_runtime::SpecError::Internal("spawn_blocking failed".into())),
+            Err(spec_runtime::SpecError::Internal("spawn_blocking failed".into())),
+            None,
+            "unknown".into(),
+            0,
+            0,
+            0,
+            0,
+        )
+    });
+
+    let content = match (status_result, tasks_result) {
+        (Ok(specs), Ok(tasks_spec)) => {
             let status_class = match policy_status.as_str() {
                 "pass" => "status-pass",
                 "fail" => "status-fail",
                 _ => "status-unknown",
             };
-
-            // Read AC coverage from feature_status.md
-            let feature_status_path = root.join("docs/feature_status.md");
-            let mut passing = 0;
-            let mut failing = 0;
-            let mut unknown = 0;
-            let mut coverage_rows = 0;
-
-            if feature_status_path.exists()
-                && let Ok(content) = std::fs::read_to_string(feature_status_path)
-            {
-                for line in content.lines() {
-                    if !line.starts_with("| AC-") {
-                        continue;
-                    }
-
-                    coverage_rows += 1;
-
-                    if line.contains("[PASS]") {
-                        passing += 1;
-                    } else if line.contains("[FAIL]") {
-                        failing += 1;
-                    } else if line.contains("[UNKNOWN]") {
-                        unknown += 1;
-                    }
-                }
-            }
-
-            // If no coverage data, count all ACs as unknown
-            if coverage_rows == 0 {
-                unknown = ac_count;
-            } else {
-                let accounted_for = passing + failing + unknown;
-                if accounted_for < ac_count {
-                    unknown += ac_count - accounted_for;
-                }
-            }
 
             dashboard_content(
                 specs,
@@ -117,12 +147,21 @@ where
 #[instrument(skip(state))]
 pub async fn graph_view<S>(State(state): State<S>) -> Html<String>
 where
-    S: super::PlatformState,
+    S: super::PlatformState + Send + Sync + 'static,
 {
-    let root = state.workspace_root();
-    let metadata = load_service_metadata(&root.join("specs/service_metadata.yaml")).ok();
+    let root = state.workspace_root().to_path_buf();
 
-    let content = match load_all_specs(root) {
+    let (metadata, specs_result) = tokio::task::spawn_blocking(move || {
+        let metadata = load_service_metadata(&root.join("specs/service_metadata.yaml")).ok();
+        let specs_result = load_all_specs(&root);
+        (metadata, specs_result)
+    })
+    .await
+    .unwrap_or_else(|_| {
+        (None, Err(spec_runtime::SpecError::Internal("spawn_blocking failed".into())))
+    });
+
+    let content = match specs_result {
         Ok(specs) => match spec_runtime::build_graph(&specs.ledger, &specs.devex, &specs.docs) {
             Ok(graph) => {
                 let mermaid_diagram = graph.to_mermaid();
@@ -166,13 +205,24 @@ where
 #[instrument(skip(state))]
 pub async fn flows_view<S>(State(state): State<S>) -> Html<String>
 where
-    S: super::PlatformState,
+    S: super::PlatformState + Send + Sync + 'static,
 {
-    let root = state.workspace_root();
-    let metadata = load_service_metadata(&root.join("specs/service_metadata.yaml")).ok();
+    let root = state.workspace_root().to_path_buf();
 
-    let flows_result = spec_runtime::load_devex_flows(&root.join("specs/devex_flows.yaml"));
-    let tasks_result = spec_runtime::load_tasks(&root.join("specs/tasks.yaml"));
+    let (metadata, flows_result, tasks_result) = tokio::task::spawn_blocking(move || {
+        let metadata = load_service_metadata(&root.join("specs/service_metadata.yaml")).ok();
+        let flows_result = spec_runtime::load_devex_flows(&root.join("specs/devex_flows.yaml"));
+        let tasks_result = spec_runtime::load_tasks(&root.join("specs/tasks.yaml"));
+        (metadata, flows_result, tasks_result)
+    })
+    .await
+    .unwrap_or_else(|_| {
+        (
+            None,
+            Err(spec_runtime::SpecError::Internal("spawn_blocking failed".into())),
+            Err(spec_runtime::SpecError::Internal("spawn_blocking failed".into())),
+        )
+    });
 
     let content = match (flows_result, tasks_result) {
         (Ok(devex), Ok(tasks_spec)) => {
@@ -242,10 +292,16 @@ where
 #[instrument(skip(state))]
 pub async fn coverage_view<S>(State(state): State<S>) -> Html<String>
 where
-    S: super::PlatformState,
+    S: super::PlatformState + Send + Sync + 'static,
 {
-    let metadata =
-        load_service_metadata(&state.workspace_root().join("specs/service_metadata.yaml")).ok();
+    let root = state.workspace_root().to_path_buf();
+
+    let metadata = tokio::task::spawn_blocking(move || {
+        load_service_metadata(&root.join("specs/service_metadata.yaml")).ok()
+    })
+    .await
+    .unwrap_or(None);
+
     let content = coverage_content();
 
     Html(layout("AC Coverage", "coverage", &metadata, content).into_string())
