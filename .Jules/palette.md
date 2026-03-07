@@ -1,3 +1,3 @@
-## 2024-05-22 - Maud Conditional Attributes
-**Learning:** `maud` templates in this codebase require the `attr=[Option]` syntax for conditional attributes like `aria-current`. Standard `if` blocks cannot be used inside attribute lists.
-**Action:** Use `attr=[condition.then(|| "value")]` for all conditional ARIA attributes.
+## 2025-10-24 - Pre-rendering ARIA states to avoid FOUC
+**Learning:** In dynamically updated tables (like the AC Coverage table), relying on a `DOMContentLoaded` script to set initial accessibility states (like `.active` classes and `aria-pressed="true"`) causes a Flash of Unstyled Content (FOUC). In `maud` templates, these should be pre-rendered server-side. Additionally, container elements updating their content based on filters must use `aria-live="polite"` so screen readers are informed of table mutations.
+**Action:** Always write the default ARIA states (`aria-pressed`, `aria-expanded`, etc.) directly into the `maud` component markup and bind `aria-live` to regions that receive injected content after a fetch or filter operation.
