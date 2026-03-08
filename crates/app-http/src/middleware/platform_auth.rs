@@ -121,9 +121,11 @@ mod tests {
                 jwt_secret: jwt_secret.map(|s| s.to_string()),
             },
             cors_config: crate::middleware::CorsConfig::default(),
-            cached_security_headers: std::sync::Arc::new(crate::middleware::CachedSecurityHeaders::from(
-                &crate::middleware::SecurityHeadersConfig::default(),
-            )),
+            cached_security_headers: std::sync::Arc::new(
+                crate::middleware::CachedSecurityHeaders::from(
+                    &crate::middleware::SecurityHeadersConfig::default(),
+                ),
+            ),
             repo_context: gov_model::RepoContext::new(&workspace_root),
         }
     }

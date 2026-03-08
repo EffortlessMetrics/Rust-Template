@@ -100,8 +100,10 @@ impl From<&SecurityHeadersConfig> for CachedSecurityHeaders {
                 .cross_origin_opener_policy
                 .as_ref()
                 .and_then(|v| HeaderValue::from_str(v).ok()),
-            cross_origin_resource_policy: HeaderValue::from_str(&config.cross_origin_resource_policy)
-                .ok(),
+            cross_origin_resource_policy: HeaderValue::from_str(
+                &config.cross_origin_resource_policy,
+            )
+            .ok(),
             enabled: true,
         }
     }
@@ -200,7 +202,6 @@ impl SecurityHeadersConfig {
             ..Default::default()
         }
     }
-
 }
 
 /// Security headers middleware layer
