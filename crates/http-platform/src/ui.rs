@@ -7,7 +7,7 @@
 //! - AC coverage
 
 use axum::{extract::State, response::Html};
-use maud::{DOCTYPE, Markup, html, PreEscaped};
+use maud::{DOCTYPE, Markup, PreEscaped, html};
 use spec_runtime::{ServiceMetadata, load_all_specs, load_service_metadata};
 use tracing::instrument;
 
