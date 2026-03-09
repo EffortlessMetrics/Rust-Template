@@ -1,3 +1,3 @@
-## 2024-05-22 - Maud Conditional Attributes
-**Learning:** `maud` templates in this codebase require the `attr=[Option]` syntax for conditional attributes like `aria-current`. Standard `if` blocks cannot be used inside attribute lists.
-**Action:** Use `attr=[condition.then(|| "value")]` for all conditional ARIA attributes.
+## 2024-05-24 - Server-Rendered ARIA States to Prevent FOUC
+**Learning:** Setting initial ARIA states (like `aria-pressed="true"`) and active classes via a `DOMContentLoaded` script causes a Flash of Unstyled Content (FOUC) and briefly exposes an incorrect state to screen readers before the JS executes.
+**Action:** Always render the initial UI state (classes and ARIA attributes) directly on the server (e.g., in the Maud template) and only use JavaScript to handle subsequent user interactions.
