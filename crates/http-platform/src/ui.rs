@@ -749,8 +749,12 @@ fn coverage_script() -> &'static str {
         })
         .catch(err => {
             console.error('Failed to load coverage data:', err);
-            document.getElementById('table-container').innerHTML =
-                '<p style="color: red;">Failed to load coverage data. Please try again.</p>';
+            const container = document.getElementById('table-container');
+            container.innerHTML = '';
+            const p = document.createElement('p');
+            p.style.color = 'red';
+            p.textContent = 'Failed to load coverage data. Please try again.';
+            container.appendChild(p);
         });
 
     function updateSummary(summary) {
@@ -812,20 +816,53 @@ fn coverage_script() -> &'static str {
                               ac.status === 'failing' ? 'status-fail' :
                               'status-unknown';
 
-            const scenarios = ac.scenarios.length > 0
-                ? '<ul class="scenario-list">' +
-                  ac.scenarios.map(s => '<li>' + s + '</li>').join('') +
-                  '</ul>'
-                : '<em style="color: #999;">No scenarios</em>';
+            const tdId = document.createElement('td');
+            const codeId = document.createElement('code');
+            codeId.textContent = ac.id;
+            tdId.appendChild(codeId);
 
-            row.innerHTML = `
-                <td><code>${ac.id}</code></td>
-                <td>${ac.title}</td>
-                <td><span class="status-badge ${badgeClass}">${statusBadge}</span></td>
-                <td><code>${ac.story}</code></td>
-                <td><code>${ac.requirement}</code></td>
-                <td>${scenarios}</td>
-            `;
+            const tdTitle = document.createElement('td');
+            tdTitle.textContent = ac.title;
+
+            const tdStatus = document.createElement('td');
+            const spanStatus = document.createElement('span');
+            spanStatus.className = 'status-badge ' + badgeClass;
+            spanStatus.textContent = statusBadge;
+            tdStatus.appendChild(spanStatus);
+
+            const tdStory = document.createElement('td');
+            const codeStory = document.createElement('code');
+            codeStory.textContent = ac.story;
+            tdStory.appendChild(codeStory);
+
+            const tdReq = document.createElement('td');
+            const codeReq = document.createElement('code');
+            codeReq.textContent = ac.requirement;
+            tdReq.appendChild(codeReq);
+
+            const tdScenarios = document.createElement('td');
+            if (ac.scenarios.length > 0) {
+                const ul = document.createElement('ul');
+                ul.className = 'scenario-list';
+                ac.scenarios.forEach(s => {
+                    const li = document.createElement('li');
+                    li.textContent = s;
+                    ul.appendChild(li);
+                });
+                tdScenarios.appendChild(ul);
+            } else {
+                const em = document.createElement('em');
+                em.style.color = '#999';
+                em.textContent = 'No scenarios';
+                tdScenarios.appendChild(em);
+            }
+
+            row.appendChild(tdId);
+            row.appendChild(tdTitle);
+            row.appendChild(tdStatus);
+            row.appendChild(tdStory);
+            row.appendChild(tdReq);
+            row.appendChild(tdScenarios);
 
             tbody.appendChild(row);
         });
