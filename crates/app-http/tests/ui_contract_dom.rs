@@ -286,3 +286,40 @@ async fn test_active_nav_link_has_aria_current() {
         "Dashboard link on dashboard page should have aria-current='page'"
     );
 }
+
+/// @AC-TPL-PLATFORM-UI-ACCESSIBILITY: Filter buttons should have aria-pressed attributes
+#[tokio::test]
+async fn test_filter_buttons_have_aria_pressed() {
+    let workspace_root = test_workspace_root();
+    let repo = Arc::new(FsGovernanceRepository::new(workspace_root.clone()));
+    let app = app_with_workspace_root(repo, workspace_root.clone()).expect("valid config");
+
+    // Fetch coverage HTML
+    let html = fetch_html(app, "/ui/coverage").await;
+    let document = Html::parse_document(&html);
+
+    // Find the All filter button
+    let selector = Selector::parse("button#filter-all").unwrap();
+    let all_button = document.select(&selector).next().expect("All filter button should exist");
+
+    // Check for aria-pressed="true" on All
+    let aria_pressed = all_button.value().attr("aria-pressed");
+    assert_eq!(
+        aria_pressed,
+        Some("true"),
+        "All filter button should have aria-pressed='true' initially"
+    );
+
+    // Find the Passing filter button
+    let passing_selector = Selector::parse("button#filter-passing").unwrap();
+    let passing_button =
+        document.select(&passing_selector).next().expect("Passing filter button should exist");
+
+    // Check for aria-pressed="false" on Passing
+    let aria_pressed_passing = passing_button.value().attr("aria-pressed");
+    assert_eq!(
+        aria_pressed_passing,
+        Some("false"),
+        "Passing filter button should have aria-pressed='false' initially"
+    );
+}
