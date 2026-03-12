@@ -65,10 +65,7 @@ jobs:
       # protoc is required for adapters-grpc
       - name: Install protoc (Windows)
         if: runner.os == 'Windows'
-        uses: arduino/setup-protoc@v3
-        with:
-          version: "27.x"
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
+        run: choco install protoc
 
       - name: Build xtask (Tier 2 - Windows)
         if: runner.os == 'Windows'
