@@ -70,7 +70,7 @@ use http_middleware::{security_headers::SecurityHeadersConfig, security_headers:
 let config = SecurityHeadersConfig::production();
 let app = Router::new()
     .route("/api/endpoint", get(handler))
-    .layer(security_headers_layer(config));
+    .layer(security_headers_layer(config.cache()));
 ```
 
 Development configuration (more permissive):
@@ -91,7 +91,7 @@ use http_middleware::{
 
 let app = Router::new()
     .route("/api/endpoint", get(handler))
-    .layer(security_headers_layer(SecurityHeadersConfig::production()))
+    .layer(security_headers_layer(SecurityHeadersConfig::production().cache()))
     .layer(cors_layer(CorsConfig::development()))
     .layer(request_id_layer());
 ```
