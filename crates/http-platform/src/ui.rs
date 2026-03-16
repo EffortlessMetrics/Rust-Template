@@ -737,7 +737,8 @@ use maud::PreEscaped;
 
 /// Coverage page JavaScript.
 fn coverage_script() -> PreEscaped<&'static str> {
-    PreEscaped(r#"
+    PreEscaped(
+        r#"
     let currentFilter = 'all';
     let allData = [];
 
@@ -842,5 +843,6 @@ fn coverage_script() -> PreEscaped<&'static str> {
         activeBtn.classList.add('active');
         activeBtn.setAttribute('aria-pressed', 'true');
     });
-    "#)
+    "#,
+    )
 }
