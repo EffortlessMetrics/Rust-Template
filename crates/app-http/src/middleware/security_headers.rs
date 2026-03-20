@@ -280,10 +280,13 @@ impl SecurityHeadersConfig {
         let content_security_policy =
             self.content_security_policy.as_deref().and_then(|csp| HeaderValue::try_from(csp).ok());
         let x_frame_options = HeaderValue::try_from(self.x_frame_options.as_str()).ok();
-        let x_content_type_options = HeaderValue::try_from(self.x_content_type_options.as_str()).ok();
+        let x_content_type_options =
+            HeaderValue::try_from(self.x_content_type_options.as_str()).ok();
         let x_xss_protection = HeaderValue::try_from(self.x_xss_protection.as_str()).ok();
-        let strict_transport_security =
-            self.strict_transport_security.as_deref().and_then(|sts| HeaderValue::try_from(sts).ok());
+        let strict_transport_security = self
+            .strict_transport_security
+            .as_deref()
+            .and_then(|sts| HeaderValue::try_from(sts).ok());
         let referrer_policy = HeaderValue::try_from(self.referrer_policy.as_str()).ok();
         let permissions_policy =
             self.permissions_policy.as_deref().and_then(|pp| HeaderValue::try_from(pp).ok());
