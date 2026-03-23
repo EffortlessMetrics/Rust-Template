@@ -22,6 +22,13 @@ fn layout(
 
     let links = metadata.as_ref().map(|m| m.links.clone()).unwrap_or_default();
 
+    let nav_link = |href: &str, text: &str, target_id: &str| {
+        let is_active = page_id == target_id;
+        html! {
+            a href=(href) aria-current=[is_active.then(|| "page")] { (text) }
+        }
+    };
+
     html! {
         (DOCTYPE)
         html lang="en" {
@@ -74,6 +81,11 @@ fn layout(
                     }
                     nav a:hover {
                         text-decoration: underline;
+                    }
+                    nav a[aria-current="page"] {
+                        font-weight: 700;
+                        text-decoration: underline;
+                        color: #4c51bf;
                     }
                     .card {
                         background: white;
@@ -152,10 +164,10 @@ fn layout(
                     }
                 }
                 nav .container data-uiid=(format!("{}.nav", page_id)) {
-                    a href="/" { "Dashboard" }
-                    a href="/ui/graph" { "Graph" }
-                    a href="/ui/flows" { "Flows & Tasks" }
-                    a href="/ui/coverage" { "AC Coverage" }
+                    (nav_link("/", "Dashboard", "dashboard"))
+                    (nav_link("/ui/graph", "Graph", "graph"))
+                    (nav_link("/ui/flows", "Flows & Tasks", "flows"))
+                    (nav_link("/ui/coverage", "AC Coverage", "coverage"))
                     a href="/platform/status" target="_blank" { "API: Status" }
                     a href="/platform/graph" target="_blank" { "API: Graph" }
                     @if let Some(runbook) = links.get("kernel_contract") {
@@ -690,9 +702,16 @@ pub async fn coverage_view(State(state): State<AppState>) -> Html<String> {
 
                 // Update active button
                 document.querySelectorAll('.filter-btn').forEach(btn => {
-                    btn.classList.remove('active');
+                    if (btn) {
+                        btn.classList.remove('active');
+                        btn.setAttribute('aria-pressed', 'false');
+                    }
                 });
-                document.getElementById('filter-' + status).classList.add('active');
+                const activeBtn = document.getElementById('filter-' + status);
+                if (activeBtn) {
+                    activeBtn.classList.add('active');
+                    activeBtn.setAttribute('aria-pressed', 'true');
+                }
 
                 // Apply filter
                 applyFilters();
@@ -768,10 +787,6 @@ pub async fn coverage_view(State(state): State<AppState>) -> Html<String> {
                 });
             }
 
-            // Initialize with 'all' filter active
-            window.addEventListener('DOMContentLoaded', () => {
-                document.getElementById('filter-all').classList.add('active');
-            });
             "#))
         }
 
@@ -800,11 +815,11 @@ pub async fn coverage_view(State(state): State<AppState>) -> Html<String> {
         .card {
             h2 { "Acceptance Criteria Coverage" }
             .filter-controls data-uiid="coverage.filters" {
-                button #filter-all.filter-btn onclick="filterData('all')" { "All" }
-                button #filter-passing.filter-btn onclick="filterData('passing')" { "Passing" }
-                button #filter-failing.filter-btn onclick="filterData('failing')" { "Failing" }
-                button #filter-unknown.filter-btn onclick="filterData('unknown')" { "Unknown" }
-                input #search-box.search-box type="text" placeholder="Search by AC ID or title..."
+                button #filter-all.filter-btn.active aria-pressed="true" onclick="filterData('all')" { "All" }
+                button #filter-passing.filter-btn aria-pressed="false" onclick="filterData('passing')" { "Passing" }
+                button #filter-failing.filter-btn aria-pressed="false" onclick="filterData('failing')" { "Failing" }
+                button #filter-unknown.filter-btn aria-pressed="false" onclick="filterData('unknown')" { "Unknown" }
+                input #search-box.search-box type="search" aria-label="Search acceptance criteria" placeholder="Search by AC ID or title..."
                     oninput="searchData()";
             }
 
