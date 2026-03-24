@@ -57,3 +57,9 @@ allow = [
 ]
 # Ignore unlicensed workspace/path crates (they are marked publish = false)
 private = {ignore = true}
+
+# RUSTSEC-2026-0066 (astral-tokio-tar)
+# - Path: astral-tokio-tar -> testcontainers -> adapters-db-sqlx (dev-only)
+# - Risk: Insufficient validation of PAX extensions during extraction. Low risk as testcontainers only uses it for copying files to/from docker containers during tests.
+# - Action: Waiting for testcontainers to update to astral-tokio-tar >= 0.6.0
+ignore = [ "RUSTSEC-2026-0066" ]
