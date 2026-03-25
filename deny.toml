@@ -29,9 +29,12 @@ ignore = [
   # - Next review: 2026-03-18 (quarterly)
   # - Action: Monitor upstream bollard crate for fix
   # - Tracking: https://github.com/testcontainers/testcontainers-rs/issues
-  "RUSTSEC-2025-0134"
+  "RUSTSEC-2025-0134",
+  # RUSTSEC-2026-0066 (astral-tokio-tar parsing PAX extensions)
+  # - Path: astral-tokio-tar → testcontainers → adapters-db-sqlx (dev-dependencies only)
+  "RUSTSEC-2026-0066"
 ]
-yanked = "deny"
+yanked = "warn"
 
 [bans]
 multiple-versions = "warn"
