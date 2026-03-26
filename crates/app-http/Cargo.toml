@@ -38,7 +38,6 @@ telemetry.workspace = true
 tower.workspace = true
 tracing.workspace = true
 tracing-subscriber.workspace = true
-astral-tokio-tar = "0.6.0"
 
 [dev-dependencies]
 jsonwebtoken = {features = ["rust_crypto"], version = "10.2.0"}
