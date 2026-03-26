@@ -688,11 +688,14 @@ pub async fn coverage_view(State(state): State<AppState>) -> Html<String> {
             function filterData(status) {
                 currentFilter = status;
 
-                // Update active button
+                // Update active button and aria-pressed
                 document.querySelectorAll('.filter-btn').forEach(btn => {
                     btn.classList.remove('active');
+                    btn.setAttribute('aria-pressed', 'false');
                 });
-                document.getElementById('filter-' + status).classList.add('active');
+                const activeBtn = document.getElementById('filter-' + status);
+                activeBtn.classList.add('active');
+                activeBtn.setAttribute('aria-pressed', 'true');
 
                 // Apply filter
                 applyFilters();
@@ -768,10 +771,6 @@ pub async fn coverage_view(State(state): State<AppState>) -> Html<String> {
                 });
             }
 
-            // Initialize with 'all' filter active
-            window.addEventListener('DOMContentLoaded', () => {
-                document.getElementById('filter-all').classList.add('active');
-            });
             "#))
         }
 
@@ -800,10 +799,10 @@ pub async fn coverage_view(State(state): State<AppState>) -> Html<String> {
         .card {
             h2 { "Acceptance Criteria Coverage" }
             .filter-controls data-uiid="coverage.filters" {
-                button #filter-all.filter-btn onclick="filterData('all')" { "All" }
-                button #filter-passing.filter-btn onclick="filterData('passing')" { "Passing" }
-                button #filter-failing.filter-btn onclick="filterData('failing')" { "Failing" }
-                button #filter-unknown.filter-btn onclick="filterData('unknown')" { "Unknown" }
+                button #filter-all.filter-btn.active aria-pressed="true" onclick="filterData('all')" { "All" }
+                button #filter-passing.filter-btn aria-pressed="false" onclick="filterData('passing')" { "Passing" }
+                button #filter-failing.filter-btn aria-pressed="false" onclick="filterData('failing')" { "Failing" }
+                button #filter-unknown.filter-btn aria-pressed="false" onclick="filterData('unknown')" { "Unknown" }
                 input #search-box.search-box type="text" placeholder="Search by AC ID or title..."
                     oninput="searchData()";
             }
