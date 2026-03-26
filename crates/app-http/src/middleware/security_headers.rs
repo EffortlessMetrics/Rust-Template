@@ -309,6 +309,97 @@ impl SecurityHeadersConfig {
     }
 }
 
+/// Pre-parsed security headers for zero-allocation request handling
+#[derive(Clone, Debug)]
+pub struct CachedSecurityHeaders {
+    pub content_security_policy: Option<HeaderValue>,
+    pub x_frame_options: Option<HeaderValue>,
+    pub x_content_type_options: Option<HeaderValue>,
+    pub x_xss_protection: Option<HeaderValue>,
+    pub strict_transport_security: Option<HeaderValue>,
+    pub referrer_policy: Option<HeaderValue>,
+    pub permissions_policy: Option<HeaderValue>,
+    pub cross_origin_embedder_policy: Option<HeaderValue>,
+    pub cross_origin_opener_policy: Option<HeaderValue>,
+    pub cross_origin_resource_policy: Option<HeaderValue>,
+    pub enabled: bool,
+}
+
+impl SecurityHeadersConfig {
+    /// Create a cached representation of the security headers configuration
+    pub fn cache(&self) -> CachedSecurityHeaders {
+        CachedSecurityHeaders {
+            content_security_policy: self
+                .content_security_policy
+                .as_ref()
+                .and_then(|s| HeaderValue::from_str(s).ok()),
+            x_frame_options: HeaderValue::from_str(&self.x_frame_options).ok(),
+            x_content_type_options: HeaderValue::from_str(&self.x_content_type_options).ok(),
+            x_xss_protection: HeaderValue::from_str(&self.x_xss_protection).ok(),
+            strict_transport_security: self
+                .strict_transport_security
+                .as_ref()
+                .and_then(|s| HeaderValue::from_str(s).ok()),
+            referrer_policy: HeaderValue::from_str(&self.referrer_policy).ok(),
+            permissions_policy: self
+                .permissions_policy
+                .as_ref()
+                .and_then(|s| HeaderValue::from_str(s).ok()),
+            cross_origin_embedder_policy: self
+                .cross_origin_embedder_policy
+                .as_ref()
+                .and_then(|s| HeaderValue::from_str(s).ok()),
+            cross_origin_opener_policy: self
+                .cross_origin_opener_policy
+                .as_ref()
+                .and_then(|s| HeaderValue::from_str(s).ok()),
+            cross_origin_resource_policy: HeaderValue::from_str(&self.cross_origin_resource_policy)
+                .ok(),
+            enabled: self.enabled,
+        }
+    }
+}
+
+impl CachedSecurityHeaders {
+    /// Apply cached security headers to a response
+    pub fn apply_headers(&self, response: &mut Response) {
+        if !self.enabled {
+            return;
+        }
+
+        if let Some(hv) = &self.content_security_policy {
+            response.headers_mut().insert("content-security-policy", hv.clone());
+        }
+        if let Some(hv) = &self.x_frame_options {
+            response.headers_mut().insert("x-frame-options", hv.clone());
+        }
+        if let Some(hv) = &self.x_content_type_options {
+            response.headers_mut().insert("x-content-type-options", hv.clone());
+        }
+        if let Some(hv) = &self.x_xss_protection {
+            response.headers_mut().insert("x-xss-protection", hv.clone());
+        }
+        if let Some(hv) = &self.strict_transport_security {
+            response.headers_mut().insert("strict-transport-security", hv.clone());
+        }
+        if let Some(hv) = &self.referrer_policy {
+            response.headers_mut().insert("referrer-policy", hv.clone());
+        }
+        if let Some(hv) = &self.permissions_policy {
+            response.headers_mut().insert("permissions-policy", hv.clone());
+        }
+        if let Some(hv) = &self.cross_origin_embedder_policy {
+            response.headers_mut().insert("cross-origin-embedder-policy", hv.clone());
+        }
+        if let Some(hv) = &self.cross_origin_opener_policy {
+            response.headers_mut().insert("cross-origin-opener-policy", hv.clone());
+        }
+        if let Some(hv) = &self.cross_origin_resource_policy {
+            response.headers_mut().insert("cross-origin-resource-policy", hv.clone());
+        }
+    }
+}
+
 /// Security headers middleware implementation
 pub async fn security_headers_middleware(
     State(state): State<AppState>,
@@ -343,7 +434,7 @@ mod tests {
         let config = SecurityHeadersConfig::default();
         let mut response = Response::new(Body::empty());
 
-        config.apply_headers(&mut response);
+        config.cache().apply_headers(&mut response);
 
         let headers = response.headers();
 
@@ -365,7 +456,7 @@ mod tests {
         let config = SecurityHeadersConfig { enabled: false, ..Default::default() };
 
         let mut response = Response::new(Body::empty());
-        config.apply_headers(&mut response);
+        config.cache().apply_headers(&mut response);
 
         let headers = response.headers();
         assert!(!headers.contains_key("X-Frame-Options"));
