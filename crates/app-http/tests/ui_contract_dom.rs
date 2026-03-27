@@ -286,3 +286,45 @@ async fn test_active_nav_link_has_aria_current() {
         "Dashboard link on dashboard page should have aria-current='page'"
     );
 }
+
+/// @AC-TPL-PLATFORM-UI-ACCESSIBILITY: Coverage page has accessible controls
+#[tokio::test]
+async fn test_coverage_page_accessibility() {
+    let workspace_root = test_workspace_root();
+    let repo = Arc::new(FsGovernanceRepository::new(workspace_root.clone()));
+    let app = app_with_workspace_root(repo, workspace_root.clone()).expect("valid config");
+
+    // Fetch coverage HTML
+    let html = fetch_html(app, "/ui/coverage").await;
+    let document = Html::parse_document(&html);
+
+    // 1. Verify Search Input Label
+    let input_selector = Selector::parse("#search-box").unwrap();
+    let input = document.select(&input_selector).next().expect("Search box should exist");
+    assert_eq!(
+        input.value().attr("aria-label"),
+        Some("Search acceptance criteria"),
+        "Search box should have aria-label"
+    );
+
+    // 2. Verify Filter Button State
+    let filter_all_selector = Selector::parse("#filter-all").unwrap();
+    let filter_all = document.select(&filter_all_selector).next().expect("Filter All button should exist");
+    assert_eq!(
+        filter_all.value().attr("aria-pressed"),
+        Some("true"),
+        "Filter All button should be pressed by default"
+    );
+
+    // 3. Verify Table Headers Scope
+    let th_selector = Selector::parse("th").unwrap();
+    let ths: Vec<_> = document.select(&th_selector).collect();
+    assert!(!ths.is_empty(), "Table headers should exist");
+    for th in ths {
+        assert_eq!(
+            th.value().attr("scope"),
+            Some("col"),
+            "Table header should have scope='col'"
+        );
+    }
+}
