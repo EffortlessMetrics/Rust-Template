@@ -1,3 +1,7 @@
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 name: OpenAPI
 on:
   pull_request:

@@ -16,3 +16,5 @@ ignore = [
 ]
 # Warn about unmaintained crates but don't fail
 informational_warnings = ["unmaintained"]
+[advisories]
+ignore = ["RUSTSEC-2026-0066"]
