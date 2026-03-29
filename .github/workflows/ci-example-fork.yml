@@ -14,8 +14,6 @@ on:
     - cron: "0 7 * * *"
   workflow_dispatch: {}
 
-env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 jobs:
   example-fork:
     runs-on: ubuntu-latest
