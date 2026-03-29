@@ -3,6 +3,8 @@ on:
   pull_request:
     paths: ['docs/**', 'backstage/**', '.github/workflows/ci-docs.yml']
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 jobs:
   docs:
     runs-on: ubuntu-latest
