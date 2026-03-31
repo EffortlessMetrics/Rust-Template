@@ -7,6 +7,8 @@ ignore = [
   # RUSTSEC-2023-0071: rsa Marvin Attack - transitive from sqlx-mysql, no fix available
   # Timing side-channel; acceptable for this template. See ADR-0007.
   "RUSTSEC-2023-0071",
+  # RUSTSEC-2026-0066: astral-tokio-tar is locked by testcontainers, see ADR-0007
+  "RUSTSEC-2026-0066",
   # RUSTSEC-2025-0057: fxhash unmaintained - dev-only via selectors/scraper
   # Waiting for upstream selectors fix
   "RUSTSEC-2025-0057",
