@@ -22,6 +22,14 @@ ignore = [
   # - Action: Monitor RustCrypto/RSA for constant-time implementation
   # - Tracking: https://github.com/RustCrypto/RSA/issues/19
   "RUSTSEC-2023-0071",
+  # RUSTSEC-2026-0066 (astral-tokio-tar)
+  # - Path: testcontainers -> astral-tokio-tar (dev-dependencies only)
+  # - Risk: Parser differential, low severity. Waiting for upstream testcontainers bump.
+  "RUSTSEC-2026-0066",
+  # RUSTSEC-2026-0049 (rustls-webpki)
+  # - Path: testcontainers -> bollard -> rustls-webpki (dev-dependencies only)
+  # - Risk: Faulty revocation checking, limited impact. Waiting for upstream bollard bump.
+  "RUSTSEC-2026-0049",
   # RUSTSEC-2025-0134 (rustls-pemfile unmaintained)
   # - Path: bollard → testcontainers → adapters-db-sqlx (dev-dependencies only)
   # - Risk: Unmaintained dependency, not directly exploitable
