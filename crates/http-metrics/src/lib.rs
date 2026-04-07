@@ -133,6 +133,9 @@ mod tests {
 
     #[tokio::test]
     async fn metrics_handler_returns_metrics_text() {
+        // Ensure metric is incremented so it appears in the output reliably
+        HTTP_REQUESTS_TOTAL.with_label_values(&["GET", "/test-metrics", "200"]).inc();
+
         let response = metrics_handler().await.into_response();
         assert_eq!(response.status(), StatusCode::OK);
 
