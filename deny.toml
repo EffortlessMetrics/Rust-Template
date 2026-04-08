@@ -5,8 +5,7 @@
 # - Transitive: astral-tokio-tar -> testcontainers -> adapters-db-sqlx (dev-only)
 # - testcontainers locks astral-tokio-tar version
 # - Mitigation: dev-dependency only, no production exposure
-ignore = ["RUSTSEC-2026-0066"]
-
+#
 # RUSTSEC-2023-0071 (rsa Marvin Attack):
 # - Transitive: rsa → jsonwebtoken → app-http
 # - Timing sidechannel in RSA decryption (Marvin Attack)
@@ -20,6 +19,8 @@ ignore = ["RUSTSEC-2026-0066"]
 # - We use the latest testcontainers version
 #
 ignore = [
+  # RUSTSEC-2026-0066 (astral-tokio-tar PAX extension vulnerability)
+  "RUSTSEC-2026-0066",
   # RUSTSEC-2023-0071 (rsa Marvin Attack)
   # - Path: rsa → jsonwebtoken → app-http
   # - Risk: Timing sidechannel, mitigated by JWT-only usage (no raw RSA decryption)
