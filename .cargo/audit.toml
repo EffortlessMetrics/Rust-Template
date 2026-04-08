@@ -4,6 +4,11 @@
 [advisories]
 # See deny.toml and ADR-0007 for dependency security policy.
 ignore = [
+  # RUSTSEC-2026-0066 (astral-tokio-tar PAX extension vulnerability):
+  # - Transitive: astral-tokio-tar -> testcontainers -> adapters-db-sqlx (dev-only)
+  # - testcontainers locks astral-tokio-tar version
+  # - Mitigation: dev-dependency only, no production exposure
+  "RUSTSEC-2026-0066",
   # RUSTSEC-2023-0071: rsa Marvin Attack - transitive from sqlx-mysql, no fix available
   # Timing side-channel; acceptable for this template. See ADR-0007.
   "RUSTSEC-2023-0071",
