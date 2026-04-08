@@ -95,6 +95,7 @@ async fn test_cors_headers_present_in_response() {
 
     // Should have CORS headers when origin is provided
     assert!(response.headers().contains_key("access-control-allow-origin"));
+    assert_eq!(response.headers().get("vary").unwrap(), "origin");
 }
 
 #[tokio::test]
@@ -121,6 +122,7 @@ async fn test_cors_preflight_request_handling() {
     assert!(response.headers().contains_key("access-control-allow-origin"));
     assert!(response.headers().contains_key("access-control-allow-methods"));
     assert!(response.headers().contains_key("access-control-allow-headers"));
+    assert_eq!(response.headers().get("vary").unwrap(), "origin");
 }
 
 #[tokio::test]
