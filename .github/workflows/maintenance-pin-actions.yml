@@ -1,3 +1,5 @@
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 name: Maintenance – Pin Actions
 on:
   schedule: [{ cron: '0 8 1 * *' }]
