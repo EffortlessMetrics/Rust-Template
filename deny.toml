@@ -34,7 +34,12 @@ ignore = [
   # - Path: astral-tokio-tar → testcontainers (dev-dependencies only)
   # - Risk: Minor PAX extension parsing bug, low severity
   # - Action: Blocked waiting for testcontainers to update to >=0.6.0
-  "RUSTSEC-2026-0066"
+  "RUSTSEC-2026-0066",
+  # RUSTSEC-2026-0097 (rand)
+  # - Path: rand
+  # - Risk: Unsoundness in custom logger
+  # - Action: Ignoring as we don't use custom loggers with rand
+  "RUSTSEC-2026-0097"
 ]
 yanked = "deny"
 
