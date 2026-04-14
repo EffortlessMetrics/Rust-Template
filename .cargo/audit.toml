@@ -12,7 +12,12 @@ ignore = [
   "RUSTSEC-2025-0057",
   # RUSTSEC-2025-0134: rustls-pemfile unmaintained - dev-only via bollard/testcontainers
   # Waiting for upstream bollard fix
-  "RUSTSEC-2025-0134"
+  "RUSTSEC-2025-0134",
+  # RUSTSEC-2026-0066 (astral-tokio-tar)
+  # - Path: testcontainers -> astral-tokio-tar
+  # - Risk: Dev-dependencies only, insufficient validation of PAX extensions during extraction.
+  # - Action: Waiting for upstream testcontainers-rs update to use 0.6.0.
+  "RUSTSEC-2026-0066"
 ]
 # Warn about unmaintained crates but don't fail
 informational_warnings = ["unmaintained"]
