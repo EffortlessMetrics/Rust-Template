@@ -18,6 +18,10 @@ ignore = [
   # - Path: astral-tokio-tar → testcontainers → adapters-db-sqlx (dev-only)
   # - Risk: Low severity parser differential. Waiting for testcontainers update.
   "RUSTSEC-2026-0066",
+  # RUSTSEC-2026-0097 (rand unsound with custom logger)
+  # - Path: rand
+  # - Risk: Not applicable to our setup (no custom rng logger used)
+  "RUSTSEC-2026-0097",
   # RUSTSEC-2023-0071 (rsa Marvin Attack)
   # - Path: rsa → jsonwebtoken → app-http
   # - Risk: Timing sidechannel, mitigated by JWT-only usage (no raw RSA decryption)

@@ -15,7 +15,10 @@ ignore = [
   "RUSTSEC-2025-0134",
   # RUSTSEC-2026-0066: astral-tokio-tar parser differential - dev-only via bollard/testcontainers
   # Waiting for upstream testcontainers fix
-  "RUSTSEC-2026-0066"
+  "RUSTSEC-2026-0066",
+  # RUSTSEC-2026-0097: rand unsound with custom logger
+  # Not applicable, no custom logger
+  "RUSTSEC-2026-0097"
 ]
 # Warn about unmaintained crates but don't fail
 informational_warnings = ["unmaintained"]
