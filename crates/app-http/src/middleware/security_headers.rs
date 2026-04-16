@@ -251,9 +251,10 @@ impl SecurityHeadersConfig {
 
         // Content Security Policy
         if let Some(csp) = &self.content_security_policy
-            && let Ok(val) = HeaderValue::from_str(csp) {
-                headers.push((HeaderName::from_static("content-security-policy"), val));
-            }
+            && let Ok(val) = HeaderValue::from_str(csp)
+        {
+            headers.push((HeaderName::from_static("content-security-policy"), val));
+        }
 
         // X-Frame-Options
         if let Ok(val) = HeaderValue::from_str(&self.x_frame_options) {
@@ -272,9 +273,10 @@ impl SecurityHeadersConfig {
 
         // Strict-Transport-Security
         if let Some(sts) = &self.strict_transport_security
-            && let Ok(val) = HeaderValue::from_str(sts) {
-                headers.push((HeaderName::from_static("strict-transport-security"), val));
-            }
+            && let Ok(val) = HeaderValue::from_str(sts)
+        {
+            headers.push((HeaderName::from_static("strict-transport-security"), val));
+        }
 
         // Referrer-Policy
         if let Ok(val) = HeaderValue::from_str(&self.referrer_policy) {
@@ -283,21 +285,24 @@ impl SecurityHeadersConfig {
 
         // Permissions-Policy
         if let Some(pp) = &self.permissions_policy
-            && let Ok(val) = HeaderValue::from_str(pp) {
-                headers.push((HeaderName::from_static("permissions-policy"), val));
-            }
+            && let Ok(val) = HeaderValue::from_str(pp)
+        {
+            headers.push((HeaderName::from_static("permissions-policy"), val));
+        }
 
         // Cross-Origin-Embedder-Policy
         if let Some(coep) = &self.cross_origin_embedder_policy
-            && let Ok(val) = HeaderValue::from_str(coep) {
-                headers.push((HeaderName::from_static("cross-origin-embedder-policy"), val));
-            }
+            && let Ok(val) = HeaderValue::from_str(coep)
+        {
+            headers.push((HeaderName::from_static("cross-origin-embedder-policy"), val));
+        }
 
         // Cross-Origin-Opener-Policy
         if let Some(coop) = &self.cross_origin_opener_policy
-            && let Ok(val) = HeaderValue::from_str(coop) {
-                headers.push((HeaderName::from_static("cross-origin-opener-policy"), val));
-            }
+            && let Ok(val) = HeaderValue::from_str(coop)
+        {
+            headers.push((HeaderName::from_static("cross-origin-opener-policy"), val));
+        }
 
         // Cross-Origin-Resource-Policy
         if let Ok(val) = HeaderValue::from_str(&self.cross_origin_resource_policy) {
