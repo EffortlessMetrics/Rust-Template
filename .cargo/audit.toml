@@ -15,7 +15,10 @@ ignore = [
   "RUSTSEC-2025-0134",
   # RUSTSEC-2026-0066: astral-tokio-tar parsing differential
   # Locked by testcontainers upstream. Requires secondary misbehaving parser.
-  "RUSTSEC-2026-0066"
+  "RUSTSEC-2026-0066",
+  # RUSTSEC-2026-0097: rand custom logger unsoundness
+  # Transitively used in sqlx and jsonwebtoken. Wait for upstream dependency updates.
+  "RUSTSEC-2026-0097"
 ]
 # Warn about unmaintained crates but don't fail
 informational_warnings = ["unmaintained"]

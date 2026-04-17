@@ -36,7 +36,14 @@ ignore = [
   # - Last reviewed: 2026-04-17
   # - Next review: 2026-07-17
   # - Action: Wait for testcontainers to update to astral-tokio-tar 0.6.0
-  "RUSTSEC-2026-0066"
+  "RUSTSEC-2026-0066",
+  # RUSTSEC-2026-0097 (rand custom logger unsoundness)
+  # - Path: Multiple paths including jsonwebtoken, sqlx, and proptest
+  # - Risk: Unsoundness with custom logger. Wait for upstream dependency updates.
+  # - Last reviewed: 2026-04-17
+  # - Next review: 2026-07-17
+  # - Action: Monitor and update rand transitives when possible.
+  "RUSTSEC-2026-0097"
 ]
 yanked = "deny"
 
