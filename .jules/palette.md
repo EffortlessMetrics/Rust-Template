@@ -1,0 +1,3 @@
+## 2026-04-18 - Added ARIA Label to Search Box
+**Learning:** Search inputs in this application relying solely on placeholders without explicit '<label>' elements represent an accessibility anti-pattern. While this is a generic a11y principle, ensuring symmetric template updates across both 'app-http' and 'http-platform' UI files is critical for this codebase.
+**Action:** When adding accessibility attributes like 'aria-label' to UI components, always grep the codebase (e.g., 'crates/app-http/src/platform/ui.rs' and 'crates/http-platform/src/ui.rs') to ensure parallel implementations are also updated symmetrically.
