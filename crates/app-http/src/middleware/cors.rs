@@ -62,7 +62,34 @@ impl Default for CorsConfig {
     }
 }
 
+/// Pre-parsed and cached CORS headers to avoid per-request string allocations
+#[derive(Clone, Debug)]
+pub struct CachedCorsHeaders {
+    pub exposed_headers: Option<HeaderValue>,
+    pub allowed_methods: Option<HeaderValue>,
+    pub max_age: Option<HeaderValue>,
+}
+
 impl CorsConfig {
+    /// Pre-parse header values to avoid per-request allocations
+    pub fn cache(&self) -> CachedCorsHeaders {
+        let exposed_headers = if !self.exposed_headers.is_empty() {
+            HeaderValue::from_str(&self.exposed_headers.join(", ")).ok()
+        } else {
+            None
+        };
+
+        let allowed_methods = if !self.allowed_methods.is_empty() {
+            HeaderValue::from_str(&self.allowed_methods.join(", ")).ok()
+        } else {
+            None
+        };
+
+        let max_age = self.max_age.and_then(|age| HeaderValue::from_str(&age.to_string()).ok());
+
+        CachedCorsHeaders { exposed_headers, allowed_methods, max_age }
+    }
+
     /// Create CORS config from environment variables or config file
     pub fn from_sources(config: Option<&ValidatedConfig>) -> Self {
         let enabled = std::env::var("CORS_ENABLED")
@@ -244,7 +271,12 @@ pub async fn cors_middleware(
     // Handle preflight requests
     if method == Method::OPTIONS {
         let request_headers = request.headers().keys().map(|h| h.as_str()).collect::<Vec<_>>();
-        return handle_preflight(&state.cors_config, origin, &request_headers);
+        return handle_preflight(
+            &state.cors_config,
+            &state.cached_cors_headers,
+            origin,
+            &request_headers,
+        );
     }
 
     let mut response = next.run(request).await;
@@ -264,11 +296,10 @@ pub async fn cors_middleware(
         }
 
         // Add exposed headers
-        if !state.cors_config.exposed_headers.is_empty() {
-            let exposed_headers = state.cors_config.exposed_headers.join(", ");
-            if let Ok(header_value) = HeaderValue::from_str(&exposed_headers) {
-                response.headers_mut().insert(header::ACCESS_CONTROL_EXPOSE_HEADERS, header_value);
-            }
+        if let Some(header_value) = &state.cached_cors_headers.exposed_headers {
+            response
+                .headers_mut()
+                .insert(header::ACCESS_CONTROL_EXPOSE_HEADERS, header_value.clone());
         }
     }
 
@@ -278,6 +309,7 @@ pub async fn cors_middleware(
 /// Handle CORS preflight requests
 fn handle_preflight(
     config: &CorsConfig,
+    cached: &CachedCorsHeaders,
     origin: Option<String>,
     request_headers: &[&str],
 ) -> Response {
@@ -303,9 +335,8 @@ fn handle_preflight(
     }
 
     // Set allowed methods
-    let allowed_methods = config.allowed_methods.join(", ");
-    if let Ok(header_value) = HeaderValue::from_str(&allowed_methods) {
-        response.headers_mut().insert(header::ACCESS_CONTROL_ALLOW_METHODS, header_value);
+    if let Some(header_value) = &cached.allowed_methods {
+        response.headers_mut().insert(header::ACCESS_CONTROL_ALLOW_METHODS, header_value.clone());
     }
 
     // Set allowed headers
@@ -331,10 +362,8 @@ fn handle_preflight(
     }
 
     // Set max age
-    if let Some(max_age) = config.max_age
-        && let Ok(header_value) = HeaderValue::from_str(&max_age.to_string())
-    {
-        response.headers_mut().insert(header::ACCESS_CONTROL_MAX_AGE, header_value);
+    if let Some(header_value) = &cached.max_age {
+        response.headers_mut().insert(header::ACCESS_CONTROL_MAX_AGE, header_value.clone());
     }
 
     response
