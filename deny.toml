@@ -14,6 +14,10 @@
 # - We use the latest testcontainers version
 #
 ignore = [
+  # RUSTSEC-2026-0066 (astral-tokio-tar parsing issue)
+  # - Path: astral-tokio-tar -> testcontainers -> dev-dependencies
+  # - Risk: Low. Dev-only parsing issue in unfixable dependency chain
+  "RUSTSEC-2026-0066",
   # RUSTSEC-2023-0071 (rsa Marvin Attack)
   # - Path: rsa → jsonwebtoken → app-http
   # - Risk: Timing sidechannel, mitigated by JWT-only usage (no raw RSA decryption)
