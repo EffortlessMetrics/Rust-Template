@@ -253,6 +253,8 @@ pub struct AppState {
     pub cors_config: CorsConfig,
     /// Security headers configuration
     pub security_headers_config: SecurityHeadersConfig,
+    /// Cached security headers for performance
+    pub cached_security_headers: crate::middleware::security_headers::CachedSecurityHeaders,
     /// Repository context for gov-http integration
     pub repo_context: RepoContext,
 }
@@ -363,6 +365,7 @@ impl AppState {
             config,
             platform_auth,
             cors_config,
+            cached_security_headers: security_headers_config.cache(),
             security_headers_config,
             repo_context,
         })
