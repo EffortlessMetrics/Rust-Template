@@ -54,9 +54,7 @@ where
                 Err(spec_runtime::SpecError::io("spawn_blocking failed", std::io::Error::other(e))),
                 Err(spec_runtime::SpecError::io(
                     "spawn_blocking failed",
-                    std::io::Error::other(std::io::Error::other(
-                        "spawn_blocking failed",
-                    )),
+                    std::io::Error::other(std::io::Error::other("spawn_blocking failed")),
                 )),
                 None,
                 "unknown".to_string(),
