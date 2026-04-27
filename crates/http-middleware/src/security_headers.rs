@@ -111,16 +111,32 @@ impl SecurityHeadersConfig {
     /// Pre-parse header values and return a cached struct for zero-allocation middleware execution
     pub fn cache(&self) -> CachedSecurityHeaders {
         CachedSecurityHeaders {
-            content_security_policy: self.content_security_policy.as_ref().and_then(|v| HeaderValue::from_str(v).ok()),
+            content_security_policy: self
+                .content_security_policy
+                .as_ref()
+                .and_then(|v| HeaderValue::from_str(v).ok()),
             x_frame_options: HeaderValue::from_str(&self.x_frame_options).ok(),
             x_content_type_options: HeaderValue::from_str(&self.x_content_type_options).ok(),
             x_xss_protection: HeaderValue::from_str(&self.x_xss_protection).ok(),
-            strict_transport_security: self.strict_transport_security.as_ref().and_then(|v| HeaderValue::from_str(v).ok()),
+            strict_transport_security: self
+                .strict_transport_security
+                .as_ref()
+                .and_then(|v| HeaderValue::from_str(v).ok()),
             referrer_policy: HeaderValue::from_str(&self.referrer_policy).ok(),
-            permissions_policy: self.permissions_policy.as_ref().and_then(|v| HeaderValue::from_str(v).ok()),
-            cross_origin_embedder_policy: self.cross_origin_embedder_policy.as_ref().and_then(|v| HeaderValue::from_str(v).ok()),
-            cross_origin_opener_policy: self.cross_origin_opener_policy.as_ref().and_then(|v| HeaderValue::from_str(v).ok()),
-            cross_origin_resource_policy: HeaderValue::from_str(&self.cross_origin_resource_policy).ok(),
+            permissions_policy: self
+                .permissions_policy
+                .as_ref()
+                .and_then(|v| HeaderValue::from_str(v).ok()),
+            cross_origin_embedder_policy: self
+                .cross_origin_embedder_policy
+                .as_ref()
+                .and_then(|v| HeaderValue::from_str(v).ok()),
+            cross_origin_opener_policy: self
+                .cross_origin_opener_policy
+                .as_ref()
+                .and_then(|v| HeaderValue::from_str(v).ok()),
+            cross_origin_resource_policy: HeaderValue::from_str(&self.cross_origin_resource_policy)
+                .ok(),
             enabled: self.enabled,
         }
     }
