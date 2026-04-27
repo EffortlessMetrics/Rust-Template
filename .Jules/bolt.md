@@ -1,0 +1,3 @@
+## 2026-04-27 - [Pre-parse and cache security HeaderValues]
+**Learning:** In Rust's `http` crate (used by Axum), `HeaderValue::clone()` is extremely cheap because the underlying data is backed by `Bytes` which performs a reference count increment. This makes pre-parsing and cloning header values in middleware significantly more performant than per-request string parsing.
+**Action:** When implementing Axum middleware, perform expensive configuration parsing (like converting config strings to `HeaderValue`s) outside the middleware closure and cache the result. Then `.clone()` the cached configuration into the request handler to eliminate per-request allocations.
