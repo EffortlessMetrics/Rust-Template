@@ -1,0 +1,4 @@
+## 2025-04-27 - Insecure Default Content Security Policy
+**Vulnerability:** The default Content Security Policy (CSP) configurations in `crates/http-middleware/src/security_headers.rs` and `crates/app-http/src/middleware/security_headers.rs` include `'unsafe-inline'` and `'unsafe-eval'`.
+**Learning:** Default configurations for security modules should provide the most restrictive security posture, requiring explicit opt-ins for potentially risky features, instead of defaulting to an insecure state. Even if meant for broader compatibility, `'unsafe-eval'` and `'unsafe-inline'` expose users to XSS vulnerabilities.
+**Prevention:** Hardcode default security headers to industry-standard strict configurations, avoiding `'unsafe-eval'` and `'unsafe-inline'`. Utilize dynamic configuration only for necessary relaxations per environment.
