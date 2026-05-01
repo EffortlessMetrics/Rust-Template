@@ -1,3 +1,6 @@
 ## 2026-01-27 - Blocking I/O in Async Handlers
 **Learning:** Found multiple instances of synchronous file I/O (std::fs, spec loading) inside async Axum handlers. This blocks the Tokio worker thread.
 **Action:** Always wrap heavy synchronous operations (like loading YAML specs) in `tokio::task::spawn_blocking` to keep the runtime responsive.
+## 2025-05-01 - CachedSecurityHeaders pre-parsing optimization
+**Learning:** Axum middleware that reads from strings (e.g. `HeaderValue::from_str(&config.x_frame_options)`) on every request causes unnecessary allocations and parsing overhead. By pre-parsing these string configurations into `HeaderValue` at application startup (or configuration time) and caching them in a `CachedSecurityHeaders` struct, we eliminate this overhead from the hot path. Rust's `http` crate makes `HeaderValue::clone()` extremely cheap because the underlying data is backed by `Bytes`, which performs a simple reference count increment rather than copying string data.
+**Action:** When configuring Axum state or middleware, identify configurations that are parsed per-request but are immutable for the lifetime of the application. Pre-parse and store them as their target types (like `HeaderValue`) during the application or middleware initialization phase to save CPU cycles and allocations on every request.
