@@ -253,6 +253,7 @@ pub struct AppState {
     pub cors_config: CorsConfig,
     /// Security headers configuration
     pub security_headers_config: SecurityHeadersConfig,
+    pub cached_security_headers: crate::middleware::CachedSecurityHeaders,
     /// Repository context for gov-http integration
     pub repo_context: RepoContext,
 }
@@ -353,6 +354,7 @@ impl AppState {
         // Initialize security configurations
         let cors_config = CorsConfig::from_sources(config.as_ref());
         let security_headers_config = SecurityHeadersConfig::from_sources(config.as_ref());
+        let cached_security_headers = crate::middleware::CachedSecurityHeaders::new(&security_headers_config);
 
         // Create RepoContext for gov-http integration
         let repo_context = RepoContext::new(&workspace_root);
@@ -364,6 +366,7 @@ impl AppState {
             platform_auth,
             cors_config,
             security_headers_config,
+            cached_security_headers,
             repo_context,
         })
     }
