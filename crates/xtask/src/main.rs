@@ -194,6 +194,18 @@ enum Commands {
     #[command(next_help_heading = "✅ Validation Gates")]
     CheckLayering,
 
+    /// Validate strict Clippy lint policy, ledgers, and workspace inheritance
+    #[command(next_help_heading = "✅ Validation Gates")]
+    CheckLintPolicy {
+        /// Print findings without failing the command
+        #[arg(long)]
+        report_only: bool,
+    },
+
+    /// Print the lint policy report without failing on findings
+    #[command(next_help_heading = "✅ Validation Gates")]
+    PolicyReport,
+
     // ============================================================================
     // ACCEPTANCE CRITERIA (AC management & testing)
     // ============================================================================
@@ -1656,6 +1668,16 @@ fn main() -> Result<()> {
             })
         }
         Commands::CheckLayering => commands::check_layering::run(),
+        Commands::CheckLintPolicy { report_only } => {
+            commands::check_lint_policy::run(commands::check_lint_policy::CheckLintPolicyArgs {
+                report_only,
+            })
+        }
+        Commands::PolicyReport => {
+            commands::check_lint_policy::run(commands::check_lint_policy::CheckLintPolicyArgs {
+                report_only: true,
+            })
+        }
         Commands::Version { json } => {
             commands::version::run(commands::version::VersionArgs { json })
         }
@@ -1790,6 +1812,7 @@ pub fn all_command_names() -> Vec<&'static str> {
         "check-api-diff",
         "check-json-schemas",
         "check-layering",
+        "check-lint-policy",
         "check-openapi-diff",
         "ci-local",
         "clean",
@@ -1825,6 +1848,7 @@ pub fn all_command_names() -> Vec<&'static str> {
         "kernel-status",
         "migrate",
         "pin-actions",
+        "policy-report",
         "policy-test",
         "pr-cover",
         "pr-update",
@@ -1950,6 +1974,8 @@ fn get_command_name(command: &Commands) -> &'static str {
         Commands::CheckOpenapiDiff => "check-openapi-diff",
         Commands::CheckJsonSchemas { .. } => "check-json-schemas",
         Commands::CheckLayering => "check-layering",
+        Commands::CheckLintPolicy { .. } => "check-lint-policy",
+        Commands::PolicyReport => "policy-report",
         Commands::AcStatus { .. } => "ac-status",
         Commands::AcNew { .. } => "ac-new",
         Commands::AcCoverage { .. } => "ac-coverage",

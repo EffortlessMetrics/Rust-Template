@@ -1,0 +1,32 @@
+schema_version = "1.0"
+
+# Rust is the default implementation language. Non-Rust programming/config
+# surfaces are allowed only with owner, reason, surface, classification, and CI
+# coverage receipts.
+
+[[allow]]
+glob = ".github/workflows/*.yml"
+kind = "ci_declarative"
+owner = "release/ci"
+reason = "GitHub Actions workflow definitions are platform-required YAML."
+surface = "ci"
+classification = "config"
+covered_by = ["cargo xtask policy-test"]
+
+[[allow]]
+glob = "policy/**/*.rego"
+kind = "policy_source"
+owner = "governance/policy"
+reason = "OPA/Rego policy modules are the contract language for policy-as-code checks."
+surface = "policy"
+classification = "production"
+covered_by = ["cargo xtask policy-test"]
+
+[[allow]]
+glob = "policy/test_*.sh"
+kind = "policy_test_harness"
+owner = "governance/policy"
+reason = "Shell harnesses exercise policy examples in environments where OPA is external."
+surface = "policy"
+classification = "test"
+covered_by = ["cargo xtask policy-test"]
