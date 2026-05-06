@@ -12,6 +12,9 @@ tempfile = {workspace = true}
 [lib]
 name = "gov_xtask_core"
 
+[lints]
+workspace = true
+
 [package]
 name = "rust-as-spec-gov-xtask-core"
 description = "Governance xtask core utilities"

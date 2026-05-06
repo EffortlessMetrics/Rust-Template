@@ -393,7 +393,7 @@ fn parse_geiger_output(output: &str) -> Option<Safety> {
 
     #[derive(serde::Deserialize, Default)]
     struct GeigerCount {
-        #[allow(dead_code)]
+        #[expect(dead_code, reason = "existing reviewed debt; tracked by lint policy ratchet")]
         #[serde(default)]
         safe: u32,
         #[serde(default)]

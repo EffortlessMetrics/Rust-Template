@@ -110,7 +110,7 @@ impl VersionInfo {
     /// Create VersionInfo with a specific date.
     ///
     /// Useful for testing and retroactive version updates.
-    #[allow(dead_code)] // Infrastructure for retroactive version updates
+    #[expect(dead_code, reason = "existing reviewed debt; tracked by lint policy ratchet")] // Infrastructure for retroactive version updates
     pub fn with_date(version_str: &str, date: &str) -> Result<Self> {
         let version = Version::parse(version_str)?;
         Ok(Self {
@@ -215,7 +215,8 @@ pub struct VersionFormat {
 #[derive(Debug, Clone, Deserialize)]
 pub struct VersionManifest {
     /// Schema version for version manifest format.
-    #[allow(dead_code)] // Deserialized for schema completeness
+    #[expect(dead_code, reason = "existing reviewed debt; tracked by lint policy ratchet")]
+    // Deserialized for schema completeness
     pub schema_version: String,
     /// Human-readable description of the version manifest. Deserialized for schema completeness.
     #[serde(default)]

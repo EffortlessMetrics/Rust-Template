@@ -5,6 +5,9 @@ http-origin-subdomain = { path = "../http-origin-subdomain" }
 [dev-dependencies]
 proptest.workspace = true
 
+[lints]
+workspace = true
+
 [package]
 name = "http-origin-rule"
 publish = false

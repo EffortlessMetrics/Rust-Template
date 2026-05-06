@@ -44,7 +44,7 @@ pub struct PrCoverArgs {
 
 /// Errata entry structure matching the canonical format
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
-#[allow(dead_code)]
+#[expect(dead_code, reason = "existing reviewed debt; tracked by lint policy ratchet")]
 pub struct ErrataEntry {
     /// What was incorrect
     pub wrong: String,
@@ -342,7 +342,7 @@ fn format_status(status: GateStatus) -> &'static str {
 }
 
 /// Extract cover sheet from markdown using idempotent markers
-#[allow(dead_code)] // Used by pr_update for reading errata, and in tests
+#[expect(dead_code, reason = "existing reviewed debt; tracked by lint policy ratchet")] // Used by pr_update for reading errata, and in tests
 pub fn extract_cover_sheet(markdown: &str) -> Option<&str> {
     let start_idx = markdown.find(COVER_SHEET_START)?;
     let end_idx = markdown.find(COVER_SHEET_END)?;

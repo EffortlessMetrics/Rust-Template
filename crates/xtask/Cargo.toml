@@ -29,6 +29,9 @@ serde_yaml.workspace = true
 [dev-dependencies]
 tempfile.workspace = true
 
+[lints]
+workspace = true
+
 [package]
 categories = ["command-line-utilities", "development-tools"]
 description = "Development task automation CLI for build, test, and maintenance workflows"

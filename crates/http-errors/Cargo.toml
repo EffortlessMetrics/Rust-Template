@@ -12,6 +12,9 @@ axum = ["dep:axum", "dep:uuid"]
 default = []
 uuid = ["dep:uuid"]
 
+[lints]
+workspace = true
+
 [package]
 name = "http-errors"
 publish = false

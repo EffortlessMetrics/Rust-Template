@@ -334,7 +334,10 @@ pub fn emit_question(question: Question) -> Result<()> {
 }
 
 /// Create a new question artifact via CLI
-#[allow(clippy::too_many_arguments)]
+#[expect(
+    clippy::too_many_arguments,
+    reason = "existing reviewed API shape; tracked by lint policy ratchet"
+)]
 pub fn create_question(
     category: &str,
     summary: &str,

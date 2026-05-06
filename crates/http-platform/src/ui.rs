@@ -445,7 +445,10 @@ fn styles() -> &'static str {
 }
 
 /// Dashboard content markup.
-#[allow(clippy::too_many_arguments)]
+#[expect(
+    clippy::too_many_arguments,
+    reason = "existing reviewed API shape; tracked by lint policy ratchet"
+)]
 fn dashboard_content(
     specs: spec_runtime::AllSpecs,
     tasks_spec: spec_runtime::TasksSpec,

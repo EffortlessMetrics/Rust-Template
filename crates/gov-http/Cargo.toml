@@ -17,6 +17,9 @@ tokio = {workspace = true}
 tracing = {workspace = true}
 uuid = {workspace = true}
 
+[lints]
+workspace = true
+
 [package]
 description = "Platform HTTP router for Rust-as-Spec governance endpoints"
 name = "gov-http"

@@ -5,7 +5,7 @@
 //!
 //! ## Future Work
 //!
-//! Some methods are marked `#[allow(dead_code)]` as they are implemented
+//! Some methods are marked `#[expect(dead_code, reason = "existing reviewed debt; tracked by lint policy ratchet")]` as they are implemented
 //! for upcoming features:
 //!
 //! - `get_repo()` - For `--repo` override support
@@ -82,7 +82,7 @@ impl GhClient {
     }
 
     /// Get the current repository (owner/repo)
-    #[allow(dead_code)]
+    #[expect(dead_code, reason = "existing reviewed debt; tracked by lint policy ratchet")]
     pub fn get_repo() -> Result<String> {
         let output = Command::new("gh")
             .args(["repo", "view", "--json", "nameWithOwner", "--jq", ".nameWithOwner"])
@@ -161,7 +161,7 @@ impl GhClient {
     }
 
     /// Close a GitHub issue
-    #[allow(dead_code)]
+    #[expect(dead_code, reason = "existing reviewed debt; tracked by lint policy ratchet")]
     pub fn close_issue(number: u64) -> Result<()> {
         Self::check_auth()?;
 
@@ -179,7 +179,7 @@ impl GhClient {
     }
 
     /// Get issue state (open/closed)
-    #[allow(dead_code)]
+    #[expect(dead_code, reason = "existing reviewed debt; tracked by lint policy ratchet")]
     pub fn get_issue_state(number: u64) -> Result<String> {
         Self::check_auth()?;
 
@@ -213,7 +213,10 @@ impl GhClient {
 }
 
 /// Generate issue body from a friction entry
-#[allow(clippy::too_many_arguments)]
+#[expect(
+    clippy::too_many_arguments,
+    reason = "existing reviewed API shape; tracked by lint policy ratchet"
+)]
 pub fn friction_issue_body(
     id: &str,
     summary: &str,
@@ -256,7 +259,11 @@ pub fn friction_issue_body(
 }
 
 /// Generate issue body from a question entry
-#[allow(dead_code, clippy::too_many_arguments)]
+#[expect(
+    dead_code,
+    clippy::too_many_arguments,
+    reason = "existing reviewed API shape; tracked by lint policy ratchet"
+)]
 pub fn question_issue_body(
     id: &str,
     summary: &str,
@@ -320,7 +327,7 @@ pub fn friction_labels(category: &str, severity: &str) -> Vec<String> {
 }
 
 /// Map question to GitHub labels
-#[allow(dead_code)]
+#[expect(dead_code, reason = "existing reviewed debt; tracked by lint policy ratchet")]
 pub fn question_labels(flow: &str) -> Vec<String> {
     vec!["question".to_string(), "needs-decision".to_string(), format!("flow:{}", flow)]
 }

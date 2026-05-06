@@ -389,7 +389,10 @@ fn find_next_friction_id(category: &str) -> Result<String> {
 }
 
 /// Create a new friction entry
-#[allow(clippy::too_many_arguments)]
+#[expect(
+    clippy::too_many_arguments,
+    reason = "existing reviewed API shape; tracked by lint policy ratchet"
+)]
 pub fn create_friction_entry(
     category: &str,
     severity: &str,
@@ -618,7 +621,10 @@ pub fn gh_link_issue(friction_id: &str, issue_number: &str) -> Result<()> {
 }
 
 /// Resolve a friction entry (mark as resolved/wont_fix with resolution details)
-#[allow(clippy::too_many_arguments)]
+#[expect(
+    clippy::too_many_arguments,
+    reason = "existing reviewed API shape; tracked by lint policy ratchet"
+)]
 pub fn resolve_friction_entry(
     id: &str,
     resolved_by: &str,

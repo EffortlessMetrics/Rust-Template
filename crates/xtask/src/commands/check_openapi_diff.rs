@@ -77,7 +77,7 @@ fn extract_platform_endpoints() -> Result<Vec<String>> {
 }
 
 /// Check for removed endpoints
-#[allow(dead_code)]
+#[expect(dead_code, reason = "existing reviewed debt; tracked by lint policy ratchet")]
 fn check_removed_endpoints(current: &[String], baseline: &[String]) -> Vec<String> {
     let baseline_set: std::collections::HashSet<_> = baseline.iter().cloned().collect();
     let current_set: std::collections::HashSet<_> = current.iter().cloned().collect();
@@ -86,7 +86,7 @@ fn check_removed_endpoints(current: &[String], baseline: &[String]) -> Vec<Strin
 }
 
 /// Check for added endpoints (non-breaking but notable)
-#[allow(dead_code)]
+#[expect(dead_code, reason = "existing reviewed debt; tracked by lint policy ratchet")]
 fn check_added_endpoints(current: &[String], baseline: &[String]) -> Vec<String> {
     let baseline_set: std::collections::HashSet<_> = baseline.iter().cloned().collect();
     let current_set: std::collections::HashSet<_> = current.iter().cloned().collect();

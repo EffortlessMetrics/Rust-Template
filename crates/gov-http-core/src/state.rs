@@ -89,7 +89,7 @@ mod tests {
     fn test_default_platform_state() {
         // This is a compile-time test to ensure the trait is implemented
         // Actual testing would require a mock GovernanceRepository
-        #[allow(dead_code)]
+        #[expect(dead_code, reason = "existing reviewed debt; tracked by lint policy ratchet")]
         fn accepts_platform_state<S: PlatformState>(_state: S) {}
 
         // This would fail to compile if DefaultPlatformState doesn't implement PlatformState

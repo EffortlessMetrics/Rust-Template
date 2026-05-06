@@ -186,7 +186,7 @@ pub fn router() -> Router<AppState> {
 }
 
 /// GET /platform/idp/snapshot - Get IDP snapshot with governance health and task hints
-#[allow(clippy::result_large_err)]
+#[expect(clippy::result_large_err, reason = "existing shared error shape; tracked by lint policy ratchet")]
 #[instrument(skip(state))]
 async fn get_idp_snapshot(State(state): State<AppState>) -> Result<Json<IdpSnapshot>, AppError> {
     let root = &state.workspace_root;

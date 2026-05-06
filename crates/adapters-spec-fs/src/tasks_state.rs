@@ -30,7 +30,10 @@ pub struct TasksState {
 ///
 /// If the file does not exist yet it will be created. Existing entries
 /// for other tasks are preserved.
-#[allow(clippy::suspicious_open_options)]
+#[expect(
+    clippy::suspicious_open_options,
+    reason = "existing file-open semantics; tracked by lint policy ratchet"
+)]
 pub fn update_task_status(
     path: &Path,
     task_id: TaskId,

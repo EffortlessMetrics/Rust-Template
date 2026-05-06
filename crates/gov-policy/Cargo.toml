@@ -9,6 +9,9 @@ thiserror = {workspace = true}
 [lib]
 name = "gov_policy"
 
+[lints]
+workspace = true
+
 [package]
 name = "rust-as-spec-gov-policy"
 description = "Rego policy bundle and runner for Rust-as-Spec platform"

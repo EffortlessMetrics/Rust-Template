@@ -468,7 +468,7 @@ pub fn detect_contract_changes(base_branch: &str) -> gov_receipts::Contracts {
 pub struct CommitInfo {
     pub sha: String,
     pub timestamp: DateTime<Utc>,
-    #[allow(dead_code)]
+    #[expect(dead_code, reason = "existing reviewed debt; tracked by lint policy ratchet")]
     pub author: String,
 }
 

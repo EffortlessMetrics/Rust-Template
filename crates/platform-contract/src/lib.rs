@@ -37,7 +37,7 @@ use std::collections::HashMap;
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 #[non_exhaustive]
-#[allow(missing_docs)]
+#[expect(missing_docs, reason = "generated or contract surface; tracked by lint policy ratchet")]
 pub enum ErrorCode {
     // Validation errors (4xx)
     #[serde(rename = "INVALID_REQUEST")]
@@ -425,56 +425,56 @@ pub struct AuthSummary {
 // Convenience constructors
 // ============================================================================
 
-#[allow(missing_docs)]
+#[expect(missing_docs, reason = "generated or contract surface; tracked by lint policy ratchet")]
 impl LedgerCounts {
     pub fn new(stories: usize, requirements: usize, acs: usize) -> Self {
         Self { stories, requirements, acs }
     }
 }
 
-#[allow(missing_docs)]
+#[expect(missing_docs, reason = "generated or contract surface; tracked by lint policy ratchet")]
 impl DevExCounts {
     pub fn new(commands: usize, flows: usize) -> Self {
         Self { commands, flows }
     }
 }
 
-#[allow(missing_docs)]
+#[expect(missing_docs, reason = "generated or contract surface; tracked by lint policy ratchet")]
 impl DocCounts {
     pub fn new(total: usize, design: usize, doc_type_issues: usize) -> Self {
         Self { total, design, doc_type_issues }
     }
 }
 
-#[allow(missing_docs)]
+#[expect(missing_docs, reason = "generated or contract surface; tracked by lint policy ratchet")]
 impl TaskStatusBreakdown {
     pub fn new(todo: usize, in_progress: usize, review: usize, done: usize) -> Self {
         Self { todo, in_progress, review, done }
     }
 }
 
-#[allow(missing_docs)]
+#[expect(missing_docs, reason = "generated or contract surface; tracked by lint policy ratchet")]
 impl TaskCounts {
     pub fn new(total: usize, by_status: Option<TaskStatusBreakdown>) -> Self {
         Self { total, by_status }
     }
 }
 
-#[allow(missing_docs)]
+#[expect(missing_docs, reason = "generated or contract surface; tracked by lint policy ratchet")]
 impl AcCoverageInfo {
     pub fn new(total: usize, passing: usize, failing: usize, unknown: usize) -> Self {
         Self { total, passing, failing, unknown }
     }
 }
 
-#[allow(missing_docs)]
+#[expect(missing_docs, reason = "generated or contract surface; tracked by lint policy ratchet")]
 impl QuestionBrief {
     pub fn new(id: String, summary: String, flow: String) -> Self {
         Self { id, summary, flow }
     }
 }
 
-#[allow(missing_docs)]
+#[expect(missing_docs, reason = "generated or contract surface; tracked by lint policy ratchet")]
 impl QuestionCounts {
     pub fn new(
         open: usize,
@@ -487,14 +487,14 @@ impl QuestionCounts {
     }
 }
 
-#[allow(missing_docs)]
+#[expect(missing_docs, reason = "generated or contract surface; tracked by lint policy ratchet")]
 impl SeverityCounts {
     pub fn new(low: usize, medium: usize, high: usize, critical: usize) -> Self {
         Self { low, medium, high, critical }
     }
 }
 
-#[allow(missing_docs)]
+#[expect(missing_docs, reason = "generated or contract surface; tracked by lint policy ratchet")]
 impl FrictionSummary {
     pub fn new(
         id: String,
@@ -507,7 +507,7 @@ impl FrictionSummary {
     }
 }
 
-#[allow(missing_docs)]
+#[expect(missing_docs, reason = "generated or contract surface; tracked by lint policy ratchet")]
 impl FrictionCounts {
     pub fn new(
         total: usize,
@@ -519,28 +519,28 @@ impl FrictionCounts {
     }
 }
 
-#[allow(missing_docs)]
+#[expect(missing_docs, reason = "generated or contract surface; tracked by lint policy ratchet")]
 impl ForkCounts {
     pub fn new(total: usize, ids: Vec<String>) -> Self {
         Self { total, ids }
     }
 }
 
-#[allow(missing_docs)]
+#[expect(missing_docs, reason = "generated or contract surface; tracked by lint policy ratchet")]
 impl PolicyStatus {
     pub fn new(status: String) -> Self {
         Self { status }
     }
 }
 
-#[allow(missing_docs)]
+#[expect(missing_docs, reason = "generated or contract surface; tracked by lint policy ratchet")]
 impl ErrorStats {
     pub fn new(total_errors: u64, client_errors: u64, server_errors: u64) -> Self {
         Self { total_errors, client_errors, server_errors }
     }
 }
 
-#[allow(missing_docs)]
+#[expect(missing_docs, reason = "generated or contract surface; tracked by lint policy ratchet")]
 impl ErrorSummary {
     pub fn new(
         has_recent_errors: bool,
@@ -551,14 +551,14 @@ impl ErrorSummary {
     }
 }
 
-#[allow(missing_docs)]
+#[expect(missing_docs, reason = "generated or contract surface; tracked by lint policy ratchet")]
 impl AuthSummary {
     pub fn new(mode: String, token_present: bool) -> Self {
         Self { mode, token_present }
     }
 }
 
-#[allow(missing_docs)]
+#[expect(missing_docs, reason = "generated or contract surface; tracked by lint policy ratchet")]
 impl ConfigSummary {
     pub fn new(
         env: Option<String>,
@@ -571,7 +571,7 @@ impl ConfigSummary {
     }
 }
 
-#[allow(missing_docs)]
+#[expect(missing_docs, reason = "generated or contract surface; tracked by lint policy ratchet")]
 impl ServiceInfo {
     pub fn new(
         service_id: String,
@@ -585,8 +585,11 @@ impl ServiceInfo {
     }
 }
 
-#[allow(missing_docs)]
-#[allow(clippy::too_many_arguments)]
+#[expect(missing_docs, reason = "generated or contract surface; tracked by lint policy ratchet")]
+#[expect(
+    clippy::too_many_arguments,
+    reason = "existing reviewed API shape; tracked by lint policy ratchet"
+)]
 impl GovernanceStatus {
     pub fn new(
         ledger: LedgerCounts,
