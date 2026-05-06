@@ -17,6 +17,9 @@ tempfile.workspace = true
 [lib]
 name = "spec_runtime"
 
+[lints]
+workspace = true
+
 [package]
 name = "rust-as-spec-runtime"
 description = "Runtime environment for spec-based development workflows and infrastructure"

@@ -13,6 +13,9 @@ tempfile.workspace = true
 [lib]
 name = "ac_kernel"
 
+[lints]
+workspace = true
+
 [package]
 name = "rust-as-spec-ac-kernel"
 description = "Core AC governance logic for the Rust-as-Spec platform"

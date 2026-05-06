@@ -8,6 +8,9 @@ serde_json.workspace = true
 [dev-dependencies]
 proptest.workspace = true
 
+[lints]
+workspace = true
+
 [package]
 name = "http-task-status-parser"
 publish = false

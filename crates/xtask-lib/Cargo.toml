@@ -11,6 +11,9 @@ uuid.workspace = true
 [dev-dependencies]
 testing.workspace = true
 
+[lints]
+workspace = true
+
 [package]
 description = "Shared xtask utilities and helpers without CLI concerns"
 name = "xtask-lib"
