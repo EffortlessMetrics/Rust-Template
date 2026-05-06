@@ -1,0 +1,28 @@
+schema_version = "1.0"
+
+[[allow]]
+glob = ".github/workflows/*.yml"
+kind = "ci_declarative"
+owner = "release/ci"
+reason = "GitHub Actions workflow definitions are platform-required YAML."
+surface = "ci"
+classification = "config"
+covered_by = ["cargo xtask check-lint-policy"]
+
+[[allow]]
+glob = "docs/**"
+kind = "documentation"
+owner = "docs"
+reason = "Markdown documentation is the governed template user surface."
+surface = "docs"
+classification = "documentation"
+covered_by = ["cargo xtask docs-check"]
+
+[[allow]]
+glob = "templates/**"
+kind = "template_asset"
+owner = "template-platform"
+reason = "Template assets intentionally include reusable policy and prompt files."
+surface = "templates"
+classification = "tooling"
+covered_by = ["cargo xtask check-lint-policy"]

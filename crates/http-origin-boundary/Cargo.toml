@@ -3,6 +3,9 @@
 [dev-dependencies]
 proptest.workspace = true
 
+[lints]
+workspace = true
+
 [package]
 name = "http-origin-boundary"
 publish = false

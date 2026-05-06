@@ -20,6 +20,7 @@ pub mod check;
 pub mod check_api_diff;
 pub mod check_json_schemas;
 pub mod check_layering;
+pub mod check_lint_policy;
 pub mod check_openapi_diff;
 pub mod ci_local;
 pub mod clean;

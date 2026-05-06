@@ -28,6 +28,9 @@ uuid = {features = ["v4"], workspace = true}
 
 [dev-dependencies]
 
+[lints]
+workspace = true
+
 [package]
 name = "acceptance"
 version.workspace = true

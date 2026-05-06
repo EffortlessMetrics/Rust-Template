@@ -5,6 +5,9 @@ http-origin-parser = { path = "../http-origin-parser" }
 [dev-dependencies]
 proptest.workspace = true
 
+[lints]
+workspace = true
+
 [package]
 name = "http-origin-subdomain"
 publish = false

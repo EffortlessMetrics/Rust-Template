@@ -10,6 +10,9 @@ testing.workspace = true
 [lib]
 doctest = false
 
+[lints]
+workspace = true
+
 [package]
 categories = ["config", "development-tools"]
 description = "YAML-based infrastructure configuration library for Rust IaC projects with validation rules"

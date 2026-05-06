@@ -8,6 +8,9 @@ serde_yaml = {workspace = true}
 [lib]
 name = "gov_contracts"
 
+[lints]
+workspace = true
+
 [package]
 name = "rust-as-spec-gov-contracts"
 description = "Governance contracts and schemas for Rust-as-Spec platform"

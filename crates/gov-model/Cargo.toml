@@ -8,6 +8,9 @@ proptest.workspace = true
 [lib]
 name = "gov_model"
 
+[lints]
+workspace = true
+
 [package]
 name = "rust-as-spec-gov-model"
 description = "Governance domain model types for Rust-as-Spec platform"

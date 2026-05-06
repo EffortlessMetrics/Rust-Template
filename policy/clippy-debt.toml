@@ -1,0 +1,18 @@
+schema = 1
+
+# Temporary lint exceptions are recorded here instead of weakening clippy.toml.
+# Each debt item must include lint, path, owner, reason, and expires.
+
+[[debt]]
+lint = "workspace::lint_inheritance"
+path = "crates/testing/Cargo.toml"
+owner = "template-platform"
+reason = "The Rust 2024 EnvVarGuard requires unsafe std::env mutation behind a serialized test helper; split or redesign before enabling workspace unsafe_code forbid on this helper crate."
+expires = "2026-07-01"
+
+[[debt]]
+lint = "workspace::lint_inheritance"
+path = "crates/xtask/Cargo.toml"
+owner = "template-platform"
+reason = "The large legacy xtask command surface has existing rust_2018_idioms and suppression debt; convert command modules incrementally before inheriting the strict workspace block."
+expires = "2026-07-01"
