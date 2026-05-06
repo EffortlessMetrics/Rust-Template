@@ -6189,6 +6189,7 @@ dependencies = [
  "serde_yaml_ng",
  "tempfile",
  "testing",
+ "toml",
  "walkdir",
  "which",
  "xtask-contracts",

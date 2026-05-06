@@ -1,0 +1,552 @@
+schema = 1
+
+# Temporary repo-local exceptions to the strict lint baseline belong here.
+# Each debt entry must include lint, path, owner, reason, and expires.
+# Expired entries fail `cargo xtask check-lint-policy`.
+
+[[debt]]
+lint = "unused_imports"
+path = "crates/acceptance/tests/acceptance.rs"
+owner = "platform"
+reason = "Existing suppression captured during strict Clippy policy rollout; replace with #[expect(..., reason = ...)] or remove. Last seen line 54."
+expires = "2026-07-01"
+
+[[debt]]
+lint = "clippy::suspicious_open_options"
+path = "crates/adapters-spec-fs/src/tasks_state.rs"
+owner = "platform"
+reason = "Existing suppression captured during strict Clippy policy rollout; replace with #[expect(..., reason = ...)] or remove. Last seen line 33."
+expires = "2026-07-01"
+
+[[debt]]
+lint = "clippy::result_large_err"
+path = "crates/app-http/src/platform/idp.rs"
+owner = "platform"
+reason = "Existing suppression captured during strict Clippy policy rollout; replace with #[expect(..., reason = ...)] or remove. Last seen line 189."
+expires = "2026-07-01"
+
+[[debt]]
+lint = "clippy::result_large_err"
+path = "crates/app-http/src/tasks.rs"
+owner = "platform"
+reason = "Existing suppression captured during strict Clippy policy rollout; replace with #[expect(..., reason = ...)] or remove. Last seen line 59."
+expires = "2026-07-01"
+
+[[debt]]
+lint = "clippy::collapsible_if"
+path = "crates/gov-http/src/forks.rs"
+owner = "platform"
+reason = "Existing suppression captured during strict Clippy policy rollout; replace with #[expect(..., reason = ...)] or remove. Last seen line 120."
+expires = "2026-07-01"
+
+[[debt]]
+lint = "dead_code"
+path = "crates/gov-http-core/src/state.rs"
+owner = "platform"
+reason = "Existing suppression captured during strict Clippy policy rollout; replace with #[expect(..., reason = ...)] or remove. Last seen line 92."
+expires = "2026-07-01"
+
+[[debt]]
+lint = "dead_code"
+path = "crates/http-platform/src/idp.rs"
+owner = "platform"
+reason = "Existing suppression captured during strict Clippy policy rollout; replace with #[expect(..., reason = ...)] or remove. Last seen line 8."
+expires = "2026-07-01"
+
+[[debt]]
+lint = "clippy::result_large_err"
+path = "crates/http-platform/src/idp.rs"
+owner = "platform"
+reason = "Existing suppression captured during strict Clippy policy rollout; replace with #[expect(..., reason = ...)] or remove. Last seen line 207."
+expires = "2026-07-01"
+
+[[debt]]
+lint = "clippy::too_many_arguments"
+path = "crates/http-platform/src/ui.rs"
+owner = "platform"
+reason = "Existing suppression captured during strict Clippy policy rollout; replace with #[expect(..., reason = ...)] or remove. Last seen line 448."
+expires = "2026-07-01"
+
+[[debt]]
+lint = "clippy::result_large_err"
+path = "crates/http-tasks/src/lib.rs"
+owner = "platform"
+reason = "Existing suppression captured during strict Clippy policy rollout; replace with #[expect(..., reason = ...)] or remove. Last seen line 235."
+expires = "2026-07-01"
+
+[[debt]]
+lint = "missing_docs"
+path = "crates/platform-contract/src/lib.rs"
+owner = "platform"
+reason = "Existing suppression captured during strict Clippy policy rollout; replace with #[expect(..., reason = ...)] or remove. Last seen line 40."
+expires = "2026-07-01"
+
+[[debt]]
+lint = "missing_docs"
+path = "crates/platform-contract/src/lib.rs"
+owner = "platform"
+reason = "Existing suppression captured during strict Clippy policy rollout; replace with #[expect(..., reason = ...)] or remove. Last seen line 428."
+expires = "2026-07-01"
+
+[[debt]]
+lint = "missing_docs"
+path = "crates/platform-contract/src/lib.rs"
+owner = "platform"
+reason = "Existing suppression captured during strict Clippy policy rollout; replace with #[expect(..., reason = ...)] or remove. Last seen line 435."
+expires = "2026-07-01"
+
+[[debt]]
+lint = "missing_docs"
+path = "crates/platform-contract/src/lib.rs"
+owner = "platform"
+reason = "Existing suppression captured during strict Clippy policy rollout; replace with #[expect(..., reason = ...)] or remove. Last seen line 442."
+expires = "2026-07-01"
+
+[[debt]]
+lint = "missing_docs"
+path = "crates/platform-contract/src/lib.rs"
+owner = "platform"
+reason = "Existing suppression captured during strict Clippy policy rollout; replace with #[expect(..., reason = ...)] or remove. Last seen line 449."
+expires = "2026-07-01"
+
+[[debt]]
+lint = "missing_docs"
+path = "crates/platform-contract/src/lib.rs"
+owner = "platform"
+reason = "Existing suppression captured during strict Clippy policy rollout; replace with #[expect(..., reason = ...)] or remove. Last seen line 456."
+expires = "2026-07-01"
+
+[[debt]]
+lint = "missing_docs"
+path = "crates/platform-contract/src/lib.rs"
+owner = "platform"
+reason = "Existing suppression captured during strict Clippy policy rollout; replace with #[expect(..., reason = ...)] or remove. Last seen line 463."
+expires = "2026-07-01"
+
+[[debt]]
+lint = "missing_docs"
+path = "crates/platform-contract/src/lib.rs"
+owner = "platform"
+reason = "Existing suppression captured during strict Clippy policy rollout; replace with #[expect(..., reason = ...)] or remove. Last seen line 470."
+expires = "2026-07-01"
+
+[[debt]]
+lint = "missing_docs"
+path = "crates/platform-contract/src/lib.rs"
+owner = "platform"
+reason = "Existing suppression captured during strict Clippy policy rollout; replace with #[expect(..., reason = ...)] or remove. Last seen line 477."
+expires = "2026-07-01"
+
+[[debt]]
+lint = "missing_docs"
+path = "crates/platform-contract/src/lib.rs"
+owner = "platform"
+reason = "Existing suppression captured during strict Clippy policy rollout; replace with #[expect(..., reason = ...)] or remove. Last seen line 490."
+expires = "2026-07-01"
+
+[[debt]]
+lint = "missing_docs"
+path = "crates/platform-contract/src/lib.rs"
+owner = "platform"
+reason = "Existing suppression captured during strict Clippy policy rollout; replace with #[expect(..., reason = ...)] or remove. Last seen line 497."
+expires = "2026-07-01"
+
+[[debt]]
+lint = "missing_docs"
+path = "crates/platform-contract/src/lib.rs"
+owner = "platform"
+reason = "Existing suppression captured during strict Clippy policy rollout; replace with #[expect(..., reason = ...)] or remove. Last seen line 510."
+expires = "2026-07-01"
+
+[[debt]]
+lint = "missing_docs"
+path = "crates/platform-contract/src/lib.rs"
+owner = "platform"
+reason = "Existing suppression captured during strict Clippy policy rollout; replace with #[expect(..., reason = ...)] or remove. Last seen line 522."
+expires = "2026-07-01"
+
+[[debt]]
+lint = "missing_docs"
+path = "crates/platform-contract/src/lib.rs"
+owner = "platform"
+reason = "Existing suppression captured during strict Clippy policy rollout; replace with #[expect(..., reason = ...)] or remove. Last seen line 529."
+expires = "2026-07-01"
+
+[[debt]]
+lint = "missing_docs"
+path = "crates/platform-contract/src/lib.rs"
+owner = "platform"
+reason = "Existing suppression captured during strict Clippy policy rollout; replace with #[expect(..., reason = ...)] or remove. Last seen line 536."
+expires = "2026-07-01"
+
+[[debt]]
+lint = "missing_docs"
+path = "crates/platform-contract/src/lib.rs"
+owner = "platform"
+reason = "Existing suppression captured during strict Clippy policy rollout; replace with #[expect(..., reason = ...)] or remove. Last seen line 543."
+expires = "2026-07-01"
+
+[[debt]]
+lint = "missing_docs"
+path = "crates/platform-contract/src/lib.rs"
+owner = "platform"
+reason = "Existing suppression captured during strict Clippy policy rollout; replace with #[expect(..., reason = ...)] or remove. Last seen line 554."
+expires = "2026-07-01"
+
+[[debt]]
+lint = "missing_docs"
+path = "crates/platform-contract/src/lib.rs"
+owner = "platform"
+reason = "Existing suppression captured during strict Clippy policy rollout; replace with #[expect(..., reason = ...)] or remove. Last seen line 561."
+expires = "2026-07-01"
+
+[[debt]]
+lint = "missing_docs"
+path = "crates/platform-contract/src/lib.rs"
+owner = "platform"
+reason = "Existing suppression captured during strict Clippy policy rollout; replace with #[expect(..., reason = ...)] or remove. Last seen line 574."
+expires = "2026-07-01"
+
+[[debt]]
+lint = "missing_docs"
+path = "crates/platform-contract/src/lib.rs"
+owner = "platform"
+reason = "Existing suppression captured during strict Clippy policy rollout; replace with #[expect(..., reason = ...)] or remove. Last seen line 588."
+expires = "2026-07-01"
+
+[[debt]]
+lint = "clippy::too_many_arguments"
+path = "crates/platform-contract/src/lib.rs"
+owner = "platform"
+reason = "Existing suppression captured during strict Clippy policy rollout; replace with #[expect(..., reason = ...)] or remove. Last seen line 589."
+expires = "2026-07-01"
+
+[[debt]]
+lint = "missing_docs"
+path = "crates/spec-devex/src/lib.rs"
+owner = "platform"
+reason = "Existing suppression captured during strict Clippy policy rollout; replace with #[expect(..., reason = ...)] or remove. Last seen line 21."
+expires = "2026-07-01"
+
+[[debt]]
+lint = "missing_docs"
+path = "crates/spec-docs/src/lib.rs"
+owner = "platform"
+reason = "Existing suppression captured during strict Clippy policy rollout; replace with #[expect(..., reason = ...)] or remove. Last seen line 21."
+expires = "2026-07-01"
+
+[[debt]]
+lint = "missing_docs"
+path = "crates/spec-graph/src/lib.rs"
+owner = "platform"
+reason = "Existing suppression captured during strict Clippy policy rollout; replace with #[expect(..., reason = ...)] or remove. Last seen line 21."
+expires = "2026-07-01"
+
+[[debt]]
+lint = "missing_docs"
+path = "crates/spec-iac/src/lib.rs"
+owner = "platform"
+reason = "Existing suppression captured during strict Clippy policy rollout; replace with #[expect(..., reason = ...)] or remove. Last seen line 21."
+expires = "2026-07-01"
+
+[[debt]]
+lint = "missing_docs"
+path = "crates/spec-metadata/src/lib.rs"
+owner = "platform"
+reason = "Existing suppression captured during strict Clippy policy rollout; replace with #[expect(..., reason = ...)] or remove. Last seen line 21."
+expires = "2026-07-01"
+
+[[debt]]
+lint = "dead_code"
+path = "crates/spec-runtime/src/config.rs"
+owner = "platform"
+reason = "Existing suppression captured during strict Clippy policy rollout; replace with #[expect(..., reason = ...)] or remove. Last seen line 24."
+expires = "2026-07-01"
+
+[[debt]]
+lint = "dead_code"
+path = "crates/spec-runtime/src/config.rs"
+owner = "platform"
+reason = "Existing suppression captured during strict Clippy policy rollout; replace with #[expect(..., reason = ...)] or remove. Last seen line 31."
+expires = "2026-07-01"
+
+[[debt]]
+lint = "missing_docs"
+path = "crates/spec-schema/src/lib.rs"
+owner = "platform"
+reason = "Existing suppression captured during strict Clippy policy rollout; replace with #[expect(..., reason = ...)] or remove. Last seen line 23."
+expires = "2026-07-01"
+
+[[debt]]
+lint = "missing_docs"
+path = "crates/spec-tasks/src/lib.rs"
+owner = "platform"
+reason = "Existing suppression captured during strict Clippy policy rollout; replace with #[expect(..., reason = ...)] or remove. Last seen line 21."
+expires = "2026-07-01"
+
+[[debt]]
+lint = "missing_docs"
+path = "crates/spec-ui-contract/src/lib.rs"
+owner = "platform"
+reason = "Existing suppression captured during strict Clippy policy rollout; replace with #[expect(..., reason = ...)] or remove. Last seen line 22."
+expires = "2026-07-01"
+
+[[debt]]
+lint = "clippy::disallowed_methods"
+path = "crates/testing/src/process.rs"
+owner = "platform"
+reason = "Existing suppression captured during strict Clippy policy rollout; replace with #[expect(..., reason = ...)] or remove. Last seen line 12."
+expires = "2026-07-01"
+
+[[debt]]
+lint = "dead_code"
+path = "crates/xtask/src/commands/ac_status.rs"
+owner = "platform"
+reason = "Existing suppression captured during strict Clippy policy rollout; replace with #[expect(..., reason = ...)] or remove. Last seen line 743."
+expires = "2026-07-01"
+
+[[debt]]
+lint = "dead_code"
+path = "crates/xtask/src/commands/ac_status.rs"
+owner = "platform"
+reason = "Existing suppression captured during strict Clippy policy rollout; replace with #[expect(..., reason = ...)] or remove. Last seen line 762."
+expires = "2026-07-01"
+
+[[debt]]
+lint = "dead_code"
+path = "crates/xtask/src/commands/check_openapi_diff.rs"
+owner = "platform"
+reason = "Existing suppression captured during strict Clippy policy rollout; replace with #[expect(..., reason = ...)] or remove. Last seen line 80."
+expires = "2026-07-01"
+
+[[debt]]
+lint = "dead_code"
+path = "crates/xtask/src/commands/check_openapi_diff.rs"
+owner = "platform"
+reason = "Existing suppression captured during strict Clippy policy rollout; replace with #[expect(..., reason = ...)] or remove. Last seen line 89."
+expires = "2026-07-01"
+
+[[debt]]
+lint = "dead_code"
+path = "crates/xtask/src/commands/docs_check.rs"
+owner = "platform"
+reason = "Existing suppression captured during strict Clippy policy rollout; replace with #[expect(..., reason = ...)] or remove. Last seen line 1500."
+expires = "2026-07-01"
+
+[[debt]]
+lint = "clippy::collapsible_if"
+path = "crates/xtask/src/commands/docs_check.rs"
+owner = "platform"
+reason = "Existing suppression captured during strict Clippy policy rollout; replace with #[expect(..., reason = ...)] or remove. Last seen line 1640."
+expires = "2026-07-01"
+
+[[debt]]
+lint = "clippy::too_many_arguments"
+path = "crates/xtask/src/commands/friction.rs"
+owner = "platform"
+reason = "Existing suppression captured during strict Clippy policy rollout; replace with #[expect(..., reason = ...)] or remove. Last seen line 392."
+expires = "2026-07-01"
+
+[[debt]]
+lint = "clippy::too_many_arguments"
+path = "crates/xtask/src/commands/friction.rs"
+owner = "platform"
+reason = "Existing suppression captured during strict Clippy policy rollout; replace with #[expect(..., reason = ...)] or remove. Last seen line 621."
+expires = "2026-07-01"
+
+[[debt]]
+lint = "dead_code"
+path = "crates/xtask/src/commands/github.rs"
+owner = "platform"
+reason = "Existing suppression captured during strict Clippy policy rollout; replace with #[expect(..., reason = ...)] or remove. Last seen line 8."
+expires = "2026-07-01"
+
+[[debt]]
+lint = "dead_code"
+path = "crates/xtask/src/commands/github.rs"
+owner = "platform"
+reason = "Existing suppression captured during strict Clippy policy rollout; replace with #[expect(..., reason = ...)] or remove. Last seen line 85."
+expires = "2026-07-01"
+
+[[debt]]
+lint = "dead_code"
+path = "crates/xtask/src/commands/github.rs"
+owner = "platform"
+reason = "Existing suppression captured during strict Clippy policy rollout; replace with #[expect(..., reason = ...)] or remove. Last seen line 164."
+expires = "2026-07-01"
+
+[[debt]]
+lint = "dead_code"
+path = "crates/xtask/src/commands/github.rs"
+owner = "platform"
+reason = "Existing suppression captured during strict Clippy policy rollout; replace with #[expect(..., reason = ...)] or remove. Last seen line 182."
+expires = "2026-07-01"
+
+[[debt]]
+lint = "clippy::too_many_arguments"
+path = "crates/xtask/src/commands/github.rs"
+owner = "platform"
+reason = "Existing suppression captured during strict Clippy policy rollout; replace with #[expect(..., reason = ...)] or remove. Last seen line 216."
+expires = "2026-07-01"
+
+[[debt]]
+lint = "dead_code"
+path = "crates/xtask/src/commands/github.rs"
+owner = "platform"
+reason = "Existing suppression captured during strict Clippy policy rollout; replace with #[expect(..., reason = ...)] or remove. Last seen line 259."
+expires = "2026-07-01"
+
+[[debt]]
+lint = "clippy::too_many_arguments"
+path = "crates/xtask/src/commands/github.rs"
+owner = "platform"
+reason = "Existing suppression captured during strict Clippy policy rollout; replace with #[expect(..., reason = ...)] or remove. Last seen line 259."
+expires = "2026-07-01"
+
+[[debt]]
+lint = "dead_code"
+path = "crates/xtask/src/commands/github.rs"
+owner = "platform"
+reason = "Existing suppression captured during strict Clippy policy rollout; replace with #[expect(..., reason = ...)] or remove. Last seen line 323."
+expires = "2026-07-01"
+
+[[debt]]
+lint = "dead_code"
+path = "crates/xtask/src/commands/pr_cover.rs"
+owner = "platform"
+reason = "Existing suppression captured during strict Clippy policy rollout; replace with #[expect(..., reason = ...)] or remove. Last seen line 47."
+expires = "2026-07-01"
+
+[[debt]]
+lint = "dead_code"
+path = "crates/xtask/src/commands/pr_cover.rs"
+owner = "platform"
+reason = "Existing suppression captured during strict Clippy policy rollout; replace with #[expect(..., reason = ...)] or remove. Last seen line 345."
+expires = "2026-07-01"
+
+[[debt]]
+lint = "clippy::too_many_arguments"
+path = "crates/xtask/src/commands/questions.rs"
+owner = "platform"
+reason = "Existing suppression captured during strict Clippy policy rollout; replace with #[expect(..., reason = ...)] or remove. Last seen line 337."
+expires = "2026-07-01"
+
+[[debt]]
+lint = "clippy::too_many_arguments"
+path = "crates/xtask/src/commands/status.rs"
+owner = "platform"
+reason = "Existing suppression captured during strict Clippy policy rollout; replace with #[expect(..., reason = ...)] or remove. Last seen line 219."
+expires = "2026-07-01"
+
+[[debt]]
+lint = "dead_code"
+path = "crates/xtask/src/commands/versioning.rs"
+owner = "platform"
+reason = "Existing suppression captured during strict Clippy policy rollout; replace with #[expect(..., reason = ...)] or remove. Last seen line 113."
+expires = "2026-07-01"
+
+[[debt]]
+lint = "dead_code"
+path = "crates/xtask/src/commands/versioning.rs"
+owner = "platform"
+reason = "Existing suppression captured during strict Clippy policy rollout; replace with #[expect(..., reason = ...)] or remove. Last seen line 218."
+expires = "2026-07-01"
+
+[[debt]]
+lint = "unused_imports"
+path = "crates/xtask/src/contracts.rs"
+owner = "platform"
+reason = "Existing suppression captured during strict Clippy policy rollout; replace with #[expect(..., reason = ...)] or remove. Last seen line 17."
+expires = "2026-07-01"
+
+[[debt]]
+lint = "dead_code"
+path = "crates/xtask-receipts/src/telemetry.rs"
+owner = "platform"
+reason = "Existing suppression captured during strict Clippy policy rollout; replace with #[expect(..., reason = ...)] or remove. Last seen line 396."
+expires = "2026-07-01"
+
+[[debt]]
+lint = "dead_code"
+path = "crates/xtask-receipts/src/timeline.rs"
+owner = "platform"
+reason = "Existing suppression captured during strict Clippy policy rollout; replace with #[expect(..., reason = ...)] or remove. Last seen line 471."
+expires = "2026-07-01"
+
+[[debt]]
+lint = "dead_code"
+path = "crates/xtask-versioning/src/lib.rs"
+owner = "platform"
+reason = "Existing suppression captured during strict Clippy policy rollout; replace with #[expect(..., reason = ...)] or remove. Last seen line 119."
+expires = "2026-07-01"
+
+[[debt]]
+lint = "dead_code"
+path = "crates/xtask-versioning/src/lib.rs"
+owner = "platform"
+reason = "Existing suppression captured during strict Clippy policy rollout; replace with #[expect(..., reason = ...)] or remove. Last seen line 148."
+expires = "2026-07-01"
+
+[[debt]]
+lint = "dead_code"
+path = "crates/xtask-versioning/src/lib.rs"
+owner = "platform"
+reason = "Existing suppression captured during strict Clippy policy rollout; replace with #[expect(..., reason = ...)] or remove. Last seen line 160."
+expires = "2026-07-01"
+
+[[debt]]
+lint = "dead_code"
+path = "crates/xtask-versioning/src/lib.rs"
+owner = "platform"
+reason = "Existing suppression captured during strict Clippy policy rollout; replace with #[expect(..., reason = ...)] or remove. Last seen line 172."
+expires = "2026-07-01"
+
+[[debt]]
+lint = "dead_code"
+path = "crates/xtask-versioning/src/lib.rs"
+owner = "platform"
+reason = "Existing suppression captured during strict Clippy policy rollout; replace with #[expect(..., reason = ...)] or remove. Last seen line 181."
+expires = "2026-07-01"
+
+[[debt]]
+lint = "dead_code"
+path = "crates/xtask-versioning/src/lib.rs"
+owner = "platform"
+reason = "Existing suppression captured during strict Clippy policy rollout; replace with #[expect(..., reason = ...)] or remove. Last seen line 185."
+expires = "2026-07-01"
+
+[[debt]]
+lint = "dead_code"
+path = "crates/xtask-versioning/src/lib.rs"
+owner = "platform"
+reason = "Existing suppression captured during strict Clippy policy rollout; replace with #[expect(..., reason = ...)] or remove. Last seen line 202."
+expires = "2026-07-01"
+
+[[debt]]
+lint = "dead_code"
+path = "crates/xtask-versioning/src/lib.rs"
+owner = "platform"
+reason = "Existing suppression captured during strict Clippy policy rollout; replace with #[expect(..., reason = ...)] or remove. Last seen line 206."
+expires = "2026-07-01"
+
+[[debt]]
+lint = "dead_code"
+path = "crates/xtask-versioning/src/lib.rs"
+owner = "platform"
+reason = "Existing suppression captured during strict Clippy policy rollout; replace with #[expect(..., reason = ...)] or remove. Last seen line 215."
+expires = "2026-07-01"
+
+[[debt]]
+lint = "dead_code"
+path = "crates/xtask-versioning/src/lib.rs"
+owner = "platform"
+reason = "Existing suppression captured during strict Clippy policy rollout; replace with #[expect(..., reason = ...)] or remove. Last seen line 219."
+expires = "2026-07-01"
+
+[[debt]]
+lint = "dead_code"
+path = "crates/xtask-versioning/src/lib.rs"
+owner = "platform"
+reason = "Existing suppression captured during strict Clippy policy rollout; replace with #[expect(..., reason = ...)] or remove. Last seen line 223."
+expires = "2026-07-01"
+

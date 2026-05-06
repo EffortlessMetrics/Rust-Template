@@ -9,6 +9,9 @@ serde_json = {workspace = true}
 [lib]
 name = "gov_receipts"
 
+[lints]
+workspace = true
+
 [package]
 name = "rust-as-spec-gov-receipts"
 description = "Receipt types for audit evidence in Rust-as-Spec platform"

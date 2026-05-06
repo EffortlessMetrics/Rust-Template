@@ -20,6 +20,9 @@ tokio.workspace = true
 default = []
 integration-db = []
 
+[lints]
+workspace = true
+
 [package]
 categories = ["database", "database-implementations"]
 description = "SQLx-based PostgreSQL database adapter with migration support"

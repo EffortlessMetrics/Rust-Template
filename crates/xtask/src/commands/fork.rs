@@ -340,7 +340,7 @@ pub struct CreateForkArgs<'a> {
 }
 
 /// Create a new fork entry
-pub fn create_fork_entry(args: CreateForkArgs) -> Result<()> {
+pub fn create_fork_entry(args: CreateForkArgs<'_>) -> Result<()> {
     // Validate status
     let valid_statuses = ["active", "archived", "experimental"];
     let status = args.status.unwrap_or("experimental");

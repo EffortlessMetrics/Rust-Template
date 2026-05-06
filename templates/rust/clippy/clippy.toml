@@ -1,0 +1,16 @@
+# Governance: Unsafe Process-Global State Manipulation (Issue #13)
+#
+# These methods are disallowed because they mutate process-global state and are
+# unsafe in Rust 2024 edition. Use the testing crate's guards instead:
+#
+# - testing::process::EnvVarGuard for environment variables
+# - testing::process::CwdGuard for working directory
+#
+# The testing crate centralizes the unsafe operations behind safe interfaces
+# with proper synchronization (global lock + restore-on-drop).
+
+disallowed-methods = [
+  {path = "std::env::remove_var", reason = "Use testing::process::EnvVarGuard for safe, serialized env var manipulation"},
+  {path = "std::env::set_current_dir", reason = "Use testing::process::CwdGuard for safe, serialized cwd manipulation"},
+  {path = "std::env::set_var", reason = "Use testing::process::EnvVarGuard for safe, serialized env var manipulation"}
+]

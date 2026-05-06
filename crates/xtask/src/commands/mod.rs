@@ -47,6 +47,7 @@ pub mod issues_search;
 pub mod kernel_pack;
 pub mod kernel_smoke;
 pub mod kernel_status;
+pub mod lint_policy;
 pub mod migrate;
 pub mod pin_actions;
 pub mod policy_test;

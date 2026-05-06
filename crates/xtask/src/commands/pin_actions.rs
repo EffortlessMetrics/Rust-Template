@@ -51,7 +51,7 @@ pub fn run() -> Result<()> {
 
         // Replace refs with SHAs
         let new_content = uses_re
-            .replace_all(&content, |caps: &Captures| {
+            .replace_all(&content, |caps: &Captures<'_>| {
                 let owner = &caps[1];
                 let repo = &caps[2];
                 let ref_ = &caps[3];

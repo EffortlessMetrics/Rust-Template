@@ -4,6 +4,9 @@ http-origin-rule = {path = "../http-origin-rule"}
 [dev-dependencies]
 proptest.workspace = true
 
+[lints]
+workspace = true
+
 [package]
 name = "http-origin-policy"
 publish = false

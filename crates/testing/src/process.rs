@@ -9,7 +9,10 @@
 
 // This module is the canonical implementation of process-global state guards.
 // It must use the disallowed methods to provide safe wrappers for them.
-#![allow(clippy::disallowed_methods)]
+#![expect(
+    clippy::disallowed_methods,
+    reason = "This crate provides the audited safe wrappers for process-global test state."
+)]
 
 use parking_lot::{ReentrantMutex, ReentrantMutexGuard};
 use std::path::{Path, PathBuf};
@@ -73,7 +76,13 @@ impl EnvVarGuard {
     pub fn set(&self, key: &'static str, value: &str) {
         // SAFETY: env mutation is process-global; we serialize via PROCESS_LOCK
         // and restore on Drop.
-        unsafe { std::env::set_var(key, value) };
+        #[expect(
+            unsafe_code,
+            reason = "Serialized process-global environment mutation is isolated behind EnvVarGuard."
+        )]
+        unsafe {
+            std::env::set_var(key, value)
+        };
     }
 
     /// Remove an environment variable.
@@ -83,7 +92,13 @@ impl EnvVarGuard {
     pub fn remove(&self, key: &'static str) {
         // SAFETY: env mutation is process-global; we serialize via PROCESS_LOCK
         // and restore on Drop.
-        unsafe { std::env::remove_var(key) };
+        #[expect(
+            unsafe_code,
+            reason = "Serialized process-global environment mutation is isolated behind EnvVarGuard."
+        )]
+        unsafe {
+            std::env::remove_var(key)
+        };
     }
 }
 
@@ -92,6 +107,10 @@ impl Drop for EnvVarGuard {
         // Restore exactly what we observed before the guard was created.
         for (key, value) in self.snapshot.iter() {
             // SAFETY: restoring pre-test state while holding PROCESS_LOCK.
+            #[expect(
+                unsafe_code,
+                reason = "Serialized process-global environment restoration is isolated behind EnvVarGuard."
+            )]
             unsafe {
                 match value {
                     Some(v) => std::env::set_var(*key, v),

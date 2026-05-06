@@ -10,6 +10,9 @@ uuid.workspace = true
 [lib]
 name = "business_core"
 
+[lints]
+workspace = true
+
 [package]
 name = "rust-as-spec-business-core"
 description = "Core business logic and domain services for the application"

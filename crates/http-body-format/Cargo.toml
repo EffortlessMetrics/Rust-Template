@@ -3,6 +3,9 @@
 [dev-dependencies]
 proptest.workspace = true
 
+[lints]
+workspace = true
+
 [package]
 name = "http-body-format"
 publish = false

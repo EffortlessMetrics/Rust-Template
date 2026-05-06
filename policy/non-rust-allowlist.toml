@@ -1,0 +1,108 @@
+schema_version = "1.0"
+
+[[allow]]
+glob = ".github/workflows/*.yml"
+kind = "ci_declarative"
+owner = "release/ci"
+reason = "GitHub Actions workflow definitions are platform-required YAML."
+surface = "ci"
+classification = "config"
+covered_by = ["cargo xtask check-file-policy"]
+
+[[allow]]
+glob = "policy/**/*.rego"
+kind = "policy_code"
+owner = "governance/policy"
+reason = "Open Policy Agent policies are intentionally maintained as Rego."
+surface = "policy"
+classification = "production"
+covered_by = ["cargo xtask policy-test"]
+
+[[allow]]
+glob = "policy/test_k8s_secrets.sh"
+kind = "policy_test_harness"
+owner = "governance/policy"
+reason = "OPA policy regression harness is shell because it orchestrates external CLI tools."
+surface = "policy"
+classification = "test"
+covered_by = ["bash policy/test_k8s_secrets.sh"]
+
+[[allow]]
+glob = "**/*.yaml"
+kind = "declarative_config"
+owner = "platform"
+reason = "YAML files are declarative platform, fixture, or documentation configuration."
+surface = "config"
+classification = "config"
+covered_by = ["cargo xtask check-file-policy"]
+
+[[allow]]
+glob = "**/*.yml"
+kind = "declarative_config"
+owner = "platform"
+reason = "YAML files are declarative platform, fixture, or documentation configuration."
+surface = "config"
+classification = "config"
+covered_by = ["cargo xtask check-file-policy"]
+
+[[allow]]
+glob = "**/*.json"
+kind = "data_fixture_or_schema"
+owner = "platform"
+reason = "JSON files are schemas, snapshots, fixtures, or generated contract data."
+surface = "fixtures"
+classification = "config"
+covered_by = ["cargo xtask check-json-schemas"]
+
+[[allow]]
+glob = "**/*.sh"
+kind = "script"
+owner = "platform/devex"
+reason = "Shell scripts are existing developer or CI entrypoints pending Rust xtask migration."
+surface = "tooling"
+classification = "tooling"
+covered_by = ["cargo xtask check-file-policy"]
+
+[[allow]]
+glob = "**/*.py"
+kind = "script"
+owner = "platform/devex"
+reason = "Python scripts are existing developer or test utilities pending Rust xtask migration."
+surface = "tooling"
+classification = "tooling"
+covered_by = ["cargo xtask check-file-policy"]
+
+[[allow]]
+glob = "backstage/site/**/*.js"
+kind = "generated_backstage_site"
+owner = "platform/docs"
+reason = "Generated Backstage documentation site assets are published JavaScript artifacts."
+surface = "docs"
+classification = "generated"
+covered_by = ["cargo xtask docs-check"]
+
+[[allow]]
+glob = "examples/backstage-plugin/**/*.{js,ts,tsx}"
+kind = "backstage_plugin_example"
+owner = "platform/idp"
+reason = "Backstage plugin examples require TypeScript and JavaScript for the Backstage extension surface."
+surface = "idp-example"
+classification = "tooling"
+covered_by = ["cargo xtask idp-check"]
+
+[[allow]]
+glob = "examples/backstage-plugin/**/*.d.ts"
+kind = "backstage_plugin_types"
+owner = "platform/idp"
+reason = "Generated TypeScript declaration files document the Backstage plugin example API."
+surface = "idp-example"
+classification = "generated"
+covered_by = ["cargo xtask idp-check"]
+[[allow]]
+glob = "examples/backstage-plugin/**"
+kind = "backstage_plugin_example"
+owner = "platform/idp"
+reason = "Backstage plugin example files intentionally use the Backstage TypeScript/JavaScript ecosystem."
+surface = "idp-example"
+classification = "tooling"
+covered_by = ["cargo xtask idp-check"]
