@@ -1,3 +1,6 @@
+[lints]
+workspace = true
+
 [package]
 name = "gov-http-types"
 description = "Shared HTTP API types for governance endpoints (FrictionEntry, Question)"

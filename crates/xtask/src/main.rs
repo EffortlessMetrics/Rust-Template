@@ -194,6 +194,22 @@ enum Commands {
     #[command(next_help_heading = "✅ Validation Gates")]
     CheckLayering,
 
+    /// Verify strict Clippy lint policy, debt ledger, and suppression governance
+    #[command(next_help_heading = "✅ Validation Gates")]
+    CheckLintPolicy,
+
+    /// Verify panic-family calls are covered by semantic TOML allowlist entries
+    #[command(next_help_heading = "✅ Validation Gates")]
+    CheckNoPanicFamily,
+
+    /// Verify non-Rust programming files have structured policy receipts
+    #[command(next_help_heading = "✅ Validation Gates")]
+    CheckFilePolicy,
+
+    /// Print a concise policy exception and lint ledger report
+    #[command(next_help_heading = "✅ Validation Gates")]
+    PolicyReport,
+
     // ============================================================================
     // ACCEPTANCE CRITERIA (AC management & testing)
     // ============================================================================
@@ -1656,6 +1672,10 @@ fn main() -> Result<()> {
             })
         }
         Commands::CheckLayering => commands::check_layering::run(),
+        Commands::CheckLintPolicy => commands::lint_policy::check_lint_policy(),
+        Commands::CheckNoPanicFamily => commands::lint_policy::check_no_panic_family(),
+        Commands::CheckFilePolicy => commands::lint_policy::check_file_policy(),
+        Commands::PolicyReport => commands::lint_policy::policy_report(),
         Commands::Version { json } => {
             commands::version::run(commands::version::VersionArgs { json })
         }
@@ -1950,6 +1970,10 @@ fn get_command_name(command: &Commands) -> &'static str {
         Commands::CheckOpenapiDiff => "check-openapi-diff",
         Commands::CheckJsonSchemas { .. } => "check-json-schemas",
         Commands::CheckLayering => "check-layering",
+        Commands::CheckLintPolicy => "check-lint-policy",
+        Commands::CheckNoPanicFamily => "check-no-panic-family",
+        Commands::CheckFilePolicy => "check-file-policy",
+        Commands::PolicyReport => "policy-report",
         Commands::AcStatus { .. } => "ac-status",
         Commands::AcNew { .. } => "ac-new",
         Commands::AcCoverage { .. } => "ac-coverage",

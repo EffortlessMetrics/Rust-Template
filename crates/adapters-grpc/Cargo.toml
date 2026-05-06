@@ -25,6 +25,9 @@ integration-grpc = []
 name = "adapters_grpc"
 path = "src/lib.rs"
 
+[lints]
+workspace = true
+
 [package]
 description = "Tonic-based gRPC adapter for cross-service communication"
 name = "adapters-grpc"

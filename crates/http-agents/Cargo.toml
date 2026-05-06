@@ -27,6 +27,9 @@ testing.workspace = true
 tokio.workspace = true
 tower.workspace = true
 
+[lints]
+workspace = true
+
 [package]
 name = "http-agents"
 publish = false

@@ -48,6 +48,9 @@ testing.workspace = true
 tokio.workspace = true
 tower.workspace = true
 
+[lints]
+workspace = true
+
 [package]
 categories = ["api-bindings", "web-programming", "web-programming::http-server"]
 description = "HTTP router and API handlers for application endpoints including todos, questions, and forks"

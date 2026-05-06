@@ -20,6 +20,9 @@ otlp = [
   "opentelemetry-otlp/grpc-tonic"
 ]
 
+[lints]
+workspace = true
+
 [package]
 name = "rust-as-spec-telemetry"
 description = "Optional OpenTelemetry tracing and metrics configuration"
