@@ -5,7 +5,7 @@
 
 use axum::{
     extract::{Request, State},
-    http::HeaderValue,
+
     middleware::Next,
     response::Response,
 };
@@ -241,70 +241,72 @@ impl SecurityHeadersConfig {
         }
     }
 
-    /// Apply security headers to a response
-    pub fn apply_headers(&self, response: &mut Response) {
-        if !self.enabled {
-            return;
+
+
+}
+
+/// Cached security headers to prevent per-request string parsing allocations.
+#[derive(Clone)]
+pub struct CachedSecurityHeaders {
+    pub headers: std::sync::Arc<Vec<(axum::http::header::HeaderName, axum::http::HeaderValue)>>,
+}
+
+impl CachedSecurityHeaders {
+    /// Create a new CachedSecurityHeaders from a SecurityHeadersConfig.
+    pub fn new(config: &SecurityHeadersConfig) -> Self {
+        let mut headers = Vec::new();
+        if !config.enabled {
+            return Self { headers: std::sync::Arc::new(headers) };
         }
 
-        // Content Security Policy
-        if let Some(csp) = &self.content_security_policy
-            && let Ok(header_value) = HeaderValue::from_str(csp)
-        {
-            response.headers_mut().insert("Content-Security-Policy", header_value);
+        if let Some(csp) = &config.content_security_policy {
+            if let Ok(value) = axum::http::HeaderValue::from_str(csp) {
+                headers.push((axum::http::header::CONTENT_SECURITY_POLICY, value));
+            }
+        }
+        if let Ok(value) = axum::http::HeaderValue::from_str(&config.x_frame_options) {
+            headers.push((axum::http::header::HeaderName::from_static("x-frame-options"), value));
+        }
+        if let Ok(value) = axum::http::HeaderValue::from_str(&config.x_content_type_options) {
+            headers.push((axum::http::header::X_CONTENT_TYPE_OPTIONS, value));
+        }
+        if let Ok(value) = axum::http::HeaderValue::from_str(&config.x_xss_protection) {
+            headers.push((axum::http::header::HeaderName::from_static("x-xss-protection"), value));
+        }
+        if let Some(sts) = &config.strict_transport_security {
+            if let Ok(value) = axum::http::HeaderValue::from_str(sts) {
+                headers.push((axum::http::header::STRICT_TRANSPORT_SECURITY, value));
+            }
+        }
+        if let Ok(value) = axum::http::HeaderValue::from_str(&config.referrer_policy) {
+            headers.push((axum::http::header::HeaderName::from_static("referrer-policy"), value));
+        }
+        if let Some(pp) = &config.permissions_policy {
+            if let Ok(value) = axum::http::HeaderValue::from_str(pp) {
+                headers.push((axum::http::header::HeaderName::from_static("permissions-policy"), value));
+            }
+        }
+        if let Some(coep) = &config.cross_origin_embedder_policy {
+            if let Ok(value) = axum::http::HeaderValue::from_str(coep) {
+                headers.push((axum::http::header::HeaderName::from_static("cross-origin-embedder-policy"), value));
+            }
+        }
+        if let Some(coop) = &config.cross_origin_opener_policy {
+            if let Ok(value) = axum::http::HeaderValue::from_str(coop) {
+                headers.push((axum::http::header::HeaderName::from_static("cross-origin-opener-policy"), value));
+            }
+        }
+        if let Ok(value) = axum::http::HeaderValue::from_str(&config.cross_origin_resource_policy) {
+            headers.push((axum::http::header::HeaderName::from_static("cross-origin-resource-policy"), value));
         }
 
-        // X-Frame-Options (prevent clickjacking)
-        if let Ok(header_value) = HeaderValue::from_str(&self.x_frame_options) {
-            response.headers_mut().insert("X-Frame-Options", header_value);
-        }
+        Self { headers: std::sync::Arc::new(headers) }
+    }
 
-        // X-Content-Type-Options (prevent MIME sniffing)
-        if let Ok(header_value) = HeaderValue::from_str(&self.x_content_type_options) {
-            response.headers_mut().insert("X-Content-Type-Options", header_value);
-        }
-
-        // X-XSS-Protection (legacy XSS protection)
-        if let Ok(header_value) = HeaderValue::from_str(&self.x_xss_protection) {
-            response.headers_mut().insert("X-XSS-Protection", header_value);
-        }
-
-        // Strict-Transport-Security (HSTS)
-        if let Some(sts) = &self.strict_transport_security
-            && let Ok(header_value) = HeaderValue::from_str(sts)
-        {
-            response.headers_mut().insert("Strict-Transport-Security", header_value);
-        }
-
-        // Referrer-Policy
-        if let Ok(header_value) = HeaderValue::from_str(&self.referrer_policy) {
-            response.headers_mut().insert("Referrer-Policy", header_value);
-        }
-
-        // Permissions-Policy
-        if let Some(pp) = &self.permissions_policy
-            && let Ok(header_value) = HeaderValue::from_str(pp)
-        {
-            response.headers_mut().insert("Permissions-Policy", header_value);
-        }
-
-        // Cross-Origin-Embedder-Policy
-        if let Some(coep) = &self.cross_origin_embedder_policy
-            && let Ok(header_value) = HeaderValue::from_str(coep)
-        {
-            response.headers_mut().insert("Cross-Origin-Embedder-Policy", header_value);
-        }
-
-        // Cross-Origin-Opener-Policy
-        if let Some(coop) = &self.cross_origin_opener_policy
-            && let Ok(header_value) = HeaderValue::from_str(coop)
-        {
-            response.headers_mut().insert("Cross-Origin-Opener-Policy", header_value);
-        }
-
-        // Cross-Origin-Resource-Policy
-        if let Ok(header_value) = HeaderValue::from_str(&self.cross_origin_resource_policy) {
-            response.headers_mut().insert("Cross-Origin-Resource-Policy", header_value);
+    /// Apply the cached headers to a response.
+    pub fn apply(&self, response: &mut Response) {
+        for (name, value) in self.headers.iter() {
+            response.headers_mut().insert(name.clone(), value.clone());
         }
     }
 }
@@ -316,14 +318,14 @@ pub async fn security_headers_middleware(
     next: Next,
 ) -> Response {
     let mut response = next.run(request).await;
-    state.security_headers_config.apply_headers(&mut response);
+    state.cached_security_headers.apply(&mut response);
     response
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use axum::{body::Body, http::HeaderValue, response::Response};
+    use axum::{body::Body, response::Response, http::HeaderValue};
     use serial_test::serial;
     use testing::process::EnvVarGuard;
 
@@ -339,12 +341,12 @@ mod tests {
     }
 
     #[test]
-    fn test_security_headers_apply_headers() {
+    fn test_security_headers_to_headers() {
         let config = SecurityHeadersConfig::default();
         let mut response = Response::new(Body::empty());
 
-        config.apply_headers(&mut response);
-
+        let cached = CachedSecurityHeaders::new(&config);
+        cached.apply(&mut response);
         let headers = response.headers();
 
         assert!(headers.contains_key("X-Frame-Options"));
@@ -365,8 +367,8 @@ mod tests {
         let config = SecurityHeadersConfig { enabled: false, ..Default::default() };
 
         let mut response = Response::new(Body::empty());
-        config.apply_headers(&mut response);
-
+        let cached = CachedSecurityHeaders::new(&config);
+        cached.apply(&mut response);
         let headers = response.headers();
         assert!(!headers.contains_key("X-Frame-Options"));
         assert!(!headers.contains_key("X-Content-Type-Options"));
