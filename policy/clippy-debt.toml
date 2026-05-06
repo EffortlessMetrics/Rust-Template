@@ -1,0 +1,10 @@
+schema = 1
+
+# Repo-specific lint exceptions belong here as temporary, owned debt.
+
+[[debt]]
+lint = "rust::unsafe_code"
+path = "crates/testing/src/process.rs"
+owner = "test-infra"
+reason = "Rust 2024 environment mutation requires unsafe calls inside the synchronized process-global guard; migrate or isolate before enabling workspace lint inheritance for the testing crate."
+expires = "2026-07-01"

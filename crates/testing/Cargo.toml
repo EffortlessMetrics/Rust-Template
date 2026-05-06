@@ -1,8 +1,6 @@
 [dependencies]
 parking_lot.workspace = true
 
-[lints]
-workspace = true
 
 [package]
 description = "Shared testing utilities for safe environment and process state manipulation"

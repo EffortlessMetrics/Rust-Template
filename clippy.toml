@@ -1,16 +1,26 @@
-# Governance: Unsafe Process-Global State Manipulation (Issue #13)
+# Effortless Metrics strict Clippy policy configuration.
+#
+# This file is intentionally limited to repo-specific policy surfaces such as
+# disallowed methods, types, macros, and names. Do not add test-specific weakenings here;
+# tests inherit the same panic-free workspace policy as production code.
+
+msrv = "1.93"
+
+# Governance: unsafe process-global state manipulation.
 #
 # These methods are disallowed because they mutate process-global state and are
 # unsafe in Rust 2024 edition. Use the testing crate's guards instead:
-#
 # - testing::process::EnvVarGuard for environment variables
 # - testing::process::CwdGuard for working directory
 #
-# The testing crate centralizes the unsafe operations behind safe interfaces
-# with proper synchronization (global lock + restore-on-drop).
-
+# The testing crate centralizes the unsafe operations behind synchronized safe
+# interfaces with a global lock and restore-on-drop behavior.
 disallowed-methods = [
   {path = "std::env::remove_var", reason = "Use testing::process::EnvVarGuard for safe, serialized env var manipulation"},
   {path = "std::env::set_current_dir", reason = "Use testing::process::CwdGuard for safe, serialized cwd manipulation"},
   {path = "std::env::set_var", reason = "Use testing::process::EnvVarGuard for safe, serialized env var manipulation"}
 ]
+
+disallowed-types = []
+disallowed-macros = []
+disallowed-names = []

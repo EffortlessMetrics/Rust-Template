@@ -1,0 +1,15 @@
+# Effortless Metrics strict Clippy policy configuration.
+#
+# This file is intentionally limited to repo-specific policy surfaces such as
+# disallowed methods, types, macros, and names. Do not add test-specific weakenings here;
+# tests inherit the same panic-free workspace policy as production code.
+
+msrv = "1.93"
+
+# Repository-local architecture bans can be added here as narrow additions to
+# the shared baseline. Keep entries sorted and explain each addition in
+# docs/CLIPPY_POLICY.md plus policy/clippy-debt.toml when temporary.
+disallowed-methods = []
+disallowed-types = []
+disallowed-macros = []
+disallowed-names = []
