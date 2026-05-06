@@ -1,0 +1,34 @@
+schema_version = "1.0"
+
+[[allow]]
+glob = ".github/workflows/*.yml"
+kind = "ci_declarative"
+owner = "release/ci"
+reason = "GitHub Actions workflow definitions are platform-required YAML."
+surface = "ci"
+classification = "config"
+covered_by = [
+  "cargo xtask check-lint-policy",
+]
+
+[[allow]]
+glob = "policy/**/*.rego"
+kind = "policy_declarative"
+owner = "governance/policy"
+reason = "OPA/Rego policy rules are evaluated by the policy test harness."
+surface = "policy"
+classification = "production"
+covered_by = [
+  "cargo xtask policy-test",
+]
+
+[[allow]]
+glob = "policy/testdata/**/*"
+kind = "fixture_input"
+owner = "governance/policy"
+reason = "Policy fixtures intentionally exercise JSON and YAML validation paths."
+surface = "fixtures"
+classification = "test"
+covered_by = [
+  "cargo xtask policy-test",
+]

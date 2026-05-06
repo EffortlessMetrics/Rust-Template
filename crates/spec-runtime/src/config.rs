@@ -21,14 +21,14 @@ pub struct ValidatedConfig {
 #[derive(Debug, Deserialize)]
 struct ConfigSchema {
     /// Environment definitions (reserved for future multi-env support).
-    #[allow(dead_code)]
+    #[expect(dead_code, reason = "existing reviewed debt; tracked by lint policy ratchet")]
     pub envs: Vec<EnvDef>,
     pub settings: Vec<ConfigEntry>,
     pub secrets: Vec<ConfigEntry>,
 }
 
 #[derive(Debug, Deserialize)]
-#[allow(dead_code)]
+#[expect(dead_code, reason = "existing reviewed debt; tracked by lint policy ratchet")]
 struct EnvDef {
     pub name: String,
     pub required: bool,

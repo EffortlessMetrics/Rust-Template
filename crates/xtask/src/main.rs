@@ -194,6 +194,10 @@ enum Commands {
     #[command(next_help_heading = "✅ Validation Gates")]
     CheckLayering,
 
+    /// Check strict Clippy lint policy ledger, inheritance, carveouts, and debt
+    #[command(next_help_heading = "✅ Validation Gates")]
+    CheckLintPolicy,
+
     // ============================================================================
     // ACCEPTANCE CRITERIA (AC management & testing)
     // ============================================================================
@@ -1274,6 +1278,7 @@ fn main() -> Result<()> {
         }),
         Commands::AdrNew { title } => commands::adr_new::run(&title),
         Commands::Check => commands::check::run(),
+        Commands::CheckLintPolicy => commands::check_lint_policy::run(),
         Commands::Precommit { mode, staged_only } => commands::precommit::run(&mode, staged_only),
         Commands::Bdd => commands::bdd::run(),
         Commands::AcReport { must_have, status, by_story, format } => {
@@ -1950,6 +1955,7 @@ fn get_command_name(command: &Commands) -> &'static str {
         Commands::CheckOpenapiDiff => "check-openapi-diff",
         Commands::CheckJsonSchemas { .. } => "check-json-schemas",
         Commands::CheckLayering => "check-layering",
+        Commands::CheckLintPolicy => "check-lint-policy",
         Commands::AcStatus { .. } => "ac-status",
         Commands::AcNew { .. } => "ac-new",
         Commands::AcCoverage { .. } => "ac-coverage",

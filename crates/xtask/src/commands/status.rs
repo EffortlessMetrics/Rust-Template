@@ -216,7 +216,10 @@ fn parse_ac_coverage(feature_status_path: &Path) -> Option<AcCoverage> {
     if coverage.total() > 0 { Some(coverage) } else { None }
 }
 
-#[allow(clippy::too_many_arguments)]
+#[expect(
+    clippy::too_many_arguments,
+    reason = "existing reviewed API shape; tracked by lint policy ratchet"
+)]
 fn print_status_dashboard(
     version: &str,
     story_count: usize,

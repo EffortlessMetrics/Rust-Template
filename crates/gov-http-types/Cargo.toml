@@ -11,6 +11,9 @@ homepage.workspace = true
 documentation.workspace = true
 publish = false
 
+[lints]
+workspace = true
+
 [dependencies]
 gov-model.workspace = true
 serde.workspace = true

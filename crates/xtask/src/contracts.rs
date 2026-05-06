@@ -14,5 +14,5 @@
 //! and synchronization via `cargo xtask contracts-check` and `cargo xtask contracts-fmt`.
 
 // Re-export all public items from xtask-contracts for cross-module use
-#[allow(unused_imports)]
+#[expect(unused_imports, reason = "existing reviewed debt; tracked by lint policy ratchet")]
 pub use xtask_contracts::{AcCounts, ContractsSnapshot};

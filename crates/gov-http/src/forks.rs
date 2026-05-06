@@ -117,7 +117,7 @@ fn load_all_forks(root: &std::path::Path) -> Result<Vec<ForkEntry>, PlatformErro
         }
 
         // Only load files matching FORK-*.yaml pattern
-        #[allow(clippy::collapsible_if)]
+        #[expect(clippy::collapsible_if, reason = "existing reviewed debt; tracked by lint policy ratchet")]
         if let Some(filename) = path.file_name().and_then(|s| s.to_str()) {
             if !filename.starts_with("FORK-") {
                 continue;

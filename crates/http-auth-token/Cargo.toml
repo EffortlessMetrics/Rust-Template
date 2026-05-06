@@ -5,6 +5,9 @@ http-bearer-token = {path = "../http-bearer-token"}
 [dev-dependencies]
 proptest.workspace = true
 
+[lints]
+workspace = true
+
 [package]
 name = "http-auth-token"
 publish = false

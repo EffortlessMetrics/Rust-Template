@@ -1,0 +1,12 @@
+schema = 1
+
+# Temporary repo-specific weakening entries go here. Each entry must include
+# lint, path, owner, reason, and expires. Expired entries fail
+# `cargo xtask check-lint-policy`.
+#
+# [example.debt]
+# lint = "clippy::indexing_slicing"
+# path = "crates/example/src/parser/table.rs"
+# owner = "parser"
+# reason = "Generated table access; replace with checked table abstraction."
+# expires = "2026-07-01"

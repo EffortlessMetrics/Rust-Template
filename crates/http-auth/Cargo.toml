@@ -11,6 +11,9 @@ serde_json.workspace = true
 serde_yaml.workspace = true
 testing.workspace = true
 
+[lints]
+workspace = true
+
 [package]
 name = "http-auth"
 publish = false

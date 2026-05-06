@@ -232,7 +232,10 @@ where
 /// Parse update task status request from headers and body.
 ///
 /// Supports both JSON and form-urlencoded content types.
-#[allow(clippy::result_large_err)] // AppError is shared across handlers; keep signature consistent
+#[expect(
+    clippy::result_large_err,
+    reason = "existing shared error shape; tracked by lint policy ratchet"
+)] // AppError is shared across handlers; keep signature consistent
 fn parse_update_task_status(
     headers: &HeaderMap,
     body: &[u8],

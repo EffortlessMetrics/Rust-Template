@@ -1497,7 +1497,7 @@ struct BrokenLink {
     /// Line number where the link was found
     line: usize,
     /// The link text (what appears in brackets)
-    #[allow(dead_code)]
+    #[expect(dead_code, reason = "existing reviewed debt; tracked by lint policy ratchet")]
     text: String,
     /// The target URL/path that is broken
     target: String,
@@ -1637,7 +1637,10 @@ fn validate_markdown_links() -> Result<()> {
 
                 // If there's an anchor, try to validate it (advisory only)
                 // Note: Nested ifs kept for clarity - each level has distinct semantics
-                #[allow(clippy::collapsible_if)]
+                #[expect(
+                    clippy::collapsible_if,
+                    reason = "existing reviewed debt; tracked by lint policy ratchet"
+                )]
                 if let Some(anchor) = anchor_part {
                     if !anchor.is_empty() && normalized_path.is_file() {
                         if let Ok(target_content) = fs::read_to_string(&normalized_path) {

@@ -740,7 +740,7 @@ fn parse_features(features_dir: &Path) -> Result<HashMap<String, Scenario>> {
 ///
 /// Used by the JUnit fallback parsing path. The primary parser uses Cucumber JSON.
 #[cfg(test)]
-#[allow(dead_code)] // Fallback implementation kept for reference; primary path uses ac_parsing
+#[expect(dead_code, reason = "existing reviewed debt; tracked by lint policy ratchet")] // Fallback implementation kept for reference; primary path uses ac_parsing
 fn normalize_testcase_name(name: &str) -> String {
     // Extract scenario name from JUnit testcase name
     // Format: "Scenario: <name>: <file>:<line>:<col>"
@@ -759,7 +759,7 @@ fn normalize_testcase_name(name: &str) -> String {
 /// Fallback parser for systems without Cucumber JSON support.
 /// The primary path uses `ac_parsing::parse_junit_with_scenarios()`.
 #[cfg(test)]
-#[allow(dead_code)] // Fallback implementation kept for reference; primary path uses ac_parsing
+#[expect(dead_code, reason = "existing reviewed debt; tracked by lint policy ratchet")] // Fallback implementation kept for reference; primary path uses ac_parsing
 fn parse_junit(
     junit_path: &Path,
     scenarios: &HashMap<String, Scenario>,

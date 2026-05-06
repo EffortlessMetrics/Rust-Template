@@ -10,6 +10,9 @@ thiserror.workspace = true
 [dev-dependencies]
 tempfile.workspace = true
 
+[lints]
+workspace = true
+
 [package]
 description = "Semantic version management and Cargo.toml manipulation for releases"
 name = "xtask-versioning"

@@ -1,0 +1,11 @@
+Implement the Effortless Metrics strict Clippy policy for this Rust workspace
+without changing product behavior. Add a workspace-level active lint baseline
+for panic-free production and test code, silent-failure prevention, suppression
+governance, and good-taste reviewability lints; add `clippy.toml` only for
+repo-specific disallowed methods/types/macros, not test carveouts. Add
+`policy/clippy-lints.toml` as the machine-readable ledger for active lints and
+planned Rust 1.94/1.95 flips, plus `docs/CLIPPY_POLICY.md` explaining the
+policy, suppression style, and repo-specific overlays. Add or extend
+`xtask check-lint-policy` so CI can verify lint inheritance, active/planned lint
+consistency, panic-free test posture, and planned upgrade flips; keep existing
+debt explicit, counted, and temporary.

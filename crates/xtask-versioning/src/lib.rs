@@ -116,7 +116,7 @@ impl VersionInfo {
     /// Create VersionInfo with a specific date.
     ///
     /// Useful for testing and retroactive version updates.
-    #[allow(dead_code)] // Infrastructure for retroactive version updates
+    #[expect(dead_code, reason = "existing reviewed debt; tracked by lint policy ratchet")] // Infrastructure for retroactive version updates
     pub fn with_date(version_str: &str, date: &str) -> XtaskResult<Self> {
         let version = Version::parse(version_str)?;
         Ok(Self {
@@ -145,7 +145,8 @@ pub struct FilePattern {
     pub marker: String,
     /// Pattern type: yaml_value, heading_version, inline_version, etc.
     #[serde(rename = "type")]
-    #[allow(dead_code)] // deserialized for schema completeness; future pattern strategies
+    #[expect(dead_code, reason = "existing reviewed debt; tracked by lint policy ratchet")]
+    // deserialized for schema completeness; future pattern strategies
     pub pattern_type: String,
     /// Format style: quoted, prefixed, prefixed_paren, etc.
     pub format: String,
@@ -157,7 +158,8 @@ pub struct FilePattern {
     pub example: Option<String>,
     /// Additional notes about the pattern. Deserialized for schema completeness.
     #[serde(default)]
-    #[allow(dead_code)] // deserialized for schema completeness; future UX improvements
+    #[expect(dead_code, reason = "existing reviewed debt; tracked by lint policy ratchet")]
+    // deserialized for schema completeness; future UX improvements
     pub notes: Option<String>,
 }
 
@@ -169,7 +171,8 @@ pub struct VersionTarget {
     pub path: String,
     /// Description of the file's purpose. Deserialized for schema completeness.
     #[serde(default)]
-    #[allow(dead_code)] // deserialized for schema completeness; future UI improvements
+    #[expect(dead_code, reason = "existing reviewed debt; tracked by lint policy ratchet")]
+    // deserialized for schema completeness; future UI improvements
     pub description: Option<String>,
     /// Patterns to match and update
     pub patterns: Vec<FilePattern>,
@@ -178,11 +181,13 @@ pub struct VersionTarget {
     pub required: bool,
     /// Update priority (1=highest). Deserialized for schema completeness.
     #[serde(default = "default_priority")]
-    #[allow(dead_code)] // deserialized for schema completeness; future ordered updates
+    #[expect(dead_code, reason = "existing reviewed debt; tracked by lint policy ratchet")]
+    // deserialized for schema completeness; future ordered updates
     pub priority: u32,
     /// Additional notes about this file. Deserialized for schema completeness.
     #[serde(default)]
-    #[allow(dead_code)] // deserialized for schema completeness; future UI improvements
+    #[expect(dead_code, reason = "existing reviewed debt; tracked by lint policy ratchet")]
+    // deserialized for schema completeness; future UI improvements
     pub notes: Option<String>,
 }
 
@@ -199,11 +204,13 @@ fn default_priority() -> u32 {
 #[derive(Debug, Clone, Deserialize)]
 pub struct VersionFormat {
     /// Regex pattern for valid version strings.
-    #[allow(dead_code)] // deserialized for schema completeness; future custom format support
+    #[expect(dead_code, reason = "existing reviewed debt; tracked by lint policy ratchet")]
+    // deserialized for schema completeness; future custom format support
     pub pattern: String,
     /// Example version strings matching this format.
     #[serde(default)]
-    #[allow(dead_code)] // deserialized for schema completeness; future validation messages
+    #[expect(dead_code, reason = "existing reviewed debt; tracked by lint policy ratchet")]
+    // deserialized for schema completeness; future validation messages
     pub examples: Vec<String>,
 }
 
@@ -212,15 +219,18 @@ pub struct VersionFormat {
 #[derive(Debug, Clone, Deserialize)]
 pub struct VersionManifest {
     /// Schema version for version manifest format.
-    #[allow(dead_code)] // Deserialized for schema completeness
+    #[expect(dead_code, reason = "existing reviewed debt; tracked by lint policy ratchet")]
+    // Deserialized for schema completeness
     pub schema_version: String,
     /// Human-readable description of the version manifest. Deserialized for schema completeness.
     #[serde(default)]
-    #[allow(dead_code)] // deserialized for schema completeness; future validation reports
+    #[expect(dead_code, reason = "existing reviewed debt; tracked by lint policy ratchet")]
+    // deserialized for schema completeness; future validation reports
     pub description: Option<String>,
     /// Custom version format specification. Deserialized for schema completeness.
     #[serde(default)]
-    #[allow(dead_code)] // deserialized for schema completeness; future custom format support
+    #[expect(dead_code, reason = "existing reviewed debt; tracked by lint policy ratchet")]
+    // deserialized for schema completeness; future custom format support
     pub version_format: Option<VersionFormat>,
     pub files: Vec<VersionTarget>,
 }

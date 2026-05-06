@@ -51,7 +51,7 @@ const NULL_DEVICE: &str = "/dev/null";
 const NULL_DEVICE: &str = "nul";
 
 // Import steps module to ensure step definitions are registered
-#[allow(unused_imports)]
+#[expect(unused_imports, reason = "existing reviewed debt; tracked by lint policy ratchet")]
 use acceptance::steps;
 
 #[tokio::main]
