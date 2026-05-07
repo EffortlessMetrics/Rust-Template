@@ -215,6 +215,22 @@ Those feedback loops are how the kernel evolves for the next tag.
 
 ---
 
+## 8. Codecov after forking
+
+The template includes a Codecov workflow and badge as optional execution-surface telemetry.
+
+After forking:
+
+1. Connect the forked repository to Codecov via [codecov.io](https://codecov.io).
+2. Add the repository secret `CODECOV_TOKEN` (from Codecov's token page).
+3. Update README badge URLs from `EffortlessMetrics/Rust-Template` to your fork's owner/repo.
+4. Keep Codecov advisory until the fork has real baseline data (set `informational: true` in `codecov.yml`).
+5. Do not treat Codecov as AC coverage or kernel readiness proof. Use `cargo xtask selftest`, `ac-status`, and `ac-coverage` for governed state.
+
+For more details, see [docs/ci/coverage.md](../ci/coverage.md).
+
+---
+
 ## Related Docs
 
 - [KERNEL_SNAPSHOT.md](../KERNEL_SNAPSHOT.md) - What you're inheriting
