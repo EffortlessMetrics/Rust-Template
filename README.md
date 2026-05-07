@@ -1,5 +1,10 @@
 # rust-as-spec IDP Platform Cell (v3.3.15)
 
+[![tier1-selftest](https://github.com/EffortlessMetrics/Rust-Template/actions/workflows/tier1-selftest.yml/badge.svg)](https://github.com/EffortlessMetrics/Rust-Template/actions/workflows/tier1-selftest.yml)
+[![Codecov](https://codecov.io/gh/EffortlessMetrics/Rust-Template/branch/main/graph/badge.svg)](https://codecov.io/gh/EffortlessMetrics/Rust-Template)
+[![MSRV](https://img.shields.io/badge/MSRV-1.92.0-blue.svg)](Cargo.toml)
+[![License](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue.svg)](#license)
+
 > **TL;DR:** A governed Rust service template where specs, tests, docs, policies, and CI all agree — and the repo can prove it.
 >
 > **Kernel baseline:** `v3.3.9-kernel`
