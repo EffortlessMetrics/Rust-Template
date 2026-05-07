@@ -1,0 +1,23 @@
+# Non-Rust Configuration Allowlist
+#
+# This allowlist registers non-Rust files (config, CI, docs) that require
+# explicit governance records. Each entry declares ownership, surface impact,
+# and validation mechanism.
+
+[[allow]]
+path = "codecov.yml"
+kind = "ci_coverage_policy"
+owner = "release/ci"
+surface = "ci"
+classification = "config"
+reason = "Codecov status and reporting configuration for cargo-llvm-cov coverage uploads."
+covered_by = ["cargo xtask check-file-policy"]
+
+[[allow]]
+path = ".github/workflows/coverage.yml"
+kind = "ci_declarative"
+owner = "release/ci"
+surface = "ci"
+classification = "config"
+reason = "GitHub Actions coverage workflow for cargo-llvm-cov and Codecov uploads."
+covered_by = ["cargo xtask check-file-policy", "docs/ci/coverage.md"]
