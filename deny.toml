@@ -57,3 +57,7 @@ allow = [
 ]
 # Ignore unlicensed workspace/path crates (they are marked publish = false)
 private = {ignore = true}
+
+[[advisories.ignore]]
+id = "RUSTSEC-2026-0066"
+reason = "Testcontainers pins an older version of astral-tokio-tar. Since testcontainers is a dev dependency used for integration tests (not handling untrusted user input), the malicious tar parser vulnerability is low-risk."
