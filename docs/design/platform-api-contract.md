@@ -80,7 +80,7 @@ For full endpoint documentation, see `docs/reference/platform-api-endpoints.md`.
 - `crates/platform/src/handlers.rs` implements the endpoints
 - `crates/spec-runtime/src/openapi.rs` generates the OpenAPI document
 - `examples/backstage-plugin/` consumes the contract via `PlatformClient`
-- `scripts/validate-ts-config.sh` ensures TypeScript config is modern and enforceable
+- `cargo xtask validate-ts-config` ensures TypeScript config is modern and enforceable
 
 ## Related Documents
 

@@ -7,14 +7,14 @@ This example shows how to integrate a Rust-as-Spec platform cell with Port.io ID
 ## What This Example Shows
 
 1. **Blueprint definition** for modeling platform cells in Port.io
-2. **Sync script** (Python) for pushing governance data to Port.io
+2. **Sync binary** (Rust) for pushing governance data to Port.io
 3. **Scorecard configuration** for governance health metrics
 4. **GitHub Actions workflow** for scheduled syncs
 
 ## Prerequisites
 
 - Port.io account with API access
-- Python 3.11+
+- Rust toolchain
 - Platform service running (`cargo run -p app-http`)
 - Port.io API credentials (`PORT_CLIENT_ID`, `PORT_CLIENT_SECRET`)
 
@@ -27,26 +27,19 @@ This example shows how to integrate a Rust-as-Spec platform cell with Port.io ID
 export PORT_CLIENT_ID="your-client-id"
 export PORT_CLIENT_SECRET="your-client-secret"
 
-# Create blueprint via Port API
-curl -X POST https://api.getport.io/v1/blueprints \
-  -H "Authorization: Bearer $(python3 get_token.py)" \
-  -H "Content-Type: application/json" \
-  -d @blueprint.json
+# Create the blueprint via the Port UI or API using blueprint.json
 ```
 
-### 2. Run the Sync Script
+### 2. Run the Sync Binary
 
 ```bash
-# Install dependencies
-pip install requests
-
 # Set environment
 export PLATFORM_URL="http://localhost:8080"
 export PORT_CLIENT_ID="your-client-id"
 export PORT_CLIENT_SECRET="your-client-secret"
 
 # Run sync
-python3 sync_to_port.py
+cargo run --manifest-path examples/port-integration/Cargo.toml --
 ```
 
 ### 2b. Offline Testing (No Port Credentials)
@@ -58,7 +51,7 @@ To test the IDP integration without Port.io credentials:
 cargo run -p app-http &
 
 # Run in dump-only mode (no Port.io auth required)
-PLATFORM_URL="http://localhost:8080" python3 sync_to_port.py --dump-only
+PLATFORM_URL="http://localhost:8080" cargo run --manifest-path examples/port-integration/Cargo.toml -- --dump-only
 ```
 
 This will:
@@ -72,16 +65,16 @@ The `--dump-only` flag outputs pure JSON to stdout, making it easy to pipe to `j
 
 ```bash
 # Extract pure JSON to file
-python3 sync_to_port.py --dump-only 2>/dev/null > entity.json
+cargo run --manifest-path examples/port-integration/Cargo.toml -- --dump-only 2>/dev/null > entity.json
 
 # Parse with jq
-python3 sync_to_port.py --dump-only 2>/dev/null | jq '.properties'
+cargo run --manifest-path examples/port-integration/Cargo.toml -- --dump-only 2>/dev/null | jq '.properties'
 
 # Get specific fields
-python3 sync_to_port.py --dump-only 2>/dev/null | jq '.properties.ac_coverage_percent'
+cargo run --manifest-path examples/port-integration/Cargo.toml -- --dump-only 2>/dev/null | jq '.properties.ac_coverage_percent'
 
 # See status messages alongside (both streams visible)
-python3 sync_to_port.py --dump-only
+cargo run --manifest-path examples/port-integration/Cargo.toml -- --dump-only
 ```
 
 **Note:** Status messages like "Fetching from..." go to stderr, so `2>/dev/null` silences them for pure JSON output.
@@ -99,13 +92,13 @@ Navigate to your Port.io catalog to see the synced service entity with:
 | File | Description |
 |------|-------------|
 | `blueprint.json` | Port.io blueprint schema for platform cells |
-| `sync_to_port.py` | Python sync script (incremental, idempotent) |
+| `Cargo.toml`, `src/main.rs` | Rust sync binary (incremental, idempotent) |
 | `scorecard.json` | Governance scorecard configuration |
 | `.github/workflows/port-sync.yaml` | GitHub Actions workflow template |
 
 ## API Endpoints Used
 
-The sync script consumes these platform endpoints:
+The sync binary consumes these platform endpoints:
 
 - `GET /platform/status` - Governance health and policies
 - `GET /platform/idp/snapshot` - Consolidated IDP payload
@@ -129,7 +122,7 @@ Edit `blueprint.json` to add properties:
 }
 ```
 
-Then update `sync_to_port.py` to populate the field from platform data.
+Then update `src/main.rs` to populate the field from platform data.
 
 ### Sync Frequency
 
@@ -147,15 +140,15 @@ schedule:
 Ensure your Port.io credentials are correct:
 
 ```bash
-python3 -c "import sync_to_port; print(sync_to_port.get_port_token())"
+cargo run --manifest-path examples/port-integration/Cargo.toml -- --verbose
 ```
 
 ### Entity Not Appearing
 
-Check the sync script output for errors:
+Check the sync binary output for errors:
 
 ```bash
-python3 sync_to_port.py --verbose
+cargo run --manifest-path examples/port-integration/Cargo.toml -- --verbose
 ```
 
 ### Stale Data
@@ -163,7 +156,7 @@ python3 sync_to_port.py --verbose
 Force a full sync (ignores cache):
 
 ```bash
-python3 sync_to_port.py --force
+cargo run --manifest-path examples/port-integration/Cargo.toml -- --force
 ```
 
 ## Related Documentation

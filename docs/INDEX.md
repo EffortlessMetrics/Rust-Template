@@ -325,7 +325,7 @@ When updating documentation:
 | **Doc index ↔ front-matter sync** | `docs-check` | AC-PLT-DOC-INDEX-FRONTMATTER |
 | **ADR format** | `adr-check` | — |
 | **Skills format** | `skills-lint` | AC-TPL-SKILLS-LINT |
-| **TypeScript config** | `validate-ts-config.sh` (CI) | — |
+| **TypeScript config** | `cargo xtask validate-ts-config` (CI) | — |
 
 ### Version Authority
 

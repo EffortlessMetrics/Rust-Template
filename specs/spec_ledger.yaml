@@ -1792,7 +1792,7 @@ stories:
             text: >
               All tsconfig.json files avoid deprecated moduleResolution values
               (node, node10) and ignoreDeprecations flags; violations are caught
-              by scripts/validate-ts-config.sh and the ts-config-lints CI job.
+              by cargo xtask validate-ts-config and the ts-config-lints CI job.
             tags: [template, typescript]
             must_have_ac: false
             note: "CI gate for TypeScript configuration health. Non-kernel (Rust-focused template)."

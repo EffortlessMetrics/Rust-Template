@@ -215,246 +215,11 @@ curl -X POST https://api.getport.io/v1/blueprints \
 
 ---
 
-## Step 2: Create Entity Sync Script
+## Step 2: Run the Rust Entity Sync Binary
 
-This script polls `/platform/status` and syncs data to Port.io.
+The repository includes a Rust Port.io sync example at `examples/port-integration`. It polls the platform IDP endpoints and upserts a Port.io entity without requiring a Python helper.
 
-### 2.1 Python Sync Script
-
-Save as `port-sync.py`:
-
-```python
-#!/usr/bin/env python3
-"""
-Port.io sync script for Rust-as-Spec platform cells.
-
-Polls /platform/status, /platform/docs/index, /platform/tasks
-and syncs governance health to Port.io entities.
-
-Usage:
-  export PORT_CLIENT_ID="..."
-  export PORT_CLIENT_SECRET="..."
-  export PLATFORM_URL="http://localhost:8080"
-  python3 port-sync.py
-"""
-
-import os
-import sys
-import requests
-from typing import Dict, Any, Optional
-
-# Configuration from environment
-PORT_CLIENT_ID = os.getenv("PORT_CLIENT_ID")
-PORT_CLIENT_SECRET = os.getenv("PORT_CLIENT_SECRET")
-PLATFORM_URL = os.getenv("PLATFORM_URL", "http://localhost:8080")
-PORT_API_URL = "https://api.getport.io/v1"
-
-def get_port_token() -> str:
-    """Authenticate with Port.io and get access token."""
-    response = requests.post(
-        f"{PORT_API_URL}/auth/access_token",
-        json={
-            "clientId": PORT_CLIENT_ID,
-            "clientSecret": PORT_CLIENT_SECRET,
-        },
-    )
-    response.raise_for_status()
-    return response.json()["accessToken"]
-
-def fetch_platform_status() -> Dict[str, Any]:
-    """Fetch /platform/status from Rust-as-Spec service."""
-    response = requests.get(f"{PLATFORM_URL}/platform/status", timeout=10)
-    response.raise_for_status()
-    return response.json()
-
-def fetch_platform_docs() -> Dict[str, Any]:
-    """Fetch /platform/docs/index for documentation health."""
-    response = requests.get(f"{PLATFORM_URL}/platform/docs/index", timeout=10)
-    response.raise_for_status()
-    return response.json()
-
-def fetch_platform_tasks() -> Dict[str, Any]:
-    """Fetch /platform/tasks for task counts."""
-    response = requests.get(f"{PLATFORM_URL}/platform/tasks", timeout=10)
-    response.raise_for_status()
-    return response.json()
-
-def calculate_ac_coverage(governance: Dict[str, Any]) -> Dict[str, int]:
-    """Calculate AC coverage from governance data."""
-    # Note: This depends on /platform/coverage endpoint
-    # For now, derive from /platform/status if available
-    try:
-        response = requests.get(f"{PLATFORM_URL}/platform/coverage", timeout=10)
-        response.raise_for_status()
-        coverage = response.json()
-
-        total = coverage.get("summary", {}).get("total", 0)
-        passing = coverage.get("summary", {}).get("passing", 0)
-        failing = coverage.get("summary", {}).get("failing", 0)
-
-        return {
-            "ac_total": total,
-            "ac_passing": passing,
-            "ac_failing": failing,
-        }
-    except Exception as e:
-        print(f"Warning: Could not fetch AC coverage: {e}", file=sys.stderr)
-        return {"ac_total": 0, "ac_passing": 0, "ac_failing": 0}
-
-def calculate_task_counts(tasks: Dict[str, Any]) -> Dict[str, int]:
-    """Calculate task status counts."""
-    task_list = tasks.get("tasks", [])
-    counts = {
-        "total": len(task_list),
-        "todo": 0,
-        "in_progress": 0,
-        "review": 0,
-        "done": 0,
-    }
-
-    for task in task_list:
-        status = task.get("status", "").lower()
-        if status == "todo":
-            counts["todo"] += 1
-        elif status == "inprogress":
-            counts["in_progress"] += 1
-        elif status == "review":
-            counts["review"] += 1
-        elif status == "done":
-            counts["done"] += 1
-
-    return counts
-
-def build_port_entity(
-    status: Dict[str, Any],
-    docs: Dict[str, Any],
-    tasks: Dict[str, Any],
-    ac_coverage: Dict[str, int],
-    task_counts: Dict[str, int],
-) -> Dict[str, Any]:
-    """Build Port.io entity from platform data."""
-    service = status.get("service", {})
-    governance = status.get("governance", {})
-
-    # Map /platform/status fields to Port.io properties
-    entity = {
-        "identifier": service.get("service_id", "unknown"),
-        "title": service.get("display_name", "Unknown Service"),
-        "blueprint": "rust-template-service",
-        "properties": {
-            "service_id": service.get("service_id", "unknown"),
-            "template_version": service.get("template_version", "unknown"),
-            "display_name": service.get("display_name", "Unknown Service"),
-            "description": service.get("description", ""),
-
-            # Governance health
-            "governance_passing": governance.get("policies", {}).get("status") == "passing",
-            "ac_total": ac_coverage["ac_total"],
-            "ac_passing": ac_coverage["ac_passing"],
-            "ac_failing": ac_coverage["ac_failing"],
-
-            # Documentation health
-            "docs_total": docs.get("summary", {}).get("total", 0),
-            "docs_with_issues": docs.get("summary", {}).get("with_issues", 0),
-
-            # DevEx metrics
-            "friction_total": governance.get("friction", {}).get("total", 0),
-            "friction_open": governance.get("friction", {}).get("open", 0),
-            "questions_open": governance.get("questions", {}).get("open", 0),
-
-            # Task tracking
-            "tasks_total": task_counts["total"],
-            "tasks_todo": task_counts["todo"],
-            "tasks_in_progress": task_counts["in_progress"],
-
-            # Links
-            "platform_url": PLATFORM_URL,
-            "repo_url": service.get("links", {}).get("repository", ""),
-        },
-        "relations": {},
-    }
-
-    return entity
-
-def upsert_port_entity(token: str, entity: Dict[str, Any]) -> None:
-    """Create or update entity in Port.io."""
-    identifier = entity["identifier"]
-    blueprint = entity["blueprint"]
-
-    # Port.io upsert: PUT to /blueprints/{blueprint}/entities/{identifier}
-    url = f"{PORT_API_URL}/blueprints/{blueprint}/entities/{identifier}"
-
-    response = requests.put(
-        url,
-        headers={
-            "Authorization": f"Bearer {token}",
-            "Content-Type": "application/json",
-        },
-        json=entity,
-    )
-
-    if response.status_code in (200, 201):
-        print(f"✓ Synced entity {identifier} to Port.io")
-    else:
-        print(f"✗ Failed to sync {identifier}: {response.status_code} {response.text}", file=sys.stderr)
-        response.raise_for_status()
-
-def main():
-    """Main sync workflow."""
-    # Validate environment
-    if not PORT_CLIENT_ID or not PORT_CLIENT_SECRET:
-        print("Error: PORT_CLIENT_ID and PORT_CLIENT_SECRET must be set", file=sys.stderr)
-        sys.exit(1)
-
-    print(f"Syncing platform {PLATFORM_URL} to Port.io...")
-
-    try:
-        # 1. Authenticate with Port.io
-        token = get_port_token()
-        print("✓ Authenticated with Port.io")
-
-        # 2. Fetch platform data
-        status = fetch_platform_status()
-        print("✓ Fetched /platform/status")
-
-        docs = fetch_platform_docs()
-        print("✓ Fetched /platform/docs/index")
-
-        tasks = fetch_platform_tasks()
-        print("✓ Fetched /platform/tasks")
-
-        ac_coverage = calculate_ac_coverage(status.get("governance", {}))
-        print("✓ Calculated AC coverage")
-
-        task_counts = calculate_task_counts(tasks)
-        print("✓ Calculated task counts")
-
-        # 3. Build entity
-        entity = build_port_entity(status, docs, tasks, ac_coverage, task_counts)
-
-        # 4. Sync to Port.io
-        upsert_port_entity(token, entity)
-
-        print("✓ Sync complete!")
-
-    except requests.exceptions.RequestException as e:
-        print(f"✗ Network error: {e}", file=sys.stderr)
-        sys.exit(1)
-    except Exception as e:
-        print(f"✗ Unexpected error: {e}", file=sys.stderr)
-        sys.exit(1)
-
-if __name__ == "__main__":
-    main()
-```
-
-### 2.2 Make Script Executable
-
-```bash
-chmod +x port-sync.py
-```
-
-### 2.3 Test Sync Locally
+### 2.1 Sync Locally
 
 ```bash
 # Set environment variables
@@ -466,28 +231,30 @@ export PLATFORM_URL="http://localhost:8080"
 cargo run -p app-http &
 
 # Run sync
-python3 port-sync.py
+cargo run --manifest-path examples/port-integration/Cargo.toml --
 ```
+
+### 2.2 Dump Entity JSON Without Port Credentials
+
+```bash
+PLATFORM_URL="http://localhost:8080" \
+  cargo run --manifest-path examples/port-integration/Cargo.toml -- --dump-only
+```
+
+The `--dump-only` mode fetches platform data and writes the Port.io entity JSON to stdout while keeping status messages on stderr.
 
 **Expected output:**
 
 ```
-Syncing platform http://localhost:8080 to Port.io...
-✓ Authenticated with Port.io
-✓ Fetched /platform/status
-✓ Fetched /platform/docs/index
-✓ Fetched /platform/tasks
-✓ Calculated AC coverage
-✓ Calculated task counts
-✓ Synced entity rust-template to Port.io
-✓ Sync complete!
+Syncing template to Port.io...
+Success! Entity synced: template
 ```
 
 ---
 
 ## Step 3: Map `/platform/status` Fields to Port Properties
 
-The sync script maps platform JSON contracts to Port.io properties. Here's the full mapping:
+The sync binary maps platform JSON contracts to Port.io properties. Here's the full mapping:
 
 | Platform Field | Port.io Property | Source Endpoint | Type |
 |---------------|-----------------|----------------|------|
@@ -590,7 +357,7 @@ Create in Port.io UI: **Scorecards** → **New Scorecard**
 
 ## Step 5: Set Up Scheduled Sync (GitHub Actions)
 
-For production, run the sync script on a schedule using GitHub Actions.
+For production, run the sync binary on a schedule using GitHub Actions.
 
 ### 5.1 Create Workflow File
 
@@ -620,14 +387,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
-      - name: Install dependencies
-        run: pip install requests
-
       - name: Start platform service
         run: |
           # Build and start service in background
@@ -642,7 +401,7 @@ jobs:
           PORT_CLIENT_ID: ${{ secrets.PORT_CLIENT_ID }}
           PORT_CLIENT_SECRET: ${{ secrets.PORT_CLIENT_SECRET }}
           PLATFORM_URL: "http://localhost:8080"
-        run: python3 port-sync.py
+        run: cargo run --manifest-path examples/port-integration/Cargo.toml --
 
       - name: Notify on failure
         if: failure()
@@ -677,7 +436,7 @@ For deployed services with public endpoints:
           PORT_CLIENT_ID: ${{ secrets.PORT_CLIENT_ID }}
           PORT_CLIENT_SECRET: ${{ secrets.PORT_CLIENT_SECRET }}
           PLATFORM_URL: "https://api.example.com"  # Your production URL
-        run: python3 port-sync.py
+        run: cargo run --manifest-path examples/port-integration/Cargo.toml --
 ```
 
 ---
@@ -712,7 +471,7 @@ Make a change that affects governance:
 cargo test -- --ignored failing_test
 
 # Re-run sync
-python3 port-sync.py
+cargo run --manifest-path examples/port-integration/Cargo.toml --
 
 # Verify in Port.io:
 # - governance_passing should be false
@@ -727,7 +486,7 @@ Restore and verify recovery:
 git checkout .
 
 # Re-sync
-python3 port-sync.py
+cargo run --manifest-path examples/port-integration/Cargo.toml --
 
 # Verify Port.io reflects green state
 ```
@@ -852,4 +611,4 @@ This integration provides:
 1. Customize scorecards for your team's quality standards
 2. Add alerts (e.g., Slack notifications when governance fails)
 3. Create Port.io dashboards aggregating multiple services
-4. Extend sync script to include custom metrics
+4. Extend sync binary to include custom metrics

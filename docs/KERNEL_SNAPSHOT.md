@@ -43,7 +43,7 @@ Day-0 commands work as documented. This is a stable, forkable baseline.
   documented kernel contracts
 - **OpenAPI spec** – `specs/openapi/openapi.yaml` includes platform schemas (`PlatformStatus`,
   `DocsIndex`) with 500 error responses
-- **TypeScript configuration governance** – `scripts/validate-ts-config.sh` + CI job enforce modern TS standards
+- **TypeScript configuration governance** – `cargo xtask validate-ts-config` + CI job enforce modern TS standards
 - **Backstage reference consumer** – `examples/backstage-plugin/` demonstrates IDP integration patterns
 
 **Note:** "Selftest green" means the template meets its own specifications. It does not mean every

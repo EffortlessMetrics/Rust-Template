@@ -1,0 +1,12 @@
+[package]
+name = "port-integration-example"
+version = "0.1.0"
+edition = "2024"
+publish = false
+
+[dependencies]
+anyhow.workspace = true
+chrono.workspace = true
+clap = { features = ["derive"], version = "4.5.54" }
+reqwest = { features = ["blocking", "json", "rustls-tls"], version = "0.12.28", default-features = false }
+serde_json.workspace = true

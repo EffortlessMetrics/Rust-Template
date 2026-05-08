@@ -864,7 +864,7 @@ The plugin's `package.json` includes these scripts:
 
 ### CI Enforcement
 
-TypeScript configuration is validated in CI via `./scripts/validate-ts-config.sh`. This script:
+TypeScript configuration is validated in CI via `cargo xtask validate-ts-config`. This script:
 
 1. Scans all `tsconfig.json` files in the repo
 2. Fails on deprecated `moduleResolution` values
@@ -874,7 +874,7 @@ TypeScript configuration is validated in CI via `./scripts/validate-ts-config.sh
 Run locally to validate:
 
 ```bash
-./scripts/validate-ts-config.sh
+cargo xtask validate-ts-config
 ```
 
 ### Extending Third-Party Configs

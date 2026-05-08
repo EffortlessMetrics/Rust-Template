@@ -21,7 +21,7 @@ debug = 1
 
 [workspace]
 exclude = ["examples/brownfield-demo"]
-members = ["crates/*"]
+members = ["crates/*", "examples/port-integration"]
 resolver = "3"
 
 [workspace.dependencies]

@@ -186,42 +186,15 @@ fn run_plugin_checks(plugin_dir: &std::path::Path) -> Result<()> {
 
 /// Run TypeScript config validation
 fn run_ts_config_check() -> CheckResult {
-    let script_path = std::path::Path::new("scripts/validate-ts-config.sh");
-    if !script_path.exists() {
-        return CheckResult::Skip("validation script not found".to_string());
-    }
-
-    // Find tsconfig files
-    let tsconfig_files: Vec<_> = walkdir::WalkDir::new(".")
-        .into_iter()
-        .filter_entry(|e| {
-            !e.path().starts_with("./node_modules")
-                && !e.path().starts_with("./.git")
-                && !e.path().starts_with("./target")
-        })
-        .filter_map(|e| e.ok())
-        .filter(|e| e.file_name() == "tsconfig.json")
-        .collect();
-
-    if tsconfig_files.is_empty() {
-        return CheckResult::Skip("no tsconfig.json files found".to_string());
-    }
-
-    // Run the validation script
-    match Command::new("bash").arg(script_path).output() {
-        Ok(output) if output.status.success() => CheckResult::Pass,
-        Ok(output) => {
-            let stderr = String::from_utf8_lossy(&output.stderr);
-            let stdout = String::from_utf8_lossy(&output.stdout);
-            let msg = if !stderr.is_empty() {
-                stderr.lines().last().unwrap_or("validation failed").to_string()
-            } else if !stdout.is_empty() {
-                stdout.lines().last().unwrap_or("validation failed").to_string()
-            } else {
-                "validation failed".to_string()
-            };
-            CheckResult::Fail(msg)
+    match super::validate_ts_config::validate_workspace(std::path::Path::new("."), false) {
+        Ok(summary) if summary.files_checked == 0 => {
+            CheckResult::Skip("no tsconfig.json files found".to_string())
         }
-        Err(e) => CheckResult::Fail(format!("failed to run script: {}", e)),
+        Ok(summary) if summary.violations == 0 => CheckResult::Pass,
+        Ok(summary) => CheckResult::Fail(format!(
+            "{} TypeScript config violation(s) found",
+            summary.violations
+        )),
+        Err(e) => CheckResult::Fail(format!("TypeScript config validation failed: {e}")),
     }
 }
