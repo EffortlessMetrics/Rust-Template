@@ -306,7 +306,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - OpenAPI lint via Redocly CLI
   - Backstage plugin type checks and tests
   - TypeScript configuration validation (no deprecated moduleResolution)
-- **TypeScript configuration governance** – `scripts/validate-ts-config.sh` enforces modern TypeScript best practices
+- **TypeScript configuration governance** – `cargo xtask validate-ts-config` enforces modern TypeScript best practices
 - **IDP Profile in KERNEL_SNAPSHOT** – Table of IDP-contract surfaces with their ACs
 - **"For IDPs" block in README** – Quick reference pointing to IDP Cell Contract
 

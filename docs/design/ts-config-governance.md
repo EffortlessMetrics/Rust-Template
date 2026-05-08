@@ -46,13 +46,13 @@ This is a **template-level** (non-kernel) concern:
 
 ```bash
 # Validate all TypeScript configurations
-./scripts/validate-ts-config.sh
+cargo xtask validate-ts-config
 
 # Or via xtask (includes OpenAPI lint)
 cargo xtask idp-check
 ```
 
-The validation script:
+The Rust validator:
 
 1. Scans for all `tsconfig*.json` files in the repository
 2. Checks for deprecated `moduleResolution` values (`node`, `node10`)
@@ -65,13 +65,13 @@ These rules are tracked in `docs/INDEX.md` under the invariants section:
 
 | Invariant | Enforcement |
 |-----------|-------------|
-| No deprecated moduleResolution | `scripts/validate-ts-config.sh` |
-| No ignoreDeprecations flags | `scripts/validate-ts-config.sh` |
+| No deprecated moduleResolution | `cargo xtask validate-ts-config` |
+| No ignoreDeprecations flags | `cargo xtask validate-ts-config` |
 | TypeScript builds clean | `pnpm run build` in CI |
 
 ## Implementation Notes
 
-- `scripts/validate-ts-config.sh` performs the actual validation
+- `cargo xtask validate-ts-config` performs the actual validation
 - `cargo xtask idp-check` runs this as part of IDP surface validation
 - CI job `ts-config-lints` runs on PRs touching TypeScript files
 - The Backstage plugin's `tsconfig.json` uses `moduleResolution: "NodeNext"`
@@ -80,4 +80,4 @@ These rules are tracked in `docs/INDEX.md` under the invariants section:
 
 - `docs/INDEX.md` - Invariants index tracking enforcement
 - `examples/backstage-plugin/tsconfig.json` - Reference configuration
-- `scripts/validate-ts-config.sh` - Validation script
+- `cargo xtask validate-ts-config` - Validation command

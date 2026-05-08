@@ -84,7 +84,7 @@ All template behaviour ACs are passing where implemented.
 | AC-TPL-GRAPH-INVARIANTS | Meta | Graph invariants are enforced by sub-ACs; this is a composite. |
 | AC-TPL-PLATFORM-DOCS-CONTRACT | Contract | Schema contract validated by OpenAPI, not direct BDD. |
 | AC-TPL-PLATFORM-STATUS-CONTRACT | Contract | Schema contract validated by OpenAPI, not direct BDD. |
-| AC-TPL-TS-CONFIG-VALIDATION | CI-only | TypeScript config validation runs in CI scripts. |
+| AC-TPL-TS-CONFIG-VALIDATION | CI-only | TypeScript config validation runs through the Rust xtask CLI in CI. |
 
 These are correctly showing as UNKNOWN because:
 - They're documentation, guidance, or governance policies (not testable as BDD)

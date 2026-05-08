@@ -275,7 +275,7 @@ After selftest runs, the workflow verifies that generated artifacts (like `featu
 **Two Jobs:**
 
 1. **`ts-config-lints`** - TypeScript config standards validation
-   - Runs `./scripts/validate-ts-config.sh`
+   - Runs `cargo xtask validate-ts-config`
    - Ensures TypeScript configs in `examples/backstage-plugin/` follow standards
    - Required for IDP integration consistency
 
@@ -308,7 +308,7 @@ cargo clippy --fix --allow-dirty
 cargo test
 
 # Validate TS configs
-./scripts/validate-ts-config.sh
+cargo xtask validate-ts-config
 ```
 
 ---

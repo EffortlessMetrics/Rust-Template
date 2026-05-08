@@ -536,7 +536,7 @@ Feature: Developer Experience Commands
   @AC-TPL-TS-CONFIG-VALIDATION
   Scenario: ts-config validator catches deprecated settings contract
     Given I am in the actual workspace
-    When I run "bash scripts/validate-ts-config.sh"
+    When I run "cargo xtask validate-ts-config"
     Then the command should succeed
     And the output should contain "Validating TypeScript configuration standards"
     And the output should contain "pass validation"

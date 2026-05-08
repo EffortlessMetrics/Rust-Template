@@ -15,7 +15,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Validate TypeScript config standards
-        run: ./scripts/validate-ts-config.sh
+        run: cargo xtask validate-ts-config
 
   rust-lints:
     runs-on: ubuntu-latest

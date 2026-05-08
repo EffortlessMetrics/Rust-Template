@@ -194,6 +194,10 @@ enum Commands {
     #[command(next_help_heading = "✅ Validation Gates")]
     CheckLayering,
 
+    /// Validate TypeScript config files from Rust (no shell helper required)
+    #[command(next_help_heading = "✅ Validation Gates")]
+    ValidateTsConfig,
+
     // ============================================================================
     // ACCEPTANCE CRITERIA (AC management & testing)
     // ============================================================================
@@ -1339,6 +1343,7 @@ fn main() -> Result<()> {
         Commands::ContractsCheck => commands::contracts::check(),
         Commands::ContractsFmt => commands::contracts::fmt(),
         Commands::UiContractCheck => commands::ui_contract_check::run(),
+        Commands::ValidateTsConfig => commands::validate_ts_config::run(),
         Commands::GraphExport { format, check, report_format } => {
             commands::graph_export::run(commands::graph_export::GraphExportArgs {
                 format,
@@ -1861,6 +1866,7 @@ pub fn all_command_names() -> Vec<&'static str> {
         "tools-checksum-update",
         "tools-checksum-verify",
         "ui-contract-check",
+        "validate-ts-config",
         "version",
         "version-check",
     ]
@@ -1971,6 +1977,7 @@ fn get_command_name(command: &Commands) -> &'static str {
         Commands::ContractsCheck => "contracts-check",
         Commands::ContractsFmt => "contracts-fmt",
         Commands::UiContractCheck => "ui-contract-check",
+        Commands::ValidateTsConfig => "validate-ts-config",
         Commands::FrictionList { .. } => "friction-list",
         Commands::FrictionNew { .. } => "friction-new",
         Commands::FrictionResolve { .. } => "friction-resolve",
