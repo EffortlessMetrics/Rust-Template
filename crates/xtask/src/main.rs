@@ -1122,6 +1122,34 @@ enum Commands {
     #[command(next_help_heading = "🔧 Infrastructure & Utilities")]
     ToolsChecksumVerify,
 
+    /// Validate build infrastructure configuration (Rust replacement for legacy shell script)
+    #[command(next_help_heading = "🔧 Infrastructure & Utilities")]
+    ValidateBuildInfrastructure,
+
+    /// Validate CI optimization conventions (Rust replacement for legacy shell script)
+    #[command(next_help_heading = "🔧 Infrastructure & Utilities")]
+    ValidateCiOptimizations,
+
+    /// Validate TypeScript configuration conventions (Rust replacement for legacy shell script)
+    #[command(next_help_heading = "🔧 Infrastructure & Utilities")]
+    ValidateTsConfig,
+
+    /// Check event schema compatibility against Confluent Schema Registry
+    #[command(next_help_heading = "🔧 Infrastructure & Utilities")]
+    CheckSchemaCompat,
+
+    /// Add missing rust-version.workspace declarations to selected crates
+    #[command(next_help_heading = "🔧 Infrastructure & Utilities")]
+    FixMsrvDeclarations,
+
+    /// Print the security advisory resolution plan
+    #[command(next_help_heading = "🔧 Infrastructure & Utilities")]
+    SecurityAdvisoriesPlan,
+
+    /// Run K8s secret policy regression tests with OPA
+    #[command(next_help_heading = "🔧 Infrastructure & Utilities")]
+    K8sSecretsPolicyTest,
+
     /// Clean workspace (remove target/, generated docs, etc.)
     #[command(next_help_heading = "🔧 Infrastructure & Utilities")]
     Clean,
@@ -1355,6 +1383,17 @@ fn main() -> Result<()> {
         Commands::TasksList => commands::tasks_list::run(),
         Commands::ToolsChecksumUpdate => commands::tools_checksum_update::run(),
         Commands::ToolsChecksumVerify => commands::tools_checksum_verify::run(),
+        Commands::ValidateBuildInfrastructure => {
+            commands::script_migrations::validate_build_infrastructure()
+        }
+        Commands::ValidateCiOptimizations => {
+            commands::script_migrations::validate_ci_optimizations()
+        }
+        Commands::ValidateTsConfig => commands::script_migrations::validate_ts_config(),
+        Commands::CheckSchemaCompat => commands::script_migrations::check_schema_compat(),
+        Commands::FixMsrvDeclarations => commands::script_migrations::fix_msrv_declarations(),
+        Commands::SecurityAdvisoriesPlan => commands::script_migrations::security_advisories_plan(),
+        Commands::K8sSecretsPolicyTest => commands::script_migrations::k8s_secrets_policy_test(),
         Commands::FmtAll => commands::fmt_all::run(),
         Commands::Hakari => commands::hakari::run(),
         Commands::Migrate => commands::migrate::run(),
@@ -2017,6 +2056,13 @@ fn get_command_name(command: &Commands) -> &'static str {
         Commands::FmtAll => "fmt-all",
         Commands::ToolsChecksumUpdate => "tools-checksum-update",
         Commands::ToolsChecksumVerify => "tools-checksum-verify",
+        Commands::ValidateBuildInfrastructure => "validate-build-infrastructure",
+        Commands::ValidateCiOptimizations => "validate-ci-optimizations",
+        Commands::ValidateTsConfig => "validate-ts-config",
+        Commands::CheckSchemaCompat => "check-schema-compat",
+        Commands::FixMsrvDeclarations => "fix-msrv-declarations",
+        Commands::SecurityAdvisoriesPlan => "security-advisories-plan",
+        Commands::K8sSecretsPolicyTest => "k8s-secrets-policy-test",
         Commands::Clean => "clean",
         Commands::GraphExport { .. } => "graph-export",
         Commands::Hakari => "hakari",
