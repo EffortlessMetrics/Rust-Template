@@ -1207,6 +1207,20 @@ enum Commands {
     /// Validate IDP integration surface (OpenAPI lint + Backstage plugin checks)
     #[command(next_help_heading = "🔌 IDP Integration")]
     IdpCheck,
+
+    /// Sync platform IDP data to Port.io (replaces the former Python helper)
+    #[command(next_help_heading = "🔌 IDP Integration")]
+    IdpPortSync {
+        /// Verbose diagnostics to stderr
+        #[arg(short, long)]
+        verbose: bool,
+        /// Force a full sync (Port upsert is already idempotent)
+        #[arg(short, long)]
+        force: bool,
+        /// Fetch platform data and print Port entity JSON without syncing
+        #[arg(short = 'd', long)]
+        dump_only: bool,
+    },
 }
 
 fn main() -> Result<()> {
@@ -1669,6 +1683,13 @@ fn main() -> Result<()> {
             commands::idp_snapshot::run(commands::idp_snapshot::IdpSnapshotArgs { output, pretty })
         }
         Commands::IdpCheck => commands::idp_check::run(),
+        Commands::IdpPortSync { verbose, force, dump_only } => {
+            commands::port_sync::run(commands::port_sync::PortSyncArgs {
+                verbose,
+                force,
+                dump_only,
+            })
+        }
     }
 }
 
@@ -2029,5 +2050,6 @@ fn get_command_name(command: &Commands) -> &'static str {
         Commands::EnvMode { .. } => "env-mode",
         Commands::IdpSnapshot { .. } => "idp-snapshot",
         Commands::IdpCheck => "idp-check",
+        Commands::IdpPortSync { .. } => "idp-port-sync",
     }
 }

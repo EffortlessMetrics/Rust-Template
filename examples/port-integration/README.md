@@ -7,14 +7,13 @@ This example shows how to integrate a Rust-as-Spec platform cell with Port.io ID
 ## What This Example Shows
 
 1. **Blueprint definition** for modeling platform cells in Port.io
-2. **Sync script** (Python) for pushing governance data to Port.io
+2. **Rust xtask command** for pushing governance data to Port.io
 3. **Scorecard configuration** for governance health metrics
 4. **GitHub Actions workflow** for scheduled syncs
 
 ## Prerequisites
 
 - Port.io account with API access
-- Python 3.11+
 - Platform service running (`cargo run -p app-http`)
 - Port.io API credentials (`PORT_CLIENT_ID`, `PORT_CLIENT_SECRET`)
 
@@ -29,24 +28,21 @@ export PORT_CLIENT_SECRET="your-client-secret"
 
 # Create blueprint via Port API
 curl -X POST https://api.getport.io/v1/blueprints \
-  -H "Authorization: Bearer $(python3 get_token.py)" \
+  -H "Authorization: Bearer $PORT_ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d @blueprint.json
 ```
 
-### 2. Run the Sync Script
+### 2. Run the Rust Sync Command
 
 ```bash
-# Install dependencies
-pip install requests
-
 # Set environment
 export PLATFORM_URL="http://localhost:8080"
 export PORT_CLIENT_ID="your-client-id"
 export PORT_CLIENT_SECRET="your-client-secret"
 
 # Run sync
-python3 sync_to_port.py
+cargo xtask idp-port-sync
 ```
 
 ### 2b. Offline Testing (No Port Credentials)
@@ -58,7 +54,7 @@ To test the IDP integration without Port.io credentials:
 cargo run -p app-http &
 
 # Run in dump-only mode (no Port.io auth required)
-PLATFORM_URL="http://localhost:8080" python3 sync_to_port.py --dump-only
+PLATFORM_URL="http://localhost:8080" cargo xtask idp-port-sync --dump-only
 ```
 
 This will:
@@ -72,16 +68,16 @@ The `--dump-only` flag outputs pure JSON to stdout, making it easy to pipe to `j
 
 ```bash
 # Extract pure JSON to file
-python3 sync_to_port.py --dump-only 2>/dev/null > entity.json
+cargo xtask idp-port-sync --dump-only 2>/dev/null > entity.json
 
 # Parse with jq
-python3 sync_to_port.py --dump-only 2>/dev/null | jq '.properties'
+cargo xtask idp-port-sync --dump-only 2>/dev/null | jq '.properties'
 
 # Get specific fields
-python3 sync_to_port.py --dump-only 2>/dev/null | jq '.properties.ac_coverage_percent'
+cargo xtask idp-port-sync --dump-only 2>/dev/null | jq '.properties.ac_coverage_percent'
 
 # See status messages alongside (both streams visible)
-python3 sync_to_port.py --dump-only
+cargo xtask idp-port-sync --dump-only
 ```
 
 **Note:** Status messages like "Fetching from..." go to stderr, so `2>/dev/null` silences them for pure JSON output.
@@ -99,13 +95,13 @@ Navigate to your Port.io catalog to see the synced service entity with:
 | File | Description |
 |------|-------------|
 | `blueprint.json` | Port.io blueprint schema for platform cells |
-| `sync_to_port.py` | Python sync script (incremental, idempotent) |
+| `cargo xtask idp-port-sync` | Rust sync command (incremental, idempotent) |
 | `scorecard.json` | Governance scorecard configuration |
 | `.github/workflows/port-sync.yaml` | GitHub Actions workflow template |
 
 ## API Endpoints Used
 
-The sync script consumes these platform endpoints:
+The Rust sync command consumes these platform endpoints:
 
 - `GET /platform/status` - Governance health and policies
 - `GET /platform/idp/snapshot` - Consolidated IDP payload
@@ -129,7 +125,7 @@ Edit `blueprint.json` to add properties:
 }
 ```
 
-Then update `sync_to_port.py` to populate the field from platform data.
+Then update `crates/xtask/src/commands/port_sync.rs` to populate the field from platform data.
 
 ### Sync Frequency
 
@@ -144,26 +140,22 @@ schedule:
 
 ### Authentication Errors
 
-Ensure your Port.io credentials are correct:
-
-```bash
-python3 -c "import sync_to_port; print(sync_to_port.get_port_token())"
-```
+Ensure `PORT_CLIENT_ID` and `PORT_CLIENT_SECRET` are set and valid. Run `cargo xtask idp-port-sync --verbose` for HTTP status details.
 
 ### Entity Not Appearing
 
-Check the sync script output for errors:
+Check the sync command output for errors:
 
 ```bash
-python3 sync_to_port.py --verbose
+cargo xtask idp-port-sync --verbose
 ```
 
 ### Stale Data
 
-Force a full sync (ignores cache):
+Force a full sync (Port upsert is idempotent):
 
 ```bash
-python3 sync_to_port.py --force
+cargo xtask idp-port-sync --force
 ```
 
 ## Related Documentation
