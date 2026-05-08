@@ -61,6 +61,7 @@ pub mod release_bundle;
 pub mod release_prepare;
 pub mod release_verify;
 pub mod sbom_local;
+pub mod script_migrations;
 pub mod selftest;
 pub mod service_descriptor;
 pub mod service_init;
