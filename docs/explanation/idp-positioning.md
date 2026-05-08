@@ -867,61 +867,28 @@ export const GovernanceCard = ({ entity }: { entity: Entity }) => {
 
 ---
 
-### Example 2: Port.io Ingestion Script
+### Example 2: Port.io Ingestion Command
 
-**Goal:** Sync platform cells into Port.io service catalog
+**Goal:** Sync platform cells into the Port.io service catalog.
 
 **Implementation:**
 
-```python
-# port-sync.py
-import requests
-import yaml
+Use the Rust xtask command instead of maintaining a separate scripting runtime:
 
-PORT_API_URL = "https://api.getport.io/v1"
-PORT_CLIENT_ID = "your-client-id"
-PORT_CLIENT_SECRET = "your-client-secret"
+```bash
+export PORT_CLIENT_ID="your-client-id"
+export PORT_CLIENT_SECRET="your-client-secret"
+export PLATFORM_URL="http://localhost:8080"
+export PORT_BLUEPRINT_ID="rust_service"
 
-def sync_platform_cell_to_port(repo_path):
-    """Sync platform cell metadata to Port.io."""
+# Validate the transformed entity without Port.io credentials or writes.
+cargo xtask idp-port-sync --dump-only
 
-    # Read service metadata
-    with open(f"{repo_path}/specs/service_metadata.yaml") as f:
-        metadata = yaml.safe_load(f)
-
-    # Read feature status
-    with open(f"{repo_path}/docs/feature_status.md") as f:
-        feature_status = f.read()
-        ac_coverage = parse_ac_coverage(feature_status)
-
-    # Create Port entity
-    entity = {
-        "identifier": metadata["service_id"],
-        "title": metadata["display_name"],
-        "properties": {
-            "team": metadata["ownership"]["team"],
-            "tier": metadata["lifecycle"]["tier"],
-            "ac_coverage": ac_coverage,
-            "links": metadata["links"],
-            "tags": metadata["tags"],
-        }
-    }
-
-    # Upsert to Port
-    headers = {"Authorization": f"Bearer {get_port_token()}"}
-    requests.post(
-        f"{PORT_API_URL}/blueprints/service/entities",
-        json=entity,
-        headers=headers
-    )
-
-def parse_ac_coverage(feature_status_md):
-    """Parse AC coverage from feature_status.md."""
-    # Example: "| AC-TPL-001 | ... | [PASS] pass | 1 / 1 |"
-    # Returns: {"passing": 56, "total": 60, "percentage": 93}
-    # Implementation left as exercise
-    pass
+# Upsert the transformed entity into Port.io.
+cargo xtask idp-port-sync --verbose
 ```
+
+The command reads `/platform/idp/snapshot` and `/platform/status`, calculates AC coverage, includes documentation and task metrics, and posts the resulting entity to Port.io. Customize the mapping in `crates/xtask/src/commands/port_sync.rs` when a fork needs additional catalog properties.
 
 ---
 
