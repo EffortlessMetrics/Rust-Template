@@ -1,0 +1,3 @@
+## 2024-05-10 - Enhancing Search Inputs Accessibility
+**Learning:** For search inputs, using `type="search"` instead of `type="text"` provides native browser features (like clear buttons) and better semantic meaning. Moreover, search inputs without a visible text label require an explicit `aria-label` (e.g., `aria-label="Search..."`) so screen readers can correctly identify them without external labels.
+**Action:** When creating or encountering search inputs, verify they use `type="search"` and include an `aria-label` if a visible external label isn't present to maintain high accessibility standards.
