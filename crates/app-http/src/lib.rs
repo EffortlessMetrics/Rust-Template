@@ -352,7 +352,9 @@ impl AppState {
 
         // Initialize security configurations
         let cors_config = CorsConfig::from_sources(config.as_ref());
-        let security_headers_config = crate::middleware::CachedSecurityHeaders::new(&SecurityHeadersConfig::from_sources(config.as_ref()));
+        let security_headers_config = crate::middleware::CachedSecurityHeaders::new(
+            &SecurityHeadersConfig::from_sources(config.as_ref()),
+        );
 
         // Create RepoContext for gov-http integration
         let repo_context = RepoContext::new(&workspace_root);
