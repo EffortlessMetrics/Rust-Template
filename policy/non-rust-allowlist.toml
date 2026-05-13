@@ -21,3 +21,13 @@ surface = "ci"
 classification = "config"
 reason = "GitHub Actions coverage workflow for cargo-llvm-cov and Codecov uploads."
 covered_by = ["cargo xtask check-file-policy", "docs/ci/coverage.md"]
+
+[[allow]]
+glob = "badges/*.json"
+kind = "generated_badge_endpoint"
+owner = "release/ci"
+surface = "docs"
+classification = "generated"
+reason = "Generated Shields endpoint JSON for public README badges."
+generated_by = "cargo xtask badges"
+covered_by = ["cargo xtask badges --check"]
