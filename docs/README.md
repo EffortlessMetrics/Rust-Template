@@ -4,6 +4,7 @@
 Welcome to the Rust Template documentation. This template provides spec-as-code, AC-as-code, policy-as-code, and LLM-native development for Rust services.
 
 **Quick Links:**
+- [VERIFICATION.md](VERIFICATION.md) — README badge meanings, generated endpoints, and PR evidence boundaries
 - 🚀 [Getting Started](#getting-started)
 - 🧪 [Pilot Projects](#pilot-projects) ← Validate the template
 - 📖 [Learning Path](#learning-path-new-to-template)
