@@ -194,6 +194,46 @@ enum Commands {
     #[command(next_help_heading = "✅ Validation Gates")]
     CheckLayering,
 
+    /// Regenerate public Shields endpoint badge JSON under badges/
+    #[command(next_help_heading = "✅ Validation Gates")]
+    Badges {
+        /// Check committed badge endpoints for drift without updating badges/
+        #[arg(long)]
+        check: bool,
+    },
+
+    /// Generate or validate PR-scoped RIPR evidence artifacts
+    #[command(next_help_heading = "✅ Validation Gates")]
+    RiprPr {
+        /// Validate required PR evidence artifacts without regenerating them
+        #[arg(long)]
+        check: bool,
+    },
+
+    /// Generate or validate RIPR review guidance artifacts
+    #[command(next_help_heading = "✅ Validation Gates")]
+    RiprReviewComments {
+        /// Validate required review guidance artifacts without regenerating them
+        #[arg(long)]
+        check: bool,
+    },
+
+    /// Validate generated non-Rust file ownership policy
+    #[command(next_help_heading = "✅ Validation Gates")]
+    CheckFilePolicy,
+
+    /// Check documentation synchronization contracts
+    #[command(next_help_heading = "✅ Validation Gates")]
+    DocsSync {
+        /// Verify documentation drift without updating files
+        #[arg(long)]
+        check: bool,
+    },
+
+    /// Run the standard pull request gate
+    #[command(next_help_heading = "✅ Validation Gates")]
+    Pr,
+
     // ============================================================================
     // ACCEPTANCE CRITERIA (AC management & testing)
     // ============================================================================
@@ -1656,6 +1696,15 @@ fn main() -> Result<()> {
             })
         }
         Commands::CheckLayering => commands::check_layering::run(),
+        Commands::Badges { check } => commands::badges::run(check),
+        Commands::RiprPr { check } => commands::ripr::run_pr(check),
+        Commands::RiprReviewComments { check } => commands::ripr::run_review_comments(check),
+        Commands::CheckFilePolicy => commands::check_file_policy::run(),
+        Commands::DocsSync { check } => {
+            let _ = check;
+            commands::docs_check::run()
+        }
+        Commands::Pr => commands::check::run(),
         Commands::Version { json } => {
             commands::version::run(commands::version::VersionArgs { json })
         }
@@ -1790,6 +1839,12 @@ pub fn all_command_names() -> Vec<&'static str> {
         "check-api-diff",
         "check-json-schemas",
         "check-layering",
+        "badges",
+        "ripr-pr",
+        "ripr-review-comments",
+        "check-file-policy",
+        "docs-sync",
+        "pr",
         "check-openapi-diff",
         "ci-local",
         "clean",
@@ -1950,6 +2005,12 @@ fn get_command_name(command: &Commands) -> &'static str {
         Commands::CheckOpenapiDiff => "check-openapi-diff",
         Commands::CheckJsonSchemas { .. } => "check-json-schemas",
         Commands::CheckLayering => "check-layering",
+        Commands::Badges { .. } => "badges",
+        Commands::RiprPr { .. } => "ripr-pr",
+        Commands::RiprReviewComments { .. } => "ripr-review-comments",
+        Commands::CheckFilePolicy => "check-file-policy",
+        Commands::DocsSync { .. } => "docs-sync",
+        Commands::Pr => "pr",
         Commands::AcStatus { .. } => "ac-status",
         Commands::AcNew { .. } => "ac-new",
         Commands::AcCoverage { .. } => "ac-coverage",
