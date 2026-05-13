@@ -194,6 +194,40 @@ enum Commands {
     #[command(next_help_heading = "✅ Validation Gates")]
     CheckLayering,
 
+    /// Check governed non-Rust file allowlist entries
+    #[command(next_help_heading = "✅ Validation Gates")]
+    CheckFilePolicy,
+
+    /// Regenerate generated public Shields endpoint JSON under badges/
+    #[command(next_help_heading = "✅ Validation Gates")]
+    Badges {
+        /// Check committed badge endpoints for drift without updating badges/
+        #[arg(long)]
+        check: bool,
+    },
+
+    /// Produce PR-scoped RIPR repository exposure evidence under target/ripr/pr/
+    #[command(next_help_heading = "✅ Validation Gates")]
+    RiprPr {
+        /// Check the existing target/ripr/pr output contract without running ripr
+        #[arg(long)]
+        check: bool,
+    },
+
+    /// Produce PR-scoped RIPR review guidance under target/ripr/review/
+    #[command(next_help_heading = "✅ Validation Gates")]
+    RiprReviewComments {
+        /// Check the existing target/ripr/review output contract without running ripr
+        #[arg(long)]
+        check: bool,
+        /// Base revision for diff-scoped review guidance
+        #[arg(long, default_value = "origin/main")]
+        base: String,
+        /// Head revision for diff-scoped review guidance
+        #[arg(long, default_value = "HEAD")]
+        head: String,
+    },
+
     // ============================================================================
     // ACCEPTANCE CRITERIA (AC management & testing)
     // ============================================================================
@@ -415,6 +449,14 @@ enum Commands {
     /// Synchronize governed facts from code/specs to docs
     #[command(next_help_heading = "📚 Design & Documentation")]
     ContractsFmt,
+
+    /// Synchronize governed documentation facts, or check drift with --check
+    #[command(next_help_heading = "📚 Design & Documentation")]
+    DocsSync {
+        /// Check for drift instead of updating docs
+        #[arg(long)]
+        check: bool,
+    },
 
     /// Validate UI contract (specs/ui_contract.yaml) and DOM anchors
     #[command(next_help_heading = "📚 Design & Documentation")]
@@ -1338,6 +1380,13 @@ fn main() -> Result<()> {
         Commands::Spellcheck => commands::spellcheck::run_with_default_targets(),
         Commands::ContractsCheck => commands::contracts::check(),
         Commands::ContractsFmt => commands::contracts::fmt(),
+        Commands::DocsSync { check } => {
+            if check {
+                commands::contracts::check()
+            } else {
+                commands::contracts::fmt()
+            }
+        }
         Commands::UiContractCheck => commands::ui_contract_check::run(),
         Commands::GraphExport { format, check, report_format } => {
             commands::graph_export::run(commands::graph_export::GraphExportArgs {
@@ -1656,6 +1705,12 @@ fn main() -> Result<()> {
             })
         }
         Commands::CheckLayering => commands::check_layering::run(),
+        Commands::CheckFilePolicy => commands::check_file_policy::run(),
+        Commands::Badges { check } => commands::badges::run(check),
+        Commands::RiprPr { check } => commands::ripr::run_pr(check),
+        Commands::RiprReviewComments { check, base, head } => {
+            commands::ripr::run_review_comments(check, &base, &head)
+        }
         Commands::Version { json } => {
             commands::version::run(commands::version::VersionArgs { json })
         }
@@ -1950,6 +2005,10 @@ fn get_command_name(command: &Commands) -> &'static str {
         Commands::CheckOpenapiDiff => "check-openapi-diff",
         Commands::CheckJsonSchemas { .. } => "check-json-schemas",
         Commands::CheckLayering => "check-layering",
+        Commands::CheckFilePolicy => "check-file-policy",
+        Commands::Badges { .. } => "badges",
+        Commands::RiprPr { .. } => "ripr-pr",
+        Commands::RiprReviewComments { .. } => "ripr-review-comments",
         Commands::AcStatus { .. } => "ac-status",
         Commands::AcNew { .. } => "ac-new",
         Commands::AcCoverage { .. } => "ac-coverage",
@@ -1970,6 +2029,7 @@ fn get_command_name(command: &Commands) -> &'static str {
         Commands::Spellcheck => "spellcheck",
         Commands::ContractsCheck => "contracts-check",
         Commands::ContractsFmt => "contracts-fmt",
+        Commands::DocsSync { .. } => "docs-sync",
         Commands::UiContractCheck => "ui-contract-check",
         Commands::FrictionList { .. } => "friction-list",
         Commands::FrictionNew { .. } => "friction-new",
