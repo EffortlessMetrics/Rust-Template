@@ -194,6 +194,30 @@ enum Commands {
     #[command(next_help_heading = "✅ Validation Gates")]
     CheckLayering,
 
+    /// Regenerate or verify public Shields endpoint badges under badges/
+    #[command(next_help_heading = "✅ Validation Gates")]
+    Badges {
+        /// Check committed badge endpoint drift without updating badges/
+        #[arg(long)]
+        check: bool,
+    },
+
+    /// Produce PR-scoped RIPR exposure evidence under target/ripr/pr/
+    #[command(next_help_heading = "✅ Validation Gates")]
+    RiprPr {
+        /// Verify required PR evidence artifacts without regenerating them
+        #[arg(long)]
+        check: bool,
+    },
+
+    /// Produce RIPR review guidance under target/ripr/review/
+    #[command(next_help_heading = "✅ Validation Gates")]
+    RiprReviewComments {
+        /// Verify required review guidance artifacts without regenerating them
+        #[arg(long)]
+        check: bool,
+    },
+
     // ============================================================================
     // ACCEPTANCE CRITERIA (AC management & testing)
     // ============================================================================
@@ -1656,6 +1680,9 @@ fn main() -> Result<()> {
             })
         }
         Commands::CheckLayering => commands::check_layering::run(),
+        Commands::Badges { check } => commands::badges::run(check),
+        Commands::RiprPr { check } => commands::ripr::run_pr(check),
+        Commands::RiprReviewComments { check } => commands::ripr::run_review_comments(check),
         Commands::Version { json } => {
             commands::version::run(commands::version::VersionArgs { json })
         }
@@ -1950,6 +1977,9 @@ fn get_command_name(command: &Commands) -> &'static str {
         Commands::CheckOpenapiDiff => "check-openapi-diff",
         Commands::CheckJsonSchemas { .. } => "check-json-schemas",
         Commands::CheckLayering => "check-layering",
+        Commands::Badges { .. } => "badges",
+        Commands::RiprPr { .. } => "ripr-pr",
+        Commands::RiprReviewComments { .. } => "ripr-review-comments",
         Commands::AcStatus { .. } => "ac-status",
         Commands::AcNew { .. } => "ac-new",
         Commands::AcCoverage { .. } => "ac-coverage",
