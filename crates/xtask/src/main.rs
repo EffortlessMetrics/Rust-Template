@@ -764,6 +764,48 @@ enum Commands {
         dry_run: bool,
     },
 
+    /// Generate or check public Shields endpoint badge JSON
+    #[command(next_help_heading = "🚢 Releases")]
+    Badges {
+        /// Check committed badge endpoint JSON for drift instead of updating it
+        #[arg(long)]
+        check: bool,
+    },
+
+    /// Produce or check PR-scoped RIPR evidence
+    #[command(next_help_heading = "🚢 Releases")]
+    RiprPr {
+        /// Check target/ripr/pr output contract instead of producing evidence
+        #[arg(long)]
+        check: bool,
+    },
+
+    /// Produce or check RIPR review guidance files
+    #[command(next_help_heading = "🚢 Releases")]
+    RiprReviewComments {
+        /// Check target/ripr/review output contract instead of producing guidance
+        #[arg(long)]
+        check: bool,
+    },
+
+    /// Produce impacted-evidence routing metadata for PR summaries
+    #[command(next_help_heading = "🚢 Releases")]
+    ImpactedEvidence,
+
+    /// Run targeted mutation for PR-changed code
+    #[command(next_help_heading = "🚢 Releases")]
+    MutantsPr {
+        /// Scope mutation to changed code
+        #[arg(long)]
+        changed: bool,
+        /// Run full owner mutation routing
+        #[arg(long)]
+        full_owner: bool,
+        /// Print the route without executing mutation
+        #[arg(long)]
+        dry_run: bool,
+    },
+
     /// Generate PR cover sheet from receipts
     #[command(next_help_heading = "🚢 Releases")]
     PrCover {
@@ -1374,6 +1416,13 @@ fn main() -> Result<()> {
                 crate_name,
                 dry_run,
             })
+        }
+        Commands::Badges { check } => commands::badges::run(check),
+        Commands::RiprPr { check } => commands::ripr::pr(check),
+        Commands::RiprReviewComments { check } => commands::ripr::review_comments(check),
+        Commands::ImpactedEvidence => commands::ripr::impacted_evidence(),
+        Commands::MutantsPr { changed, full_owner, dry_run } => {
+            commands::ripr::mutants_pr(changed, full_owner, dry_run)
         }
         Commands::PrCover { pr, run_dir, output, description } => {
             commands::pr_cover::run(commands::pr_cover::PrCoverArgs {
@@ -1995,6 +2044,11 @@ fn get_command_name(command: &Commands) -> &'static str {
         Commands::ReleaseVerify => "release-verify",
         Commands::SbomLocal => "sbom-local",
         Commands::PublishCheck { .. } => "publish-check",
+        Commands::Badges { .. } => "badges",
+        Commands::RiprPr { .. } => "ripr-pr",
+        Commands::RiprReviewComments { .. } => "ripr-review-comments",
+        Commands::ImpactedEvidence => "impacted-evidence",
+        Commands::MutantsPr { .. } => "mutants-pr",
         Commands::PrCover { .. } => "pr-cover",
         Commands::PrUpdate { .. } => "pr-update",
         Commands::ReceiptsGate { .. } => "receipts-gate",
