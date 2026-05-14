@@ -13,6 +13,8 @@
 # - Upstream issue: https://github.com/testcontainers/testcontainers-rs/issues
 # - We use the latest testcontainers version
 #
+# RUSTSEC-2026-0066 (astral-tokio-tar malformed PAX extensions skipped)
+# - Transitive via testcontainers
 ignore = [
   # RUSTSEC-2023-0071 (rsa Marvin Attack)
   # - Path: rsa → jsonwebtoken → app-http
@@ -29,7 +31,12 @@ ignore = [
   # - Next review: 2026-03-18 (quarterly)
   # - Action: Monitor upstream bollard crate for fix
   # - Tracking: https://github.com/testcontainers/testcontainers-rs/issues
-  "RUSTSEC-2025-0134"
+  "RUSTSEC-2025-0134",
+
+  # RUSTSEC-2026-0066 (astral-tokio-tar parsing issue)
+  # - Path: testcontainers -> astral-tokio-tar
+  # - Action: Monitor testcontainers
+  "RUSTSEC-2026-0066"
 ]
 yanked = "deny"
 
@@ -57,3 +64,4 @@ allow = [
 ]
 # Ignore unlicensed workspace/path crates (they are marked publish = false)
 private = {ignore = true}
+# trigger ci
