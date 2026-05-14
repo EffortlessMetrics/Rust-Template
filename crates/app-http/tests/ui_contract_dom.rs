@@ -286,3 +286,47 @@ async fn test_active_nav_link_has_aria_current() {
         "Dashboard link on dashboard page should have aria-current='page'"
     );
 }
+
+/// @AC-TPL-PLATFORM-UI-ACCESSIBILITY: Coverage filters have aria-pressed
+#[tokio::test]
+async fn test_coverage_filters_accessibility() {
+    let workspace_root = test_workspace_root();
+    let repo = Arc::new(FsGovernanceRepository::new(workspace_root.clone()));
+    let app = app_with_workspace_root(repo, workspace_root.clone()).expect("valid config");
+
+    // Fetch coverage HTML
+    let html = fetch_html(app, "/ui/coverage").await;
+    let document = Html::parse_document(&html);
+
+    // Check Filter Buttons
+    let filter_buttons = [
+        ("filter-all", "true"),
+        ("filter-passing", "false"),
+        ("filter-failing", "false"),
+        ("filter-unknown", "false"),
+    ];
+
+    for (id, expected_pressed) in filter_buttons {
+        let selector = Selector::parse(&format!("#{}", id)).unwrap();
+        let button = document.select(&selector).next().unwrap_or_else(|| panic!("Button #{} should exist", id));
+
+        let aria_pressed = button.value().attr("aria-pressed");
+        assert_eq!(
+            aria_pressed,
+            Some(expected_pressed),
+            "Button #{} should have aria-pressed='{}'",
+            id,
+            expected_pressed
+        );
+    }
+
+    // Check Search Input Label
+    let selector = Selector::parse("#search-box").unwrap();
+    let search_box = document.select(&selector).next().expect("Search box should exist");
+    let aria_label = search_box.value().attr("aria-label");
+
+    assert!(
+        aria_label.is_some() && !aria_label.unwrap().is_empty(),
+        "Search box must have a non-empty aria-label"
+    );
+}
