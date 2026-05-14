@@ -594,7 +594,7 @@ fn dashboard_content(
 fn coverage_content() -> Markup {
     html! {
         style { (coverage_styles()) }
-        script { (coverage_script()) }
+        script { (maud::PreEscaped(coverage_script())) }
 
         .card data-uiid="coverage.summary" {
             h2 { "AC Coverage Summary" }
@@ -620,16 +620,16 @@ fn coverage_content() -> Markup {
 
         .card {
             h2 { "Acceptance Criteria Coverage" }
-            .filter-controls data-uiid="coverage.filters" {
-                button #filter-all.filter-btn onclick="filterData('all')" { "All" }
-                button #filter-passing.filter-btn onclick="filterData('passing')" { "Passing" }
-                button #filter-failing.filter-btn onclick="filterData('failing')" { "Failing" }
-                button #filter-unknown.filter-btn onclick="filterData('unknown')" { "Unknown" }
-                input #search-box.search-box type="text" placeholder="Search by AC ID or title..."
+            .filter-controls data-uiid="coverage.filters" role="group" aria-label="Coverage filters" {
+                button #filter-all.filter-btn.active aria-pressed="true" onclick="filterData('all')" { "All" }
+                button #filter-passing.filter-btn aria-pressed="false" onclick="filterData('passing')" { "Passing" }
+                button #filter-failing.filter-btn aria-pressed="false" onclick="filterData('failing')" { "Failing" }
+                button #filter-unknown.filter-btn aria-pressed="false" onclick="filterData('unknown')" { "Unknown" }
+                input #search-box.search-box type="text" aria-label="Search coverage" placeholder="Search by AC ID or title..."
                     oninput="searchData()";
             }
 
-            #table-container data-uiid="coverage.table" {
+            #table-container data-uiid="coverage.table" aria-live="polite" {
                 table .coverage-table {
                     thead {
                         tr {
@@ -766,8 +766,11 @@ fn coverage_script() -> &'static str {
         // Update active button
         document.querySelectorAll('.filter-btn').forEach(btn => {
             btn.classList.remove('active');
+            btn.setAttribute('aria-pressed', 'false');
         });
-        document.getElementById('filter-' + status).classList.add('active');
+        const activeBtn = document.getElementById('filter-' + status);
+        activeBtn.classList.add('active');
+        activeBtn.setAttribute('aria-pressed', 'true');
 
         // Apply filter
         applyFilters();
@@ -831,9 +834,5 @@ fn coverage_script() -> &'static str {
         });
     }
 
-    // Initialize with 'all' filter active
-    window.addEventListener('DOMContentLoaded', () => {
-        document.getElementById('filter-all').classList.add('active');
-    });
     "#
 }
