@@ -133,6 +133,10 @@ mod tests {
 
     #[tokio::test]
     async fn metrics_handler_returns_metrics_text() {
+        // Ensure there is at least one metric recorded before checking the text output.
+        // Prometheus registry might be empty otherwise depending on test execution order.
+        HTTP_REQUESTS_TOTAL.with_label_values(&["GET", "/test-metrics-handler", "200"]).inc();
+
         let response = metrics_handler().await.into_response();
         assert_eq!(response.status(), StatusCode::OK);
 

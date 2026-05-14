@@ -10,7 +10,7 @@ tracing.workspace = true
 uuid.workspace = true
 
 [dev-dependencies]
-testcontainers = "0.26.0"
+testcontainers = "0.26.4"
 uuid = {features = ["v4"], workspace = true}
 async-trait.workspace = true
 chrono.workspace = true
