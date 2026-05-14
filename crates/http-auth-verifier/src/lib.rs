@@ -224,7 +224,7 @@ mod tests {
         let claims = Claims {
             sub: "user123".to_string(),
             exp: now + 3600,
-            iat: now + 301,
+            iat: now + 3600, // Use a large offset to prevent flakiness due to clock advancement during the test
             iss: "rust-template".to_string(),
         };
 
