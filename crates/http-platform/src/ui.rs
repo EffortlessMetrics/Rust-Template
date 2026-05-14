@@ -291,6 +291,7 @@ fn layout(
                 script { "mermaid.initialize({ startOnLoad: true, theme: 'default' });" }
             }
             body {
+                a .skip-link href="#main-content" { "Skip to main content" }
                 header data-uiid=(format!("{}.header", page_id)) {
                     .container {
                         h1 { (service_name) }
@@ -320,7 +321,7 @@ fn layout(
                         a href=(support) target="_blank" { "Platform Support" }
                     }
                 }
-                main .container {
+                main #main-content .container {
                     (content)
                 }
             }
@@ -337,6 +338,20 @@ fn styles() -> &'static str {
         line-height: 1.6;
         color: #333;
         background: #f5f5f5;
+    }
+    .skip-link {
+        position: absolute;
+        top: -40px;
+        left: 0;
+        background: #000;
+        color: #fff;
+        padding: 8px;
+        z-index: 1000;
+        text-decoration: none;
+        transition: top 0.2s;
+    }
+    .skip-link:focus {
+        top: 0;
     }
     .container {
         max-width: 1200px;

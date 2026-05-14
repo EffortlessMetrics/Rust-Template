@@ -286,3 +286,33 @@ async fn test_active_nav_link_has_aria_current() {
         "Dashboard link on dashboard page should have aria-current='page'"
     );
 }
+
+/// @AC-TPL-PLATFORM-UI-ACCESSIBILITY: Skip to main content link exists and points to main
+#[tokio::test]
+async fn test_accessibility_skip_link() {
+    let workspace_root = test_workspace_root();
+    let repo = Arc::new(FsGovernanceRepository::new(workspace_root.clone()));
+    let app = app_with_workspace_root(repo, workspace_root.clone()).expect("valid config");
+
+    // Fetch dashboard HTML
+    let html = fetch_html(app, "/").await;
+    let document = Html::parse_document(&html);
+
+    // 1. Verify skip link exists and has correct href
+    let skip_selector = Selector::parse("a.skip-link").unwrap();
+    let skip_link =
+        document.select(&skip_selector).next().expect("Skip to main content link should exist");
+
+    assert_eq!(
+        skip_link.value().attr("href"),
+        Some("#main-content"),
+        "Skip link should point to #main-content"
+    );
+
+    // 2. Verify main element exists and has correct ID
+    let main_selector = Selector::parse("main#main-content").unwrap();
+    assert!(
+        document.select(&main_selector).next().is_some(),
+        "Main element with id='main-content' should exist"
+    );
+}
