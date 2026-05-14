@@ -22,6 +22,7 @@
 
 use axum::{Json, Router, extract::State, routing::get};
 use http_errors::HttpError;
+use http_idp_snapshot::load_ac_coverage;
 use platform_contract::{
     AcCoverageInfo, AuthSummary, ConfigSummary, DevExCounts, DocCounts, ErrorStats, ErrorSummary,
     ForkCounts, FrictionCounts, FrictionSummary, GovernanceStatus, LedgerCounts, PolicyStatus,
@@ -72,7 +73,7 @@ pub use gov_http::{
 };
 
 // Re-export IDP snapshot types
-pub use idp::IdpSnapshot;
+pub use http_idp_snapshot::IdpSnapshot;
 
 // ============================================================================
 // State Trait
@@ -240,7 +241,7 @@ where
     let task_counts = TaskCounts::new(tasks_spec.tasks.len(), Some(task_breakdown));
 
     // Load AC coverage from idp module
-    let ac_cov = idp::load_ac_coverage(root);
+    let ac_cov = load_ac_coverage(root);
     let ac_coverage =
         Some(AcCoverageInfo::new(ac_cov.total, ac_cov.passing, ac_cov.failing, ac_cov.unknown));
 

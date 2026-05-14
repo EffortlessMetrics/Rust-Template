@@ -1,6 +1,8 @@
 [dependencies]
 # Governance HTTP
 gov-http = {path = "../gov-http"}
+# IDP snapshot generation
+http-idp-snapshot = {path = "../http-idp-snapshot"}
 # Core HTTP types
 http-auth = {path = "../http-auth"}
 http-core = {path = "../http-core"}
