@@ -1,6 +1,7 @@
 [dependencies]
 jsonwebtoken = { version = "10.2.0", features = ["rust_crypto"] }
 serde.workspace = true
+subtle = "2.6"
 tracing.workspace = true
 
 [dev-dependencies]
