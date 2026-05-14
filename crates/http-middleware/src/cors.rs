@@ -149,6 +149,8 @@ pub async fn cors_middleware(config: CorsConfig, request: Request, next: Next) -
     {
         if let Ok(header_value) = HeaderValue::from_str(&origin) {
             response.headers_mut().insert(header::ACCESS_CONTROL_ALLOW_ORIGIN, header_value);
+            // Sentinel: Prevent intermediate cache poisoning by ensuring caching keys on Origin
+            response.headers_mut().append(header::VARY, HeaderValue::from_static("Origin"));
         }
 
         if config.allow_credentials {
@@ -194,6 +196,8 @@ fn handle_preflight(
     // Set allowed origin
     if let Ok(header_value) = HeaderValue::from_str(&origin) {
         response.headers_mut().insert(header::ACCESS_CONTROL_ALLOW_ORIGIN, header_value);
+        // Sentinel: Prevent intermediate cache poisoning by ensuring caching keys on Origin
+        response.headers_mut().append(header::VARY, HeaderValue::from_static("Origin"));
     }
 
     // Set allowed methods
