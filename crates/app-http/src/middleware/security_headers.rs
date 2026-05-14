@@ -44,9 +44,9 @@ pub struct SecurityHeadersConfig {
 impl Default for SecurityHeadersConfig {
     fn default() -> Self {
         Self {
-            // Strict CSP for production, more permissive for development
+            // Strict CSP by default
             content_security_policy: Some(
-                "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self'; frame-ancestors 'none';".to_string(),
+                "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self'; frame-ancestors 'none';".to_string(),
             ),
             x_frame_options: "DENY".to_string(),
             x_content_type_options: "nosniff".to_string(),
@@ -334,7 +334,12 @@ mod tests {
         assert_eq!(config.x_frame_options, "DENY");
         assert_eq!(config.x_content_type_options, "nosniff");
         assert_eq!(config.x_xss_protection, "1; mode=block");
-        assert!(config.content_security_policy.is_some());
+
+        // Ensure default CSP is strict
+        let csp = config.content_security_policy.as_ref().unwrap();
+        assert!(!csp.contains("'unsafe-inline'"));
+        assert!(!csp.contains("'unsafe-eval'"));
+
         assert!(config.strict_transport_security.is_some());
     }
 
