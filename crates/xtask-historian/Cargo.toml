@@ -1,0 +1,16 @@
+[dependencies]
+anyhow.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+
+[package]
+description = "Historian appendix parsing and extraction utilities for xtask quality flows"
+name = "xtask-historian"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+repository.workspace = true
+homepage.workspace = true
+authors.workspace = true
+rust-version.workspace = true

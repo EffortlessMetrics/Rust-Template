@@ -10,6 +10,8 @@ serde.workspace = true
 serde_json.workspace = true
 serde_yaml.workspace = true
 thiserror.workspace = true
+xtask-historian = { path = "../xtask-historian" }
+xtask-run-id = { path = "../xtask-run-id" }
 
 [dev-dependencies]
 tempfile.workspace = true
