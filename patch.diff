@@ -1,0 +1,18 @@
+--- crates/http-middleware/src/cors.rs
++++ crates/http-middleware/src/cors.rs
+@@ -148,6 +148,7 @@
+     {
+         if let Ok(header_value) = HeaderValue::from_str(&origin) {
+             response.headers_mut().insert(header::ACCESS_CONTROL_ALLOW_ORIGIN, header_value);
++            response.headers_mut().append(header::VARY, HeaderValue::from_static("origin"));
+         }
+
+         if config.allow_credentials {
+@@ -191,6 +192,7 @@
+     // Set allowed origin
+     if let Ok(header_value) = HeaderValue::from_str(&origin) {
+         response.headers_mut().insert(header::ACCESS_CONTROL_ALLOW_ORIGIN, header_value);
++        response.headers_mut().append(header::VARY, HeaderValue::from_static("origin"));
+     }
+
+     // Set allowed methods
