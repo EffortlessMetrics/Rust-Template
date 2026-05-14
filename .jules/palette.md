@@ -1,0 +1,3 @@
+## 2024-05-18 - Server-Side vs Client-Side A11y Initialization
+**Learning:** Initializing aria states (like `aria-pressed`) or active CSS classes via `DOMContentLoaded` on the client-side creates a Flash of Unstyled Content (FOUC). Screen readers may misreport the initial state before the JS has fully loaded and updated the DOM, causing a poor accessibility experience.
+**Action:** Always render initial accessibility attributes and interactive CSS classes directly in the HTML server-side via Maud templates. Only use client-side JS to handle *subsequent* interactions/toggles.
