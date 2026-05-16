@@ -60,7 +60,7 @@ fn project_root() -> PathBuf {
 /// Validate that all required commands in the spec are implemented in the Commands enum.
 ///
 /// This function reads specs/xtask_commands.yaml and verifies that each required
-/// command name appears in the Commands enum definition.
+/// command name appears in the CLI Commands enum definition.
 ///
 /// Used by tests to ensure the xtask implementation matches the spec.
 #[cfg(test)]
@@ -89,16 +89,16 @@ fn validate_xtask_commands_against_spec() -> Result<()> {
         .map(|cmd| normalize_command_name(&cmd.name))
         .collect();
 
-    // Read the main.rs to extract implemented commands
-    let main_rs = root.join("crates/xtask/src/main.rs");
-    if !main_rs.exists() {
-        anyhow::bail!("main.rs not found: {}", main_rs.display());
+    // Read the CLI module to extract implemented commands
+    let cli_rs = root.join("crates/xtask/src/cli.rs");
+    if !cli_rs.exists() {
+        anyhow::bail!("cli.rs not found: {}", cli_rs.display());
     }
 
-    let main_content = fs::read_to_string(&main_rs)
-        .with_context(|| format!("Failed to read main.rs: {}", main_rs.display()))?;
+    let cli_content = fs::read_to_string(&cli_rs)
+        .with_context(|| format!("Failed to read cli.rs: {}", cli_rs.display()))?;
 
-    let implemented_commands = extract_commands_from_enum(&main_content)?;
+    let implemented_commands = extract_commands_from_enum(&cli_content)?;
 
     // Validate that all required commands are implemented
     let mut missing = Vec::new();
