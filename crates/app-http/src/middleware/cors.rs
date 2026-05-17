@@ -255,6 +255,7 @@ pub async fn cors_middleware(
     {
         if let Ok(header_value) = HeaderValue::from_str(&origin) {
             response.headers_mut().insert(header::ACCESS_CONTROL_ALLOW_ORIGIN, header_value);
+            response.headers_mut().append(header::VARY, HeaderValue::from_static("Origin"));
         }
 
         if state.cors_config.allow_credentials {
@@ -300,6 +301,7 @@ fn handle_preflight(
     // Set allowed origin
     if let Ok(header_value) = HeaderValue::from_str(&origin) {
         response.headers_mut().insert(header::ACCESS_CONTROL_ALLOW_ORIGIN, header_value);
+        response.headers_mut().append(header::VARY, HeaderValue::from_static("Origin"));
     }
 
     // Set allowed methods
@@ -400,4 +402,30 @@ mod tests {
     //     let response = cors_middleware(config, request, next).await;
     //     assert_eq!(response.status(), StatusCode::OK);
     // }
+}
+
+#[cfg(test)]
+mod additional_tests {
+    use super::*;
+
+    #[test]
+    fn test_cors_preflight_has_vary_origin() {
+        let config = CorsConfig::default();
+        let response =
+            handle_preflight(&config, Some("http://localhost:3000".to_string()), &["content-type"]);
+
+        assert_eq!(response.status(), StatusCode::OK);
+        assert_eq!(
+            response.headers().get(header::ACCESS_CONTROL_ALLOW_ORIGIN).unwrap(),
+            "http://localhost:3000"
+        );
+        let vary_headers = response.headers().get_all(header::VARY);
+        let mut has_vary_origin = false;
+        for value in vary_headers.iter() {
+            if value == "Origin" {
+                has_vary_origin = true;
+            }
+        }
+        assert!(has_vary_origin, "Missing Vary: Origin header in preflight response");
+    }
 }
