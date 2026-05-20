@@ -221,10 +221,15 @@ mod tests {
         let secret = "test-secret";
         let now = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs();
 
+        // Use a significantly larger offset to avoid flakiness on slow CI runners
+        // where the time difference between test setup and validation execution
+        // could exceed 1 second.
+        let future_offset = 600;
+
         let claims = Claims {
             sub: "user123".to_string(),
             exp: now + 3600,
-            iat: now + 301,
+            iat: now + future_offset,
             iss: "rust-template".to_string(),
         };
 
