@@ -796,6 +796,15 @@ fn coverage_script() -> &'static str {
         });
     }
 
+    function escapeHtml(unsafe) {
+        return unsafe
+             .replace(/&/g, "&amp;")
+             .replace(/</g, "&lt;")
+             .replace(/>/g, "&gt;")
+             .replace(/"/g, "&quot;")
+             .replace(/'/g, "&#039;");
+    }
+
     function renderTable(data) {
         const tbody = document.getElementById('coverage-tbody');
         tbody.innerHTML = '';
@@ -814,16 +823,16 @@ fn coverage_script() -> &'static str {
 
             const scenarios = ac.scenarios.length > 0
                 ? '<ul class="scenario-list">' +
-                  ac.scenarios.map(s => '<li>' + s + '</li>').join('') +
+                  ac.scenarios.map(s => '<li>' + escapeHtml(s) + '</li>').join('') +
                   '</ul>'
                 : '<em style="color: #999;">No scenarios</em>';
 
             row.innerHTML = `
-                <td><code>${ac.id}</code></td>
-                <td>${ac.title}</td>
+                <td><code>${escapeHtml(ac.id)}</code></td>
+                <td>${escapeHtml(ac.title)}</td>
                 <td><span class="status-badge ${badgeClass}">${statusBadge}</span></td>
-                <td><code>${ac.story}</code></td>
-                <td><code>${ac.requirement}</code></td>
+                <td><code>${escapeHtml(ac.story)}</code></td>
+                <td><code>${escapeHtml(ac.requirement)}</code></td>
                 <td>${scenarios}</td>
             `;
 
