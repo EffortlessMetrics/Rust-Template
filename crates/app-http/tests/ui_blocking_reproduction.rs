@@ -85,14 +85,14 @@ async fn dashboard_does_not_block_executor() {
 
     // Spawn concurrent dashboard requests
     let mut handles = Vec::new();
+    let repo =
+        Arc::new(adapters_spec_fs::FsGovernanceRepository::new(spec_root.join("specs")));
+    let app = app_with_workspace_root(repo, spec_root).expect("valid config");
+
     for _ in 0..10 {
         // Increase count to ensure enough work
-        let spec_root = spec_root.clone();
+        let app = app.clone();
         handles.push(tokio::spawn(async move {
-            let repo =
-                Arc::new(adapters_spec_fs::FsGovernanceRepository::new(spec_root.join("specs")));
-            let app = app_with_workspace_root(repo, spec_root).expect("valid config");
-
             let request = Request::builder()
                 .method("GET")
                 .uri("/") // Dashboard
