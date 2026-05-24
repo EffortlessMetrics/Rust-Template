@@ -6,7 +6,7 @@ use axum::{
     response::{Html, IntoResponse},
 };
 use business_core::governance::{TaskId, TaskService, TaskStatus};
-use serde::Deserialize;
+use http_task_status_parser::{ParseUpdateTaskStatusError, parse_update_task_status};
 use tracing::instrument;
 use std::fmt::Write;
 
@@ -28,11 +28,6 @@ where
         .map_err(AppError::from)
 }
 
-#[derive(Deserialize)]
-pub struct UpdateTaskStatusRequest {
-    status: TaskStatus,
-}
-
 #[instrument(skip(state, headers, body), fields(task_id = %id))]
 pub async fn update_task_status(
     State(state): State<AppState>,
@@ -40,7 +35,7 @@ pub async fn update_task_status(
     headers: HeaderMap,
     body: Bytes,
 ) -> Result<impl IntoResponse, AppError> {
-    let payload = parse_update_task_status(&headers, &body)?;
+    let payload = parse_update_task_status_request(&headers, &body)?;
     let repo = state.governance_repo.clone();
     let task_id = TaskId(id);
     let new_status = payload.status;
@@ -57,41 +52,25 @@ pub async fn update_task_status(
 }
 
 #[allow(clippy::result_large_err)] // AppError is shared across handlers; keep signature consistent
-fn parse_update_task_status(
+fn parse_update_task_status_request(
     headers: &HeaderMap,
     body: &[u8],
-) -> Result<UpdateTaskStatusRequest, AppError> {
+) -> Result<http_task_status_parser::UpdateTaskStatusRequest, AppError> {
     let content_type =
-        headers.get(axum::http::header::CONTENT_TYPE).and_then(|h| h.to_str().ok()).unwrap_or("");
+        headers.get(axum::http::header::CONTENT_TYPE).and_then(|h| h.to_str().ok());
 
-    if content_type.starts_with("application/json") {
-        return serde_json::from_slice(body).map_err(|err| {
-            AppError::validation_error(ErrorCode::InvalidRequest, format!("Invalid JSON: {}", err))
-        });
-    }
-
-    if content_type.starts_with("application/x-www-form-urlencoded") {
-        return serde_urlencoded::from_bytes(body).map_err(|err| {
-            AppError::validation_error(
-                ErrorCode::InvalidRequest,
-                format!("Invalid form data: {}", err),
-            )
-        });
-    }
-
-    // Fallback: try to parse as JSON first, then form data to be forgiving
-    if let Ok(value) = serde_json::from_slice(body) {
-        return Ok(value);
-    }
-
-    if let Ok(value) = serde_urlencoded::from_bytes(body) {
-        return Ok(value);
-    }
-
-    Err(AppError::validation_error(
-        ErrorCode::InvalidRequest,
-        "Unsupported body format; use JSON or x-www-form-urlencoded",
-    ))
+    parse_update_task_status(content_type, body).map_err(|error| {
+        let message = match error {
+            ParseUpdateTaskStatusError::InvalidJson(details) => format!("Invalid JSON: {details}"),
+            ParseUpdateTaskStatusError::InvalidFormData(details) => {
+                format!("Invalid form data: {details}")
+            }
+            ParseUpdateTaskStatusError::UnsupportedBodyFormat => {
+                "Unsupported body format; use JSON or x-www-form-urlencoded".to_string()
+            }
+        };
+        AppError::validation_error(ErrorCode::InvalidRequest, message)
+    })
 }
 
 pub async fn tasks_ui(State(state): State<AppState>) -> Result<impl IntoResponse, AppError> {

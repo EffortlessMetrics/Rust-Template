@@ -13,6 +13,7 @@ http-middleware = {path = "../http-middleware"}
 http-origin-policy = {path = "../http-origin-policy"}
 http-platform = {path = "../http-platform"}
 http-tasks = {path = "../http-tasks"}
+http-task-status-parser = {path = "../http-task-status-parser"}
 http-todos = {path = "../http-todos"}
 # HTML templates
 maud = "0.27.0"
