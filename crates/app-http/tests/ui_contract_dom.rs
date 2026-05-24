@@ -286,3 +286,33 @@ async fn test_active_nav_link_has_aria_current() {
         "Dashboard link on dashboard page should have aria-current='page'"
     );
 }
+
+/// @AC-TPL-PLATFORM-UI-ACCESSIBILITY: Coverage search input has aria-label
+#[tokio::test]
+async fn test_coverage_search_has_label() {
+    let workspace_root = test_workspace_root();
+    let repo = Arc::new(FsGovernanceRepository::new(workspace_root.clone()));
+    let app = app_with_workspace_root(repo, workspace_root.clone()).expect("valid config");
+
+    // Fetch coverage HTML
+    let html = fetch_html(app, "/ui/coverage").await;
+    let document = Html::parse_document(&html);
+
+    // Find the search input
+    let selector = Selector::parse("#search-box").unwrap();
+    let search_input = document
+        .select(&selector)
+        .next()
+        .expect("Search input should exist");
+
+    // Check for aria-label
+    let aria_label = search_input.value().attr("aria-label");
+    assert!(
+        aria_label.is_some(),
+        "Search input should have aria-label attribute"
+    );
+    assert!(
+        !aria_label.unwrap().is_empty(),
+        "Search input aria-label should not be empty"
+    );
+}
