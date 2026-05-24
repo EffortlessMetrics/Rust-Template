@@ -286,3 +286,56 @@ async fn test_active_nav_link_has_aria_current() {
         "Dashboard link on dashboard page should have aria-current='page'"
     );
 }
+
+/// @AC-TPL-PLATFORM-UI-ACCESSIBILITY: Coverage filter buttons have aria-pressed
+#[tokio::test]
+async fn test_coverage_filter_buttons_have_aria_pressed() {
+    let workspace_root = test_workspace_root();
+    let repo = Arc::new(FsGovernanceRepository::new(workspace_root.clone()));
+    let app = app_with_workspace_root(repo, workspace_root.clone()).expect("valid config");
+
+    // Fetch coverage HTML
+    let html = fetch_html(app, "/ui/coverage").await;
+    let document = Html::parse_document(&html);
+
+    // Find the filter buttons
+    let selector = Selector::parse(".filter-btn").unwrap();
+    let buttons: Vec<_> = document.select(&selector).collect();
+
+    // Verify "All" button is pressed by default
+    let all_btn = buttons
+        .iter()
+        .find(|el| el.value().id() == Some("filter-all"))
+        .expect("All filter button should exist");
+
+    assert_eq!(
+        all_btn.value().attr("aria-pressed"),
+        Some("true"),
+        "All filter button should have aria-pressed='true'"
+    );
+
+    // Verify "Passing" button is not pressed
+    let passing_btn = buttons
+        .iter()
+        .find(|el| el.value().id() == Some("filter-passing"))
+        .expect("Passing filter button should exist");
+
+    assert_eq!(
+        passing_btn.value().attr("aria-pressed"),
+        Some("false"),
+        "Passing filter button should have aria-pressed='false'"
+    );
+
+    // Verify search input has label
+    let search_selector = Selector::parse("#search-box").unwrap();
+    let search_input = document
+        .select(&search_selector)
+        .next()
+        .expect("Search box should exist");
+
+    assert_eq!(
+        search_input.value().attr("aria-label"),
+        Some("Filter acceptance criteria"),
+        "Search input should have aria-label"
+    );
+}
