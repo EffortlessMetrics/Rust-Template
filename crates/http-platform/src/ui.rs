@@ -7,7 +7,7 @@
 //! - AC coverage
 
 use axum::{extract::State, response::Html};
-use maud::{DOCTYPE, Markup, html};
+use maud::{DOCTYPE, Markup, PreEscaped, html};
 use spec_runtime::{ServiceMetadata, load_all_specs, load_service_metadata};
 use tracing::instrument;
 
@@ -287,7 +287,7 @@ fn layout(
                 title { (title) " - Rust-as-Spec Platform" }
                 script src="https://unpkg.com/htmx.org@1.9.10" {}
                 script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js" {}
-                style { (styles()) }
+                style { (PreEscaped(styles())) }
                 script { "mermaid.initialize({ startOnLoad: true, theme: 'default' });" }
             }
             body {
@@ -593,8 +593,8 @@ fn dashboard_content(
 /// Coverage page content markup.
 fn coverage_content() -> Markup {
     html! {
-        style { (coverage_styles()) }
-        script { (coverage_script()) }
+        style { (PreEscaped(coverage_styles())) }
+        script { (PreEscaped(coverage_script())) }
 
         .card data-uiid="coverage.summary" {
             h2 { "AC Coverage Summary" }
@@ -621,15 +621,15 @@ fn coverage_content() -> Markup {
         .card {
             h2 { "Acceptance Criteria Coverage" }
             .filter-controls data-uiid="coverage.filters" {
-                button #filter-all.filter-btn onclick="filterData('all')" { "All" }
-                button #filter-passing.filter-btn onclick="filterData('passing')" { "Passing" }
-                button #filter-failing.filter-btn onclick="filterData('failing')" { "Failing" }
-                button #filter-unknown.filter-btn onclick="filterData('unknown')" { "Unknown" }
-                input #search-box.search-box type="text" placeholder="Search by AC ID or title..."
+                button #filter-all.filter-btn aria-pressed="true" onclick="filterData('all')" { "All" }
+                button #filter-passing.filter-btn aria-pressed="false" onclick="filterData('passing')" { "Passing" }
+                button #filter-failing.filter-btn aria-pressed="false" onclick="filterData('failing')" { "Failing" }
+                button #filter-unknown.filter-btn aria-pressed="false" onclick="filterData('unknown')" { "Unknown" }
+                input #search-box.search-box type="text" aria-label="Search coverage data" placeholder="Search by AC ID or title..."
                     oninput="searchData()";
             }
 
-            #table-container data-uiid="coverage.table" {
+            #table-container data-uiid="coverage.table" aria-live="polite" {
                 table .coverage-table {
                     thead {
                         tr {
@@ -766,8 +766,11 @@ fn coverage_script() -> &'static str {
         // Update active button
         document.querySelectorAll('.filter-btn').forEach(btn => {
             btn.classList.remove('active');
+            btn.setAttribute('aria-pressed', 'false');
         });
-        document.getElementById('filter-' + status).classList.add('active');
+        const activeBtn = document.getElementById('filter-' + status);
+        activeBtn.classList.add('active');
+        activeBtn.setAttribute('aria-pressed', 'true');
 
         // Apply filter
         applyFilters();
