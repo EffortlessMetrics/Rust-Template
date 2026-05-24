@@ -621,11 +621,11 @@ fn coverage_content() -> Markup {
         .card {
             h2 { "Acceptance Criteria Coverage" }
             .filter-controls data-uiid="coverage.filters" {
-                button #filter-all.filter-btn onclick="filterData('all')" { "All" }
-                button #filter-passing.filter-btn onclick="filterData('passing')" { "Passing" }
-                button #filter-failing.filter-btn onclick="filterData('failing')" { "Failing" }
-                button #filter-unknown.filter-btn onclick="filterData('unknown')" { "Unknown" }
-                input #search-box.search-box type="text" placeholder="Search by AC ID or title..."
+                button #filter-all.filter-btn aria-pressed="true" onclick="filterData('all')" { "All" }
+                button #filter-passing.filter-btn aria-pressed="false" onclick="filterData('passing')" { "Passing" }
+                button #filter-failing.filter-btn aria-pressed="false" onclick="filterData('failing')" { "Failing" }
+                button #filter-unknown.filter-btn aria-pressed="false" onclick="filterData('unknown')" { "Unknown" }
+                input #search-box.search-box type="text" aria-label="Search acceptance criteria" placeholder="Search by AC ID or title..."
                     oninput="searchData()";
             }
 
@@ -633,12 +633,12 @@ fn coverage_content() -> Markup {
                 table .coverage-table {
                     thead {
                         tr {
-                            th { "AC ID" }
-                            th { "Title" }
-                            th { "Status" }
-                            th { "Story" }
-                            th { "Requirement" }
-                            th { "Scenarios" }
+                            th scope="col" { "AC ID" }
+                            th scope="col" { "Title" }
+                            th scope="col" { "Status" }
+                            th scope="col" { "Story" }
+                            th scope="col" { "Requirement" }
+                            th scope="col" { "Scenarios" }
                         }
                     }
                     tbody #coverage-tbody {
@@ -766,8 +766,11 @@ fn coverage_script() -> &'static str {
         // Update active button
         document.querySelectorAll('.filter-btn').forEach(btn => {
             btn.classList.remove('active');
+            btn.setAttribute('aria-pressed', 'false');
         });
-        document.getElementById('filter-' + status).classList.add('active');
+        const activeBtn = document.getElementById('filter-' + status);
+        activeBtn.classList.add('active');
+        activeBtn.setAttribute('aria-pressed', 'true');
 
         // Apply filter
         applyFilters();
