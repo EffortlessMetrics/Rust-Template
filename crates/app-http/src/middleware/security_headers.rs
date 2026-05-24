@@ -11,8 +11,24 @@ use axum::{
 };
 use serde::{Deserialize, Serialize};
 use spec_runtime::ValidatedConfig;
+use std::sync::Arc;
 
 use crate::AppState;
+
+/// Pre-computed security headers to avoid parsing on every request
+#[derive(Clone, Debug)]
+pub struct CachedSecurityHeaders {
+    pub content_security_policy: Option<HeaderValue>,
+    pub x_frame_options: Option<HeaderValue>,
+    pub x_content_type_options: Option<HeaderValue>,
+    pub x_xss_protection: Option<HeaderValue>,
+    pub strict_transport_security: Option<HeaderValue>,
+    pub referrer_policy: Option<HeaderValue>,
+    pub permissions_policy: Option<HeaderValue>,
+    pub cross_origin_embedder_policy: Option<HeaderValue>,
+    pub cross_origin_opener_policy: Option<HeaderValue>,
+    pub cross_origin_resource_policy: Option<HeaderValue>,
+}
 
 /// Security headers configuration
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -39,11 +55,15 @@ pub struct SecurityHeadersConfig {
     pub cross_origin_resource_policy: String,
     /// Whether security headers are enabled
     pub enabled: bool,
+
+    /// Cached parsed headers (internal optimization)
+    #[serde(skip)]
+    pub cached_headers: Option<Arc<CachedSecurityHeaders>>,
 }
 
 impl Default for SecurityHeadersConfig {
     fn default() -> Self {
-        Self {
+        let mut config = Self {
             // Strict CSP for production, more permissive for development
             content_security_policy: Some(
                 "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self'; frame-ancestors 'none';".to_string(),
@@ -62,11 +82,53 @@ impl Default for SecurityHeadersConfig {
             cross_origin_opener_policy: Some("same-origin".to_string()),
             cross_origin_resource_policy: "same-origin".to_string(),
             enabled: true,
-        }
+            cached_headers: None,
+        };
+        config.init_cache();
+        config
     }
 }
 
 impl SecurityHeadersConfig {
+    /// Initialize the cached headers
+    pub fn init_cache(&mut self) {
+        if !self.enabled {
+            self.cached_headers = None;
+            return;
+        }
+
+        let cached = CachedSecurityHeaders {
+            content_security_policy: self
+                .content_security_policy
+                .as_ref()
+                .and_then(|s| HeaderValue::from_str(s).ok()),
+            x_frame_options: HeaderValue::from_str(&self.x_frame_options).ok(),
+            x_content_type_options: HeaderValue::from_str(&self.x_content_type_options).ok(),
+            x_xss_protection: HeaderValue::from_str(&self.x_xss_protection).ok(),
+            strict_transport_security: self
+                .strict_transport_security
+                .as_ref()
+                .and_then(|s| HeaderValue::from_str(s).ok()),
+            referrer_policy: HeaderValue::from_str(&self.referrer_policy).ok(),
+            permissions_policy: self
+                .permissions_policy
+                .as_ref()
+                .and_then(|s| HeaderValue::from_str(s).ok()),
+            cross_origin_embedder_policy: self
+                .cross_origin_embedder_policy
+                .as_ref()
+                .and_then(|s| HeaderValue::from_str(s).ok()),
+            cross_origin_opener_policy: self
+                .cross_origin_opener_policy
+                .as_ref()
+                .and_then(|s| HeaderValue::from_str(s).ok()),
+            cross_origin_resource_policy: HeaderValue::from_str(&self.cross_origin_resource_policy)
+                .ok(),
+        };
+
+        self.cached_headers = Some(Arc::new(cached));
+    }
+
     /// Create security headers config from environment variables or config file
     pub fn from_sources(config: Option<&ValidatedConfig>) -> Self {
         let enabled = std::env::var("SECURITY_HEADERS_ENABLED")
@@ -92,7 +154,7 @@ impl SecurityHeadersConfig {
             .unwrap_or(true); // Enable by default for security
 
         if !enabled {
-            return Self { enabled: false, ..Default::default() };
+            return Self { enabled: false, cached_headers: None, ..Default::default() };
         }
 
         let is_development =
@@ -226,7 +288,7 @@ impl SecurityHeadersConfig {
             })
             .unwrap_or_else(|| "same-origin".to_string());
 
-        Self {
+        let mut config = Self {
             content_security_policy,
             x_frame_options,
             x_content_type_options,
@@ -238,7 +300,10 @@ impl SecurityHeadersConfig {
             cross_origin_opener_policy,
             cross_origin_resource_policy,
             enabled: true,
-        }
+            cached_headers: None,
+        };
+        config.init_cache();
+        config
     }
 
     /// Apply security headers to a response
@@ -246,6 +311,43 @@ impl SecurityHeadersConfig {
         if !self.enabled {
             return;
         }
+
+        // Use cached headers if available (fast path)
+        if let Some(cached) = &self.cached_headers {
+            if let Some(val) = &cached.content_security_policy {
+                response.headers_mut().insert("Content-Security-Policy", val.clone());
+            }
+            if let Some(val) = &cached.x_frame_options {
+                response.headers_mut().insert("X-Frame-Options", val.clone());
+            }
+            if let Some(val) = &cached.x_content_type_options {
+                response.headers_mut().insert("X-Content-Type-Options", val.clone());
+            }
+            if let Some(val) = &cached.x_xss_protection {
+                response.headers_mut().insert("X-XSS-Protection", val.clone());
+            }
+            if let Some(val) = &cached.strict_transport_security {
+                response.headers_mut().insert("Strict-Transport-Security", val.clone());
+            }
+            if let Some(val) = &cached.referrer_policy {
+                response.headers_mut().insert("Referrer-Policy", val.clone());
+            }
+            if let Some(val) = &cached.permissions_policy {
+                response.headers_mut().insert("Permissions-Policy", val.clone());
+            }
+            if let Some(val) = &cached.cross_origin_embedder_policy {
+                response.headers_mut().insert("Cross-Origin-Embedder-Policy", val.clone());
+            }
+            if let Some(val) = &cached.cross_origin_opener_policy {
+                response.headers_mut().insert("Cross-Origin-Opener-Policy", val.clone());
+            }
+            if let Some(val) = &cached.cross_origin_resource_policy {
+                response.headers_mut().insert("Cross-Origin-Resource-Policy", val.clone());
+            }
+            return;
+        }
+
+        // Fallback to parsing (slow path, should only happen if not initialized)
 
         // Content Security Policy
         if let Some(csp) = &self.content_security_policy
