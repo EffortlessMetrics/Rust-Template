@@ -286,3 +286,59 @@ async fn test_active_nav_link_has_aria_current() {
         "Dashboard link on dashboard page should have aria-current='page'"
     );
 }
+
+/// @AC-TPL-PLATFORM-UI-ACCESSIBILITY: Coverage page has accessible controls
+#[tokio::test]
+async fn test_coverage_page_accessibility() {
+    let workspace_root = test_workspace_root();
+    let repo = Arc::new(FsGovernanceRepository::new(workspace_root.clone()));
+    let app = app_with_workspace_root(repo, workspace_root.clone()).expect("valid config");
+
+    // Fetch coverage HTML
+    let html = fetch_html(app, "/ui/coverage").await;
+    let document = Html::parse_document(&html);
+
+    // 1. Verify Search Box Label
+    let search_selector = Selector::parse("input#search-box").unwrap();
+    let search_box = document
+        .select(&search_selector)
+        .next()
+        .expect("Search box should exist");
+
+    assert_eq!(
+        search_box.value().attr("aria-label"),
+        Some("Search coverage data"),
+        "Search box should have aria-label"
+    );
+
+    // 2. Verify Filter Buttons
+    let btn_selector = Selector::parse("button.filter-btn").unwrap();
+    let buttons: Vec<_> = document.select(&btn_selector).collect();
+
+    assert!(!buttons.is_empty(), "Filter buttons should exist");
+
+    for btn in buttons {
+        // Check for aria-pressed
+        assert!(
+            btn.value().attr("aria-pressed").is_some(),
+            "Filter button should have aria-pressed"
+        );
+
+        // Check for aria-controls
+        assert_eq!(
+            btn.value().attr("aria-controls"),
+            Some("coverage-tbody"),
+            "Filter button should have aria-controls='coverage-tbody'"
+        );
+    }
+
+    // Verify 'All' button is pressed by default
+    let all_btn_selector = Selector::parse("button#filter-all").unwrap();
+    let all_btn = document.select(&all_btn_selector).next().unwrap();
+    assert_eq!(all_btn.value().attr("aria-pressed"), Some("true"));
+
+    // Verify 'Passing' button is not pressed
+    let passing_btn_selector = Selector::parse("button#filter-passing").unwrap();
+    let passing_btn = document.select(&passing_btn_selector).next().unwrap();
+    assert_eq!(passing_btn.value().attr("aria-pressed"), Some("false"));
+}
