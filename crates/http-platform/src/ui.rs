@@ -21,94 +21,111 @@ pub async fn dashboard<S>(State(state): State<S>) -> Html<String>
 where
     S: super::PlatformState,
 {
-    let root = state.workspace_root();
-    let status_result = load_all_specs(root);
-    let tasks_result = spec_runtime::load_tasks(&root.join("specs/tasks.yaml"));
-    let metadata = load_service_metadata(&root.join("specs/service_metadata.yaml")).ok();
+    let root = state.workspace_root().to_path_buf();
     let config = super::config_summary(&state);
 
-    let content = match (status_result, tasks_result) {
-        (Ok(specs), Ok(tasks_spec)) => {
-            let _req_count: usize = specs.ledger.stories.iter().map(|s| s.requirements.len()).sum();
-            let ac_count: usize = specs
-                .ledger
-                .stories
-                .iter()
-                .flat_map(|s| s.requirements.iter())
-                .map(|r| r.acceptance_criteria.len())
-                .sum();
+    let (metadata, content) = tokio::task::spawn_blocking(move || {
+        let status_result = load_all_specs(&root);
+        let tasks_result = spec_runtime::load_tasks(&root.join("specs/tasks.yaml"));
+        let metadata = load_service_metadata(&root.join("specs/service_metadata.yaml")).ok();
 
-            // Read policy status
-            let policy_path = root.join("target/policy_status.json");
-            let policy_status = std::fs::read_to_string(policy_path)
-                .ok()
-                .and_then(|content| serde_json::from_str::<serde_json::Value>(&content).ok())
-                .and_then(|v| v.get("summary").and_then(|s| s.as_str()).map(String::from))
-                .unwrap_or_else(|| "unknown".to_string());
+        let content = match (status_result, tasks_result) {
+            (Ok(specs), Ok(tasks_spec)) => {
+                let _req_count: usize =
+                    specs.ledger.stories.iter().map(|s| s.requirements.len()).sum();
+                let ac_count: usize = specs
+                    .ledger
+                    .stories
+                    .iter()
+                    .flat_map(|s| s.requirements.iter())
+                    .map(|r| r.acceptance_criteria.len())
+                    .sum();
 
-            let status_class = match policy_status.as_str() {
-                "pass" => "status-pass",
-                "fail" => "status-fail",
-                _ => "status-unknown",
-            };
+                // Read policy status
+                let policy_path = root.join("target/policy_status.json");
+                let policy_status = std::fs::read_to_string(policy_path)
+                    .ok()
+                    .and_then(|content| serde_json::from_str::<serde_json::Value>(&content).ok())
+                    .and_then(|v| v.get("summary").and_then(|s| s.as_str()).map(String::from))
+                    .unwrap_or_else(|| "unknown".to_string());
 
-            // Read AC coverage from feature_status.md
-            let feature_status_path = root.join("docs/feature_status.md");
-            let mut passing = 0;
-            let mut failing = 0;
-            let mut unknown = 0;
-            let mut coverage_rows = 0;
+                let status_class = match policy_status.as_str() {
+                    "pass" => "status-pass",
+                    "fail" => "status-fail",
+                    _ => "status-unknown",
+                };
 
-            if feature_status_path.exists()
-                && let Ok(content) = std::fs::read_to_string(feature_status_path)
-            {
-                for line in content.lines() {
-                    if !line.starts_with("| AC-") {
-                        continue;
+                // Read AC coverage from feature_status.md
+                let feature_status_path = root.join("docs/feature_status.md");
+                let mut passing = 0;
+                let mut failing = 0;
+                let mut unknown = 0;
+                let mut coverage_rows = 0;
+
+                if feature_status_path.exists()
+                    && let Ok(content) = std::fs::read_to_string(feature_status_path)
+                {
+                    for line in content.lines() {
+                        if !line.starts_with("| AC-") {
+                            continue;
+                        }
+
+                        coverage_rows += 1;
+
+                        if line.contains("[PASS]") {
+                            passing += 1;
+                        } else if line.contains("[FAIL]") {
+                            failing += 1;
+                        } else if line.contains("[UNKNOWN]") {
+                            unknown += 1;
+                        }
                     }
+                }
 
-                    coverage_rows += 1;
+                // If no coverage data, count all ACs as unknown
+                if coverage_rows == 0 {
+                    unknown = ac_count;
+                } else {
+                    let accounted_for = passing + failing + unknown;
+                    if accounted_for < ac_count {
+                        unknown += ac_count - accounted_for;
+                    }
+                }
 
-                    if line.contains("[PASS]") {
-                        passing += 1;
-                    } else if line.contains("[FAIL]") {
-                        failing += 1;
-                    } else if line.contains("[UNKNOWN]") {
-                        unknown += 1;
+                dashboard_content(
+                    specs,
+                    tasks_spec,
+                    config,
+                    policy_status,
+                    status_class,
+                    passing,
+                    failing,
+                    unknown,
+                )
+            }
+            _ => {
+                html! {
+                    .card {
+                        h2 { "Error" }
+                        p { "Failed to load platform specifications. Ensure specs are valid and available." }
                     }
                 }
             }
-
-            // If no coverage data, count all ACs as unknown
-            if coverage_rows == 0 {
-                unknown = ac_count;
-            } else {
-                let accounted_for = passing + failing + unknown;
-                if accounted_for < ac_count {
-                    unknown += ac_count - accounted_for;
-                }
-            }
-
-            dashboard_content(
-                specs,
-                tasks_spec,
-                config,
-                policy_status,
-                status_class,
-                passing,
-                failing,
-                unknown,
-            )
-        }
-        _ => {
+        };
+        (metadata, content)
+    })
+    .await
+    .unwrap_or_else(|e| {
+        (
+            None,
             html! {
                 .card {
-                    h2 { "Error" }
-                    p { "Failed to load platform specifications. Ensure specs are valid and available." }
+                    h2 { "Internal Error" }
+                    p { "Failed to execute blocking task: " (format!("{:?}", e)) }
                 }
-            }
-        }
-    };
+            },
+        )
+    });
 
     Html(layout("Dashboard", "dashboard", &metadata, content).into_string())
 }
