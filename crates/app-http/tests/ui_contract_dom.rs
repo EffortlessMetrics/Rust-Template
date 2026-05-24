@@ -286,3 +286,28 @@ async fn test_active_nav_link_has_aria_current() {
         "Dashboard link on dashboard page should have aria-current='page'"
     );
 }
+
+/// @AC-TPL-PLATFORM-UI-ACCESSIBILITY: Coverage page has accessible controls
+#[tokio::test]
+async fn test_coverage_accessibility() {
+    let workspace_root = test_workspace_root();
+    let repo = Arc::new(FsGovernanceRepository::new(workspace_root.clone()));
+    let app = app_with_workspace_root(repo, workspace_root.clone()).expect("valid config");
+
+    let html = fetch_html(app, "/ui/coverage").await;
+    let document = Html::parse_document(&html);
+
+    // Check search box label
+    let search_selector = Selector::parse("#search-box").unwrap();
+    let search_box = document.select(&search_selector).next().expect("Search box missing");
+    assert!(search_box.value().attr("aria-label").is_some(), "Search box needs aria-label");
+
+    // Check filter buttons
+    let btn_selector = Selector::parse(".filter-btn").unwrap();
+    let buttons: Vec<_> = document.select(&btn_selector).collect();
+    assert!(!buttons.is_empty(), "Filter buttons missing");
+
+    for btn in buttons {
+        assert!(btn.value().attr("aria-pressed").is_some(), "Filter buttons need aria-pressed");
+    }
+}
