@@ -10,19 +10,30 @@ fn setup_full_workspace() -> (tempfile::TempDir, std::path::PathBuf) {
     let specs_dir = spec_root.join("specs");
     fs::create_dir_all(&specs_dir).expect("failed to create specs dir");
 
-    // Create minimal valid spec files to avoid errors
+    // Create a larger spec file to simulate real workload (CPU bound parsing)
+    let mut stories = String::new();
+    for i in 0..500 {
+        stories.push_str(&format!(
+            "  - id: STORY-{}\n    title: Story {}\n    requirements: []\n",
+            i, i
+        ));
+    }
 
     // spec_ledger.yaml
     fs::write(
         specs_dir.join("spec_ledger.yaml"),
-        r#"
+        format!(
+            r#"
 metadata:
   schema_version: "1.0.0"
   template_version: "1.0.0"
   last_updated: "2024-01-01T00:00:00Z"
   description: "Test Ledger"
-stories: []
+stories:
+{}
 "#,
+            stories
+        ),
     )
     .unwrap();
 
@@ -73,26 +84,25 @@ owner: "test"
 async fn dashboard_does_not_block_executor() {
     let (_temp, spec_root) = setup_full_workspace();
 
-    // Timer task
+    // Initialize the app ONCE, outside the loop.
+    let repo = Arc::new(adapters_spec_fs::FsGovernanceRepository::new(spec_root.join("specs")));
+    let app = app_with_workspace_root(repo, spec_root.clone()).expect("valid config");
+
+    // Timer task: Sleep 10 times 20ms = 200ms ideal.
     let timer_task = tokio::spawn(async {
         let start = std::time::Instant::now();
-        // Sleep 10 times 10ms. If executor is blocked, this will take longer.
         for _ in 0..10 {
-            tokio::time::sleep(Duration::from_millis(10)).await;
+            tokio::time::sleep(Duration::from_millis(20)).await;
         }
         start.elapsed()
     });
 
     // Spawn concurrent dashboard requests
+    // Increase load to ensure we hit the blocking behavior
     let mut handles = Vec::new();
-    for _ in 0..10 {
-        // Increase count to ensure enough work
-        let spec_root = spec_root.clone();
+    for _ in 0..50 {
+        let app = app.clone();
         handles.push(tokio::spawn(async move {
-            let repo =
-                Arc::new(adapters_spec_fs::FsGovernanceRepository::new(spec_root.join("specs")));
-            let app = app_with_workspace_root(repo, spec_root).expect("valid config");
-
             let request = Request::builder()
                 .method("GET")
                 .uri("/") // Dashboard
@@ -118,8 +128,14 @@ async fn dashboard_does_not_block_executor() {
         .expect("timer timed out")
         .expect("timer panicked");
 
-    // If blocking I/O happens on main thread, timer will be delayed significantly.
-    // With 1 thread, every FS call blocks the thread.
-
     println!("Timer elapsed: {:?}", timer_elapsed);
+    // If we have 50 requests and each takes even 5ms to parse 500 stories, that's 250ms of blocking.
+    // The timer (200ms) will be delayed by that amount.
+    // So 200ms + 250ms = 450ms.
+    // Let's assert it must be < 300ms.
+    assert!(
+        timer_elapsed < Duration::from_millis(300),
+        "Timer took too long: {:?}, executor was likely blocked",
+        timer_elapsed
+    );
 }
