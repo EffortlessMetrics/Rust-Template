@@ -1,6 +1,6 @@
 [dependencies]
 gov-http-core = { path = "../gov-http-core" }
-gov-http-types = { path = "../gov-http-types" }
+gov-http-friction-types = { path = "../gov-http-friction-types" }
 gov-model.workspace = true
 http-errors = { path = "../http-errors", features = ["axum"] }
 platform-contract = { path = "../platform-contract" }

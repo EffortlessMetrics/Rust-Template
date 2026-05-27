@@ -6,21 +6,12 @@
 //!
 //! # Types
 //!
-//! - [`FrictionEntry`] - Friction log entry for process/tooling issues
 //! - [`Question`] - Question artifact for flow decision points
 
-mod friction;
 mod question;
 
-pub use friction::*;
 use gov_model::YamlResource;
 pub use question::*;
-
-impl YamlResource for FrictionEntry {
-    fn id(&self) -> &str {
-        &self.id
-    }
-}
 
 impl YamlResource for Question {
     fn id(&self) -> &str {

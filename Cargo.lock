@@ -1558,7 +1558,7 @@ version = "3.3.15"
 dependencies = [
  "axum",
  "gov-http-core",
- "gov-http-types",
+ "gov-http-friction-types",
  "http",
  "http-errors",
  "platform-contract",
@@ -1572,12 +1572,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "gov-http-friction-types"
+version = "3.3.15"
+dependencies = [
+ "rust-as-spec-gov-model",
+ "serde",
+ "serde_json",
+ "serde_yaml_ng",
+]
+
+[[package]]
 name = "gov-http-issues"
 version = "3.3.15"
 dependencies = [
  "anyhow",
  "axum",
  "gov-http-core",
+ "gov-http-friction-types",
  "gov-http-types",
  "http",
  "http-errors",

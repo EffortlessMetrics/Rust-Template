@@ -14,7 +14,8 @@ use axum::{
     routing::get,
 };
 use gov_http_core::{PlatformError, PlatformState};
-use gov_http_types::{FrictionEntry, Question};
+use gov_http_friction_types::FrictionEntry;
+use gov_http_types::Question;
 use gov_model::TaskStatus;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
