@@ -3,6 +3,7 @@ anyhow = {workspace = true}
 axum = {workspace = true}
 gov-contracts.workspace = true
 gov-http-core = {path = "../gov-http-core"}
+doc-type-contract.workspace = true
 gov-http-forks = {path = "../gov-http-forks"}
 gov-http-friction = {path = "../gov-http-friction"}
 gov-http-issues = {path = "../gov-http-issues"}

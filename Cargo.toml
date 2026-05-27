@@ -52,6 +52,7 @@ tempfile = "3.25.0"
 # Internal workspace crates (Wave 1 publishable)
 ac-kernel = { package = "rust-as-spec-ac-kernel", path = "crates/ac-kernel", version = "=3.3.15" }
 business-core = { package = "rust-as-spec-business-core", path = "crates/business-core", version = "=3.3.15" }
+doc-type-contract = { package = "rust-as-spec-doc-type-contract", path = "crates/doc-type-contract", version = "=3.3.15" }
 gov-contracts = { package = "rust-as-spec-gov-contracts", path = "crates/gov-contracts", version = "=3.3.15" }
 gov-model = { package = "rust-as-spec-gov-model", path = "crates/gov-model", version = "=3.3.15" }
 gov-policy = { package = "rust-as-spec-gov-policy", path = "crates/gov-policy", version = "=3.3.15" }

@@ -1,0 +1,18 @@
+[package]
+name = "rust-as-spec-doc-type-contract"
+description = "Reusable doc_type contract validation rules"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+repository.workspace = true
+homepage.workspace = true
+authors.workspace = true
+rust-version.workspace = true
+
+[lib]
+name = "doc_type_contract"
+path = "src/lib.rs"
+
+[lints]
+workspace = true

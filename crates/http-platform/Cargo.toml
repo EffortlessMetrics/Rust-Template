@@ -9,6 +9,7 @@ http-errors = {features = ["axum", "uuid"], path = "../http-errors"}
 maud = "0.27.0"
 # Platform contract types
 platform-contract = {path = "../platform-contract"}
+doc-type-contract.workspace = true
 # Spec runtime for loading specs
 spec-runtime.workspace = true
 # Utilities

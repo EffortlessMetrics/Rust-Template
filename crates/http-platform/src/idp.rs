@@ -8,6 +8,7 @@
 #![allow(dead_code)]
 
 use axum::{Json, Router, extract::State, routing::get};
+use doc_type_contract::{DocTypeInput, validate_with_options};
 use http_errors::HttpError;
 use serde::{Deserialize, Serialize};
 use std::fs;
@@ -394,21 +395,16 @@ fn load_doc_metrics(root: &std::path::Path) -> DocumentationMetrics {
 
 /// Validate doc_type contract for a single document.
 fn validate_doc_type_contract(doc: &DocEntry) -> bool {
-    let doc_type = doc.doc_type.replace('-', "_");
-
-    match doc_type.as_str() {
-        "how_to" => !doc.requirements.is_empty() || !doc.acs.is_empty(),
-        "explanation" => !doc.stories.is_empty() || !doc.requirements.is_empty(),
-        "design_doc" => !doc.requirements.is_empty(),
-        "reference" => !doc.requirements.is_empty() || !doc.acs.is_empty(),
-        "status" => !doc.requirements.is_empty() && !doc.acs.is_empty(),
-        "adr" => !doc.requirements.is_empty(),
-        "guide" => !doc.requirements.is_empty() || !doc.acs.is_empty(),
-        "impl_plan" => !doc.requirements.is_empty() && !doc.acs.is_empty(),
-        "requirements_doc" => !doc.requirements.is_empty(),
-        "ci_workflow" | "" => true,
-        _ => false,
-    }
+    validate_with_options(
+        DocTypeInput {
+            doc_type: &doc.doc_type,
+            stories: &doc.stories,
+            requirements: &doc.requirements,
+            acs: &doc.acs,
+        },
+        true,
+    )
+    .valid
 }
 
 fn load_task_hints(root: &std::path::Path) -> anyhow::Result<TaskHints> {

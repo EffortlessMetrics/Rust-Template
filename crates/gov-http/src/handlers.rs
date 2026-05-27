@@ -6,6 +6,7 @@ use axum::{
     http::header,
     response::IntoResponse,
 };
+use doc_type_contract::{DocTypeInput, validate};
 use gov_http_core::PlatformError;
 use gov_http_core::PlatformState;
 use gov_model::TaskStatus;
@@ -193,86 +194,13 @@ where
 ///
 /// Returns (is_valid, issue_description).
 fn validate_doc_type_contract(doc: &spec_runtime::DocEntry) -> (bool, Option<String>) {
-    // Normalize doc_type: treat "how-to" as "how_to"
-    let doc_type = doc.doc_type.replace('-', "_");
-
-    match doc_type.as_str() {
-        "how_to" => {
-            if doc.requirements.is_empty() && doc.acs.is_empty() {
-                return (
-                    false,
-                    Some("how_to should reference at least one requirement or AC".into()),
-                );
-            }
-        }
-        "explanation" => {
-            if doc.stories.is_empty() && doc.requirements.is_empty() {
-                return (
-                    false,
-                    Some("explanation should reference at least one story or requirement".into()),
-                );
-            }
-        }
-        "design_doc" => {
-            if doc.requirements.is_empty() {
-                return (
-                    false,
-                    Some("design_doc should reference at least one requirement".into()),
-                );
-            }
-        }
-        "reference" => {
-            if doc.requirements.is_empty() && doc.acs.is_empty() {
-                return (
-                    false,
-                    Some("reference should reference at least one requirement or AC".into()),
-                );
-            }
-        }
-        "status" => {
-            if doc.requirements.is_empty() || doc.acs.is_empty() {
-                return (false, Some("status should reference both requirements and ACs".into()));
-            }
-        }
-        "adr" => {
-            if doc.requirements.is_empty() {
-                return (false, Some("adr should reference at least one requirement".into()));
-            }
-        }
-        "guide" => {
-            if doc.requirements.is_empty() && doc.acs.is_empty() {
-                return (
-                    false,
-                    Some("guide should reference at least one requirement or AC".into()),
-                );
-            }
-        }
-        "impl_plan" => {
-            if doc.requirements.is_empty() || doc.acs.is_empty() {
-                return (
-                    false,
-                    Some("impl_plan should reference both requirements and ACs".into()),
-                );
-            }
-        }
-        "requirements_doc" => {
-            if doc.requirements.is_empty() {
-                return (
-                    false,
-                    Some("requirements_doc should reference at least one requirement".into()),
-                );
-            }
-        }
-        "ci_workflow" => {
-            // CI workflow YAML: no validation
-        }
-        _ => {
-            // Unknown doc_type
-            return (false, Some(format!("Unknown doc_type '{}'", doc.doc_type)));
-        }
-    }
-
-    (true, None)
+    let result = validate(DocTypeInput {
+        doc_type: &doc.doc_type,
+        stories: &doc.stories,
+        requirements: &doc.requirements,
+        acs: &doc.acs,
+    });
+    (result.valid, result.issue)
 }
 
 // =============================================================================
