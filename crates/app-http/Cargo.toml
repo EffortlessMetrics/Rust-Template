@@ -16,7 +16,7 @@ http-tasks = {path = "../http-tasks"}
 http-todos = {path = "../http-todos"}
 # HTML templates
 maud = "0.27.0"
-tokio = {features = ["net", "signal"], workspace = true}
+tokio = {features = ["net"], workspace = true}
 tower-http = {features = ["metrics", "trace"], version = "0.6.8"}
 uuid = {features = ["v4"], workspace = true}
 # Workspace dependencies
