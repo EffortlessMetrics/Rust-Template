@@ -95,6 +95,10 @@ async fn test_cors_headers_present_in_response() {
 
     // Should have CORS headers when origin is provided
     assert!(response.headers().contains_key("access-control-allow-origin"));
+
+    // Vary header should be present with Origin
+    let vary = response.headers().get("vary").expect("Vary header missing");
+    assert!(vary.to_str().unwrap().to_lowercase().contains("origin"));
 }
 
 #[tokio::test]
