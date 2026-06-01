@@ -12,6 +12,7 @@ http-metrics = {path = "../http-metrics"}
 http-middleware = {path = "../http-middleware"}
 http-origin-policy = {path = "../http-origin-policy"}
 http-platform = {path = "../http-platform"}
+http-request-id = {path = "../http-request-id"}
 http-tasks = {path = "../http-tasks"}
 http-todos = {path = "../http-todos"}
 # HTML templates
