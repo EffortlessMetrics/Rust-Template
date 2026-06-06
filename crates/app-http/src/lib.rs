@@ -200,8 +200,8 @@ pub use http_metrics::{metrics_handler, metrics_middleware};
 // Re-export from app-http internal modules (backward compatibility)
 pub use errors::{AppError, ErrorCode, ErrorSummary, get_error_summary};
 pub use middleware::{
-    CachedSecurityHeaders, CorsConfig, REQUEST_ID_HEADER, RequestId, SecurityHeadersConfig, cors_middleware,
-    platform_auth_guard, request_id_middleware, security_headers_middleware,
+    CachedSecurityHeaders, CorsConfig, REQUEST_ID_HEADER, RequestId, SecurityHeadersConfig,
+    cors_middleware, platform_auth_guard, request_id_middleware, security_headers_middleware,
 };
 
 // ============================================================================

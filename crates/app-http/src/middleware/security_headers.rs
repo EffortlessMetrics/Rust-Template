@@ -244,23 +244,42 @@ impl SecurityHeadersConfig {
     /// Build cached headers to eliminate per-request parsing
     pub fn build(&self) -> CachedSecurityHeaders {
         CachedSecurityHeaders {
-            content_security_policy: self.content_security_policy.as_ref().and_then(|s| HeaderValue::from_str(s).ok()),
-            x_frame_options: HeaderValue::from_str(&self.x_frame_options).unwrap_or_else(|_| HeaderValue::from_static("DENY")),
-            x_content_type_options: HeaderValue::from_str(&self.x_content_type_options).unwrap_or_else(|_| HeaderValue::from_static("nosniff")),
-            x_xss_protection: HeaderValue::from_str(&self.x_xss_protection).unwrap_or_else(|_| HeaderValue::from_static("1; mode=block")),
-            strict_transport_security: self.strict_transport_security.as_ref().and_then(|s| HeaderValue::from_str(s).ok()),
-            referrer_policy: HeaderValue::from_str(&self.referrer_policy).unwrap_or_else(|_| HeaderValue::from_static("strict-origin-when-cross-origin")),
-            permissions_policy: self.permissions_policy.as_ref().and_then(|s| HeaderValue::from_str(s).ok()),
-            cross_origin_embedder_policy: self.cross_origin_embedder_policy.as_ref().and_then(|s| HeaderValue::from_str(s).ok()),
-            cross_origin_opener_policy: self.cross_origin_opener_policy.as_ref().and_then(|s| HeaderValue::from_str(s).ok()),
-            cross_origin_resource_policy: HeaderValue::from_str(&self.cross_origin_resource_policy).unwrap_or_else(|_| HeaderValue::from_static("same-origin")),
+            content_security_policy: self
+                .content_security_policy
+                .as_ref()
+                .and_then(|s| HeaderValue::from_str(s).ok()),
+            x_frame_options: HeaderValue::from_str(&self.x_frame_options)
+                .unwrap_or_else(|_| HeaderValue::from_static("DENY")),
+            x_content_type_options: HeaderValue::from_str(&self.x_content_type_options)
+                .unwrap_or_else(|_| HeaderValue::from_static("nosniff")),
+            x_xss_protection: HeaderValue::from_str(&self.x_xss_protection)
+                .unwrap_or_else(|_| HeaderValue::from_static("1; mode=block")),
+            strict_transport_security: self
+                .strict_transport_security
+                .as_ref()
+                .and_then(|s| HeaderValue::from_str(s).ok()),
+            referrer_policy: HeaderValue::from_str(&self.referrer_policy)
+                .unwrap_or_else(|_| HeaderValue::from_static("strict-origin-when-cross-origin")),
+            permissions_policy: self
+                .permissions_policy
+                .as_ref()
+                .and_then(|s| HeaderValue::from_str(s).ok()),
+            cross_origin_embedder_policy: self
+                .cross_origin_embedder_policy
+                .as_ref()
+                .and_then(|s| HeaderValue::from_str(s).ok()),
+            cross_origin_opener_policy: self
+                .cross_origin_opener_policy
+                .as_ref()
+                .and_then(|s| HeaderValue::from_str(s).ok()),
+            cross_origin_resource_policy: HeaderValue::from_str(&self.cross_origin_resource_policy)
+                .unwrap_or_else(|_| HeaderValue::from_static("same-origin")),
             enabled: self.enabled,
         }
     }
 }
 
 /// Security headers middleware implementation
-
 
 /// Cached security headers optimized for performance
 #[derive(Clone, Debug)]
@@ -290,7 +309,9 @@ impl CachedSecurityHeaders {
         }
 
         response.headers_mut().insert("X-Frame-Options", self.x_frame_options.clone());
-        response.headers_mut().insert("X-Content-Type-Options", self.x_content_type_options.clone());
+        response
+            .headers_mut()
+            .insert("X-Content-Type-Options", self.x_content_type_options.clone());
         response.headers_mut().insert("X-XSS-Protection", self.x_xss_protection.clone());
 
         if let Some(sts) = &self.strict_transport_security {
@@ -311,7 +332,9 @@ impl CachedSecurityHeaders {
             response.headers_mut().insert("Cross-Origin-Opener-Policy", coop.clone());
         }
 
-        response.headers_mut().insert("Cross-Origin-Resource-Policy", self.cross_origin_resource_policy.clone());
+        response
+            .headers_mut()
+            .insert("Cross-Origin-Resource-Policy", self.cross_origin_resource_policy.clone());
     }
 }
 pub async fn security_headers_middleware(
