@@ -13,6 +13,8 @@ concurrency:
 jobs:
   selftest:
     runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     timeout-minutes: 60
     permissions:
       contents: read
@@ -158,6 +160,7 @@ jobs:
           steps.changes.outputs.non_docs != 'true' &&
           steps.changes.outputs.bdd_needed != 'true'
         env:
+          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
           XTASK_STRICT_PRECOMMIT: "1"
         run: |
           echo "Docs-only change - running docs-check"
@@ -169,6 +172,7 @@ jobs:
           steps.changes.outputs.bdd_needed != 'true' &&
           steps.changes.outputs.non_docs == 'true'
         env:
+          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
           XTASK_STRICT_PRECOMMIT: "1"
         run: |
           echo "Non-BDD change - running fast governance checks"
@@ -188,8 +192,10 @@ jobs:
         #
         # See: cargo xtask ac-coverage --todo --must-have for backlog
         env:
+          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
           KERNEL_UNKNOWN_BUDGET: "0"
           XTASK_STRICT_AC_COVERAGE: ${{ github.ref == 'refs/heads/main' && '1' || '' }}
+          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
           XTASK_STRICT_PRECOMMIT: "1"
         run: |
           nix develop -c bash -lc '
