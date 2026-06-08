@@ -309,6 +309,86 @@ impl SecurityHeadersConfig {
     }
 }
 
+/// Cached version of SecurityHeadersConfig that pre-parses HeaderValues.
+///
+/// **Optimization:** This struct prevents the overhead of parsing strings into
+/// `axum::http::HeaderValue` on every single HTTP request. Parsing headers
+/// involves string allocation and validation which is expensive. By caching
+/// the parsed values once at startup, we eliminate these operations from the
+/// hot path. Cloning `HeaderValue` is extremely cheap because the underlying
+/// data is backed by `Bytes` which simply performs a reference count increment.
+///
+/// **Impact:** Reduces CPU cycles and memory allocations per request.
+#[derive(Clone, Debug)]
+pub struct CachedSecurityHeaders {
+    headers: Vec<(&'static str, axum::http::HeaderValue)>,
+}
+
+impl CachedSecurityHeaders {
+    pub fn new(config: &SecurityHeadersConfig) -> Self {
+        let mut headers = Vec::new();
+        if !config.enabled {
+            return Self { headers };
+        }
+
+        if let Some(v) = config.content_security_policy.as_ref() {
+            if let Ok(hv) = axum::http::HeaderValue::from_str(v) {
+                headers.push(("Content-Security-Policy", hv));
+            }
+        }
+
+        if let Ok(hv) = axum::http::HeaderValue::from_str(&config.x_frame_options) {
+            headers.push(("X-Frame-Options", hv));
+        }
+        if let Ok(hv) = axum::http::HeaderValue::from_str(&config.x_content_type_options) {
+            headers.push(("X-Content-Type-Options", hv));
+        }
+        if let Ok(hv) = axum::http::HeaderValue::from_str(&config.x_xss_protection) {
+            headers.push(("X-XSS-Protection", hv));
+        }
+
+        if let Some(v) = config.strict_transport_security.as_ref() {
+            if let Ok(hv) = axum::http::HeaderValue::from_str(v) {
+                headers.push(("Strict-Transport-Security", hv));
+            }
+        }
+
+        if let Ok(hv) = axum::http::HeaderValue::from_str(&config.referrer_policy) {
+            headers.push(("Referrer-Policy", hv));
+        }
+
+        if let Some(v) = config.permissions_policy.as_ref() {
+            if let Ok(hv) = axum::http::HeaderValue::from_str(v) {
+                headers.push(("Permissions-Policy", hv));
+            }
+        }
+
+        if let Some(v) = config.cross_origin_embedder_policy.as_ref() {
+            if let Ok(hv) = axum::http::HeaderValue::from_str(v) {
+                headers.push(("Cross-Origin-Embedder-Policy", hv));
+            }
+        }
+
+        if let Some(v) = config.cross_origin_opener_policy.as_ref() {
+            if let Ok(hv) = axum::http::HeaderValue::from_str(v) {
+                headers.push(("Cross-Origin-Opener-Policy", hv));
+            }
+        }
+
+        if let Ok(hv) = axum::http::HeaderValue::from_str(&config.cross_origin_resource_policy) {
+            headers.push(("Cross-Origin-Resource-Policy", hv));
+        }
+
+        Self { headers }
+    }
+
+    pub fn apply_headers(&self, response: &mut axum::response::Response) {
+        for (k, v) in &self.headers {
+            response.headers_mut().insert(*k, v.clone());
+        }
+    }
+}
+
 /// Security headers middleware implementation
 pub async fn security_headers_middleware(
     State(state): State<AppState>,
@@ -316,7 +396,7 @@ pub async fn security_headers_middleware(
     next: Next,
 ) -> Response {
     let mut response = next.run(request).await;
-    state.security_headers_config.apply_headers(&mut response);
+    state.cached_security_headers.apply_headers(&mut response);
     response
 }
 
