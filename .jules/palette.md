@@ -1,0 +1,3 @@
+## 2024-06-12 - [Search Input Accessibility]
+**Learning:** Search inputs should use `type="search"` instead of `type="text"` to provide native browser features (like clear buttons) and better semantic meaning. They should also include an explicit `aria-label` (e.g., `aria-label="Search..."`) so screen readers can correctly identify them without external labels.
+**Action:** Always verify search inputs use `type="search"` and have proper ARIA labels. When writing Playwright UI verification tests, use explicit CSS locators like `page.locator("#search-box")` since `page.get_by_role("searchbox")` fails for `type="text"` fields.
