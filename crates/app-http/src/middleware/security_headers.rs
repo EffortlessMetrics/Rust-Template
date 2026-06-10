@@ -309,7 +309,6 @@ impl SecurityHeadersConfig {
     }
 }
 
-
 /// Cached security headers to eliminate per-request parsing
 #[derive(Clone, Debug)]
 pub struct CachedSecurityHeaders {
@@ -330,16 +329,34 @@ impl CachedSecurityHeaders {
     /// Create cached headers from configuration
     pub fn new(config: &SecurityHeadersConfig) -> Self {
         Self {
-            content_security_policy: config.content_security_policy.as_ref().and_then(|v| HeaderValue::from_str(v).ok()),
+            content_security_policy: config
+                .content_security_policy
+                .as_ref()
+                .and_then(|v| HeaderValue::from_str(v).ok()),
             x_frame_options: HeaderValue::from_str(&config.x_frame_options).ok(),
             x_content_type_options: HeaderValue::from_str(&config.x_content_type_options).ok(),
             x_xss_protection: HeaderValue::from_str(&config.x_xss_protection).ok(),
-            strict_transport_security: config.strict_transport_security.as_ref().and_then(|v| HeaderValue::from_str(v).ok()),
+            strict_transport_security: config
+                .strict_transport_security
+                .as_ref()
+                .and_then(|v| HeaderValue::from_str(v).ok()),
             referrer_policy: HeaderValue::from_str(&config.referrer_policy).ok(),
-            permissions_policy: config.permissions_policy.as_ref().and_then(|v| HeaderValue::from_str(v).ok()),
-            cross_origin_embedder_policy: config.cross_origin_embedder_policy.as_ref().and_then(|v| HeaderValue::from_str(v).ok()),
-            cross_origin_opener_policy: config.cross_origin_opener_policy.as_ref().and_then(|v| HeaderValue::from_str(v).ok()),
-            cross_origin_resource_policy: HeaderValue::from_str(&config.cross_origin_resource_policy).ok(),
+            permissions_policy: config
+                .permissions_policy
+                .as_ref()
+                .and_then(|v| HeaderValue::from_str(v).ok()),
+            cross_origin_embedder_policy: config
+                .cross_origin_embedder_policy
+                .as_ref()
+                .and_then(|v| HeaderValue::from_str(v).ok()),
+            cross_origin_opener_policy: config
+                .cross_origin_opener_policy
+                .as_ref()
+                .and_then(|v| HeaderValue::from_str(v).ok()),
+            cross_origin_resource_policy: HeaderValue::from_str(
+                &config.cross_origin_resource_policy,
+            )
+            .ok(),
             enabled: config.enabled,
         }
     }

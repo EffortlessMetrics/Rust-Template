@@ -112,7 +112,8 @@ mod tests {
     ) -> AppState {
         let workspace_root = PathBuf::new();
         let security_headers_config = crate::middleware::SecurityHeadersConfig::default();
-        let cached_security_headers = crate::middleware::CachedSecurityHeaders::new(&security_headers_config);
+        let cached_security_headers =
+            crate::middleware::CachedSecurityHeaders::new(&security_headers_config);
         AppState {
             governance_repo: Arc::new(NoopRepo),
             workspace_root: workspace_root.clone(),
