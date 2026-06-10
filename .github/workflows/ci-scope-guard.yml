@@ -1,3 +1,5 @@
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 name: ScopeGuard
 on: [pull_request]
 
@@ -30,7 +32,7 @@ jobs:
           PR_BODY: ${{ github.event.pull_request.body }}
         run: |
           # Check if ## Scope block exists
-          if echo "$PR_BODY" | grep -qE '^## Scope'; then
+          if echo "$PR_BODY" | grep -qE '## Scope'; then
             echo "declared=true" >> $GITHUB_OUTPUT
 
             # Extract Type field

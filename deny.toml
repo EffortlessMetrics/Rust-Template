@@ -29,7 +29,12 @@ ignore = [
   # - Next review: 2026-03-18 (quarterly)
   # - Action: Monitor upstream bollard crate for fix
   # - Tracking: https://github.com/testcontainers/testcontainers-rs/issues
-  "RUSTSEC-2025-0134"
+  "RUSTSEC-2025-0134",
+  # RUSTSEC-2026-0066 (astral-tokio-tar)
+  # - Path: testcontainers -> astral-tokio-tar
+  # - Risk: Low severity, requires secondary misbehaving tar parser
+  # - Action: Monitor upstream testcontainers for astral-tokio-tar update
+  "RUSTSEC-2026-0066"
 ]
 yanked = "deny"
 
