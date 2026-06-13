@@ -804,7 +804,7 @@ pub async fn coverage_view(State(state): State<AppState>) -> Html<String> {
                 button #filter-passing.filter-btn onclick="filterData('passing')" { "Passing" }
                 button #filter-failing.filter-btn onclick="filterData('failing')" { "Failing" }
                 button #filter-unknown.filter-btn onclick="filterData('unknown')" { "Unknown" }
-                input #search-box.search-box type="text" placeholder="Search by AC ID or title..."
+                input #search-box.search-box type="search" aria-label="Search acceptance criteria" placeholder="Search by AC ID or title..."
                     oninput="searchData()";
             }
 
