@@ -371,7 +371,8 @@ mod tests {
 
     #[test]
     fn test_security_headers_apply_headers() {
-        let config = SecurityHeadersConfig::default();
+        let config_src = SecurityHeadersConfig::default();
+        let config = CachedSecurityHeaders::from_config(&config_src);
         let mut response = Response::new(Body::empty());
 
         config.apply_headers(&mut response);
@@ -393,7 +394,8 @@ mod tests {
 
     #[test]
     fn test_security_headers_disabled() {
-        let config = SecurityHeadersConfig { enabled: false, ..Default::default() };
+        let config_src = SecurityHeadersConfig { enabled: false, ..Default::default() };
+        let config = CachedSecurityHeaders::from_config(&config_src);
 
         let mut response = Response::new(Body::empty());
         config.apply_headers(&mut response);
