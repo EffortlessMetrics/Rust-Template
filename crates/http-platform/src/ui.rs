@@ -625,7 +625,8 @@ fn coverage_content() -> Markup {
                 button #filter-passing.filter-btn onclick="filterData('passing')" { "Passing" }
                 button #filter-failing.filter-btn onclick="filterData('failing')" { "Failing" }
                 button #filter-unknown.filter-btn onclick="filterData('unknown')" { "Unknown" }
-                input #search-box.search-box type="text" placeholder="Search by AC ID or title..."
+                input #search-box.search-box type="search" placeholder="Search by AC ID or title..."
+                    aria-label="Search acceptance criteria"
                     oninput="searchData()";
             }
 
