@@ -2,3 +2,8 @@
 **Vulnerability:** A `constant_time_eq` implementation iterated `max(a.len(), b.len())` times, exposing a DoS vector where a large input would cause excessive CPU usage.
 **Learning:** Attempts to "avoid leaking length" by checking all bytes can inadvertently introduce algorithmic complexity vulnerabilities. Standard practice is to check length first (leaking length but preventing DoS) and then compare in constant time.
 **Prevention:** Prefer `subtle` crate or idiomatic constant-time comparisons that explicitly handle length checks to bound execution time.
+
+## 2024-05-24 - Hand-rolled constant-time string comparison
+**Vulnerability:** The `constant_time_eq` function used a manual `fold` with bitwise XOR for comparing tokens, which compiler optimizations can defeat, leading to timing attack vulnerabilities.
+**Learning:** Never use hand-rolled iterators for constant-time cryptographic comparisons as compiler optimizations can break constant-time guarantees.
+**Prevention:** Always use vetted cryptography primitives like the `subtle` crate (`ConstantTimeEq`), and explicitly check the length first to prevent algorithmic complexity DoS vulnerabilities.
