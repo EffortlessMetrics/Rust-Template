@@ -151,6 +151,8 @@ pub async fn cors_middleware(config: CorsConfig, request: Request, next: Next) -
             response.headers_mut().insert(header::ACCESS_CONTROL_ALLOW_ORIGIN, header_value);
         }
 
+        response.headers_mut().append(header::VARY, HeaderValue::from_static("origin"));
+
         if config.allow_credentials {
             response
                 .headers_mut()
@@ -195,6 +197,8 @@ fn handle_preflight(
     if let Ok(header_value) = HeaderValue::from_str(&origin) {
         response.headers_mut().insert(header::ACCESS_CONTROL_ALLOW_ORIGIN, header_value);
     }
+
+    response.headers_mut().append(header::VARY, HeaderValue::from_static("origin"));
 
     // Set allowed methods
     let allowed_methods = config.allowed_methods.join(", ");
