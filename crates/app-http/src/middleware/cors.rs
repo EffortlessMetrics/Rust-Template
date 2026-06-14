@@ -256,6 +256,7 @@ pub async fn cors_middleware(
         if let Ok(header_value) = HeaderValue::from_str(&origin) {
             response.headers_mut().insert(header::ACCESS_CONTROL_ALLOW_ORIGIN, header_value);
         }
+        response.headers_mut().append(header::VARY, HeaderValue::from_static("Origin"));
 
         if state.cors_config.allow_credentials {
             response
@@ -337,6 +338,8 @@ fn handle_preflight(
         response.headers_mut().insert(header::ACCESS_CONTROL_MAX_AGE, header_value);
     }
 
+    response.headers_mut().append(header::VARY, HeaderValue::from_static("Origin"));
+
     response
 }
 
@@ -400,4 +403,16 @@ mod tests {
     //     let response = cors_middleware(config, request, next).await;
     //     assert_eq!(response.status(), StatusCode::OK);
     // }
+
+    #[test]
+    fn test_cors_preflight_vary_origin() {
+        let config = CorsConfig::default();
+        let headers = vec!["content-type"];
+        let response =
+            handle_preflight(&config, Some("http://localhost:3000".to_string()), &headers);
+
+        let vary = response.headers().get(header::VARY);
+        assert!(vary.is_some());
+        assert_eq!(vary.unwrap().to_str().unwrap(), "Origin");
+    }
 }
