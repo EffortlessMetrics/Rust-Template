@@ -1,0 +1,3 @@
+## 2024-05-18 - Input types for search fields
+**Learning:** Browsers natively support `type="search"` for search inputs, which provides built-in "clear" buttons (the "x" inside the input) on many platforms, improving the UX without requiring custom JavaScript or UI elements. Also, a search input should always have an `aria-label` for screen reader accessibility since they are often presented without an explicit `<label>` tag.
+**Action:** When implementing or updating search fields, always use `type="search"` instead of `type="text"` and ensure an `aria-label` is present to improve native usability and accessibility.
