@@ -8,6 +8,7 @@ use jsonwebtoken::{Algorithm, DecodingKey, Validation, decode};
 #[cfg(test)]
 use jsonwebtoken::{EncodingKey, Header, encode};
 use serde::{Deserialize, Serialize};
+use subtle::ConstantTimeEq;
 #[cfg(test)]
 use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -93,7 +94,7 @@ pub fn constant_time_eq(left: &str, right: &str) -> bool {
         return false;
     }
 
-    left.bytes().zip(right.bytes()).fold(0_u8, |acc, (x, y)| acc | (x ^ y)) == 0
+    left.as_bytes().ct_eq(right.as_bytes()).into()
 }
 
 #[cfg(test)]
