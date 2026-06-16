@@ -189,9 +189,14 @@ pub fn router() -> Router<AppState> {
 #[allow(clippy::result_large_err)]
 #[instrument(skip(state))]
 async fn get_idp_snapshot(State(state): State<AppState>) -> Result<Json<IdpSnapshot>, AppError> {
-    let root = &state.workspace_root;
+    let root = state.workspace_root.clone();
 
-    let snapshot = generate_snapshot(root)
+    // Offload the heavy synchronous task of generating the IDP snapshot
+    // (which includes reading multiple files and parsing YAML) to a dedicated worker thread.
+    // This significantly reduces latency and prevents executor blocking.
+    let snapshot = tokio::task::spawn_blocking(move || generate_snapshot(&root))
+        .await
+        .unwrap_or_else(|e| Err(anyhow::anyhow!("spawn_blocking failed: {}", e)))
         .map_err(|e| AppError::internal_error(format!("Failed to generate IDP snapshot: {}", e)))?;
 
     Ok(Json(snapshot))

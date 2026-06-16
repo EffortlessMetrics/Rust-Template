@@ -286,10 +286,13 @@ struct DebugInfo {
 /// Returns basic kernel and template version information.
 /// Documented in docs/how-to/add-http-endpoint.md as a canonical example.
 async fn debug_info(State(state): State<AppState>) -> Json<DebugInfo> {
-    let root = &state.workspace_root;
+    let root = state.workspace_root.clone();
 
-    let template_version = load_service_metadata(&root.join("specs/service_metadata.yaml"))
-        .ok()
+    // Offload synchronous file I/O to a background thread to prevent blocking the async executor.
+    // This improves concurrent request throughput when fetching debug info.
+    let template_version = tokio::task::spawn_blocking(move || {
+        load_service_metadata(&root.join("specs/service_metadata.yaml"))
+    }).await.ok().and_then(|r| r.ok())
         .and_then(|m| m.template_version)
         .unwrap_or_else(|| "unknown".to_string());
 
@@ -384,10 +387,17 @@ fn validate_doc_type_contract(doc: &spec_runtime::DocEntry) -> (bool, Option<Str
 
 #[instrument(skip(state))]
 async fn get_status(State(state): State<AppState>) -> Result<Json<PlatformStatus>, AppError> {
+    let root = state.workspace_root.clone();
+    // Offload heavy synchronous file I/O and YAML parsing to a background thread
+    // to prevent blocking the Tokio reactor. This ensures the server remains responsive
+    // under high load while generating the status report.
+    let (specs, tasks_spec) = tokio::task::spawn_blocking(move || {
+        let specs = load_all_specs(&root).map_err(|e| AppError::spec_load_error("load specs", e))?;
+        let tasks_spec = spec_runtime::load_tasks(&root.join("specs/tasks.yaml"))
+            .map_err(|e| AppError::spec_load_error("load tasks", e))?;
+        Ok::<_, AppError>((specs, tasks_spec))
+    }).await.map_err(|e| AppError::internal_error(e.to_string()))??;
     let root = &state.workspace_root;
-    let specs = load_all_specs(root).map_err(|e| AppError::spec_load_error("load specs", e))?;
-    let tasks_spec = spec_runtime::load_tasks(&root.join("specs/tasks.yaml"))
-        .map_err(|e| AppError::spec_load_error("load tasks", e))?;
 
     let ledger_counts = LedgerCounts {
         stories: specs.ledger.stories.len(),
