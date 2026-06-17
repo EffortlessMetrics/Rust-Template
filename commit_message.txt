@@ -1,0 +1,7 @@
+## Scope
+Type: mechanical
+Intent: Add node 24 env variable and update dependencies
+Touchpoints: .github/workflows/*.yml, crates/adapters-db-sqlx/Cargo.toml, Cargo.lock
+Evidence: selftest green
+
+update github actions
