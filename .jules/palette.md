@@ -1,0 +1,3 @@
+## $(date +%Y-%m-%d) - Enhance search input accessibility and semantics
+**Learning:** In the acceptance criteria UI, the search input was using `type="text"` and lacked an `aria-label`, relying entirely on its placeholder. This is an accessibility anti-pattern. By upgrading it to `type="search"`, we not only provide semantic meaning and native browser features (like the clear 'x' button) but adding `aria-label="Search acceptance criteria"` ensures screen readers provide appropriate context.
+**Action:** When finding search boxes using `type="text"`, upgrade them to `type="search"` and always ensure an explicit `aria-label` is present if a visible `<label>` is not used.
