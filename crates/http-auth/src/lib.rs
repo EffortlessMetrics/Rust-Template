@@ -285,7 +285,7 @@ mod tests {
         let claims = Claims {
             sub: "user123".to_string(),
             exp: now + 3600,
-            iat: now + 301,
+            iat: now + 361,
             iss: "rust-template".to_string(),
         };
 
