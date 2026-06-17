@@ -253,6 +253,8 @@ pub async fn cors_middleware(
     if let Some(origin) = origin
         && state.cors_config.is_origin_allowed(&origin)
     {
+        response.headers_mut().append(header::VARY, HeaderValue::from_static("origin"));
+
         if let Ok(header_value) = HeaderValue::from_str(&origin) {
             response.headers_mut().insert(header::ACCESS_CONTROL_ALLOW_ORIGIN, header_value);
         }
@@ -296,6 +298,8 @@ fn handle_preflight(
     }
 
     let mut response = Response::new(axum::body::Body::empty());
+
+    response.headers_mut().append(header::VARY, HeaderValue::from_static("origin"));
 
     // Set allowed origin
     if let Ok(header_value) = HeaderValue::from_str(&origin) {
