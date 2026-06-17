@@ -243,80 +243,91 @@ impl SecurityHeadersConfig {
 
     /// Apply security headers to a response
     pub fn apply_headers(&self, response: &mut Response) {
-        if !self.enabled {
-            return;
-        }
-
-        // Content Security Policy
-        if let Some(csp) = &self.content_security_policy
-            && let Ok(header_value) = HeaderValue::from_str(csp)
-        {
-            response.headers_mut().insert("Content-Security-Policy", header_value);
-        }
-
-        // X-Frame-Options (prevent clickjacking)
-        if let Ok(header_value) = HeaderValue::from_str(&self.x_frame_options) {
-            response.headers_mut().insert("X-Frame-Options", header_value);
-        }
-
-        // X-Content-Type-Options (prevent MIME sniffing)
-        if let Ok(header_value) = HeaderValue::from_str(&self.x_content_type_options) {
-            response.headers_mut().insert("X-Content-Type-Options", header_value);
-        }
-
-        // X-XSS-Protection (legacy XSS protection)
-        if let Ok(header_value) = HeaderValue::from_str(&self.x_xss_protection) {
-            response.headers_mut().insert("X-XSS-Protection", header_value);
-        }
-
-        // Strict-Transport-Security (HSTS)
-        if let Some(sts) = &self.strict_transport_security
-            && let Ok(header_value) = HeaderValue::from_str(sts)
-        {
-            response.headers_mut().insert("Strict-Transport-Security", header_value);
-        }
-
-        // Referrer-Policy
-        if let Ok(header_value) = HeaderValue::from_str(&self.referrer_policy) {
-            response.headers_mut().insert("Referrer-Policy", header_value);
-        }
-
-        // Permissions-Policy
-        if let Some(pp) = &self.permissions_policy
-            && let Ok(header_value) = HeaderValue::from_str(pp)
-        {
-            response.headers_mut().insert("Permissions-Policy", header_value);
-        }
-
-        // Cross-Origin-Embedder-Policy
-        if let Some(coep) = &self.cross_origin_embedder_policy
-            && let Ok(header_value) = HeaderValue::from_str(coep)
-        {
-            response.headers_mut().insert("Cross-Origin-Embedder-Policy", header_value);
-        }
-
-        // Cross-Origin-Opener-Policy
-        if let Some(coop) = &self.cross_origin_opener_policy
-            && let Ok(header_value) = HeaderValue::from_str(coop)
-        {
-            response.headers_mut().insert("Cross-Origin-Opener-Policy", header_value);
-        }
-
-        // Cross-Origin-Resource-Policy
-        if let Ok(header_value) = HeaderValue::from_str(&self.cross_origin_resource_policy) {
-            response.headers_mut().insert("Cross-Origin-Resource-Policy", header_value);
-        }
+        CachedSecurityHeaders::new(self).apply_headers(response);
     }
 }
 
 /// Security headers middleware implementation
+/// Cached security headers for performance
+#[derive(Clone, Debug)]
+pub struct CachedSecurityHeaders {
+    pub headers: Vec<(axum::http::header::HeaderName, HeaderValue)>,
+    pub enabled: bool,
+}
+
+impl CachedSecurityHeaders {
+    pub fn new(config: &SecurityHeadersConfig) -> Self {
+        if !config.enabled {
+            return Self { headers: Vec::new(), enabled: false };
+        }
+
+        let mut headers = Vec::new();
+
+        if let Some(csp) = &config.content_security_policy
+            && let Ok(value) = HeaderValue::from_str(csp) {
+                headers.push((axum::http::header::HeaderName::from_static("content-security-policy"), value));
+            }
+
+        if let Ok(value) = HeaderValue::from_str(&config.x_frame_options) {
+            headers.push((axum::http::header::HeaderName::from_static("x-frame-options"), value));
+        }
+
+        if let Ok(value) = HeaderValue::from_str(&config.x_content_type_options) {
+            headers.push((axum::http::header::HeaderName::from_static("x-content-type-options"), value));
+        }
+
+        if let Ok(value) = HeaderValue::from_str(&config.x_xss_protection) {
+            headers.push((axum::http::header::HeaderName::from_static("x-xss-protection"), value));
+        }
+
+        if let Some(sts) = &config.strict_transport_security
+            && let Ok(value) = HeaderValue::from_str(sts) {
+                headers.push((axum::http::header::HeaderName::from_static("strict-transport-security"), value));
+            }
+
+        if let Ok(value) = HeaderValue::from_str(&config.referrer_policy) {
+            headers.push((axum::http::header::HeaderName::from_static("referrer-policy"), value));
+        }
+
+        if let Some(pp) = &config.permissions_policy
+            && let Ok(value) = HeaderValue::from_str(pp) {
+                headers.push((axum::http::header::HeaderName::from_static("permissions-policy"), value));
+            }
+
+        if let Some(coep) = &config.cross_origin_embedder_policy
+            && let Ok(value) = HeaderValue::from_str(coep) {
+                headers.push((axum::http::header::HeaderName::from_static("cross-origin-embedder-policy"), value));
+            }
+
+        if let Some(coop) = &config.cross_origin_opener_policy
+            && let Ok(value) = HeaderValue::from_str(coop) {
+                headers.push((axum::http::header::HeaderName::from_static("cross-origin-opener-policy"), value));
+            }
+
+        if let Ok(value) = HeaderValue::from_str(&config.cross_origin_resource_policy) {
+            headers.push((axum::http::header::HeaderName::from_static("cross-origin-resource-policy"), value));
+        }
+
+        Self { headers, enabled: true }
+    }
+
+    pub fn apply_headers(&self, response: &mut Response) {
+        if !self.enabled {
+            return;
+        }
+        for (name, value) in &self.headers {
+            response.headers_mut().insert(name.clone(), value.clone());
+        }
+    }
+}
+
 pub async fn security_headers_middleware(
     State(state): State<AppState>,
     request: Request,
     next: Next,
 ) -> Response {
     let mut response = next.run(request).await;
-    state.security_headers_config.apply_headers(&mut response);
+    state.cached_security_headers.apply_headers(&mut response);
     response
 }
 

@@ -200,7 +200,7 @@ pub use http_metrics::{metrics_handler, metrics_middleware};
 // Re-export from app-http internal modules (backward compatibility)
 pub use errors::{AppError, ErrorCode, ErrorSummary, get_error_summary};
 pub use middleware::{
-    CorsConfig, REQUEST_ID_HEADER, RequestId, SecurityHeadersConfig, cors_middleware,
+    CachedSecurityHeaders, CorsConfig, REQUEST_ID_HEADER, RequestId, SecurityHeadersConfig, cors_middleware,
     platform_auth_guard, request_id_middleware, security_headers_middleware,
 };
 
@@ -253,6 +253,8 @@ pub struct AppState {
     pub cors_config: CorsConfig,
     /// Security headers configuration
     pub security_headers_config: SecurityHeadersConfig,
+    /// Cached security headers for performance
+    pub cached_security_headers: CachedSecurityHeaders,
     /// Repository context for gov-http integration
     pub repo_context: RepoContext,
 }
@@ -353,6 +355,7 @@ impl AppState {
         // Initialize security configurations
         let cors_config = CorsConfig::from_sources(config.as_ref());
         let security_headers_config = SecurityHeadersConfig::from_sources(config.as_ref());
+        let cached_security_headers = CachedSecurityHeaders::new(&security_headers_config);
 
         // Create RepoContext for gov-http integration
         let repo_context = RepoContext::new(&workspace_root);
@@ -364,6 +367,7 @@ impl AppState {
             platform_auth,
             cors_config,
             security_headers_config,
+            cached_security_headers,
             repo_context,
         })
     }
