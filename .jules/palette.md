@@ -1,0 +1,3 @@
+## 2024-05-24 - Semantic navigation and search inputs
+**Learning:** Maud templates in this codebase require the `attr=[Option]` syntax for conditional attributes like `aria-current`. Search inputs should use `type="search"` instead of `type="text"` to provide native browser features (like clear buttons) and better semantic meaning, and must include an explicit `aria-label` (e.g., `aria-label="Search..."`) so screen readers can correctly identify them without external labels.
+**Action:** When creating or modifying navigation links in Maud templates, conditionally add `aria-current="page"` based on the active page context using the `attr=[Option]` syntax. When creating search inputs, always use `type="search"` and include an explicit `aria-label`.
