@@ -46,7 +46,7 @@ impl Default for SecurityHeadersConfig {
         Self {
             // Strict CSP for production, more permissive for development
             content_security_policy: Some(
-                "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self'; frame-ancestors 'none';".to_string(),
+                "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self'; frame-ancestors 'none';".to_string(),
             ),
             x_frame_options: "DENY".to_string(),
             x_content_type_options: "nosniff".to_string(),
