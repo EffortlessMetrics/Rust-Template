@@ -75,6 +75,11 @@ fn layout(
                     nav a:hover {
                         text-decoration: underline;
                     }
+                    nav a[aria-current="page"] {
+                        font-weight: 700;
+                        border-bottom: 2px solid #667eea;
+                        padding-bottom: 0.25rem;
+                    }
                     .card {
                         background: white;
                         border-radius: 8px;
@@ -152,10 +157,10 @@ fn layout(
                     }
                 }
                 nav .container data-uiid=(format!("{}.nav", page_id)) {
-                    a href="/" { "Dashboard" }
-                    a href="/ui/graph" { "Graph" }
-                    a href="/ui/flows" { "Flows & Tasks" }
-                    a href="/ui/coverage" { "AC Coverage" }
+                    a href="/" aria-current=[if page_id == "dashboard" { Some("page") } else { None }] { "Dashboard" }
+                    a href="/ui/graph" aria-current=[if page_id == "graph" { Some("page") } else { None }] { "Graph" }
+                    a href="/ui/flows" aria-current=[if page_id == "flows" { Some("page") } else { None }] { "Flows & Tasks" }
+                    a href="/ui/coverage" aria-current=[if page_id == "coverage" { Some("page") } else { None }] { "AC Coverage" }
                     a href="/platform/status" target="_blank" { "API: Status" }
                     a href="/platform/graph" target="_blank" { "API: Graph" }
                     @if let Some(runbook) = links.get("kernel_contract") {
@@ -804,7 +809,7 @@ pub async fn coverage_view(State(state): State<AppState>) -> Html<String> {
                 button #filter-passing.filter-btn onclick="filterData('passing')" { "Passing" }
                 button #filter-failing.filter-btn onclick="filterData('failing')" { "Failing" }
                 button #filter-unknown.filter-btn onclick="filterData('unknown')" { "Unknown" }
-                input #search-box.search-box type="text" placeholder="Search by AC ID or title..."
+                input #search-box.search-box type="search" aria-label="Search coverage" placeholder="Search by AC ID or title..."
                     oninput="searchData()";
             }
 
