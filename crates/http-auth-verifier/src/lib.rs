@@ -10,6 +10,7 @@ use jsonwebtoken::{EncodingKey, Header, encode};
 use serde::{Deserialize, Serialize};
 #[cfg(test)]
 use std::time::{SystemTime, UNIX_EPOCH};
+use subtle::ConstantTimeEq;
 
 /// JWT claims used by platform auth.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -93,7 +94,7 @@ pub fn constant_time_eq(left: &str, right: &str) -> bool {
         return false;
     }
 
-    left.bytes().zip(right.bytes()).fold(0_u8, |acc, (x, y)| acc | (x ^ y)) == 0
+    left.as_bytes().ct_eq(right.as_bytes()).into()
 }
 
 #[cfg(test)]
