@@ -595,8 +595,15 @@ where
     let repo = state.governance_repo();
 
     // Load task definitions from spec (has full metadata)
-    let tasks_spec = spec_runtime::load_tasks_with_context(ctx)
-        .map_err(|e| PlatformError::spec_load("tasks.yaml", e))?;
+    // PERFORMANCE: Offload heavy YAML parsing and synchronous I/O to a blocking thread
+    // to prevent starvation of the Tokio worker threads under load.
+    let ctx_clone = ctx.clone();
+    let tasks_spec = tokio::task::spawn_blocking(move || {
+        spec_runtime::load_tasks_with_context(&ctx_clone)
+    })
+    .await
+    .map_err(|e| PlatformError::internal(format!("spawn_blocking failed: {}", e)))?
+    .map_err(|e| PlatformError::spec_load("tasks.yaml", e))?;
 
     // Get status overlay from governance repository
     let all_tasks = repo
