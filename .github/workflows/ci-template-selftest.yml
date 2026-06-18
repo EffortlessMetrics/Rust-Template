@@ -1,3 +1,5 @@
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 name: Template Self-Test
 # NOTE: This workflow validates cross-platform compilation (macOS + Windows).
 # Linux + full BDD is handled by tier1-selftest.yml to avoid redundant BDD runs.
