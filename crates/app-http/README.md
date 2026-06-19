@@ -216,7 +216,7 @@ pub struct AppState {
     pub config: Option<ValidatedConfig>,
     pub platform_auth: PlatformAuthConfig,
     pub cors_config: CorsConfig,
-    pub security_headers_config: SecurityHeadersConfig,
+    pub security_headers_config: CachedSecurityHeaders,
     pub repo_context: RepoContext,
 }
 ```
