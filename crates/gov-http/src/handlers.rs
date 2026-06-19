@@ -288,11 +288,19 @@ pub async fn get_graph<S>(
 where
     S: PlatformState,
 {
-    let ctx = state.context();
-    let specs = spec_runtime::load_all_specs_with_context(ctx)
-        .map_err(|e| PlatformError::spec_load("specs", e))?;
-    let graph = spec_runtime::build_graph(&specs.ledger, &specs.devex, &specs.docs)
-        .map_err(|e| PlatformError::internal(format!("Failed to build graph: {}", e)))?;
+    let ctx = state.context().clone();
+
+    // Offload blocking file I/O and graph building to avoid starving
+    // the Tokio async runtime under concurrent load.
+    let graph = tokio::task::spawn_blocking(move || {
+        let specs = spec_runtime::load_all_specs_with_context(&ctx)
+            .map_err(|e| PlatformError::spec_load("specs", e))?;
+        spec_runtime::build_graph(&specs.ledger, &specs.devex, &specs.docs)
+            .map_err(|e| PlatformError::internal(format!("Failed to build graph: {}", e)))
+    })
+    .await
+    .map_err(|e| PlatformError::internal(format!("spawn_blocking failed: {}", e)))??;
+
     Ok(Json(graph))
 }
 
