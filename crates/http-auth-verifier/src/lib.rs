@@ -93,7 +93,8 @@ pub fn constant_time_eq(left: &str, right: &str) -> bool {
         return false;
     }
 
-    left.bytes().zip(right.bytes()).fold(0_u8, |acc, (x, y)| acc | (x ^ y)) == 0
+    use subtle::ConstantTimeEq;
+    left.as_bytes().ct_eq(right.as_bytes()).into()
 }
 
 #[cfg(test)]
