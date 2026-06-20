@@ -87,13 +87,15 @@ pub fn validate_jwt_token(token: &str, secret: &str) -> bool {
     }
 }
 
+use subtle::ConstantTimeEq;
+
 /// Constant-time compare for equal-length strings.
 pub fn constant_time_eq(left: &str, right: &str) -> bool {
     if left.len() != right.len() {
         return false;
     }
 
-    left.bytes().zip(right.bytes()).fold(0_u8, |acc, (x, y)| acc | (x ^ y)) == 0
+    left.as_bytes().ct_eq(right.as_bytes()).into()
 }
 
 #[cfg(test)]
