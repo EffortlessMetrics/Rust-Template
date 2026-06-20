@@ -698,8 +698,10 @@ pub async fn coverage_view(State(state): State<AppState>) -> Html<String> {
                 applyFilters();
             }
 
+            let searchTimeout = null;
             function searchData() {
-                applyFilters();
+                if (searchTimeout) clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(applyFilters, 300);
             }
 
             function applyFilters() {
@@ -804,8 +806,8 @@ pub async fn coverage_view(State(state): State<AppState>) -> Html<String> {
                 button #filter-passing.filter-btn onclick="filterData('passing')" { "Passing" }
                 button #filter-failing.filter-btn onclick="filterData('failing')" { "Failing" }
                 button #filter-unknown.filter-btn onclick="filterData('unknown')" { "Unknown" }
-                input #search-box.search-box type="text" placeholder="Search by AC ID or title..."
-                    oninput="searchData()";
+                input #search-box.search-box type="search" placeholder="Search by AC ID or title..."
+                    aria-label="Search coverage" oninput="searchData()";
             }
 
             #table-container data-uiid="coverage.table" {
