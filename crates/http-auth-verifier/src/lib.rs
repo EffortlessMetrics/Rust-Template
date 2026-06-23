@@ -4,6 +4,8 @@
 
 #![forbid(unsafe_code)]
 
+use subtle::ConstantTimeEq;
+
 use jsonwebtoken::{Algorithm, DecodingKey, Validation, decode};
 #[cfg(test)]
 use jsonwebtoken::{EncodingKey, Header, encode};
@@ -93,7 +95,7 @@ pub fn constant_time_eq(left: &str, right: &str) -> bool {
         return false;
     }
 
-    left.bytes().zip(right.bytes()).fold(0_u8, |acc, (x, y)| acc | (x ^ y)) == 0
+    left.as_bytes().ct_eq(right.as_bytes()).into()
 }
 
 #[cfg(test)]
