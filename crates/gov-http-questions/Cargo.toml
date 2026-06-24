@@ -5,6 +5,7 @@ gov-http-types = { path = "../gov-http-types" }
 gov-model.workspace = true
 http-errors = { path = "../http-errors", features = ["axum"] }
 platform-contract = { path = "../platform-contract" }
+question-id = { package = "rust-as-spec-question-id", path = "../question-id" }
 spec-runtime.workspace = true
 axum.workspace = true
 http.workspace = true

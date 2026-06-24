@@ -1,5 +1,6 @@
 use anyhow::{Context, Result};
 use chrono::{DateTime, Utc};
+use question_id::next_question_sequence;
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -310,16 +311,7 @@ pub fn list_questions(status_filter: Option<&str>, json: bool) -> Result<()> {
 pub fn get_next_question_id(category: &str) -> Result<usize> {
     let questions = load_all_questions()?;
 
-    // Find highest ID number for this category
-    let prefix = format!("Q-{}-", category.to_uppercase());
-    let max_id = questions
-        .iter()
-        .filter(|q| q.id.starts_with(&prefix))
-        .filter_map(|q| q.id.strip_prefix(&prefix).and_then(|s| s.parse::<usize>().ok()))
-        .max()
-        .unwrap_or(0);
-
-    Ok(max_id + 1)
+    Ok(next_question_sequence(category, questions.iter().map(|q| q.id.as_str())) as usize)
 }
 
 /// Emit a question artifact from a flow.
