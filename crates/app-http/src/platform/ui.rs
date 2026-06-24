@@ -22,6 +22,13 @@ fn layout(
 
     let links = metadata.as_ref().map(|m| m.links.clone()).unwrap_or_default();
 
+    let nav_link = |href: &str, text: &str, target_id: &str| {
+        let is_active = page_id == target_id;
+        html! {
+            a href=(href) aria-current=[is_active.then(|| "page")] { (text) }
+        }
+    };
+
     html! {
         (DOCTYPE)
         html lang="en" {
@@ -74,6 +81,11 @@ fn layout(
                     }
                     nav a:hover {
                         text-decoration: underline;
+                    }
+                    nav a[aria-current="page"] {
+                        font-weight: 700;
+                        text-decoration: underline;
+                        color: #4c51bf;
                     }
                     .card {
                         background: white;
@@ -152,10 +164,10 @@ fn layout(
                     }
                 }
                 nav .container data-uiid=(format!("{}.nav", page_id)) {
-                    a href="/" { "Dashboard" }
-                    a href="/ui/graph" { "Graph" }
-                    a href="/ui/flows" { "Flows & Tasks" }
-                    a href="/ui/coverage" { "AC Coverage" }
+                    (nav_link("/", "Dashboard", "dashboard"))
+                    (nav_link("/ui/graph", "Graph", "graph"))
+                    (nav_link("/ui/flows", "Flows & Tasks", "flows"))
+                    (nav_link("/ui/coverage", "AC Coverage", "coverage"))
                     a href="/platform/status" target="_blank" { "API: Status" }
                     a href="/platform/graph" target="_blank" { "API: Graph" }
                     @if let Some(runbook) = links.get("kernel_contract") {
