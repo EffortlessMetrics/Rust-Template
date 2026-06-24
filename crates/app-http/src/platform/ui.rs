@@ -657,6 +657,17 @@ pub async fn coverage_view(State(state): State<AppState>) -> Html<String> {
             .scenario-list li {
                 margin: 0.25rem 0;
             }
+            .sr-only {
+                position: absolute;
+                width: 1px;
+                height: 1px;
+                padding: 0;
+                margin: -1px;
+                overflow: hidden;
+                clip: rect(0, 0, 0, 0);
+                white-space: nowrap;
+                border-width: 0;
+            }
             "#
         }
         script {
@@ -691,8 +702,11 @@ pub async fn coverage_view(State(state): State<AppState>) -> Html<String> {
                 // Update active button
                 document.querySelectorAll('.filter-btn').forEach(btn => {
                     btn.classList.remove('active');
+                    btn.setAttribute('aria-pressed', 'false');
                 });
-                document.getElementById('filter-' + status).classList.add('active');
+                const activeBtn = document.getElementById('filter-' + status);
+                activeBtn.classList.add('active');
+                activeBtn.setAttribute('aria-pressed', 'true');
 
                 // Apply filter
                 applyFilters();
@@ -705,6 +719,7 @@ pub async fn coverage_view(State(state): State<AppState>) -> Html<String> {
             function applyFilters() {
                 const searchTerm = document.getElementById('search-box').value.toLowerCase();
                 const rows = document.querySelectorAll('.ac-row');
+                let visibleCount = 0;
 
                 rows.forEach(row => {
                     const status = row.dataset.status;
@@ -715,10 +730,16 @@ pub async fn coverage_view(State(state): State<AppState>) -> Html<String> {
 
                     if (statusMatch && searchMatch) {
                         row.classList.remove('hidden');
+                        visibleCount++;
                     } else {
                         row.classList.add('hidden');
                     }
                 });
+
+                const announcer = document.getElementById('filter-announcer');
+                if (announcer) {
+                    announcer.textContent = visibleCount + " items found";
+                }
             }
 
             function escapeHtml(text) {
@@ -770,7 +791,7 @@ pub async fn coverage_view(State(state): State<AppState>) -> Html<String> {
 
             // Initialize with 'all' filter active
             window.addEventListener('DOMContentLoaded', () => {
-                document.getElementById('filter-all').classList.add('active');
+                // active class and aria-pressed are set server-side
             });
             "#))
         }
@@ -799,14 +820,15 @@ pub async fn coverage_view(State(state): State<AppState>) -> Html<String> {
 
         .card {
             h2 { "Acceptance Criteria Coverage" }
-            .filter-controls data-uiid="coverage.filters" {
-                button #filter-all.filter-btn onclick="filterData('all')" { "All" }
-                button #filter-passing.filter-btn onclick="filterData('passing')" { "Passing" }
-                button #filter-failing.filter-btn onclick="filterData('failing')" { "Failing" }
-                button #filter-unknown.filter-btn onclick="filterData('unknown')" { "Unknown" }
-                input #search-box.search-box type="text" placeholder="Search by AC ID or title..."
+            .filter-controls data-uiid="coverage.filters" aria-label="Filter coverage data" {
+                button #filter-all.filter-btn.active aria-pressed="true" onclick="filterData('all')" { "All" }
+                button #filter-passing.filter-btn aria-pressed="false" onclick="filterData('passing')" { "Passing" }
+                button #filter-failing.filter-btn aria-pressed="false" onclick="filterData('failing')" { "Failing" }
+                button #filter-unknown.filter-btn aria-pressed="false" onclick="filterData('unknown')" { "Unknown" }
+                input #search-box.search-box type="text" aria-label="Search by AC ID or title" placeholder="Search by AC ID or title..."
                     oninput="searchData()";
             }
+            div #filter-announcer.sr-only aria-live="polite" {}
 
             #table-container data-uiid="coverage.table" {
                 table .coverage-table {
