@@ -1,3 +1,3 @@
-## 2026-01-27 - Blocking I/O in Async Handlers
-**Learning:** Found multiple instances of synchronous file I/O (std::fs, spec loading) inside async Axum handlers. This blocks the Tokio worker thread.
-**Action:** Always wrap heavy synchronous operations (like loading YAML specs) in `tokio::task::spawn_blocking` to keep the runtime responsive.
+## 2024-05-24 - Zero-Allocation Security Headers
+**Learning:** Security headers middleware was parsing strings into `HeaderValue`s for every single HTTP request via `HeaderValue::from_str()`. This introduces significant overhead on the hot path, especially with many complex headers.
+**Action:** Always pre-parse static string configurations into `HeaderValue` or other cached representations during middleware initialization or `AppState` creation. `HeaderValue` clones are cheap (atomic ref-counting/inline copying) and can be cloned per-request without allocation overhead. Always insert headers into `HeaderMap` using strictly lowercase static strings to prevent runtime panics.
