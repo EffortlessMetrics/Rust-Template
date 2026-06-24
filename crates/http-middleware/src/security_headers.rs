@@ -14,6 +14,84 @@
 use axum::{extract::Request, http::HeaderValue, middleware::Next, response::Response};
 use serde::{Deserialize, Serialize};
 
+/// Cached security headers configuration containing pre-parsed HeaderValues
+#[derive(Clone, Debug)]
+pub struct CachedSecurityHeaders {
+    /// Content Security Policy (CSP) header
+    pub content_security_policy: Option<HeaderValue>,
+    /// X-Frame-Options header to prevent clickjacking
+    pub x_frame_options: Option<HeaderValue>,
+    /// X-Content-Type-Options header to prevent MIME type sniffing
+    pub x_content_type_options: Option<HeaderValue>,
+    /// X-XSS-Protection header for XSS filtering
+    pub x_xss_protection: Option<HeaderValue>,
+    /// Strict-Transport-Security header for HTTPS enforcement
+    pub strict_transport_security: Option<HeaderValue>,
+    /// Referrer-Policy header
+    pub referrer_policy: Option<HeaderValue>,
+    /// Permissions-Policy header
+    pub permissions_policy: Option<HeaderValue>,
+    /// Cross-Origin-Embedder-Policy header
+    pub cross_origin_embedder_policy: Option<HeaderValue>,
+    /// Cross-Origin-Opener-Policy header
+    pub cross_origin_opener_policy: Option<HeaderValue>,
+    /// Cross-Origin-Resource-Policy header
+    pub cross_origin_resource_policy: Option<HeaderValue>,
+    /// Whether security headers are enabled
+    pub enabled: bool,
+}
+
+impl CachedSecurityHeaders {
+    /// Apply cached security headers to a response
+    pub fn apply_headers(&self, response: &mut Response) {
+        if !self.enabled {
+            return;
+        }
+
+        let headers = response.headers_mut();
+
+        if let Some(csp) = &self.content_security_policy {
+            headers.insert("Content-Security-Policy", csp.clone());
+        }
+
+        if let Some(xfo) = &self.x_frame_options {
+            headers.insert("X-Frame-Options", xfo.clone());
+        }
+
+        if let Some(xcto) = &self.x_content_type_options {
+            headers.insert("X-Content-Type-Options", xcto.clone());
+        }
+
+        if let Some(xxp) = &self.x_xss_protection {
+            headers.insert("X-XSS-Protection", xxp.clone());
+        }
+
+        if let Some(sts) = &self.strict_transport_security {
+            headers.insert("Strict-Transport-Security", sts.clone());
+        }
+
+        if let Some(rp) = &self.referrer_policy {
+            headers.insert("Referrer-Policy", rp.clone());
+        }
+
+        if let Some(pp) = &self.permissions_policy {
+            headers.insert("Permissions-Policy", pp.clone());
+        }
+
+        if let Some(coep) = &self.cross_origin_embedder_policy {
+            headers.insert("Cross-Origin-Embedder-Policy", coep.clone());
+        }
+
+        if let Some(coop) = &self.cross_origin_opener_policy {
+            headers.insert("Cross-Origin-Opener-Policy", coop.clone());
+        }
+
+        if let Some(corp) = &self.cross_origin_resource_policy {
+            headers.insert("Cross-Origin-Resource-Policy", corp.clone());
+        }
+    }
+}
+
 /// Security headers configuration
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct SecurityHeadersConfig {
@@ -92,6 +170,47 @@ impl SecurityHeadersConfig {
         }
     }
 
+    /// Cache the security headers configuration by pre-parsing HeaderValues
+    pub fn cache(&self) -> CachedSecurityHeaders {
+        let content_security_policy =
+            self.content_security_policy.as_ref().and_then(|v| HeaderValue::from_str(v).ok());
+
+        let x_frame_options = HeaderValue::from_str(&self.x_frame_options).ok();
+        let x_content_type_options = HeaderValue::from_str(&self.x_content_type_options).ok();
+        let x_xss_protection = HeaderValue::from_str(&self.x_xss_protection).ok();
+
+        let strict_transport_security =
+            self.strict_transport_security.as_ref().and_then(|v| HeaderValue::from_str(v).ok());
+
+        let referrer_policy = HeaderValue::from_str(&self.referrer_policy).ok();
+
+        let permissions_policy =
+            self.permissions_policy.as_ref().and_then(|v| HeaderValue::from_str(v).ok());
+
+        let cross_origin_embedder_policy =
+            self.cross_origin_embedder_policy.as_ref().and_then(|v| HeaderValue::from_str(v).ok());
+
+        let cross_origin_opener_policy =
+            self.cross_origin_opener_policy.as_ref().and_then(|v| HeaderValue::from_str(v).ok());
+
+        let cross_origin_resource_policy =
+            HeaderValue::from_str(&self.cross_origin_resource_policy).ok();
+
+        CachedSecurityHeaders {
+            content_security_policy,
+            x_frame_options,
+            x_content_type_options,
+            x_xss_protection,
+            strict_transport_security,
+            referrer_policy,
+            permissions_policy,
+            cross_origin_embedder_policy,
+            cross_origin_opener_policy,
+            cross_origin_resource_policy,
+            enabled: self.enabled,
+        }
+    }
+
     /// Apply security headers to a response
     pub fn apply_headers(&self, response: &mut Response) {
         if !self.enabled {
@@ -166,11 +285,12 @@ impl SecurityHeadersConfig {
 pub fn security_headers_layer(
     config: SecurityHeadersConfig,
 ) -> impl tower::Layer<axum::routing::Route> + Clone {
+    let cached = config.cache();
     axum::middleware::from_fn::<_, ()>(move |request: Request, next: Next| {
-        let config = config.clone();
+        let cached = cached.clone();
         async move {
             let mut response = next.run(request).await;
-            config.apply_headers(&mut response);
+            cached.apply_headers(&mut response);
             response
         }
     })
