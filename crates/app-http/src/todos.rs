@@ -21,77 +21,17 @@ use axum::{
     routing::{delete, get},
 };
 use serde::{Deserialize, Serialize};
-use std::sync::Arc;
-use tokio::sync::RwLock;
+use todo_store::TodosState;
 use tracing::{info, instrument, warn};
 
 use crate::{AppError, AppState, ErrorCode};
 use model::Todo;
-
-/// Shared state for todos - in-memory storage
-#[derive(Clone)]
-pub struct TodosState {
-    todos: Arc<RwLock<Vec<Todo>>>,
-}
 
 /// Request body for creating a new todo
 #[derive(Debug, Deserialize, Serialize)]
 pub struct CreateTodoRequest {
     pub id: String,
     pub title: String,
-}
-
-impl TodosState {
-    /// Create a new TodosState with sample data
-    pub fn new() -> Self {
-        let todos = vec![
-            Todo { id: "todo-1".to_string(), title: "Learn Rust-as-Spec patterns".to_string() },
-            Todo { id: "todo-2".to_string(), title: "Implement AC-MYSERV-001".to_string() },
-        ];
-
-        Self { todos: Arc::new(RwLock::new(todos)) }
-    }
-
-    /// Create a new TodosState with empty todos.
-    ///
-    /// Used for testing AC-MYSERV-002 (empty array scenario) and in unit tests.
-    pub fn empty() -> Self {
-        Self { todos: Arc::new(RwLock::new(vec![])) }
-    }
-
-    /// Get all todos
-    async fn get_all(&self) -> Vec<Todo> {
-        self.todos.read().await.clone()
-    }
-
-    /// Add a new todo
-    async fn add(&self, todo: Todo) {
-        self.todos.write().await.push(todo);
-    }
-
-    /// Check if a todo with the given ID exists
-    async fn exists(&self, id: &str) -> bool {
-        self.todos.read().await.iter().any(|t| t.id == id)
-    }
-
-    /// Delete a todo by ID, returns true if found and deleted
-    async fn delete(&self, id: &str) -> bool {
-        let mut guard = self.todos.write().await;
-        let original_len = guard.len();
-        guard.retain(|t| t.id != id);
-        guard.len() < original_len
-    }
-
-    /// Clear all todos (for AC-MYSERV-002 testing)
-    async fn clear(&self) {
-        self.todos.write().await.clear();
-    }
-}
-
-impl Default for TodosState {
-    fn default() -> Self {
-        Self::new()
-    }
 }
 
 /// Create the todos router
@@ -257,75 +197,3 @@ async fn clear_todos(
     Ok(StatusCode::NO_CONTENT)
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[tokio::test]
-    async fn test_todos_state_initialization() {
-        let state = TodosState::new();
-        let todos = state.get_all().await;
-
-        assert_eq!(todos.len(), 2);
-        assert_eq!(todos[0].id, "todo-1");
-        assert_eq!(todos[0].title, "Learn Rust-as-Spec patterns");
-    }
-
-    #[tokio::test]
-    async fn test_todo_has_required_fields() {
-        let state = TodosState::new();
-        let todos = state.get_all().await;
-
-        // AC-MYSERV-001: Each todo must have id and title
-        for todo in todos {
-            assert!(!todo.id.is_empty(), "Todo must have id");
-            assert!(!todo.title.is_empty(), "Todo must have title");
-        }
-    }
-
-    #[tokio::test]
-    async fn test_empty_todos_state() {
-        // AC-MYSERV-002: Empty list is valid
-        let state = TodosState::empty();
-        let todos = state.get_all().await;
-
-        assert_eq!(todos.len(), 0);
-    }
-
-    #[tokio::test]
-    async fn test_add_todo() {
-        let state = TodosState::empty();
-        let todo = Todo { id: "test-1".to_string(), title: "Test todo".to_string() };
-
-        state.add(todo).await;
-
-        let todos = state.get_all().await;
-        assert_eq!(todos.len(), 1);
-        assert_eq!(todos[0].id, "test-1");
-    }
-
-    #[tokio::test]
-    async fn test_delete_todo() {
-        // AC-MYSERV-004: Delete removes todo from list
-        let state = TodosState::new();
-
-        let deleted = state.delete("todo-1").await;
-        assert!(deleted, "Todo should be found and deleted");
-
-        let todos = state.get_all().await;
-        assert_eq!(todos.len(), 1);
-        assert_eq!(todos[0].id, "todo-2");
-    }
-
-    #[tokio::test]
-    async fn test_delete_nonexistent_todo() {
-        // AC-MYSERV-004: Deleting non-existent todo returns false
-        let state = TodosState::new();
-
-        let deleted = state.delete("non-existent").await;
-        assert!(!deleted, "Non-existent todo should not be found");
-
-        let todos = state.get_all().await;
-        assert_eq!(todos.len(), 2); // Original count unchanged
-    }
-}

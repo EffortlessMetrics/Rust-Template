@@ -1,0 +1,15 @@
+[package]
+name = "todo-store"
+description = "In-memory todo state storage for HTTP handlers"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[dependencies]
+model.workspace = true
+tokio = { workspace = true, features = ["sync"] }

@@ -14,6 +14,7 @@ http-origin-policy = {path = "../http-origin-policy"}
 http-platform = {path = "../http-platform"}
 http-tasks = {path = "../http-tasks"}
 http-todos = {path = "../http-todos"}
+todo-store = {path = "../todo-store"}
 # HTML templates
 maud = "0.27.0"
 tokio = {features = ["net", "signal"], workspace = true}
