@@ -4,6 +4,7 @@ business-core.workspace = true
 # Core HTTP types
 http-core = {path = "../http-core"}
 http-errors = {features = ["axum"], path = "../http-errors"}
+http-task-board = {path = "../http-task-board"}
 http-task-status-parser = {path = "../http-task-status-parser"}
 # Platform contract types
 platform-contract = {path = "../platform-contract"}

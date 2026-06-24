@@ -1,0 +1,17 @@
+[package]
+name = "http-task-board"
+publish = false
+authors.workspace = true
+documentation.workspace = true
+edition.workspace = true
+homepage.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+version.workspace = true
+
+[dependencies]
+business-core.workspace = true
+
+[dev-dependencies]
+pretty_assertions = "1.4.1"
