@@ -14,6 +14,10 @@
 # - We use the latest testcontainers version
 #
 ignore = [
+  # RUSTSEC-2026-0066 (astral-tokio-tar parsing issue):
+  # - Transitive: testcontainers (dev-only)
+  # - Requires a secondary vulnerable parser to exploit. Upstream version constraint in testcontainers prevents update.
+  "RUSTSEC-2026-0066",
   # RUSTSEC-2023-0071 (rsa Marvin Attack)
   # - Path: rsa → jsonwebtoken → app-http
   # - Risk: Timing sidechannel, mitigated by JWT-only usage (no raw RSA decryption)
