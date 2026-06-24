@@ -189,9 +189,11 @@ pub fn router() -> Router<AppState> {
 #[allow(clippy::result_large_err)]
 #[instrument(skip(state))]
 async fn get_idp_snapshot(State(state): State<AppState>) -> Result<Json<IdpSnapshot>, AppError> {
-    let root = &state.workspace_root;
+    let root = state.workspace_root.clone();
 
-    let snapshot = generate_snapshot(root)
+    let snapshot = tokio::task::spawn_blocking(move || generate_snapshot(&root))
+        .await
+        .map_err(|_| AppError::internal_error("Task joined failed"))?
         .map_err(|e| AppError::internal_error(format!("Failed to generate IDP snapshot: {}", e)))?;
 
     Ok(Json(snapshot))

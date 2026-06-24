@@ -286,12 +286,16 @@ struct DebugInfo {
 /// Returns basic kernel and template version information.
 /// Documented in docs/how-to/add-http-endpoint.md as a canonical example.
 async fn debug_info(State(state): State<AppState>) -> Json<DebugInfo> {
-    let root = &state.workspace_root;
+    let root = state.workspace_root.clone();
 
-    let template_version = load_service_metadata(&root.join("specs/service_metadata.yaml"))
-        .ok()
-        .and_then(|m| m.template_version)
-        .unwrap_or_else(|| "unknown".to_string());
+    let template_version = tokio::task::spawn_blocking(move || {
+        load_service_metadata(&root.join("specs/service_metadata.yaml"))
+            .ok()
+            .and_then(|m| m.template_version)
+            .unwrap_or_else(|| "unknown".to_string())
+    })
+    .await
+    .unwrap_or_else(|_| "unknown".to_string());
 
     Json(DebugInfo { kernel_version: env!("CARGO_PKG_VERSION").to_string(), template_version })
 }
@@ -384,86 +388,84 @@ fn validate_doc_type_contract(doc: &spec_runtime::DocEntry) -> (bool, Option<Str
 
 #[instrument(skip(state))]
 async fn get_status(State(state): State<AppState>) -> Result<Json<PlatformStatus>, AppError> {
-    let root = &state.workspace_root;
-    let specs = load_all_specs(root).map_err(|e| AppError::spec_load_error("load specs", e))?;
-    let tasks_spec = spec_runtime::load_tasks(&root.join("specs/tasks.yaml"))
-        .map_err(|e| AppError::spec_load_error("load tasks", e))?;
+    let root = state.workspace_root.clone();
 
-    let ledger_counts = LedgerCounts {
-        stories: specs.ledger.stories.len(),
-        requirements: specs.ledger.stories.iter().map(|s| s.requirements.len()).sum(),
-        acs: specs
-            .ledger
-            .stories
-            .iter()
-            .flat_map(|s| s.requirements.iter())
-            .map(|r| r.acceptance_criteria.len())
-            .sum(),
-    };
+    let (governance, service_info) = tokio::task::spawn_blocking(move || {
+        let specs = load_all_specs(&root).map_err(|e| AppError::spec_load_error("load specs", e))?;
+        let tasks_spec = spec_runtime::load_tasks(&root.join("specs/tasks.yaml"))
+            .map_err(|e| AppError::spec_load_error("load tasks", e))?;
 
-    let devex_counts =
-        DevExCounts { commands: specs.devex.commands.len(), flows: specs.devex.flows.len() };
+        let ledger_counts = LedgerCounts {
+            stories: specs.ledger.stories.len(),
+            requirements: specs.ledger.stories.iter().map(|s| s.requirements.len()).sum(),
+            acs: specs
+                .ledger
+                .stories
+                .iter()
+                .flat_map(|s| s.requirements.iter())
+                .map(|r| r.acceptance_criteria.len())
+                .sum(),
+        };
 
-    let doc_type_issues =
-        specs.docs.docs.iter().filter(|d| !validate_doc_type_contract(d).0).count();
-    let doc_counts = DocCounts {
-        total: specs.docs.docs.len(),
-        design: specs.docs.docs.iter().filter(|d| d.doc_type == "design_doc").count(),
-        doc_type_issues,
-    };
+        let devex_counts =
+            DevExCounts { commands: specs.devex.commands.len(), flows: specs.devex.flows.len() };
 
-    // Calculate task status breakdown
-    let task_breakdown = calculate_task_breakdown(&tasks_spec);
-    let task_counts = TaskCounts { total: tasks_spec.tasks.len(), by_status: Some(task_breakdown) };
+        let doc_type_issues =
+            specs.docs.docs.iter().filter(|d| !validate_doc_type_contract(d).0).count();
+        let doc_counts = DocCounts {
+            total: specs.docs.docs.len(),
+            design: specs.docs.docs.iter().filter(|d| d.doc_type == "design_doc").count(),
+            doc_type_issues,
+        };
 
-    // Load AC coverage from idp module
-    let ac_cov = idp::load_ac_coverage(root);
-    let ac_coverage = Some(AcCoverageInfo {
-        total: ac_cov.total,
-        passing: ac_cov.passing,
-        failing: ac_cov.failing,
-        unknown: ac_cov.unknown,
-    });
+        // Calculate task status breakdown
+        let task_breakdown = calculate_task_breakdown(&tasks_spec);
+        let task_counts = TaskCounts { total: tasks_spec.tasks.len(), by_status: Some(task_breakdown) };
 
-    // Load question counts
-    let question_counts = load_question_counts(root);
+        // Load AC coverage from idp module
+        let ac_cov = idp::load_ac_coverage(&root);
+        let ac_coverage = Some(AcCoverageInfo {
+            total: ac_cov.total,
+            passing: ac_cov.passing,
+            failing: ac_cov.failing,
+            unknown: ac_cov.unknown,
+        });
 
-    // Load friction counts
-    let friction_counts = load_friction_counts(root);
+        // Load question counts
+        let question_counts = load_question_counts(&root);
 
-    // Load fork counts
-    let fork_counts = load_fork_counts(root);
+        // Load friction counts
+        let friction_counts = load_friction_counts(&root);
 
-    // Read policy status from last policy-test run
-    let policy_path = root.join("target/policy_status.json");
-    let policy_status = if let Ok(content) = fs::read_to_string(policy_path) {
-        serde_json::from_str::<PolicyStatusReport>(&content)
-            .map(|r| r.summary)
-            .unwrap_or_else(|_| "unknown".to_string())
-    } else {
-        "unknown".to_string()
-    };
+        // Load fork counts
+        let fork_counts = load_fork_counts(&root);
 
-    let metadata = load_service_metadata(&root.join("specs/service_metadata.yaml"))
-        .map_err(|e| AppError::spec_load_error("load service_metadata.yaml", e))?;
+        // Read policy status from last policy-test run
+        let policy_path = root.join("target/policy_status.json");
+        let policy_status = if let Ok(content) = fs::read_to_string(policy_path) {
+            serde_json::from_str::<PolicyStatusReport>(&content)
+                .map(|r| r.summary)
+                .unwrap_or_else(|_| "unknown".to_string())
+        } else {
+            "unknown".to_string()
+        };
 
-    let template_version =
-        metadata.template_version.clone().unwrap_or_else(|| env!("CARGO_PKG_VERSION").to_string());
+        let metadata = load_service_metadata(&root.join("specs/service_metadata.yaml"))
+            .map_err(|e| AppError::spec_load_error("load service_metadata.yaml", e))?;
 
-    let service_info = ServiceInfo {
-        service_id: metadata.service_id.clone(),
-        template_version,
-        display_name: metadata.display_name.clone(),
-        description: metadata.description.clone(),
-        links: metadata.links.clone(),
-        tags: metadata.tags.clone(),
-    };
+        let template_version =
+            metadata.template_version.clone().unwrap_or_else(|| env!("CARGO_PKG_VERSION").to_string());
 
-    let config = config_summary(&state);
+        let service_info = ServiceInfo {
+            service_id: metadata.service_id.clone(),
+            template_version,
+            display_name: metadata.display_name.clone(),
+            description: metadata.description.clone(),
+            links: metadata.links.clone(),
+            tags: metadata.tags.clone(),
+        };
 
-    Ok(Json(PlatformStatus {
-        service: service_info,
-        governance: GovernanceStatus {
+        let governance = GovernanceStatus {
             ledger: ledger_counts,
             devex: devex_counts,
             docs: doc_counts,
@@ -473,7 +475,18 @@ async fn get_status(State(state): State<AppState>) -> Result<Json<PlatformStatus
             forks: fork_counts,
             policies: PolicyStatus { status: policy_status },
             ac_coverage,
-        },
+        };
+
+        Ok::<_, AppError>((governance, service_info))
+    })
+    .await
+    .map_err(|_| AppError::internal_error("Task joined failed"))??;
+
+    let config = config_summary(&state);
+
+    Ok(Json(PlatformStatus {
+        service: service_info,
+        governance,
         config,
         errors: get_error_summary(),
     }))
