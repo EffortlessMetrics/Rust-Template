@@ -1,3 +1,3 @@
-## 2024-05-22 - Maud Conditional Attributes
-**Learning:** `maud` templates in this codebase require the `attr=[Option]` syntax for conditional attributes like `aria-current`. Standard `if` blocks cannot be used inside attribute lists.
-**Action:** Use `attr=[condition.then(|| "value")]` for all conditional ARIA attributes.
+## 2024-03-22 - Server-side Initial UI State and ARIA for Toggle Buttons
+**Learning:** Initial active states of UI elements (like toggle buttons) shouldn't be set via client-side `DOMContentLoaded` scripts to prevent Flash of Unstyled Content (FOUC) and ensure immediate screen reader accessibility. Toggle buttons also need `aria-pressed` to communicate their state.
+**Action:** When implementing filter or toggle buttons, add the active class and `aria-pressed="true"` to the default active button directly in the server-side template (Maud), and `aria-pressed="false"` to others. Update the client-side JavaScript to toggle both the class and the `aria-pressed` attribute.
