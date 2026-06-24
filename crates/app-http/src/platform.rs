@@ -286,12 +286,19 @@ struct DebugInfo {
 /// Returns basic kernel and template version information.
 /// Documented in docs/how-to/add-http-endpoint.md as a canonical example.
 async fn debug_info(State(state): State<AppState>) -> Json<DebugInfo> {
-    let root = &state.workspace_root;
+    let root = state.workspace_root.clone();
 
-    let template_version = load_service_metadata(&root.join("specs/service_metadata.yaml"))
-        .ok()
-        .and_then(|m| m.template_version)
-        .unwrap_or_else(|| "unknown".to_string());
+    let template_version = tokio::task::spawn_blocking(move || {
+        load_service_metadata(&root.join("specs/service_metadata.yaml"))
+            .ok()
+            .and_then(|m| m.template_version)
+            .unwrap_or_else(|| "unknown".to_string())
+    })
+    .await
+    .unwrap_or_else(|e| {
+        tracing::error!("Blocking task join error: {}", e);
+        "unknown".to_string()
+    });
 
     Json(DebugInfo { kernel_version: env!("CARGO_PKG_VERSION").to_string(), template_version })
 }
@@ -384,10 +391,64 @@ fn validate_doc_type_contract(doc: &spec_runtime::DocEntry) -> (bool, Option<Str
 
 #[instrument(skip(state))]
 async fn get_status(State(state): State<AppState>) -> Result<Json<PlatformStatus>, AppError> {
-    let root = &state.workspace_root;
-    let specs = load_all_specs(root).map_err(|e| AppError::spec_load_error("load specs", e))?;
-    let tasks_spec = spec_runtime::load_tasks(&root.join("specs/tasks.yaml"))
-        .map_err(|e| AppError::spec_load_error("load tasks", e))?;
+    let root = state.workspace_root.clone();
+
+    let (
+        specs,
+        tasks_spec,
+        ac_cov,
+        question_counts,
+        friction_counts,
+        fork_counts,
+        policy_status,
+        metadata,
+    ) = tokio::task::spawn_blocking(move || {
+        let specs_res = load_all_specs(&root).map_err(|e| AppError::spec_load_error("load specs", e));
+        let tasks_spec_res = spec_runtime::load_tasks(&root.join("specs/tasks.yaml"))
+            .map_err(|e| AppError::spec_load_error("load tasks", e));
+
+        // Load AC coverage from idp module
+        let ac_cov = idp::load_ac_coverage(&root);
+
+        // Load question counts
+        let question_counts = load_question_counts(&root);
+
+        // Load friction counts
+        let friction_counts = load_friction_counts(&root);
+
+        // Load fork counts
+        let fork_counts = load_fork_counts(&root);
+
+        // Read policy status from last policy-test run
+        let policy_path = root.join("target/policy_status.json");
+        let policy_status = if let Ok(content) = fs::read_to_string(policy_path) {
+            serde_json::from_str::<PolicyStatusReport>(&content)
+                .map(|r| r.summary)
+                .unwrap_or_else(|_| "unknown".to_string())
+        } else {
+            "unknown".to_string()
+        };
+
+        let metadata_res = load_service_metadata(&root.join("specs/service_metadata.yaml"))
+            .map_err(|e| AppError::spec_load_error("load service_metadata.yaml", e));
+
+        (
+            specs_res,
+            tasks_spec_res,
+            ac_cov,
+            question_counts,
+            friction_counts,
+            fork_counts,
+            policy_status,
+            metadata_res,
+        )
+    })
+    .await
+    .map_err(|e| AppError::internal_error(format!("Blocking task join error: {}", e)))?;
+
+    let specs = specs?;
+    let tasks_spec = tasks_spec?;
+    let metadata = metadata?;
 
     let ledger_counts = LedgerCounts {
         stories: specs.ledger.stories.len(),
@@ -416,36 +477,12 @@ async fn get_status(State(state): State<AppState>) -> Result<Json<PlatformStatus
     let task_breakdown = calculate_task_breakdown(&tasks_spec);
     let task_counts = TaskCounts { total: tasks_spec.tasks.len(), by_status: Some(task_breakdown) };
 
-    // Load AC coverage from idp module
-    let ac_cov = idp::load_ac_coverage(root);
     let ac_coverage = Some(AcCoverageInfo {
         total: ac_cov.total,
         passing: ac_cov.passing,
         failing: ac_cov.failing,
         unknown: ac_cov.unknown,
     });
-
-    // Load question counts
-    let question_counts = load_question_counts(root);
-
-    // Load friction counts
-    let friction_counts = load_friction_counts(root);
-
-    // Load fork counts
-    let fork_counts = load_fork_counts(root);
-
-    // Read policy status from last policy-test run
-    let policy_path = root.join("target/policy_status.json");
-    let policy_status = if let Ok(content) = fs::read_to_string(policy_path) {
-        serde_json::from_str::<PolicyStatusReport>(&content)
-            .map(|r| r.summary)
-            .unwrap_or_else(|_| "unknown".to_string())
-    } else {
-        "unknown".to_string()
-    };
-
-    let metadata = load_service_metadata(&root.join("specs/service_metadata.yaml"))
-        .map_err(|e| AppError::spec_load_error("load service_metadata.yaml", e))?;
 
     let template_version =
         metadata.template_version.clone().unwrap_or_else(|| env!("CARGO_PKG_VERSION").to_string());
