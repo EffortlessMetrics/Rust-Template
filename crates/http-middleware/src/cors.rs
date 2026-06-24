@@ -149,6 +149,7 @@ pub async fn cors_middleware(config: CorsConfig, request: Request, next: Next) -
     {
         if let Ok(header_value) = HeaderValue::from_str(&origin) {
             response.headers_mut().insert(header::ACCESS_CONTROL_ALLOW_ORIGIN, header_value);
+            response.headers_mut().append(header::VARY, HeaderValue::from_static("Origin"));
         }
 
         if config.allow_credentials {
@@ -194,6 +195,7 @@ fn handle_preflight(
     // Set allowed origin
     if let Ok(header_value) = HeaderValue::from_str(&origin) {
         response.headers_mut().insert(header::ACCESS_CONTROL_ALLOW_ORIGIN, header_value);
+        response.headers_mut().append(header::VARY, HeaderValue::from_static("Origin"));
     }
 
     // Set allowed methods
@@ -280,5 +282,23 @@ mod tests {
         assert!(config.is_origin_allowed("https://example.com"));
         assert!(!config.is_origin_allowed("http://localhost:3000"));
         assert!(!config.allow_credentials);
+    }
+
+    #[test]
+    fn test_handle_preflight_vary_origin() {
+        let config = CorsConfig {
+            allowed_origins: vec!["https://example.com".to_string()],
+            ..Default::default()
+        };
+
+        let request_headers = vec!["authorization"];
+        let response =
+            handle_preflight(&config, Some("https://example.com".to_string()), &request_headers);
+
+        assert_eq!(
+            response.headers().get(axum::http::header::ACCESS_CONTROL_ALLOW_ORIGIN).unwrap(),
+            "https://example.com"
+        );
+        assert_eq!(response.headers().get(axum::http::header::VARY).unwrap(), "Origin");
     }
 }
