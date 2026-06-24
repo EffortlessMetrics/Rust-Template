@@ -340,7 +340,6 @@ pub async fn dashboard(State(state): State<AppState>) -> Html<String> {
                     }
                 }
 
-                // Bolt performance optimization: use config value directly instead of cloning it.
                 @if let Some(cfg) = config {
                     .card data-uiid="dashboard.config" {
                         h2 { "Runtime Config (redacted)" }
@@ -350,13 +349,11 @@ pub async fn dashboard(State(state): State<AppState>) -> Html<String> {
                         ul style="margin-left: 1.25rem; line-height: 1.6;" {
                             li {
                                 strong { "Env: " }
-                                // Bolt performance optimization: use Option directly instead of cloning.
                                 (cfg.env.unwrap_or_else(|| "unknown".to_string()))
                             }
                             li { strong { "HTTP port: " } (cfg.http_port) }
                             li {
                                 strong { "Auth mode: " }
-                                // Bolt performance optimization: use mode directly instead of cloning.
                                 (cfg.auth.mode)
                                 " ("
                                 @if cfg.auth.token_present { "token configured" } @else { "no token" }
