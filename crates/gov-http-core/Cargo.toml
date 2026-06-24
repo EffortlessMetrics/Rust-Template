@@ -1,4 +1,5 @@
 [dependencies]
+gov-http-pagination = { path = "../gov-http-pagination" }
 gov-model.workspace = true
 http-errors = {features = ["axum"], path = "../http-errors"}
 platform-contract = {path = "../platform-contract"}

@@ -1,5 +1,7 @@
 //! Shared pagination types for platform API endpoints.
 
+#![forbid(unsafe_code)]
+
 use serde::{Deserialize, Serialize};
 
 /// Common pagination query parameters.
@@ -68,5 +70,35 @@ impl Pagination {
     /// Get the number of items to take for the current page.
     pub fn limit(&self) -> usize {
         self.per_page as usize
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::Pagination;
+
+    #[test]
+    fn pagination_clamps_page_and_per_page() {
+        let pagination = Pagination::new(25, 0, 500);
+
+        assert_eq!(pagination.page, 1);
+        assert_eq!(pagination.per_page, 100);
+        assert_eq!(pagination.total_pages, 1);
+    }
+
+    #[test]
+    fn pagination_computes_offset_and_limit() {
+        let pagination = Pagination::new(200, 3, 20);
+
+        assert_eq!(pagination.offset(), 40);
+        assert_eq!(pagination.limit(), 20);
+        assert_eq!(pagination.total_pages, 10);
+    }
+
+    #[test]
+    fn pagination_handles_empty_result_set() {
+        let pagination = Pagination::new(0, 2, 10);
+
+        assert_eq!(pagination.total_pages, 0);
     }
 }

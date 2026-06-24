@@ -3,7 +3,7 @@
 //! Provides standardized CRUD operations for governance artifacts stored as YAML files.
 
 use crate::error::PlatformError;
-use crate::pagination::{PaginatedResponse, Pagination, PaginationParams};
+use gov_http_pagination::{PaginatedResponse, Pagination, PaginationParams};
 pub use gov_model::YamlResource;
 use std::fs;
 use std::path::{Path, PathBuf};
