@@ -208,11 +208,19 @@ where
 #[instrument(skip(state))]
 pub async fn get_idp_snapshot<S>(State(state): State<S>) -> Result<Json<IdpSnapshot>, HttpError>
 where
-    S: super::PlatformState,
+    S: super::PlatformState + Clone + Send + Sync + 'static,
 {
-    let snapshot = generate_snapshot(state.workspace_root()).map_err(|e| {
-        HttpError::internal_error(format!("Failed to generate IDP snapshot: {}", e))
-    })?;
+    let root = state.workspace_root().to_path_buf();
+
+    let snapshot = tokio::task::spawn_blocking(move || generate_snapshot(&root))
+        .await
+        .map_err(|e| {
+            tracing::error!("Blocking task join error: {}", e);
+            HttpError::internal_error("Failed to generate IDP snapshot (join error)")
+        })?
+        .map_err(|e| {
+            HttpError::internal_error(format!("Failed to generate IDP snapshot: {}", e))
+        })?;
 
     Ok(Json(snapshot))
 }
