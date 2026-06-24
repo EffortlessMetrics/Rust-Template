@@ -44,6 +44,35 @@ pub struct CorsConfig {
     pub enabled: bool,
 }
 
+/// Pre-parsed and cached CORS headers to avoid per-request string allocations
+#[derive(Clone, Debug)]
+pub struct CachedCorsHeaders {
+    pub exposed_headers: Option<HeaderValue>,
+    pub allowed_methods: Option<HeaderValue>,
+    pub max_age: Option<HeaderValue>,
+}
+
+impl CorsConfig {
+    /// Pre-parse header values to avoid per-request allocations
+    pub fn cache(&self) -> CachedCorsHeaders {
+        let exposed_headers = if !self.exposed_headers.is_empty() {
+            HeaderValue::from_str(&self.exposed_headers.join(", ")).ok()
+        } else {
+            None
+        };
+
+        let allowed_methods = if !self.allowed_methods.is_empty() {
+            HeaderValue::from_str(&self.allowed_methods.join(", ")).ok()
+        } else {
+            None
+        };
+
+        let max_age = self.max_age.and_then(|age| HeaderValue::from_str(&age.to_string()).ok());
+
+        CachedCorsHeaders { exposed_headers, allowed_methods, max_age }
+    }
+}
+
 impl Default for CorsConfig {
     fn default() -> Self {
         Self {
@@ -117,14 +146,21 @@ impl CorsConfig {
 ///
 /// Creates a middleware layer that handles CORS requests.
 pub fn cors_layer(config: CorsConfig) -> impl tower::Layer<axum::routing::Route> + Clone {
+    let cached = config.cache();
     axum::middleware::from_fn::<_, ()>(move |request: Request, next: Next| {
         let config = config.clone();
-        async move { cors_middleware(config, request, next).await }
+        let cached = cached.clone();
+        async move { cors_middleware(config, cached, request, next).await }
     })
 }
 
 /// CORS middleware implementation
-pub async fn cors_middleware(config: CorsConfig, request: Request, next: Next) -> Response {
+pub async fn cors_middleware(
+    config: CorsConfig,
+    cached: CachedCorsHeaders,
+    request: Request,
+    next: Next,
+) -> Response {
     // If CORS is disabled, just pass through
     if !config.enabled {
         return next.run(request).await;
@@ -138,7 +174,7 @@ pub async fn cors_middleware(config: CorsConfig, request: Request, next: Next) -
 
     // Handle preflight requests
     if method == Method::OPTIONS {
-        return handle_preflight(&config, origin, &request_headers);
+        return handle_preflight(&config, &cached, origin, &request_headers);
     }
 
     let mut response = next.run(request).await;
@@ -158,11 +194,10 @@ pub async fn cors_middleware(config: CorsConfig, request: Request, next: Next) -
         }
 
         // Add exposed headers
-        if !config.exposed_headers.is_empty() {
-            let exposed_headers = config.exposed_headers.join(", ");
-            if let Ok(header_value) = HeaderValue::from_str(&exposed_headers) {
-                response.headers_mut().insert(header::ACCESS_CONTROL_EXPOSE_HEADERS, header_value);
-            }
+        if let Some(header_value) = &cached.exposed_headers {
+            response
+                .headers_mut()
+                .insert(header::ACCESS_CONTROL_EXPOSE_HEADERS, header_value.clone());
         }
     }
 
@@ -172,6 +207,7 @@ pub async fn cors_middleware(config: CorsConfig, request: Request, next: Next) -
 /// Handle CORS preflight requests
 fn handle_preflight(
     config: &CorsConfig,
+    cached: &CachedCorsHeaders,
     origin: Option<String>,
     request_headers: &[&str],
 ) -> Response {
@@ -197,9 +233,8 @@ fn handle_preflight(
     }
 
     // Set allowed methods
-    let allowed_methods = config.allowed_methods.join(", ");
-    if let Ok(header_value) = HeaderValue::from_str(&allowed_methods) {
-        response.headers_mut().insert(header::ACCESS_CONTROL_ALLOW_METHODS, header_value);
+    if let Some(header_value) = &cached.allowed_methods {
+        response.headers_mut().insert(header::ACCESS_CONTROL_ALLOW_METHODS, header_value.clone());
     }
 
     // Set allowed headers
@@ -225,10 +260,8 @@ fn handle_preflight(
     }
 
     // Set max age
-    if let Some(max_age) = config.max_age
-        && let Ok(header_value) = HeaderValue::from_str(&max_age.to_string())
-    {
-        response.headers_mut().insert(header::ACCESS_CONTROL_MAX_AGE, header_value);
+    if let Some(header_value) = &cached.max_age {
+        response.headers_mut().insert(header::ACCESS_CONTROL_MAX_AGE, header_value.clone());
     }
 
     response

@@ -111,6 +111,10 @@ mod tests {
         jwt_secret: Option<&str>,
     ) -> AppState {
         let workspace_root = PathBuf::new();
+        let cors_config = crate::middleware::CorsConfig::default();
+        let cached_cors_headers = cors_config.cache();
+        let security_headers_config = crate::middleware::SecurityHeadersConfig::default();
+        let cached_security_headers = security_headers_config.cache();
         AppState {
             governance_repo: Arc::new(NoopRepo),
             workspace_root: workspace_root.clone(),
@@ -120,8 +124,10 @@ mod tests {
                 token: token.map(|t| t.to_string()),
                 jwt_secret: jwt_secret.map(|s| s.to_string()),
             },
-            cors_config: crate::middleware::CorsConfig::default(),
-            security_headers_config: crate::middleware::SecurityHeadersConfig::default(),
+            cors_config,
+            cached_cors_headers,
+            security_headers_config,
+            cached_security_headers,
             repo_context: gov_model::RepoContext::new(&workspace_root),
         }
     }
