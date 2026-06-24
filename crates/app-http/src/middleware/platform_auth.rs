@@ -122,6 +122,9 @@ mod tests {
             },
             cors_config: crate::middleware::CorsConfig::default(),
             security_headers_config: crate::middleware::SecurityHeadersConfig::default(),
+            cached_security_headers: std::sync::Arc::new(
+                crate::middleware::SecurityHeadersConfig::default().cache(),
+            ),
             repo_context: gov_model::RepoContext::new(&workspace_root),
         }
     }
