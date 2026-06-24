@@ -228,6 +228,7 @@ pub use security::PlatformAuthConfig;
 
 use business_core::governance::GovernanceRepository;
 use gov_model::RepoContext;
+use middleware::security_headers::CachedSecurityHeaders;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
@@ -252,7 +253,7 @@ pub struct AppState {
     /// CORS configuration
     pub cors_config: CorsConfig,
     /// Security headers configuration
-    pub security_headers_config: SecurityHeadersConfig,
+    pub security_headers_config: CachedSecurityHeaders,
     /// Repository context for gov-http integration
     pub repo_context: RepoContext,
 }
@@ -352,7 +353,7 @@ impl AppState {
 
         // Initialize security configurations
         let cors_config = CorsConfig::from_sources(config.as_ref());
-        let security_headers_config = SecurityHeadersConfig::from_sources(config.as_ref());
+        let security_headers_config = SecurityHeadersConfig::from_sources(config.as_ref()).cache();
 
         // Create RepoContext for gov-http integration
         let repo_context = RepoContext::new(&workspace_root);
