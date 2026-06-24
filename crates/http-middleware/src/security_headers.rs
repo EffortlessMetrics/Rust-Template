@@ -41,6 +41,62 @@ pub struct SecurityHeadersConfig {
     pub enabled: bool,
 }
 
+/// Cached security headers to avoid per-request parsing
+#[derive(Clone, Debug)]
+pub struct CachedSecurityHeaders {
+    pub content_security_policy: Option<HeaderValue>,
+    pub x_frame_options: Option<HeaderValue>,
+    pub x_content_type_options: Option<HeaderValue>,
+    pub x_xss_protection: Option<HeaderValue>,
+    pub strict_transport_security: Option<HeaderValue>,
+    pub referrer_policy: Option<HeaderValue>,
+    pub permissions_policy: Option<HeaderValue>,
+    pub cross_origin_embedder_policy: Option<HeaderValue>,
+    pub cross_origin_opener_policy: Option<HeaderValue>,
+    pub cross_origin_resource_policy: Option<HeaderValue>,
+    pub enabled: bool,
+}
+
+impl CachedSecurityHeaders {
+    /// Apply cached security headers to a response
+    pub fn apply_headers(&self, response: &mut Response) {
+        if !self.enabled {
+            return;
+        }
+
+        if let Some(val) = &self.content_security_policy {
+            response.headers_mut().insert("Content-Security-Policy", val.clone());
+        }
+        if let Some(val) = &self.x_frame_options {
+            response.headers_mut().insert("X-Frame-Options", val.clone());
+        }
+        if let Some(val) = &self.x_content_type_options {
+            response.headers_mut().insert("X-Content-Type-Options", val.clone());
+        }
+        if let Some(val) = &self.x_xss_protection {
+            response.headers_mut().insert("X-XSS-Protection", val.clone());
+        }
+        if let Some(val) = &self.strict_transport_security {
+            response.headers_mut().insert("Strict-Transport-Security", val.clone());
+        }
+        if let Some(val) = &self.referrer_policy {
+            response.headers_mut().insert("Referrer-Policy", val.clone());
+        }
+        if let Some(val) = &self.permissions_policy {
+            response.headers_mut().insert("Permissions-Policy", val.clone());
+        }
+        if let Some(val) = &self.cross_origin_embedder_policy {
+            response.headers_mut().insert("Cross-Origin-Embedder-Policy", val.clone());
+        }
+        if let Some(val) = &self.cross_origin_opener_policy {
+            response.headers_mut().insert("Cross-Origin-Opener-Policy", val.clone());
+        }
+        if let Some(val) = &self.cross_origin_resource_policy {
+            response.headers_mut().insert("Cross-Origin-Resource-Policy", val.clone());
+        }
+    }
+}
+
 impl Default for SecurityHeadersConfig {
     fn default() -> Self {
         Self {
@@ -94,83 +150,56 @@ impl SecurityHeadersConfig {
 
     /// Apply security headers to a response
     pub fn apply_headers(&self, response: &mut Response) {
-        if !self.enabled {
-            return;
-        }
+        self.clone().into_cached().apply_headers(response);
+    }
 
-        // Content Security Policy
-        if let Some(csp) = &self.content_security_policy
-            && let Ok(header_value) = HeaderValue::from_str(csp)
-        {
-            response.headers_mut().insert("Content-Security-Policy", header_value);
-        }
-
-        // X-Frame-Options (prevent clickjacking)
-        if let Ok(header_value) = HeaderValue::from_str(&self.x_frame_options) {
-            response.headers_mut().insert("X-Frame-Options", header_value);
-        }
-
-        // X-Content-Type-Options (prevent MIME sniffing)
-        if let Ok(header_value) = HeaderValue::from_str(&self.x_content_type_options) {
-            response.headers_mut().insert("X-Content-Type-Options", header_value);
-        }
-
-        // X-XSS-Protection (legacy XSS protection)
-        if let Ok(header_value) = HeaderValue::from_str(&self.x_xss_protection) {
-            response.headers_mut().insert("X-XSS-Protection", header_value);
-        }
-
-        // Strict-Transport-Security (HSTS)
-        if let Some(sts) = &self.strict_transport_security
-            && let Ok(header_value) = HeaderValue::from_str(sts)
-        {
-            response.headers_mut().insert("Strict-Transport-Security", header_value);
-        }
-
-        // Referrer-Policy
-        if let Ok(header_value) = HeaderValue::from_str(&self.referrer_policy) {
-            response.headers_mut().insert("Referrer-Policy", header_value);
-        }
-
-        // Permissions-Policy
-        if let Some(pp) = &self.permissions_policy
-            && let Ok(header_value) = HeaderValue::from_str(pp)
-        {
-            response.headers_mut().insert("Permissions-Policy", header_value);
-        }
-
-        // Cross-Origin-Embedder-Policy
-        if let Some(coep) = &self.cross_origin_embedder_policy
-            && let Ok(header_value) = HeaderValue::from_str(coep)
-        {
-            response.headers_mut().insert("Cross-Origin-Embedder-Policy", header_value);
-        }
-
-        // Cross-Origin-Opener-Policy
-        if let Some(coop) = &self.cross_origin_opener_policy
-            && let Ok(header_value) = HeaderValue::from_str(coop)
-        {
-            response.headers_mut().insert("Cross-Origin-Opener-Policy", header_value);
-        }
-
-        // Cross-Origin-Resource-Policy
-        if let Ok(header_value) = HeaderValue::from_str(&self.cross_origin_resource_policy) {
-            response.headers_mut().insert("Cross-Origin-Resource-Policy", header_value);
+    /// Convert configuration into cached headers for performance
+    pub fn into_cached(self) -> CachedSecurityHeaders {
+        CachedSecurityHeaders {
+            content_security_policy: self
+                .content_security_policy
+                .as_ref()
+                .and_then(|s| HeaderValue::from_str(s).ok()),
+            x_frame_options: HeaderValue::from_str(&self.x_frame_options).ok(),
+            x_content_type_options: HeaderValue::from_str(&self.x_content_type_options).ok(),
+            x_xss_protection: HeaderValue::from_str(&self.x_xss_protection).ok(),
+            strict_transport_security: self
+                .strict_transport_security
+                .as_ref()
+                .and_then(|s| HeaderValue::from_str(s).ok()),
+            referrer_policy: HeaderValue::from_str(&self.referrer_policy).ok(),
+            permissions_policy: self
+                .permissions_policy
+                .as_ref()
+                .and_then(|s| HeaderValue::from_str(s).ok()),
+            cross_origin_embedder_policy: self
+                .cross_origin_embedder_policy
+                .as_ref()
+                .and_then(|s| HeaderValue::from_str(s).ok()),
+            cross_origin_opener_policy: self
+                .cross_origin_opener_policy
+                .as_ref()
+                .and_then(|s| HeaderValue::from_str(s).ok()),
+            cross_origin_resource_policy: HeaderValue::from_str(&self.cross_origin_resource_policy)
+                .ok(),
+            enabled: self.enabled,
         }
     }
 }
 
 /// Security headers middleware layer
+
 ///
 /// Creates a middleware layer that applies security headers to all responses.
 pub fn security_headers_layer(
     config: SecurityHeadersConfig,
 ) -> impl tower::Layer<axum::routing::Route> + Clone {
+    let cached = config.into_cached();
     axum::middleware::from_fn::<_, ()>(move |request: Request, next: Next| {
-        let config = config.clone();
+        let cached = cached.clone();
         async move {
             let mut response = next.run(request).await;
-            config.apply_headers(&mut response);
+            cached.apply_headers(&mut response);
             response
         }
     })
