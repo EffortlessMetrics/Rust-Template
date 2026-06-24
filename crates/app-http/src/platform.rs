@@ -286,12 +286,16 @@ struct DebugInfo {
 /// Returns basic kernel and template version information.
 /// Documented in docs/how-to/add-http-endpoint.md as a canonical example.
 async fn debug_info(State(state): State<AppState>) -> Json<DebugInfo> {
-    let root = &state.workspace_root;
+    let root = state.workspace_root.clone();
 
-    let template_version = load_service_metadata(&root.join("specs/service_metadata.yaml"))
-        .ok()
-        .and_then(|m| m.template_version)
-        .unwrap_or_else(|| "unknown".to_string());
+    let template_version = tokio::task::spawn_blocking(move || {
+        load_service_metadata(&root.join("specs/service_metadata.yaml"))
+            .ok()
+            .and_then(|m| m.template_version)
+            .unwrap_or_else(|| "unknown".to_string())
+    })
+    .await
+    .unwrap_or_else(|_| "unknown".to_string());
 
     Json(DebugInfo { kernel_version: env!("CARGO_PKG_VERSION").to_string(), template_version })
 }
@@ -384,10 +388,20 @@ fn validate_doc_type_contract(doc: &spec_runtime::DocEntry) -> (bool, Option<Str
 
 #[instrument(skip(state))]
 async fn get_status(State(state): State<AppState>) -> Result<Json<PlatformStatus>, AppError> {
-    let root = &state.workspace_root;
-    let specs = load_all_specs(root).map_err(|e| AppError::spec_load_error("load specs", e))?;
-    let tasks_spec = spec_runtime::load_tasks(&root.join("specs/tasks.yaml"))
-        .map_err(|e| AppError::spec_load_error("load tasks", e))?;
+    let root = state.workspace_root.clone();
+
+    let root_clone = root.clone();
+    let (specs, tasks_spec, ac_cov) = tokio::task::spawn_blocking(move || {
+        let specs_res = load_all_specs(&root_clone);
+        let tasks_res = spec_runtime::load_tasks(&root_clone.join("specs/tasks.yaml"));
+        let ac_cov = idp::load_ac_coverage(&root_clone);
+        (specs_res, tasks_res, ac_cov)
+    })
+    .await
+    .map_err(|e| AppError::internal_error(format!("spawn_blocking failed: {}", e)))?;
+
+    let specs = specs.map_err(|e| AppError::spec_load_error("load specs", e))?;
+    let tasks_spec = tasks_spec.map_err(|e| AppError::spec_load_error("load tasks", e))?;
 
     let ledger_counts = LedgerCounts {
         stories: specs.ledger.stories.len(),
@@ -417,7 +431,6 @@ async fn get_status(State(state): State<AppState>) -> Result<Json<PlatformStatus
     let task_counts = TaskCounts { total: tasks_spec.tasks.len(), by_status: Some(task_breakdown) };
 
     // Load AC coverage from idp module
-    let ac_cov = idp::load_ac_coverage(root);
     let ac_coverage = Some(AcCoverageInfo {
         total: ac_cov.total,
         passing: ac_cov.passing,

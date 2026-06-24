@@ -1,3 +1,7 @@
 ## 2026-01-27 - Blocking I/O in Async Handlers
 **Learning:** Found multiple instances of synchronous file I/O (std::fs, spec loading) inside async Axum handlers. This blocks the Tokio worker thread.
 **Action:** Always wrap heavy synchronous operations (like loading YAML specs) in `tokio::task::spawn_blocking` to keep the runtime responsive.
+
+## 2025-03-15 - Unblocking Tokio executor via `spawn_blocking`
+**Learning:** Running heavy file I/O operations (like `load_service_metadata`, `load_all_specs`, or reading raw `target/policy_status.json` or `docs/feature_status.md`) inside async request handlers blocks the entire Tokio runtime executor thread. This causes starvation and severe latency spikes. I found numerous instances where file I/O operations, such as calling `load_all_specs` inside UI or API controllers (e.g. `crates/http-platform/src/lib.rs` and `crates/http-platform/src/ui.rs`), were directly invoked rather than spawned on the dedicated blocking thread pool.
+**Action:** Any synchronous operations (File IO, YAML parsing) within async routes must be wrapped with `tokio::task::spawn_blocking(move || { ... }).await`. When doing this, be mindful that passing reference to variables captured within the closure (e.g., passing a `&std::path::Path`) will violate `'static` lifetime requirements; explicitly clone these values (e.g., `let root_clone = root.clone()`) and move them into the closure block. Also, correctly resolve types since `spawn_blocking` closure returns can lead to inference issues.

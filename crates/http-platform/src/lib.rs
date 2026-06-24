@@ -173,12 +173,16 @@ async fn debug_info<S>(State(state): State<S>) -> Json<DebugInfo>
 where
     S: PlatformState,
 {
-    let root = state.workspace_root();
+    let root = state.workspace_root().to_path_buf();
 
-    let template_version = load_service_metadata(&root.join("specs/service_metadata.yaml"))
-        .ok()
-        .and_then(|m| m.template_version)
-        .unwrap_or_else(|| "unknown".to_string());
+    let template_version = tokio::task::spawn_blocking(move || {
+        load_service_metadata(&root.join("specs/service_metadata.yaml"))
+            .ok()
+            .and_then(|m| m.template_version)
+            .unwrap_or_else(|| "unknown".to_string())
+    })
+    .await
+    .unwrap_or_else(|_| "unknown".to_string());
 
     Json(DebugInfo { kernel_version: env!("CARGO_PKG_VERSION").to_string(), template_version })
 }
@@ -207,10 +211,21 @@ async fn get_status<S>(State(state): State<S>) -> Result<Json<PlatformStatusResp
 where
     S: PlatformState,
 {
-    let root = state.workspace_root();
-    let specs = load_all_specs(root)
-        .map_err(|e| HttpError::internal_error(format!("Failed to load specs: {}", e)))?;
-    let tasks_spec = spec_runtime::load_tasks(&root.join("specs/tasks.yaml"))
+    let root = state.workspace_root().to_path_buf();
+
+    let root_clone = root.clone();
+    let (specs, tasks_spec, ac_cov) = tokio::task::spawn_blocking(move || {
+        let specs_res = load_all_specs(&root_clone);
+        let tasks_res = spec_runtime::load_tasks(&root_clone.join("specs/tasks.yaml"));
+        let ac_cov = idp::load_ac_coverage(&root_clone);
+        (specs_res, tasks_res, ac_cov)
+    })
+    .await
+    .map_err(|e| HttpError::internal_error(format!("spawn_blocking failed: {}", e)))?;
+
+    let specs =
+        specs.map_err(|e| HttpError::internal_error(format!("Failed to load specs: {}", e)))?;
+    let tasks_spec = tasks_spec
         .map_err(|e| HttpError::internal_error(format!("Failed to load tasks: {}", e)))?;
 
     let ledger_counts = LedgerCounts::new(
@@ -240,18 +255,17 @@ where
     let task_counts = TaskCounts::new(tasks_spec.tasks.len(), Some(task_breakdown));
 
     // Load AC coverage from idp module
-    let ac_cov = idp::load_ac_coverage(root);
     let ac_coverage =
         Some(AcCoverageInfo::new(ac_cov.total, ac_cov.passing, ac_cov.failing, ac_cov.unknown));
 
     // Load question counts
-    let question_counts = load_question_counts(root);
+    let question_counts = load_question_counts(&root);
 
     // Load friction counts
-    let friction_counts = load_friction_counts(root);
+    let friction_counts = load_friction_counts(&root);
 
     // Load fork counts
-    let fork_counts = load_fork_counts(root);
+    let fork_counts = load_fork_counts(&root);
 
     // Read policy status from last policy-test run
     let policy_path = root.join("target/policy_status.json");
