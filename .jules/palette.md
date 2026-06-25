@@ -1,0 +1,3 @@
+## 2026-06-25 - [Search Input Accessibility]
+**Learning:** Found that search inputs in coverage tables (`crates/app-http/src/platform/ui.rs` and `crates/http-platform/src/ui.rs`) were implemented using `type="text"` without an `aria-label`, relying solely on placeholders. This reduces semantic meaning and creates accessibility barriers for screen readers.
+**Action:** When implementing or updating search fields, always use `type="search"` to grant native browser behaviors (like a clear button) and ensure a descriptive `aria-label` is present to assist screen readers, as `placeholder` alone is an anti-pattern.
