@@ -2,6 +2,7 @@
 jsonwebtoken = { version = "10.2.0", features = ["rust_crypto"] }
 serde.workspace = true
 tracing.workspace = true
+subtle.workspace = true
 
 [dev-dependencies]
 proptest.workspace = true

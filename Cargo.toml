@@ -49,6 +49,7 @@ serde_yaml = { package = "serde_yaml_ng", version = "0.10.0" }
 serde_yaml_ng = { package = "serde_yaml_ng", version = "0.10.0" }
 shell-words = "1.1.1"
 tempfile = "3.25.0"
+subtle = "2.6.1"
 # Internal workspace crates (Wave 1 publishable)
 ac-kernel = { package = "rust-as-spec-ac-kernel", path = "crates/ac-kernel", version = "=3.3.15" }
 business-core = { package = "rust-as-spec-business-core", path = "crates/business-core", version = "=3.3.15" }
