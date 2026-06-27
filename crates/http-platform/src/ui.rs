@@ -625,7 +625,7 @@ fn coverage_content() -> Markup {
                 button #filter-passing.filter-btn onclick="filterData('passing')" { "Passing" }
                 button #filter-failing.filter-btn onclick="filterData('failing')" { "Failing" }
                 button #filter-unknown.filter-btn onclick="filterData('unknown')" { "Unknown" }
-                input #search-box.search-box type="text" placeholder="Search by AC ID or title..."
+                input #search-box.search-box type="search" aria-label="Search acceptance criteria" placeholder="Search by AC ID or title..."
                     oninput="searchData()";
             }
 
@@ -766,8 +766,11 @@ fn coverage_script() -> &'static str {
         // Update active button
         document.querySelectorAll('.filter-btn').forEach(btn => {
             btn.classList.remove('active');
+            btn.setAttribute('aria-pressed', 'false');
         });
-        document.getElementById('filter-' + status).classList.add('active');
+        const activeBtn = document.getElementById('filter-' + status);
+        activeBtn.classList.add('active');
+        activeBtn.setAttribute('aria-pressed', 'true');
 
         // Apply filter
         applyFilters();
@@ -833,7 +836,9 @@ fn coverage_script() -> &'static str {
 
     // Initialize with 'all' filter active
     window.addEventListener('DOMContentLoaded', () => {
-        document.getElementById('filter-all').classList.add('active');
+        const allBtn = document.getElementById('filter-all');
+        allBtn.classList.add('active');
+        allBtn.setAttribute('aria-pressed', 'true');
     });
     "#
 }
