@@ -1,4 +1,4 @@
-## 2024-05-23 - DoS in Constant-Time Comparison
-**Vulnerability:** A `constant_time_eq` implementation iterated `max(a.len(), b.len())` times, exposing a DoS vector where a large input would cause excessive CPU usage.
-**Learning:** Attempts to "avoid leaking length" by checking all bytes can inadvertently introduce algorithmic complexity vulnerabilities. Standard practice is to check length first (leaking length but preventing DoS) and then compare in constant time.
-**Prevention:** Prefer `subtle` crate or idiomatic constant-time comparisons that explicitly handle length checks to bound execution time.
+## 2025-02-14 - Fix Time-Based Side-Channel Vulnerability in Token Comparison
+**Vulnerability:** The codebase compared basic authentication tokens using `fold` and `|` with bitwise XOR to compare strings character-by-character. While this attempts to be constant-time, standard Rust iterators and compiler optimizations can still short-circuit or introduce timing variances that could leak token bytes.
+**Learning:** Hand-rolled constant-time string comparisons in authentication logic are unsafe due to compiler optimizations and lack of strict constant-time guarantees.
+**Prevention:** Always use vetted cryptography primitives like the `subtle` crate's `ConstantTimeEq` for comparing secrets, tokens, and hashes to prevent timing attacks.

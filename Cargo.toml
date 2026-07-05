@@ -29,7 +29,6 @@ anyhow = "1.0.102"
 async-trait = "0.1.89"
 axum = "0.8.8"
 chrono = { features = ["serde"], version = "0.4.43" }
-cucumber = "0.22.1"
 gherkin = "0.15.0"
 http = "1.4.0"
 http-body-util = "0.1.3"
@@ -54,7 +53,6 @@ ac-kernel = { package = "rust-as-spec-ac-kernel", path = "crates/ac-kernel", ver
 business-core = { package = "rust-as-spec-business-core", path = "crates/business-core", version = "=3.3.15" }
 gov-contracts = { package = "rust-as-spec-gov-contracts", path = "crates/gov-contracts", version = "=3.3.15" }
 gov-model = { package = "rust-as-spec-gov-model", path = "crates/gov-model", version = "=3.3.15" }
-gov-policy = { package = "rust-as-spec-gov-policy", path = "crates/gov-policy", version = "=3.3.15" }
 gov-receipts = { package = "rust-as-spec-gov-receipts", path = "crates/gov-receipts", version = "=3.3.15" }
 gov-xtask-core = { package = "rust-as-spec-gov-xtask-core", path = "crates/gov-xtask-core", version = "=3.3.15" }
 model = { package = "rust-as-spec-model", path = "crates/model", version = "=3.3.15" }
