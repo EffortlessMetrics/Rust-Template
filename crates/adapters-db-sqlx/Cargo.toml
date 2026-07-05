@@ -8,13 +8,14 @@ async-trait.workspace = true
 chrono.workspace = true
 tracing.workspace = true
 uuid.workspace = true
+testcontainers = "0.27.3"
 
 [dev-dependencies]
-testcontainers = "0.26.0"
 uuid = {features = ["v4"], workspace = true}
 async-trait.workspace = true
 chrono.workspace = true
 tokio.workspace = true
+testcontainers = "0.27.3"
 
 [features]
 default = []
