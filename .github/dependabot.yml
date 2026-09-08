@@ -1,15 +1,27 @@
 version: 2
 updates:
   - package-ecosystem: "cargo"
-    directory: "/"
+    directories:
+      - "/"
+      - "/crates/http-auth/fuzz"
+      - "/crates/http-auth-mode/fuzz"
+      - "/crates/http-auth-token/fuzz"
+      - "/crates/http-body-format/fuzz"
+      - "/crates/http-origin-rule/fuzz"
+      - "/crates/http-bearer-token/fuzz"
+      - "/crates/http-origin-prefix/fuzz"
+      - "/crates/http-auth-verifier/fuzz"
+      - "/crates/http-origin-policy/fuzz"
+      - "/crates/http-origin-parser/fuzz"
+      - "/crates/http-origin-boundary/fuzz"
+      - "/crates/http-origin-subdomain/fuzz"
+      - "/crates/http-task-status-parser/fuzz"
+      - "/examples/brownfield-demo"
     schedule:
       interval: "weekly"
     cooldown:
       default-days: 14
     open-pull-requests-limit: 5
-    labels:
-      - "dependencies"
-      - "rust"
 
   - package-ecosystem: "github-actions"
     directory: "/"
@@ -18,6 +30,3 @@ updates:
     cooldown:
       default-days: 14
     open-pull-requests-limit: 5
-    labels:
-      - "dependencies"
-      - "github-actions"
